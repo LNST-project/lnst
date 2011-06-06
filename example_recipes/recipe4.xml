@@ -1,0 +1,4 @@
+<nettestrecipe>
+  <command_sequence source="cmd_sequences/sequence1.xml"/>
+</nettestrecipe>
+

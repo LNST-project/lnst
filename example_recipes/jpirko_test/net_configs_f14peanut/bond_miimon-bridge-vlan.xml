@@ -1,0 +1,32 @@
+<netconfig>
+  <netdevice id="1" type="eth" phys_id="1"/>
+  <netdevice id="2" type="eth" phys_id="2"/>
+  <netdevice id="3" type="bond">
+    <options>
+    	<option name="mode" value="1"/>
+	<option name="miimon" value="100"/>
+	<option name="primary" value="2"/>
+    </options>
+    <slaves>
+      <slave id="1"/>
+      <slave id="2"/>
+    </slaves>
+  </netdevice>
+  <netdevice id="4" type="bridge">
+    <slaves>
+      <slave id="3"/>
+    </slaves>
+  </netdevice>
+  <netdevice id="5" type="vlan">
+    <options>
+      <option name="vlan_tci" value="100"/>
+    </options>
+    <slaves>
+      <slave id="4"/>
+    </slaves>
+    <addresses>
+      <address value="192.168.102.1/24"/>
+    </addresses>
+  </netdevice>
+</netconfig>
+

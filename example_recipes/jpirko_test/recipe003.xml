@@ -1,0 +1,14 @@
+<nettestrecipe>
+  <machines>
+    <machine id="1">
+      <netmachineconfig source="machine_configs/config-f14peanut.xml"/>
+      <netconfig source="net_configs_f14peanut/bond_miimon-bridge.xml"/>
+    </machine>
+    <machine id="2">
+      <netmachineconfig source="machine_configs/config-junkbox.xml"/>
+      <netconfig source="net_configs_junkbox/netconfig1.xml"/>
+    </machine>
+  </machines>
+  <command_sequence source="sequences/sequence1.xml"/>
+</nettestrecipe>
+

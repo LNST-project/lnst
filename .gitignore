@@ -1,0 +1,10 @@
+.*.rej
+*.rej
+.*~
+*~
+.#*
+# additional patterns:
+*.pyc
+*.pyo
+*.gz
+*.orig

@@ -1,0 +1,20 @@
+<nettestrecipe>
+  <machines>
+    <machine id="1">
+      <netmachineconfig source="machine_configs/config-f14peanut.xml"/>
+      <netconfig source="net_configs/netconfig1.xml"/>
+    </machine>
+  </machines>
+  <command_sequence>
+    <command machine_id="1" type="test" value="IcmpPing" timeout="30">
+      <options>
+        <option name="addr" value="www.redhat.com"/>
+	<option name="count" value="40"/>
+	<option name="interval" value="0.2"/>
+	<option name="limit_rate" value="95"/>
+      </options>
+    </command>
+    <command machine_id="1" type="test" value="DummyFailing"/>
+  </command_sequence>
+</nettestrecipe>
+

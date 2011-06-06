@@ -1,0 +1,101 @@
+"""
+This module defines common test stuff
+
+Copyright 2011 Red Hat, Inc.
+Licensed under the GNU General Public License, version 2 as
+published by the Free Software Foundation; see COPYING for details.
+"""
+
+__author__ = """
+jpirko@redhat.com (Jiri Pirko)
+"""
+
+import re, logging, sys, os
+from NetTest.NetTestCommand import NetTestCommandGeneric
+
+class testLogger(logging.Logger):
+    def __init__(self, name, level=logging.NOTSET):
+        logging.Logger.__init__(self, name, level)
+
+    def findCaller(self):
+        """
+        Find the stack frame of the caller so that we can note the source
+        file name, line number and function name.
+        """
+        f = logging.currentframe()
+        #On some versions of IronPython, currentframe() returns None if
+        #IronPython isn't run with -X:Frames.
+        if f is not None:
+            f = f.f_back.f_back
+        rv = "(unknown file)", 0, "(unknown function)"
+        while hasattr(f, "f_code"):
+            co = f.f_code
+            filename = os.path.normcase(co.co_filename)
+            if filename == logging._srcfile:
+                f = f.f_back.f_back
+                continue
+            rv = (filename, f.f_lineno, co.co_name)
+            break
+        return rv
+
+logging._acquireLock()
+try:
+    logging.setLoggerClass(testLogger)
+    logging.getLogger("root.testLogger")
+    logging.setLoggerClass(logging.Logger)
+finally:
+    logging._releaseLock()
+
+class TestOptionMissing(Exception):
+    pass
+
+class TestGeneric(NetTestCommandGeneric):
+    def __init__(self, command):
+        self._command = command
+        self._testLogger = logging.getLogger("root.testLogger")
+
+    def set_fail(self, err_msg, res_data = None):
+        self._testLogger.error("FAILED - %s" % err_msg)
+        res = {"passed": False, "err_msg": err_msg}
+        if res_data:
+            res["res_data"] = res_data
+        self.set_result(res)
+        return res
+
+    def set_pass(self, res_data = None):
+        self._testLogger.debug("PASSED")
+        res = {"passed": True}
+        if res_data:
+            res["res_data"] = res_data
+        self.set_result(res)
+        return res
+
+    def get_opt(self, name, mandatory=False, opt_type="", default=None):
+        try:
+            option = self._command["options"][name]
+        except KeyError:
+            if mandatory:
+                raise TestOptionMissing
+            return default
+
+        value = option["value"]
+        if opt_type == "addr":
+            '''
+            If address type is specified do "slashcut"
+            '''
+            value = re.sub(r'/.*', r'', value)
+
+        if default != None:
+            '''
+            In case a default value is passed, retype value
+            by the default value type.
+            '''
+            value = (type(default))(value)
+
+        return value
+
+    def get_mopt(self, name, opt_type=""):
+        '''
+        This should be used to get mandatory options
+        '''
+        return self.get_opt(name, mandatory=True, opt_type=opt_type)

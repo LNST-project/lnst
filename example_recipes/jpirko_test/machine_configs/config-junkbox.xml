@@ -1,0 +1,4 @@
+<netmachineconfig>
+  <info hostname="junkbox.lab.eng.brq.redhat.com"/>
+  <netdevice type="eth" phys_id="1" hwaddr="00:10:18:61:35:9B"/>
+</netmachineconfig>

@@ -1,0 +1,10 @@
+<netconfig>
+  <netdevice id="1" type="eth" phys_id="1"/>
+  <netdevice id="2" type="macvlan" hwaddr="aa:84:52:e1:09:bc">
+    <realdev id="1"/>
+    <addresses>
+      <address value="192.168.101.1/24"/>
+    </addresses>
+  </netdevice>
+</netconfig>
+

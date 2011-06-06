@@ -1,0 +1,34 @@
+<nettestrecipe>
+  <machines>
+    <machine id="1">
+      <netmachineconfig source="machine_configs/config-f14peanut.xml"/>
+      <netconfig source="net_configs/netconfig1.xml"/>
+    </machine>
+    <machine id="2">
+      <netmachineconfig>
+        <info hostname="junkbox.lab.eng.brq.redhat.com"/>
+        <netdevice type="eth" phys_id="1" hwaddr="00:10:18:61:35:9B"/>
+      </netmachineconfig>
+      <netconfig>
+	<netdevice id="1" type="eth" phys_id="1">
+          <addresses>
+            <address value="192.168.101.2/24"/>
+          </addresses>
+	</netdevice>
+      </netconfig>
+    </machine>
+  </machines>
+  <command_sequence>
+    <command type="exec" value="sleep 4"/>
+
+    <command type="test" machine_id="1" value="IcmpPing" timeout="30">
+      <options>
+        <option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]"/>
+	<option name="count" value="40"/>
+	<option name="interval" value="0.2"/>
+	<option name="limit_rate" value="95"/>
+      </options>
+    </command>
+  </command_sequence>
+</nettestrecipe>
+
