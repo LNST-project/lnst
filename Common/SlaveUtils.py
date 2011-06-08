@@ -11,23 +11,32 @@ from Common.ShellProcess import ShellProcess
 
 
 def prepare_client_session(host, port, login, passwd=None, command=None,
-                           prompt=None):
+                           prompt=None, install_path=None, test_dir=None):
     """
     Copy nettest to client start client part
     and create session with client part.
-    @param command: Command which is started after login to guest.
-    @param prompt: Prompt in guest side which means that guest side stared correctly.
+    @param command: Command which is started after login to guest, in root
+                    path of installed test.
+    @param prompt: Prompt in guest side which means that guest side stared
+                   correctly.
+    @param test_dir: Path in install_path where is installed testing framework.
+    @param install_path: Path to create and install test_dir folder.
     """
-    s = ShellProcess("tar -cvzf nettest.tar.gz --exclude *.pyc --exclude 'Logs/*' *")
+    if install_path is None:
+        install_path = "/tmp"
+    if test_dir is None:
+        test_dir = "lnst"
+    s = ShellProcess("tar -cjf lnst.tar.bz2 --exclude *.pyc --exclude 'Logs/*' *")
     s.wait()
     scp_to_remote(host, port, login, passwd,
-                        "nettest.tar.gz","/tmp/")
+                  "lnst.tar.bz2","/%s/" % (install_path))
     wait_for_login(host, port, login, passwd, "PASS:",
-                       command = "mkdir -p /tmp/nettest && tar -xvzf "
-                       "/tmp/nettest.tar.gz -C /tmp/nettest/ && echo PASS:",
-                       timeout=60)
+                   command = "mkdir -p /%(ip)s/%(td)s && tar -xvjf "
+                   "/%(ip)s/lnst.tar.bz2 -C /%(ip)s/%(td)s && echo PASS:" %
+                   {"td":test_dir, "ip":install_path} , timeout=60)
 
     if prompt is None:
         prompt = "Started"
+    command = "/%s/%s/%s" % (install_path, test_dir, command)
     return wait_for_login(host, port, login, passwd, prompt,
                           command=command, timeout=10)

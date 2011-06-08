@@ -194,7 +194,7 @@ class Logs:
                             ':%(lineno)4.4d| %(levelname)s: '
                             '%(message)s', '%d/%m %H:%M:%S', " "*4)
         cls.log_root = log_root
-        cls.logFolder = find_test_root(__file__, "nettest")
+        cls.logFolder = os.path.dirname(sys.argv[0])
         cls.logger = logger
         cls.debug = debug
         cls.date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")

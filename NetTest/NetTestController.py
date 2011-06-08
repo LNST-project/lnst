@@ -52,9 +52,8 @@ class NetTestController:
                 passwd = info["rootpass"]
             else:
                 passwd = None
-            session = prepare_client_session(hostname, port,
-                                                     login, passwd,
-                                                "/tmp/nettest/nettestslave.py")
+            session = prepare_client_session(hostname, port, login, passwd,
+                                             "nettestslave.py")
             session.add_kill_handler(self._session_die)
             info["session"] = session
 
