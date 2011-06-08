@@ -9,64 +9,86 @@ published by the Free Software Foundation; see COPYING for details.
 __autor__ = """
 jzupka@redhat.com (Jiri Zupka)
 """
-import os, signal
+import os, signal, thread, logging
 
 class ProcessManager:
+    class SubProcess:
+        def __init__(self, pid, handler):
+            self.pid = pid
+            self.lock = thread.allocate_lock()
+            self.lock.acquire()
+            self.handler = handler
+            self.enabled = True
+            self.status = None
+            thread.start_new_thread(self.waitpid, (self.pid, self.lock,
+                                                   self.handler))
+
+        def isAlive(self):
+            return self.lock.locked()
+
+        def kill(self):
+            os.kill(self.pid, signal.SIGTERM)
+
+        def waitpid(self, pid, lock, handler):
+            _pid, status = ProcessManager.std_waitpid(pid, 0)
+            self.status = status
+            status = os.WEXITSTATUS(status)
+            lock.release()
+            if self.enabled:
+                ProcessManager.lock.acquire()
+                if handler is not None:
+                    try:
+                        handler(status)
+                    except:
+                        import sys, traceback
+                        type, value, tb = sys.exc_info()
+                        logging.error(''.join(traceback.format_exception(type, value, tb)))
+                        os.kill(os.getpid(), signal.SIGTERM)
+                else:
+                    print "Process pid %s exit with exitcode %s" % (pid, status)
+                ProcessManager.lock.release()
+            thread.exit()
+
     pids = {}
-    signals = 0
+    lock = thread.allocate_lock()
+    std_waitpid = None
 
     @classmethod
     def register_pid(cls, pid, handler=None):
-        cls.pids[pid] = handler
+        cls.pids[pid] = ProcessManager.SubProcess(pid, handler)
 
     @classmethod
     def remove_pid(cls, pid):
         if pid in cls.pids:
-            del (cls.pids[pid])
+            cls.pids[pid].enabled = False
 
     @classmethod
-    def check_pids(cls):
-        finished = {}
-        pid_tr = []
-
+    def kill_all(cls):
         for pid in cls.pids:
-            _pid = 0
-            status = None
-            try:
-                _pid, status = os.waitpid(pid, os.WNOHANG)
-            except OSError, e:
-                if e.errno != 10:
-                    raise
-                else:
-                    finished[pid] = (None, cls.pids[pid])
-                    pid_tr.append(pid)
-            else:
-                if pid == _pid:
-                    finished[pid] = (os.WEXITSTATUS(status), cls.pids[pid])
-                    pid_tr.append(pid)
-
-        for pid in pid_tr:
-            cls.remove_pid(pid)
-        return finished
+            cls.pids[pid].kill()
 
     @classmethod
-    def handler(cls, signum, frame):
-        if (signum == signal.SIGCHLD):
-            cls.signals += 1
-            if cls.signals == 1:
-                while cls.signals > 0:
-                    finished = ProcessManager.check_pids()
-                    for pid in finished:
-                        status, handler = finished[pid]
-                        if handler is None:
-                            print("Process %d finish with status %s." % (pid, status))
-                        else:
-                            handler(status)
-                    if cls.signals > 1:
-                        cls.signals = 1
-                    else:
-                        cls.signals = 0
+    def waitpid(cls, pid, wait):
+        if pid not in cls.pids:
+            return ProcessManager.std_waitpid(pid, wait)
+        if not wait:
+            cls.pids[pid].lock.acquire()
+            cls.pids[pid].lock.release()
+            status = cls.pids[pid].status
+            del cls.pids[pid]
+            return pid, status
+        else:
+            status = cls.pids[pid].status
+            if status is not None:
+                del cls.pids[pid]
+            else:
+                pid = 0
+            return pid, status
 
 
-signal.siginterrupt(signal.SIGCHLD, False)
-signal.signal(signal.SIGCHLD, ProcessManager.handler)
+lock = thread.allocate_lock()
+lock.acquire()
+if os.waitpid != ProcessManager.waitpid:
+    ProcessManager.std_waitpid = os.waitpid
+    os.waitpid = ProcessManager.waitpid
+lock.release()
