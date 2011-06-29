@@ -70,27 +70,39 @@ class TestGeneric(NetTestCommandGeneric):
         self.set_result(res)
         return res
 
-    def get_opt(self, name, mandatory=False, opt_type="", default=None):
-        try:
-            option = self._command["options"][name]
-        except KeyError:
-            if mandatory:
-                raise TestOptionMissing
-            return default
-
-        value = option["value"]
+    def _get_val(self, value, opt_type, default):
         if opt_type == "addr":
             '''
             If address type is specified do "slashcut"
             '''
-            value = re.sub(r'/.*', r'', value)
+            return re.sub(r'/.*', r'', value)
 
         if default != None:
             '''
             In case a default value is passed, retype value
             by the default value type.
             '''
-            value = (type(default))(value)
+            return (type(default))(value)
+
+        return value
+
+    def get_opt(self, name, multi=False, mandatory=False, opt_type="", default=None):
+        try:
+            option = self._command["options"][name]
+        except KeyError:
+            if mandatory:
+                raise TestOptionMissing
+            if multi:
+                return [default]
+            else:
+                return default
+
+        if multi:
+            value = []
+            for op in option:
+                value.append(self._get_val(op["value"], opt_type, default))
+        else:
+            value = self._get_val(option[0]["value"], opt_type, default)
 
         return value
 
@@ -99,3 +111,16 @@ class TestGeneric(NetTestCommandGeneric):
         This should be used to get mandatory options
         '''
         return self.get_opt(name, mandatory=True, opt_type=opt_type)
+
+    def get_multi_opt(self, name, mandatory=False, opt_type="", default=None):
+        '''
+        This should be used to get multi options (array of values)
+        '''
+        return self.get_opt(name, multi=True, mandatory=mandatory,
+                            opt_type=opt_type, default=default)
+
+    def get_multi_mopt(self, name, opt_type=""):
+        '''
+        This should be used to get mandatory multi options (array of values)
+        '''
+        return self.get_multi_opt(name, mandatory=True, opt_type=opt_type)

@@ -113,7 +113,9 @@ class NetTestParse:
             option["type"] = option_type
         if orig_value:
             option["orig_value"] = orig_value
-        options[name] = option
+        if not name in options:
+            options[name] = []
+        options[name].append(option)
 
     def _parse_command(self, dom_command):
         logging.debug("Parsing command")
