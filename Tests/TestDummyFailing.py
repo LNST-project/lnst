@@ -14,8 +14,5 @@ import logging
 from Common.TestsCommon import TestGeneric
 
 class TestDummyFailing(TestGeneric):
-    def __init__(self, command):
-        pass
-
     def run(self):
         return self.set_fail("what else did you expect?")
