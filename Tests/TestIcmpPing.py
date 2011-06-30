@@ -52,6 +52,6 @@ class TestIcmpPing(TestGeneric):
                       "mdev \"%.3f\"" % (tmin, tavg, tmax, tmdev))
 
         if rate < limit_rate:
-            return self.set_fail("rate is lower that limit")
+            return self.set_fail("rate is lower that limit", res_data={"rate": rate})
 
-        return self.set_pass()
+        return self.set_pass(res_data={"rate": rate})
