@@ -17,6 +17,7 @@ import logging
 import os
 import re
 from NetTest.NetTestController import NetTestController
+from NetTest.NetTestResultSerializer import NetTestResultSerializer
 from Common.Logs import Logs
 from Common.LoggingServer import LoggingServer
 import Common.ProcessManager
@@ -37,11 +38,13 @@ def usage():
           "                                          application on slaves"
     print "  -c, --cleanup                           perform config cleanup\n" \
           "                                          machines"
+    print "  -x, --result=FILE                       file to write xml_result"
     sys.exit()
 
-def process_recipe(args, file_path, remoteexec, cleanup):
+def process_recipe(args, file_path, remoteexec, cleanup, res_serializer):
     nettestctl = NetTestController(os.path.realpath(file_path),
-                                   remoteexec=remoteexec, cleanup=cleanup)
+                                   remoteexec=remoteexec, cleanup=cleanup,
+                                   res_serializer=res_serializer)
     action = args[0]
     if action == "run":
         return nettestctl.run_recipe()
@@ -70,11 +73,12 @@ def print_summary(summary):
         logging.info("*%s* %s" % (res, recipe_file))
     logging.info("=====================================================")
 
-def get_recipe_result(args, file_path, remoteexec, cleanup):
+def get_recipe_result(args, file_path, remoteexec, cleanup, res_serializer):
+    res_serializer.add_recipe(file_path)
     Logs.set_logging_root_path(file_path)
     loggingServer = LoggingServer(LoggingServer.DEFAULT_PORT, Logs.root_path, Logs.debug)
     loggingServer.start()
-    res = process_recipe(args, file_path, remoteexec, cleanup)
+    res = process_recipe(args, file_path, remoteexec, cleanup, res_serializer)
     loggingServer.stop()
     return ((file_path, res))
 
@@ -85,8 +89,8 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:ec",
-            ["debug", "help", "recipe=", "remoteexec", "cleanup"]
+            "dhr:ecx:",
+            ["debug", "help", "recipe=", "remoteexec", "cleanup", "result"]
         )
     except getopt.GetoptError, err:
         print str(err)
@@ -97,6 +101,7 @@ def main():
     recipe_path = None
     remoteexec = False
     cleanup = False
+    result_path = None
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -108,6 +113,8 @@ def main():
             remoteexec = True
         elif opt in ("-c", "--cleanup"):
             cleanup = True
+        elif opt in ("-x", "--result"):
+            result_path = arg
 
     Logs(debug)
 
@@ -121,6 +128,7 @@ def main():
 
     summary = []
 
+    res_serializer = NetTestResultSerializer()
     if os.path.isdir(recipe_path):
         all_files = []
         for root, dirs, files in os.walk(recipe_path):
@@ -133,13 +141,20 @@ def main():
             if re.match(r'^.*\.xml$', recipe_file):
                 logging.info("Processing recipe file \"%s\"" % recipe_file)
                 summary.append(get_recipe_result(args, recipe_file,
-                                                 remoteexec, cleanup))
+                                                 remoteexec, cleanup,
+                                                 res_serializer))
     else:
         summary.append(get_recipe_result(args, recipe_path,
-                                         remoteexec, cleanup))
+                                         remoteexec, cleanup, res_serializer))
     Logs.set_logging_root_path(clean=False)
 
     print_summary(summary)
+
+    if result_path:
+        result_path = os.path.expanduser(result_path)
+        handle = open(result_path, "w")
+        handle.write(str(res_serializer))
+        handle.close()
 
 if __name__ == "__main__":
     main()

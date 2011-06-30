@@ -1,5 +1,5 @@
 """
-This module defines NetConfigController class which does the controlling
+This module defines NetTestController class which does the controlling
 part of network testing.
 
 Copyright 2011 Red Hat, Inc.
@@ -23,13 +23,15 @@ from NetTestCommand import NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
 
 class NetTestController:
-    def __init__(self, recipe_path, remoteexec=False, cleanup=False):
+    def __init__(self, recipe_path, remoteexec=False, cleanup=False,
+                 res_serializer=None):
         ntparse = NetTestParse(recipe_path)
         ntparse.parse_recipe()
         self._recipe = ntparse.get_recipe()
         self._ntparse = ntparse
         self._remoteexec = remoteexec
         self._docleanup = cleanup
+        self._res_serializer = res_serializer
 
     def _get_machineinfo(self, machine_id):
         return self._recipe["machines"][machine_id]["info"]
@@ -162,6 +164,8 @@ class NetTestController:
         for command in sequence:
             logging.info("Executing command: [%s]" % str_command(command))
             cmd_res = self._run_command(command)
+            if self._res_serializer:
+                self._res_serializer.add_cmd_result(command, cmd_res)
             logging.debug("Result: %s" % str(cmd_res))
             if "res_data" in cmd_res:
                 res_data = pformat(cmd_res["res_data"])
