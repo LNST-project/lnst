@@ -13,7 +13,7 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import socket
-from pprint import pprint
+from pprint import pprint, pformat
 from Common.XmlRpc import ServerProxy
 from NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
@@ -163,6 +163,9 @@ class NetTestController:
             logging.info("Executing command: [%s]" % str_command(command))
             cmd_res = self._run_command(command)
             logging.debug("Result: %s" % str(cmd_res))
+            if "res_data" in cmd_res:
+                res_data = pformat(cmd_res["res_data"])
+                logging.info("Result data: %s" % (res_data))
             if not cmd_res["passed"]:
                 logging.error("Command failed - command: [%s], "
                               "Error message: \"%s\""
