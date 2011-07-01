@@ -184,6 +184,7 @@ class NetTestCommand:
                 return {"passed": True}
             os.close(read_pipe)
             os.setpgrp()
+            cmd_cls.set_handle_intr()
             try:
                 cmd_cls.run()
                 result = cmd_cls.get_result()

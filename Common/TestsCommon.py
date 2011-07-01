@@ -57,12 +57,18 @@ class TestGeneric(NetTestCommandGeneric):
     def __init__(self, command):
         self._testLogger = logging.getLogger("root.testLogger")
         self._read_pipe, self._write_pipe = os.pipe()
-        signal.signal(signal.SIGINT, self._signal_intr_handler)
         NetTestCommandGeneric.__init__(self, command)
 
     def __del__(self):
         os.close(self._read_pipe)
         os.close(self._write_pipe)
+
+    def set_handle_intr(self):
+        """
+        Call this if you need this class to handle SIGINT. For backgroud
+        process purposes.
+        """
+        signal.signal(signal.SIGINT, self._signal_intr_handler)
 
     def _signal_intr_handler(self, signum, frame):
         os.write(self._write_pipe, "a")
