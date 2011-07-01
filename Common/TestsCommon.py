@@ -10,7 +10,11 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-import re, logging, sys, os
+import re
+import logging
+import sys
+import os
+import signal
 from NetTest.NetTestCommand import NetTestCommandGeneric
 
 class testLogger(logging.Logger):
@@ -51,8 +55,28 @@ class TestOptionMissing(Exception):
 
 class TestGeneric(NetTestCommandGeneric):
     def __init__(self, command):
-        self._command = command
         self._testLogger = logging.getLogger("root.testLogger")
+        self._read_pipe, self._write_pipe = os.pipe()
+        signal.signal(signal.SIGINT, self._signal_intr_handler)
+        NetTestCommandGeneric.__init__(self, command)
+
+    def __del__(self):
+        os.close(self._read_pipe)
+        os.close(self._write_pipe)
+
+    def _signal_intr_handler(self, signum, frame):
+        os.write(self._write_pipe, "a")
+    
+    def wait_on_interrupt(self):
+        '''
+        Should be used by test implementation for waiting on SIGINT
+        '''
+        while True:
+            try:
+                os.read(self._read_pipe, 1)
+            except OSError:
+                continue
+            break
 
     def set_fail(self, err_msg, res_data = None):
         self._testLogger.error("FAILED - %s" % err_msg)

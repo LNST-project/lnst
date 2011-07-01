@@ -67,6 +67,7 @@ def NetTestCommandTest(command):
 class NetTestCommandGeneric:
     def __init__(self, command):
         self._command = command
+        self._result = None
 
     def run(self):
         pass
@@ -75,6 +76,12 @@ class NetTestCommandGeneric:
         self._result = result
 
     def get_result(self):
+        if not self._result:
+            '''
+            In case result is not set yet, it most likely means that
+            command was killed. So set pass in this case
+            '''
+            self.set_pass()
         return self._result
 
     def set_fail(self, err_msg):
@@ -95,27 +102,30 @@ class NetTestCommandExec(NetTestCommandGeneric):
         except ExecCmdFail:
             self.set_fail("Command failed to execute")
 
-
 class BgProcessException(Exception):
     """Base class for client errors."""
     def __init__(self, str):
-        self.str = str
+        self._str = str
 
     def __str__(self):
-        return "BgProcessError: " + self.str
+        return "BgProcessError: " + self._str
+
+def get_bg_process_result(bg_id):
+    pipe = bg_processes.get_pipe(bg_id)
+    tmp = os.read(pipe, 4096*10)
+    result = pickle.loads(tmp)
+    if "Exception" in result:
+        raise BgProcessException(result["Exception"])
+    os.close(pipe)
+    return result
 
 class NetTestCommandWait(NetTestCommandGeneric):
     def run(self):
         bg_id = int(self._command["value"])
         pid = bg_processes.get_pid(bg_id)
-        pipe = bg_processes.get_pipe(bg_id)
         logging.debug("Waiting for background id \"%d\", pid \"%d\"" % (bg_id, pid))
         os.waitpid(pid, 0)
-        tmp = os.read(pipe, 4096*10)
-        result = pickle.loads(tmp)
-        if "Exception" in result:
-            raise BgProcessException(result["Exception"])
-        os.close(pipe)
+        result = get_bg_process_result(bg_id)
         bg_processes.remove(bg_id)
         self.set_result(result)
 
@@ -125,8 +135,10 @@ class NetTestCommandKill(NetTestCommandGeneric):
         pid = bg_processes.get_pid(bg_id)
         logging.debug("Killing background id \"%d\", pid \"%d\"" % (bg_id, pid))
         os.killpg(os.getpgid(pid), signal.SIGINT)
+        os.waitpid(pid, 0)
+        result = get_bg_process_result(bg_id)
         bg_processes.remove(bg_id)
-        self.set_result({"passed": True})
+        self.set_result(result)
 
 def get_command_class(command):
     cmd_type = command["type"]
@@ -164,15 +176,13 @@ class NetTestCommand:
             try:
                 cmd_cls.run()
                 result = cmd_cls.get_result()
-                tmp = pickle.dumps(result)
-                os.write(write_pipe, tmp)
             except KeyboardInterrupt:
-                pass
+                result = cmd_cls.get_result()
             except:
                 type, value, tb = sys.exc_info()
                 result = {"Exception": ''.join(traceback.format_exception(type, value, tb))}
-                tmp = pickle.dumps(result)
-                os.write(write_pipe, tmp)
+            tmp = pickle.dumps(result)
+            os.write(write_pipe, tmp)
             os.close(write_pipe)
             os._exit(0)
         else:
