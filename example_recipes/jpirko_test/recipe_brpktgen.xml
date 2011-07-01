@@ -48,6 +48,6 @@
         <option name="netdev_name" type="recipe_eval" value="['machines'][2]['netconfig'][2]['name']"/>
       </options>
     </command>
-    <command machine_id="1" type="kill" value="1"/>
+    <command machine_id="1" type="intr" value="1"/>
   </command_sequence>
 </nettestrecipe>

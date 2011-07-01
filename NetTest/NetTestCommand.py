@@ -129,16 +129,25 @@ class NetTestCommandWait(NetTestCommandGeneric):
         bg_processes.remove(bg_id)
         self.set_result(result)
 
-class NetTestCommandKill(NetTestCommandGeneric):
+class NetTestCommandIntr(NetTestCommandGeneric):
     def run(self):
         bg_id = int(self._command["value"])
         pid = bg_processes.get_pid(bg_id)
-        logging.debug("Killing background id \"%d\", pid \"%d\"" % (bg_id, pid))
+        logging.debug("Interrupting background id \"%d\", pid \"%d\"" % (bg_id, pid))
         os.killpg(os.getpgid(pid), signal.SIGINT)
         os.waitpid(pid, 0)
         result = get_bg_process_result(bg_id)
         bg_processes.remove(bg_id)
         self.set_result(result)
+
+class NetTestCommandKill(NetTestCommandGeneric):
+    def run(self):
+        bg_id = int(self._command["value"])
+        pid = bg_processes.get_pid(bg_id)
+        logging.debug("Killing background id \"%d\", pid \"%d\"" % (bg_id, pid))
+        os.killpg(os.getpgid(pid), signal.SIGKILL)
+        bg_processes.remove(bg_id)
+        self.set_result({"passed": True})
 
 def get_command_class(command):
     cmd_type = command["type"]
@@ -148,6 +157,8 @@ def get_command_class(command):
         return NetTestCommandTest(command)
     elif cmd_type == "wait":
         return NetTestCommandWait(command)
+    elif cmd_type == "intr":
+        return NetTestCommandIntr(command)
     elif cmd_type == "kill":
         return NetTestCommandKill(command)
     else:

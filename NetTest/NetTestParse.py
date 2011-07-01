@@ -159,7 +159,7 @@ class NetTestParse:
                 bg_ids[machine_id] = set()
 
             cmd_type = command["type"]
-            if cmd_type in ["kill", "wait"]:
+            if cmd_type in ["wait", "intr", "kill"]:
                 bg_id = int(command["value"])
                 if bg_id in bg_ids[machine_id]:
                     bg_ids[machine_id].remove(bg_id)
