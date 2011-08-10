@@ -94,6 +94,9 @@ class NetTestCommandGeneric:
         self.set_result(result)
         return result
 
+    def set_handle_intr(self):
+        pass
+
 class NetTestCommandExec(NetTestCommandGeneric):
     def run(self):
         try:
