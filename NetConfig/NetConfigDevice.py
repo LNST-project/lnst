@@ -50,10 +50,10 @@ class NetConfigDeviceGeneric:
 
     def down(self):
         netdev = self._netdev
-        exec_cmd("ip link set %s down" % netdev["name"])
         if "addresses" in netdev:
             for address in netdev["addresses"]:
                 exec_cmd("ip addr del %s dev %s" % (address, netdev["name"]))
+        exec_cmd("ip link set %s down" % netdev["name"])
 
     @classmethod
     def type_init(self):
