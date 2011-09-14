@@ -139,6 +139,12 @@ class NetTestController:
         cmd_type = command["type"]
         machine_id = command["machine_id"]
 
+        try:
+            desc = command["desc"]
+            logging.info("Cmd description: %s" % desc)
+        except KeyError:
+            pass
+
         if machine_id == 0:
             cmd_res = NetTestCommand(command).run()
         else:

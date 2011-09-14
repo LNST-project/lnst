@@ -138,6 +138,9 @@ class NetTestParse:
         tmp = dom_command.getAttribute("bg_id")
         if tmp:
             command["bg_id"] = int(tmp)
+        tmp = dom_command.getAttribute("desc")
+        if tmp:
+            command["desc"] = str(tmp)
         logging.debug("Parsed command: [%s]" % str_command(command))
 
         dom_options_grp = dom_command.getElementsByTagName("options")

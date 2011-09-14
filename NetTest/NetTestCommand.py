@@ -25,6 +25,8 @@ def str_command(command):
         out += ", timeout (%d)" % command["timeout"]
     if "bg_id" in command:
         out += ", bg_id (%d)" % command["bg_id"]
+    if "desc" in command:
+        out += ", desc (%s)" % command["desc"]
     return out
 
 class CommandException(Exception):
