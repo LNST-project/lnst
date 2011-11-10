@@ -1,0 +1,22 @@
+<command_sequence>
+    <command type='test' value='Iperf' machine_id='2' bg_id="1">
+            <options>
+                <option name="role" value="server"/>
+                <option name="bind" value="192.168.122.102" />
+                <option name="duration" value="3600"/>
+            </options>
+    </command>
+    <command type='exec' value='sleep 30' />
+    <command type='test' value='Iperf' machine_id='1' bg_id="1">
+            <options>
+                <option name="role" value="client"/>
+                <option name="iperf_server" value="192.168.122.102" />
+                <option name="duration" value="120"/>
+            </options>
+    </command>
+    <command type='exec' value='sleep 30' />
+    <command type='exec' value="fb=`free -b | grep Mem: | sed 's/[ ]\+/ /g' | cut -f4 -d' '`; stress -m 10 --vm-bytes $(( $fb / 10 ))" machine_id='1' bg_id='2'/>
+    <command type='wait' machine_id='1' value='1'/>
+    <command type='kill' machine_id='1' value='2' />
+    <command type='kill' machine_id='2' value='1' />
+</command_sequence>
