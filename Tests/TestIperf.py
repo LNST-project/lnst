@@ -17,7 +17,6 @@ class TestIperf(TestGeneric):
     def _install_iperf(self):
         # by default dies on failure
         logging.info("trace: _install_iperf")
-        self._temp_dir = (exec_cmd("mktemp -d")[0]).strip()
         exec_cmd("wget -P %s/ %s" % (self._temp_dir, self._harness_url) )
         exec_cmd("cd %s; tar -xvzf %s" % (self._temp_dir, self._harness_archive))
         exec_cmd("cd %s/%s; ./configure; make; " % (self._temp_dir, self._harness))
@@ -58,7 +57,12 @@ class TestIperf(TestGeneric):
             self.duration = 60
 
         # same for client and server
-        self._install_iperf()
+        installed = self.get_opt("install_dir")
+        if installed is None:
+            self._temp_dir = (exec_cmd("mktemp -d")[0]).strip()
+            self._install_iperf()
+        else:
+            self._temp_dir = installed
 
         role = self.get_mopt("role")
         cmd = self._compose_iperf_cmd(role)
