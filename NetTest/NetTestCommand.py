@@ -105,7 +105,11 @@ class NetTestCommandExec(NetTestCommandGeneric):
             exec_cmd(self._command["value"])
             self.set_pass()
         except ExecCmdFail:
-            self.set_fail("Command failed to execute")
+            if "bg_id" in self._command:
+                logging.info("Command probably intentionally killed. Passing.")
+                self.set_pass()
+            else:
+                self.set_fail("Command failed to execute")
 
 class BgProcessException(Exception):
     """Base class for client errors."""
