@@ -13,7 +13,6 @@ from Common.ShellProcess import ShellProcess
 import time
 
 class TestIperf(TestGeneric):
-
     def _install_iperf(self):
         # by default dies on failure
         logging.info("trace: _install_iperf")
@@ -43,18 +42,25 @@ class TestIperf(TestGeneric):
 
     def run_server(self, cmd):
         server = ShellProcess(cmd)
-        time.sleep(float(self.duration))
-        server.read_nonblocking()
-        server.kill()
+
+        if not self._keep_server_running:
+            time.sleep(float(self.duration))
+            server.read_nonblocking()
+            server.kill()
+        else:
+            server.wait()
 
     def run(self):
+        self._keep_server_running = True
         self._harness = "iperf-2.0.5"
         self._harness_archive = self._harness + ".tar.gz"
         self._harness_url = "http://sourceforge.net/projects/iperf/files/%s/download" % self._harness_archive
 
         self.duration = self.get_opt("duration")
         if self.duration is None:
-            self.duration = 60
+            self.duration = 60    # for client purposes
+        else:
+            self._keep_server_running = False    # for server purposes
 
         # same for client and server
         installed = self.get_opt("install_dir")
