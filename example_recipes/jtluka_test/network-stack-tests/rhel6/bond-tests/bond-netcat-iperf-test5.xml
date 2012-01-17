@@ -1,0 +1,97 @@
+<nettestrecipe>
+
+    <machines>
+        <machine id="1">
+            <netmachineconfig source="../rhel62-guest1.xml"/>
+            <netconfig>
+                <netdevice id="1" phys_id="1" type="eth"/>
+                <netdevice id="2" phys_id="2" type="eth"/>
+                <netdevice id="3" type="bond">
+                    <options>
+                        <option name="mode" value="5" />
+                        <option name="miimon" value="100" />
+                    </options>
+                    <slaves>
+                        <slave id="1"/>
+                        <slave id="2"/>
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.100.2/24" />
+                    </addresses>
+                </netdevice>
+            </netconfig>
+        </machine>
+
+        <machine id="2">
+            <netmachineconfig source="../rhel62-guest2.xml"/>
+            <netconfig>
+                <netdevice id="1" phys_id="1" type="eth"/>
+                <netdevice id="2" phys_id="2" type="eth"/>
+                <netdevice id="3" type="bond">
+                    <options>
+                        <option name="mode" value="5" />
+                        <option name="miimon" value="100" />
+                    </options>
+                    <slaves>
+                        <slave id="1"/>
+                        <slave id="2"/>
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.100.3/24" />
+                    </addresses>
+                </netdevice>
+            </netconfig>
+        </machine>
+    </machines>
+
+
+    <command_sequence>
+
+<!-- just a ping check ... -->
+
+        <command machine_id="1" type="test" value="IcmpPing">
+            <options>
+                <option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][3]['addresses'][0]" />
+                <option name="count" value="3"/>
+            </options>
+        </command>
+
+<!-- start iperf tests ... -->
+
+        <command machine_id="2" type="test" value="Iperf" bg_id="1">
+            <options>
+                <option name="role" value="server" />
+                <option name="install_dir" value="/root" />
+                <option name="bind" type="recipe_eval" value="['machines'][2]['netconfig'][3]['addresses'][0]" />
+            </options>
+        </command>
+
+        <command type="exec" value="sleep 3" />
+
+        <command machine_id="1" type="test" value="Iperf" bg_id="2">
+            <options>
+                <option name="role" value="client" />
+                <option name="install_dir" value="/root" />
+                <option name="iperf_server" type="recipe_eval" value="['machines'][2]['netconfig'][3]['addresses'][0]" />
+            </options>
+        </command>
+
+<!-- start a TCP stream in opposite direction -->
+
+        <command type="exec" machine_id="1" value="nc -l 1234" bg_id="3" />
+        <command type="exec" value="sleep 1" />
+
+        <command machine_id="2" type="test" value="NetCat" bg_id="4">
+            <option name="addr" type="recipe_eval" value="['machines'][1]['netconfig'][3]['addresses'][0]"/>
+            <option name="port" value="1234" />
+        </command>
+
+        <command type="exec" value="sleep 60" />
+
+        <command type="kill" machine_id="1" value="2" />
+        <command type="kill" machine_id="2" value="1" />
+        <command type="kill" machine_id="1" value="3" />
+        <command type="kill" machine_id="2" value="4" />
+        
+    </command_sequence>
+</nettestrecipe>
