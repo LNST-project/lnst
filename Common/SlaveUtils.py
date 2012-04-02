@@ -37,6 +37,6 @@ def prepare_client_session(host, port, login, passwd=None, command=None,
 
     if prompt is None:
         prompt = "Started"
-    command = "/%s/%s/%s" % (install_path, test_dir, command)
+    command = "cd /%s/%s/ && ./%s" % (install_path, test_dir, command)
     return wait_for_login(host, port, login, passwd, prompt,
                           command=command, timeout=10)
