@@ -142,7 +142,8 @@ def _remote_login(session, username, password, prompt, timeout=10):
                         msg = "Got username prompt after password prompt"
                     raise LoginAuthenticationError(msg, text)
             elif match == 3:  # "Connection closed"
-                raise LoginError("Client said 'connection closed'", text)
+                logging.log(logging.INFO, "Remote command execution successful")
+                break
             elif match == 4:  # "Connection refused"
                 raise LoginError("Client said 'connection refused'", text)
             elif match == 5:  # "Please wait"
@@ -183,7 +184,7 @@ def remote_login(host, port, username, password, prompt, linesep="\n",
         command = ""
     else:
         command = "-C '%s'" % (command)
-    cmd = ("ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o UserKnownHostsFile=/dev/null "
+    cmd = ("ssh -t -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o UserKnownHostsFile=/dev/null "
            "-p %s %s@%s %s" % #-o PreferredAuthentications=password
            (port, username, host, command))
 
