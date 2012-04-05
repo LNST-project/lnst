@@ -1,0 +1,38 @@
+<!-- Example test scenario using multicast test tools -->
+<nettestrecipe>
+    <machines>
+        <machine id="1">
+            <netmachineconfig>
+                <info hostname="10.34.1.120" rootpass="redhat" />
+                <netdevice id="1" type="eth" phys_id="1" hwaddr="52:54:00:2E:D5:A8"/>
+                <netdevice id="2" type="eth" phys_id="2" hwaddr="52:54:00:90:23:0B"/>
+            </netmachineconfig>
+            <netconfig>
+	            <netdevice id="1" type="eth" phys_id="1">
+                    <addresses>
+                        <address value="192.168.122.237/24" />
+                    </addresses>
+                </netdevice>
+	            <netdevice id="2" type="eth" phys_id="2" />
+            </netconfig>
+        </machine>
+        <machine id="2">
+            <netmachineconfig>
+                <info hostname="10.34.1.171" rootpass="redhat" />
+                <netdevice id="1" type="eth" phys_id="1" hwaddr="52:54:00:12:DF:5A"/>
+            </netmachineconfig>
+            <netconfig>
+	            <netdevice id="1" type="eth" phys_id="1">
+                    <addresses>
+                        <address value="192.168.122.179/24" />
+                    </addresses>
+                </netdevice>
+            </netconfig>
+        </machine>
+    </machines>
+
+    <command_sequence source="cmd_sequences/multicast/if.xml" />
+    <command_sequence source="cmd_sequences/multicast/ttl.xml" />
+    <command_sequence source="cmd_sequences/multicast/loop.xml" />
+    <command_sequence source="cmd_sequences/multicast/simple.xml" />
+</nettestrecipe>
