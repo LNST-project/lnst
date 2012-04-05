@@ -1,0 +1,77 @@
+<!-- Offline IP_MULTICAST_IF test -->
+<!-- Requires: 2 hosts
+   -    [1] with one interface
+   -    [2] with one interface
+   - -->
+
+<command_sequence>
+    <!-- IP_MULTICAST_IF sockopt conformance test -->
+    <command type="test" value="Multicast" machine_id="1" timeout="30">
+        <options>
+            <option name="setup" value="sockopt_if" />
+
+            <!-- This condition doesn't pass yet because of a
+                 bug in the syscal. #803202 on RedHat Bugzilla -->
+            <!-- <option name="condition" value="status == 'pass'" /> -->
+        </options>
+    </command>
+
+    <!-- IP_MULTICAST_IF correct interfaces set -->
+    <command type="exec" machine_id="1" value="sleep 1" />
+    <command type="exec" machine_id="2" value="sleep 1" />
+
+    <command type="test" value="Multicast" machine_id="1" timeout="30" bg_id="1">
+        <options>
+            <option name="setup" value="send_simple" />
+            <option name="address" value="238.0.0.1" />
+            <option name="port" value="1337" />
+            <option name="duration" value="10" />
+            <option name="delay" value="0.1" />
+            <option name="ttl" value="0" />
+            <option type="recipe_eval" name="interface" value="['machines'][1]['netconfig'][1]['addresses'][0]" />
+        </options>
+    </command>
+
+    <command type="test" value="Multicast" machine_id="2" timeout="30">
+        <options>
+            <option name="setup" value="recv_simple" />
+            <option name="address" value="238.0.0.1" />
+            <option name="port" value="1337" />
+            <option name="duration" value="10" />
+            <option type="recipe_eval" name="interface" value="['machines'][2]['netconfig'][1]['addresses'][0]" />
+
+            <option name="condition" value="packets_received > 0" />
+        </options>
+    </command>
+
+    <command type="wait" machine_id="1" value="1" />
+
+    <!-- IP_MULTICAST_IF incorrect interfaces set -->
+    <command type="exec" machine_id="1" value="sleep 1" />
+
+    <command type="test" value="Multicast" machine_id="1" timeout="30" bg_id="1">
+        <options>
+            <option name="setup" value="send_simple" />
+            <option name="address" value="238.0.0.1" />
+            <option name="port" value="1337" />
+            <option name="duration" value="10" />
+            <option name="delay" value="0.1" />
+            <option name="ttl" value="1" />
+            <option type="recipe_eval" name="interface" value="['machines'][1]['netconfig'][1]['addresses'][0]" />
+        </options>
+    </command>
+
+    <command type="test" value="Multicast" machine_id="2" timeout="30">
+        <options>
+            <option name="setup" value="recv_simple" />
+            <option name="address" value="238.0.0.1" />
+            <option name="port" value="1337" />
+            <option name="duration" value="10" />
+            <option name="interface" value="127.0.0.1" />
+
+            <option name="condition" value="packets_received == 0" />
+        </options>
+    </command>
+
+    <command type="wait" machine_id="1" value="1" />
+</command_sequence>
