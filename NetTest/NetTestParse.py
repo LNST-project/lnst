@@ -25,6 +25,9 @@ def load_file(filename):
 class WrongCommandSequenceException(Exception):
     pass
 
+class WrongIncludeSource(Exception):
+    pass
+
 class NetTestParse:
     def __init__(self, recipe_path):
         recipe_path = os.path.expanduser(recipe_path)
@@ -37,22 +40,12 @@ class NetTestParse:
 
     def _parse_machine(self, dom_machine):
         machine = {}
+
         dom_netmachineconfig = dom_machine.getElementsByTagName("netmachineconfig")[0]
+        netmachineconfig_xml = dom_netmachineconfig.toxml()
+
         dom_netconfig = dom_machine.getElementsByTagName("netconfig")[0]
-
-        source = str(dom_netmachineconfig.getAttribute("source"))
-        if source:
-            file_path = self._get_referenced_xml_path(source)
-            netmachineconfig_xml = load_file(file_path)
-        else:
-            netmachineconfig_xml = dom_netmachineconfig.toxml()
-
-        source = str(dom_netconfig.getAttribute("source"))
-        if source:
-            file_path = self._get_referenced_xml_path(source)
-            netconfig_xml = load_file(file_path)
-        else:
-            netconfig_xml = dom_netconfig.toxml()
+        netconfig_xml = dom_netconfig.toxml()
 
         ncparse = NetConfigParse(netmachineconfig_xml)
         machine["info"] = ncparse.get_machine_info()
@@ -72,6 +65,8 @@ class NetTestParse:
     def parse_recipe(self):
         recipe = {}
         dom = parseString(self._recipe_xml_string)
+
+        self._load_included_parts(dom)
         dom_nettestrecipe = dom.getElementsByTagName("nettestrecipe")[0]
 
         dom_machines_grp = dom_nettestrecipe.getElementsByTagName("machines")
@@ -85,6 +80,30 @@ class NetTestParse:
 
     def get_recipe(self):
         return self._recipe
+
+    def _load_included_parts(self, dom_node):
+        if dom_node.nodeType == dom_node.ELEMENT_NODE:
+            source = str(dom_node.getAttribute("source"))
+            if source:
+                file_path = self._get_referenced_xml_path(source)
+                xml_data = load_file(file_path)
+
+                dom = parseString(xml_data)
+                loaded_node = None
+                try:
+                    loaded_node = dom.getElementsByTagName(dom_node.nodeName)[0]
+                except Exception:
+                    err = ("No '%s' node present in included file '%s'."
+                                        % (dom_node.nodeName, file_path))
+                    raise WrongIncludeSource(err)
+
+                parent = dom_node.parentNode
+                parent.replaceChild(loaded_node, dom_node)
+                self._load_included_parts(loaded_node)
+                return
+
+        for child in dom_node.childNodes:
+            self._load_included_parts(child)
 
     def _parse_command_option(self, dom_option, options):
         logging.debug("Parsing command option")
@@ -193,18 +212,8 @@ class NetTestParse:
     def parse_recipe_command_sequence(self):
         sequence = []
         dom_sequences = self._dom_nettestrecipe.getElementsByTagName("command_sequence")
-        for dom_sequence in dom_sequences:
-            source = str(dom_sequence.getAttribute("source"))
-            if source:
-                """
-                If source attribute is present, load sequence command
-                from referenced xml file.
-                """
-                file_path = self._get_referenced_xml_path(source)
-                xml_data = load_file(file_path)
-                dom = parseString(xml_data)
-                dom_sequence = dom.getElementsByTagName("command_sequence")[0]
 
+        for dom_sequence in dom_sequences:
             dom_commands = dom_sequence.getElementsByTagName("command")
             for dom_command in dom_commands:
                 sequence.append(self._parse_command(dom_command))
