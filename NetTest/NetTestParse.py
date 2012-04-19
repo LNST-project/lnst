@@ -13,6 +13,7 @@ jpirko@redhat.com (Jiri Pirko)
 from xml.dom.minidom import parseString
 import logging
 import os
+import re
 from NetConfig.NetConfigParse import NetConfigParse
 from NetTest.NetTestCommand import str_command
 
@@ -62,6 +63,16 @@ class NetTestParse:
                 machines[machine_id] = self._parse_machine(dom_machine)
         return machines
 
+    def _parse_definitions(self, dom_definitions_grp):
+        definitions = {}
+        for dom_definitions_item in dom_definitions_grp:
+            dom_aliases = dom_definitions_item.getElementsByTagName("alias")
+            for dom_alias in dom_aliases:
+                alias_name = str(dom_alias.getAttribute("name"))
+                alias_value = str(dom_alias.getAttribute("value"))
+                definitions[alias_name] = alias_value
+        return definitions
+
     def parse_recipe(self):
         recipe = {}
         dom = parseString(self._recipe_xml_string)
@@ -69,10 +80,18 @@ class NetTestParse:
         self._load_included_parts(dom)
         dom_nettestrecipe = dom.getElementsByTagName("nettestrecipe")[0]
 
+        dom_definitions_grp = dom_nettestrecipe.getElementsByTagName("define")
+        self._definitions = self._parse_definitions(dom_definitions_grp)
+        for define_tag in dom_definitions_grp:
+            parent = define_tag.parentNode
+            parent.removeChild(define_tag)
+
         dom_machines_grp = dom_nettestrecipe.getElementsByTagName("machines")
+        self._expand_group(dom_machines_grp)
         recipe["machines"] = self._parse_machines(dom_machines_grp)
 
         dom_switches_grp = dom_nettestrecipe.getElementsByTagName("switches")
+        self._expand_group(dom_switches_grp)
         recipe["switches"] = self._parse_machines(dom_switches_grp)
 
         self._recipe = recipe
@@ -105,6 +124,15 @@ class NetTestParse:
         for child in dom_node.childNodes:
             self._load_included_parts(child)
 
+    def _recipe_eval(self, eval_data):
+        try:
+            return str(eval("self._recipe%s" % eval_data))
+        except (KeyError, IndexError):
+            print self._recipe
+            logging.error("Wrong recipe_eval value \"%s\" passed"
+                                      % eval_data)
+            raise Exception
+
     def _parse_command_option(self, dom_option, options):
         logging.debug("Parsing command option")
         option_type = str(dom_option.getAttribute("type"))
@@ -115,12 +143,7 @@ class NetTestParse:
         elif option_type == "recipe_eval":
             name = str(dom_option.getAttribute("name"))
             orig_value = str(dom_option.getAttribute("value"))
-            try:
-                value = str(eval("self._recipe%s" % orig_value))
-            except (KeyError, IndexError):
-                logging.error("Wrong recipe_eval value \"%s\" passed"
-                                    % orig_value)
-                raise Exception
+            value = str(self._recipe_eval(orig_value))
         else:
             logging.error("Unknown option type \"%s\"" % option_type)
             raise Exception("Unknown option type")
@@ -212,6 +235,7 @@ class NetTestParse:
     def parse_recipe_command_sequence(self):
         sequence = []
         dom_sequences = self._dom_nettestrecipe.getElementsByTagName("command_sequence")
+        self._expand_group(dom_sequences, recipe_eval=True)
 
         for dom_sequence in dom_sequences:
             dom_commands = dom_sequence.getElementsByTagName("command")
@@ -220,3 +244,54 @@ class NetTestParse:
 
         self._check_sequence(sequence)
         self._recipe["sequence"] = sequence
+
+    def _expand(self, node, recipe_eval=False):
+        if node.nodeType == node.ELEMENT_NODE:
+            i = 0
+            num_attributes = node.attributes.length
+            while(i < num_attributes):
+                attr = node.attributes.item(i)
+                attr.value = self._expand_string(attr.value, recipe_eval)
+                i += 1
+        elif node.nodeType == node.TEXT_NODE:
+            node.data = self._expand_string(node.data, recipe_eval)
+
+        for child in node.childNodes:
+            self._expand(child, recipe_eval)
+
+    def _expand_group(self, group, recipe_eval=False):
+        for node in group:
+            self._expand(node, recipe_eval)
+
+    def _expand_string(self, string, recipe_eval):
+        eval_re = "\{\$recipe([^\{\}]+)\}"
+        alias_re = "\{\$([^\{\}]*)\}"
+        while True:
+            eval_match = re.search(eval_re, string)
+            if eval_match:
+                eval_string = eval_match.group(0)
+                eval_data = eval_match.group(1)
+                if recipe_eval:
+                    string = string.replace(eval_string,
+                                        self._recipe_eval(eval_data))
+                    continue
+                else:
+                    err = ("Accessing $recipe allowed only from command sequence: %s"
+                                                        % string)
+                    raise KeyError(err)
+            alias_match = re.search(alias_re, string)
+            if alias_match:
+                alias = alias_match.group(0)
+                alias_name = alias_match.group(1)
+                try:
+                    string = string.replace(alias,
+                                self._definitions[alias_name])
+                    continue
+                except KeyError, err:
+                    raise Exception("Alias '%s' doesn't exist!" % str(err))
+
+
+            if not (eval_match and alias_match):
+                break
+
+        return string
