@@ -57,6 +57,7 @@ class TestPktgenTx(TestGeneric):
         addr = self.get_mopt("addr", opt_type="addr")
         hwaddr = self.get_mopt("hwaddr")
         vlan_tci = self.get_opt("vlan_tci", default=0)
+        skb_clone = self.get_opt("skb_clone", default=100000)
 
         exec_cmd("modprobe pktgen")
 
@@ -67,7 +68,7 @@ class TestPktgenTx(TestGeneric):
             for dev_name in dev_names:
                 pgwrkr.add_device(dev_name)
                 pg = Pktgen("/proc/net/pktgen/%s" % dev_name)
-                pg.set("clone_skb 100000")
+                pg.set("clone_skb %s" % skb_clone)
                 pg.set("pkt_size 60")
                 pg.set("dst %s" % addr)
                 pg.set("dst_mac %s" % hwaddr)
