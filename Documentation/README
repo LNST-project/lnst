@@ -1,0 +1,24 @@
+This directory contains useful documentation to help you understand how 
+Linux Network Stack Test (LNST) works and show you some hints how to start 
+using it.
+
+Description of the files in Documentation directory follows.
+
+
+LNSTIntro.html
+--------------
+
+General introduction to the LNST including all concepts required for 
+understanding the framework.
+
+IMPORTANT NOTE:
+
+The document contains few interesting pictures that were stored in gzipped XML 
+format and conversion to png is needed before viewing them. The pictures were 
+created with Dia (program for drawing structured diagrams [1]). We have 
+provided you a script named "lnst_intro_images.sh" to help you with the 
+conversion. First install the dia package for your distribution and then 
+just run the script and you'll be ready to read the document with all the 
+fancy pictures.
+
+[1] http://live.gnome.org/Dia
