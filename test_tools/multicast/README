@@ -1,0 +1,120 @@
+Multicast Testing Tools
+=======================
+
+This is a set of test setups and scripts for multicast testing in Linux kernel.
+There are generaly four types of ready-to-use testing tools included in this
+package and also a library you can use to build your own setup for testing.
+
+
+Structure
+---------
+
+The structure is following:
+
+*   **client/**  - contains client setups (generaly programs that send data)
+*   **offline/** - here goes all tests, that are performed offline
+*   **scripts/** - helper scripts in bash/python
+*   **server/**  - setups of servers (programs that receive)
+*   *igmp\_utils.h* - sending IGMP packets over IPPROTO\_RAW socket
+*   *multicast\_utils.h* - sending/receiving IPv4 multicast
+*   *parameters.h* - parsing options
+*   *sockopt\_utils.h* - offline conformance testing of socket options
+
+
+Setups
+------
+
+### Parameters ###
+
+Execution of each test setup can be controled via a set of options. These
+parameters are passed to the setup through CLI arguments. There are long and
+short version for each option.
+
+
+### Test Results ###
+
+Each test setup returns results in the following format for easy parsing:
+
+    name="value"
+    packets_transfered=5
+
+Double-quotes around the value are optional.
+
+
+### Clients ###
+
+*   **recv\_block\_source** - Join multicast group for some time, start blocking
+    the sender with `IP_BLOCK_SOURCE`. Finaly unblock the source using
+    `IP_UNBLOCK_SOURCE`.
+
+    Returns `packets_received` - number of packets, that correctly arrived and
+    `packets_received_while_blocking` - number of packets received while the
+    source was blocked (which should always be zero).
+
+*   **recv\_membership** - Join multicast group and leave in the middle of
+    ongoing communication.
+
+    Returns `packets_received` -- number of correctly received packets and
+    `packets_received_after_drop` -- number of packets received after leaving
+    the multicast group.
+
+*   **recv\_simple** - Simple setup that joins multicast group and listens
+    for data.
+
+    Returns `packets_received`.
+
+*   **recv\_source\_membership** - Same as the **recv\_membership** setup, only
+    for source specific multicast.
+
+
+### Servers ###
+
+*   **send\_simple** - This setup allows you to emitt multicast packets
+    with specific parameters to some multicast group. Run with -h option
+    in order to find out all controlalble parameters of this setup.
+
+    Returns `packets_sent` - number of packets passed to network.
+
+*   **send\_igmp\_query** - This setup is able to send IP datagrams with IGMP
+    queries of all versions. It uses RAW sockets so it must be run with
+    super-user priviledges.
+
+    Returns nothing.
+
+
+### Offline ###
+
+*   **sockopt\_block\_source** - `IP_BLOCK_SOURCE` and `IP_UNBLOCK_SOURCE`
+    offline conformance tests
+
+    Returns list of passed tests.
+
+*   **sockopt\_if** - `IP_MULTICAST_IF` conformance test
+
+    Returns list of passed tests.
+
+*   **sockopt\_loop** - `IP_MULTICAST_LOOP` conformance test
+
+    Returns list of passed tests.
+
+*   **sockopt\_membership** - `IP_ADD_MEMBERSHIP` and `IP_DROP_MEMBERSHIP`
+    conformance test
+
+    Returns list of passed tests.
+
+*   **sockopt\_source\_membership** - `IP_ADD_SOURCE_MEMBERSHIP` and
+    `IP_DROP_SOURCE_MEMBERSHIP` conformance test
+
+    Returns list of passed tests.
+
+*   **sockopt\_ttl** - `IP_MULTICAST_TTL` conformance test
+
+    Returns list of passed tests.
+
+
+Author
+------
+
+Radek Pazdera ([rpazdera@redhat.com](mailto:rpazdera@redhat.com))
+
+This was developed as part of LNST framework.
