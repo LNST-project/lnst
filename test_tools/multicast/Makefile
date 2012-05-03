@@ -3,8 +3,8 @@ TOOLS_DIR=.
 CFLAGS=-Wall -Wextra -I$(TOOLS_DIR)
 
 SENDERS=send_simple
-RECEIVERS=recv_simple
-OFFLINE=sockopt_loop sockopt_ttl sockopt_if
+RECEIVERS=recv_simple recv_membership
+OFFLINE=sockopt_loop sockopt_ttl sockopt_if sockopt_membership
 
 all: $(SENDERS) $(RECEIVERS) $(OFFLINE)
 

@@ -1,0 +1,48 @@
+<!-- IP_ADD/DROP_MEMBERSHIP test -->
+<!-- Requires: 2 hosts
+   -    [1] with one interface
+   -    [2] with one interface
+   - -->
+
+<command_sequence>
+    <!-- IP_ADD/DROP_MEMBERSHIP sockopt conformance test -->
+    <command type="test" value="Multicast" machine_id="1" timeout="30">
+        <options>
+            <option name="setup" value="sockopt_membership" />
+            <option name="condition" value="status == 'pass'" />
+        </options>
+    </command>
+
+    <!-- This simple test case verifies that if one side leaves multicast group
+       - in the middle of ongoing communication, no further packets are delivered
+       - to the process. -->
+    <command type="exec" machine_id="1" value="sleep 1" />
+    <command type="exec" machine_id="2" value="sleep 1" />
+
+    <command type="test" value="Multicast" machine_id="1" timeout="30" bg_id="1">
+        <options>
+            <option name="setup" value="send_simple" />
+            <option name="address" value="238.0.0.1" />
+            <option name="port" value="1337" />
+            <option name="duration" value="10" />
+            <option name="delay" value="0.1" />
+            <option name="ttl" value="1" />
+            <option type="recipe_eval" name="interface" value="['machines'][1]['netconfig'][1]['addresses'][0]" />
+        </options>
+    </command>
+
+    <command type="test" value="Multicast" machine_id="2" timeout="30">
+        <options>
+            <option name="setup" value="recv_membership" />
+            <option name="address" value="238.0.0.1" />
+            <option name="port" value="1337" />
+            <option name="duration" value="10" />
+            <option type="recipe_eval" name="interface" value="['machines'][2]['netconfig'][1]['addresses'][0]" />
+
+            <option name="condition" value="packets_received > 0" />
+            <option name="condition" value="packets_received_after_drop == 0" />
+        </options>
+    </command>
+
+    <command type="wait" machine_id="1" value="1" />
+</command_sequence>
