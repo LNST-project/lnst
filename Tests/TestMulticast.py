@@ -53,7 +53,7 @@ class TestMulticast(TestGeneric):
         opts["delay"] = self.get_opt("delay")
 
         # receiver-specific
-        opts["source"] = self._remove_mask(self.get_opt("source"))
+        opts["source_address"] = self._remove_mask(self.get_opt("source"))
 
         cmd  = "./{0} ".format(setup)
 
