@@ -251,10 +251,10 @@ class NetTestParse:
             num_attributes = node.attributes.length
             while(i < num_attributes):
                 attr = node.attributes.item(i)
-                attr.value = self._expand_string(attr.value, recipe_eval)
+                attr.value = self._expand_string(str(attr.value), recipe_eval)
                 i += 1
         elif node.nodeType == node.TEXT_NODE:
-            node.data = self._expand_string(node.data, recipe_eval)
+            node.data = self._expand_string(str(node.data), recipe_eval)
 
         for child in node.childNodes:
             self._expand(child, recipe_eval)
