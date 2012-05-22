@@ -128,10 +128,26 @@ class NetTestParse:
         try:
             return str(eval("self._recipe%s" % eval_data))
         except (KeyError, IndexError):
-            print self._recipe
             logging.error("Wrong recipe_eval value \"%s\" passed"
                                       % eval_data)
             raise Exception
+
+    @classmethod
+    def _int_it(cls, val):
+        try:
+            num = int(val)
+        except ValueError:
+            num = 0
+        return num
+
+    @classmethod
+    def _bool_it(cls, val):
+        if isinstance(val, str):
+            if re.match("^\s*(?i)(true)", val):
+                return True
+            elif re.match("^\s*(?i)(false)", val):
+                return False
+        return True if cls._int_it(val) else False
 
     def _parse_command_option(self, dom_option, options):
         logging.debug("Parsing command option")
@@ -185,6 +201,17 @@ class NetTestParse:
             command["desc"] = str(tmp)
         logging.debug("Parsed command: [%s]" % str_command(command))
 
+        if cmd_type == "system_config":
+            tmp = dom_command.getAttribute("option")
+            if tmp:
+                command["option"] = str(tmp)
+
+            tmp = dom_command.getAttribute("persistent")
+            if tmp:
+                command["persistent"] = self._bool_it(tmp)
+            else:
+                command["persistent"] = False
+
         dom_options_grp = dom_command.getElementsByTagName("options")
         options = {}
         for dom_options_item in dom_options_grp:
@@ -233,17 +260,18 @@ class NetTestParse:
             raise WrongCommandSequenceException
 
     def parse_recipe_command_sequence(self):
-        sequence = []
         dom_sequences = self._dom_nettestrecipe.getElementsByTagName("command_sequence")
         self._expand_group(dom_sequences, recipe_eval=True)
 
+        self._recipe["sequences"] = []
         for dom_sequence in dom_sequences:
+            sequence = []
             dom_commands = dom_sequence.getElementsByTagName("command")
             for dom_command in dom_commands:
                 sequence.append(self._parse_command(dom_command))
 
-        self._check_sequence(sequence)
-        self._recipe["sequence"] = sequence
+            self._check_sequence(sequence)
+            self._recipe["sequences"].append(sequence)
 
     def _expand(self, node, recipe_eval=False):
         if node.nodeType == node.ELEMENT_NODE:

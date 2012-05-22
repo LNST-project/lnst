@@ -111,6 +111,49 @@ class NetTestCommandExec(NetTestCommandGeneric):
             else:
                 self.set_fail("Command failed to execute")
 
+class NetTestCommandSystemConfig(NetTestCommandGeneric):
+    def _retrive_option(self, option):
+        cmd_str = "cat %s" % option
+        (stdout, stderr) = exec_cmd(cmd_str)
+        return stdout.strip()
+
+    def _set_option(self, option, value):
+        cmd_str = "echo \"%s\" >%s" % (value, option)
+        (stdout, stderr) = exec_cmd(cmd_str)
+
+    def run(self):
+        res_data = {}
+
+        # inline version
+        if "option" in self._command:
+            opt = self._command["option"]
+            val = [{"value": self._command["value"]}]
+            self._command["options"] = {opt: val}
+
+        for option, values in self._command["options"].iteritems():
+            new_val = values[0]["value"]
+
+            option_abspath = os.path.abspath(option)
+            if option_abspath[0:5] != "/sys/" and \
+               option_abspath[0:6] != "/proc/":
+                err = "Wrong config option %s. Only /proc or /sys paths are allowed." % option
+                self.set_fail(err)
+                return
+
+            try:
+                prev_val = self._retrive_option(option)
+                self._set_option(option, new_val)
+            except ExecCmdFail:
+                self.set_fail("Unable to set %s config option!" % option)
+                return
+
+            res_data[option] = {"current_val": new_val,
+                                "previous_val": prev_val}
+
+        res = {"passed": True}
+        res["res_data"] = res_data
+        self.set_result(res)
+
 class BgProcessException(Exception):
     """Base class for client errors."""
     def __init__(self, str):
@@ -170,6 +213,8 @@ def get_command_class(command):
         return NetTestCommandIntr(command)
     elif cmd_type == "kill":
         return NetTestCommandKill(command)
+    elif cmd_type == "system_config":
+        return NetTestCommandSystemConfig(command)
     else:
         logging.error("Unknown comamnd type \"%s\"" % cmd_type)
         raise Exception("Unknown command type \"%s\"" % cmd_type)

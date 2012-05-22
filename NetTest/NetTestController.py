@@ -58,6 +58,7 @@ class NetTestController:
                                              "nettestslave.py")
             session.add_kill_handler(self._session_die)
             info["session"] = session
+            info["system_config"] = {}
 
     def _cleanup_slaves(self):
         for machine_id in self._recipe["machines"]:
@@ -163,10 +164,19 @@ class NetTestController:
             if "timeout" in command:
                 logging.debug("Setting socket timeout to default value")
                 socket.setdefaulttimeout(None)
+
+        if command["type"] == "system_config":
+            if cmd_res["passed"]:
+                self._update_system_config(machine_id, cmd_res["res_data"],
+                                                command["persistent"])
+            else:
+                err = "Error occured while setting system configuration (%s)" \
+                                                    % cmd_res["err_msg"]
+                logging.error(err)
+
         return cmd_res
 
-    def _run_command_sequence(self):
-        sequence = self._recipe["sequence"]
+    def _run_command_sequence(self, sequence):
         for command in sequence:
             logging.info("Executing command: [%s]" % str_command(command))
             cmd_res = self._run_command(command)
@@ -198,12 +208,50 @@ class NetTestController:
 
     def run_recipe(self):
         self._prepare()
-        res = self._run_command_sequence()
+        for sequence in self._recipe["sequences"]:
+            res = self._run_command_sequence(sequence)
+
+            for machine_id in self._recipe["machines"]:
+                self._restore_system_config(machine_id)
+
+            # stop when sequence fails
+            if not res:
+                break
+
         self._cleanup()
         return res
 
     def eval_expression_recipe(self, expr):
         self._prepare()
         value = eval("self._recipe%s" % expr)
-        print "Evaluated expression \"%s\": \"%s\"" % (expr, value)
         return True
+
+    def _update_system_config(self, machine_id, res_data, persistent=False):
+        info = self._get_machineinfo(machine_id)
+        system_config = info["system_config"]
+        for option, values in res_data.iteritems():
+            if persistent:
+                if option in system_config:
+                    del system_config[option]
+            else:
+                if not option in system_config:
+                    system_config[option] = {"initial_val": values["previous_val"]}
+                system_config[option]["current_val"] = values["current_val"]
+
+
+    def _restore_system_config(self, machine_id):
+        info = self._get_machineinfo(machine_id)
+        system_config = info["system_config"]
+
+        if len(system_config) > 0:
+            command = {}
+            command["machine_id"] = machine_id
+            command["type"] = "system_config"
+            command["value"] = ""
+            command["options"] = {}
+            command["persistent"] = True
+            for option, values in system_config.iteritems():
+                command["options"][option] = [{"value": values["initial_val"]}]
+
+            self._run_command_sequence([command])
+            info["system_config"] = {}
