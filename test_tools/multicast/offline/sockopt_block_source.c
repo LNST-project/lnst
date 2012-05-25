@@ -27,19 +27,17 @@ void test_block_source()
 {
 	struct ip_mreq_source mreq;
 
-	mreq.imr_multiaddr.s_addr  = 0x0100007f;
-	mreq.imr_interface.s_addr  = 0x0100007f;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_BLOCK_SOURCE Bad multicast address",
 			IP_BLOCK_SOURCE, &mreq, sizeof(mreq), EINVAL);
 
-
-	mreq.imr_multiaddr.s_addr  = 0xdeadbeef;
-	mreq.imr_interface.s_addr  = 0xffffffff;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("255.255.255.255");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_BLOCK_SOURCE Bad interface",
 			IP_BLOCK_SOURCE, &mreq, sizeof(mreq), ENODEV);
-
 
 	test_setsockopt_error("IP_BLOCK_SOURCE Bad optlen",
 			IP_BLOCK_SOURCE, &mreq, 2, EINVAL);
@@ -49,21 +47,21 @@ void test_unblock_source()
 {
 	struct ip_mreq_source mreq;
 
-	mreq.imr_multiaddr.s_addr  = 0x0100007f;
-	mreq.imr_interface.s_addr  = 0x0100007f;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_UNBLOCK_SOURCE Bad multicast address",
 			IP_UNBLOCK_SOURCE, &mreq, sizeof(mreq), EINVAL);
 
-	mreq.imr_multiaddr.s_addr  = 0xdeadbeef;
-	mreq.imr_interface.s_addr  = 0x0100007f;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_UNBLOCK_SOURCE Not a member",
 			IP_UNBLOCK_SOURCE, &mreq, sizeof(mreq), EINVAL);
 
-	mreq.imr_multiaddr.s_addr  = 0xdeadbeef;
-	mreq.imr_interface.s_addr  = 0xffffffff;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("255.255.255.255");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_UNBLOCK_SOURCE No device found",
 			IP_UNBLOCK_SOURCE, &mreq, sizeof(mreq), ENODEV);
 

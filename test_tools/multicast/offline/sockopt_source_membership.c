@@ -29,16 +29,16 @@ void test_add_source_membership()
 {
 	struct ip_mreq_source mreq;
 
-	mreq.imr_multiaddr.s_addr  = 0x0100007f;
-	mreq.imr_interface.s_addr  = 0x0100007f;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_ADD_SOURCE_MEMBERSHIP Bad multicast address",
 			IP_ADD_SOURCE_MEMBERSHIP, &mreq, sizeof(mreq), EINVAL);
 
 
-	mreq.imr_multiaddr.s_addr  = 0xdeadbeef;
-	mreq.imr_interface.s_addr  = 0xffffffff;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("255.255.255.255");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_ADD_SOURCE_MEMBERSHIP Bad interface",
 			IP_ADD_SOURCE_MEMBERSHIP, &mreq, sizeof(mreq), ENODEV);
 
@@ -51,21 +51,21 @@ void test_drop_source_membership()
 {
 	struct ip_mreq_source mreq;
 
-	mreq.imr_multiaddr.s_addr  = 0x0100007f;
-	mreq.imr_interface.s_addr  = 0x0100007f;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_DROP_SOURCE_MEMBERSHIP Bad multicast address",
 			IP_DROP_SOURCE_MEMBERSHIP, &mreq, sizeof(mreq), EINVAL);
 
-	mreq.imr_multiaddr.s_addr  = 0xdeadbeef;
-	mreq.imr_interface.s_addr  = 0x0100007f;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_DROP_SOURCE_MEMBERSHIP Not a member",
 			IP_DROP_SOURCE_MEMBERSHIP, &mreq, sizeof(mreq), EINVAL);
 
-	mreq.imr_multiaddr.s_addr  = 0xdeadbeef;
-	mreq.imr_interface.s_addr  = 0xffffffff;
-	mreq.imr_sourceaddr.s_addr = 0x12345678;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("255.255.255.255");
+	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.1");
 	test_setsockopt_error("IP_DROP_SOURCE_MEMBERSHIP No device found",
 			IP_DROP_SOURCE_MEMBERSHIP, &mreq, sizeof(mreq), ENODEV);
 

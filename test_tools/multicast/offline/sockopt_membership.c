@@ -26,7 +26,7 @@
 void test_add_membership()
 {
 	struct ip_mreq mreq;
-	mreq.imr_multiaddr.s_addr = 0x0100007f;
+	mreq.imr_multiaddr.s_addr = inet_addr("127.0.0.1");
 	struct ip_mreqn mreqn;
 
 	test_setsockopt_error("IP_ADD_MEMBERSHIP Bad multicast address",
@@ -35,8 +35,8 @@ void test_add_membership()
 	test_setsockopt_error("IP_ADD_MEMBERSHIP Bad optlen",
 			IP_ADD_MEMBERSHIP, &mreq, 5, EINVAL);
 
-	mreqn.imr_multiaddr.s_addr = 0xdeadbeef;
-	mreqn.imr_address.s_addr = 0xffffffff;
+	mreqn.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreqn.imr_address.s_addr = inet_addr("255.255.255.255");
 	mreqn.imr_ifindex = 500;
 	test_setsockopt_error("IP_ADD_MEMBERSHIP No device found",
 			IP_ADD_MEMBERSHIP, &mreqn, sizeof(mreqn), ENODEV);
@@ -45,8 +45,8 @@ void test_add_membership()
 void test_drop_membership()
 {
 	struct ip_mreq mreq;
-	mreq.imr_multiaddr.s_addr = 0x0100007f;
-	mreq.imr_interface.s_addr = 0x0100007f;
+	mreq.imr_multiaddr.s_addr = inet_addr("127.0.0.1");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
 	struct ip_mreqn mreqn;
 
 	test_setsockopt_error("IP_DROP_MEMBERSHIP Bad optlen",
@@ -54,13 +54,13 @@ void test_drop_membership()
 	test_setsockopt_error("IP_DROP_MEMBERSHIP Bad multicast address",
 			IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq), EADDRNOTAVAIL);
 
-	mreq.imr_multiaddr.s_addr = 0xdeadbeef;
-	mreq.imr_interface.s_addr = 0x0100007f;
+	mreq.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreq.imr_interface.s_addr = inet_addr("127.0.0.1");
 	test_setsockopt_error("IP_DROP_MEMBERSHIP Not a member",
 			IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq), EADDRNOTAVAIL);
 
-	mreqn.imr_multiaddr.s_addr = 0xdeadbeef;
-	mreqn.imr_address.s_addr = 0xffffffff;
+	mreqn.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+	mreqn.imr_address.s_addr = inet_addr("255.255.255.255");
 	mreqn.imr_ifindex = 500;
 	test_setsockopt_error("IP_DROP_MEMBERSHIP No device found",
 			IP_DROP_MEMBERSHIP, &mreqn, sizeof(mreqn), ENODEV);

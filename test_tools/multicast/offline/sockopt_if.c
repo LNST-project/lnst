@@ -32,19 +32,19 @@ void test_if()
 	test_getsockopt("IP_MULTICAST_IF default value",
 				IP_MULTICAST_IF, &address, size);
 
-	inet_pton(AF_INET, "127.0.0.1", &address);
+	address.s_addr = inet_addr("127.0.0.1");
 	test_sockopt_value("IP_MULTICAST_IF set to 127.0.0.1",
 				IP_MULTICAST_IF, &address, size);
 
 	struct ip_mreqn mreqn;
-	mreqn.imr_multiaddr.s_addr = 0xdeadbeef;
+	mreqn.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
 	mreqn.imr_address.s_addr = INADDR_ANY;
 	mreqn.imr_ifindex = 0;
 
 	test_sockopt_value("IP_MULTICAST_IF set to INADDR_ANY",
 				IP_MULTICAST_IF, &mreqn, sizeof(mreqn));
 
-	mreqn.imr_address.s_addr = 0x0100007f;
+	mreqn.imr_address.s_addr = inet_addr("127.0.0.1");
 	test_sockopt_value("IP_MULTICAST_IF set to 127.0.0.1",
 				IP_MULTICAST_IF, &mreqn, sizeof(mreqn));
 
@@ -53,7 +53,7 @@ void test_if()
 	test_setsockopt_error("IP_MULTICAST_IF bad optlen",
 				IP_MULTICAST_IF, &address, 3, EINVAL);
 
-	inet_pton(AF_INET, "238.0.10.0", &address);
+	address.s_addr = inet_addr("238.0.10.0");
 	test_setsockopt_error("IP_MULTICAST_IF address 238.0.10.0",
 					IP_MULTICAST_IF, &address,
 					sizeof(address), EADDRNOTAVAIL);
