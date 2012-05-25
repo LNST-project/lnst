@@ -8,22 +8,21 @@
     <command type="test" value="Multicast" machine_id="1" timeout="30" bg_id="1">
         <options>
             <option name="setup" value="send_simple" />
-            <option name="address" value="238.0.0.1" />
-            <option name="port" value="1337" />
-            <option name="duration" value="10" />
-            <option name="delay" value="0.1" />
-            <option type="recipe_eval" name="interface" value="['machines'][1]['netconfig'][1]['addresses'][0]" />
+            <option name="address" value="{$multicast_group}" />
+            <option name="port" value="{$port}" />
+            <option name="duration" value="{$test_duration}" />
+            <option name="delay" value="{$send_delay}" />
+            <option name="interface" value="{ip(1,1)}" />
         </options>
     </command>
 
     <command type="test" value="Multicast" machine_id="2" timeout="30">
         <options>
             <option name="setup" value="recv_simple" />
-            <option name="address" value="238.0.0.1" />
-            <option name="port" value="1337" />
-            <option name="duration" value="10" />
-            <!-- <option name="interface" value="192.168.122.179" /> -->
-            <option type="recipe_eval" name="interface" value="['machines'][2]['netconfig'][1]['addresses'][0]" />
+            <option name="address" value="{$multicast_group}" />
+            <option name="port" value="{$port}" />
+            <option name="duration" value="{$test_duration}" />
+            <option name="interface" value="{ip(2,1)}" />
 
             <option name="condition" value="packets_received > 0" />
         </options>

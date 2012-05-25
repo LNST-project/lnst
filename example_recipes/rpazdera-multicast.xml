@@ -10,10 +10,14 @@
             <netconfig>
 	            <netdevice id="1" type="eth" phys_id="1">
                     <addresses>
-                        <address value="192.168.122.237/24" />
+                        <address value="192.168.122.225/24" />
                     </addresses>
                 </netdevice>
-	            <netdevice id="2" type="eth" phys_id="2" />
+	            <netdevice id="2" type="eth" phys_id="2">
+                    <addresses>
+                        <address value="192.168.122.239/24" />
+                    </addresses>
+                </netdevice>
             </netconfig>
         </machine>
         <machine id="2">
@@ -24,13 +28,25 @@
             <netconfig>
 	            <netdevice id="1" type="eth" phys_id="1">
                     <addresses>
-                        <address value="192.168.122.179/24" />
+                        <address value="192.168.122.200/24" />
                     </addresses>
                 </netdevice>
             </netconfig>
         </machine>
     </machines>
 
+    <define>
+        <alias name="multicast_group" value="239.1.2.3" />
+        <alias name="port" value="1337" />
+        <alias name="test_duration" value="10" />
+        <alias name="send_delay" value="0.1" />
+        <alias name="nonexistent_ip" value="127.0.0.200" />
+    </define>
+
+    <command_sequence source="cmd_sequences/multicast/max_groups.xml" />
+    <command_sequence source="cmd_sequences/multicast/block_source.xml" />
+    <command_sequence source="cmd_sequences/multicast/source_membership.xml" />
+    <command_sequence source="cmd_sequences/multicast/membership.xml" />
     <command_sequence source="cmd_sequences/multicast/if.xml" />
     <command_sequence source="cmd_sequences/multicast/ttl.xml" />
     <command_sequence source="cmd_sequences/multicast/loop.xml" />

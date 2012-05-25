@@ -6,20 +6,19 @@
     <command type="test" value="Multicast" machine_id="1" timeout="30">
         <options>
             <option name="setup" value="max_groups" />
-            <option name="interface" value="{$host1if1}" />
+            <option name="interface" value="{ip(1,1)}" />
             <option name="condition" value="max_groups > 0" />
         </options>
     </command>
 
     <!-- Change default max_memberhsips -->
-    <command type="exec" value="echo '5' > /proc/sys/net/ipv4/igmp_max_memberships" machine_id="1" />
+
+    <command type="system_config" option="/proc/sys/net/ipv4/igmp_max_memberships" value="5" machine_id="1" />
     <command type="test" value="Multicast" machine_id="1" timeout="30">
         <options>
             <option name="setup" value="max_groups" />
-            <option type="recipe_eval" name="interface" value="['machines'][1]['netconfig'][1]['addresses'][0]" />
+            <option name="interface" value="{ip(1,1)}" />
             <option name="condition" value="max_groups == 5" />
         </options>
     </command>
-    <command type="exec" value="echo '20' > /proc/sys/net/ipv4/igmp_max_memberships" machine_id="1" />
-
 </command_sequence>
