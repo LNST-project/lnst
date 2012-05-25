@@ -6,6 +6,10 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
   <title>LNST - Linux Network Stack Test</title>
   <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/" />
+
+  <style>
+    pre {background-color: #eaeaea;}
+  </style>
 </head>
 
 <body>
@@ -119,6 +123,7 @@ traffic generated in tests executed on test machines.</p>
     SshUtils.py
     TestsCommon.py
     Utils.py
+    XmlPreprocessor.py
     XmlRpc.py
 
 [./example_recipes]        (inspiration for test setups – netconfigs, machineconfigs, recipes)
@@ -148,9 +153,13 @@ traffic generated in tests executed on test machines.</p>
     TestIcmp6Ping.py
     TestIcmpPing.py
     TestIperf.py
+    TestMulticast.py
     TestNetCat.py
     TestPktCounter.py
     TestPktgenTx.py
+
+[./test_tools]            (non-python testing tools and scripts)
+    multicast/
 </pre>
 
 <p></p>
@@ -203,7 +212,7 @@ repository on it.</p>
     &lt;machines&gt;
          &lt;machine id="1"&gt;
              <span style="background-color:#ffc0cb">&lt;netmachineconfig source="example_recipes/machine_configs/config-f14peanut.xml"/&gt;</span>
-             <span style="background-color:#90ee90">&lt;netconfig source="example_recipes/net_configs/netconfig1.xml"/&gt;</span> 
+             <span style="background-color:#90ee90">&lt;netconfig source="example_recipes/net_configs/netconfig1.xml"/&gt;</span>
          &lt;/machine&gt;
          &lt;machine id="2"&gt;
              <span style="background-color:#ffc0cb">&lt;netmachineconfig source="my_recipes/config-f15.xml"/&gt;</span>
@@ -212,8 +221,8 @@ repository on it.</p>
     &lt;/machines&gt;
 
     <span style="background-color:#add8e6">&lt;command_sequence&gt;</span>
-        <span style="background-color:#add8e6">&lt;command type="exec" value="sleep 4"/&gt;</span></pre>
-<pre>        <span style="background-color:#add8e6">&lt;command type="test" machine_id="1" value="IcmpPing" timeout="30"&gt;</span>
+        <span style="background-color:#add8e6">&lt;command type="exec" value="sleep 4"/&gt;</span>
+        <span style="background-color:#add8e6">&lt;command type="test" machine_id="1" value="IcmpPing" timeout="30"&gt;</span>
             <span style="background-color:#add8e6">&lt;options&gt;</span>
                 <span style="background-color:#add8e6">&lt;option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]"/&gt;</span>
                 <span style="background-color:#add8e6">&lt;option name="count" value="40"/&gt;</span>
@@ -303,28 +312,7 @@ defined in <strong>addresses</strong> element.</p>
 src="machineconfig-netconfig-mapping.png" width="793" height="318" /></p>
 
 <p></p>
-
-<h3><em>Defining aliases</em></h3>
-<p>LNST allows you to define arbitrary <strong>aliases</strong> and use
-them to access certain values from the whole recipe file while the value
-itself is included in the file only once. Definition of an alias occurs
-in the <code>&lt;define&gt;</code> tag anywhere in the document:</p>
-<pre>
-&lt;define&gt;
-    <span style="background-color:#90ee90">&lt;alias name="ip_addr" value="192.168.0.1" /&gt;</span>
-    <span style="background-color:#add8e6">&lt;alias name="mask" value="24" /&gt;</span>
-&lt;/define&gt;
-</pre>
-
-<p>Defined alias can be referenced from any element's attribute or text.
-For instance:</p>
-<pre>
-&lt;netdevice id="2" type="eth"&gt;
-    &lt;addresses&gt;
-        &lt;address value="<span style="background-color:#90ee90">{$ip_addr}</span>/<span style="background-color:#add8e6">{$mask}</span>"/&gt;
-    &lt;/addresses&gt;
-&lt;/netdevice&gt;
-</pre>
+<h4><strong></strong></h4>
 
 <h3><em>Command sequences</em></h3>
 
@@ -388,6 +376,146 @@ assigned address from netconfig of <em>first</em> device on <em>second</em>
 machine.
 </p>
 
+<h3><em>System Configuration</em></h3>
+<p>
+LNST provides a native way of changing system configuration of the slave machines from within the recipe.
+This can be achieved by <strong>system_config</strong> command. There are two versions
+of <strong>system_config</strong> command:
+</p>
+<h4>Inline version</h4>
+<pre>
+    &lt;command <span style="background-color:#add8e6">type="system_config"</span> option="/proc/sys/net/ipv4/igmp_max_memberships" value="50" machine_id="2" persistent="true" /&gt;
+</pre>
+
+<h4>Multiline version</h4>
+<pre>
+    &lt;command <span style="background-color:#add8e6">type="system_config"</span> machine_id="1"&gt;
+        &lt;options&gt;
+            &lt;option name="/proc/sys/net/ipv4/igmp_max_memberships" value="10" /&gt;
+            &lt;option name="/proc/sys/net/ipv4/igmp_max_mfs" value="5" /&gt;
+        &lt;/options&gt;
+    &lt;/commang&gt;
+</pre>
+
+<p>
+    In the multiline version you can set a several options at once.
+</p>
+<p>
+    Unless <strong>persistent</strong> flag is set to <strong>true</strong>, all modified
+    options are restored to their previous values <strong>at the end of the command sequence</strong>.
+    The following examlpe illustrates how this works:
+<pre>
+    &lt;command_sequence&gt;
+        &lt;command type="system_config" machine_id="1" <span style="background-color:#ffc0cb">persistent="true"</span>&gt;
+            &lt;options&gt;
+                &lt;option name="/proc/sys/net/ipv4/igmp_max_memberships" value="10" /&gt;
+                &lt;option name="/proc/sys/net/ipv4/igmp_max_mfs" value="5" /&gt;
+            &lt;/options&gt;
+        &lt;/commang&gt;
+    &lt;/command_sequence&gt;
+    &lt;command_sequence&gt;
+        &lt;command type="system_config" option="/proc/sys/net/ipv4/igmp_max_memberships" value="50" /&gt;
+
+        execute some test here ...
+    &lt;/command_sequence&gt; <span style="background-color:#90ee90">&lt;!-- At this point, igmp_max_memberships is set back to 10 --&gt;</span>
+    &lt;command_sequence&gt;
+        &lt;command type="system_config" machine_id="1" <span style="background-color:#ffc0cb">persistent="true"</span>&gt;
+            &lt;options&gt;
+                &lt;option name="/proc/sys/net/ipv4/igmp_max_memberships" value="20" /&gt;
+                &lt;option name="/proc/sys/net/ipv4/igmp_max_mfs" value="10" /&gt;
+            &lt;/options&gt;
+        &lt;/commang&gt;
+    &lt;/command_sequence&gt;
+</pre>
+<p>
+    The first command sequence serves as a global system setup phase, persistent flag is set to true,
+    so the options <strong>will not</strong> be restored when the command sequence finishes.
+</p>
+<p>
+    In the second command sequence, one option is modified for purposes of the next test, but it's
+    not marked persistent, so the change will be automatically reverted when the command sequence
+    comes to end.
+</p>
+<p>
+    And the final command sequences issues a persistent command again, to make sure that system is left
+    in a consistent state when recipe execution is over.
+</p>
+
+<hr />
+
+<h2>Writing a test</h2>
+<p>
+    This section introduces several features you can use when you decide to create your own recipe.
+</p>
+
+<h3><em>Defining aliases</em></h3>
+<p>LNST allows you to define arbitrary <strong>aliases</strong> and use
+them to access certain values from the whole recipe file while the value
+itself is included in the file only once. Definition of an alias occurs
+in the <code>&lt;define&gt;</code> tag anywhere in the document:</p>
+<pre>
+&lt;define&gt;
+    <span style="background-color:#90ee90">&lt;alias name="ip_addr" value="192.168.0.1" /&gt;</span>
+    <span style="background-color:#add8e6">&lt;alias name="mask" value="24" /&gt;</span>
+&lt;/define&gt;
+</pre>
+
+<p>Defined alias can be referenced from any element's attribute or text.
+For instance:</p>
+<pre>
+&lt;netdevice id="2" type="eth"&gt;
+    &lt;addresses&gt;
+        &lt;address value="<span style="background-color:#90ee90">{$ip_addr}</span>/<span style="background-color:#add8e6">{$mask}</span>"/&gt;
+    &lt;/addresses&gt;
+&lt;/netdevice&gt;
+</pre>
+
+<h3><em>Template functions</em></h3>
+<p>
+    Template functions are conceptually quite similar to aliases, but instead of a assigned value, they
+    represent an action that will be executed when the recipe is parsed. They can be used the same way
+    as aliases - inside of curly braces. Currently, there are three template functions available in LNST:
+</p>
+<ul>
+    <li><strong>ip</strong>(<em>machine_id</em>, <em>interface_id</em><em>[, address_id]</em>)
+        <p>
+            Returns IP address for a specific machine and interface.
+            Third argument is optional and can be used when there are
+            multiple IP addresses associated with a single interface.
+        </p>
+    </li>
+    <li><strong>hwaddr</strong>(<em>machine_id</em>, <em>interface_id</em>)
+        <p>
+            Returns hardware address of specified interface.
+        </p>
+    </li>
+    <li><strong>devname</strong>(<em>machine_id</em>, <em>interface_id</em>)
+        <p>
+            Returns device name of specified interface.
+        </p>
+    </li>
+</ul>
+<p>
+    All three above mentioned functions can be used for retrieving information from machine
+    configs, therefore calling them is only valid within a command sequence. See the following
+    example on how this templates can be used:
+</p>
+<pre>
+    &lt;command type="system_config" option="/proc/sys/net/ipv4/conf/<span style="background-color:#ffc0cb">{devname(1,1)}</span>/forwarding" value="1" machine_id="1" /&gt;
+    &lt;command type="test" value="Multicast" machine_id="1" timeout="30"&gt;
+        &lt;options&gt;
+            &lt;option name="setup" value="max_groups" /&gt;
+            &lt;option name="interface" value="<span style="background-color:#ffc0cb">{ip(1,1)}</span>" /&gt;
+            &lt;option name="condition" value="max_groups &gt; 0" /&gt;
+        &lt;/options&gt;
+    &lt;/command&gt;
+</pre>
+<p>
+    Aliases can be passed to functions as parameters, but the preprocessor
+does not support nesting (e.g. function cannot have another function
+passed as an argument).
+</p>
+
 <h3><em>Splitting recipes into multiple files</em></h3>
 <p>
 LNST also offers a possibility of splitting the recipe into several
@@ -407,12 +535,6 @@ Example (<em>peanut.xml</em>):
 &lt;/machine&gt;
 </pre>
 <p>Note that parts of the included machine config are again external.</p>
-
-<hr />
-
-<h2>Writing a test</h2>
-
-<p>[TODO]</p>
 
 <p></p>
 <hr />
@@ -460,8 +582,8 @@ up as <strong>type='bridge'</strong>.</p>
 
 &lt;domain type='kvm'&gt;
     &lt;name&gt;rhel6ga&lt;/name&gt;
-    ...</pre>
-<pre>    &lt;devices&gt;
+    ...
+    &lt;devices&gt;
         ...
         &lt;interface type='bridge'&gt;
             &lt;mac address='52:54:00:9f:be:73'/&gt;
@@ -502,7 +624,7 @@ configuration, that means removal of relevant kernel module (bonding, bridge,
 <h3><em>Running LNST without remote execution</em></h3>
 
 <p>In this case you have to start nettestslave.py processes first on all
-machines that are defined in recipe by yourself. Let's assume there are 
+machines that are defined in recipe by yourself. Let's assume there are
 2 machines participating in the test.</p>
 
 <p>On both of these machines you have to run following command:</p>
@@ -523,7 +645,7 @@ in a recipe:</p>
 
 <h3><em>Using LNST to configure interfaces only</em></h3>
 
-<p>You can also use LNST to do just the network configuration of the test 
+<p>You can also use LNST to do just the network configuration of the test
 machines. None of the tests inside your recipe file will get executed.</p>
 
 <p>To do this pass <strong>config_only</strong> instead of 'run' argument to
