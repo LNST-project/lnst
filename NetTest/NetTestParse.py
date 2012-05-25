@@ -16,6 +16,7 @@ import os
 import re
 from NetConfig.NetConfigParse import NetConfigParse
 from NetTest.NetTestCommand import str_command
+from Common.XmlPreprocessor import XmlPreprocessor
 
 def load_file(filename):
     handle = open(filename, "r")
@@ -35,6 +36,8 @@ class NetTestParse:
         self._recipe_xml_string = load_file(recipe_path)
         self._dirpath = os.path.dirname(recipe_path)
         self._recipe = None
+
+        self._xml_prep = XmlPreprocessor()
 
     def _get_referenced_xml_path(self, filename):
         return os.path.join(self._dirpath, os.path.expanduser(filename))
@@ -64,38 +67,40 @@ class NetTestParse:
         return machines
 
     def _parse_definitions(self, dom_definitions_grp):
+        xml_prep = self._xml_prep
         definitions = {}
         for dom_definitions_item in dom_definitions_grp:
             dom_aliases = dom_definitions_item.getElementsByTagName("alias")
             for dom_alias in dom_aliases:
                 alias_name = str(dom_alias.getAttribute("name"))
                 alias_value = str(dom_alias.getAttribute("value"))
-                definitions[alias_name] = alias_value
-        return definitions
+                xml_prep.define_alias(alias_name, alias_value)
 
     def parse_recipe(self):
         recipe = {}
         dom = parseString(self._recipe_xml_string)
+        xml_prep = self._xml_prep
 
         self._load_included_parts(dom)
         dom_nettestrecipe = dom.getElementsByTagName("nettestrecipe")[0]
 
         dom_definitions_grp = dom_nettestrecipe.getElementsByTagName("define")
-        self._definitions = self._parse_definitions(dom_definitions_grp)
+        self._parse_definitions(dom_definitions_grp)
         for define_tag in dom_definitions_grp:
             parent = define_tag.parentNode
             parent.removeChild(define_tag)
 
         dom_machines_grp = dom_nettestrecipe.getElementsByTagName("machines")
-        self._expand_group(dom_machines_grp)
+        xml_prep.expand_group(dom_machines_grp)
         recipe["machines"] = self._parse_machines(dom_machines_grp)
 
         dom_switches_grp = dom_nettestrecipe.getElementsByTagName("switches")
-        self._expand_group(dom_switches_grp)
+        xml_prep.expand_group(dom_switches_grp)
         recipe["switches"] = self._parse_machines(dom_switches_grp)
 
         self._recipe = recipe
         self._dom_nettestrecipe = dom_nettestrecipe
+        xml_prep.define_alias("recipe", recipe, skip_reserved_check=True)
 
     def get_recipe(self):
         return self._recipe
@@ -261,7 +266,8 @@ class NetTestParse:
 
     def parse_recipe_command_sequence(self):
         dom_sequences = self._dom_nettestrecipe.getElementsByTagName("command_sequence")
-        self._expand_group(dom_sequences, recipe_eval=True)
+        xml_prep = self._xml_prep
+        xml_prep.expand_group(dom_sequences)
 
         self._recipe["sequences"] = []
         for dom_sequence in dom_sequences:
@@ -272,54 +278,3 @@ class NetTestParse:
 
             self._check_sequence(sequence)
             self._recipe["sequences"].append(sequence)
-
-    def _expand(self, node, recipe_eval=False):
-        if node.nodeType == node.ELEMENT_NODE:
-            i = 0
-            num_attributes = node.attributes.length
-            while(i < num_attributes):
-                attr = node.attributes.item(i)
-                attr.value = self._expand_string(str(attr.value), recipe_eval)
-                i += 1
-        elif node.nodeType == node.TEXT_NODE:
-            node.data = self._expand_string(str(node.data), recipe_eval)
-
-        for child in node.childNodes:
-            self._expand(child, recipe_eval)
-
-    def _expand_group(self, group, recipe_eval=False):
-        for node in group:
-            self._expand(node, recipe_eval)
-
-    def _expand_string(self, string, recipe_eval):
-        eval_re = "\{\$recipe([^\{\}]+)\}"
-        alias_re = "\{\$([^\{\}]*)\}"
-        while True:
-            eval_match = re.search(eval_re, string)
-            if eval_match:
-                eval_string = eval_match.group(0)
-                eval_data = eval_match.group(1)
-                if recipe_eval:
-                    string = string.replace(eval_string,
-                                        self._recipe_eval(eval_data))
-                    continue
-                else:
-                    err = ("Accessing $recipe allowed only from command sequence: %s"
-                                                        % string)
-                    raise KeyError(err)
-            alias_match = re.search(alias_re, string)
-            if alias_match:
-                alias = alias_match.group(0)
-                alias_name = alias_match.group(1)
-                try:
-                    string = string.replace(alias,
-                                self._definitions[alias_name])
-                    continue
-                except KeyError, err:
-                    raise Exception("Alias '%s' doesn't exist!" % str(err))
-
-
-            if not (eval_match and alias_match):
-                break
-
-        return string
