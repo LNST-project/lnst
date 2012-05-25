@@ -32,7 +32,9 @@ int main(int argc, char** argv)
 
 	int sockfd = init_in_socket(params.multiaddr, params.port);
 
-	int num_recv = 0;
+	int num_good = 0;
+	int num_bad = 0;
+
 	struct ip_mreq mreq;
 	mreq.imr_multiaddr  = params.multiaddr;
 	mreq.imr_interface  = params.interface;
@@ -49,8 +51,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	num_recv = wait_for_data(sockfd, params.duration/3, 0);
-	printf("packets_received=%d\n", num_recv);
+	num_good += wait_for_data(sockfd, params.duration/3, 0);
 
 	if (setsockopt(sockfd, IPPROTO_IP, IP_BLOCK_SOURCE,
 				   &(mreqs), sizeof(mreqs)) < 0)
@@ -59,8 +60,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	num_recv = wait_for_data(sockfd, params.duration/3, 0);
-	printf("packets_received_while_blocking=%d\n", num_recv);
+	num_bad += wait_for_data(sockfd, params.duration/3, 0);
 
 	if (setsockopt(sockfd, IPPROTO_IP, IP_UNBLOCK_SOURCE,
 				   &(mreqs), sizeof(mreqs)) < 0)
@@ -69,8 +69,9 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	num_recv = wait_for_data(sockfd, params.duration/3, 0);
-	printf("packets_received=%d\n", num_recv);
+	num_good += wait_for_data(sockfd, params.duration/3, 0);
+	printf("packets_received=%d\n", num_good);
+	printf("packets_received_while_blocking=%d\n", num_bad);
 
 	return EXIT_SUCCESS;
 }
