@@ -55,6 +55,11 @@ class TestMulticast(TestGeneric):
         # receiver-specific
         opts["source_address"] = self._remove_mask(self.get_opt("source"))
 
+        # igmp-specific
+        opts["query_type"] = self.get_opt("query_type")
+        opts["dest_address"] = self.get_opt("dest_address")
+        opts["max_resp_time"] = self.get_opt("max_resp_time")
+
         cmd  = "./{0} ".format(setup)
 
         for optname, optval in opts.iteritems():
