@@ -43,7 +43,7 @@
 #include <linux/igmp.h>
 
 #define IGMP
-#include "parameters.h"
+#include "parameters_igmp.h"
 
 int __verbosity = 0;
 

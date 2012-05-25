@@ -43,7 +43,7 @@
 #error  "At least one of SEND/RECEIVE macros must be defined!"
 #endif
 
-#include "parameters.h"
+#include "parameters_multicast.h"
 
 #define MESSAGE "Hello world!"
 
