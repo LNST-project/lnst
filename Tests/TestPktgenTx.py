@@ -58,6 +58,7 @@ class TestPktgenTx(TestGeneric):
         hwaddr = self.get_mopt("hwaddr")
         vlan_tci = self.get_opt("vlan_tci", default=0)
         skb_clone = self.get_opt("skb_clone", default=100000)
+        count = self.get_opt("count", default=10000000)
 
         exec_cmd("modprobe pktgen")
 
@@ -74,7 +75,7 @@ class TestPktgenTx(TestGeneric):
                 pg.set("dst_mac %s" % hwaddr)
                 if vlan_tci:
                     pg.set("vlan_id %d" % vlan_tci)
-                pg.set("count 10000000")
+                pg.set("count %d" % count)
             pgctl.set("start")
         except ExecCmdFail:
             return self.set_fail("pktgen failed")
