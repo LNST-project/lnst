@@ -11,6 +11,7 @@ from Common.TestsCommon import TestGeneric
 from Common.ExecCmd import exec_cmd
 from Common.ShellProcess import ShellProcess
 import time
+import errno
 
 class TestIperf(TestGeneric):
     def _install_iperf(self):
@@ -37,7 +38,12 @@ class TestIperf(TestGeneric):
 
     def run_client(self, cmd):
         client = ShellProcess(cmd)
-        client.wait()
+        try:
+            client.wait()
+        except OSError as e:
+            # we got interrupted, let's gather data
+            if e.errno == errno.EINTR:
+                client.kill()
         client.read_nonblocking()
 
     def run_server(self, cmd):
@@ -48,7 +54,13 @@ class TestIperf(TestGeneric):
             server.read_nonblocking()
             server.kill()
         else:
-            server.wait()
+            try:
+                server.wait()
+            except OSError as e:
+                if e.errno == errno.EINTR:
+                     server.kill()
+
+            server.read_nonblocking()
 
     def run(self):
         self._keep_server_running = True
