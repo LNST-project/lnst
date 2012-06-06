@@ -12,6 +12,7 @@ from Common.ExecCmd import exec_cmd
 from Common.ShellProcess import ShellProcess
 import time
 import errno
+import re
 
 class TestIperf(TestGeneric):
     def _install_iperf(self):
@@ -36,6 +37,54 @@ class TestIperf(TestGeneric):
 
         return cmd
 
+    def _rate_over_threshold(self, rate):
+        # convert rate to the same unit as threshold unit
+        pattern = "(\d*(\.\d*){0,1})\s*([ kMGT])bits\/sec"
+
+        # parse threshold value
+        r1 = re.match(pattern, self.threshold)
+        thr_units = r1.group(3)
+
+        # parse measured rate value
+        r2 = re.match(pattern, rate)
+        rate_units = r2.group(3)
+
+        if r1.group(2) != None:
+            thr_val = float(r1.group(1) + r1.group(2))
+        else:
+            thr_val = float(r1.group(1))
+
+        if r2.group(2) != None:
+            rate_val = float(r2.group(1) + r2.group(2))
+        else:
+            rate_val = float(r2.group(1))
+
+        # do the conversion of rate units
+        if thr_units != rate_units:
+            # remove any k,M,G,T from measured rate
+            if rate_units == 'k':
+                rate_val *= 1000
+            elif rate_units == 'M':
+                rate_val *= 1000*1000
+            elif rate_val == 'G':
+                rate_val *= 1000*1000*1000
+
+            # divide by k or M or G if present
+            if thr_units == 'k':
+                rate_val /= 1000
+            elif thr_units == 'M':
+                rate_val /= 1000*1000
+            elif thr_units == 'G':
+                rate_val /= 1000*1000*1000
+
+        if rate_val < thr_val:
+            logging.info("measured rate is below threshold! " \
+                         "(measured: %s < threshold: %s)" % \
+                (rate, self.threshold))
+            return False
+
+        return True
+
     def run_client(self, cmd):
         client = ShellProcess(cmd)
         try:
@@ -44,7 +93,17 @@ class TestIperf(TestGeneric):
             # we got interrupted, let's gather data
             if e.errno == errno.EINTR:
                 client.kill()
-        client.read_nonblocking()
+
+        output = client.read_nonblocking()
+        if self.threshold is not None:
+            # check if expected threshold is reached
+            m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output)
+            if m is None:
+                logging.info("Could not get performance throughput!")
+                return False
+
+            rate = m.group(2)
+            return self._rate_over_threshold(rate)
 
     def run_server(self, cmd):
         server = ShellProcess(cmd)
@@ -82,6 +141,8 @@ class TestIperf(TestGeneric):
         else:
             self._temp_dir = installed
 
+        self.threshold = self.get_opt("threshold")
+
         role = self.get_mopt("role")
         cmd = self._compose_iperf_cmd(role)
         logging.debug("compiled command: %s" % cmd)
@@ -91,6 +152,8 @@ class TestIperf(TestGeneric):
             self.run_server(cmd)
         elif role == "client":
             logging.debug("running as client ...")
-            self.run_client(cmd)
+            rv = self.run_client(cmd)
+            if rv == False:
+                return self.set_fail("iperf test failed, measured rate is below expected threshold")
 
         return self.set_pass()
