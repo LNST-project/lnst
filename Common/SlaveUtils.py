@@ -8,7 +8,7 @@ jzupka@redhat.com (Jiri Zupka)
 
 from Common.SshUtils import scp_to_remote, wait_for_login
 from Common.ShellProcess import ShellProcess
-
+import sys
 
 def prepare_client_session(host, port, login, passwd=None, command=None,
                            prompt=None, install_path=None, test_dir=None):
@@ -26,7 +26,8 @@ def prepare_client_session(host, port, login, passwd=None, command=None,
         install_path = "/tmp"
     if test_dir is None:
         test_dir = "lnst"
-    s = ShellProcess("tar -cjf lnst.tar.bz2 --exclude *.pyc --exclude 'Logs/*' *")
+
+    s = ShellProcess("tar -cjf lnst.tar.bz2 --exclude *.pyc --exclude 'Logs/*' -C '%s' ./" % sys.path[0])
     s.wait()
     scp_to_remote(host, port, login, passwd,
                   "lnst.tar.bz2","/%s/" % (install_path))
