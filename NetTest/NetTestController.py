@@ -176,6 +176,7 @@ class NetTestController:
         return cmd_res
 
     def _run_command_sequence(self, sequence):
+        seq_passed = True
         for command in sequence:
             logging.info("Executing command: [%s]" % str_command(command))
             cmd_res = self._run_command(command)
@@ -189,8 +190,8 @@ class NetTestController:
                 logging.error("Command failed - command: [%s], "
                               "Error message: \"%s\""
                                 % (str_command(command), cmd_res["err_msg"]))
-                return False
-        return True
+                seq_passed = False
+        return seq_passed
 
     def dump_recipe(self):
         pprint(self._recipe)
