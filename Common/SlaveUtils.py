@@ -27,7 +27,7 @@ def prepare_client_session(host, port, login, passwd=None, command=None,
     if test_dir is None:
         test_dir = "lnst"
 
-    s = ShellProcess("tar -cjf lnst.tar.bz2 --exclude *.pyc --exclude 'Logs/*' -C '%s' ./" % sys.path[0])
+    s = ShellProcess("tar -cjf lnst.tar.bz2 --exclude *.pyc --exclude 'Logs/*' --exclude '.git/*' --exclude 'lnst.tar.bz2' -C '%s' ./" % sys.path[0])
     s.wait()
     scp_to_remote(host, port, login, passwd,
                   "lnst.tar.bz2","/%s/" % (install_path))
