@@ -42,6 +42,7 @@ class NetConfigParse:
             info["rootpass"] = rootpass
         if rpcport:
             info["rpcport"] = int(rpcport)
+        info["system_config"] = {}
 
         dom_netdevs = dom_netmachine.getElementsByTagName("netdevice")
         netdevs = {}

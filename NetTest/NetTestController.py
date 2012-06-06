@@ -58,7 +58,6 @@ class NetTestController:
                                              "nettestslave.py")
             session.add_kill_handler(self._session_die)
             info["session"] = session
-            info["system_config"] = {}
 
     def _cleanup_slaves(self):
         for machine_id in self._recipe["machines"]:
