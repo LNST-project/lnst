@@ -31,9 +31,8 @@ class XmlPreprocessor:
     This class serves as template processor within a XML DOM tree object.
     """
 
-    _template_re = "\{([^\{\}]+)\}"
-    _alias_re = "^\$([a-zA-Z0-9_]+)(\[.+\])*$"
-    _func_re  = "^([a-zA-Z0-9_]+)\(([^\(\)]*)\)$"
+    _alias_re = "\{\$([a-zA-Z0-9_]+)(\[.+\])*\}"
+    _func_re  = "\{([a-zA-Z0-9_]+)\(([^\(\)]*)\)\}"
 
     def __init__(self):
         self._definitions = {}
@@ -97,31 +96,23 @@ class XmlPreprocessor:
 
     def _expand_string(self, string):
         while True:
-            template_match = re.search(self._template_re, string)
-            if template_match:
-                template_string = template_match.group(0)
-                template = template_match.group(1)
-                template_result = self._process_template(template)
+            alias_match = re.search(self._alias_re, string)
+            func_match  = re.search(self._func_re, string)
 
-                string = string.replace(template_string, template_result)
+            result = None
+
+            if alias_match:
+                template = alias_match.group(0)
+                result = self._process_alias_template(template)
+            elif func_match:
+                template = func_match.group(0)
+                result = self._process_func_template(template)
             else:
                 break
 
+            string = string.replace(template, result)
+
         return string
-
-    def _process_template(self, string):
-        string = string.strip()
-        result = None
-
-        if re.match(self._alias_re, string):
-            result = self._process_alias_template(string)
-            return result
-
-        if re.match(self._func_re, string):
-            result = self._process_func_template(string)
-            return result
-
-        raise XmlTemplateError("Unknown template type '%s'" % string)
 
     def _process_alias_template(self, string):
         result = None
