@@ -200,10 +200,14 @@ class NetTestController:
     def all_dump_recipe(self):
         self._prepare()
         pprint(self._recipe)
+        if self._docleanup:
+            self._cleanup()
         return True
 
     def config_only_recipe(self):
         self._prepare()
+        if self._docleanup:
+            self._cleanup()
         return True
 
     def run_recipe(self):
@@ -218,7 +222,8 @@ class NetTestController:
             if not res:
                 break
 
-        self._cleanup()
+        if self._docleanup:
+            self._cleanup()
         return res
 
     def eval_expression_recipe(self, expr):
