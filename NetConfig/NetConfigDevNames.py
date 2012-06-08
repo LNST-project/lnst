@@ -76,6 +76,9 @@ class NetConfigDevNames:
     def _assign_name_macvlan(self, netdev, config):
         self._assign_name_generic("t_macvlan", netdev, config)
 
+    def _assign_name_team(self, netdev, config):
+        self._assign_name_generic("t_team", netdev, config)
+
     def _assign_name_vlan(self, netdev, config):
         real_netdev = config[netdev["slaves"][0]]
         vlan_tci = get_option(netdev, "vlan_tci")
@@ -95,6 +98,9 @@ class NetConfigDevNames:
                 self._assign_name_bridge(netdev, config)
             elif dev_type == "macvlan":
                 self._assign_name_macvlan(netdev, config)
+            elif dev_type == "team":
+                self._assign_name_team(netdev, config)
+
         '''
         In second round assign names for vlans as they use
         previously assigned names

@@ -212,12 +212,46 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
         else:
             exec_cmd("vconfig rem %s" % dev_name)
 
+class NetConfigDeviceTeam(NetConfigDeviceGeneric):
+    _pidfile = None
+
+    def _slaves_up(self):
+        for slaveid in get_slaves(self._netdev):
+            slavenetdev = self._config[slaveid]
+            NetConfigDevice(slavenetdev, self._config).up()
+
+    def _slaves_down(self):
+        for slaveid in get_slaves(self._netdev):
+            slavenetdev = self._config[slaveid]
+            NetConfigDevice(slavenetdev, self._config).down()
+
+    def configure(self):
+        self._slaves_down()
+
+        teamd_config = get_option(self._netdev, "teamd_config")
+        teamd_config = teamd_config.replace('"', '\\"')
+
+        dev_name = self._netdev["name"]
+        pidfile = "/var/run/teamd_%s.pid" % dev_name
+
+        exec_cmd("teamd -r -d -c \"%s\" -t %s -p %s" % (teamd_config, dev_name, pidfile))
+
+        self._pidfile = pidfile
+
+    def deconfigure(self):
+        dev_name = self._netdev["name"]
+        pidfile = "/var/run/teamd_%s.pid" % dev_name
+
+        exec_cmd("teamd -k -p %s" % pidfile)
+        self._slaves_up()
+
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
     "bond": NetConfigDeviceBond,
     "bridge": NetConfigDeviceBridge,
     "macvlan": NetConfigDeviceMacvlan,
-    "vlan": NetConfigDeviceVlan
+    "vlan": NetConfigDeviceVlan,
+    "team": NetConfigDeviceTeam
 }
 
 def NetConfigDevice(netdev, config):

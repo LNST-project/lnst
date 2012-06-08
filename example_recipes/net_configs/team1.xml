@@ -1,0 +1,42 @@
+<netconfig>
+    <netdevice id="1" type="eth" phys_id="1" />
+    <netdevice id="2" type="eth" phys_id="2" />
+    <netdevice id="5" type="team">
+        <options>
+            <!-- Team device name can be omitted from teamd config,
+                 because it will be overridden by LNST anyway. -->
+            <option name="teamd_config">
+                {
+                    "runner":   {"name": "roundrobin"},
+                    "ports":    {"eth1": {}, "eth2": {}}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="1" />
+            <slave id="2" />
+        </slaves>
+        <addresses>
+             <address value="192.168.122.200/24" />
+        </addresses>
+    </netdevice>
+    <netdevice id="3" type="eth" phys_id="3" />
+    <netdevice id="4" type="eth" phys_id="4" />
+    <netdevice id="6" type="team">
+        <options>
+            <option name="teamd_config">
+                {
+                    "runner":   {"name": "roundrobin"},
+                    "ports":    {"eth3": {}, "eth4": {}}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="3" />
+            <slave id="4" />
+        </slaves>
+        <addresses>
+            <address value="192.168.122.210/24" />
+        </addresses>
+    </netdevice>
+</netconfig>

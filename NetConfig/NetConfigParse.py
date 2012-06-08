@@ -192,7 +192,7 @@ class NetConfigParse:
 
         if dev_type == "eth":
             pass
-        elif dev_type in ["bond", "bridge", "vlan", "macvlan"]:
+        elif dev_type in ["bond", "bridge", "vlan", "macvlan", "team"]:
             self._parse_options(netdev, dom_netdev, config)
             self._parse_slaves(netdev, dom_netdev, config)
         else:
