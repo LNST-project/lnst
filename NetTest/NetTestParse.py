@@ -81,6 +81,8 @@ class NetTestParse:
         dom = parseString(self._recipe_xml_string)
         xml_prep = self._xml_prep
 
+        xml_prep.remove_comments(dom)
+
         self._load_included_parts(dom)
         dom_nettestrecipe = dom.getElementsByTagName("nettestrecipe")[0]
 

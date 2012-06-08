@@ -51,6 +51,21 @@ class XmlPreprocessor:
         else:
             raise XmlTemplateError("Alias name '%s' is reserved" % name)
 
+    def remove_comments(self, node):
+        """
+        Remove all comment nodes from the tree.
+        """
+
+        comments = []
+        for child in node.childNodes:
+            if child.nodeType == node.COMMENT_NODE:
+                comments.append(child)
+            else:
+                self.remove_comments(child)
+
+        for comment in comments:
+            node.removeChild(comment)
+
     def expand(self, node):
         """
         Traverse DOM tree from `node' down and expand any
