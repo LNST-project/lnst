@@ -97,7 +97,17 @@ class NetConfigParse:
 
     def _parse_options_handler(self, lst, dom_element, config):
         name = str(dom_element.getAttribute("name"))
-        value = str(dom_element.getAttribute("value"))
+
+        value = ""
+        if dom_element.hasAttribute("value"):
+            value = str(dom_element.getAttribute("value"))
+        elif dom_element.hasChildNodes():
+            node = dom_element.firstChild
+            try:
+                value = str(dom_element.firstChild.data)
+            except:
+                raise Exception("Invalid option value")
+
         lst.append((name, value))
 
     def _parse_options(self, netdev, dom_netdev, config):
