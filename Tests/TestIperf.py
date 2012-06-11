@@ -49,15 +49,9 @@ class TestIperf(TestGeneric):
         r2 = re.match(pattern, rate)
         rate_units = r2.group(3)
 
-        if r1.group(2) != None:
-            thr_val = float(r1.group(1) + r1.group(2))
-        else:
-            thr_val = float(r1.group(1))
+        thr_val = float(r1.group(1))
 
-        if r2.group(2) != None:
-            rate_val = float(r2.group(1) + r2.group(2))
-        else:
-            rate_val = float(r2.group(1))
+        rate_val = float(r2.group(1))
 
         # do the conversion of rate units
         if thr_units != rate_units:
