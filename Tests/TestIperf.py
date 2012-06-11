@@ -91,7 +91,7 @@ class TestIperf(TestGeneric):
         output = client.read_nonblocking()
         if self.threshold is not None:
             # check if expected threshold is reached
-            m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output)
+            m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\s*\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output)
             if m is None:
                 logging.info("Could not get performance throughput!")
                 return False
