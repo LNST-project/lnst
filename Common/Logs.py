@@ -197,7 +197,10 @@ class Logs:
         cls.logFolder = os.path.dirname(sys.argv[0])
         cls.logger = logger
         cls.debug = debug
-        cls.date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        if date is None:
+            cls.date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        else:
+            cls.date = date
         cls.nameExtend = nameExtend
         cls.root_path = cls.prepare_logging(debug, waitForNet,
                                             recipe_path, to_display)
