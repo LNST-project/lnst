@@ -362,7 +362,7 @@ def scp_to_remote(host, port, username, password, local_path, remote_path,
     @raise: Whatever remote_scp() raises
     """
     command = ("scp -v -o UserKnownHostsFile=/dev/null "
-               " -r -P %s %s %s@%s:%s" % #-o PreferredAuthentications=password
+               " -r -P %s '%s' '%s@%s:%s'" % #-o PreferredAuthentications=password
                (port, local_path, username, host, remote_path))
     password_list = []
     password_list.append(password)
@@ -386,7 +386,7 @@ def scp_from_remote(host, port, username, password, remote_path, local_path,
     @raise: Whatever remote_scp() raises
     """
     command = ("scp -v -o UserKnownHostsFile=/dev/null "
-               "-o PreferredAuthentications=password -r -P %s %s@%s:%s %s" %
+               "-o PreferredAuthentications=password -r -P %s '%s@%s:%s' '%s'" %
                (port, username, host, remote_path, local_path))
     password_list = []
     password_list.append(password)
@@ -411,7 +411,7 @@ def scp_between_remotes(src, dst, port, s_passwd, d_passwd, s_name, d_name,
     @return: True on success and False on failure.
     """
     command = ("scp -v -o UserKnownHostsFile=/dev/null -o "
-               "PreferredAuthentications=password -r -P %s %s@%s:%s %s@%s:%s" %
+               "PreferredAuthentications=password -r -P %s '%s@%s:%s' '%s@%s:%s'" %
                (port, s_name, src, s_path, d_name, dst, d_path))
     password_list = []
     password_list.append(s_passwd)
