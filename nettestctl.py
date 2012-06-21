@@ -143,6 +143,7 @@ def main():
                 summary.append(get_recipe_result(args, recipe_file,
                                                  remoteexec, cleanup,
                                                  res_serializer))
+                Logs.set_logging_root_path(clean=False)
     else:
         summary.append(get_recipe_result(args, recipe_path,
                                          remoteexec, cleanup, res_serializer))
