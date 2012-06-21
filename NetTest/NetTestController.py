@@ -13,6 +13,9 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import socket
+import os
+from Common.Logs import Logs
+from Common.SshUtils import scp_from_remote
 from pprint import pprint, pformat
 from Common.XmlRpc import ServerProxy
 from NetTestParse import NetTestParse
@@ -32,6 +35,7 @@ class NetTestController:
         self._remoteexec = remoteexec
         self._docleanup = cleanup
         self._res_serializer = res_serializer
+        self._remote_capture_files = {}
 
     def _get_machineinfo(self, machine_id):
         return self._recipe["machines"][machine_id]["info"]
@@ -210,8 +214,31 @@ class NetTestController:
             self._cleanup()
         return True
 
-    def run_recipe(self):
+    def run_recipe(self, packet_capture=False):
         self._prepare()
+
+        if packet_capture:
+            self._start_packet_capture()
+
+        err = None
+        try:
+            res = self._run_recipe()
+        except e:
+            err = e
+
+        if packet_capture:
+            self._stop_packet_capture()
+            self._gather_capture_files()
+
+        if self._docleanup:
+            self._cleanup()
+
+        if not err:
+            return res
+        else:
+            raise err
+
+    def _run_recipe(self):
         for sequence in self._recipe["sequences"]:
             res = self._run_command_sequence(sequence)
 
@@ -222,9 +249,42 @@ class NetTestController:
             if not res:
                 break
 
-        if self._docleanup:
-            self._cleanup()
         return res
+
+    def _start_packet_capture(self):
+        logging.info("Starting packet capture")
+        for machine_id in self._recipe["machines"]:
+            rpc = self._get_machinerpc(machine_id)
+            capture_files = rpc.start_packet_capture("")
+            self._remote_capture_files[machine_id] = capture_files
+
+    def _stop_packet_capture(self):
+        logging.info("Stopping packet capture")
+        for machine_id in self._recipe["machines"]:
+            rpc = self._get_machinerpc(machine_id)
+            rpc.stop_packet_capture()
+
+    def _gather_capture_files(self):
+        logging_root = Logs.get_logging_root_path()
+        logging_root = os.path.abspath(logging_root)
+        logging.info("Retrieving capture files from slaves")
+        for machine_id in self._recipe["machines"]:
+            hostname = self._recipe["machines"][machine_id]['info']['hostname']
+            rootpass = self._recipe["machines"][machine_id]['info']['rootpass']
+
+            slave_logging_dir = os.path.join(logging_root, hostname)
+            try:
+                os.mkdir(slave_logging_dir)
+            except OSError, e:
+                if e.errno != 17:
+                    raise
+
+            capture_files = self._remote_capture_files[machine_id]
+            for remote_path in capture_files:
+                filename = os.path.basename(remote_path)
+                local_path = os.path.join(slave_logging_dir, filename)
+                scp_from_remote(hostname, "22", "root", rootpass,
+                                    remote_path, local_path)
 
     def eval_expression_recipe(self, expr):
         self._prepare()

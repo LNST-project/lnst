@@ -14,6 +14,8 @@ jpirko@redhat.com (Jiri Pirko)
 from Common.Logs import Logs
 import signal
 import select, logging
+import os
+from Common.PacketCapture import PacketCapture
 from Common.XmlRpc import Server
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from NetConfig.NetConfig import NetConfig
@@ -29,6 +31,7 @@ class NetTestSlaveXMLRPC:
     '''
     def __init__(self):
         self._netconfig = None
+        self._packet_captures = {}
 
     def hello(self):
         return "hello"
@@ -53,6 +56,34 @@ class NetTestSlaveXMLRPC:
     def netconfig_clear(self):
         self._netconfig.deconfigure_all()
         self.__init__()
+        return True
+
+    def start_packet_capture(self, filt):
+        logging_dir = Logs.get_logging_root_path()
+        logging_dir = os.path.abspath(logging_dir)
+        netconfig = self._netconfig.dump_config()
+
+        files = []
+        for dev_id, dev_spec in netconfig.iteritems():
+            dump_file = os.path.join(logging_dir, "%s.pcap" % dev_id)
+            files.append(dump_file)
+
+            pcap = PacketCapture()
+            pcap.set_interface(dev_spec["name"])
+            pcap.set_output_file(dump_file)
+            pcap.set_filter(filt)
+            pcap.start()
+
+            self._packet_captures[dev_id] = pcap
+
+        return files
+
+    def stop_packet_capture(self):
+        netconfig = self._netconfig.dump_config()
+        for dev_id in netconfig.keys():
+            pcap = self._packet_captures[dev_id]
+            pcap.stop()
+
         return True
 
     def run_command(self, command):

@@ -262,6 +262,11 @@ class Logs:
 
 
     @classmethod
+    def get_logging_root_path(cls):
+        return cls.root_path
+
+
+    @classmethod
     def prepare_logging(cls, debug=0, waitForNet=False,
                         recipe_path=None, to_display=True):
         """
