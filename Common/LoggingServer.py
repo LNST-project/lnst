@@ -75,9 +75,8 @@ class LoggingServer:
             if e.errno != 17:
                 raise
         logger = logging.getLogger(address)
-        Logs(self.debug, False, logger,
-                     log_root=slave_root_path,
-                             to_display=False)
+        Logs(self.debug, False, logger, log_root=slave_root_path,
+                     to_display=False, date="")
         return (logger, address, sock[0])
 
 
