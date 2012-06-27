@@ -68,7 +68,7 @@ class NetConfigDeviceGeneric:
     @classmethod
     def type_check(self):
         if self._modulename:
-            output = exec_cmd("modprobe -l %s" % self._modulename)[0]
+            output = exec_cmd("modinfo -F filename %s" % self._modulename, die_on_err=False)[0]
             for line in output.split("\n"):
                 if re.match(r'^.*\/%s\.ko$' % self._modulename, line):
                     return True
