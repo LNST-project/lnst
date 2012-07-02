@@ -3,8 +3,17 @@
 .*~
 *~
 .#*
+
+Logs/
+
+# vim swap files
+*.swp
+*.swo
+*.swn
+
 # additional patterns:
 *.pyc
 *.pyo
 *.gz
+*.bz2
 *.orig
