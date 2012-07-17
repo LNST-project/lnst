@@ -181,7 +181,7 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
         output = exec_cmd("ip link help", die_on_err=False,
                           log_outputs=False)[1]
         for line in output.split("\n"):
-            if re.match(r'^.*ip link add link.*$', line):
+            if re.match(r'^.*ip link add [\[]{0,1}link.*$', line):
                 return True
         return False
 
