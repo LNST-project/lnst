@@ -84,29 +84,20 @@ class NetConfigDevNames:
         vlan_tci = get_option(netdev, "vlan_tci")
         netdev["name"] = "%s.%s" % (real_netdev["name"], vlan_tci)
 
-    def assign_names(self, config):
-        for dev_id in config:
-            netdev = config[dev_id]
-            if "name" in netdev:
-                continue
-            dev_type = netdev["type"]
-            if dev_type == "eth":
-                self.assign_name_by_scan(dev_id, netdev)
-            elif dev_type == "bond":
-                self._assign_name_bond(netdev, config)
-            elif dev_type == "bridge":
-                self._assign_name_bridge(netdev, config)
-            elif dev_type == "macvlan":
-                self._assign_name_macvlan(netdev, config)
-            elif dev_type == "team":
-                self._assign_name_team(netdev, config)
-
-        '''
-        In second round assign names for vlans as they use
-        previously assigned names
-        '''
-        for dev_id in config:
-            netdev = config[dev_id]
-            dev_type = netdev["type"]
-            if dev_type == "vlan":
-                self._assign_name_vlan(netdev, config)
+    def assign_name(self, dev_id, config):
+        netdev = config[dev_id]
+        if "name" in netdev:
+            return
+        dev_type = netdev["type"]
+        if dev_type == "eth":
+            self.assign_name_by_scan(dev_id, netdev)
+        elif dev_type == "bond":
+            self._assign_name_bond(netdev, config)
+        elif dev_type == "bridge":
+            self._assign_name_bridge(netdev, config)
+        elif dev_type == "macvlan":
+            self._assign_name_macvlan(netdev, config)
+        elif dev_type == "team":
+            self._assign_name_team(netdev, config)
+        elif dev_type == "vlan":
+            self._assign_name_vlan(netdev, config)

@@ -12,30 +12,15 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import copy
-from NetConfigParse import NetConfigParse
 from NetConfigDevNames import NetConfigDevNames
 from NetConfigDevice import NetConfigDevice
 from NetConfigDevice import NetConfigDeviceType
 from NetConfigCommon import get_slaves
 
 class NetConfig:
-    def __init__(self, machine_xml_string, config_xml_string=None):
-        parse = NetConfigParse(machine_xml_string)
+    def __init__(self):
         devnames = NetConfigDevNames()
-
-        if config_xml_string:
-            config = parse.parse_config(config_xml_string)
-        else:
-            '''
-            No config is passed so make essential netdevices as they
-            are listed in machine config and stores them into config
-            '''
-            mnetdevs = parse.get_machine_netdevs()
-            config = copy.deepcopy(mnetdevs)
-            for key in config:
-                config[key]["phys_id"] = key
-
-        devnames.assign_names(config)
+        config = {}
         self._devnames = devnames
         self._config = config
 
@@ -73,13 +58,21 @@ class NetConfig:
             types.add(netdev["type"])
         return types
 
-    def _types_init(self):
-        for dev_type in self._get_used_types():
+    def _type_init(self, dev_type):
+        if not dev_type in self._get_used_types():
             NetConfigDeviceType(dev_type).type_init()
 
     def _types_cleanup(self):
         for dev_type in self._get_used_types():
             NetConfigDeviceType(dev_type).type_cleanup()
+
+    def add_interface_config(self, if_id, config):
+        self._config[if_id] = config
+        self._type_init(config["type"])
+        self._devnames.assign_name(if_id, self._config)
+
+    def get_interface_config(self, if_id):
+        return self._config[if_id]
 
     def configure(self, dev_id):
         netdev = self._config[dev_id]
@@ -88,7 +81,6 @@ class NetConfig:
         device.up()
 
     def configure_all(self):
-        self._types_init()
         dev_order = self._get_dev_order()
         for dev_id in dev_order:
             self.configure(dev_id)
@@ -129,7 +121,7 @@ class NetConfig:
             if "slaves" in params:
                 netdev["slaves"] = params["slaves"]
         self._config[dev_id] = netdev
-        self._devnames.assign_names(self._config)
+        self._devnames.assign_name(dev_id, self._config)
         return dev_id
 
     def netdev_del(self, dev_id):
