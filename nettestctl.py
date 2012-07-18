@@ -29,7 +29,7 @@ def usage():
     print "Usage:"
     print "nettestctl.py [OPTION...] ACTION"
     print ""
-    print "ACTION = [run | dump | all_dump | config_only | eval EXPR]"
+    print "ACTION = [run | dump | config_only]"
     print ""
     print "  -d, --debug                             emit debugging messages"
     print "  -p, --packet_capture                    capture and log all ongoing\n" \
@@ -54,15 +54,8 @@ def process_recipe(args, file_path, remoteexec, cleanup,
         return nettestctl.run_recipe(packet_capture)
     elif action == "dump":
         return nettestctl.dump_recipe()
-    elif action == "all_dump":
-        return nettestctl.all_dump_recipe()
     elif action == "config_only":
         return nettestctl.config_only_recipe()
-    elif action == "eval":
-        if len(args) < 2:
-            logging.error("No expression passed")
-            usage();
-        return nettestctl.eval_expression_recipe(args[1])
     else:
         logging.error("Unknown action \"%s\"" % action)
         usage();
