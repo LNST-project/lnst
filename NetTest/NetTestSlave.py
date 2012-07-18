@@ -20,7 +20,7 @@ from Common.XmlRpc import Server
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from NetConfig.NetConfig import NetConfig
 from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
-from NetTestCommand import NetTestCommand, CommandException
+from NetTest.NetTestCommand import NetTestCommand, CommandException
 from Common.Utils import die_when_parent_die
 
 DefaultRPCPort = 9999
@@ -32,6 +32,7 @@ class NetTestSlaveXMLRPC:
     def __init__(self):
         self._netconfig = None
         self._packet_captures = {}
+        self._netconfig = NetConfig()
 
     def hello(self):
         return "hello"
@@ -45,18 +46,29 @@ class NetTestSlaveXMLRPC:
         Logs.append_network_hadler(logger_address, port)
         return True
 
-    def netconfig_set(self, machine_xml_string, config_xml_string):
-        self._netconfig = NetConfig(machine_xml_string, config_xml_string)
-        self._netconfig.configure_all()
+    def get_interface_info(self, if_id):
+        if_config = self._netconfig.get_interface_config(if_id)
+        info = {}
+
+        if "name" in if_config:
+            info["name"] = if_config["name"]
+
+        if "hwaddr" in if_config:
+            info["hwaddr"] = if_config["hwaddr"]
+
+        return info
+
+    def configure_interface(self, if_id, config):
+        self._netconfig.add_interface_config(if_id, config)
+        self._netconfig.configure(if_id)
+        return True
+
+    def deconfigure_interface(self, if_id):
+        self._netconfig.deconfigure(if_id)
         return True
 
     def netconfig_dump(self):
         return self._netconfig.dump_config().items()
-
-    def netconfig_clear(self):
-        self._netconfig.deconfigure_all()
-        self.__init__()
-        return True
 
     def start_packet_capture(self, filt):
         logging_dir = Logs.get_logging_root_path()
@@ -91,8 +103,9 @@ class NetTestSlaveXMLRPC:
             return NetTestCommand(command).run()
         except:
             import sys, traceback
-            type, value, tb = sys.exc_info()
-            logging.error(''.join(traceback.format_exception(type, value, tb)))
+            cmd_type, value, tb = sys.exc_info()
+            exception = traceback.format_exception(cmd_type, value, tb)
+            logging.error(''.join(exception))
             raise CommandException(command)
 
     def machine_cleanup(self):
