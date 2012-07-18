@@ -10,224 +10,296 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-from xml.dom.minidom import parseString
 import logging
 import os
 import re
-from NetConfig.NetConfigParse import NetConfigParse
-from NetTest.NetTestCommand import str_command
-from Common.XmlPreprocessor import XmlPreprocessor
+from Common.XmlProcessing import RecipeParser
+from Common.XmlProcessing import XmlDomTreeInit
+from Common.XmlProcessing import XmlProcessingError
+from NetConfig.NetConfigDevNames import normalize_hwaddr
 
-def load_file(filename):
-    handle = open(filename, "r")
-    data = handle.read()
-    handle.close()
-    return data
 
-class WrongCommandSequenceException(Exception):
-    pass
+class NetTestParse(RecipeParser):
+    def __init__(self, recipe_filepath):
+        super(NetTestParse, self).__init__()
 
-class WrongIncludeSource(Exception):
-    pass
+        self._filepath = recipe_filepath
+        self._include_root = os.path.dirname(recipe_filepath)
 
-class NetTestParse:
-    def __init__(self, recipe_path):
-        recipe_path = os.path.expanduser(recipe_path)
-        self._recipe_xml_string = load_file(recipe_path)
-        self._dirpath = os.path.dirname(recipe_path)
-        self._recipe = None
-
-        self._xml_prep = XmlPreprocessor()
-
-    def _get_referenced_xml_path(self, filename):
-        return os.path.join(self._dirpath, os.path.expanduser(filename))
-
-    def _parse_machine(self, dom_machine):
-        machine = {}
-
-        dom_netmachineconfig = dom_machine.getElementsByTagName("netmachineconfig")[0]
-        netmachineconfig_xml = dom_netmachineconfig.toxml()
-
-        dom_netconfig = dom_machine.getElementsByTagName("netconfig")[0]
-        netconfig_xml = dom_netconfig.toxml()
-
-        ncparse = NetConfigParse(netmachineconfig_xml)
-        machine["info"] = ncparse.get_machine_info()
-        machine["netmachineconfig_xml"] = netmachineconfig_xml
-        machine["netconfig_xml"] = netconfig_xml
-        return machine
-
-    def _parse_machines(self, dom_machines_grp):
-        machines = {}
-        for dom_machines_item in dom_machines_grp:
-            dom_machines = dom_machines_item.getElementsByTagName("machine")
-            for dom_machine in dom_machines:
-                machine_id = int(dom_machine.getAttribute("id"))
-                machines[machine_id] = self._parse_machine(dom_machine)
-        return machines
-
-    def _parse_definitions(self, dom_definitions_grp):
-        xml_prep = self._xml_prep
-        definitions = {}
-        for dom_definitions_item in dom_definitions_grp:
-            dom_aliases = dom_definitions_item.getElementsByTagName("alias")
-            for dom_alias in dom_aliases:
-                alias_name = str(dom_alias.getAttribute("name"))
-                alias_value = str(dom_alias.getAttribute("value"))
-                xml_prep.define_alias(alias_name, alias_value)
+        self._recipe = {}
+        self._template_proc.set_definitions({"recipe": self._recipe})
 
     def parse_recipe(self):
-        recipe = {}
-        dom = parseString(self._recipe_xml_string)
-        xml_prep = self._xml_prep
+        dom_init = XmlDomTreeInit()
+        xml_dom = dom_init.parse_file(self._filepath)
+        self._parse(xml_dom)
 
-        xml_prep.remove_comments(dom)
-
-        self._load_included_parts(dom)
-        dom_nettestrecipe = dom.getElementsByTagName("nettestrecipe")[0]
-
-        dom_definitions_grp = dom_nettestrecipe.getElementsByTagName("define")
-        self._parse_definitions(dom_definitions_grp)
-        for define_tag in dom_definitions_grp:
-            parent = define_tag.parentNode
-            parent.removeChild(define_tag)
-
-        dom_machines_grp = dom_nettestrecipe.getElementsByTagName("machines")
-        xml_prep.expand_group(dom_machines_grp)
-        recipe["machines"] = self._parse_machines(dom_machines_grp)
-
-        dom_switches_grp = dom_nettestrecipe.getElementsByTagName("switches")
-        xml_prep.expand_group(dom_switches_grp)
-        recipe["switches"] = self._parse_machines(dom_switches_grp)
-
-        self._recipe = recipe
-        self._dom_nettestrecipe = dom_nettestrecipe
-        xml_prep.define_alias("recipe", recipe, skip_reserved_check=True)
-
-    def get_recipe(self):
-        return self._recipe
-
-    def _load_included_parts(self, dom_node):
-        if dom_node.nodeType == dom_node.ELEMENT_NODE:
-            source = str(dom_node.getAttribute("source"))
-            if source:
-                file_path = self._get_referenced_xml_path(source)
-                xml_data = load_file(file_path)
-
-                dom = parseString(xml_data)
-                loaded_node = None
-                try:
-                    loaded_node = dom.getElementsByTagName(dom_node.nodeName)[0]
-                except Exception:
-                    err = ("No '%s' node present in included file '%s'."
-                                        % (dom_node.nodeName, file_path))
-                    raise WrongIncludeSource(err)
-
-                parent = dom_node.parentNode
-                parent.replaceChild(loaded_node, dom_node)
-                self._load_included_parts(loaded_node)
-                return
-
-        for child in dom_node.childNodes:
-            self._load_included_parts(child)
-
-    def _recipe_eval(self, eval_data):
-        try:
-            return str(eval("self._recipe%s" % eval_data))
-        except (KeyError, IndexError):
-            logging.error("Wrong recipe_eval value \"%s\" passed"
-                                      % eval_data)
-            raise Exception
-
-    @classmethod
-    def _int_it(cls, val):
-        try:
-            num = int(val)
-        except ValueError:
-            num = 0
-        return num
-
-    @classmethod
-    def _bool_it(cls, val):
-        if isinstance(val, str):
-            if re.match("^\s*(?i)(true)", val):
-                return True
-            elif re.match("^\s*(?i)(false)", val):
-                return False
-        return True if cls._int_it(val) else False
-
-    def _parse_command_option(self, dom_option, options):
-        logging.debug("Parsing command option")
-        option_type = str(dom_option.getAttribute("type"))
-        orig_value = None
-        if not option_type:
-            name = str(dom_option.getAttribute("name"))
-            value = str(dom_option.getAttribute("value"))
-        elif option_type == "recipe_eval":
-            name = str(dom_option.getAttribute("name"))
-            orig_value = str(dom_option.getAttribute("value"))
-            value = str(self._recipe_eval(orig_value))
+    def _parse(self, xml_dom):
+        if xml_dom.nodeType == xml_dom.DOCUMENT_NODE:
+            scheme = {"nettestrecipe": self._nettestrecipe}
+            self._process_child_nodes(xml_dom, scheme)
         else:
-            logging.error("Unknown option type \"%s\"" % option_type)
-            raise Exception("Unknown option type")
+            raise XmlProcessingError("Passed object is not a XML document")
 
-        logging.debug("Command option name \"%s\", value \"%s\""
-                                        % (name, value))
-        option = {"value": value}
-        if option_type:
-            option["type"] = option_type
-        if orig_value:
-            option["orig_value"] = orig_value
-        if not name in options:
-            options[name] = []
-        options[name].append(option)
+    def _nettestrecipe(self, node, params):
+        scheme = {"machines": self._machines,
+                  "switches": self._switches,
+                  "command_sequence": self._command_sequence}
+        self._process_child_nodes(node, scheme)
 
-    def _parse_command(self, dom_command):
-        logging.debug("Parsing command")
-        recipe = self._recipe
-        tmp = dom_command.getAttribute("machine_id")
-        if tmp:
-            machine_id = int(tmp)
-            if machine_id and not machine_id in recipe["machines"]:
-                logging.error("Invalid machine id")
-                raise Exception("Invalid machine id")
+    def _machines(self, node, params):
+        self._recipe["machines"] = {}
+        scheme = {"machine": self._machine}
+        self._process_child_nodes(node, scheme)
+
+    def _machine(self, node, params):
+        subparser = MachineParse(self)
+        subparser.set_type("host")
+        subparser.parse(node)
+
+    def _switches(self, node, params):
+        self._recipe["switches"] = {}
+        scheme = {"switch": self._switch}
+        self._process_child_nodes(node, scheme)
+
+    def _switch(self, node, params):
+        subparser = MachineParse(self)
+        subparser.set_type("switch")
+        subparser.parse(node)
+
+    def _command_sequence(self, node, params):
+        if not "sequences" in self._recipe:
+            self._recipe["sequences"] = []
+
+        subparser = CommandSequenceParse(self)
+        subparser.parse(node)
+
+
+class MachineParse(RecipeParser):
+    _target = "machines"
+
+    def set_type(self, machine_type):
+        if machine_type == "host":
+            self._target = "machines"
+        elif machine_type == "switch":
+            self._target = "switches"
         else:
-            machine_id = 0 # controller id
-        cmd_type = str(dom_command.getAttribute("type"))
-        value = str(dom_command.getAttribute("value"))
+            raise XmlProcessingError("Unknown machine type")
 
-        command = {"type": cmd_type, "value": value, "machine_id": machine_id}
-        tmp = dom_command.getAttribute("timeout")
-        if tmp:
-            command["timeout"] = int(tmp)
-        tmp = dom_command.getAttribute("bg_id")
-        if tmp:
-            command["bg_id"] = int(tmp)
-        tmp = dom_command.getAttribute("desc")
-        if tmp:
-            command["desc"] = str(tmp)
-        logging.debug("Parsed command: [%s]" % str_command(command))
+    def parse(self, node):
+        self._id = self._get_attribute(node, "id", int)
+        self._machine = {}
+        self._recipe[self._target][self._id] = self._machine
 
-        if cmd_type == "system_config":
-            tmp = dom_command.getAttribute("option")
-            if tmp:
-                command["option"] = str(tmp)
+        self._machine["info"] = {}
+        self._machine["netdevices"] = {}
+        self._machine["netconfig"] = {}
 
-            tmp = dom_command.getAttribute("persistent")
-            if tmp:
-                command["persistent"] = self._bool_it(tmp)
+        scheme = {"netmachineconfig": self._netmachineconfig,
+                  "netconfig": self._netconfig }
+        self._process_child_nodes(node, scheme)
+
+    def _netmachineconfig(self, node, params):
+        subparser = NetMachineConfigParse(self)
+        subparser.set_machine(self._id, self._machine)
+        subparser.parse(node)
+
+    def _netconfig(self, node, params):
+        subparser = NetConfigParse(self)
+        subparser.set_machine(self._id, self._machine)
+        subparser.parse(node)
+
+class NetMachineConfigParse(RecipeParser):
+    _machine_id = None
+    _machine = None
+
+    def set_machine(self, machine_id, machine):
+        self._machine_id = machine_id
+        self._machine = machine
+
+    def parse(self, node):
+        scheme = {"info": self._info,
+                  "netdevice": self._phys_netdevice}
+        self._process_child_nodes(node, scheme)
+
+    def _info(self, node, params):
+        machine = self._machine
+        info = machine["info"]
+
+        info["hostname"] = self._get_attribute(node, "hostname")
+
+        if self._has_attribute(node, "rootpass"):
+            info["rootpass"] = self._get_attribute(node, "rootpass")
+
+        if self._has_attribute(node, "rpcport"):
+            info["rpcport"] = self._get_attribute(node, "rpcport", int)
+
+        info["system_config"] = {}
+
+        self._trigger_event("machine_info_ready",
+                            {"machine_id": self._machine_id})
+
+    def _phys_netdevice(self, node, params):
+        machine = self._machine
+        phys_id = self._get_attribute(node, "phys_id", int)
+
+        dev = machine["netdevices"][phys_id] = {}
+        dev["type"] = self._get_attribute(node, "type")
+        dev["hwaddr"] = normalize_hwaddr(self._get_attribute(node, "hwaddr"))
+
+        if self._has_attribute(node, "name"):
+            dev["name"] = self._get_attribute(node, "name")
+
+        self._trigger_event("netdevice_ready", {"machine_id": self._machine_id,
+                                                "dev_id": phys_id})
+
+
+class NetConfigParse(RecipeParser):
+    _machine_id = None
+    _machine = None
+
+    def set_machine(self, machine_id, machine):
+        self._machine_id = machine_id
+        self._machine = machine
+
+    def parse(self, node):
+        netconfig = self._machine["netconfig"]
+        self._netconfig = netconfig
+
+        devices = self._machine["netdevices"]
+        self._devices = devices
+
+        scheme = {"netdevice": self._netdevice}
+        self._process_child_nodes(node, scheme)
+
+    def _netdevice(self, node, params):
+        netconfig = self._netconfig
+        devices = self._devices
+
+        dev_id = self._get_attribute(node, "id", int)
+        if not dev_id in netconfig:
+            netconfig[dev_id] = {}
+        else:
+            msg = "Netdevice 'id' used more than once"
+            raise XmlProcessingError(msg, node)
+
+        dev = netconfig[dev_id]
+        dev["type"] = self._get_attribute(node, "type")
+
+        if self._has_attribute(node, "phys_id"):
+            self._process_phys_id_attr(node, dev)
+
+        params = {"dev_id": dev_id}
+        scheme = {"addresses": self._addresses}
+        if dev["type"] == "eth":
+            pass
+        elif dev["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
+            scheme["options"] = self._options
+            scheme["slaves"] = self._slaves
+        else:
+            logging.warn("unknown type \"%s\"" % dev["type"])
+
+        self._process_child_nodes(node, scheme, params)
+
+        self._trigger_event("interface_config_ready",
+                            {"machine_id": self._machine_id,
+                             "netdev_config_id": dev_id})
+
+    def _process_phys_id_attr(self, node, dev):
+        netconfig = self._netconfig
+        devices = self._devices
+
+        if dev["type"] == "eth":
+            phys_id = self._get_attribute(node, "phys_id", int)
+            self._check_phys_id(node, phys_id, netconfig)
+            dev["phys_id"] = phys_id
+
+            if phys_id in devices:
+                phys_dev = devices[phys_id]
+                if phys_dev["type"] == dev["type"]:
+                    dev["hwaddr"] = phys_dev["hwaddr"]
+                    if "name" in phys_dev:
+                        dev["name"] = phys_dev["name"]
             else:
-                command["persistent"] = False
+                msg = "phys_id passed but does not match any device on machine"
+                raise XmlProcessingError(msg, node)
+        else:
+            logging.warn("phys_id found on non-eth netdev, ignoring")
 
-        dom_options_grp = dom_command.getElementsByTagName("options")
-        options = {}
-        for dom_options_item in dom_options_grp:
-            dom_options = dom_options_item.getElementsByTagName("option")
-            for dom_option in dom_options:
-                self._parse_command_option(dom_option, options)
-        if options:
-            command["options"] = options
-        return command
+
+    @staticmethod
+    def _check_phys_id(node, dev_pid, config):
+        for key in config:
+            if not "phys_id" in config[key]:
+                continue
+            if config[key]["phys_id"] == dev_pid:
+                msg = "same phys_id \"%d\" used more than once" % dev_pid
+                raise XmlProcessingError(msg, node)
+
+    def _addresses(self, node, params):
+        self._list_init(node, params, "addresses", {"address": self._address})
+
+    def _address(self, node, params):
+        if self._has_attribute(node, "value"):
+            addr = self._get_attribute(node, "value")
+        else:
+            addr = self._get_text_content(node)
+
+        dev_id = params["dev_id"]
+        self._netconfig[dev_id]["addresses"].append(addr)
+
+    def _options(self, node, params):
+        self._list_init(node, params, "options", {"option": self._option})
+
+    def _option(self, node, params):
+        name = self._get_attribute(node, "name")
+
+        if self._has_attribute(node, "value"):
+            value = self._get_attribute(node, "value")
+        else:
+            value = self._get_text_content(node)
+
+        dev_id = params["dev_id"]
+        self._netconfig[dev_id]["options"].append((name, value))
+
+    def _slaves(self, node, params):
+        self._list_init(node, params, "slaves", {"slave": self._slave})
+
+    def _slave(self, node, params):
+        if self._has_attribute(node, "id"):
+            slave_id = self._get_attribute(node, "id", int)
+        else:
+            slave_id = self._get_text_content(node, int)
+
+        dev_id = params["dev_id"]
+        self._netconfig[dev_id]["slaves"].append(slave_id)
+
+    def _list_init(self, node, params, node_name, scheme):
+        dev_id = params["dev_id"]
+        dev = self._netconfig[dev_id]
+        dev[node_name] = []
+
+        self._process_child_nodes(node, scheme, params)
+
+
+class CommandSequenceParse(RecipeParser):
+    def parse(self, node):
+        sequences = self._recipe["sequences"]
+        sequences.append([])
+        seq_num = len(sequences) - 1
+
+        self._seq_num = seq_num
+        self._seq_node = node
+
+        scheme = {"command": self._command}
+        self._process_child_nodes(node, scheme)
+
+        self._check_sequence(sequences[seq_num])
+
+    def _command(self, node, params):
+        subparser = CommandParse(self)
+        subparser.set_seq_num(self._seq_num)
+        subparser.parse(node)
 
     def _check_sequence(self, sequence):
         err = False
@@ -245,7 +317,7 @@ class NetTestParse:
                 else:
                     logging.error("Found command \"%s\" for bg_id \"%s\" on "
                               "machine \"%d\" which was not previously "
-                              "defined" % (cmd_type, bg_id, machine_id))
+                              "defined", cmd_type, bg_id, machine_id)
                     err = True
 
             if "bg_id" in command:
@@ -254,29 +326,117 @@ class NetTestParse:
                     bg_ids[machine_id].add(bg_id)
                 else:
                     logging.error("Command \"%d\" uses bg_id \"%d\" on machine "
-                              "\"%d\" which is already used"
-                                            % (i, bg_id, machine_id))
+                              "\"%d\" which is already used",
+                                            i, bg_id, machine_id)
                     err = True
 
         for machine_id in bg_ids:
             for bg_id in bg_ids[machine_id]:
                 logging.error("bg_id \"%d\" on machine \"%d\" has no kill/wait "
-                          "command to it" % (bg_id, machine_id))
-                err= True
+                          "command to it", bg_id, machine_id)
+                err = True
         if err:
-            raise WrongCommandSequenceException
+            msg = "Incorrect command sequence"
+            raise XmlProcessingError(msg, self._seq_node)
 
-    def parse_recipe_command_sequence(self):
-        dom_sequences = self._dom_nettestrecipe.getElementsByTagName("command_sequence")
-        xml_prep = self._xml_prep
-        xml_prep.expand_group(dom_sequences)
 
-        self._recipe["sequences"] = []
-        for dom_sequence in dom_sequences:
-            sequence = []
-            dom_commands = dom_sequence.getElementsByTagName("command")
-            for dom_command in dom_commands:
-                sequence.append(self._parse_command(dom_command))
+class CommandParse(RecipeParser):
+    _seq_num = None
+    _cmd_num = None
 
-            self._check_sequence(sequence)
-            self._recipe["sequences"].append(sequence)
+    def set_seq_num(self, num):
+        self._seq_num = num
+
+    def parse(self, node):
+        recipe = self._recipe
+        command = {}
+        recipe["sequences"][self._seq_num].append(command)
+        self._cmd_num = len(recipe["sequences"][self._seq_num]) - 1
+
+        if self._has_attribute(node, "machine_id"):
+            machine_id = self._get_attribute(node, "machine_id", int)
+            if machine_id and not machine_id in recipe["machines"]:
+                raise XmlProcessingError("Invalid machine_id", node)
+        else:
+            machine_id = 0 # controller id
+
+        command["machine_id"] = machine_id
+        command["type"]  = self._get_attribute(node, "type")
+        command["value"] = self._get_attribute(node, "value")
+
+        if self._has_attribute(node, "timeout"):
+            command["timeout"] = self._get_attribute(node, "timeout", int)
+
+        if self._has_attribute(node, "bg_id"):
+            command["bg_id"] = self._get_attribute(node, "bg_id", int)
+
+        if self._has_attribute(node, "desc"):
+            command["desc"] = self._get_attribute(node, "desc")
+
+        if command["type"] == "system_config":
+            if self._has_attribute(node, "option"):
+                command["option"] = self._get_attribute(node, "option")
+
+            if self._has_attribute(node, "persistent"):
+                command["persistent"] = self._get_attribute(node, "persistent",
+                                                    self._bool_it)
+            else:
+                command["persistent"] = False
+
+        scheme = {"options": self._options}
+        self._process_child_nodes(node, scheme)
+
+    def _options(self, node, params):
+        seq = self._seq_num
+        cmd = self._cmd_num
+        self._recipe["sequences"][seq][cmd]["options"] = {}
+
+        scheme = {"option": self._option}
+        self._process_child_nodes(node, scheme)
+
+    def _option(self, node, params):
+        seq = self._seq_num
+        cmd = self._cmd_num
+        options = self._recipe["sequences"][seq][cmd]["options"]
+
+        name = self._get_attribute(node, "name")
+        if not name in options:
+            options[name] = []
+
+        option = {}
+        options[name].append(option)
+
+        if self._has_attribute(node, "type"):
+            opt_type = self._get_attribute(node, "type")
+            option["type"] = opt_type
+        else:
+            opt_type = "default"
+
+        if opt_type == "default":
+            if self._has_attribute(node, "value"):
+                value = self._get_attribute(node, "value")
+            else:
+                value = self._get_text_content(node)
+
+            option["value"] = value
+        else:
+            msg = "Unknown option type \"%s\"" % opt_type
+            raise XmlProcessingError(msg, node)
+
+
+    @classmethod
+    def _int_it(cls, val):
+        try:
+            num = int(val)
+        except ValueError:
+            num = 0
+        return num
+
+    @classmethod
+    def _bool_it(cls, val):
+        if isinstance(val, str):
+            if re.match("^\s*(?i)(true)", val):
+                return True
+            elif re.match("^\s*(?i)(false)", val):
+                return False
+        return True if cls._int_it(val) else False
