@@ -18,8 +18,11 @@ import re
 import os
 from pprint import pprint
 from NetConfig.NetConfig import NetConfig
-from NetConfig.NetConfigParse import NetConfigParse
 from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
+from NetConfig.NetConfigDevNames import NetConfigDevNames
+from NetTest.NetTestParse import NetConfigParse
+from NetTest.NetTestParse import NetMachineConfigParse
+from Common.XmlProcessing import XmlDomTreeInit
 from Common.Logs import Logs
 
 def usage():
@@ -35,6 +38,76 @@ def usage():
     print "  -c, --config=FILE                       use this net configuration file"
     print "  -m, --machine-config=FILE               use this machine configuration file"
     sys.exit()
+
+def prepare_machine_config(machine_file):
+    tree_init = XmlDomTreeInit()
+    dom = tree_init.parse_file(machine_file)
+    machine_dom = dom.getElementsByTagName("netmachineconfig")[0]
+
+    data = {"info":{}, "netdevices": {}, "netconfig": {}}
+
+    machine_parse = NetMachineConfigParse()
+    machine_parse.disable_events()
+    machine_parse.set_recipe(data)
+    machine_parse.set_machine(0, data)
+    machine_parse.parse(machine_dom)
+
+    return data
+
+def prepare_netconfig(machine_file, config_file):
+    tree_init = XmlDomTreeInit()
+    data = prepare_machine_config(machine_file)
+
+    dom = tree_init.parse_file(config_file)
+    config_dom = dom.getElementsByTagName("netconfig")[0]
+
+    config_parse = NetConfigParse()
+    config_parse.disable_events()
+    config_parse.set_recipe(data)
+    config_parse.set_machine(0, data)
+    config_parse.parse(config_dom)
+
+    netconfig = NetConfig()
+    for key, entry in data["netconfig"].iteritems():
+        netconfig.add_interface_config(key, entry)
+
+    return netconfig
+
+def netmachineconfig_to_xml(machine_data):
+    info = machine_data["info"]
+
+    hostname = ""
+    rootpass = ""
+    rpcport = ""
+
+    if "hostname" in info:
+        hostname = "hostname=\"%s\" " % info["hostname"]
+    if "rootpass" in info:
+        rootpass = "rootpass=\"%s\" " % info["rootpass"]
+    if "rpcport" in info:
+        rpcport = "rpcport=\"%s\" " % info["rpcport"]
+
+    info_tag = "    <info %s%s%s/>\n" % (hostname, rootpass, rpcport)
+
+    devices = ""
+    for phys_id, netdev in machine_data["netdevices"].iteritems():
+        pid = "phys_id=\"%d\" " % phys_id
+        dev_type = ""
+        name = ""
+        hwaddr = ""
+
+        if "type" in netdev:
+            dev_type = "type=\"%s\" " % netdev["type"]
+        if "name" in netdev:
+            name = "name=\"%s\" " % netdev["name"]
+        if "hwaddr" in netdev:
+            hwaddr = "hwaddr=\"%s\" " % netdev["hwaddr"]
+
+        device_tag = "    <netdevice %s%s%s%s/>\n" % (pid, dev_type,
+                                                      name, hwaddr)
+        devices += device_tag
+
+    return "<netmachineconfig>\n" + info_tag + devices + "</netmachineconfig>"
 
 def main():
     """
@@ -82,14 +155,16 @@ def main():
         usage();
     machine_config_path = os.path.expanduser(machine_config_path)
 
-    handle = open(machine_config_path, "r")
-    machine_config_xml = handle.read()
-    handle.close()
-
     if action == "refresh":
         logging.info("Refreshing machine config")
-        net_config_parse = NetConfigParse(machine_config_xml)
-        output = net_config_parse.refresh_machine_config()
+        machine_data = prepare_machine_config(machine_config_path)
+        dev_names = NetConfigDevNames()
+        for dev_id, netdev in machine_data["netdevices"].iteritems():
+            if "name" in netdev:
+                del netdev["name"]
+            dev_names.assign_name_by_scan(dev_id, netdev)
+
+        output = netmachineconfig_to_xml(machine_data)
         handle = open(machine_config_path, "w")
         handle.write(output)
         handle.close()
@@ -106,24 +181,18 @@ def main():
         '''
 
         for root, dirs, files in os.walk(config_path):
-            for f in files:
-                config_file = os.path.join(config_path, f)
+            for file_name in files:
+                config_file = os.path.join(config_path, file_name)
                 if not re.match(r'^.*\.xml$', config_file):
                     continue
-                handle = open(config_file, "r")
-                config_xml = handle.read()
-                handle.close()
-                logging.info("Processing config file \"%s\"" % config_file)
-                net_config = NetConfig(machine_config_xml, config_xml)
+                logging.info("Processing config file \"%s\"", config_file)
+                net_config = prepare_netconfig(machine_config_path,
+                                               config_file)
                 net_config.configure_all()
                 net_config.deconfigure_all()
         return
 
-    handle = open(config_path, "r")
-    config_xml = handle.read()
-    handle.close()
-
-    net_config = NetConfig(machine_config_xml, config_xml)
+    net_config = prepare_netconfig(machine_config_path, config_path)
     if action == "up":
         net_config.configure_all()
     elif action == "down":
