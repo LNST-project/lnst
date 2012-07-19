@@ -158,26 +158,24 @@ class NetTestController:
         ip_addr = get_corespond_local_ip(hostname)
         rpc.set_logging(ip_addr, LoggingServer.DEFAULT_PORT)
 
-    def _cleanup_slave(self, machine_id):
-        info = self._get_machineinfo(machine_id)
-
-        if self._docleanup:
+    def _deconfigure_slaves(self):
+        for machine_id in self._recipe["machines"]:
+            info = self._get_machineinfo(machine_id)
             rpc = self._get_machinerpc(machine_id)
             for if_id in reversed(info["configured_interfaces"]):
                 rpc.deconfigure_interface(if_id)
 
-        if self._remoteexec and "session" in info:
-            info["session"].kill()
-            info["session"].wait()
+    def _disconnect_slaves(self):
+        for machine_id in self._recipe["machines"]:
+            info = self._get_machineinfo(machine_id)
+            if self._remoteexec and "session" in info:
+                info["session"].kill()
+                info["session"].wait()
 
     def _prepare(self):
         # All the perparations are made within the recipe parsing
         # This is achieved by handling parser events (by registering
         self._ntparse.parse_recipe()
-
-    def _cleanup(self):
-        for machine_id in self._recipe["machines"]:
-            self._cleanup_slave(machine_id)
 
     def _run_command(self, command):
         machine_id = command["machine_id"]
@@ -236,12 +234,13 @@ class NetTestController:
     def dump_recipe(self):
         self._prepare()
         pprint(self._recipe)
-        self._cleanup()
+        self._deconfigure_slaves()
+        self._disconnect_slaves()
         return True
 
     def config_only_recipe(self):
         self._prepare()
-        self._cleanup()
+        self._disconnect_slaves()
         return True
 
     def run_recipe(self, packet_capture=False):
@@ -260,7 +259,8 @@ class NetTestController:
             self._stop_packet_capture()
             self._gather_capture_files()
 
-        self._cleanup()
+        self._deconfigure_slaves()
+        self._disconnect_slaves()
 
         if not err:
             return res
