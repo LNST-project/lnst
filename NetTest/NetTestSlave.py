@@ -65,6 +65,7 @@ class NetTestSlaveXMLRPC:
 
     def deconfigure_interface(self, if_id):
         self._netconfig.deconfigure(if_id)
+        self._netconfig.remove_interface_config(if_id)
         return True
 
     def netconfig_dump(self):

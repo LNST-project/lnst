@@ -62,14 +62,19 @@ class NetConfig:
         if not dev_type in self._get_used_types():
             NetConfigDeviceType(dev_type).type_init()
 
-    def _types_cleanup(self):
-        for dev_type in self._get_used_types():
+    def _type_cleanup(self, dev_type):
+        if not dev_type in self._get_used_types():
             NetConfigDeviceType(dev_type).type_cleanup()
 
     def add_interface_config(self, if_id, config):
-        self._config[if_id] = config
         self._type_init(config["type"])
+        self._config[if_id] = config
         self._devnames.assign_name(if_id, self._config)
+
+    def remove_interface_config(self, if_id):
+        config = self._config[if_id]
+        del self._config[if_id]
+        self._type_cleanup(config["type"])
 
     def get_interface_config(self, if_id):
         return self._config[if_id]
@@ -95,7 +100,6 @@ class NetConfig:
         dev_order = self._get_dev_order()
         for dev_id in reversed(dev_order):
             self.deconfigure(dev_id)
-        self._types_cleanup()
 
     def dump_config(self):
         return copy.deepcopy(self._config)
