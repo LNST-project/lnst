@@ -29,7 +29,7 @@ class XmlTemplateError(Exception):
 class XmlTemplates:
     """ This class serves as template processor """
 
-    _alias_re = "\{\$([a-zA-Z0-9_]+)(\[.+\])*\}"
+    _alias_re = "\{\$([a-zA-Z0-9_]+)(\[[^{}]+\])?\}"
     _func_re  = "\{([a-zA-Z0-9_]+)\(([^\(\)]*)\)\}"
 
     def __init__(self, definitions=None):
