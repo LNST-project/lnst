@@ -39,6 +39,9 @@ class NetConfigDevNames:
                 scan.append({"name": d, "hwaddr": addr})
         return scan
 
+    def rescan_netdevs(self):
+        self._scan = self._scan_netdevs()
+
     def assign_name_by_scan(self, dev_id, netdev):
         if (not "hwaddr" in netdev or
             "name" in netdev): # name was previously assigned
