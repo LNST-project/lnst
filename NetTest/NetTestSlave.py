@@ -111,6 +111,7 @@ class NetTestSlaveXMLRPC:
 
     def machine_cleanup(self):
         NetConfigDeviceAllCleanup()
+        self._netconfig.cleanup()
         return True
 
 class MySimpleXMLRPCServer(Server):

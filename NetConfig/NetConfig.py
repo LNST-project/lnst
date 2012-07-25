@@ -150,3 +150,9 @@ class NetConfig:
         device = NetConfigDevice(netdev, self._config)
         device.slave_del(slave_dev_id)
         return True
+
+    def cleanup(self):
+        tmp = copy.deepcopy(self._config)
+        for dev_id in tmp:
+            del self._config[dev_id]
+        self._devnames.rescan_netdevs()
