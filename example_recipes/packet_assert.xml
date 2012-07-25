@@ -1,15 +1,15 @@
 <nettestrecipe>
     <command_sequence>
-        <command type="test" value="PacketAssert" bg_id="1">
+        <command bg_id="1" type="test" value="PacketAssert">
             <options>
-                <option name="interface" value="br0" />
-                <option name="filter" value="" />
-                <option name="grep_for" value="IP" />
-                <option name="min" value="1" />
-                <option name="max" value="5" />
+                <option name="interface" value="br0"/>
+                <option name="filter" value=""/>
+                <option name="grep_for" value="IP"/>
+                <option name="min" value="1"/>
+                <option name="max" value="5"/>
             </options>
         </command>
-        <command type="exec" value="sleep 3" />
-        <command type="intr" value="1" />
+        <command type="exec" value="sleep 3"/>
+        <command type="intr" value="1"/>
     </command_sequence>
 </nettestrecipe>

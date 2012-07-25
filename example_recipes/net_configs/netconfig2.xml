@@ -1,7 +1,7 @@
 <netconfig>
-  <netdevice id="1" type="eth" phys_id="1"/>
-  <netdevice id="2" type="eth" phys_id="2"/>
-  <netdevice id="3" type="bridge">
+  <interface id="1" phys_id="1" type="eth"/>
+  <interface id="2" phys_id="2" type="eth"/>
+  <interface id="3" type="bridge">
     <slaves>
       <slave id="1"/>
       <slave id="2"/>
@@ -9,6 +9,5 @@
     <addresses>
       <address value="192.168.101.1/24"/>
     </addresses>
-  </netdevice>
+  </interface>
 </netconfig>
-

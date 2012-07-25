@@ -1,14 +1,13 @@
 <nettestrecipe>
   <command_sequence>
-    <command type="test" value="IcmpPing" timeout="30">
+    <command timeout="30" type="test" value="IcmpPing">
       <options>
         <option name="addr" value="www.redhat.com"/>
-	<option name="count" value="40"/>
-	<option name="interval" value="0.2"/>
-	<option name="limit_rate" value="95"/>
+        <option name="count" value="40"/>
+        <option name="interval" value="0.2"/>
+        <option name="limit_rate" value="95"/>
       </options>
     </command>
     <command type="test" value="DummyFailing"/>
   </command_sequence>
 </nettestrecipe>
-

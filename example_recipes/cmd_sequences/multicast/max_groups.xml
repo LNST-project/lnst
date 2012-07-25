@@ -1,24 +1,22 @@
 <!-- Offline maximum number of groups test -->
 <!-- Requires: 1 host with one interface -->
-
 <command_sequence>
     <!-- With a specific interface -->
-    <command type="test" value="Multicast" machine_id="1" timeout="30">
+    <command machine_id="1" timeout="30" type="test" value="Multicast">
         <options>
-            <option name="setup" value="max_groups" />
-            <option name="interface" value="{ip(1,1)}" />
-            <option name="condition" value="max_groups > 0" />
+            <option name="setup" value="max_groups"/>
+            <option name="interface" value="{ip(1,1)}"/>
+            <option name="condition" value="max_groups > 0"/>
         </options>
     </command>
 
     <!-- Change default max_memberhsips -->
-
-    <command type="system_config" option="/proc/sys/net/ipv4/igmp_max_memberships" value="5" machine_id="1" />
-    <command type="test" value="Multicast" machine_id="1" timeout="30">
+    <command machine_id="1" option="/proc/sys/net/ipv4/igmp_max_memberships" type="system_config" value="5"/>
+    <command machine_id="1" timeout="30" type="test" value="Multicast">
         <options>
-            <option name="setup" value="max_groups" />
-            <option name="interface" value="{ip(1,1)}" />
-            <option name="condition" value="max_groups == 5" />
+            <option name="setup" value="max_groups"/>
+            <option name="interface" value="{ip(1,1)}"/>
+            <option name="condition" value="max_groups == 5"/>
         </options>
     </command>
 </command_sequence>

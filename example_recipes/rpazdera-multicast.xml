@@ -3,52 +3,52 @@
     <machines>
         <machine id="1">
             <netmachineconfig>
-                <info hostname="10.34.1.120" rootpass="redhat" />
-                <netdevice id="1" type="eth" phys_id="1" hwaddr="52:54:00:2E:D5:A8"/>
-                <netdevice id="2" type="eth" phys_id="2" hwaddr="52:54:00:90:23:0B"/>
+                <info hostname="10.34.1.120" rootpass="redhat"/>
+                <netdevice hwaddr="52:54:00:2E:D5:A8" id="1" phys_id="1" type="eth"/>
+                <netdevice hwaddr="52:54:00:90:23:0B" id="2" phys_id="2" type="eth"/>
             </netmachineconfig>
             <netconfig>
-	            <netdevice id="1" type="eth" phys_id="1">
+                <interface id="1" phys_id="1" type="eth">
                     <addresses>
-                        <address value="192.168.122.225/24" />
+                        <address value="192.168.122.225/24"/>
                     </addresses>
-                </netdevice>
-	            <netdevice id="2" type="eth" phys_id="2">
+                </interface>
+                <interface id="2" phys_id="2" type="eth">
                     <addresses>
-                        <address value="192.168.122.239/24" />
+                        <address value="192.168.122.239/24"/>
                     </addresses>
-                </netdevice>
+                </interface>
             </netconfig>
         </machine>
         <machine id="2">
             <netmachineconfig>
-                <info hostname="10.34.1.171" rootpass="redhat" />
-                <netdevice id="1" type="eth" phys_id="1" hwaddr="52:54:00:12:DF:5A"/>
+                <info hostname="10.34.1.171" rootpass="redhat"/>
+                <netdevice hwaddr="52:54:00:12:DF:5A" id="1" phys_id="1" type="eth"/>
             </netmachineconfig>
             <netconfig>
-	            <netdevice id="1" type="eth" phys_id="1">
+                <interface id="1" phys_id="1" type="eth">
                     <addresses>
-                        <address value="192.168.122.200/24" />
+                        <address value="192.168.122.200/24"/>
                     </addresses>
-                </netdevice>
+                </interface>
             </netconfig>
         </machine>
     </machines>
 
     <define>
-        <alias name="multicast_group" value="239.1.2.3" />
-        <alias name="port" value="1337" />
-        <alias name="test_duration" value="10" />
-        <alias name="send_delay" value="0.1" />
-        <alias name="nonexistent_ip" value="127.0.0.200" />
+        <alias name="multicast_group" value="239.1.2.3"/>
+        <alias name="port" value="1337"/>
+        <alias name="test_duration" value="10"/>
+        <alias name="send_delay" value="0.1"/>
+        <alias name="nonexistent_ip" value="127.0.0.200"/>
     </define>
 
-    <command_sequence source="cmd_sequences/multicast/max_groups.xml" />
-    <command_sequence source="cmd_sequences/multicast/block_source.xml" />
-    <command_sequence source="cmd_sequences/multicast/source_membership.xml" />
-    <command_sequence source="cmd_sequences/multicast/membership.xml" />
-    <command_sequence source="cmd_sequences/multicast/if.xml" />
-    <command_sequence source="cmd_sequences/multicast/ttl.xml" />
-    <command_sequence source="cmd_sequences/multicast/loop.xml" />
-    <command_sequence source="cmd_sequences/multicast/simple.xml" />
+    <command_sequence source="cmd_sequences/multicast/max_groups.xml"/>
+    <command_sequence source="cmd_sequences/multicast/block_source.xml"/>
+    <command_sequence source="cmd_sequences/multicast/source_membership.xml"/>
+    <command_sequence source="cmd_sequences/multicast/membership.xml"/>
+    <command_sequence source="cmd_sequences/multicast/if.xml"/>
+    <command_sequence source="cmd_sequences/multicast/ttl.xml"/>
+    <command_sequence source="cmd_sequences/multicast/loop.xml"/>
+    <command_sequence source="cmd_sequences/multicast/simple.xml"/>
 </nettestrecipe>

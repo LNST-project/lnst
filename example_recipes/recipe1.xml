@@ -7,28 +7,27 @@
     <machine id="2">
       <netmachineconfig>
         <info hostname="junkbox.lab.eng.brq.redhat.com"/>
-        <netdevice type="eth" phys_id="1" hwaddr="00:10:18:61:35:9B"/>
+        <netdevice hwaddr="00:10:18:61:35:9B" phys_id="1" type="eth"/>
       </netmachineconfig>
       <netconfig>
-	<netdevice id="1" type="eth" phys_id="1">
+        <interface id="1" phys_id="1" type="eth">
           <addresses>
             <address value="192.168.101.2/24"/>
           </addresses>
-	</netdevice>
+        </interface>
       </netconfig>
     </machine>
   </machines>
   <command_sequence>
     <command type="exec" value="sleep 4"/>
 
-    <command type="test" machine_id="1" value="IcmpPing" timeout="30">
+    <command machine_id="1" timeout="30" type="test" value="IcmpPing">
       <options>
-        <option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]"/>
-	<option name="count" value="40"/>
-	<option name="interval" value="0.2"/>
-	<option name="limit_rate" value="95"/>
+        <option name="addr" value="{$recipe['machines'][2]['netconfig'][1]['addresses'][0]}"/>
+        <option name="count" value="40"/>
+        <option name="interval" value="0.2"/>
+        <option name="limit_rate" value="95"/>
       </options>
     </command>
   </command_sequence>
 </nettestrecipe>
-

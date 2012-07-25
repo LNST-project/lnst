@@ -1,38 +1,37 @@
 <command_sequence>
-  <command type="exec" machine_id="2" value="nc -l 1234" bg_id="1" />
-  <command type="exec" machine_id="1" value="sleep 5" />
-  <command type="test" machine_id="1" value="NetCat">
+  <command bg_id="1" machine_id="2" type="exec" value="nc -l 1234"/>
+  <command machine_id="1" type="exec" value="sleep 5"/>
+  <command machine_id="1" type="test" value="NetCat">
     <options>
-      <option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]" />
-      <option name="port" value="1234" />
+      <option name="addr" value="{ip(2,1)}"/>
+      <option name="port" value="1234"/>
     </options>
   </command>
-  <command type="kill" machine_id="2" value="1" />
+  <command machine_id="2" type="kill" value="1"/>
 
-  <command type="exec" machine_id="2" value="nc -u -l 1234" bg_id="2" />
-  <command type="exec" machine_id="1" value="sleep 5" />
-  <command type="test" machine_id="1" value="NetCat">
+  <command bg_id="2" machine_id="2" type="exec" value="nc -u -l 1234"/>
+  <command machine_id="1" type="exec" value="sleep 5"/>
+  <command machine_id="1" type="test" value="NetCat">
     <options>
-      <option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]" />
-      <option name="port" value="1234" />
-      <option name="duration" value="10" />
-      <option name="stream" value="udp" />
-      <option name="ipv" value="4" />
+      <option name="addr" value="{ip(2,1)}"/>
+      <option name="port" value="1234"/>
+      <option name="duration" value="10"/>
+      <option name="stream" value="udp"/>
+      <option name="ipv" value="4"/>
     </options>
   </command>
-  <command type="kill" machine_id="2" value="2" />
+  <command machine_id="2" type="kill" value="2"/>
 
-  <command type="exec" machine_id="2" value="nc -l 1234" bg_id="3" />
-  <command type="exec" machine_id="1" value="sleep 5" />
-  <command type="test" machine_id="1" value="NetCat">
+  <command bg_id="3" machine_id="2" type="exec" value="nc -l 1234"/>
+  <command machine_id="1" type="exec" value="sleep 5"/>
+  <command machine_id="1" type="test" value="NetCat">
     <options>
-      <option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]" />
-      <option name="port" value="1234" />
-      <option name="duration" value="10" />
-      <option name="stream" value="tcp" />
-      <option name="ipv" value="4" />
+      <option name="addr" value="{ip(2,1)}"/>
+      <option name="port" value="1234"/>
+      <option name="duration" value="10"/>
+      <option name="stream" value="tcp"/>
+      <option name="ipv" value="4"/>
     </options>
   </command>
-  <command type="kill" machine_id="2" value="3" />
+  <command machine_id="2" type="kill" value="3"/>
 </command_sequence>
-
