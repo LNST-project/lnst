@@ -119,7 +119,7 @@ class NetMachineConfigParse(RecipeParser):
 
     def parse(self, node):
         scheme = {"info": self._info,
-                  "netdevice": self._phys_netdevice}
+                  "netdevice": self._netdevice}
         self._process_child_nodes(node, scheme)
 
     def _info(self, node, params):
@@ -139,7 +139,7 @@ class NetMachineConfigParse(RecipeParser):
         self._trigger_event("machine_info_ready",
                             {"machine_id": self._machine_id})
 
-    def _phys_netdevice(self, node, params):
+    def _netdevice(self, node, params):
         machine = self._machine
         phys_id = self._get_attribute(node, "phys_id", int)
 
@@ -169,10 +169,10 @@ class NetConfigParse(RecipeParser):
         devices = self._machine["netdevices"]
         self._devices = devices
 
-        scheme = {"netdevice": self._netdevice}
+        scheme = {"interface": self._interface}
         self._process_child_nodes(node, scheme)
 
-    def _netdevice(self, node, params):
+    def _interface(self, node, params):
         netconfig = self._netconfig
         devices = self._devices
 
