@@ -114,6 +114,11 @@ class NetTestController:
 
             info["configured_interfaces"] = []
 
+        rpc = self._get_machinerpc(machine_id)
+
+        if self._docleanup:
+            rpc.machine_cleanup()
+
     def _init_slave_session(self, machine_id):
         info = self._get_machineinfo(machine_id)
         hostname = info["hostname"]
@@ -144,9 +149,6 @@ class NetTestController:
         if rpc.hello() != "hello":
             logging.error("Handshake error with machine %s", hostname)
             raise Exception("Hanshake error")
-
-        if self._docleanup:
-            rpc.machine_cleanup()
 
         info["rpc"] = rpc
 
