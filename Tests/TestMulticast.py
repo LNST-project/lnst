@@ -108,10 +108,11 @@ class TestMulticast(TestGeneric):
         setup_name = self.get_mopt("setup")
         logging.info("Started Multicast test setup {0}".format(setup_name))
 
-        exec_cmd("cd " + self._tools_location + " && make")
+        exec_cmd("cd " + self._tools_location + " && make",
+                    log_outputs=False)
 
         cmd = self._compose_cmd()
-        data_stdout = exec_cmd(cmd, die_on_err=False)[0]
+        data_stdout = exec_cmd(cmd, die_on_err=False, log_outputs=False)[0]
 
         res = {}
 
