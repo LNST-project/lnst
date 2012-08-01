@@ -70,7 +70,6 @@ class NetConfig:
     def remove_interface_config(self, if_id):
         config = self._config[if_id]
         del self._config[if_id]
-        print self._config
 
         dev_type = config["type"]
         if not dev_type in self._get_used_types():
