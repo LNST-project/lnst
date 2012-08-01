@@ -14,7 +14,25 @@ import logging
 import subprocess
 
 class ExecCmdFail(Exception):
-    pass
+    _cmd = None
+    _retval = None
+    _stderr = None
+
+    def __init__(self, cmd=None, retval=None, err=""):
+        self._stderr = err
+        self._retval = retval
+
+    def get_cmd(self):
+        return self._cmd
+
+    def get_stderr(self):
+        return self._stderr
+
+    def __str__(self):
+        retval = ""
+        if self._retval:
+            retval = " (exited with %d)" % self._retval
+        return "Command execution failed%s" % retval
 
 def log_output(log_func, out_type, out):
     log_func("%s:\n"
@@ -40,7 +58,8 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True):
         if data_stderr:
             log_output(logging.error, "Stderr", data_stderr)
     if subp.returncode and die_on_err:
-        logging.error("Command failed with error \"%d\"" % subp.returncode)
-        raise ExecCmdFail
+        err = ExecCmdFail(cmd, subp.returncode, data_stderr)
+        logging.error(err)
+        raise err
 
     return data_stdout, data_stderr
