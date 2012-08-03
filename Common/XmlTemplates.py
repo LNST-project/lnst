@@ -223,8 +223,23 @@ class XmlTemplates:
         if_id = int(params[1])
         ip_id = int(params[2]) if len(params) == 3 else 0
 
-        machines = recipe["machines"]
-        ip_addr = machines[m_id]['netconfig'][if_id]['addresses'][ip_id]
+        if 'machines' not in recipe or m_id not in recipe['machines']:
+            msg = "First parameter of function ip() is invalid: "\
+                    "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+        machine = recipe["machines"][m_id]
+
+
+        if if_id not in machine['netconfig']:
+            msg = "Second parameter of function ip() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+        if ip_id >= len(machine['netconfig'][if_id]['addresses']):
+            msg = "Third parameter of function ip() is invalid: "\
+                    "Address %s does not exist." % ip_id
+            raise XmlTemplateError(msg)
+        ip_addr = machine['netconfig'][if_id]['addresses'][ip_id]
+
 
         return ip_addr.split('/')[0]
 
@@ -234,8 +249,19 @@ class XmlTemplates:
         m_id = int(params[0])
         if_id = int(params[1])
 
-        machines = recipe["machines"]
-        return machines[m_id]['netconfig'][if_id]['hwaddr']
+        if 'machines' not in recipe or m_id not in recipe['machines']:
+            msg = "First parameter of function hwaddr() is invalid: "\
+                    "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+        machine = recipe["machines"][m_id]
+
+        if if_id not in machine['netconfig']:
+            msg = "Second parameter of function hwaddr() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+        mac_addr = machine['netconfig'][if_id]['hwaddr']
+
+        return mac_addr
 
 
     def _devname_func(self, params):
@@ -244,8 +270,19 @@ class XmlTemplates:
         m_id = int(params[0])
         if_id = int(params[1])
 
-        machines = recipe["machines"]
-        return machines[m_id]['netconfig'][if_id]['name']
+        if 'machines' not in recipe or m_id not in recipe['machines']:
+            msg = "First parameter of function devname() is invalid: "\
+                    "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+        machines = recipe["machines"][m_id]
+
+        if if_id not in machine['netconfig']:
+            msg = "Second parameter of function devname() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+        dev_name = machines['netconfig'][if_id]['name']
+
+        return dev_name
 
     @staticmethod
     def _validate_func_params(name, params, mandatory, optional):
