@@ -274,13 +274,13 @@ class XmlTemplates:
             msg = "First parameter of function devname() is invalid: "\
                     "Machine %s does not exist." % m_id
             raise XmlTemplateError(msg)
-        machines = recipe["machines"][m_id]
+        machine = recipe["machines"][m_id]
 
         if if_id not in machine['netconfig']:
             msg = "Second parameter of function devname() is invalid: "\
                     "Interface %s does not exist." % if_id
             raise XmlTemplateError(msg)
-        dev_name = machines['netconfig'][if_id]['name']
+        dev_name = machine['netconfig'][if_id]['name']
 
         return dev_name
 
