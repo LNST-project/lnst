@@ -37,6 +37,14 @@ class CommandException(Exception):
     def __str__(self):
         return "CommandException: " + str(self.command)
 
+class BgProcessException(Exception):
+    """Base class for client errors."""
+    def __init__(self, str):
+        self._str = str
+
+    def __str__(self):
+        return "BgProcessError: " + self._str
+
 class BGProcesses:
     def __init__(self):
         self._dict = {}
@@ -54,6 +62,15 @@ class BGProcesses:
 
     def remove(self, bg_id):
         del self._dict[bg_id]
+
+    def get_bg_process_result(self, bg_id):
+        pipe = self.get_pipe(bg_id)
+        tmp = os.read(pipe, 4096*10)
+        result = pickle.loads(tmp)
+        if "Exception" in result:
+            raise BgProcessException(result["Exception"])
+        os.close(pipe)
+        return result
 
 bg_processes = BGProcesses()
 
@@ -154,30 +171,13 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
         res["res_data"] = res_data
         self.set_result(res)
 
-class BgProcessException(Exception):
-    """Base class for client errors."""
-    def __init__(self, str):
-        self._str = str
-
-    def __str__(self):
-        return "BgProcessError: " + self._str
-
-def get_bg_process_result(bg_id):
-    pipe = bg_processes.get_pipe(bg_id)
-    tmp = os.read(pipe, 4096*10)
-    result = pickle.loads(tmp)
-    if "Exception" in result:
-        raise BgProcessException(result["Exception"])
-    os.close(pipe)
-    return result
-
 class NetTestCommandWait(NetTestCommandGeneric):
     def run(self):
         bg_id = int(self._command["value"])
         pid = bg_processes.get_pid(bg_id)
         logging.debug("Waiting for background id \"%d\", pid \"%d\"" % (bg_id, pid))
         os.waitpid(pid, 0)
-        result = get_bg_process_result(bg_id)
+        result = bg_processes.get_bg_process_result(bg_id)
         bg_processes.remove(bg_id)
         self.set_result(result)
 
@@ -188,7 +188,7 @@ class NetTestCommandIntr(NetTestCommandGeneric):
         logging.debug("Interrupting background id \"%d\", pid \"%d\"" % (bg_id, pid))
         os.killpg(os.getpgid(pid), signal.SIGINT)
         os.waitpid(pid, 0)
-        result = get_bg_process_result(bg_id)
+        result = bg_processes.get_bg_process_result(bg_id)
         bg_processes.remove(bg_id)
         self.set_result(result)
 
