@@ -11,12 +11,31 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import logging
+import os
 import re
 import socket
 import subprocess
 
 def normalize_hwaddr(hwaddr):
     return hwaddr.upper().rstrip("\n")
+
+def scan_netdevs():
+    sys_dir = "/sys/class/net"
+    scan = []
+    for root, dirs, files in os.walk(sys_dir):
+        if "lo" in dirs:
+            dirs.remove("lo")
+        for d in dirs:
+            dev_path = os.path.join(sys_dir, d)
+            addr_path = os.path.join(dev_path, "address")
+            if not os.path.isfile(addr_path):
+                continue
+            handle = open(addr_path, "rb")
+            addr = handle.read()
+            handle.close()
+            addr = normalize_hwaddr(addr)
+            scan.append({"name": d, "hwaddr": addr})
+    return scan
 
 def get_corespond_local_ip(query_ip):
     """

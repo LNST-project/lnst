@@ -14,31 +14,14 @@ import logging
 import os
 from NetConfigCommon import get_option
 from Common.NetUtils import normalize_hwaddr
+from Common.NetUtils import scan_netdevs
 
 class NetConfigDevNames:
     def __init__(self):
-        self._scan = self._scan_netdevs()
-
-    def _scan_netdevs(self):
-        sys_dir = "/sys/class/net"
-        scan = []
-        for root, dirs, files in os.walk(sys_dir):
-            if "lo" in dirs:
-                dirs.remove("lo")
-            for d in dirs:
-                dev_path = os.path.join(sys_dir, d)
-                addr_path = os.path.join(dev_path, "address")
-                if not os.path.isfile(addr_path):
-                    continue
-                handle = open(addr_path, "rb")
-                addr = handle.read()
-                handle.close()
-                addr = normalize_hwaddr(addr)
-                scan.append({"name": d, "hwaddr": addr})
-        return scan
+        self._scan = scan_netdevs()
 
     def rescan_netdevs(self):
-        self._scan = self._scan_netdevs()
+        self._scan = scan_netdevs()
 
     def assign_name_by_scan(self, dev_id, netdev):
         if (not "hwaddr" in netdev or
