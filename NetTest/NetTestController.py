@@ -20,7 +20,7 @@ from pprint import pprint, pformat
 from Common.XmlRpc import ServerProxy
 from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
-from Common.Utils import get_corespond_local_ip
+from Common.NetUtils import get_corespond_local_ip
 from NetTest.NetTestSlave import DefaultRPCPort
 from NetTest.NetTestCommand import NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
