@@ -39,11 +39,14 @@ class NetTestController:
         self._recipe = {}
         definitions = {"recipe": self._recipe}
 
+        self._recipe["networks"] = {}
+
         ntparse = NetTestParse(recipe_path)
         ntparse.set_recipe(self._recipe)
         ntparse.set_definitions(definitions)
 
-        ntparse.register_event_handler("netdevice_ready", ignore_event)
+        ntparse.register_event_handler("netdevice_ready",
+                                        self._prepare_device)
         ntparse.register_event_handler("machine_info_ready",
                                         self._prepare_slave)
         ntparse.register_event_handler("interface_config_ready",
@@ -74,6 +77,17 @@ class NetTestController:
         logging.error("Session started with cmd %s die with status %s.",
                                         session.command, status)
         raise Exception("Session Die.")
+
+    def _prepare_device(self, machine_id, dev_id):
+        info = self._get_machineinfo(machine_id)
+        dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
+
+        dev_net = dev["network"]
+        networks = self._recipe["networks"]
+        if not dev_net in networks:
+            networks[dev_net] = {"members": []}
+
+        networks[dev_net]["members"].append((machine_id, dev_id))
 
     def _prepare_interface(self, machine_id, netdev_config_id):
         rpc = self._get_machinerpc(machine_id)

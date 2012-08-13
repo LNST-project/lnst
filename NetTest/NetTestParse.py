@@ -145,6 +145,7 @@ class NetMachineConfigParse(RecipeParser):
 
         dev = machine["netdevices"][phys_id] = {}
         dev["type"] = self._get_attribute(node, "type")
+        dev["network"] = self._get_attribute(node, "network")
         dev["hwaddr"] = normalize_hwaddr(self._get_attribute(node, "hwaddr"))
 
         if self._has_attribute(node, "name"):
