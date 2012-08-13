@@ -16,8 +16,7 @@ import re
 from Common.XmlProcessing import RecipeParser
 from Common.XmlProcessing import XmlDomTreeInit
 from Common.XmlProcessing import XmlProcessingError
-from NetConfig.NetConfigDevNames import normalize_hwaddr
-
+from Common.NetUtils import normalize_hwaddr
 
 class NetTestParse(RecipeParser):
     def __init__(self, recipe_filepath):

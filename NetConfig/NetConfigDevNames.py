@@ -13,9 +13,7 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import os
 from NetConfigCommon import get_option
-
-def normalize_hwaddr(hwaddr):
-    return hwaddr.upper().rstrip("\n")
+from Common.NetUtils import normalize_hwaddr
 
 class NetConfigDevNames:
     def __init__(self):
