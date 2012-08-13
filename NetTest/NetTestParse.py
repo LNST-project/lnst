@@ -118,7 +118,7 @@ class NetMachineConfigParse(RecipeParser):
 
     def parse(self, node):
         scheme = {"info": self._info,
-                  "netdevice": self._netdevice}
+                  "netdevices": self._netdevices}
         self._process_child_nodes(node, scheme)
 
     def _info(self, node, params):
@@ -126,6 +126,10 @@ class NetMachineConfigParse(RecipeParser):
         info = machine["info"]
 
         info["hostname"] = self._get_attribute(node, "hostname")
+
+        if self._has_attribute(node, "libvirt_domain"):
+            info["libvirt_domain"] = self._get_attribute(node,
+                                                "libvirt_domain")
 
         if self._has_attribute(node, "rootpass"):
             info["rootpass"] = self._get_attribute(node, "rootpass")
@@ -138,17 +142,42 @@ class NetMachineConfigParse(RecipeParser):
         self._trigger_event("machine_info_ready",
                             {"machine_id": self._machine_id})
 
+    def _netdevices(self, node, params):
+        scheme = {"netdevice": self._netdevice,
+                  "libvirt_create": self._libvirt_create}
+
+        new_params = {"create": None}
+        self._process_child_nodes(node, scheme, new_params)
+
+    def _libvirt_create(self, node, params):
+        scheme = {"netdevice": self._netdevice}
+
+        new_params = {"create": "libvirt"}
+        self._process_child_nodes(node, scheme, new_params)
+
     def _netdevice(self, node, params):
         machine = self._machine
         phys_id = self._get_attribute(node, "phys_id", int)
 
         dev = machine["netdevices"][phys_id] = {}
+        dev["create"] = params["create"]
         dev["type"] = self._get_attribute(node, "type")
         dev["network"] = self._get_attribute(node, "network")
-        dev["hwaddr"] = normalize_hwaddr(self._get_attribute(node, "hwaddr"))
 
-        if self._has_attribute(node, "name"):
+        # hwaddr attribute is optional for dynamic devices,
+        # but it is required by non-dynamic devices
+        if dev["create"] == None or self._has_attribute(node, "hwaddr"):
+            hwaddr = self._get_attribute(node, "hwaddr")
+            dev["hwaddr"] = normalize_hwaddr(hwaddr)
+
+        # name attribute is only valid when the device is not dynamic
+        if dev["create"] == None and self._has_attribute(node, "name"):
             dev["name"] = self._get_attribute(node, "name")
+
+        # bridge attribute is valid only when the device is dynamic
+        if dev["create"] == "libvirt" and \
+           self._has_attribute(node, "libvirt_bridge"):
+            dev["libvirt_bridge"] = self._get_attribute(node, "libvirt_bridge")
 
         self._trigger_event("netdevice_ready", {"machine_id": self._machine_id,
                                                 "dev_id": phys_id})
