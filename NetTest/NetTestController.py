@@ -25,6 +25,9 @@ from NetTest.NetTestSlave import DefaultRPCPort
 from NetTest.NetTestCommand import NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
 
+class NetTestError(Exception):
+    pass
+
 def ignore_event(**kwarg):
     pass
 
