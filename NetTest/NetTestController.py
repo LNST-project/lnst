@@ -20,10 +20,14 @@ from pprint import pprint, pformat
 from Common.XmlRpc import ServerProxy
 from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
-from Common.NetUtils import get_corespond_local_ip
+from Common.NetUtils import get_corespond_local_ip, MacPool
 from NetTest.NetTestSlave import DefaultRPCPort
 from NetTest.NetTestCommand import NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
+from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
+from Common.Utils import wait_for
+
+MAC_POOL_RANGE = {"start": "52:54:01:00:00:01", "end": "52:54:01:FF:FF:FF"}
 
 class NetTestError(Exception):
     pass
@@ -43,6 +47,8 @@ class NetTestController:
         definitions = {"recipe": self._recipe}
 
         self._recipe["networks"] = {}
+        self._mac_pool = MacPool(MAC_POOL_RANGE["start"],
+                                 MAC_POOL_RANGE["end"])
 
         ntparse = NetTestParse(recipe_path)
         ntparse.set_recipe(self._recipe)
@@ -83,14 +89,71 @@ class NetTestController:
 
     def _prepare_device(self, machine_id, dev_id):
         info = self._get_machineinfo(machine_id)
+        rpc = self._get_machinerpc(machine_id)
         dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
 
-        dev_net = dev["network"]
+        dev_net_name = dev["network"]
         networks = self._recipe["networks"]
-        if not dev_net in networks:
-            networks[dev_net] = {"members": []}
+        if not dev_net_name in networks:
+            networks[dev_net_name] = {"members": []}
 
-        networks[dev_net]["members"].append((machine_id, dev_id))
+        dev_net = networks[dev_net_name]
+        dev_net["members"].append((machine_id, dev_id))
+
+        if dev["create"] == "libvirt":
+            if not "virt_domain_ctl" in info:
+                msg = "Cannot create device. " \
+                      "Machine '%d' is not virtual." % (machine_id)
+                raise NetTestError(msg)
+
+            if not "hwaddr" in dev:
+                dev["hwaddr"] = self._mac_pool.get_addr()
+
+            if "target_bridge" in dev:
+                brctl = BridgeCtl(dev["target_bridge"])
+            else:
+                if "default_bridge" in dev_net:
+                    brctl = dev_net["default_bridge"]
+                else:
+                    brctl = BridgeCtl()
+                    dev_net["default_bridge"] = brctl
+
+            br_name = brctl.get_name()
+            brctl.init()
+
+            logging.info("Creating netdevice %d (%s) on machine %d",
+                            dev_id, dev["hwaddr"], machine_id)
+
+            domain_ctl = info["virt_domain_ctl"]
+            domain_ctl.attach_interface(dev["hwaddr"], br_name)
+
+            ready_check_func = lambda: self._device_ready(machine_id, dev_id)
+            ready = wait_for(ready_check_func, timeout=10)
+
+            if not ready:
+                msg = "Netdevice initialization failed." \
+                      "Unable to create device %d (%s) on machine %d" \
+                                % (dev_id, dev["hwaddr"], machine_id)
+                raise NetTestError(msg)
+
+        phys_devs = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+        if len(phys_devs) == 1:
+            pass
+        elif len(phys_devs) < 1:
+            msg = "Device %d not found on machine %d" \
+                            % (dev_id, machine_id)
+            raise NetTestError(msg)
+        elif len(phys_devs) > 1:
+            msg = "Multiple netdevices with same address %s on machine %d" \
+                                    % (dev["hwaddr"], machine_id)
+            raise NetTestError(msg)
+
+    def _device_ready(self, machine_id, dev_id):
+        rpc = self._get_machinerpc(machine_id)
+        dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
+
+        devs = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+        return len(devs) > 0
 
     def _prepare_interface(self, machine_id, netdev_config_id):
         rpc = self._get_machinerpc(machine_id)
@@ -121,6 +184,10 @@ class NetTestController:
     def _prepare_slave(self, machine_id):
         logging.info("Preparing machine #%d", machine_id)
         info = self._get_machineinfo(machine_id)
+
+        if "libvirt_domain" in info:
+            domain_ctl = VirtDomainCtl(info["libvirt_domain"])
+            info["virt_domain_ctl"] = domain_ctl
 
         if self._remoteexec and not "session" in info:
             self._init_slave_session(machine_id)
@@ -183,6 +250,21 @@ class NetTestController:
             rpc = self._get_machinerpc(machine_id)
             for if_id in reversed(info["configured_interfaces"]):
                 rpc.deconfigure_interface(if_id)
+
+            # detach dynamically created devices
+            machine = self._recipe["machines"][machine_id]
+            for dev_id, dev in machine["netdevices"].iteritems():
+                if dev["create"] == "libvirt":
+                    logging.info("Removing netdevice %d (%s) from machine %d",
+                                    dev_id, dev["hwaddr"], machine_id)
+                    domain_ctl = info["virt_domain_ctl"]
+                    domain_ctl.detach_interface(dev["hwaddr"])
+
+        # remove dynamically created bridges
+        networks = self._recipe["networks"]
+        for net in networks.itervalues():
+            if "default_bridge" in net:
+                net["default_bridge"].cleanup()
 
     def _disconnect_slaves(self):
         for machine_id in self._recipe["machines"]:
