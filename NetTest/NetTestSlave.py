@@ -22,6 +22,7 @@ from NetConfig.NetConfig import NetConfig
 from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
 from NetTest.NetTestCommand import NetTestCommand, CommandException
 from Common.Utils import die_when_parent_die
+from Common.NetUtils import scan_netdevs
 
 DefaultRPCPort = 9999
 
@@ -45,6 +46,16 @@ class NetTestSlaveXMLRPC:
         """
         Logs.append_network_hadler(logger_address, port)
         return True
+
+    def get_devices_by_hwaddr(self, hwaddr):
+        name_scan = scan_netdevs()
+        netdevs = []
+
+        for entry in name_scan:
+            if entry["hwaddr"] == hwaddr:
+                netdevs.append(entry)
+
+        return netdevs
 
     def get_interface_info(self, if_id):
         if_config = self._netconfig.get_interface_config(if_id)
