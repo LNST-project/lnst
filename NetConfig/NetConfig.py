@@ -65,6 +65,8 @@ class NetConfig:
             NetConfigDeviceType(dev_type).type_init()
 
         self._config[if_id] = config
+
+        self._devnames.rescan_netdevs()
         self._devnames.assign_name(if_id, self._config)
 
     def remove_interface_config(self, if_id):
@@ -125,6 +127,8 @@ class NetConfig:
             if "slaves" in params:
                 netdev["slaves"] = params["slaves"]
         self._config[dev_id] = netdev
+
+        self._devnames.rescan_netdevs()
         self._devnames.assign_name(dev_id, self._config)
         return dev_id
 
