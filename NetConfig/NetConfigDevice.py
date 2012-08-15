@@ -24,6 +24,7 @@ class NetConfigDeviceGeneric:
     '''
     _modulename = ""
     _moduleparams = ""
+    _cleanupcmd = ""
 
     def __init__(self, netdev, config):
         self._netdev = netdev
@@ -61,18 +62,20 @@ class NetConfigDeviceGeneric:
             exec_cmd("modprobe %s %s" % (self._modulename, self._moduleparams))
 
     @classmethod
-    def type_cleanup(self):
-        if self._modulename:
-            exec_cmd("modprobe -r %s" % self._modulename, die_on_err=False)
-
-    @classmethod
-    def type_check(self):
+    def _module_check(self):
         if self._modulename:
             output = exec_cmd("modinfo -F filename %s" % self._modulename, die_on_err=False)[0]
             for line in output.split("\n"):
                 if re.match(r'^.*\/%s\.ko$' % self._modulename, line):
                     return True
         False
+
+    @classmethod
+    def type_cleanup(self):
+        if self._modulename and self._module_check():
+            exec_cmd("modprobe -r %s" % self._modulename, die_on_err=False)
+        if self._cleanupcmd:
+            exec_cmd(self._cleanupcmd, die_on_err=False)
 
 class NetConfigDeviceEth(NetConfigDeviceGeneric):
     def configure(self):
@@ -214,6 +217,7 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
 
 class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     _pidfile = None
+    _cleanupcmd = "killall -q teamd"
 
     def _slaves_up(self):
         for slaveid in get_slaves(self._netdev):
@@ -268,5 +272,4 @@ def NetConfigDeviceType(dev_type):
 
 def NetConfigDeviceAllCleanup():
     for dev_type in type_class_mapping:
-        if NetConfigDeviceType(dev_type).type_check():
-            NetConfigDeviceType(dev_type).type_cleanup()
+        NetConfigDeviceType(dev_type).type_cleanup()
