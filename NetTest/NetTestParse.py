@@ -330,6 +330,12 @@ class CommandSequenceParse(RecipeParser):
         self._seq_num = seq_num
         self._seq_node = node
 
+        if self._has_attribute(node, "quit_on_fail"):
+            quit_on_fail = self._get_attribute(node, "quit_on_fail")
+            sequences[seq_num]["quit_on_fail"] = quit_on_fail
+        else:
+            sequences[seq_num]["quit_on_fail"] = "no"
+
         scheme = {"command": self._command}
         self._process_child_nodes(node, scheme)
 
