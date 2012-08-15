@@ -382,17 +382,21 @@ class NetTestController:
             raise err
 
     def _run_recipe(self):
+        overall_res = True
+
         for sequence in self._recipe["sequences"]:
             res = self._run_command_sequence(sequence)
 
             for machine_id in self._recipe["machines"]:
                 self._restore_system_config(machine_id)
 
-            # stop when sequence fails
+            # sequence failed, check if we should quit_on_fail
             if not res:
-                break
+                overall_res = False
+                if sequence["quit_on_fail"] == "yes":
+                    break
 
-        return res
+        return overall_res
 
     def _start_packet_capture(self):
         logging.info("Starting packet capture")
