@@ -139,8 +139,11 @@ class NetMachineConfigParse(RecipeParser):
 
         info["system_config"] = {}
 
-        self._trigger_event("machine_info_ready",
-                            {"machine_id": self._machine_id})
+        try:
+            self._trigger_event("machine_info_ready",
+                    {"machine_id": self._machine_id})
+        except Exception, exc:
+            raise XmlProcessingError(str(exc), node)
 
     def _netdevices(self, node, params):
         scheme = {"netdevice": self._netdevice,
@@ -179,8 +182,11 @@ class NetMachineConfigParse(RecipeParser):
            self._has_attribute(node, "libvirt_bridge"):
             dev["libvirt_bridge"] = self._get_attribute(node, "libvirt_bridge")
 
-        self._trigger_event("netdevice_ready", {"machine_id": self._machine_id,
-                                                "dev_id": phys_id})
+        try:
+            self._trigger_event("netdevice_ready",
+                    {"machine_id": self._machine_id, "dev_id": phys_id})
+        except Exception, exc:
+            raise XmlProcessingError(str(exc), node)
 
 
 class NetConfigParse(RecipeParser):
@@ -230,9 +236,12 @@ class NetConfigParse(RecipeParser):
 
         self._process_child_nodes(node, scheme, params)
 
-        self._trigger_event("interface_config_ready",
-                            {"machine_id": self._machine_id,
-                             "netdev_config_id": dev_id})
+        try:
+            self._trigger_event("interface_config_ready",
+                    {"machine_id": self._machine_id,
+                     "netdev_config_id": dev_id})
+        except Exception, exc:
+            raise XmlProcessingError(str(exc), node)
 
     def _process_phys_id_attr(self, node, dev):
         netconfig = self._netconfig
