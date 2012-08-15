@@ -276,7 +276,14 @@ class NetTestController:
     def _prepare(self):
         # All the perparations are made within the recipe parsing
         # This is achieved by handling parser events (by registering
-        self._ntparse.parse_recipe()
+        try:
+            self._ntparse.parse_recipe()
+        except Exception, exc:
+            logging.debug("Exception raised during recipe parsing. "\
+                    "Deconfiguring machines.")
+            self._deconfigure_slaves()
+            self._disconnect_slaves()
+            raise exc
 
     def _run_command(self, command):
         machine_id = command["machine_id"]
