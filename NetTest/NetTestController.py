@@ -136,6 +136,10 @@ class NetTestController:
                                 % (dev_id, dev["hwaddr"], machine_id)
                 raise NetTestError(msg)
 
+            if 'created_devices' not in info:
+                info['created_devices'] = []
+            info['created_devices'].append((dev_id, dev))
+
         phys_devs = rpc.get_devices_by_hwaddr(dev["hwaddr"])
         if len(phys_devs) == 1:
             pass
@@ -247,18 +251,20 @@ class NetTestController:
     def _deconfigure_slaves(self):
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
+            if "rpc" not in info:
+                continue
             rpc = self._get_machinerpc(machine_id)
             for if_id in reversed(info["configured_interfaces"]):
                 rpc.deconfigure_interface(if_id)
 
             # detach dynamically created devices
-            machine = self._recipe["machines"][machine_id]
-            for dev_id, dev in machine["netdevices"].iteritems():
-                if dev["create"] == "libvirt":
-                    logging.info("Removing netdevice %d (%s) from machine %d",
-                                    dev_id, dev["hwaddr"], machine_id)
-                    domain_ctl = info["virt_domain_ctl"]
-                    domain_ctl.detach_interface(dev["hwaddr"])
+            if "created_devices" not in info:
+                continue
+            for dev_id, dev in reversed(info["created_devices"]):
+                logging.info("Removing netdevice %d (%s) from machine %d",
+                                dev_id, dev["hwaddr"], machine_id)
+                domain_ctl = info["virt_domain_ctl"]
+                domain_ctl.detach_interface(dev["hwaddr"])
 
         # remove dynamically created bridges
         networks = self._recipe["networks"]
