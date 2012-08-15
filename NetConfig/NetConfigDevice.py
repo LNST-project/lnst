@@ -219,19 +219,7 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     _pidfile = None
     _cleanupcmd = "killall -q teamd"
 
-    def _slaves_up(self):
-        for slaveid in get_slaves(self._netdev):
-            slavenetdev = self._config[slaveid]
-            NetConfigDevice(slavenetdev, self._config).up()
-
-    def _slaves_down(self):
-        for slaveid in get_slaves(self._netdev):
-            slavenetdev = self._config[slaveid]
-            NetConfigDevice(slavenetdev, self._config).down()
-
     def configure(self):
-        self._slaves_down()
-
         teamd_config = get_option(self._netdev, "teamd_config")
         teamd_config = teamd_config.replace('"', '\\"')
 
@@ -242,12 +230,28 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
 
         self._pidfile = pidfile
 
+        for slave_id in get_slaves(self._netdev):
+            self.slave_add(slave_id)
+
     def deconfigure(self):
+        for slave_id in get_slaves(self._netdev):
+            self.slave_del(slave_id)
+
         dev_name = self._netdev["name"]
         pidfile = "/var/run/teamd_%s.pid" % dev_name
 
         exec_cmd("teamd -k -p %s" % pidfile)
-        self._slaves_up()
+
+    def slave_add(self, slaveid):
+        dev_name = self._netdev["name"]
+        port_netdev = self._config[slaveid]
+        port_name = port_netdev["name"]
+        NetConfigDevice(port_netdev, self._config).down()
+        exec_cmd("ip link set dev %s master %s" % (port_name, dev_name))
+
+    def slave_del(self, slaveid):
+        port_name = self._config[slaveid]["name"]
+        exec_cmd("ip link set dev %s nomaster" % (port_name))
 
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
