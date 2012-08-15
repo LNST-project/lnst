@@ -191,6 +191,13 @@ class XmlParser(object):
         text = str(''.join(content).strip())
         return self._convert_string(node, text, conversion_cb)
 
+    def _get_all_attributes(self, node):
+        res = {}
+        for i in range(0, node.attributes.length):
+            attr = node.attributes.item(i)
+            res[attr.name] = attr.value
+
+        return res
 
 class RecipeParser(XmlParser):
     """ Enhanced XmlParser
@@ -294,9 +301,17 @@ class RecipeParser(XmlParser):
                                     % (node.nodeName, file_path))
                 raise XmlProcessingError(msg, node)
 
+            old_attrs = self._get_all_attributes(node)
+
             parent = node.parentNode
             parent.replaceChild(loaded_node, node)
             node = loaded_node
+
+            # copy all of the original attributes to the sourced node
+            for name, value in old_attrs.iteritems():
+                # do not overwrite sourced attributes
+                if not node.hasAttribute(name):
+                    node.setAttribute(name, value)
 
         parent = super(RecipeParser, self)
         parent._process_node(node, handler, params)
