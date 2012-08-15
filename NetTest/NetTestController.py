@@ -329,7 +329,7 @@ class NetTestController:
 
     def _run_command_sequence(self, sequence):
         seq_passed = True
-        for command in sequence:
+        for command in sequence["commands"]:
             logging.info("Executing command: [%s]", str_command(command))
             cmd_res = self._run_command(command)
             if self._res_serializer:

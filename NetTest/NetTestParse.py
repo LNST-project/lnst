@@ -323,8 +323,9 @@ class NetConfigParse(RecipeParser):
 class CommandSequenceParse(RecipeParser):
     def parse(self, node):
         sequences = self._recipe["sequences"]
-        sequences.append([])
+        sequences.append({})
         seq_num = len(sequences) - 1
+        sequences[seq_num]["commands"] = []
 
         self._seq_num = seq_num
         self._seq_node = node
@@ -342,7 +343,7 @@ class CommandSequenceParse(RecipeParser):
     def _check_sequence(self, sequence):
         err = False
         bg_ids = {}
-        for i, command in enumerate(sequence):
+        for i, command in enumerate(sequence["commands"]):
             machine_id = command["machine_id"]
             if not machine_id in bg_ids:
                 bg_ids[machine_id] = set()
@@ -388,8 +389,8 @@ class CommandParse(RecipeParser):
     def parse(self, node):
         recipe = self._recipe
         command = {}
-        recipe["sequences"][self._seq_num].append(command)
-        self._cmd_num = len(recipe["sequences"][self._seq_num]) - 1
+        recipe["sequences"][self._seq_num]["commands"].append(command)
+        self._cmd_num = len(recipe["sequences"][self._seq_num]["commands"]) - 1
 
         if self._has_attribute(node, "machine_id"):
             machine_id = self._get_attribute(node, "machine_id", int)
@@ -427,7 +428,7 @@ class CommandParse(RecipeParser):
     def _options(self, node, params):
         seq = self._seq_num
         cmd = self._cmd_num
-        self._recipe["sequences"][seq][cmd]["options"] = {}
+        self._recipe["sequences"][seq]["commands"][cmd]["options"] = {}
 
         scheme = {"option": self._option}
         self._process_child_nodes(node, scheme)
@@ -435,7 +436,7 @@ class CommandParse(RecipeParser):
     def _option(self, node, params):
         seq = self._seq_num
         cmd = self._cmd_num
-        options = self._recipe["sequences"][seq][cmd]["options"]
+        options = self._recipe["sequences"][seq]["commands"][cmd]["options"]
 
         name = self._get_attribute(node, "name")
         if not name in options:
