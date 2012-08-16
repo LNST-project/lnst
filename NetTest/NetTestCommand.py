@@ -147,8 +147,10 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
             val = [{"value": self._command["value"]}]
             self._command["options"] = {opt: val}
 
-        for option, values in self._command["options"].iteritems():
-            new_val = values[0]["value"]
+        for option, opt_data in self._command["options"].iteritems():
+            new_values = []
+            for record in opt_data:
+                new_values.append(record["value"])
 
             option_abspath = os.path.abspath(option)
             if option_abspath[0:5] != "/sys/" and \
@@ -159,12 +161,13 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
 
             try:
                 prev_val = self._retrive_option(option)
-                self._set_option(option, new_val)
+                for new_val in new_values:
+                    self._set_option(option, new_val)
             except ExecCmdFail:
                 self.set_fail("Unable to set %s config option!" % option)
                 return
 
-            res_data[option] = {"current_val": new_val,
+            res_data[option] = {"current_val": new_values[-1],
                                 "previous_val": prev_val}
 
         res = {"passed": True}

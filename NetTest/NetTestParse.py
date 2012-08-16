@@ -407,7 +407,10 @@ class CommandParse(RecipeParser):
 
         command["machine_id"] = machine_id
         command["type"]  = self._get_attribute(node, "type")
-        command["value"] = self._get_attribute(node, "value")
+
+        command["value"] = None
+        if self._has_attribute(node, "value"):
+            command["value"] = self._get_attribute(node, "value")
 
         if self._has_attribute(node, "timeout"):
             command["timeout"] = self._get_attribute(node, "timeout", int)
