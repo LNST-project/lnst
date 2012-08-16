@@ -11,6 +11,7 @@ jzupka@redhat.com (Jiri Zupka)
 """
 import logging
 import time
+import re
 
 def die_when_parent_die():
     try:
@@ -52,3 +53,20 @@ def wait_for(func, timeout, first=0.0, step=1.0, text=None):
 
     logging.debug("Timeout elapsed")
     return None
+
+def kmod_in_use(modulename, tries = 1):
+    tries -= 1
+    ret = False
+    mod_file = "/proc/modules"
+    handle = open(mod_file, "r")
+    for line in handle:
+        match = re.match(r'^(\S+)\s\d+\s(\d+).*$', line)
+        if not match or not match.groups()[0] in re.split('\s+', modulename):
+            continue
+        if int(match.groups()[1]) != 0:
+            ret = True
+        break
+    handle.close()
+    if (ret and tries):
+        return kmod_in_use(modulename, tries)
+    return ret

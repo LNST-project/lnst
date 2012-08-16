@@ -16,6 +16,7 @@ import re
 import sys
 from Common.ExecCmd import exec_cmd
 from NetConfigCommon import get_slaves, get_option
+from Common.Utils import kmod_in_use
 
 class NetConfigDeviceGeneric:
     '''
@@ -23,6 +24,7 @@ class NetConfigDeviceGeneric:
     extend this one.
     '''
     _modulename = ""
+    _moduleload = True
     _moduleparams = ""
     _cleanupcmd = ""
 
@@ -58,24 +60,16 @@ class NetConfigDeviceGeneric:
 
     @classmethod
     def type_init(self):
-        if self._modulename:
+        if self._modulename and self._moduleload:
             exec_cmd("modprobe %s %s" % (self._modulename, self._moduleparams))
 
     @classmethod
-    def _module_check(self):
-        if self._modulename:
-            output = exec_cmd("modinfo -F filename %s" % self._modulename, die_on_err=False)[0]
-            for line in output.split("\n"):
-                if re.match(r'^.*\/%s\.ko$' % self._modulename, line):
-                    return True
-        False
-
-    @classmethod
     def type_cleanup(self):
-        if self._modulename and self._module_check():
-            exec_cmd("modprobe -r %s" % self._modulename, die_on_err=False)
         if self._cleanupcmd:
             exec_cmd(self._cleanupcmd, die_on_err=False)
+        if self._modulename:
+            kmod_in_use(self._modulename, 300)
+            exec_cmd("modprobe -r %s" % self._modulename, die_on_err=False)
 
 class NetConfigDeviceEth(NetConfigDeviceGeneric):
     def configure(self):
@@ -217,6 +211,8 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
 
 class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     _pidfile = None
+    _modulename = "team_mode_roundrobin team_mode_activebackup team_mode_broadcast team_mode_loadbalance team"
+    _moduleload = False
     _cleanupcmd = "killall -q teamd"
 
     def configure(self):
