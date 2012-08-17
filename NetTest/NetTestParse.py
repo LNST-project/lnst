@@ -226,10 +226,10 @@ class NetConfigParse(RecipeParser):
 
         params = {"dev_id": dev_id}
         scheme = {"addresses": self._addresses}
+        scheme["options"] = self._options
         if dev["type"] == "eth":
             pass
         elif dev["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
-            scheme["options"] = self._options
             scheme["slaves"] = self._slaves
         else:
             logging.warn("unknown type \"%s\"" % dev["type"])

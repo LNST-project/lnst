@@ -17,7 +17,10 @@ def get_slaves(netdev):
         return set()
 
 def get_option(netdev, opt_name):
-    options = netdev["options"]
+    try:
+        options = netdev["options"]
+    except KeyError:
+        return None
     for option, value in options:
         if option == opt_name:
             return value

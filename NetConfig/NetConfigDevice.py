@@ -209,20 +209,35 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
         else:
             exec_cmd("vconfig rem %s" % dev_name)
 
+def prepare_json_str(json_str):
+    if not json_str:
+        return ""
+    json_str = json_str.replace('"', '\\"')
+    json_str = re.sub('\s+', ' ', json_str)
+    return json_str
+
 class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     _pidfile = None
     _modulename = "team_mode_roundrobin team_mode_activebackup team_mode_broadcast team_mode_loadbalance team"
     _moduleload = False
     _cleanupcmd = "killall -q teamd"
 
+    def _should_enable_dbus(self):
+        for slave_id in get_slaves(self._netdev):
+            port_netdev = self._config[slave_id]
+            if get_option(port_netdev, "teamd_port_config"):
+                return True
+        return False
+
     def configure(self):
         teamd_config = get_option(self._netdev, "teamd_config")
-        teamd_config = teamd_config.replace('"', '\\"')
+        teamd_config = prepare_json_str(teamd_config)
 
         dev_name = self._netdev["name"]
         pidfile = "/var/run/teamd_%s.pid" % dev_name
 
-        exec_cmd("teamd -r -d -c \"%s\" -t %s -p %s" % (teamd_config, dev_name, pidfile))
+        dbus_option = " -D" if self._should_enable_dbus() else ""
+        exec_cmd("teamd -r -d -c \"%s\" -t %s -p %s%s" % (teamd_config, dev_name, pidfile, dbus_option))
 
         self._pidfile = pidfile
 
@@ -242,6 +257,10 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         dev_name = self._netdev["name"]
         port_netdev = self._config[slaveid]
         port_name = port_netdev["name"]
+        teamd_port_config = get_option(port_netdev, "teamd_port_config")
+        if teamd_port_config:
+            teamd_port_config = prepare_json_str(teamd_port_config)
+            exec_cmd("teamdctl %s PortConfigUpdate %s \"%s\"" % (dev_name, port_name, teamd_port_config))
         NetConfigDevice(port_netdev, self._config).down()
         exec_cmd("ip link set dev %s master %s" % (port_name, dev_name))
 

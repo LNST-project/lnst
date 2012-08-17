@@ -1,0 +1,38 @@
+<netconfig>
+    <interface id="1" phys_id="1" type="eth">
+        <options>
+            <option name="teamd_port_config">
+                {
+                    "prio": -10,
+                    "sticky": true
+                }
+            </option>
+        </options>
+    </interface>
+    <interface id="2" phys_id="2" type="eth">
+        <options>
+            <option name="teamd_port_config">
+                {
+                    "prio": 100
+                }
+            </option>
+        </options>
+    </interface>
+    <interface id="3" type="team">
+        <options>
+            <option name="teamd_config">
+                {
+                    "runner": {"name": "activebackup"},
+                    "link_watch": {"name": "ethtool"}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="1"/>
+            <slave id="2"/>
+        </slaves>
+        <addresses>
+             <address value="192.168.111.1/24"/>
+        </addresses>
+    </interface>
+</netconfig>
