@@ -229,7 +229,14 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
                 return True
         return False
 
+    def _ports_down(self):
+        for slave_id in get_slaves(self._netdev):
+            port_netdev = self._config[slave_id]
+            NetConfigDevice(port_netdev, self._config).down()
+
     def configure(self):
+        self._ports_down()
+
         teamd_config = get_option(self._netdev, "teamd_config")
         teamd_config = prepare_json_str(teamd_config)
 
