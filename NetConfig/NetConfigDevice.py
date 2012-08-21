@@ -69,7 +69,7 @@ class NetConfigDeviceGeneric:
             exec_cmd(self._cleanupcmd, die_on_err=False)
         if self._modulename:
             kmod_in_use(self._modulename, 300)
-            exec_cmd("modprobe -r %s" % self._modulename, die_on_err=False)
+            exec_cmd("modprobe -q -r %s" % self._modulename, die_on_err=False)
 
 class NetConfigDeviceEth(NetConfigDeviceGeneric):
     def configure(self):
