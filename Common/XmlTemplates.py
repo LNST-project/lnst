@@ -220,7 +220,7 @@ class XmlTemplates:
         recipe = self._get_recipe_data("ip")
 
         m_id = params[0]
-        if_id = int(params[1])
+        if_id = params[1]
         ip_id = int(params[2]) if len(params) == 3 else 0
 
         if 'machines' not in recipe or m_id not in recipe['machines']:
@@ -247,7 +247,7 @@ class XmlTemplates:
         self._validate_func_params("hwaddr", params, 2, 0)
         recipe = self._get_recipe_data("hwaddr")
         m_id = params[0]
-        if_id = int(params[1])
+        if_id = params[1]
 
         if 'machines' not in recipe or m_id not in recipe['machines']:
             msg = "First parameter of function hwaddr() is invalid: "\
@@ -268,7 +268,7 @@ class XmlTemplates:
         self._validate_func_params("devname", params, 2, 0)
         recipe = self._get_recipe_data("devname")
         m_id = params[0]
-        if_id = int(params[1])
+        if_id = params[1]
 
         if 'machines' not in recipe or m_id not in recipe['machines']:
             msg = "First parameter of function devname() is invalid: "\
@@ -295,7 +295,7 @@ class XmlTemplates:
                 err = "Function %s takes %d arguments, %d passed" \
                             % (name, mandatory, num_params)
             raise XmlTemplateError(err)
-        for param in params[1:]:
+        for param in params[2:]:
             try:
                 int(param)
             except ValueError:

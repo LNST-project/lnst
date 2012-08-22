@@ -172,7 +172,7 @@ class NetTestController:
     def _prepare_interface(self, machine_id, netdev_config_id):
         rpc = self._get_machinerpc(machine_id)
         info = self._get_machineinfo(machine_id)
-        logging.info("Configuring interface #%d on %s", netdev_config_id,
+        logging.info("Configuring interface %s on %s", netdev_config_id,
                                                         info["hostname"])
 
         self._configure_interface(machine_id, netdev_config_id)

@@ -33,7 +33,7 @@ class NetConfigDevNames:
             if hwaddr == entry["hwaddr"]:
                 netdev["name"] = entry["name"]
         if not "name" in netdev:
-            logging.error("Name for addr \"%s\" (netdevice id \"%d\") not found"
+            logging.error("Name for addr \"%s\" (netdevice id \"%s\") not found"
                                                             % (hwaddr, dev_id))
             raise Exception
 

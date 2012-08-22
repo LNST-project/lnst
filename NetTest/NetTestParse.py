@@ -211,7 +211,7 @@ class NetConfigParse(RecipeParser):
         netconfig = self._netconfig
         devices = self._devices
 
-        dev_id = self._get_attribute(node, "id", int)
+        dev_id = self._get_attribute(node, "id")
         if not dev_id in netconfig:
             netconfig[dev_id] = {}
         else:
@@ -305,9 +305,9 @@ class NetConfigParse(RecipeParser):
 
     def _slave(self, node, params):
         if self._has_attribute(node, "id"):
-            slave_id = self._get_attribute(node, "id", int)
+            slave_id = self._get_attribute(node, "id")
         else:
-            slave_id = self._get_text_content(node, int)
+            slave_id = self._get_text_content(node)
 
         dev_id = params["dev_id"]
         self._netconfig[dev_id]["slaves"].append(slave_id)
