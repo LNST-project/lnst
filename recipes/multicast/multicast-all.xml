@@ -1,34 +1,52 @@
-<!-- Example test scenario using multicast test tools -->
+<!-- Execute all tests for multicast -->
 <nettestrecipe>
+    <!-- Change these parameters to match your test environment setup -->
+    <define>
+        <alias name="hostname1" value="192.168.122.11"/>
+        <alias name="virtdomain1" value="RHEL6"/>
+
+        <alias name="hostname2" value="192.168.122.10"/>
+        <alias name="virtdomain2" value="Fedora16-clone"/>
+    </define>
     <machines>
         <machine id="1">
             <netmachineconfig>
-                <info hostname="10.34.1.120" rootpass="redhat"/>
-                <netdevice hwaddr="52:54:00:2E:D5:A8" id="1" phys_id="1" type="eth"/>
-                <netdevice hwaddr="52:54:00:90:23:0B" id="2" phys_id="2" type="eth"/>
+                <info hostname="{$hostname1}" libvirt_domain="{$virtdomain1}"
+                      rootpass="redhat"/>
+                <netdevices>
+                    <libvirt_create>
+                        <netdevice network="tnet" phys_id="1" type="eth"/>
+                        <netdevice network="tnet" phys_id="2" type="eth"/>
+                    </libvirt_create>
+                </netdevices>
             </netmachineconfig>
             <netconfig>
                 <interface id="1" phys_id="1" type="eth">
                     <addresses>
-                        <address value="192.168.122.225/24"/>
+                        <address value="192.168.100.226/24"/>
                     </addresses>
                 </interface>
                 <interface id="2" phys_id="2" type="eth">
                     <addresses>
-                        <address value="192.168.122.239/24"/>
+                        <address value="192.168.100.240/24"/>
                     </addresses>
                 </interface>
             </netconfig>
         </machine>
         <machine id="2">
             <netmachineconfig>
-                <info hostname="10.34.1.171" rootpass="redhat"/>
-                <netdevice hwaddr="52:54:00:12:DF:5A" id="1" phys_id="1" type="eth"/>
+                <info hostname="{$hostname2}" libvirt_domain="{$virtdomain2}"
+                      rootpass="redhat"/>
+                <netdevices>
+                    <libvirt_create>
+                        <netdevice network="tnet" phys_id="1" type="eth"/>
+                    </libvirt_create>
+                </netdevices>
             </netmachineconfig>
             <netconfig>
                 <interface id="1" phys_id="1" type="eth">
                     <addresses>
-                        <address value="192.168.122.200/24"/>
+                        <address value="192.168.100.215/24"/>
                     </addresses>
                 </interface>
             </netconfig>
