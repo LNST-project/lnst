@@ -86,7 +86,7 @@ class MachineParse(RecipeParser):
             raise XmlProcessingError("Unknown machine type")
 
     def parse(self, node):
-        self._id = self._get_attribute(node, "id", int)
+        self._id = self._get_attribute(node, "id")
         self._machine = {}
         self._recipe[self._target][self._id] = self._machine
 
@@ -361,7 +361,7 @@ class CommandSequenceParse(RecipeParser):
                     bg_ids[machine_id].remove(bg_id)
                 else:
                     logging.error("Found command \"%s\" for bg_id \"%s\" on "
-                              "machine \"%d\" which was not previously "
+                              "machine \"%s\" which was not previously "
                               "defined", cmd_type, bg_id, machine_id)
                     err = True
 
@@ -371,13 +371,13 @@ class CommandSequenceParse(RecipeParser):
                     bg_ids[machine_id].add(bg_id)
                 else:
                     logging.error("Command \"%d\" uses bg_id \"%d\" on machine "
-                              "\"%d\" which is already used",
+                              "\"%s\" which is already used",
                                             i, bg_id, machine_id)
                     err = True
 
         for machine_id in bg_ids:
             for bg_id in bg_ids[machine_id]:
-                logging.error("bg_id \"%d\" on machine \"%d\" has no kill/wait "
+                logging.error("bg_id \"%d\" on machine \"%s\" has no kill/wait "
                           "command to it", bg_id, machine_id)
                 err = True
         if err:
@@ -399,11 +399,11 @@ class CommandParse(RecipeParser):
         self._cmd_num = len(recipe["sequences"][self._seq_num]["commands"]) - 1
 
         if self._has_attribute(node, "machine_id"):
-            machine_id = self._get_attribute(node, "machine_id", int)
+            machine_id = self._get_attribute(node, "machine_id")
             if machine_id and not machine_id in recipe["machines"]:
                 raise XmlProcessingError("Invalid machine_id", node)
         else:
-            machine_id = 0 # controller id
+            machine_id = "0" # controller id
 
         command["machine_id"] = machine_id
         command["type"]  = self._get_attribute(node, "type")

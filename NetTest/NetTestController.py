@@ -103,7 +103,7 @@ class NetTestController:
         if dev["create"] == "libvirt":
             if not "virt_domain_ctl" in info:
                 msg = "Cannot create device. " \
-                      "Machine '%d' is not virtual." % (machine_id)
+                      "Machine '%s' is not virtual." % (machine_id)
                 raise NetTestError(msg)
 
             if "hwaddr" in dev:
@@ -131,7 +131,7 @@ class NetTestController:
             br_name = brctl.get_name()
             brctl.init()
 
-            logging.info("Creating netdevice %d (%s) on machine %d",
+            logging.info("Creating netdevice %d (%s) on machine %s",
                             dev_id, dev["hwaddr"], machine_id)
 
             domain_ctl = info["virt_domain_ctl"]
@@ -142,7 +142,7 @@ class NetTestController:
 
             if not ready:
                 msg = "Netdevice initialization failed." \
-                      "Unable to create device %d (%s) on machine %d" \
+                      "Unable to create device %d (%s) on machine %s" \
                                 % (dev_id, dev["hwaddr"], machine_id)
                 raise NetTestError(msg)
 
@@ -154,11 +154,11 @@ class NetTestController:
         if len(phys_devs) == 1:
             pass
         elif len(phys_devs) < 1:
-            msg = "Device %d not found on machine %d" \
+            msg = "Device %d not found on machine %s" \
                             % (dev_id, machine_id)
             raise NetTestError(msg)
         elif len(phys_devs) > 1:
-            msg = "Multiple netdevices with same address %s on machine %d" \
+            msg = "Multiple netdevices with same address %s on machine %s" \
                                     % (dev["hwaddr"], machine_id)
             raise NetTestError(msg)
 
@@ -196,7 +196,7 @@ class NetTestController:
         rpc.deconfigure_interface(netdev_config_id)
 
     def _prepare_slave(self, machine_id):
-        logging.info("Preparing machine #%d", machine_id)
+        logging.info("Preparing machine %s", machine_id)
         info = self._get_machineinfo(machine_id)
 
         if "libvirt_domain" in info:
@@ -271,7 +271,7 @@ class NetTestController:
             if "created_devices" not in info:
                 continue
             for dev_id, dev in reversed(info["created_devices"]):
-                logging.info("Removing netdevice %d (%s) from machine %d",
+                logging.info("Removing netdevice %d (%s) from machine %s",
                                 dev_id, dev["hwaddr"], machine_id)
                 domain_ctl = info["virt_domain_ctl"]
                 domain_ctl.detach_interface(dev["hwaddr"])
@@ -309,7 +309,7 @@ class NetTestController:
         except KeyError:
             pass
 
-        if machine_id == 0:
+        if machine_id == "0":
             cmd_res = NetTestCommand(command).run()
         else:
             rpc = self._get_machinerpc(machine_id)

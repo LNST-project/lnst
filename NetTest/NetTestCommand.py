@@ -19,7 +19,7 @@ import pickle, traceback
 from Common.ExecCmd import exec_cmd, ExecCmdFail
 
 def str_command(command):
-    out = ("type (%s), machine_id (%d), value (%s)"
+    out = ("type (%s), machine_id (%s), value (%s)"
                 % (command["type"], command["machine_id"], command["value"]))
     if "timeout" in command:
         out += ", timeout (%d)" % command["timeout"]

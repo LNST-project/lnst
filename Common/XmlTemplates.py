@@ -219,7 +219,7 @@ class XmlTemplates:
         self._validate_func_params("ip", params, 2, 1)
         recipe = self._get_recipe_data("ip")
 
-        m_id = int(params[0])
+        m_id = params[0]
         if_id = int(params[1])
         ip_id = int(params[2]) if len(params) == 3 else 0
 
@@ -246,7 +246,7 @@ class XmlTemplates:
     def _hwaddr_func(self, params):
         self._validate_func_params("hwaddr", params, 2, 0)
         recipe = self._get_recipe_data("hwaddr")
-        m_id = int(params[0])
+        m_id = params[0]
         if_id = int(params[1])
 
         if 'machines' not in recipe or m_id not in recipe['machines']:
@@ -267,7 +267,7 @@ class XmlTemplates:
     def _devname_func(self, params):
         self._validate_func_params("devname", params, 2, 0)
         recipe = self._get_recipe_data("devname")
-        m_id = int(params[0])
+        m_id = params[0]
         if_id = int(params[1])
 
         if 'machines' not in recipe or m_id not in recipe['machines']:
@@ -295,7 +295,7 @@ class XmlTemplates:
                 err = "Function %s takes %d arguments, %d passed" \
                             % (name, mandatory, num_params)
             raise XmlTemplateError(err)
-        for param in params:
+        for param in params[1:]:
             try:
                 int(param)
             except ValueError:
