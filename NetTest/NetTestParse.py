@@ -356,7 +356,7 @@ class CommandSequenceParse(RecipeParser):
 
             cmd_type = command["type"]
             if cmd_type in ["wait", "intr", "kill"]:
-                bg_id = int(command["value"])
+                bg_id = command["value"]
                 if bg_id in bg_ids[machine_id]:
                     bg_ids[machine_id].remove(bg_id)
                 else:
@@ -370,14 +370,14 @@ class CommandSequenceParse(RecipeParser):
                 if not bg_id in bg_ids[machine_id]:
                     bg_ids[machine_id].add(bg_id)
                 else:
-                    logging.error("Command \"%d\" uses bg_id \"%d\" on machine "
+                    logging.error("Command \"%d\" uses bg_id \"%s\" on machine "
                               "\"%s\" which is already used",
                                             i, bg_id, machine_id)
                     err = True
 
         for machine_id in bg_ids:
             for bg_id in bg_ids[machine_id]:
-                logging.error("bg_id \"%d\" on machine \"%s\" has no kill/wait "
+                logging.error("bg_id \"%s\" on machine \"%s\" has no kill/wait "
                           "command to it", bg_id, machine_id)
                 err = True
         if err:
@@ -416,7 +416,7 @@ class CommandParse(RecipeParser):
             command["timeout"] = self._get_attribute(node, "timeout", int)
 
         if self._has_attribute(node, "bg_id"):
-            command["bg_id"] = self._get_attribute(node, "bg_id", int)
+            command["bg_id"] = self._get_attribute(node, "bg_id")
 
         if self._has_attribute(node, "desc"):
             command["desc"] = self._get_attribute(node, "desc")

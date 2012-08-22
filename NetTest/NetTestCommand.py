@@ -24,7 +24,7 @@ def str_command(command):
     if "timeout" in command:
         out += ", timeout (%d)" % command["timeout"]
     if "bg_id" in command:
-        out += ", bg_id (%d)" % command["bg_id"]
+        out += ", bg_id (%s)" % command["bg_id"]
     if "desc" in command:
         out += ", desc (%s)" % command["desc"]
     return out
@@ -176,9 +176,9 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
 
 class NetTestCommandWait(NetTestCommandGeneric):
     def run(self):
-        bg_id = int(self._command["value"])
+        bg_id = self._command["value"]
         pid = bg_processes.get_pid(bg_id)
-        logging.debug("Waiting for background id \"%d\", pid \"%d\"" % (bg_id, pid))
+        logging.debug("Waiting for background id \"%s\", pid \"%d\"" % (bg_id, pid))
         os.waitpid(pid, 0)
         result = bg_processes.get_bg_process_result(bg_id)
         bg_processes.remove(bg_id)
@@ -186,9 +186,9 @@ class NetTestCommandWait(NetTestCommandGeneric):
 
 class NetTestCommandIntr(NetTestCommandGeneric):
     def run(self):
-        bg_id = int(self._command["value"])
+        bg_id = self._command["value"]
         pid = bg_processes.get_pid(bg_id)
-        logging.debug("Interrupting background id \"%d\", pid \"%d\"" % (bg_id, pid))
+        logging.debug("Interrupting background id \"%s\", pid \"%d\"" % (bg_id, pid))
         os.killpg(os.getpgid(pid), signal.SIGINT)
         os.waitpid(pid, 0)
         result = bg_processes.get_bg_process_result(bg_id)
@@ -197,9 +197,9 @@ class NetTestCommandIntr(NetTestCommandGeneric):
 
 class NetTestCommandKill(NetTestCommandGeneric):
     def run(self):
-        bg_id = int(self._command["value"])
+        bg_id = self._command["value"]
         pid = bg_processes.get_pid(bg_id)
-        logging.debug("Killing background id \"%d\", pid \"%d\"" % (bg_id, pid))
+        logging.debug("Killing background id \"%s\", pid \"%d\"" % (bg_id, pid))
         os.killpg(os.getpgid(pid), signal.SIGKILL)
         bg_processes.remove(bg_id)
         self.set_result({"passed": True})
@@ -236,7 +236,7 @@ class NetTestCommand:
             if pid:
                 os.close(write_pipe)
                 logging.debug("Running in background with"
-                              " id \"%d\", pid \"%d\"" % (bg_id, pid))
+                              " id \"%s\", pid \"%d\"" % (bg_id, pid))
                 bg_processes.add(bg_id, pid, read_pipe)
                 return {"passed": True}
             os.close(read_pipe)
