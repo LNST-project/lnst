@@ -91,7 +91,7 @@ def netmachineconfig_to_xml(machine_data):
 
     devices = ""
     for phys_id, netdev in machine_data["netdevices"].iteritems():
-        pid = "phys_id=\"%d\" " % phys_id
+        pid = "phys_id=\"%s\" " % phys_id
         dev_type = ""
         name = ""
         hwaddr = ""

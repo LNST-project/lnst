@@ -131,7 +131,7 @@ class NetTestController:
             br_name = brctl.get_name()
             brctl.init()
 
-            logging.info("Creating netdevice %d (%s) on machine %s",
+            logging.info("Creating netdevice %s (%s) on machine %s",
                             dev_id, dev["hwaddr"], machine_id)
 
             domain_ctl = info["virt_domain_ctl"]
@@ -142,7 +142,7 @@ class NetTestController:
 
             if not ready:
                 msg = "Netdevice initialization failed." \
-                      "Unable to create device %d (%s) on machine %s" \
+                      "Unable to create device %s (%s) on machine %s" \
                                 % (dev_id, dev["hwaddr"], machine_id)
                 raise NetTestError(msg)
 
@@ -154,7 +154,7 @@ class NetTestController:
         if len(phys_devs) == 1:
             pass
         elif len(phys_devs) < 1:
-            msg = "Device %d not found on machine %s" \
+            msg = "Device %s not found on machine %s" \
                             % (dev_id, machine_id)
             raise NetTestError(msg)
         elif len(phys_devs) > 1:
@@ -271,7 +271,7 @@ class NetTestController:
             if "created_devices" not in info:
                 continue
             for dev_id, dev in reversed(info["created_devices"]):
-                logging.info("Removing netdevice %d (%s) from machine %s",
+                logging.info("Removing netdevice %s (%s) from machine %s",
                                 dev_id, dev["hwaddr"], machine_id)
                 domain_ctl = info["virt_domain_ctl"]
                 domain_ctl.detach_interface(dev["hwaddr"])

@@ -160,7 +160,7 @@ class NetMachineConfigParse(RecipeParser):
 
     def _netdevice(self, node, params):
         machine = self._machine
-        phys_id = self._get_attribute(node, "phys_id", int)
+        phys_id = self._get_attribute(node, "phys_id")
 
         dev = machine["netdevices"][phys_id] = {}
         dev["create"] = params["create"]
@@ -248,7 +248,7 @@ class NetConfigParse(RecipeParser):
         devices = self._devices
 
         if dev["type"] == "eth":
-            phys_id = self._get_attribute(node, "phys_id", int)
+            phys_id = self._get_attribute(node, "phys_id")
             self._check_phys_id(node, phys_id, netconfig)
             dev["phys_id"] = phys_id
 
@@ -271,7 +271,7 @@ class NetConfigParse(RecipeParser):
             if not "phys_id" in config[key]:
                 continue
             if config[key]["phys_id"] == dev_pid:
-                msg = "same phys_id \"%d\" used more than once" % dev_pid
+                msg = "same phys_id \"%s\" used more than once" % dev_pid
                 raise XmlProcessingError(msg, node)
 
     def _addresses(self, node, params):
