@@ -461,5 +461,6 @@ class NetTestController:
             for option, values in system_config.iteritems():
                 command["options"][option] = [{"value": values["initial_val"]}]
 
-            self._run_command_sequence([command])
+            seq = {"commands": [command], "quit_on_fail": "no"}
+            self._run_command_sequence(seq)
             info["system_config"] = {}
