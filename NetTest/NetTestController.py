@@ -106,8 +106,18 @@ class NetTestController:
                       "Machine '%d' is not virtual." % (machine_id)
                 raise NetTestError(msg)
 
-            if not "hwaddr" in dev:
-                dev["hwaddr"] = self._mac_pool.get_addr()
+            if "hwaddr" in dev:
+                query_result = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+                if query_result:
+                    msg = "Device with hwaddr %s already exists" \
+                                                % dev["hwaddr"]
+                    raise NetTestError(msg)
+            else:
+                while True:
+                    dev["hwaddr"] = self._mac_pool.get_addr()
+                    query_result = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+                    if not len(query_result):
+                        break
 
             if "target_bridge" in dev:
                 brctl = BridgeCtl(dev["target_bridge"])
