@@ -94,12 +94,12 @@ class MachineParse(RecipeParser):
         self._machine["netdevices"] = {}
         self._machine["netconfig"] = {}
 
-        scheme = {"netmachineconfig": self._netmachineconfig,
+        scheme = {"machineconfig": self._machineconfig,
                   "netconfig": self._netconfig }
         self._process_child_nodes(node, scheme)
 
-    def _netmachineconfig(self, node, params):
-        subparser = NetMachineConfigParse(self)
+    def _machineconfig(self, node, params):
+        subparser = MachineConfigParse(self)
         subparser.set_machine(self._id, self._machine)
         subparser.parse(node)
 
@@ -108,7 +108,8 @@ class MachineParse(RecipeParser):
         subparser.set_machine(self._id, self._machine)
         subparser.parse(node)
 
-class NetMachineConfigParse(RecipeParser):
+
+class MachineConfigParse(RecipeParser):
     _machine_id = None
     _machine = None
 
