@@ -27,16 +27,16 @@ def usage():
     Print usage of this app
     """
     print "Usage:"
-    print "nettestctl.py [OPTION...] ACTION"
+    print "nettestctl.py [OPTION...] [RECIPE...] ACTION"
     print ""
     print "ACTION = [run | dump | config_only]"
     print ""
+    print "options:"
     print "  -d, --debug                             emit debugging messages"
     print "  -p, --packet_capture                    capture and log all ongoing\n" \
           "                                          network communication during\n" \
           "                                          the test"
     print "  -h, --help                              print this message"
-    print "  -r, --recipe=FILE                       use this net test recipe"
     print "  -e, --remoteexec                        transfer and execute\n" \
           "                                          application on slaves"
     print "  -c, --cleanup                           perform config cleanup\n" \
@@ -44,12 +44,11 @@ def usage():
     print "  -x, --result=FILE                       file to write xml_result"
     sys.exit()
 
-def process_recipe(args, file_path, remoteexec, cleanup,
+def process_recipe(action, file_path, remoteexec, cleanup,
                    res_serializer, packet_capture):
     nettestctl = NetTestController(os.path.realpath(file_path),
                                    remoteexec=remoteexec, cleanup=cleanup,
                                    res_serializer=res_serializer)
-    action = args[0]
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "dump":
@@ -109,8 +108,6 @@ def main():
             debug += 1
         elif opt in ("-h", "--help"):
             usage()
-        elif opt in ("-r", "--recipe"):
-            recipe_path = arg
         elif opt in ("-e", "--remoteexec"):
             remoteexec = True
         elif opt in ("-c", "--cleanup"):
@@ -127,32 +124,33 @@ def main():
         logging.error("No action command passed")
         usage();
 
-    if not recipe_path:
-        logging.error("No recipe xml file passed")
-        usage();
+    action = args.pop()
 
     summary = []
 
     res_serializer = NetTestResultSerializer()
-    if os.path.isdir(recipe_path):
-        all_files = []
-        for root, dirs, files in os.walk(recipe_path):
-            dirs[:] = [] # do not walk subdirs
-            all_files += files
+    for recipe_path in args:
+        if os.path.isdir(recipe_path):
+            all_files = []
+            for root, dirs, files in os.walk(recipe_path):
+                dirs[:] = [] # do not walk subdirs
+                all_files += files
 
-        all_files.sort()
-        for f in all_files:
-            recipe_file = os.path.join(recipe_path, f)
-            if re.match(r'^.*\.xml$', recipe_file):
-                logging.info("Processing recipe file \"%s\"" % recipe_file)
-                summary.append(get_recipe_result(args, recipe_file, remoteexec,
-                                                 cleanup, res_serializer,
-                                                 packet_capture))
-                Logs.set_logging_root_path(clean=False)
-    else:
-        summary.append(get_recipe_result(args, recipe_path, remoteexec,
-                                         cleanup, res_serializer,
-                                         packet_capture))
+            all_files.sort()
+            for f in all_files:
+                recipe_file = os.path.join(recipe_path, f)
+                if re.match(r'^.*\.xml$', recipe_file):
+                    logging.info("Processing recipe file \"%s\"" % recipe_file)
+                    summary.append(get_recipe_result(action, recipe_file,
+                                                     remoteexec, cleanup,
+                                                     res_serializer,
+                                                     packet_capture))
+                    Logs.set_logging_root_path(clean=False)
+        else:
+            summary.append(get_recipe_result(action, recipe_path, remoteexec,
+                                             cleanup, res_serializer,
+                                             packet_capture))
+
     Logs.set_logging_root_path(clean=False)
 
     print_summary(summary)
