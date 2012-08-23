@@ -234,7 +234,7 @@ class XmlTemplates:
             msg = "Second parameter of function ip() is invalid: "\
                     "Interface %s does not exist." % if_id
             raise XmlTemplateError(msg)
-        if ip_id >= len(machine['netconfig'][if_id]['addresses']):
+        if ip_id >= len(machine['netconfig'][if_id]['addresses']) or ip_id < 0:
             msg = "Third parameter of function ip() is invalid: "\
                     "Address %s does not exist." % ip_id
             raise XmlTemplateError(msg)
