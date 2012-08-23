@@ -234,6 +234,11 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
             port_netdev = self._config[slave_id]
             NetConfigDevice(port_netdev, self._config).down()
 
+    def _ports_up(self):
+        for slave_id in get_slaves(self._netdev):
+            port_netdev = self._config[slave_id]
+            NetConfigDevice(port_netdev, self._config).up()
+
     def configure(self):
         self._ports_down()
 
@@ -250,6 +255,7 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
 
         for slave_id in get_slaves(self._netdev):
             self.slave_add(slave_id)
+        self._ports_up()
 
     def deconfigure(self):
         for slave_id in get_slaves(self._netdev):
