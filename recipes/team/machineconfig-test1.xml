@@ -1,7 +1,7 @@
-<netmachineconfig>
+<machineconfig>
   <info hostname="192.168.122.182" rootpass="aaa"/>
   <netdevices>
     <netdevice type="eth" phys_id="1" hwaddr="52:54:00:3d:c7:6d" network="testing"/>
     <netdevice type="eth" phys_id="2" hwaddr="52:54:00:73:15:c2" network="testing"/>
   </netdevices>
-</netmachineconfig>
+</machineconfig>

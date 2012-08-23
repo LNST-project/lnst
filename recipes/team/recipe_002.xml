@@ -4,14 +4,14 @@
             <alias name="testip" value="192.168.111.1/24"/>
         </define>
         <machine id="1">
-            <netmachineconfig source="netmachineconfig-test1.xml"/>
+            <machineconfig source="netmachineconfig-test1.xml"/>
             <netconfig source="netconfig-team_ab_001.xml"/>
         </machine>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
         </define>
         <machine id="2">
-            <netmachineconfig source="netmachineconfig-test2.xml"/>
+            <machineconfig source="netmachineconfig-test2.xml"/>
             <netconfig source="netconfig-team_ab_001.xml"/>
         </machine>
     </machines>

@@ -10,7 +10,7 @@
     </define>
     <machines>
         <machine id="1">
-            <netmachineconfig>
+            <machineconfig>
                 <info hostname="{$hostname1}" libvirt_domain="{$virtdomain1}"
                       rootpass="redhat"/>
                 <netdevices>
@@ -19,7 +19,7 @@
                         <netdevice network="tnet" phys_id="2" type="eth"/>
                     </libvirt_create>
                 </netdevices>
-            </netmachineconfig>
+            </machineconfig>
             <netconfig>
                 <interface id="1" phys_id="1" type="eth">
                     <addresses>
@@ -34,7 +34,7 @@
             </netconfig>
         </machine>
         <machine id="2">
-            <netmachineconfig>
+            <machineconfig>
                 <info hostname="{$hostname2}" libvirt_domain="{$virtdomain2}"
                       rootpass="redhat"/>
                 <netdevices>
@@ -42,7 +42,7 @@
                         <netdevice network="tnet" phys_id="1" type="eth"/>
                     </libvirt_create>
                 </netdevices>
-            </netmachineconfig>
+            </machineconfig>
             <netconfig>
                 <interface id="1" phys_id="1" type="eth">
                     <addresses>
