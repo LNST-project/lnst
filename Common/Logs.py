@@ -12,8 +12,14 @@ jzupka@redhat.com (Jiri Zupka)
 import os, sys, shutil, datetime
 from logging import Formatter
 import logging.handlers
+import traceback
 
 LOCAL_IP = "(127.0.0.1)"
+
+def log_exc_traceback():
+    cmd_type, value, tb = sys.exc_info()
+    exception = traceback.format_exception(cmd_type, value, tb)
+    logging.debug(''.join(exception))
 
 class FindRootPathError(Exception):
     def __init__(self, path, rootFolder):

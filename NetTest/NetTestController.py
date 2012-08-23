@@ -14,7 +14,7 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import socket
 import os
-from Common.Logs import Logs
+from Common.Logs import Logs, log_exc_traceback
 from Common.SshUtils import scp_from_remote
 from pprint import pprint, pformat
 from Common.XmlRpc import ServerProxy
@@ -295,6 +295,7 @@ class NetTestController:
         try:
             self._ntparse.parse_recipe()
         except Exception, exc:
+            log_exc_traceback()
             logging.debug("Exception raised during recipe parsing. "\
                     "Deconfiguring machines.")
             self._deconfigure_slaves()
@@ -377,6 +378,7 @@ class NetTestController:
         try:
             res = self._run_recipe()
         except Exception, exc:
+            log_exc_traceback()
             err = exc
 
         if packet_capture:

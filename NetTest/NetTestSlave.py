@@ -11,7 +11,7 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-from Common.Logs import Logs
+from Common.Logs import Logs, log_exc_traceback
 import signal
 import select, logging
 import os
@@ -114,10 +114,7 @@ class NetTestSlaveXMLRPC:
         try:
             return NetTestCommand(command).run()
         except:
-            import sys, traceback
-            cmd_type, value, tb = sys.exc_info()
-            exception = traceback.format_exception(cmd_type, value, tb)
-            logging.error(''.join(exception))
+            log_exc_traceback()
             raise CommandException(command)
 
     def machine_cleanup(self):
