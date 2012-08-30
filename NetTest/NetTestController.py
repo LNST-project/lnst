@@ -26,6 +26,7 @@ from NetTest.NetTestCommand import NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from Common.Utils import wait_for
+from NetTest.MachinePool import MachinePool
 
 MAC_POOL_RANGE = {"start": "52:54:01:00:00:01", "end": "52:54:01:FF:FF:FF"}
 
@@ -42,6 +43,8 @@ class NetTestController:
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
+
+        self._machine_pool = MachinePool([])
 
         self._recipe = {}
         definitions = {"recipe": self._recipe}
