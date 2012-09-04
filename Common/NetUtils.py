@@ -37,6 +37,21 @@ def scan_netdevs():
             scan.append({"name": d, "hwaddr": addr})
     return scan
 
+def verify_ip_address(addr):
+    if len(addr.split('.')) != 4:
+        return False
+    try:
+        socket.inet_aton(addr)
+        return True
+    except:
+        return False
+
+def verify_mac_address(addr):
+    if re.match("^[0-9a-f]{2}([:][0-9a-f]{2}){5}$", addr, re.I):
+        return True
+    else:
+        return False
+
 def get_corespond_local_ip(query_ip):
     """
     Get ip address in local system which can communicate with query_ip.
@@ -85,10 +100,10 @@ class AddressPool:
 
 class MacPool(AddressPool):
     def _addr_to_byte_string(self, addr):
-        bs = [int(byte, 16) for byte in addr.split(":")]
+        if not verify_mac_address(addr):
+            raise Exception("Invalid MAC address")
 
-        if len(bs) != 6:
-            raise Exception("Malformed MAC address")
+        bs = [int(byte, 16) for byte in addr.split(":")]
 
         return bs
 
@@ -97,10 +112,10 @@ class MacPool(AddressPool):
 
 class IpPool(AddressPool):
     def _addr_to_byte_string(self, addr):
-        bs = [int(byte) for byte in addr.split(".")]
+        if not verify_ip_address(addr):
+            raise Exception("Invalid IP address")
 
-        if len(bs) != 4:
-            raise Exception("Malformed IP address")
+        bs = [int(byte) for byte in addr.split(".")]
 
         return bs
 
