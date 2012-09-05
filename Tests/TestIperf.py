@@ -89,15 +89,28 @@ class TestIperf(TestGeneric):
                 client.kill()
 
         output = client.read_nonblocking()
+
+        if re.search("connect failed:", output):
+            logging.info("Iperf connection failed!")
+            return (False, "Iperf connection failed!")
+
         if self.threshold is not None:
             # check if expected threshold is reached
             m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\s*\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output)
             if m is None:
                 logging.info("Could not get performance throughput!")
-                return False
+                return (False, "Could not get performance throughput!")
 
             rate = m.group(2)
-            return self._rate_over_threshold(rate)
+            result = self._rate_over_threshold(rate)
+            if result:
+                return (True, "Measured rate (%s) is over threshold (%s)." %
+                        (rate, self.threshold))
+            else:
+                return (False, "Measured rate (%s) is below threshold (%s)!" %
+                        (rate, self.threshold))
+        else:
+            return True, "Measured rate: %s" % rate
 
     def run_server(self, cmd):
         server = ShellProcess(cmd)
@@ -144,10 +157,13 @@ class TestIperf(TestGeneric):
         if role == "server":
             logging.debug("running as server ...")
             self.run_server(cmd)
+
+            return self.set_pass()
         elif role == "client":
             logging.debug("running as client ...")
-            rv = self.run_client(cmd)
+            (rv, message) = self.run_client(cmd)
             if rv == False:
-                return self.set_fail("iperf test failed, measured rate is below expected threshold")
+                return self.set_fail(message)
 
-        return self.set_pass()
+            return self.set_pass(message)
+
