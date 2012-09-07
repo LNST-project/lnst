@@ -94,14 +94,14 @@ class TestIperf(TestGeneric):
             logging.info("Iperf connection failed!")
             return (False, "Iperf connection failed!")
 
+        m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\s*\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output)
+        if m is None:
+            logging.info("Could not get performance throughput!")
+            return (False, "Could not get performance throughput!")
+
+        rate = m.group(2)
         if self.threshold is not None:
             # check if expected threshold is reached
-            m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\s*\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output)
-            if m is None:
-                logging.info("Could not get performance throughput!")
-                return (False, "Could not get performance throughput!")
-
-            rate = m.group(2)
             result = self._rate_over_threshold(rate)
             if result:
                 return (True, "Measured rate (%s) is over threshold (%s)." %
