@@ -122,8 +122,8 @@ class NetTestController:
                     if not len(query_result):
                         break
 
-            if "target_bridge" in dev:
-                brctl = BridgeCtl(dev["target_bridge"])
+            if "libvirt_bridge" in dev:
+                brctl = BridgeCtl(dev["libvirt_bridge"])
             else:
                 if "default_bridge" in dev_net:
                     brctl = dev_net["default_bridge"]
