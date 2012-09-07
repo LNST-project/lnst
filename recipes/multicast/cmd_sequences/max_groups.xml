@@ -5,7 +5,7 @@
     <command machine_id="1" timeout="30" type="test" value="Multicast">
         <options>
             <option name="setup" value="max_groups"/>
-            <option name="interface" value="{ip(1,1)}"/>
+            <option name="interface" value="{ip(1,testiface)}"/>
             <option name="condition" value="max_groups > 0"/>
         </options>
     </command>
@@ -15,7 +15,7 @@
     <command machine_id="1" timeout="30" type="test" value="Multicast">
         <options>
             <option name="setup" value="max_groups"/>
-            <option name="interface" value="{ip(1,1)}"/>
+            <option name="interface" value="{ip(1,testiface)}"/>
             <option name="condition" value="max_groups == 5"/>
         </options>
     </command>

@@ -1,10 +1,18 @@
 <command_sequence>
   <command type="exec" value="sleep 4"/>
-  <command machine_id="1" timeout="30" type="test" value="IcmpPing">
+  <command machine_id="1" timeout="60" type="test" value="IcmpPing">
     <options>
-      <option name="addr" value="{$recipe['machines']['2']['netconfig']['3']['addresses'][0]}"/>
-      <option name="count" value="40"/>
-      <option name="interval" value="0.2"/>
+      <option name="addr" value="{ip(2,testiface)}"/>
+      <option name="count" value="2000"/>
+      <option name="interval" value="0.01"/>
+      <option name="limit_rate" value="95"/>
+    </options>
+  </command>
+  <command machine_id="1" timeout="60" type="test" value="Icmp6Ping">
+    <options>
+      <option name="addr" value="{ip(2,testiface,1)}"/>
+      <option name="count" value="2000"/>
+      <option name="interval" value="0.01"/>
       <option name="limit_rate" value="95"/>
     </options>
   </command>

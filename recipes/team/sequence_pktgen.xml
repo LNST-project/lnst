@@ -1,0 +1,21 @@
+<command_sequence>
+  <command type="exec" value="sleep 4"/>
+  <command machine_id="1" type="test" value="PktCounter" bg_id="1">
+    <options>
+      <option name="input_netdev_name" value="{devname(1,testiface)}"/>
+      <option name="proto" value="udp"/>
+      <option name="dport" value="9"/>
+    </options>
+  </command>
+  <command machine_id="2" type="test" value="PktgenTx" timeout="200">
+    <options>
+      <option name="pktgen_option" value="dst {ip(1,testiface)}"/>
+      <option name="pktgen_option" value="dst_mac 00:11:22:33:44:55"/>
+      <option name="pktgen_option" value="src_min {ip(2,testiface)}"/>
+      <option name="netdev_name" value="{devname(2,testiface)}"/>
+      <option name="netdev_name" value="{devname(2,2)}"/>
+      <option name="netdev_name" value="{devname(2,3)}"/>
+    </options>
+  </command>
+  <command machine_id="1" type="intr" value="1"/>
+</command_sequence>

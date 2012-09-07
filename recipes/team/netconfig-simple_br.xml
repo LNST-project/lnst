@@ -2,15 +2,7 @@
     <interface id="1" phys_id="1" type="eth"/>
     <interface id="2" phys_id="2" type="eth"/>
     <interface id="3" phys_id="3" type="eth"/>
-    <interface id="testiface" type="team">
-        <options>
-            <option name="teamd_config">
-                {
-                    "hwaddr": "00:11:22:33:44:55",
-                    "runner": {"name": "roundrobin"}
-                }
-            </option>
-        </options>
+    <interface id="testiface" type="bridge">
         <slaves>
             <slave id="1"/>
             <slave id="2"/>

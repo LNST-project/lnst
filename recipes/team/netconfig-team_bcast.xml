@@ -7,7 +7,7 @@
             <option name="teamd_config">
                 {
                     "hwaddr": "00:11:22:33:44:55",
-                    "runner": {"name": "roundrobin"}
+                    "runner": {"name": "broadcast"}
                 }
             </option>
         </options>

@@ -21,7 +21,7 @@
                 </netdevices>
             </machineconfig>
             <netconfig>
-                <interface id="1" phys_id="1" type="eth">
+                <interface id="testiface" phys_id="1" type="eth">
                     <addresses>
                         <address value="192.168.100.226/24"/>
                     </addresses>
@@ -44,7 +44,7 @@
                 </netdevices>
             </machineconfig>
             <netconfig>
-                <interface id="1" phys_id="1" type="eth">
+                <interface id="testiface" phys_id="1" type="eth">
                     <addresses>
                         <address value="192.168.100.215/24"/>
                     </addresses>

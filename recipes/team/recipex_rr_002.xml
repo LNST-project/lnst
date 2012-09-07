@@ -1,0 +1,36 @@
+<nettestrecipe>
+    <machines>
+        <define>
+            <alias name="testip" value="192.168.111.1/24"/>
+            <alias name="testip6" value="fe01::1/64"/>
+        </define>
+        <machine id="1">
+            <machineconfig source="machineconfig-peanut.xml"/>
+            <netconfig source="netconfig-team_rr.xml"/>
+        </machine>
+        <define>
+            <alias name="testip" value="192.168.111.2/24"/>
+            <alias name="testip6" value="fe01::2/64"/>
+        </define>
+        <machine id="2">
+            <machineconfig source="machineconfig-dhcp-37-128.xml"/>
+            <netconfig source="netconfig-simple_br.xml"/>
+        </machine>
+    </machines>
+    <define>
+        <alias name="multicast_group" value="239.1.2.3"/>
+        <alias name="port" value="1337"/>
+        <alias name="test_duration" value="10"/>
+        <alias name="send_delay" value="0.1"/>
+        <alias name="nonexistent_ip" value="127.0.0.200"/>
+    </define>
+
+    <command_sequence source="../multicast/cmd_sequences/max_groups.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/block_source.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/source_membership.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/membership.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/if.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/ttl.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/loop.xml"/>
+    <command_sequence source="../multicast/cmd_sequences/simple.xml"/>
+</nettestrecipe>

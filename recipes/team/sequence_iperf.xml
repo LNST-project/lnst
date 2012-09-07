@@ -1,0 +1,18 @@
+<command_sequence>
+  <command type="exec" value="sleep 3" />
+  <command machine_id="2" type="test" value="Iperf" bg_id="1">
+    <options>
+      <option name="role" value="server" />
+      <option name="bind" value="{ip(2,testiface)}" />
+    </options>
+  </command>
+  <command type="exec" value="sleep 3" />
+  <command machine_id="1" type="test" value="Iperf">
+    <options>
+      <option name="role" value="client" />
+      <option name="duration" value="15"/>
+      <option name="iperf_server" value="{ip(2,testiface)}" />
+    </options>
+  </command>
+  <command type="kill" machine_id="2" value="1" />
+</command_sequence>

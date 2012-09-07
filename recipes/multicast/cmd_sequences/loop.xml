@@ -20,7 +20,7 @@
             <option name="duration" value="{$test_duration}"/>
             <option name="delay" value="{$send_delay}"/>
             <option name="loop" value="1"/>
-            <option name="interface" value="{ip(1,1)}"/>
+            <option name="interface" value="{ip(1,testiface)}"/>
         </options>
     </command>
 
@@ -30,7 +30,7 @@
             <option name="address" value="{$multicast_group}"/>
             <option name="port" value="{$port}"/>
             <option name="duration" value="{$test_duration}"/>
-            <option name="interface" value="{ip(1,1)}"/>
+            <option name="interface" value="{ip(1,testiface)}"/>
 
             <option name="condition" value="packets_received > 0"/>
         </options>
@@ -49,7 +49,7 @@
             <option name="duration" value="{$test_duration}"/>
             <option name="delay" value="{$send_delay}"/>
             <option name="loop" value="0"/>
-            <option name="interface" value="{ip(1,1)}"/>
+            <option name="interface" value="{ip(1,testiface)}"/>
         </options>
     </command>
 
@@ -59,7 +59,7 @@
             <option name="address" value="{$multicast_group}"/>
             <option name="port" value="{$port}"/>
             <option name="duration" value="{$test_duration}"/>
-            <option name="interface" value="{ip(1,1)}"/>
+            <option name="interface" value="{ip(1,testiface)}"/>
 
             <option name="condition" value="packets_received == 0"/>
         </options>
