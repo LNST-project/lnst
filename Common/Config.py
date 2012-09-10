@@ -104,7 +104,10 @@ class Config():
             msg = "Option mac_pool_range expects 2"\
                     " values sepparated by whitespaces."
             raise ConfigError(msg)
-        if not verify_mac_address(option):
-            msg = "Invalid MAC address: %s" % option
+        if not verify_mac_address(vals[0]):
+            msg = "Invalid MAC address: %s" % vals[0]
+            raise ConfigError(msg)
+        if not verify_mac_address(vals[1]):
+            msg = "Invalid MAC address: %s" % vals[1]
             raise ConfigError(msg)
         return vals
