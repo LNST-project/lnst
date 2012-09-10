@@ -11,9 +11,11 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import os
+import sys
 import logging
 import re
 from ConfigParser import ConfigParser
+from NetTest.NetTestSlave import DefaultRPCPort
 from NetUtils import verify_ip_address, verify_mac_address
 
 class ConfigError(Exception):
@@ -21,55 +23,68 @@ class ConfigError(Exception):
 
 class Config():
     options = None
-    _parser = None
 
     def __init__(self):
-        self._parser = ConfigParser(dict_type=dict)
         self.options = dict()
+
+        self.options['log'] = dict()
+        self.options['log']['port'] = 9998
+        self.options['log']['path'] = os.path.join(
+                os.path.dirname(sys.argv[0]), './')
+
+        self.options['environment'] = dict()
+        self.options['environment']['mac_pool_range'] = \
+                ['52:54:01:00:00:01', '52:54:01:FF:FF:FF']
+        self.options['environment']['rpcport'] = DefaultRPCPort
+        self.options['environment']['pool_dirs'] = []
 
     def get_config(self):
         return self.options
 
     def get_section(self, section):
+        if section not in self.options:
+            msg = 'Unknow section: %s' % section
+            raise ConfigError(msg)
         return self.options[section]
 
     def get_option(self, section, option):
-        return self.options[section][option]
+        sect = self.get_section(section)
+        if option not in sect:
+            msg = 'Unknown option: %s in section: %s' % (option, section)
+            raise ConfigError(msg)
+        return sect[option]
 
     def load_config(self, path):
         '''Parse and load the config file'''
-        self._parser.read(path)
+        exp_path = os.path.expanduser(path)
+        abs_path = os.path.abspath(exp_path)
+        parser = ConfigParser(dict_type=dict)
+        parser.read(abs_path)
 
-        sections = self._parser._sections
+        sections = parser._sections
         for section in sections:
             if section == "log":
-                self.sectionLogs(sections[section])
+                self.sectionLogs(sections[section], abs_path)
             elif section == "environment":
-                self.sectionEnvironment(sections[section])
+                self.sectionEnvironment(sections[section], abs_path)
             else:
                 msg = "Unknown section: %s" % section
                 raise ConfigError(msg)
 
-    def sectionLogs(self, config):
-        if 'log' not in self.options:
-            self.options['log'] = dict()
+    def sectionLogs(self, config, cfg_path):
         section = self.options['log']
 
         config.pop('__name__', None)
         for option in config:
-            if option == 'local_ip':
-                section['local_ip'] = self.optionLocalIP(config[option])
-            elif option == 'port':
+            if option == 'port':
                 section['port'] = self.optionPort(config[option])
             elif option == 'path':
-                section['path'] = self.optionLogPath(config[option])
+                section['path'] = self.optionLogPath(config[option], cfg_path)
             else:
                 msg = "Unknown option: %s in section log" % option
                 raise ConfigError(msg)
 
-    def sectionEnvironment(self, config):
-        if 'environment' not in self.options:
-            self.options['environment'] = dict()
+    def sectionEnvironment(self, config, cfg_path):
         section = self.options['environment']
 
         config.pop('__name__', None)
@@ -79,16 +94,11 @@ class Config():
             elif option == 'rpcport':
                 section['rpcport'] = self.optionPort(config[option])
             elif option == 'machine_pool_dirs':
-                section['pool_dirs'] = self.optionPoolDirs(config[option])
+                section['pool_dirs'] = self.optionPoolDirs(config[option],
+                                                           cfg_path)
             else:
                 msg = "Unknown option: %s in section environment" % option
                 raise ConfigError(msg)
-
-    def optionLocalIP(self, option):
-        if not verify_ip_address(option):
-            msg = "Invalid IP address: %s" % option
-            raise ConfigError(msg)
-        return option
 
     def optionPort(self, option):
         try:
@@ -98,8 +108,11 @@ class Config():
             raise ConfigError(msg)
         return int(option)
 
-    def optionLogPath(self, option):
-        return option
+    def optionLogPath(self, option, cfg_path):
+        exp_path = os.path.expanduser(option)
+        abs_path = os.path.join(os.path.dirname(cfg_path), exp_path)
+        norm_path = os.path.normpath(abs_path)
+        return norm_path
 
     def optionMacRange(self, option):
         vals = option.split()
@@ -115,9 +128,17 @@ class Config():
             raise ConfigError(msg)
         return vals
 
-    def optionPoolDirs(self, option):
+    def optionPoolDirs(self, option, cfg_path):
         env = self.get_section('environment')
-        if 'pool_dirs' not in env:
-            env['pool_dirs'] = []
-        opts = re.split(r'(?<!\\)\s', option)
-        return env['pool_dirs'] + opts
+        paths = re.split(r'(?<!\\)\s', option)
+
+        pool_dirs = env['pool_dirs']
+        for path in paths:
+            if path == '':
+                continue
+            exp_path = os.path.expanduser(path)
+            abs_path = os.path.join(os.path.dirname(cfg_path), exp_path)
+            norm_path = os.path.normpath(abs_path)
+            pool_dirs.append(norm_path)
+
+        return pool_dirs
