@@ -28,8 +28,6 @@ from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from Common.Utils import wait_for
 from NetTest.MachinePool import MachinePool
 
-MAC_POOL_RANGE = {"start": "52:54:01:00:00:01", "end": "52:54:01:FF:FF:FF"}
-
 class NetTestError(Exception):
     pass
 
@@ -51,8 +49,10 @@ class NetTestController:
         definitions = {"recipe": self._recipe}
 
         self._recipe["networks"] = {}
-        self._mac_pool = MacPool(MAC_POOL_RANGE["start"],
-                                 MAC_POOL_RANGE["end"])
+
+        mac_pool_range = config.get_option('environment', 'mac_pool_range')
+        self._mac_pool = MacPool(mac_pool_range[0],
+                                 mac_pool_range[1])
 
         ntparse = NetTestParse(recipe_path)
         ntparse.set_recipe(self._recipe)
