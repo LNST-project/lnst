@@ -21,6 +21,7 @@ from NetTest.NetTestResultSerializer import NetTestResultSerializer
 from Common.Logs import Logs
 from Common.LoggingServer import LoggingServer
 import Common.ProcessManager
+from Common.Config import Config
 
 def usage():
     """
@@ -45,7 +46,7 @@ def usage():
     sys.exit()
 
 def process_recipe(action, file_path, remoteexec, cleanup,
-                   res_serializer, packet_capture):
+                   res_serializer, packet_capture, config):
     nettestctl = NetTestController(os.path.realpath(file_path),
                                    remoteexec=remoteexec, cleanup=cleanup,
                                    res_serializer=res_serializer)
@@ -70,14 +71,14 @@ def print_summary(summary):
     logging.info("=====================================================")
 
 def get_recipe_result(args, file_path, remoteexec, cleanup,
-                      res_serializer, packet_capture):
+                      res_serializer, packet_capture, config):
     res_serializer.add_recipe(file_path)
     Logs.set_logging_root_path(file_path)
     loggingServer = LoggingServer(LoggingServer.DEFAULT_PORT,
                                   Logs.root_path, Logs.debug)
     loggingServer.start()
     res = process_recipe(args, file_path, remoteexec, cleanup,
-                         res_serializer, packet_capture)
+                         res_serializer, packet_capture, config)
     loggingServer.stop()
     return ((file_path, res))
 
@@ -96,6 +97,9 @@ def main():
         print str(err)
         usage()
         sys.exit()
+
+    config = Config()
+    config.load_config('~/.lnst/lnst.conf')
 
     debug = 0
     recipe_path = None
@@ -144,12 +148,14 @@ def main():
                     summary.append(get_recipe_result(action, recipe_file,
                                                      remoteexec, cleanup,
                                                      res_serializer,
-                                                     packet_capture))
+                                                     packet_capture,
+                                                     config))
                     Logs.set_logging_root_path(clean=False)
         else:
             summary.append(get_recipe_result(action, recipe_path, remoteexec,
                                              cleanup, res_serializer,
-                                             packet_capture))
+                                             packet_capture,
+                                             config))
 
     Logs.set_logging_root_path(clean=False)
 

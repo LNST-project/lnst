@@ -24,12 +24,7 @@ class Config():
 
     def __init__(self):
         self._parser = ConfigParser(dict_type=dict)
-
-        # defaults.conf should contain all possible sections and options
-        # sections and options not listed there will be undefined which
-        # can cause problems
         self.options = dict()
-        self.load_config("default.conf")
 
     def get_config(self):
         return self.options
