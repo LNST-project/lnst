@@ -363,4 +363,4 @@ class RecipeParser(XmlParser):
             raise XmlProcessingError(str(err), node)
 
     def _get_referenced_xml_path(self, filename):
-        return os.path.join(self._include_root, os.path.expanduser(filename))
+        return os.path.normpath(os.path.join(self._include_root, os.path.expanduser(filename)))
