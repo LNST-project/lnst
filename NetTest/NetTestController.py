@@ -38,11 +38,12 @@ def ignore_event(**kwarg):
 
 class NetTestController:
     def __init__(self, recipe_path, remoteexec=False, cleanup=False,
-                 res_serializer=None):
+                 res_serializer=None, config=None):
         self._remoteexec = remoteexec
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
+        self._config = config
         self._command_context = NetTestCommandContext()
         self._machine_pool = MachinePool([])
 
@@ -259,7 +260,7 @@ class NetTestController:
         logging.info("Setting logging server on machine %s", hostname)
         rpc = self._get_machinerpc(machine_id)
         ip_addr = get_corespond_local_ip(hostname)
-        rpc.set_logging(ip_addr, LoggingServer.DEFAULT_PORT)
+        rpc.set_logging(ip_addr, self._config.get_option('log', 'port'))
 
     def _deconfigure_slaves(self):
         for machine_id in self._recipe["machines"]:

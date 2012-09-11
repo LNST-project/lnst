@@ -49,7 +49,8 @@ def process_recipe(action, file_path, remoteexec, cleanup,
                    res_serializer, packet_capture, config):
     nettestctl = NetTestController(os.path.realpath(file_path),
                                    remoteexec=remoteexec, cleanup=cleanup,
-                                   res_serializer=res_serializer)
+                                   res_serializer=res_serializer,
+                                   config=config)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "dump":
@@ -74,7 +75,7 @@ def get_recipe_result(args, file_path, remoteexec, cleanup,
                       res_serializer, packet_capture, config):
     res_serializer.add_recipe(file_path)
     Logs.set_logging_root_path(file_path)
-    loggingServer = LoggingServer(LoggingServer.DEFAULT_PORT,
+    loggingServer = LoggingServer(config.get_option('log', 'port'),
                                   Logs.root_path, Logs.debug)
     loggingServer.start()
     res = process_recipe(args, file_path, remoteexec, cleanup,
@@ -122,7 +123,7 @@ def main():
             packet_capture = True
 
 
-    Logs(debug)
+    Logs(debug, log_folder=config.get_option('log', 'path'))
 
     if not args:
         logging.error("No action command passed")

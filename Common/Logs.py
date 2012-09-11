@@ -187,7 +187,7 @@ class Logs:
     @classmethod
     def __init__(cls,debug=0, waitForNet=False, logger=logging.getLogger(),
                  recipe_path=None, log_root="Logs", to_display=True, date=None,
-                 nameExtend=None):
+                 nameExtend=None, log_folder=None):
         logging.addLevelName(5, "DEBUG2")
         logging.DEBUG2 = 5
         if nameExtend is None:
@@ -200,7 +200,10 @@ class Logs:
                             ':%(lineno)4.4d| %(levelname)s: '
                             '%(message)s', '%d/%m %H:%M:%S', " "*4)
         cls.log_root = log_root
-        cls.logFolder = os.path.dirname(sys.argv[0])
+        if log_folder != None:
+            cls.logFolder = log_folder
+        else:
+            cls.logFolder = os.path.dirname(sys.argv[0])
         cls.logger = logger
         cls.debug = debug
         if date is None:
