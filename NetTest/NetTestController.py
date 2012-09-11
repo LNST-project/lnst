@@ -21,7 +21,6 @@ from Common.XmlRpc import ServerProxy
 from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
 from Common.NetUtils import get_corespond_local_ip, MacPool
-from NetTest.NetTestSlave import DefaultRPCPort
 from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
@@ -233,8 +232,9 @@ class NetTestController:
 
         port = "22"
         login = "root"
+        rpc_port = self._config.get_option('environment', 'rpcport')
         session = prepare_client_session(hostname, port, login, passwd,
-                                         "nettestslave.py")
+                                         "nettestslave.py -p %s" % rpc_port)
         session.add_kill_handler(self._session_die)
         info["session"] = session
 
@@ -244,7 +244,7 @@ class NetTestController:
         if "rpcport" in info:
             port = info["rpcport"]
         else:
-            port = DefaultRPCPort
+            port = self._config.get_option('environment', 'rpcport')
         logging.info("Connecting to RPC on machine %s", hostname)
 
         url = "http://%s:%d" % (hostname, port)
