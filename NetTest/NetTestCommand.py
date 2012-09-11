@@ -37,42 +37,90 @@ class CommandException(Exception):
     def __str__(self):
         return "CommandException: " + str(self.command)
 
-class BgProcessException(Exception):
-    """Base class for client errors."""
+class BgCommandException(Exception):
+    """Base class for background command errors."""
     def __init__(self, str):
         self._str = str
 
     def __str__(self):
-        return "BgProcessError: " + self._str
+        return "BgCommandError: " + self._str
 
-class BGProcesses:
+class BgCommand:
+    def __init__(self, bg_id, cmd_cls):
+        self._bg_id = bg_id
+        self._cmd_cls = cmd_cls
+        self._pid = None
+        self._read_pipe = None
+
+    def get_bg_id(self):
+        return self._bg_id
+
+    def run(self):
+        read_pipe, write_pipe = os.pipe()
+        self._pid = os.fork()
+        if self._pid:
+            os.close(write_pipe)
+            logging.debug("Running in background with"
+                          " id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
+            self._read_pipe = read_pipe
+            return {"passed": True}
+        os.close(read_pipe)
+        os.setpgrp()
+        self._cmd_cls.set_handle_intr()
+        try:
+            self._cmd_cls.run()
+            result = self._cmd_cls.get_result()
+        except KeyboardInterrupt:
+            result = self._cmd_cls.get_result()
+        except:
+            type, value, tb = sys.exc_info()
+            result = {"Exception": ''.join(traceback.format_exception(type, value, tb))}
+        tmp = pickle.dumps(result)
+        os.write(write_pipe, tmp)
+        os.close(write_pipe)
+        os._exit(0)
+
+    def wait_for(self):
+        logging.debug("Waiting for background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
+        os.waitpid(self._pid, 0)
+
+    def interrupt(self):
+        logging.debug("Interrupting background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
+        os.killpg(os.getpgid(self._pid), signal.SIGINT)
+        os.waitpid(self._pid, 0)
+
+    def kill(self):
+        logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
+        os.killpg(os.getpgid(self._pid), signal.SIGKILL)
+
+    def get_result(self):
+        tmp = os.read(self._read_pipe, 4096*10)
+        result = pickle.loads(tmp)
+        if "Exception" in result:
+            raise BgCommandException(result["Exception"])
+        os.close(self._read_pipe)
+        return result
+
+class NetTestCommandContext:
     def __init__(self):
         self._dict = {}
 
-    def add(self, bg_id, pid, pipe):
-        if bg_id in self._dict:
-            raise Exception
-        self._dict[bg_id] = {"pid": pid, "pipe": pipe}
+    def add_bg_cmd(self, bg_cmd):
+        self._dict[bg_cmd.get_bg_id()] = bg_cmd
 
-    def get_pid(self, bg_id):
-        return self._dict[bg_id]["pid"]
+    def del_bg_cmd(self, bg_cmd):
+        del self._dict[bg_cmd.get_bg_id()]
 
-    def get_pipe(self, bg_id):
-        return self._dict[bg_id]["pipe"]
+    def get_bg_cmd(self, bg_id):
+        return self._dict[bg_id]
 
-    def remove(self, bg_id):
-        del self._dict[bg_id]
+    def _kill_all_bg_cmds(self):
+        for bg_id in self._dict:
+            self._dict[bg_id].kill()
 
-    def get_bg_process_result(self, bg_id):
-        pipe = self.get_pipe(bg_id)
-        tmp = os.read(pipe, 4096*10)
-        result = pickle.loads(tmp)
-        if "Exception" in result:
-            raise BgProcessException(result["Exception"])
-        os.close(pipe)
-        return result
-
-bg_processes = BGProcesses()
+    def cleanup(self):
+        self._kill_all_bg_cmds()
+        self._dict = {}
 
 def NetTestCommandTest(command):
     test_name = command["value"]
@@ -174,48 +222,49 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
         res["res_data"] = res_data
         self.set_result(res)
 
-class NetTestCommandWait(NetTestCommandGeneric):
+class NetTestCommandControl(NetTestCommandGeneric):
+    def __init__(self, command_context, command):
+        self._command_context = command_context
+        NetTestCommandGeneric.__init__(self, command)
+
+class NetTestCommandWait(NetTestCommandControl):
     def run(self):
         bg_id = self._command["value"]
-        pid = bg_processes.get_pid(bg_id)
-        logging.debug("Waiting for background id \"%s\", pid \"%d\"" % (bg_id, pid))
-        os.waitpid(pid, 0)
-        result = bg_processes.get_bg_process_result(bg_id)
-        bg_processes.remove(bg_id)
+        bg_cmd = self._command_context.get_bg_cmd(bg_id)
+        bg_cmd.wait_for()
+        result = bg_cmd.get_result()
+        self._command_context.del_bg_cmd(bg_cmd)
         self.set_result(result)
 
-class NetTestCommandIntr(NetTestCommandGeneric):
+class NetTestCommandIntr(NetTestCommandControl):
     def run(self):
         bg_id = self._command["value"]
-        pid = bg_processes.get_pid(bg_id)
-        logging.debug("Interrupting background id \"%s\", pid \"%d\"" % (bg_id, pid))
-        os.killpg(os.getpgid(pid), signal.SIGINT)
-        os.waitpid(pid, 0)
-        result = bg_processes.get_bg_process_result(bg_id)
-        bg_processes.remove(bg_id)
+        bg_cmd = self._command_context.get_bg_cmd(bg_id)
+        bg_cmd.interrupt()
+        result = bg_cmd.get_result()
+        self._command_context.del_bg_cmd(bg_cmd)
         self.set_result(result)
 
-class NetTestCommandKill(NetTestCommandGeneric):
+class NetTestCommandKill(NetTestCommandControl):
     def run(self):
         bg_id = self._command["value"]
-        pid = bg_processes.get_pid(bg_id)
-        logging.debug("Killing background id \"%s\", pid \"%d\"" % (bg_id, pid))
-        os.killpg(os.getpgid(pid), signal.SIGKILL)
-        bg_processes.remove(bg_id)
+        bg_cmd = self._command_context.get_bg_cmd(bg_id)
+        bg_cmd.kill()
+        self._command_context.del_bg_cmd(bg_cmd)
         self.set_result({"passed": True})
 
-def get_command_class(command):
+def get_command_class(command_context, command):
     cmd_type = command["type"]
     if cmd_type == "exec":
         return NetTestCommandExec(command)
     elif cmd_type == "test":
         return NetTestCommandTest(command)
     elif cmd_type == "wait":
-        return NetTestCommandWait(command)
+        return NetTestCommandWait(command_context, command)
     elif cmd_type == "intr":
-        return NetTestCommandIntr(command)
+        return NetTestCommandIntr(command_context, command)
     elif cmd_type == "kill":
-        return NetTestCommandKill(command)
+        return NetTestCommandKill(command_context, command)
     elif cmd_type == "system_config":
         return NetTestCommandSystemConfig(command)
     else:
@@ -223,37 +272,18 @@ def get_command_class(command):
         raise Exception("Unknown command type \"%s\"" % cmd_type)
 
 class NetTestCommand:
-    def __init__(self, command):
-        self._command_class = get_command_class(command)
+    def __init__(self, command_context, command):
+        self._command_class = get_command_class(command_context, command)
+        self._command_context = command_context
         self._command = command
 
     def run(self):
         cmd_cls = self._command_class
         if "bg_id" in self._command:
             bg_id = self._command["bg_id"]
-            read_pipe, write_pipe = os.pipe()
-            pid = os.fork()
-            if pid:
-                os.close(write_pipe)
-                logging.debug("Running in background with"
-                              " id \"%s\", pid \"%d\"" % (bg_id, pid))
-                bg_processes.add(bg_id, pid, read_pipe)
-                return {"passed": True}
-            os.close(read_pipe)
-            os.setpgrp()
-            cmd_cls.set_handle_intr()
-            try:
-                cmd_cls.run()
-                result = cmd_cls.get_result()
-            except KeyboardInterrupt:
-                result = cmd_cls.get_result()
-            except:
-                type, value, tb = sys.exc_info()
-                result = {"Exception": ''.join(traceback.format_exception(type, value, tb))}
-            tmp = pickle.dumps(result)
-            os.write(write_pipe, tmp)
-            os.close(write_pipe)
-            os._exit(0)
+            bg_cmd = BgCommand(bg_id, cmd_cls)
+            self._command_context.add_bg_cmd(bg_cmd)
+            return bg_cmd.run()
         else:
             cmd_cls.run()
             return cmd_cls.get_result()

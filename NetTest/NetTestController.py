@@ -22,7 +22,7 @@ from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
 from Common.NetUtils import get_corespond_local_ip, MacPool
 from NetTest.NetTestSlave import DefaultRPCPort
-from NetTest.NetTestCommand import NetTestCommand, str_command
+from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from Common.Utils import wait_for
@@ -43,7 +43,7 @@ class NetTestController:
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
-
+        self._command_context = NetTestCommandContext()
         self._machine_pool = MachinePool([])
 
         self._recipe = {}
@@ -314,7 +314,7 @@ class NetTestController:
             pass
 
         if machine_id == "0":
-            cmd_res = NetTestCommand(command).run()
+            cmd_res = NetTestCommand(self._command_context, command).run()
         else:
             rpc = self._get_machinerpc(machine_id)
             if "timeout" in command:
@@ -390,6 +390,7 @@ class NetTestController:
 
         self._deconfigure_slaves()
         self._disconnect_slaves()
+        self._command_context.cleanup()
 
         if not err:
             return res

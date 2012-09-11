@@ -20,7 +20,7 @@ from Common.XmlRpc import Server
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from NetConfig.NetConfig import NetConfig
 from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
-from NetTest.NetTestCommand import NetTestCommand, CommandException
+from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, CommandException
 from Common.Utils import die_when_parent_die
 from Common.NetUtils import scan_netdevs
 
@@ -30,10 +30,11 @@ class NetTestSlaveXMLRPC:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self):
+    def __init__(self, command_context):
         self._netconfig = None
         self._packet_captures = {}
         self._netconfig = NetConfig()
+        self._command_context = command_context
 
     def hello(self):
         return "hello"
@@ -112,7 +113,7 @@ class NetTestSlaveXMLRPC:
 
     def run_command(self, command):
         try:
-            return NetTestCommand(command).run()
+            return NetTestCommand(self._command_context, command).run()
         except:
             log_exc_traceback()
             raise CommandException(command)
@@ -120,11 +121,13 @@ class NetTestSlaveXMLRPC:
     def machine_cleanup(self):
         NetConfigDeviceAllCleanup()
         self._netconfig.cleanup()
+        self._command_context.cleanup()
         return True
 
 class MySimpleXMLRPCServer(Server):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, command_context, *args, **kwargs):
         self._finished = False
+        self._command_context = command_context
         Server.__init__(self, *args, **kwargs)
 
     def register_die_signal(self, signum):
@@ -138,6 +141,7 @@ class MySimpleXMLRPCServer(Server):
         while True:
             try:
                 if self._finished:
+                    self._command_context.cleanup()
                     import sys
                     sys.exit()
                     return
@@ -149,12 +153,14 @@ class NetTestSlave:
     def __init__(self, port = DefaultRPCPort):
         die_when_parent_die()
 
-        server = MySimpleXMLRPCServer(("", port), SimpleXMLRPCRequestHandler,
+        command_context = NetTestCommandContext()
+        server = MySimpleXMLRPCServer(command_context,
+                                      ("", port), SimpleXMLRPCRequestHandler,
                                       logRequests = False)
         server.register_die_signal(signal.SIGHUP)
         server.register_die_signal(signal.SIGINT)
         server.register_die_signal(signal.SIGTERM)
-        server.register_instance(NetTestSlaveXMLRPC())
+        server.register_instance(NetTestSlaveXMLRPC(command_context))
         self._server = server
 
     def run(self):
