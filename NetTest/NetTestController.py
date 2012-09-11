@@ -43,7 +43,8 @@ class NetTestController:
         self._remote_capture_files = {}
         self._config = config
         self._command_context = NetTestCommandContext()
-        self._machine_pool = MachinePool([])
+        self._machine_pool = MachinePool(config.get_option('environment',
+                                                            'pool_dirs'))
 
         self._recipe = {}
         definitions = {"recipe": self._recipe}

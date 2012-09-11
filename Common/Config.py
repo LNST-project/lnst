@@ -12,6 +12,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import os
 import logging
+import re
 from ConfigParser import ConfigParser
 from NetUtils import verify_ip_address, verify_mac_address
 
@@ -77,6 +78,8 @@ class Config():
                 section['mac_pool_range'] = self.optionMacRange(config[option])
             elif option == 'rpcport':
                 section['rpcport'] = self.optionPort(config[option])
+            elif option == 'machine_pool_dirs':
+                section['pool_dirs'] = self.optionPoolDirs(config[option])
             else:
                 msg = "Unknown option: %s in section environment" % option
                 raise ConfigError(msg)
@@ -111,3 +114,10 @@ class Config():
             msg = "Invalid MAC address: %s" % vals[1]
             raise ConfigError(msg)
         return vals
+
+    def optionPoolDirs(self, option):
+        env = self.get_section('environment')
+        if 'pool_dirs' not in env:
+            env['pool_dirs'] = []
+        opts = re.split(r'(?<!\\)\s', option)
+        return env['pool_dirs'] + opts
