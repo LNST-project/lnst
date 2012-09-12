@@ -264,6 +264,8 @@ class NetTestController:
         rpc.set_logging(ip_addr, self._config.get_option('log', 'port'))
 
     def _deconfigure_slaves(self):
+        if 'machines' not in self._recipe:
+            return
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
             if "rpc" not in info:
@@ -288,6 +290,8 @@ class NetTestController:
                 net["default_bridge"].cleanup()
 
     def _disconnect_slaves(self):
+        if 'machines' not in self._recipe:
+            return
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
             if self._remoteexec and "session" in info:
