@@ -54,11 +54,13 @@ class PktgenWorkers:
 class TestPktgenTx(TestGeneric):
     def run(self):
         dev_names = self.get_multi_mopt("netdev_name")
-        addr = self.get_mopt("addr", opt_type="addr")
-        hwaddr = self.get_mopt("hwaddr")
-        vlan_tci = self.get_opt("vlan_tci", default=0)
-        skb_clone = self.get_opt("skb_clone", default=100000)
-        count = self.get_opt("count", default=10000000)
+        pktgen_options = self.get_multi_mopt("pktgen_option")
+
+        default_pktgen_options = [
+            "count 10000000",
+            "clone_skb 100000",
+            "pkt_size 60",
+        ]
 
         exec_cmd("modprobe pktgen")
 
@@ -69,13 +71,10 @@ class TestPktgenTx(TestGeneric):
             for dev_name in dev_names:
                 pgwrkr.add_device(dev_name)
                 pg = Pktgen("/proc/net/pktgen/%s" % dev_name)
-                pg.set("clone_skb %s" % skb_clone)
-                pg.set("pkt_size 60")
-                pg.set("dst %s" % addr)
-                pg.set("dst_mac %s" % hwaddr)
-                if vlan_tci:
-                    pg.set("vlan_id %d" % vlan_tci)
-                pg.set("count %d" % count)
+                for pktgen_option in default_pktgen_options:
+                    pg.set(pktgen_option)
+                for pktgen_option in pktgen_options:
+                    pg.set(pktgen_option)
             pgctl.set("start")
         except ExecCmdFail:
             return self.set_fail("pktgen failed")
