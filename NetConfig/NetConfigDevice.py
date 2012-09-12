@@ -75,6 +75,7 @@ class NetConfigDeviceEth(NetConfigDeviceGeneric):
     def configure(self):
         netdev = self._netdev
         exec_cmd("ip addr flush %s" % netdev["name"])
+        exec_cmd("ethtool -A %s rx off tx off" % netdev["name"], die_on_err=False)
 
 class NetConfigDeviceBond(NetConfigDeviceGeneric):
     _modulename = "bonding"
