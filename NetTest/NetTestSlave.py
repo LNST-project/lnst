@@ -22,7 +22,7 @@ from NetConfig.NetConfig import NetConfig
 from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
 from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, CommandException
 from Common.Utils import die_when_parent_die
-from Common.NetUtils import scan_netdevs
+from Common.NetUtils import scan_netdevs, test_tcp_connection
 
 DefaultRPCPort = 9999
 
@@ -45,8 +45,10 @@ class NetTestSlaveXMLRPC:
 
         @param logger_address: Address of running logger.
         """
+        connectable = test_tcp_connection(logger_address, port)
+
         Logs.append_network_hadler(logger_address, port)
-        return True
+        return connectable
 
     def get_devices_by_hwaddr(self, hwaddr):
         name_scan = scan_netdevs()

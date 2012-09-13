@@ -261,7 +261,11 @@ class NetTestController:
         logging.info("Setting logging server on machine %s", hostname)
         rpc = self._get_machinerpc(machine_id)
         ip_addr = get_corespond_local_ip(hostname)
-        rpc.set_logging(ip_addr, self._config.get_option('log', 'port'))
+        if not rpc.set_logging(ip_addr, self._config.get_option('log', 'port')):
+            logging.error("==================================================")
+            logging.error("Machine %s is unable to connect to the logging "\
+                    "server! Check your firewall settings." % hostname)
+            logging.error("==================================================")
 
     def _deconfigure_slaves(self):
         if 'machines' not in self._recipe:

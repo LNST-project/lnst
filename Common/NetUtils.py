@@ -37,6 +37,15 @@ def scan_netdevs():
             scan.append({"name": d, "hwaddr": addr})
     return scan
 
+def test_tcp_connection(host, port):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+        s.shutdown(socket.SHUT_RDWR)
+        return True
+    except:
+        return False
+
 def verify_ip_address(addr):
     if len(addr.split('.')) != 4:
         return False
