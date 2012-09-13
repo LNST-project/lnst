@@ -9,13 +9,14 @@ jtluka@redhat.com (Jan Tluka)
 import sys
 import socket
 import errno
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Value
 from signal import signal, SIGINT
 from time import sleep
 from random import randrange, sample
 import logging
 import re
 from Common.TestsCommon import TestGeneric
+import ctypes
 
 """
 Test description:
@@ -35,52 +36,81 @@ Parameters:
 
 class ConnectionWorker():
     def __init__(self, host, port, sleep_time = None, continuous = None):
-        self._tlock = Lock()
-        self._terminate = 0
         self._host = host
         self._port = port
         self._sleep_time = sleep_time
         self._cont = continuous
         self._ascii = [chr(i) for i in range(0,255)]
 
-    def terminate(self):
-        self._tlock.acquire()
-        self._terminate=1
-        self._tlock.release()
-
-    def run(self):
+    def run(self, closecon):
         loop = True
 
-        while loop:
+        while loop and not closecon.value:
             loop = (self._cont is not None)
             logging.debug("Starting connection to (%s) port %s " % (self._host,
                           self._port))
 
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((self._host, self._port))
             except socket.error, msg:
-                s.close()
-                s = None
-                logging.error(msg)
+                logging.debug(msg)
                 return
 
+            s.settimeout(5)
+
+            try:
+                s.connect((self._host, self._port))
+            except socket.timeout, msg:
+                logging.debug("Could not connect to %s port %s" %
+                                      (self._host, self._port))
+                s.close()
+                continue
+            except socket.error, msg:
+                logging.debug(msg)
+                s.close()
+                break
+
+            s.settimeout(1)
+
             for txs in range(10, randrange(20,100)):
-                self._tlock.acquire()
-                if self._terminate:
-                    self._tlock.release()
+                if closecon.value:
                     logging.debug("Terminating connection on port %s" %
                                   self._port)
                     loop = False
-                    break
-                else:
-                    self._tlock.release()
+                    s.settimeout(0)
+                    try:
+                        s.shutdown(socket.SHUT_WR)
+                    except:
+                        pass
+                    s.close()
+                    return
 
                 rnd_str = "".join(sample(self._ascii, len(self._ascii)))
-                data = s.sendall(rnd_str)
+                while True and not closecon.value:
+                    try:
+                        data = s.sendall(rnd_str)
+                    except socket.timeout:
+                        continue
+                    except socket.error, msg:
+                        logging.debug(msg)
+                        s.settimeout(0)
+                        try:
+                            s.shutdown(socket.SHUT_WR)
+                        except:
+                            pass
+                        s.close()
+                        return
+
+                    break
+
                 if (self._sleep_time):
                     sleep(self._sleep_time)
 
+            s.settimeout(0)
+            try:
+                s.shutdown(socket.SHUT_WR)
+            except:
+                pass
             s.close()
 
 
@@ -129,18 +159,17 @@ class TestTCPConnect(TestGeneric):
 
     def _close_connections(self, signum, frame):
         logging.debug("Termination signal delivered ...")
-        for cw in self._cw_instances:
-            cw.terminate()
+        self._closecon.value = True
 
     def _set_interrupt_handler(self):
         signal(SIGINT, self._close_connections)
 
     def run(self):
-        self._terminate = 0
         self._host = None
         self._port = None
         self._cont = None
         self._cw_instances = []
+        self._closecon = Value(ctypes.c_bool, False, lock=True)
 
         self._set_interrupt_handler()
 
@@ -158,10 +187,17 @@ class TestTCPConnect(TestGeneric):
             cw = ConnectionWorker(self._host, p, self._sleep_time, self._cont)
             self._cw_instances.append(cw)
 
-            w = Process(target=cw.run)
+            w = Process(target=cw.run, args=(self._closecon,))
             w.start()
             workers.append(w)
 
         logging.debug("Waiting for workers ...")
-        for w in workers:
-            w.join()
+        while len(workers) > 0:
+            for w in workers:
+                try:
+                    w.join()
+                except OSError, e:
+                    continue
+                workers.remove(w)
+
+        logging.info("Connect: Finished ...")

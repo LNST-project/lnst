@@ -11,8 +11,10 @@ import socket
 import errno
 import logging
 import re
-from multiprocessing import Process
+from multiprocessing import Process, Value
 from Common.TestsCommon import TestGeneric
+from signal import signal, SIGINT
+import ctypes
 
 """
 Test description:
@@ -34,6 +36,8 @@ class TestTCPListen(TestGeneric):
         self._addr = None
         self._port = None
         self._cont = None
+        self._closecon = Value(ctypes.c_bool, False, lock=True)
+
         TestGeneric.__init__(self, command)
 
     def _parse_options(self):
@@ -57,35 +61,82 @@ class TestTCPListen(TestGeneric):
         if cont:
             self._cont = cont
 
-    def _worker(self, host, port):
+    def _worker(self, host, port, connections, closecon):
         logging.debug("Starting listener (%s) on port %s " % (host, port))
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1)
+        except socket.error, msg:
+            logging.debug(msg)
+            return
+
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((host, port))
             s.listen(1)
         except socket.error, msg:
+            logging.debug(msg)
             s.close()
-            s = None
-            logging.error(msg)
             return
 
         loop = 1
 
-        while loop or self._cont:
-            conn, addr = s.accept()
+        while (loop or self._cont) and not closecon.value:
+            conn = None
+            while conn == None and not closecon.value:
+                try:
+                    conn, addr = s.accept()
+                except socket.timeout, e:
+                    continue
+                except socket.error, e:
+                    logging.debug(e)
+                    s.close()
+                    return
+                except:
+                    logging.warning("Unknown exception.")
+                    s.close()
+                    return
+
+            if conn:
+                connections.value += 1
+                conn.settimeout(1)
+            else:
+                continue
+
             logging.debug('Connected from ' + addr[0] + ' port:' +
                           str(addr[1]))
 
-            while 1:
-                data = conn.recv(1024)
+            while not closecon.value:
+                try:
+                    data = conn.recv(1024)
+                except socket.timeout, e:
+                    continue
+                except socket.error, e:
+                    logging.debug(e)
+                    if conn:
+                        conn.shutdown(socket.SHUT_RDWR)
+                        conn.close()
+                    s.close()
+                    return
+
                 if not data:
                     logging.debug('Client disconnected: ' + addr[0] +
                                   ' port:' + str(addr[1]))
                     break
 
-            conn.close()
+            if conn:
+                try:
+                    conn.shutdown(socket.SHUT_RDWR)
+                    conn.close()
+                except socket.error, msg:
+                    logging.debug(msg)
+                    s.close()
+                    return
+
             loop = 0
+
+        s.close()
 
     def _parse_port_range(self):
         if self._port_range == None:
@@ -104,7 +155,16 @@ class TestTCPListen(TestGeneric):
 
         return range(low, high)
 
+    def _terminate(self, signum, frame):
+        self._closecon.value = True
+        logging.debug("Listen: terminate called")
+
+    def _set_interrupt_handler(self):
+        signal(SIGINT, self._terminate)
+
     def run(self):
+        self._set_interrupt_handler()
+
         self._parse_options()
 
         ports = []
@@ -114,14 +174,25 @@ class TestTCPListen(TestGeneric):
             r = self._parse_port_range()
             ports.extend(r)
 
-        workers = []
+        self.workers = []
+
+        connections = Value('L', 0, lock=True)
 
         for p in ports:
-            w = Process(target=self._worker, args=(self._addr, p))
+            w = Process(target=self._worker, args=(self._addr, p, connections, self._closecon))
             w.start()
-            workers.append(w)
+            self.workers.append(w)
 
 
         logging.debug("Waiting for workers ...")
-        for w in workers:
-            w.join()
+        while len(self.workers) > 0:
+            for w in self.workers:
+                try:
+                    w.join()
+                except:
+                    continue
+                self.workers.remove(w)
+
+        logging.info("Handled %s TCP connections." % connections.value)
+
+        return self.set_pass("Handled %s TCP connections." % connections.value)
