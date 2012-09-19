@@ -15,13 +15,6 @@ import errno
 import re
 
 class TestIperf(TestGeneric):
-    def _install_iperf(self):
-        # by default dies on failure
-        logging.info("trace: _install_iperf")
-        exec_cmd("wget -P %s/ %s" % (self._temp_dir, self._harness_url) )
-        exec_cmd("cd %s; tar -xvzf %s" % (self._temp_dir, self._harness_archive))
-        exec_cmd("cd %s/%s; ./configure; make; " % (self._temp_dir, self._harness))
-
     def _compose_iperf_cmd(self, role):
         iperf_options = self.get_opt("iperf_opts")
         if iperf_options is None:
@@ -30,10 +23,10 @@ class TestIperf(TestGeneric):
         cmd = ""
         if role == "client":
             iperf_server = self.get_mopt("iperf_server", opt_type="addr")
-            cmd = "cd %s/%s/src; ./iperf --%s %s -t %s %s" % (self._temp_dir, self._harness, role, iperf_server, self.duration, iperf_options)
+            cmd = "iperf --%s %s -t %s %s" % (role, iperf_server, self.duration, iperf_options)
         elif role == "server":
             bind = self.get_opt("bind", opt_type="addr")
-            cmd = "cd %s/%s/src; ./iperf --%s -B %s %s" % (self._temp_dir, self._harness, role, bind, iperf_options)
+            cmd = "iperf --%s -B %s %s" % (role, bind, iperf_options)
 
         return cmd
 
@@ -130,23 +123,12 @@ class TestIperf(TestGeneric):
 
     def run(self):
         self._keep_server_running = True
-        self._harness = "iperf-2.0.5"
-        self._harness_archive = self._harness + ".tar.gz"
-        self._harness_url = "http://sourceforge.net/projects/iperf/files/%s/download" % self._harness_archive
 
         self.duration = self.get_opt("duration")
         if self.duration is None:
             self.duration = 60    # for client purposes
         else:
             self._keep_server_running = False    # for server purposes
-
-        # same for client and server
-        installed = self.get_opt("install_dir")
-        if installed is None:
-            self._temp_dir = (exec_cmd("mktemp -d")[0]).strip()
-            self._install_iperf()
-        else:
-            self._temp_dir = installed
 
         self.threshold = self.get_opt("threshold")
 
