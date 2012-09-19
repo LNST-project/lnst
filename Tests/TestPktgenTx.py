@@ -51,6 +51,16 @@ class PktgenWorkers:
         wrkr = self._get_wrkr()
         wrkr.set("add_device %s" % dev_name)
 
+def pktget_options_merge(pktgen_options, default_pktgen_options):
+    opts = [re.split('\s+', opt) for opt in pktgen_options]
+    def_opts = [re.split('\s+', opt) for opt in default_pktgen_options]
+    res = []
+    for def_opt in def_opts:
+        if not def_opt[0] in [opt[0] for opt in opts]:
+            res.append(def_opt)
+    res = res + opts
+    return [" ".join(opt) for opt in res]
+
 class TestPktgenTx(TestGeneric):
     def run(self):
         dev_names = self.get_multi_mopt("netdev_name")
@@ -61,6 +71,8 @@ class TestPktgenTx(TestGeneric):
             "clone_skb 100000",
             "pkt_size 60",
         ]
+        pktgen_options = pktget_options_merge(pktgen_options,
+                                              default_pktgen_options)
 
         exec_cmd("modprobe pktgen")
 
@@ -71,8 +83,6 @@ class TestPktgenTx(TestGeneric):
             for dev_name in dev_names:
                 pgwrkr.add_device(dev_name)
                 pg = Pktgen("/proc/net/pktgen/%s" % dev_name)
-                for pktgen_option in default_pktgen_options:
-                    pg.set(pktgen_option)
                 for pktgen_option in pktgen_options:
                     pg.set(pktgen_option)
             pgctl.set("start")
