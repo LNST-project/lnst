@@ -1,0 +1,38 @@
+<netconfig>
+    <interface id="1" phys_id="1" type="eth">
+        <options>
+            <option name="teamd_port_config">
+                {
+                    "prio": -10
+                }
+            </option>
+        </options>
+    </interface>
+    <interface id="2" phys_id="2" type="eth"/>
+    <interface id="3" phys_id="3" type="eth"/>
+    <interface id="testiface" type="team">
+        <options>
+            <option name="teamd_config">
+                {
+                    "hwaddr": "00:11:22:33:44:55",
+                    "runner": {
+                        "name": "lacp",
+                        "active": false,
+                        "fast_rate": true,
+                        "tx_hash": ["eth", "ipv4", "ipv6"]
+                    },
+                    "link_watch": {"name": "ethtool"}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="1"/>
+            <slave id="2"/>
+            <slave id="3"/>
+        </slaves>
+        <addresses>
+             <address value="{$testip}"/>
+             <address value="{$testip6}"/>
+        </addresses>
+    </interface>
+</netconfig>
