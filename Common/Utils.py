@@ -70,3 +70,18 @@ def kmod_in_use(modulename, tries = 1):
     if (ret and tries):
         return kmod_in_use(modulename, tries)
     return ret
+
+def int_it(val):
+    try:
+        num = int(val)
+    except ValueError:
+        num = 0
+    return num
+
+def bool_it(val):
+    if isinstance(val, str):
+        if re.match("^\s*(?i)(true)", val):
+            return True
+        elif re.match("^\s*(?i)(false)", val):
+            return False
+    return True if int_it(val) else False

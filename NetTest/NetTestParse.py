@@ -17,6 +17,7 @@ from Common.XmlProcessing import RecipeParser
 from Common.XmlProcessing import XmlDomTreeInit
 from Common.XmlProcessing import XmlProcessingError
 from Common.NetUtils import normalize_hwaddr
+from Common.Utils import bool_it
 
 class NetTestParse(RecipeParser):
     def __init__(self, recipe_filepath):
@@ -428,7 +429,7 @@ class CommandParse(RecipeParser):
 
             if self._has_attribute(node, "persistent"):
                 command["persistent"] = self._get_attribute(node, "persistent",
-                                                    self._bool_it)
+                                                            bool_it)
             else:
                 command["persistent"] = False
 
@@ -471,21 +472,3 @@ class CommandParse(RecipeParser):
         else:
             msg = "Unknown option type \"%s\"" % opt_type
             raise XmlProcessingError(msg, node)
-
-
-    @classmethod
-    def _int_it(cls, val):
-        try:
-            num = int(val)
-        except ValueError:
-            num = 0
-        return num
-
-    @classmethod
-    def _bool_it(cls, val):
-        if isinstance(val, str):
-            if re.match("^\s*(?i)(true)", val):
-                return True
-            elif re.match("^\s*(?i)(false)", val):
-                return False
-        return True if cls._int_it(val) else False
