@@ -16,7 +16,7 @@ import re
 import sys
 from Common.ExecCmd import exec_cmd
 from NetConfigCommon import get_slaves, get_option
-from Common.Utils import kmod_in_use
+from Common.Utils import kmod_in_use, bool_it
 
 class NetConfigDeviceGeneric:
     '''
@@ -224,10 +224,9 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     _cleanupcmd = "killall -q teamd"
 
     def _should_enable_dbus(self):
-        for slave_id in get_slaves(self._netdev):
-            port_netdev = self._config[slave_id]
-            if get_option(port_netdev, "teamd_port_config"):
-                return True
+        dbus_disabled = get_option(self._netdev, "dbus_disabled")
+        if not dbus_disabled or bool_it(dbus_disabled):
+            return True
         return False
 
     def _ports_down(self):
@@ -276,11 +275,12 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
             teamd_port_config = prepare_json_str(teamd_port_config)
             exec_cmd("teamdctl %s PortConfigUpdate %s \"%s\"" % (dev_name, port_name, teamd_port_config))
         NetConfigDevice(port_netdev, self._config).down()
-        exec_cmd("ip link set dev %s master %s" % (port_name, dev_name))
+        exec_cmd("teamdctl %s PortAdd %s" % (dev_name, port_name))
 
     def slave_del(self, slaveid):
+        dev_name = self._netdev["name"]
         port_name = self._config[slaveid]["name"]
-        exec_cmd("ip link set dev %s nomaster" % (port_name))
+        exec_cmd("teamdctl %s PortRemove %s" % (dev_name, port_name))
 
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
