@@ -58,7 +58,8 @@ class SCPError(Exception):
         self.output = output
 
     def __str__(self):
-        return "%s    (output: %r)" % (self.msg, self.output)
+        indented = "\n".join((4 * " ") + i for i in self.output.splitlines())
+        return "%s%s" % (self.msg, indented)
 
 
 class SCPAuthenticationError(SCPError):
@@ -127,7 +128,7 @@ def _remote_login(session, username, password, prompt, timeout=10):
                     password_prompt_count += 1
                     continue
                 else:
-                    raise LoginAuthenticationError("Got password prompt twice",
+                    raise LoginAuthenticationError("Invalid password",
                                                    text)
             elif match == 2:  # "login:"
                 if login_prompt_count == 0 and password_prompt_count == 0:
@@ -294,7 +295,7 @@ def _remote_scp(session, password_list, transfer_timeout=600, login_timeout=10):
                     authentication_done = True
                     continue
                 else:
-                    raise SCPAuthenticationError("Got password prompt twice",
+                    raise SCPAuthenticationError("Invalid password",
                                                  text)
             elif match == 2:  # "lost connection"
                 raise SCPError("SCP client said 'lost connection'", text)

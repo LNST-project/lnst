@@ -227,7 +227,7 @@ class NetTestController:
         if "rootpass" in info:
             passwd = info["rootpass"]
         else:
-            passwd = None
+            passwd = ''
         logging.info("Remote app exec on machine %s", hostname)
 
         port = "22"
