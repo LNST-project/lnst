@@ -1,0 +1,68 @@
+<netconfig>
+    <interface id="1" phys_id="1" type="eth">
+        <options>
+            <option name="teamd_port_config">
+                {
+		    "link_watch": {
+			"name": "arp_ping",
+			"interval": 1000,
+			"missed_max": 5,
+			"init_wait": 10000,
+			"source_host": "192.168.111.1",
+			"target_host": "192.168.111.2"
+		    }
+                }
+            </option>
+        </options>
+    </interface>
+    <interface id="2" phys_id="2" type="eth">
+        <options>
+            <option name="teamd_port_config">
+                {
+		    "link_watch": {
+			"name": "arp_ping",
+			"interval": 500,
+			"missed_max": 20,
+			"source_host": "192.168.111.1",
+			"target_host": "192.168.111.2"
+		    }
+                }
+            </option>
+        </options>
+    </interface>
+    <interface id="3" phys_id="3" type="eth">
+        <options>
+            <option name="teamd_port_config">
+                {
+		    "link_watch": {
+			"name": "arp_ping",
+			"interval": 100,
+			"missed_max": 30,
+			"init_wait": 0,
+			"source_host": "192.168.111.1",
+			"target_host": "192.168.111.2"
+		    }
+                }
+            </option>
+        </options>
+    </interface>
+    <interface id="testiface" type="team">
+        <options>
+            <option name="teamd_config">
+                {
+                    "hwaddr": "00:11:22:33:44:55",
+                    "runner": {"name": "activebackup"}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="1"/>
+            <slave id="2"/>
+            <slave id="3"/>
+        </slaves>
+        <addresses>
+             <address value="{$testip}"/>
+             <address value="{$testip6}"/>
+        </addresses>
+    </interface>
+</netconfig>
