@@ -18,20 +18,23 @@ from Common.XmlProcessing import XmlDomTreeInit
 from Common.XmlProcessing import XmlProcessingError
 from Common.NetUtils import normalize_hwaddr
 from Common.Utils import bool_it
+from Common.RecipePath import RecipePath
 
 class NetTestParse(RecipeParser):
     def __init__(self, recipe_filepath):
         super(NetTestParse, self).__init__()
 
         self._filepath = recipe_filepath
-        self._include_root = os.path.dirname(recipe_filepath)
+        self._rp = RecipePath(None, self._filepath)
+        self._include_root = self._rp.get_root()
 
         self._recipe = {}
         self._template_proc.set_definitions({"recipe": self._recipe})
 
     def parse_recipe(self):
         dom_init = XmlDomTreeInit()
-        xml_dom = dom_init.parse_file(self._filepath)
+        rp = self._rp
+        xml_dom = dom_init.parse_string(rp.to_str(), rp.abs_path())
         self._parse(xml_dom)
 
     def _parse(self, xml_dom):

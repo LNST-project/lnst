@@ -47,7 +47,7 @@ def usage():
 
 def process_recipe(action, file_path, remoteexec, cleanup,
                    res_serializer, packet_capture, config):
-    nettestctl = NetTestController(os.path.realpath(file_path),
+    nettestctl = NetTestController(file_path,
                                    remoteexec=remoteexec, cleanup=cleanup,
                                    res_serializer=res_serializer,
                                    config=config)

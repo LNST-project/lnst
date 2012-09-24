@@ -15,6 +15,7 @@ import logging
 from xml.dom.minidom import parseString
 from xml import sax
 from Common.XmlTemplates import XmlTemplates, XmlTemplateError
+from Common.RecipePath import RecipePath
 
 
 class XmlProcessingError(Exception):
@@ -281,14 +282,17 @@ class RecipeParser(XmlParser):
         old_include_root = None
         if self._has_attribute(node, "source"):
             source = self._get_attribute(node, "source")
-            file_path = self._get_referenced_xml_path(source)
+
+            source_rp = RecipePath(self._include_root, source)
 
             old_include_root = self._include_root
-            self._include_root = os.path.dirname(file_path)
+            self._include_root = source_rp.get_root()
+            xmlstr = source_rp.to_str()
 
             dom_init = XmlDomTreeInit()
             try:
-                dom = dom_init.parse_file(file_path)
+                dom = dom_init.parse_string(xmlstr,
+                                            filename=source_rp.abs_path())
             except IOError, err:
                 msg = "Unable to resolve include: %s" % str(err)
                 raise XmlProcessingError(msg, node)
@@ -361,6 +365,3 @@ class RecipeParser(XmlParser):
             self._template_proc.define_alias(name, value)
         except XmlTemplateError, err:
             raise XmlProcessingError(str(err), node)
-
-    def _get_referenced_xml_path(self, filename):
-        return os.path.normpath(os.path.join(self._include_root, os.path.expanduser(filename)))
