@@ -18,26 +18,24 @@ from Common.Utils import die_when_parent_die
 
 
 class LoggingServer:
-    DEFAULT_PORT = 9998
-    def __init__(self, port, root_path, debug):
-        self.port = port
+    def __init__(self, root_path, debug):
         self.pid = None
-        self.socket = None
         self.stopped = False
         self.root_path = root_path
         self.debug = debug
         self.childSocket = {}
+        self.read_pipe = None
+        self.write_pipe = None
 
 
     def server_stop_handler(self, sig, frame):
         """
         Call function. Used for signal handle.
         """
+        os.close(self.read_pipe)
         if (sig == signal.SIGTERM):
             for sock in self.childSocket.itervalues():
                 sock[2].close()
-            self.socket.shutdown(socket.SHUT_RDWR)
-            self.socket.close()
             sys.exit()
 
 
@@ -48,26 +46,20 @@ class LoggingServer:
         @param port: Port on which logging server listen.
         @return: Pid of logging process.
         """
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            self.socket.bind(('0.0.0.0',self.port))
-        except socket.error, e:
-            if (e.errno == 98):
-                logging.error("Another Logging server listen"
-                              " on port %d" % self.port)
-            raise
+        self.read_pipe, self.write_pipe = os.pipe()
         self.pid = os.fork()
         if not self.pid:
+            os.close(self.write_pipe)
             die_when_parent_die()
             signal.signal(signal.SIGTERM, self.server_stop_handler)
             self._forked()
         else:
+            os.close(self.read_pipe)
             time.sleep(0.5)
 
 
     def prepare_logging(self, root_path, sock):
-        address = sock[1][0]
+        address = sock.getpeername()[0]
         slave_root_path = os.path.join(root_path, address)
         try:
             os.mkdir(slave_root_path)
@@ -77,7 +69,7 @@ class LoggingServer:
         logger = logging.getLogger(address)
         Logs(self.debug, False, logger, log_root=slave_root_path,
                      to_display=False, date="")
-        return (logger, address, sock[0])
+        return (logger, address, sock)
 
 
     def recv_slave_log(self, logger, address, sock):
@@ -111,23 +103,34 @@ class LoggingServer:
 
         @param port: Port for listening.
         """
-        self.socket.listen(100)
-        wait_socket = [self.socket.fileno()]
+        wait_socket = [self.read_pipe]
         while True:
             (r,w,e) = select.select(wait_socket, [], [])
-            if (self.socket.fileno() in r):
-                csock = self.socket.accept()
-                slave = self.prepare_logging(self.root_path, csock)
-                self.childSocket[csock[0].fileno()] = slave
-                wait_socket.append(slave[2].fileno())
-                r.remove(self.socket.fileno())
+            if (self.read_pipe in r):
+                slave_ip = os.read(self.read_pipe, 4096)
+                host, port = slave_ip.split()
+
+                try:
+                    csock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    csock.connect((host, int(port)))
+                except socket.error:
+                    logging.debug("Failed to connect to slave: "+ slave_ip)
+                else:
+                    slave = self.prepare_logging(self.root_path, csock)
+                    self.childSocket[csock.fileno()] = slave
+                    wait_socket.append(slave[2].fileno())
+                finally:
+                    r.remove(self.read_pipe)
+
             for so in r:
                 if not self.recv_slave_log(*self.childSocket[so]):
                     self.childSocket[so][2].close()
                     del self.childSocket[so]
                     wait_socket.remove(so)
-        self.socket.close()
-        sys.exit()
+
+
+    def addSlave(self, hostname, port):
+        os.write(self.write_pipe, hostname+' '+port)
 
 
     def stop(self):
@@ -149,7 +152,7 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     c = logging.FileHandler("out.txt")
     logger.addHandler(c)
-    l = LoggingServer(LoggingServer.DEFAULT_PORT)
+    l = LoggingServer()
     l.start()
     raw_input()
     l.stop()
