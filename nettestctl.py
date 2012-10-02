@@ -45,12 +45,12 @@ def usage():
     print "  -x, --result=FILE                       file to write xml_result"
     sys.exit()
 
-def process_recipe(action, file_path, remoteexec, cleanup,
-                   res_serializer, packet_capture, config):
+def process_recipe(action, file_path, remoteexec, cleanup, res_serializer,
+                   packet_capture, config, loggingServer):
     nettestctl = NetTestController(file_path,
                                    remoteexec=remoteexec, cleanup=cleanup,
                                    res_serializer=res_serializer,
-                                   config=config)
+                                   config=config, logServer=loggingServer)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "dump":
@@ -75,11 +75,10 @@ def get_recipe_result(args, file_path, remoteexec, cleanup,
                       res_serializer, packet_capture, config):
     res_serializer.add_recipe(file_path)
     Logs.set_logging_root_path(file_path)
-    loggingServer = LoggingServer(config.get_option('log', 'port'),
-                                  Logs.root_path, Logs.debug)
+    loggingServer = LoggingServer(Logs.root_path, Logs.debug)
     loggingServer.start()
-    res = process_recipe(args, file_path, remoteexec, cleanup,
-                         res_serializer, packet_capture, config)
+    res = process_recipe(args, file_path, remoteexec, cleanup, res_serializer,
+                         packet_capture, config, loggingServer)
     loggingServer.stop()
     return ((file_path, res))
 

@@ -26,6 +26,7 @@ from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from Common.Utils import wait_for
 from NetTest.MachinePool import MachinePool
+from Common.LoggingHandler import DEFAULT_LOG_PORT
 
 class NetTestError(Exception):
     pass
@@ -35,12 +36,13 @@ def ignore_event(**kwarg):
 
 class NetTestController:
     def __init__(self, recipe_path, remoteexec=False, cleanup=False,
-                 res_serializer=None, config=None):
+                 res_serializer=None, config=None, logServer=None):
         self._remoteexec = remoteexec
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._config = config
+        self._logServer = logServer
         self._command_context = NetTestCommandContext()
         self._machine_pool = MachinePool(config.get_option('environment',
                                                             'pool_dirs'))
@@ -257,15 +259,13 @@ class NetTestController:
 
     def _init_slave_logging(self, machine_id):
         info = self._get_machineinfo(machine_id)
+        logServer = self._logServer
+
         hostname = info["hostname"]
-        logging.info("Setting logging server on machine %s", hostname)
-        rpc = self._get_machinerpc(machine_id)
-        ip_addr = get_corespond_local_ip(hostname)
-        if not rpc.set_logging(ip_addr, self._config.get_option('log', 'port')):
-            logging.error("==================================================")
-            logging.error("Machine %s is unable to connect to the logging "\
-                    "server! Check your firewall settings." % hostname)
-            logging.error("==================================================")
+        port = str(DEFAULT_LOG_PORT)
+
+        logging.info("Connecting to the logging server on machine %s", hostname)
+        logServer.addSlave(hostname, port)
 
     def _deconfigure_slaves(self):
         if 'machines' not in self._recipe:
