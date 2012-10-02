@@ -13,6 +13,7 @@ import os, sys, shutil, datetime
 from logging import Formatter
 import logging.handlers
 import traceback
+from Common.LoggingHandler import ServerHandler
 
 LOCAL_IP = "(127.0.0.1)"
 
@@ -214,14 +215,6 @@ class Logs:
         cls.root_path = cls.prepare_logging(debug, waitForNet,
                                             recipe_path, to_display)
 
-
-    @staticmethod
-    def append_network_hadler(address, port):
-        """
-        Append to log network handler.
-        """
-        logging.net_handler.setTarget(logging.handlers.SocketHandler(address, port))
-
     @classmethod
     def clean_root_log_folder(cls, logRootPath):
         try:
@@ -297,9 +290,8 @@ class Logs:
             root_logger.addHandler(display)
 
         if waitForNet:
-            memory_handler = logging.handlers.MemoryHandler(1)
-            root_logger.addHandler(memory_handler)
-            logging.net_handler = memory_handler
+            server_handler = ServerHandler()
+            root_logger.addHandler(server_handler)
 
         log_root_folder = cls.set_logging_root_path(recipe_path)
 
