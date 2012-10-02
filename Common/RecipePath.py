@@ -20,7 +20,7 @@ def get_recipepath_class(root, path):
             return HttpRecipePath(root, path)
         else:
             if os.access(path, os.R_OK):
-                return FileRecipePath(root, path)
+                return FileRecipePath(None, os.path.realpath(path))
             else:
                 raise Exception("Recipe path does not exist \"%s\"!" % path)
 
