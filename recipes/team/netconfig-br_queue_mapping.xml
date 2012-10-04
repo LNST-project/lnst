@@ -1,0 +1,18 @@
+<netconfig>
+    <interface id="1" phys_id="1" type="eth"/>
+    <interface id="2" phys_id="2" type="eth"/>
+    <interface id="3" phys_id="3" type="eth"/>
+    <interface id="testiface" type="bridge">
+        <slaves>
+            <slave id="1"/>
+            <slave id="2"/>
+            <slave id="3"/>
+        </slaves>
+        <addresses>
+             <address value="172.0.1.2/24"/>
+             <address value="172.0.2.2/24"/>
+             <address value="172.0.3.2/24"/>
+             <address value="172.0.4.2/24"/>
+        </addresses>
+    </interface>
+</netconfig>
