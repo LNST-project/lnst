@@ -1,0 +1,21 @@
+<nettestrecipe>
+    <machines>
+        <define>
+            <alias name="testip" value="192.168.111.1/24"/>
+            <alias name="testip6" value="fe01::1/64"/>
+        </define>
+        <machine id="1">
+            <machineconfig source="machineconfig-peanut.xml"/>
+            <netconfig source="netconfig-team_lb_act.xml"/>
+        </machine>
+        <define>
+            <alias name="testip" value="192.168.111.2/24"/>
+            <alias name="testip6" value="fe01::2/64"/>
+        </define>
+        <machine id="2">
+            <machineconfig source="machineconfig-dhcp-37-128.xml"/>
+            <netconfig source="netconfig-simple_br.xml"/>
+        </machine>
+    </machines>
+    <command_sequence source="sequence_pktgen_flows.xml"/>
+</nettestrecipe>
