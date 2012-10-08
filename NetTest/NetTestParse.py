@@ -35,9 +35,116 @@ class NetTestParse(RecipeParser):
         dom_init = XmlDomTreeInit()
         rp = self._rp
         xml_dom = dom_init.parse_string(rp.to_str(), rp.abs_path())
-        self._parse(xml_dom)
 
-    def _parse(self, xml_dom):
+        first_pass = FirstPass(self)
+        first_pass.parse(xml_dom)
+
+        try:
+            self._trigger_event("provisioning_requirements_ready", {})
+        except Exception, exc:
+            raise XmlProcessingError(str(exc), xml_dom)
+
+        # process machine requirements if used in the recipe before
+        # proceeding to the second pass
+        provisioning = self._recipe["provisioning"]
+
+        dom_init = XmlDomTreeInit()
+        for name, req in provisioning["setup_requirements"].iteritems():
+            xml = provisioning["allocated_machines"][name]
+            dom = dom_init.parse_string(xml, "pool_machine_config")
+
+            # replace the original machinerequires with
+            # the config recived from MachinePool
+            original_node = req["dom_node_ref"]
+            parent = original_node.parentNode
+            replacement_node = dom.getElementsByTagName("machineconfig")[0]
+
+            parent.replaceChild(replacement_node, original_node)
+
+        second_pass = SecondPass(self)
+        second_pass.parse(xml_dom)
+
+
+class FirstPass(RecipeParser):
+    """
+    Purpose of the first pass through the recipe is to detect
+    machine requirements for provisioning.
+
+    The purpose is generic, but the first pass exist only to
+    detect provisioning at the moment.
+    """
+
+    _has_machineconfigs = False
+    _provisioned_setup = False
+
+    def parse(self, node):
+        self._recipe["provisioning"] = {}
+        self._recipe["provisioning"]["setup_requirements"] = {}
+
+        if node.nodeType == node.DOCUMENT_NODE:
+            scheme = {"nettestrecipe": self._nettestrecipe}
+            self._process_child_nodes(node, scheme,
+                        default_handler=self._ignore_tag)
+        else:
+            raise XmlProcessingError("Passed object is not a XML document")
+
+    def _nettestrecipe(self, node, params):
+        scheme = {"machines": self._machines}
+        self._process_child_nodes(node, scheme,
+                    default_handler=self._ignore_tag)
+
+    def _machines(self, node, params):
+        scheme = {"machine": self._machine}
+        self._process_child_nodes(node, scheme,
+                    default_handler=self._ignore_tag)
+
+    def _machine(self, node, params):
+        params = {}
+        params["id"] = self._get_attribute(node, "id")
+
+        scheme = {"machineconfig": self._machineconfig,
+                  "machinerequires": self._machinerequires}
+        self._process_child_nodes(node, scheme, params,
+                    default_handler=self._ignore_tag)
+
+    def _machineconfig(self, node, params):
+        if self._provisioned_setup:
+            msg = "Cannot mix provisioned and non-provisioned machines"
+            raise XmlProcessingError(msg, node)
+
+        self._has_machineconfigs = True
+
+    def _machinerequires(self, node, params):
+        if self._has_machineconfigs:
+            msg = "Cannot mix provisioned and non-provisioned machines"
+            raise XmlProcessingError(msg, node)
+
+        self._provisioned_setup = True
+
+        machine_req = self._recipe["provisioning"]["setup_requirements"]
+        m_id = params["id"]
+        template = {}
+        template["info"] = {}
+        template["netdevices"] = {}
+        machine_req[m_id] = template
+
+        subparser = MachineRequiresParse(self)
+        subparser.set_template(template)
+        subparser.parse(node)
+
+    def _ignore_tag(self, node, params):
+        pass
+
+
+class SecondPass(RecipeParser):
+    """
+    Second pass makes sure all recognized values from the recipe
+    are properly saved into the self._recipe.
+
+    This is where the real parsing is done.
+    """
+
+    def parse(self, xml_dom):
         if xml_dom.nodeType == xml_dom.DOCUMENT_NODE:
             scheme = {"nettestrecipe": self._nettestrecipe}
             self._process_child_nodes(xml_dom, scheme)
@@ -111,6 +218,48 @@ class MachineParse(RecipeParser):
         subparser = NetConfigParse(self)
         subparser.set_machine(self._id, self._machine)
         subparser.parse(node)
+
+class MachineRequiresParse(RecipeParser):
+    _requirements = None
+
+    def set_template(self, tmp_dict):
+        self._requirements = tmp_dict
+
+    def parse(self, node):
+        self._requirements["dom_node_ref"] = node
+
+        scheme = {"info": self._info,
+                  "netdevices": self._netdevices}
+        self._process_child_nodes(node, scheme)
+
+    def _info(self, node, params):
+        template = self._requirements
+        info = template["info"]
+
+        if self._has_attribute(node, "hostname"):
+            info["hostname"] = self._get_attribute(node, "hostname")
+
+        if self._has_attribute(node, "libvirt_domain"):
+            info["libvirt_domain"] = self._get_attribute(node,
+                                                "libvirt_domain")
+
+    def _netdevices(self, node, params):
+        scheme = {"netdevice": self._netdevice}
+        self._process_child_nodes(node, scheme)
+
+    def _netdevice(self, node, params):
+        template = self._requirements
+        phys_id = self._get_attribute(node, "phys_id")
+
+        dev = template["netdevices"][phys_id] = {}
+        dev["network"] = self._get_attribute(node, "network")
+
+        if self._has_attribute(node, "type"):
+            dev["type"] = self._get_attribute(node, "type")
+
+        if self._has_attribute(node, "hwaddr"):
+            hwaddr = self._get_attribute(node, "hwaddr")
+            dev["hwaddr"] = normalize_hwaddr(hwaddr)
 
 
 class MachineConfigParse(RecipeParser):
