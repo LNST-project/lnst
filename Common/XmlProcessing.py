@@ -111,11 +111,11 @@ class XmlDomTreeInit:
         return self.parse_string(xml_text, filename)
 
     def parse_string(self, xml_text, filename="xml_string"):
-        self._filename = filename
+        self._filename = os.path.basename(filename)
         try:
             dom = parseString(xml_text, self._sax)
         except sax.SAXParseException, err:
-            pos = {"file": filename,
+            pos = {"file": self._filename,
                    "line": err.getLineNumber(),
                    "col": err.getColumnNumber()}
             exc = XmlProcessingError(err.getMessage())
