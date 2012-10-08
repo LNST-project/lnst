@@ -122,6 +122,8 @@ class XmlDomTreeInit:
             exc.set_pos(pos)
             raise exc
 
+        pos = {"file": self._filename, "line": 0, "col": 0}
+        dom.parse_position = pos
         return dom
 
 
