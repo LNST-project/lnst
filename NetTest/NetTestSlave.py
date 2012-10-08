@@ -23,6 +23,7 @@ from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
 from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, CommandException
 from Common.Utils import die_when_parent_die
 from Common.NetUtils import scan_netdevs, test_tcp_connection
+from Common.ExecCmd import exec_cmd
 
 DefaultRPCPort = 9999
 
@@ -59,6 +60,14 @@ class NetTestSlaveXMLRPC:
                 netdevs.append(entry)
 
         return netdevs
+
+    def set_device_down(self, hwaddr):
+        devs = self.get_devices_by_hwaddr(hwaddr)
+
+        for dev in devs:
+            exec_cmd("ip link set %s down" % dev["name"])
+
+        return True
 
     def get_interface_info(self, if_id):
         if_config = self._netconfig.get_interface_config(if_id)
