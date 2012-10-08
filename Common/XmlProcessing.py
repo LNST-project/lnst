@@ -138,7 +138,8 @@ class XmlParser(object):
         used in error reporting.
     """
 
-    def _process_child_nodes(self, parent, scheme, params=None):
+    def _process_child_nodes(self, parent, scheme, params=None,
+                                    default_handler=None):
         child_nodes = parent.childNodes
 
         if not params:
@@ -153,6 +154,8 @@ class XmlParser(object):
                 if node_name in scheme:
                     handler = scheme[node_name]
                     self._process_node(node, handler, params)
+                elif default_handler:
+                    self._process_node(node, default_handler, params)
                 else:
                     msg = "Unexpected '%s' tag under '%s'" % (node_name,
                                                         parent.nodeName)
@@ -263,7 +266,7 @@ class RecipeParser(XmlParser):
         handler(**args)
 
     def _process_child_nodes(self, node, scheme, params=None,
-                                    new_ns_level=True):
+                                default_handler=None, new_ns_level=True):
         scheme["define"] = self._define_handler
 
         if not params:
@@ -273,7 +276,8 @@ class RecipeParser(XmlParser):
             self._template_proc.add_namespace_level()
 
         parent = super(RecipeParser, self)
-        result = parent._process_child_nodes(node, scheme, params)
+        result = parent._process_child_nodes(node, scheme, params,
+                                                default_handler)
 
         if new_ns_level:
             self._template_proc.drop_namespace_level()
