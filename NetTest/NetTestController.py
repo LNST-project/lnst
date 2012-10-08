@@ -67,6 +67,10 @@ class NetTestController:
         ntparse.register_event_handler("interface_config_ready",
                                         self._prepare_interface)
 
+        ntparse.register_event_handler("provisioning_requirements_ready",
+                                        self._prepare_provisioning)
+
+
         self._ntparse = ntparse
 
     def _get_machineinfo(self, machine_id):
@@ -92,6 +96,24 @@ class NetTestController:
         logging.error("Session started with cmd %s die with status %s.",
                                         session.command, status)
         raise Exception("Session Die.")
+
+    def _prepare_provisioning(self):
+        provisioning = self._recipe["provisioning"]
+        if len(provisioning["setup_requirements"]) <= 0:
+            return
+
+        mp = self._machine_pool
+        alloc_machines = mp.provision_setup(provisioning["setup_requirements"])
+        if alloc_machines == None:
+            msg = "This setup cannot be provisioned with the current pool."
+            raise NetTestError(msg)
+
+        provisioning["allocated_machines"] = alloc_machines
+
+        logging.info("Provisioning initialized")
+        for machine in alloc_machines.keys():
+            provisioner = mp.get_provisioner_id(machine)
+            logging.info("  machine %s uses %s" % (machine, provisioner))
 
     def _prepare_device(self, machine_id, dev_id):
         info = self._get_machineinfo(machine_id)
@@ -219,6 +241,15 @@ class NetTestController:
             info["configured_interfaces"] = []
 
         rpc = self._get_machinerpc(machine_id)
+
+        # Some additional initialization is necessary in case the
+        # underlying machine is provisioned from the pool
+        prov_id = self._machine_pool.get_provisioner_id(machine_id)
+        if prov_id:
+            provisioner = self._machine_pool.get_provisioner(machine_id)
+            logging.info("Initializing provisioned system (%s)" % prov_id)
+            for device in provisioner["netdevices"].itervalues():
+                rpc.set_device_down(device["hwaddr"])
 
         if self._docleanup:
             rpc.machine_cleanup()
