@@ -302,7 +302,7 @@ class RecipeParser(XmlParser):
                 loaded_node = dom.getElementsByTagName(node.nodeName)[0]
             except Exception:
                 msg = ("No '%s' element present in included file '%s'."
-                                    % (node.nodeName, file_path))
+                                    % (node.nodeName, source_rp.abs_path()))
                 raise XmlProcessingError(msg, node)
 
             old_attrs = self._get_all_attributes(node)
