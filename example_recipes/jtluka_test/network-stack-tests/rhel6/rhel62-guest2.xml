@@ -1,5 +1,0 @@
-<netmachineconfig>
-    <info hostname="10.34.30.181" rootpass="redhat"/>
-    <netdevice type="eth" phys_id="1" hwaddr="52:54:00:ab:cd:f1"/>
-    <netdevice type="eth" phys_id="2" hwaddr="52:54:00:ab:cd:f2"/>
-</netmachineconfig>

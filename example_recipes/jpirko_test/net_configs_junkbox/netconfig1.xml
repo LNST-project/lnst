@@ -1,8 +1,0 @@
-<netconfig>
-  <netdevice id="1" type="eth" phys_id="1">
-    <addresses>
-      <address value="192.168.101.2/24"/>
-    </addresses>
-  </netdevice>
-</netconfig>
-

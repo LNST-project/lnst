@@ -1,5 +1,0 @@
-<netmachineconfig>
-  <info hostname="10.34.37.141" rootpass="aaa"/>
-  <netdevice hwaddr="00:E0:4C:14:2E:5D" phys_id="1" type="eth"/>
-  <netdevice hwaddr="00:30:4F:7F:FD:30" phys_id="2" type="eth"/>
-</netmachineconfig>
