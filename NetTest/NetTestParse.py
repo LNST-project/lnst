@@ -41,7 +41,7 @@ class NetTestParse(RecipeParser):
 
         try:
             self._trigger_event("provisioning_requirements_ready", {})
-        except Exception, exc:
+        except Exception as exc:
             raise XmlProcessingError(str(exc), xml_dom)
 
         # process machine requirements if used in the recipe before
@@ -296,7 +296,7 @@ class MachineConfigParse(RecipeParser):
         try:
             self._trigger_event("machine_info_ready",
                     {"machine_id": self._machine_id})
-        except Exception, exc:
+        except Exception as exc:
             raise XmlProcessingError(str(exc), node)
 
     def _netdevices(self, node, params):
@@ -339,7 +339,7 @@ class MachineConfigParse(RecipeParser):
         try:
             self._trigger_event("netdevice_ready",
                     {"machine_id": self._machine_id, "dev_id": phys_id})
-        except Exception, exc:
+        except Exception as exc:
             raise XmlProcessingError(str(exc), node)
 
 
@@ -394,8 +394,10 @@ class NetConfigParse(RecipeParser):
             self._trigger_event("interface_config_ready",
                     {"machine_id": self._machine_id,
                      "netdev_config_id": dev_id})
-        except Exception, exc:
-            raise XmlProcessingError(str(exc), node)
+        except Exception as exc:
+            msg = "Unable to configure interface %s on machine %s [%s]." % \
+                    (dev_id, self._machine_id, str(exc))
+            raise XmlProcessingError(msg, node)
 
     def _process_phys_id_attr(self, node, dev):
         netconfig = self._netconfig

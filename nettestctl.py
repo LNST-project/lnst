@@ -100,7 +100,7 @@ def main():
             ["debug", "help", "recipe=", "remoteexec", "cleanup", "result=",
              "packet_capture"]
         )
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print str(err)
         usage()
         sys.exit()

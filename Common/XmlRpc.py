@@ -84,7 +84,7 @@ class ExceptionUnmarshaller(xmlrpclib.Unmarshaller):
     def close(self):
         try:
             return xmlrpclib.Unmarshaller.close(self)
-        except xmlrpclib.Fault, e:
+        except xmlrpclib.Fault as e:
             raise ServerException(e.faultString)
 
 class ExceptionTransport(xmlrpclib.Transport):

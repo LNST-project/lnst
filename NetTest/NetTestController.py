@@ -17,7 +17,7 @@ import os
 from Common.Logs import Logs, log_exc_traceback
 from Common.SshUtils import scp_from_remote
 from pprint import pprint, pformat
-from Common.XmlRpc import ServerProxy
+from Common.XmlRpc import ServerProxy, ServerException
 from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
 from Common.NetUtils import get_corespond_local_ip, MacPool
@@ -78,7 +78,7 @@ class NetTestController:
             info = self._recipe["machines"][machine_id]["info"]
         except KeyError:
             msg = "Machine info is required, but not yet available"
-            raise Exception(msg)
+            raise NetTestError(msg)
 
         return info
 
@@ -87,15 +87,15 @@ class NetTestController:
             rpc = self._get_machineinfo(machine_id)["rpc"]
         except KeyError:
             msg = "XMLRPC connection required, but not yet available"
-            raise Exception(msg)
+            raise NetTestError(msg)
 
         return rpc
 
     @staticmethod
     def _session_die(session, status):
-        logging.error("Session started with cmd %s die with status %s.",
-                                        session.command, status)
-        raise Exception("Session Die.")
+        logging.debug("%s terminated with status %s", session.command, status)
+        msg = "SSH session terminated with status %s" % status
+        raise NetTestError(msg)
 
     def _prepare_provisioning(self):
         provisioning = self._recipe["provisioning"]
@@ -261,7 +261,7 @@ class NetTestController:
             passwd = info["rootpass"]
         else:
             passwd = ''
-        logging.info("Remote app exec on machine %s", hostname)
+        logging.info("Executing nettestslave on machine %s", hostname)
 
         port = "22"
         login = "root"
@@ -283,8 +283,10 @@ class NetTestController:
         url = "http://%s:%d" % (hostname, port)
         rpc = ServerProxy(url, allow_none = True)
         if rpc.hello() != "hello":
-            logging.error("Handshake error with machine %s", hostname)
-            raise Exception("Hanshake error")
+            msg = "Unable to establish RPC connection to machine %s. " \
+                                                        % hostname
+            msg += "Handshake failed"
+            raise NetTestError(msg)
 
         info["rpc"] = rpc
 
@@ -338,13 +340,13 @@ class NetTestController:
         # This is achieved by handling parser events (by registering
         try:
             self._ntparse.parse_recipe()
-        except Exception, exc:
-            log_exc_traceback()
+        except Exception as exc:
             logging.debug("Exception raised during recipe parsing. "\
                     "Deconfiguring machines.")
+            log_exc_traceback()
             self._deconfigure_slaves()
             self._disconnect_slaves()
-            raise exc
+            raise NetTestError(exc)
 
     def _run_command(self, command):
         machine_id = command["machine_id"]
@@ -365,8 +367,8 @@ class NetTestController:
             try:
                 cmd_res = rpc.run_command(command)
             except socket.timeout:
-                logging.error("Slave reply timed out")
-                raise Exception("Slave reply timed out")
+                msg = "RPC connection to machine %s timed out" % machine_id
+                raise NetTestError(msg)
             if "timeout" in command:
                 logging.debug("Setting socket timeout to default value")
                 socket.setdefaulttimeout(None)
@@ -394,8 +396,7 @@ class NetTestController:
                 res_data = pformat(cmd_res["res_data"])
                 logging.info("Result data: %s", (res_data))
             if not cmd_res["passed"]:
-                logging.error("Command failed - command: [%s], "
-                              "Error message: \"%s\"",
+                logging.error("Command failed: [%s], Error message: \"%s\"",
                               str_command(command), cmd_res["err_msg"])
                 seq_passed = False
         return seq_passed
@@ -421,7 +422,10 @@ class NetTestController:
         err = None
         try:
             res = self._run_recipe()
-        except Exception, exc:
+        except ServerException as exc:
+            err = NetTestError(exc)
+        except Exception as exc:
+            logging.info("Recipe execution terminated by unexpected exception")
             log_exc_traceback()
             err = exc
 
@@ -481,7 +485,9 @@ class NetTestController:
                 os.mkdir(slave_logging_dir)
             except OSError, err:
                 if err.errno != 17:
-                    raise
+                    msg = "Cannot access the logging directory %s" \
+                                            % slave_logging_dir
+                    raise NetTestError(msg)
 
             capture_files = self._remote_capture_files[machine_id]
             for remote_path in capture_files:
