@@ -16,7 +16,7 @@ import sys
 import logging
 import os
 import re
-from NetTest.NetTestController import NetTestController
+from NetTest.NetTestController import NetTestController, NetTestError
 from NetTest.NetTestResultSerializer import NetTestResultSerializer
 from Common.Logs import Logs
 from Common.LoggingServer import LoggingServer
@@ -77,8 +77,15 @@ def get_recipe_result(args, file_path, remoteexec, cleanup,
     Logs.set_logging_root_path(file_path)
     loggingServer = LoggingServer(Logs.root_path, Logs.debug)
     loggingServer.start()
-    res = process_recipe(args, file_path, remoteexec, cleanup, res_serializer,
-                         packet_capture, config, loggingServer)
+
+    res = None
+    try:
+        res = process_recipe(args, file_path, remoteexec, cleanup,
+                             res_serializer, packet_capture,
+                             config, loggingServer)
+    except NetTestError as err:
+        logging.error(err)
+
     loggingServer.stop()
     return ((file_path, res))
 
