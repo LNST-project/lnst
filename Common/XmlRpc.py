@@ -20,6 +20,7 @@ jpirko@redhat.com (Jiri Pirko)
 """
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
+from Common.Logs import log_exc_traceback
 import xmlrpclib
 import sys
 import socket
@@ -58,9 +59,9 @@ class Server(SimpleXMLRPCServer):
     def _dispatch(self, method, params):
         try:
             return SimpleXMLRPCServer._dispatch(self, method, params)
-        except:
-            type, value, tb = sys.exc_info()
-            raise xmlrpclib.Fault(1, ''.join(traceback.format_exception(type, value, tb)))
+        except Exception as err:
+            log_exc_traceback()
+            raise xmlrpclib.Fault(1, str(err))
 
     def serve_until_done(self):
         while self.util_inst.running:
