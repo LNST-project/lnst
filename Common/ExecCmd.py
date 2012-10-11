@@ -17,10 +17,12 @@ class ExecCmdFail(Exception):
     _cmd = None
     _retval = None
     _stderr = None
+    _report_stderr = None
 
-    def __init__(self, cmd=None, retval=None, err=""):
+    def __init__(self, cmd=None, retval=None, err="", report_stderr=False):
         self._stderr = err
         self._retval = retval
+        self._report_stderr = report_stderr
 
     def get_cmd(self):
         return self._cmd
@@ -30,9 +32,12 @@ class ExecCmdFail(Exception):
 
     def __str__(self):
         retval = ""
+        stderr = ""
         if self._retval:
             retval = " (exited with %d)" % self._retval
-        return "Command execution failed%s" % retval
+        if self._report_stderr:
+            stderr = " [%s]" % self._stderr
+        return "Command execution failed%s%s" % (retval, stderr)
 
 def log_output(log_func, out_type, out):
     log_func("%s:\n"
@@ -41,7 +46,7 @@ def log_output(log_func, out_type, out):
              "----------------------------"
              % (out_type, out))
 
-def exec_cmd(cmd, die_on_err=True, log_outputs=True):
+def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False):
     cmd = cmd.rstrip(" ")
     logging.debug("Executing: \"%s\"" % cmd)
     subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
@@ -58,7 +63,7 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True):
         if data_stderr:
             log_output(logging.error, "Stderr", data_stderr)
     if subp.returncode and die_on_err:
-        err = ExecCmdFail(cmd, subp.returncode, data_stderr)
+        err = ExecCmdFail(cmd, subp.returncode, data_stderr,report_stderr)
         logging.error(err)
         raise err
 
