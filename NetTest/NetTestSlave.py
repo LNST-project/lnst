@@ -127,7 +127,11 @@ class NetTestSlaveXMLRPC:
             return NetTestCommand(self._command_context, command).run()
         except:
             log_exc_traceback()
-            raise CommandException(command)
+            cmd_type = command["type"]
+            m_id = command["machine_id"]
+            msg = "Execution of %s command on machine %s failed" \
+                                    % (cmd_type, m_id)
+            raise CommandException(msg)
 
     def machine_cleanup(self):
         NetConfigDeviceAllCleanup()
