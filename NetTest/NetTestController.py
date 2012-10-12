@@ -117,7 +117,6 @@ class NetTestController:
 
     def _prepare_device(self, machine_id, dev_id):
         info = self._get_machineinfo(machine_id)
-        rpc = self._get_machinerpc(machine_id)
         dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
 
         dev_net_name = dev["network"]
@@ -135,7 +134,8 @@ class NetTestController:
                 raise NetTestError(msg)
 
             if "hwaddr" in dev:
-                query_result = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+                query_result = self._rpc_call(machine_id,
+                        'get_devices_by_hwaddr', dev["hwaddr"])
                 if query_result:
                     msg = "Device with hwaddr %s already exists" \
                                                 % dev["hwaddr"]
@@ -143,7 +143,8 @@ class NetTestController:
             else:
                 while True:
                     dev["hwaddr"] = self._mac_pool.get_addr()
-                    query_result = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+                    query_result = self._rpc_call(machine_id,
+                            'get_devices_by_hwaddr', dev["hwaddr"])
                     if not len(query_result):
                         break
 
@@ -178,7 +179,8 @@ class NetTestController:
                 info['created_devices'] = []
             info['created_devices'].append((dev_id, dev))
 
-        phys_devs = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+        phys_devs = self._rpc_call(machine_id,
+                'get_devices_by_hwaddr', dev["hwaddr"])
         if len(phys_devs) == 1:
             pass
         elif len(phys_devs) < 1:
@@ -191,21 +193,21 @@ class NetTestController:
             raise NetTestError(msg)
 
     def _device_ready(self, machine_id, dev_id):
-        rpc = self._get_machinerpc(machine_id)
         dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
 
-        devs = rpc.get_devices_by_hwaddr(dev["hwaddr"])
+        devs = self._rpc_call(machine_id,
+                'get_devices_by_hwaddr', dev["hwaddr"])
         return len(devs) > 0
 
     def _prepare_interface(self, machine_id, netdev_config_id):
-        rpc = self._get_machinerpc(machine_id)
         info = self._get_machineinfo(machine_id)
         logging.info("Configuring interface %s on %s", netdev_config_id,
                                                         info["hostname"])
 
         self._configure_interface(machine_id, netdev_config_id)
 
-        if_info = rpc.get_interface_info(netdev_config_id)
+        if_info = self._rpc_call(machine_id,
+                'get_interface_info', netdev_config_id)
         machine = self._recipe["machines"][machine_id]
         if "name" in if_info:
             machine["netconfig"][netdev_config_id]["name"] = if_info["name"]
@@ -213,15 +215,14 @@ class NetTestController:
         info["configured_interfaces"].append(netdev_config_id)
 
     def _configure_interface(self, machine_id, netdev_config_id):
-        rpc = self._get_machinerpc(machine_id)
         netconfig = self._recipe["machines"][machine_id]["netconfig"]
         dev_config = netconfig[netdev_config_id]
 
-        rpc.configure_interface(netdev_config_id, dev_config)
+        self._rpc_call(machine_id,
+                'configure_interface', netdev_config_id, dev_config)
 
     def _deconfigure_interface(self, machine_id, netdev_config_id):
-        rpc = self._get_machinerpc(machine_id)
-        rpc.deconfigure_interface(netdev_config_id)
+        self._rpc_call(machine_id, 'deconfigure_interface', netdev_config_id)
 
     def _prepare_slave(self, machine_id):
         logging.info("Preparing machine %s", machine_id)
@@ -240,8 +241,6 @@ class NetTestController:
 
             info["configured_interfaces"] = []
 
-        rpc = self._get_machinerpc(machine_id)
-
         # Some additional initialization is necessary in case the
         # underlying machine is provisioned from the pool
         prov_id = self._machine_pool.get_provisioner_id(machine_id)
@@ -249,10 +248,10 @@ class NetTestController:
             provisioner = self._machine_pool.get_provisioner(machine_id)
             logging.info("Initializing provisioned system (%s)" % prov_id)
             for device in provisioner["netdevices"].itervalues():
-                rpc.set_device_down(device["hwaddr"])
+                self._rpc_call(machine_id, 'set_device_down', device["hwaddr"])
 
         if self._docleanup:
-            rpc.machine_cleanup()
+            self._rpc_call(machine_id, 'machine_cleanup')
 
     def _init_slave_session(self, machine_id):
         info = self._get_machineinfo(machine_id)
@@ -282,13 +281,12 @@ class NetTestController:
 
         url = "http://%s:%d" % (hostname, port)
         rpc = ServerProxy(url, allow_none = True)
-        if rpc.hello() != "hello":
+        info["rpc"] = rpc
+        if self._rpc_call(machine_id, 'hello') != "hello":
             msg = "Unable to establish RPC connection to machine %s. " \
                                                         % hostname
             msg += "Handshake failed"
             raise NetTestError(msg)
-
-        info["rpc"] = rpc
 
     def _init_slave_logging(self, machine_id):
         info = self._get_machineinfo(machine_id)
@@ -307,9 +305,8 @@ class NetTestController:
             info = self._get_machineinfo(machine_id)
             if "rpc" not in info:
                 continue
-            rpc = self._get_machinerpc(machine_id)
             for if_id in reversed(info["configured_interfaces"]):
-                rpc.deconfigure_interface(if_id)
+                self._rpc_call(machine_id, 'deconfigure_interface', if_id)
 
             # detach dynamically created devices
             if "created_devices" not in info:
@@ -359,13 +356,12 @@ class NetTestController:
         if machine_id == "0":
             cmd_res = NetTestCommand(self._command_context, command).run()
         else:
-            rpc = self._get_machinerpc(machine_id)
             if "timeout" in command:
                 timeout = command["timeout"]
                 logging.debug("Setting socket timeout to \"%d\"", timeout)
                 socket.setdefaulttimeout(timeout)
             try:
-                cmd_res = rpc.run_command(command)
+                cmd_res = self._rpc_call(machine_id, 'run_command', command)
             except socket.timeout:
                 msg = "RPC connection to machine %s timed out" % machine_id
                 raise NetTestError(msg)
@@ -462,15 +458,14 @@ class NetTestController:
     def _start_packet_capture(self):
         logging.info("Starting packet capture")
         for machine_id in self._recipe["machines"]:
-            rpc = self._get_machinerpc(machine_id)
-            capture_files = rpc.start_packet_capture("")
+            capture_files = self._rpc_call(machine_id,
+                    'start_packet_capture', "")
             self._remote_capture_files[machine_id] = capture_files
 
     def _stop_packet_capture(self):
         logging.info("Stopping packet capture")
         for machine_id in self._recipe["machines"]:
-            rpc = self._get_machinerpc(machine_id)
-            rpc.stop_packet_capture()
+            self._rpc_call(machine_id, 'stop_packet_capture')
 
     def _gather_capture_files(self):
         logging_root = Logs.get_logging_root_path()
@@ -527,3 +522,9 @@ class NetTestController:
             seq = {"commands": [command], "quit_on_fail": "no"}
             self._run_command_sequence(seq)
             info["system_config"] = {}
+
+    def _rpc_call(self, machine_id, method_name, *args):
+        rpc = self._get_machinerpc(machine_id)
+        rpc_method = getattr(rpc, method_name)
+        result = rpc_method(*args)
+        return result
