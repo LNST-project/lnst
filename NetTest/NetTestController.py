@@ -21,7 +21,7 @@ from pprint import pprint, pformat
 from Common.XmlRpc import ServerProxy, ServerException
 from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
-from Common.NetUtils import get_corespond_local_ip, MacPool
+from Common.NetUtils import MacPool
 from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, str_command
 from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
@@ -36,7 +36,7 @@ def ignore_event(**kwarg):
 
 class NetTestController:
     def __init__(self, recipe_path, remoteexec=False, cleanup=False,
-                 res_serializer=None, config=None, logServer=None):
+                 res_serializer=None, config=None):
         self._remoteexec = remoteexec
         self._docleanup = cleanup
         self._res_serializer = res_serializer

@@ -46,11 +46,10 @@ def usage():
     sys.exit()
 
 def process_recipe(action, file_path, remoteexec, cleanup, res_serializer,
-                   packet_capture, config, loggingServer):
+                   packet_capture, config):
     nettestctl = NetTestController(file_path,
                                    remoteexec=remoteexec, cleanup=cleanup,
-                                   res_serializer=res_serializer,
-                                   config=config, logServer=loggingServer)
+                                   res_serializer=res_serializer, config=config)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "dump":
@@ -75,18 +74,14 @@ def get_recipe_result(args, file_path, remoteexec, cleanup,
                       res_serializer, packet_capture, config):
     res_serializer.add_recipe(file_path)
     Logs.set_logging_root_path(file_path)
-    loggingServer = LoggingServer(Logs.root_path, Logs.debug)
-    loggingServer.start()
 
     res = None
     try:
         res = process_recipe(args, file_path, remoteexec, cleanup,
-                             res_serializer, packet_capture,
-                             config, loggingServer)
+                res_serializer, packet_capture, config)
     except NetTestError as err:
         logging.error(err)
 
-    loggingServer.stop()
     return ((file_path, res))
 
 def main():
