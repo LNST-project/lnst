@@ -40,6 +40,11 @@ class NetTestSlaveXMLRPC:
     def hello(self):
         return "hello"
 
+    def get_new_logs(self):
+        buffer  = Logs.get_buffer()
+        logs = buffer.flush()
+        return logs
+
     def set_logging(self, logger_address, port):
         """
         Server side setup logging to server side.

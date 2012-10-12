@@ -14,6 +14,7 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import socket
 import os
+import pickle
 from Common.Logs import Logs, log_exc_traceback
 from Common.SshUtils import scp_from_remote
 from pprint import pprint, pformat
@@ -26,7 +27,6 @@ from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from Common.Utils import wait_for
 from NetTest.MachinePool import MachinePool
-from Common.LoggingHandler import DEFAULT_LOG_PORT
 
 class NetTestError(Exception):
     pass
@@ -42,7 +42,7 @@ class NetTestController:
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._config = config
-        self._logServer = logServer
+        self._log_root_path = Logs.root_path
         self._command_context = NetTestCommandContext()
         self._machine_pool = MachinePool(config.get_option('environment',
                                                             'pool_dirs'))
@@ -236,8 +236,8 @@ class NetTestController:
             self._init_slave_session(machine_id)
 
         if not "rpc" in info:
-            self._init_slave_rpc(machine_id)
             self._init_slave_logging(machine_id)
+            self._init_slave_rpc(machine_id)
 
             info["configured_interfaces"] = []
 
@@ -290,13 +290,20 @@ class NetTestController:
 
     def _init_slave_logging(self, machine_id):
         info = self._get_machineinfo(machine_id)
-        logServer = self._logServer
+        address = socket.gethostbyname(info["hostname"])
 
-        hostname = info["hostname"]
-        port = str(DEFAULT_LOG_PORT)
+        slave_root_path = os.path.join(self._log_root_path, address)
+        try:
+            os.mkdir(slave_root_path)
+        except OSError, e:
+            if e.errno != 17:
+                raise
 
-        logging.info("Connecting to the logging server on machine %s", hostname)
-        logServer.addSlave(hostname, port)
+        logger = logging.getLogger(address)
+        Logs(Logs.debug, False, logger, log_root=slave_root_path,
+                     to_display=False, date="")
+
+        info['logger'] = logger
 
     def _deconfigure_slaves(self):
         if 'machines' not in self._recipe:
@@ -526,5 +533,21 @@ class NetTestController:
     def _rpc_call(self, machine_id, method_name, *args):
         rpc = self._get_machinerpc(machine_id)
         rpc_method = getattr(rpc, method_name)
+
         result = rpc_method(*args)
+
+        logs = rpc.get_new_logs()
+        self._add_client_logs(machine_id, logs)
         return result
+
+    def _add_client_logs(self, machine_id, logs):
+        info = self._get_machineinfo(machine_id)
+        address = socket.gethostbyname(info['hostname'])
+        logger = info['logger']
+
+        for log in logs:
+            data = log.data
+            data = pickle.loads(data)
+            data['address'] = '(' + address + ')'
+            record = logging.makeLogRecord(data)
+            logger.handle(record)
