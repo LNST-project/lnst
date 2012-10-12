@@ -13,7 +13,7 @@ import os, sys, shutil, datetime
 from logging import Formatter
 import logging.handlers
 import traceback
-from Common.LoggingHandler import ServerHandler
+from Common.LoggingHandler import ServerHandler, LogBuffer
 
 LOCAL_IP = "(127.0.0.1)"
 
@@ -267,6 +267,9 @@ class Logs:
     def get_logging_root_path(cls):
         return cls.root_path
 
+    @classmethod
+    def get_buffer(cls):
+        return cls.buffer
 
     @classmethod
     def prepare_logging(cls, debug=0, waitForNet=False,
@@ -290,8 +293,9 @@ class Logs:
             root_logger.addHandler(display)
 
         if waitForNet:
-            server_handler = ServerHandler()
-            root_logger.addHandler(server_handler)
+            handler = LogBuffer()
+            cls.buffer = handler
+            root_logger.addHandler(handler)
 
         log_root_folder = cls.set_logging_root_path(recipe_path)
 

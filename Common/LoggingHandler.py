@@ -1,4 +1,11 @@
 """
+Custom logging handlers we use.
+
+LogBuffer
+Handler used solely for temporarily storing messages so that they can be
+retrieved later.
+
+ServerHandler
 Server-like logging handler.
 Stores logged messages in a buffer. Every time a new message is emitted it
 checks for incoming connections. If a connection is established it flushes the
@@ -15,8 +22,52 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import socket, struct, pickle
 import logging
+import xmlrpclib
 
 DEFAULT_LOG_PORT = 9998
+
+class LogBuffer(logging.Handler):
+    """
+    Handler used for buffering log messages. Compared to the BufferingHandler
+    defined in Python it doesn't have a capacity. It is intended to be used
+    solely as a temporary storage of logged messages so that they can be later
+    retrieved.
+    """
+    def __init__(self):
+        logging.Handler.__init__(self)
+        self.buffer = []
+
+    def makePickle(self, record):
+        """
+        Pickles the record in binary format with a length prefix, and
+        returns it ready for transmission across the socket.
+
+        Function taken from class SocketHandler from standard python
+        library logging.handlers
+        """
+        d = dict(record.__dict__)
+        d['msg'] = record.getMessage()
+        d['args'] = None
+        d['exc_info'] = None
+        s = pickle.dumps(d, 1)
+        return xmlrpclib.Binary(s)
+
+    def emit(self, record):
+        s = self.makePickle(record)
+        self.buffer.append(s)
+
+    def flush(self):
+        self.acquire()
+
+        buf = list(self.buffer)
+        self.buffer = []
+
+        self.release()
+        return buf
+
+    def close(self):
+        self.flush()
+        logging.Handler.close(self)
 
 class ServerHandler(logging.Handler):
     def __init__(self, port=DEFAULT_LOG_PORT):
