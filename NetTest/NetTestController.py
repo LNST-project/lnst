@@ -41,7 +41,7 @@ class NetTestController:
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._config = config
-        self._log_root_path = Logs.root_path
+        self._log_root_path = Logs.get_logging_root_path()
         self._command_context = NetTestCommandContext()
         self._machine_pool = MachinePool(config.get_option('environment',
                                                             'pool_dirs'))
