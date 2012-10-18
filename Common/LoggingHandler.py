@@ -31,11 +31,7 @@ class LogBuffer(logging.Handler):
 
     def makePickle(self, record):
         """
-        Pickles the record in binary format with a length prefix, and
-        returns it ready for transmission across the socket.
-
-        Function taken from class SocketHandler from standard python
-        library logging.handlers
+        Pickles the record so that it can be sent over the xmlrpc we use.
         """
         d = dict(record.__dict__)
         d['msg'] = record.getMessage()
