@@ -45,17 +45,6 @@ class NetTestSlaveXMLRPC:
         logs = buffer.flush()
         return logs
 
-    def set_logging(self, logger_address, port):
-        """
-        Server side setup logging to server side.
-
-        @param logger_address: Address of running logger.
-        """
-        connectable = test_tcp_connection(logger_address, port)
-
-        Logs.append_network_hadler(logger_address, port)
-        return connectable
-
     def get_devices_by_hwaddr(self, hwaddr):
         name_scan = scan_netdevs()
         netdevs = []
