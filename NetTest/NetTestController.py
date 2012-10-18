@@ -299,7 +299,7 @@ class NetTestController:
                 raise
 
         logger = logging.getLogger(address)
-        Logs(Logs.debug, False, logger, log_root=slave_root_path,
+        Logs(Logs.debug, False, logger, log_folder=slave_root_path,
                      to_display=False, date="")
 
         info['logger'] = logger

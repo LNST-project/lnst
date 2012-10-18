@@ -150,7 +150,6 @@ class LoggingFile(object):
 class Logs:
     file_handlers = []
     formatter = None
-    log_root = None
     logFolder = None
     logger = None
     root_path = None
@@ -159,7 +158,7 @@ class Logs:
     nameExtend = None
     @classmethod
     def __init__(cls,debug=0, waitForNet=False, logger=logging.getLogger(),
-                 recipe_path=None, log_root="Logs", to_display=True, date=None,
+                 recipe_path=None, to_display=True, date=None,
                  nameExtend=None, log_folder=None):
         logging.addLevelName(5, "DEBUG2")
         logging.DEBUG2 = 5
@@ -172,11 +171,10 @@ class Logs:
                             '%(asctime)s| %(address)17.17s%(module)15.15s'
                             ':%(lineno)4.4d| %(levelname)s: '
                             '%(message)s', '%d/%m %H:%M:%S', " "*4)
-        cls.log_root = log_root
         if log_folder != None:
             cls.logFolder = log_folder
         else:
-            cls.logFolder = os.path.dirname(sys.argv[0])
+            cls.logFolder = os.path.join(os.path.dirname(sys.argv[0]), './Logs')
         cls.logger = logger
         cls.debug = debug
         if date is None:
@@ -221,8 +219,8 @@ class Logs:
             recipe_path = ""
         root_logger = cls.logger
         recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
-        cls.root_path = os.path.join(cls.logFolder, cls.log_root,
-                                    cls.date+cls.nameExtend, recipe_name)
+        cls.root_path = os.path.join(cls.logFolder, cls.date+cls.nameExtend,
+                                    recipe_name)
         if (clean):
             cls.clean_root_log_folder(cls.root_path)
         for fhandler in cls.file_handlers:

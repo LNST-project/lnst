@@ -29,7 +29,7 @@ class Config():
 
         self.options['log'] = dict()
         self.options['log']['path'] = os.path.join(
-                os.path.dirname(sys.argv[0]), './')
+                os.path.dirname(sys.argv[0]), './Logs')
 
         self.options['environment'] = dict()
         self.options['environment']['mac_pool_range'] = \
