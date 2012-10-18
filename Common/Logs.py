@@ -13,7 +13,7 @@ import os, sys, shutil, datetime
 from logging import Formatter
 import logging.handlers
 import traceback
-from Common.LoggingHandler import ServerHandler, LogBuffer
+from Common.LoggingHandler import LogBuffer
 
 LOCAL_IP = "(127.0.0.1)"
 
