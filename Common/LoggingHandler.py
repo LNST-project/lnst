@@ -24,8 +24,6 @@ import socket, struct, pickle
 import logging
 import xmlrpclib
 
-DEFAULT_LOG_PORT = 9998
-
 class LogBuffer(logging.Handler):
     """
     Handler used for buffering log messages. Compared to the BufferingHandler

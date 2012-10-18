@@ -28,7 +28,6 @@ class Config():
         self.options = dict()
 
         self.options['log'] = dict()
-        self.options['log']['port'] = 9998
         self.options['log']['path'] = os.path.join(
                 os.path.dirname(sys.argv[0]), './')
 
@@ -76,9 +75,7 @@ class Config():
 
         config.pop('__name__', None)
         for option in config:
-            if option == 'port':
-                section['port'] = self.optionPort(config[option])
-            elif option == 'path':
+            if option == 'path':
                 section['path'] = self.optionLogPath(config[option], cfg_path)
             else:
                 msg = "Unknown option: %s in section log" % option

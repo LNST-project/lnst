@@ -19,7 +19,6 @@ import re
 from NetTest.NetTestController import NetTestController, NetTestError
 from NetTest.NetTestResultSerializer import NetTestResultSerializer
 from Common.Logs import Logs
-from Common.LoggingServer import LoggingServer
 import Common.ProcessManager
 from Common.Config import Config
 

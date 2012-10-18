@@ -23,7 +23,6 @@ from NetTest.NetTestParse import NetTestParse
 from Common.SlaveUtils import prepare_client_session
 from Common.NetUtils import MacPool
 from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, str_command
-from Common.LoggingServer import LoggingServer
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from Common.Utils import wait_for
 from NetTest.MachinePool import MachinePool

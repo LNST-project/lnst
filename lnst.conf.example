@@ -4,4 +4,3 @@ rpcport = 9999
 machine_pool_dirs =
 [log]
 path = ./
-port = 9998
