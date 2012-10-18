@@ -22,34 +22,6 @@ def log_exc_traceback():
     exception = traceback.format_exception(cmd_type, value, tb)
     logging.debug(''.join(exception))
 
-class FindRootPathError(Exception):
-    def __init__(self, path, rootFolder):
-            Exception.__init__(self, path, rootFolder)
-            self.path = path
-            self.rootFolder = rootFolder
-
-    def __str__(self):
-        return ("Cannot find root folder '%s' in path '%s'" %
-                (self.rootFolder, self.path))
-
-
-def find_test_root(path, rootFolder):
-    """
-    Find test root folder in path.
-
-    @param path: Path.
-    @param rootFolder: Name of test root folder.
-    @return: Absolute path to test root folder.
-    """
-    sub = None
-    path = os.path.abspath(path)
-    _path = path
-    while sub != rootFolder and sub != '':
-        _path, sub = os.path.split(_path)
-    if sub != rootFolder:
-        raise FindRootPathError(path, rootFolder)
-    return os.path.join(_path, sub)
-
 
 class MultilineFormater(Formatter):
     """
