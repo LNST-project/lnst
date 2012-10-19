@@ -41,7 +41,7 @@ def main():
             "dhei:p:",
             ["debug", "help", "daemonize", "pidfile", "port"]
         )[0]
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print str(err)
         usage()
         sys.exit()

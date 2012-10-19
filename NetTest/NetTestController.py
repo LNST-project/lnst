@@ -294,7 +294,7 @@ class NetTestController:
         slave_root_path = os.path.join(self._log_root_path, address)
         try:
             os.mkdir(slave_root_path)
-        except OSError, e:
+        except OSError as e:
             if e.errno != 17:
                 raise
 
@@ -484,7 +484,7 @@ class NetTestController:
             slave_logging_dir = os.path.join(logging_root, hostname)
             try:
                 os.mkdir(slave_logging_dir)
-            except OSError, err:
+            except OSError as err:
                 if err.errno != 17:
                     msg = "Cannot access the logging directory %s" \
                                             % slave_logging_dir

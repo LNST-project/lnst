@@ -52,7 +52,7 @@ class ConnectionWorker():
 
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            except socket.error, msg:
+            except socket.error as msg:
                 logging.debug(msg)
                 return
 
@@ -60,12 +60,12 @@ class ConnectionWorker():
 
             try:
                 s.connect((self._host, self._port))
-            except socket.timeout, msg:
+            except socket.timeout as msg:
                 logging.debug("Could not connect to %s port %s" %
                                       (self._host, self._port))
                 s.close()
                 continue
-            except socket.error, msg:
+            except socket.error as msg:
                 logging.debug(msg)
                 s.close()
                 break
@@ -91,7 +91,7 @@ class ConnectionWorker():
                         data = s.sendall(rnd_str)
                     except socket.timeout:
                         continue
-                    except socket.error, msg:
+                    except socket.error as msg:
                         logging.debug(msg)
                         s.settimeout(0)
                         try:
@@ -196,7 +196,7 @@ class TestTCPConnect(TestGeneric):
             for w in workers:
                 try:
                     w.join()
-                except OSError, e:
+                except OSError as e:
                     continue
                 workers.remove(w)
 

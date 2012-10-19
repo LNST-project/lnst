@@ -92,7 +92,7 @@ class HttpRecipePath(RecipePathGeneric):
         try:
             f = urlopen(url)
             self._data = f.read()
-        except IOError, err:
+        except IOError as err:
             msg = "Unable to resolve path: %s (%s)" % (url, str(err))
             raise Exception(msg)
 

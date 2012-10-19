@@ -44,7 +44,7 @@ def main():
             "dhm:p:",
             ["debug", "help", "machine-config=", "port="]
         )
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print str(err)
         usage()
         sys.exit()

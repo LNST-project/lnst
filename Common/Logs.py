@@ -189,7 +189,7 @@ class Logs:
     def clean_root_log_folder(cls, logRootPath):
         try:
             shutil.rmtree(logRootPath)
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2:
                 raise
         os.makedirs(logRootPath)

@@ -114,7 +114,7 @@ class XmlDomTreeInit:
         self._filename = os.path.basename(filename)
         try:
             dom = parseString(xml_text, self._sax)
-        except sax.SAXParseException, err:
+        except sax.SAXParseException as err:
             pos = {"file": self._filename,
                    "line": err.getLineNumber(),
                    "col": err.getColumnNumber()}
@@ -172,7 +172,7 @@ class XmlParser(object):
         if conversion_cb:
             try:
                 converted = conversion_cb(string)
-            except ValueError, err:
+            except ValueError as err:
                 raise XmlProcessingError("Conversion error: " + str(err), node)
             return converted
 
@@ -259,7 +259,7 @@ class RecipeParser(XmlParser):
 
         try:
             handler = self._event_handlers[event_id]
-        except KeyError, err:
+        except KeyError as err:
             logging.warn("No handler found for %s event, ignoring", event_id)
             return
 
@@ -299,7 +299,7 @@ class RecipeParser(XmlParser):
             try:
                 dom = dom_init.parse_string(xmlstr,
                                             filename=source_rp.abs_path())
-            except IOError, err:
+            except IOError as err:
                 msg = "Unable to resolve include: %s" % str(err)
                 raise XmlProcessingError(msg, node)
 
@@ -335,7 +335,7 @@ class RecipeParser(XmlParser):
 
         try:
             attr_val = self._template_proc.expand_string(raw_attr_val)
-        except XmlTemplateError, err:
+        except XmlTemplateError as err:
             raise XmlProcessingError(str(err), node)
 
         return self._convert_string(node, attr_val, conversion_cb)
@@ -346,7 +346,7 @@ class RecipeParser(XmlParser):
 
         try:
             content = self._template_proc.expand_string(raw_content)
-        except XmlTemplateError, err:
+        except XmlTemplateError as err:
             raise XmlProcessingError(str(err), node)
 
         return self._convert_string(node, content, conversion_cb)
@@ -369,5 +369,5 @@ class RecipeParser(XmlParser):
 
         try:
             self._template_proc.define_alias(name, value)
-        except XmlTemplateError, err:
+        except XmlTemplateError as err:
             raise XmlProcessingError(str(err), node)

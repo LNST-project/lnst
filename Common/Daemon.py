@@ -41,7 +41,7 @@ class Daemon:
     def _del_pidfile(self):
         try:
             os.remove(self._pidfile)
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2:
                 raise(e)
 
@@ -67,6 +67,6 @@ class Daemon:
             pid = os.getpid()
             self._write_pid(pid)
             logging.info("deamonized with pid %d" % pid)
-        except OSError, e:
+        except OSError as e:
             logging.error("fork failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)

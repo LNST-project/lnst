@@ -67,7 +67,7 @@ class TestTCPListen(TestGeneric):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(1)
-        except socket.error, msg:
+        except socket.error as msg:
             logging.debug(msg)
             return
 
@@ -75,7 +75,7 @@ class TestTCPListen(TestGeneric):
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((host, port))
             s.listen(1)
-        except socket.error, msg:
+        except socket.error as msg:
             logging.debug(msg)
             s.close()
             return
@@ -87,9 +87,9 @@ class TestTCPListen(TestGeneric):
             while conn == None and not closecon.value:
                 try:
                     conn, addr = s.accept()
-                except socket.timeout, e:
+                except socket.timeout as e:
                     continue
-                except socket.error, e:
+                except socket.error as e:
                     logging.debug(e)
                     s.close()
                     return
@@ -110,9 +110,9 @@ class TestTCPListen(TestGeneric):
             while not closecon.value:
                 try:
                     data = conn.recv(1024)
-                except socket.timeout, e:
+                except socket.timeout as e:
                     continue
-                except socket.error, e:
+                except socket.error as e:
                     logging.debug(e)
                     if conn:
                         conn.shutdown(socket.SHUT_RDWR)
@@ -129,7 +129,7 @@ class TestTCPListen(TestGeneric):
                 try:
                     conn.shutdown(socket.SHUT_RDWR)
                     conn.close()
-                except socket.error, msg:
+                except socket.error as msg:
                     logging.debug(msg)
                     s.close()
                     return

@@ -306,7 +306,7 @@ class XmlTemplates:
         try:
             recipe = self._find_definition("recipe")
             return recipe
-        except XmlTemplateError, err:
+        except XmlTemplateError as err:
             msg = "Cannot resolve %s(): " % template_name
             msg += str(err)
             raise XmlTemplateError(msg)

@@ -154,9 +154,9 @@ def _remote_login(session, username, password, prompt, timeout=10):
             elif match == 6:  # prompt
                 logging.log(logging.INFO, "Got shell prompt -- logged in")
                 break
-        except ShellProcess.ProcessTimeoutError, e:
+        except ShellProcess.ProcessTimeoutError as e:
             raise LoginTimeoutError(e.output)
-        except ShellProcess.ProcessTerminatedError, e:
+        except ShellProcess.ProcessTerminatedError as e:
             raise LoginProcessTerminatedError(e.status, e.output)
 
 
@@ -225,7 +225,7 @@ def wait_for_login(host, port, username, password, prompt, linesep="\n",
             return remote_login(host, port, username, password, prompt,
                                 linesep, log_filename, internal_timeout,
                                 command)
-        except LoginError, e:
+        except LoginError as e:
             logging.debug(e)
         time.sleep(2)
     # Timeout expired; try one more time but don't catch exceptions
@@ -302,12 +302,12 @@ def _remote_scp(session, password_list, transfer_timeout=600, login_timeout=10):
             """elif match == 3: #Exit transfer correctly.
                 logging.log(logging.DEBUG2, "SCP process terminated with status 0")
                 break"""
-        except ShellProcess.ProcessTimeoutError, e:
+        except ShellProcess.ProcessTimeoutError as e:
             if authentication_done:
                 raise SCPTransferTimeoutError(e.output)
             else:
                 raise SCPAuthenticationTimeoutError(e.output)
-        except ShellProcess.ProcessTerminatedError, e:
+        except ShellProcess.ProcessTerminatedError as e:
             if e.status == 0:
                 logging.log(logging.DEBUG2, "SCP process terminated with status 0")
                 break
