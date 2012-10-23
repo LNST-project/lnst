@@ -48,6 +48,8 @@ class Config():
                 ['52:54:01:00:00:01', '52:54:01:FF:FF:FF']
         self.options['environment']['rpcport'] = DefaultRPCPort
         self.options['environment']['pool_dirs'] = []
+        self.options['environment']['tool_dirs'] = []
+        self.options['environment']['module_dirs'] = []
 
     def init_slave(self):
         pass
@@ -120,7 +122,22 @@ class Config():
             elif option == 'rpcport':
                 section['rpcport'] = self.optionPort(config[option])
             elif option == 'machine_pool_dirs':
-                section['pool_dirs'] = self.optionPoolDirs(config[option],
+                section['pool_dirs'] = self.optionDirList(config[option],
+                                                           cfg_path)
+            elif re.match(r'^machine_pool_dirs\s+\+$', option):
+                section['pool_dirs'] += self.optionDirList(config[option],
+                                                           cfg_path)
+            elif option == 'test_module_dirs':
+                section['module_dirs'] = self.optionDirList(config[option],
+                                                           cfg_path)
+            elif re.match(r'^test_module_dirs\s+\+$', option):
+                section['module_dirs'] += self.optionDirList(config[option],
+                                                           cfg_path)
+            elif option == 'test_tool_dirs':
+                section['tool_dirs'] = self.optionDirList(config[option],
+                                                           cfg_path)
+            elif re.match(r'^test_tool_dirs\s+\+$', option):
+                section['tool_dirs'] += self.optionDirList(config[option],
                                                            cfg_path)
             else:
                 msg = "Unknown option: %s in section environment" % option
@@ -154,17 +171,16 @@ class Config():
             raise ConfigError(msg)
         return vals
 
-    def optionPoolDirs(self, option, cfg_path):
-        env = self.get_section('environment')
+    def optionDirList(self, option, cfg_path):
         paths = re.split(r'(?<!\\)\s', option)
 
-        pool_dirs = env['pool_dirs']
+        dirs = []
         for path in paths:
             if path == '':
                 continue
             exp_path = os.path.expanduser(path)
             abs_path = os.path.join(os.path.dirname(cfg_path), exp_path)
             norm_path = os.path.normpath(abs_path)
-            pool_dirs.append(norm_path)
+            dirs.append(norm_path)
 
-        return pool_dirs
+        return dirs
