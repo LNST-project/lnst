@@ -13,10 +13,12 @@ jpirko@redhat.com (Jiri Pirko)
 
 import getopt
 import sys
+import os
 import logging
 from NetTest.NetTestSlave import NetTestSlave
 from Common.Daemon import Daemon
 from Common.Logs import Logs
+from Common.Config import Config
 
 def usage():
     """
@@ -45,6 +47,14 @@ def main():
         print str(err)
         usage()
         sys.exit()
+
+    config = Config("slave")
+    dirname = os.path.dirname(sys.argv[0])
+    gitcfg = os.path.join(dirname, "lnst-slave.conf")
+    if os.path.isfile(gitcfg):
+        config.load_config(gitcfg)
+    else:
+        config.load_config('/etc/lnst-slave.conf')
 
     debug = False
     daemon = False

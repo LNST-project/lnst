@@ -100,7 +100,13 @@ def main():
         sys.exit()
 
     config = Config("controller")
-    config.load_config('~/.lnst/lnst.conf')
+    dirname = os.path.dirname(sys.argv[0])
+    gitcfg = os.path.join(dirname, "lnst-ctl.conf")
+    if os.path.isfile(gitcfg):
+        config.load_config(gitcfg)
+    else:
+        config.load_config('/etc/lnst-ctl.conf')
+        config.load_config('~/.lnst/lnst-ctl.conf')
 
     debug = 0
     recipe_path = None
