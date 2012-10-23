@@ -23,10 +23,22 @@ class ConfigError(Exception):
 
 class Config():
     options = None
+    _scheme = None
 
-    def __init__(self):
+    def __init__(self, scheme):
         self.options = dict()
 
+        self._scheme = scheme
+        if self._scheme == "controller":
+            self.init_controller()
+        elif self._scheme == "slave":
+            self.init_slave()
+        else:
+            msg = "Unknow scheme: '%s', can't set up configuration"\
+                    % self._scheme
+            raise ConfigError(msg)
+
+    def init_controller(self):
         self.options['log'] = dict()
         self.options['log']['path'] = os.path.join(
                 os.path.dirname(sys.argv[0]), './Logs')
@@ -36,6 +48,9 @@ class Config():
                 ['52:54:01:00:00:01', '52:54:01:FF:FF:FF']
         self.options['environment']['rpcport'] = DefaultRPCPort
         self.options['environment']['pool_dirs'] = []
+
+    def init_slave(self):
+        pass
 
     def get_config(self):
         return self.options
@@ -61,14 +76,28 @@ class Config():
         parser.read(abs_path)
 
         sections = parser._sections
+
+        if self._scheme == "controller":
+            self.sectionsCntl(sections, abs_path)
+        elif self._scheme == "slave":
+            self.sectionsSlave(sections, abs_path)
+        else:
+            msg = "Unknow scheme: '%s', can't parse sections." \
+                    % self._scheme
+            raise ConfigError(msg)
+
+    def sectionsCntl(self, sections, path):
         for section in sections:
             if section == "log":
-                self.sectionLogs(sections[section], abs_path)
+                self.sectionLogs(sections[section], path)
             elif section == "environment":
-                self.sectionEnvironment(sections[section], abs_path)
+                self.sectionEnvironment(sections[section], path)
             else:
                 msg = "Unknown section: %s" % section
                 raise ConfigError(msg)
+
+    def sectionsSlave(self, sections, path):
+        pass
 
     def sectionLogs(self, config, cfg_path):
         section = self.options['log']

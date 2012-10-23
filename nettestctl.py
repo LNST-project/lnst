@@ -99,7 +99,7 @@ def main():
         usage()
         sys.exit()
 
-    config = Config()
+    config = Config("controller")
     config.load_config('~/.lnst/lnst.conf')
 
     debug = 0
