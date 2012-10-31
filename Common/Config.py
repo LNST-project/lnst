@@ -40,8 +40,8 @@ class Config():
 
     def init_controller(self):
         self.options['log'] = dict()
-        self.options['log']['path'] = os.path.join(
-                os.path.dirname(sys.argv[0]), './Logs')
+        self.options['log']['path'] = os.path.abspath(os.path.join(
+                os.path.dirname(sys.argv[0]), './Logs'))
 
         self.options['environment'] = dict()
         self.options['environment']['mac_pool_range'] = \
