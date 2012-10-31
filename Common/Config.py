@@ -52,7 +52,9 @@ class Config():
         self.options['environment']['module_dirs'] = []
 
     def init_slave(self):
-        pass
+        self.options['cache'] = dict()
+        self.options['cache']['dir'] = os.path.abspath(os.path.join(
+                os.path.dirname(sys.argv[0]), './cache'))
 
     def get_config(self):
         return self.options
@@ -99,7 +101,12 @@ class Config():
                 raise ConfigError(msg)
 
     def sectionsSlave(self, sections, path):
-        pass
+        for section in sections:
+            if section == "cache":
+                self.sectionCache(sections[section], path)
+            else:
+                msg = "Unknown section: %s" % section
+                raise ConfigError(msg)
 
     def sectionLogs(self, config, cfg_path):
         section = self.options['log']
@@ -107,9 +114,20 @@ class Config():
         config.pop('__name__', None)
         for option in config:
             if option == 'path':
-                section['path'] = self.optionLogPath(config[option], cfg_path)
+                section['path'] = self.optionPath(config[option], cfg_path)
             else:
                 msg = "Unknown option: %s in section log" % option
+                raise ConfigError(msg)
+
+    def sectionCache(self, config, cfg_path):
+        section = self.options['cache']
+
+        config.pop('__name__', None)
+        for option in config:
+            if option == 'cache_dir':
+                section['dir'] = self.optionPath(config[option], cfg_path)
+            else:
+                msg = "Unknown option: %s in section cache" % option
                 raise ConfigError(msg)
 
     def sectionEnvironment(self, config, cfg_path):
@@ -151,7 +169,7 @@ class Config():
             raise ConfigError(msg)
         return int(option)
 
-    def optionLogPath(self, option, cfg_path):
+    def optionPath(self, option, cfg_path):
         exp_path = os.path.expanduser(option)
         abs_path = os.path.join(os.path.dirname(cfg_path), exp_path)
         norm_path = os.path.normpath(abs_path)
@@ -178,9 +196,7 @@ class Config():
         for path in paths:
             if path == '':
                 continue
-            exp_path = os.path.expanduser(path)
-            abs_path = os.path.join(os.path.dirname(cfg_path), exp_path)
-            norm_path = os.path.normpath(abs_path)
+            norm_path = self.optionPath(path, cfg_path)
             dirs.append(norm_path)
 
         return dirs
