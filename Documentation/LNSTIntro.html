@@ -13,14 +13,13 @@
 </head>
 
 <body>
-<h1>LNST Project</h1>
+<h1>Linux Network Stack Test - LNST Project</h1>
 
 <p></p>
 
 <h2>About</h2>
 
-<p>LNST is an automated testing framework focused on the Linux network stack
-testing. It supports bonding, vlan, bridging and macvlan.</p>
+<p>LNST is an automated testing framework focused on the Linux network stack testing. It supports bonding, vlan, bridging and macvlan.</p>
 
 <h3><em>People</em></h3>
 <ul>
@@ -29,12 +28,14 @@ testing. It supports bonding, vlan, bridging and macvlan.</p>
     quality engineer</li>
   <li>Jan Tluka (jtluka) – contributor, test development, Beaker
     integration, quality engineer</li>
-  <li>Radek Pazdera - contributor, framework infrastructure implementation, test development, quality engineer
+  <li>Radek Pazdera (rpazdera) - contributor, framework infrastructure implementation, test development, quality engineer
+  <li>Ondrej Lichtner (olichtne) - contributor, framework infrastructure implementation, quality engineer
 </ul>
 
 <h3><em>Communication channels</em></h3>
 
 <ul>
+    <li>Project web page on <a>https://fedorahosted.org/lnst/</a>
     <li>We are on irc:  #lnst @ freenode (irc://irc.freenode.net#lnst)</li>
     <li>The development mailing list: <a href="https://fedorahosted.org/mailman/listinfo/lnst-developers">https://fedorahosted.org/mailman/listinfo/lnst-developers</a></li>
  </ul>
@@ -43,8 +44,7 @@ testing. It supports bonding, vlan, bridging and macvlan.</p>
 <h3><em>Goals</em></h3>
 <ul>
   <li>QE: extend our current network code coverage in Tier tests</li>
-  <li>Devel: create a tool/test environment to easily catch regressions in
-    network stack during development</li>
+  <li>Devel: create a tool/test environment to easily catch regressions in network stack during development</li>
 </ul>
 
 <h3><em>Target audience</em></h3>
@@ -55,8 +55,7 @@ testing. It supports bonding, vlan, bridging and macvlan.</p>
 
 <h3><em>Topology</em></h3>
 
-<p>In the following picture you can see an example of the network topology
-along with the roles and communication paths. There are 3 basic entities, </p>
+<p>In the following picture you can see an example of the network topology along with the roles and communication paths. There are 3 basic entities, </p>
 <ul>
   <li>controller </li>
   <li>test machines</li>
@@ -72,17 +71,11 @@ width="712" height="279" /></p>
 
 <p></p>
 
-<p>In the picture you can see two network connections drawn in different
-colors. </p>
+<p>In the picture you can see two network connections drawn in different colors. </p>
 
-<p>The green one is the <strong>controller path</strong> and is used to setup
-network interfaces on machine1 and machine2 through the <strong>controller
-interfaces</strong> (eth3 on both test machines). The <strong>controller
-path</strong> is also used to do setup of the test switch and live changes on
-it such as vlan and bonding configuration, port disconnection, etc.</p>
+<p>The green one is the <strong>controller path</strong> and is used to setup network interfaces on machine1 and machine2 through the <strong>controller interfaces</strong> (eth3 on both test machines). The <strong>controller path</strong> is also used to do setup of the test switch and live changes on it such as vlan and bonding configuration, port disconnection, etc.</p>
 
-<p>The red one is the <strong>test path</strong> and is used for network
-traffic generated in tests executed on test machines.</p>
+<p>The red one is the <strong>test path</strong> and is used for network traffic generated in tests executed on test machines.</p>
 
 <p></p>
 <hr />
@@ -103,63 +96,27 @@ traffic generated in tests executed on test machines.</p>
 
 <h2>Source code structure</h2>
 
+Please note, that not every file is listed.
+
 <p></p>
 <pre>[./]
-    netconfig.py           (tool to configure network interfaces based on xml description)
     nettestctl.py          (tool to control remote machines/execute tests)
     nettestslave.py        (app that runs on remote machine and
                             accepts commands from controller (nettestctl.py))
-    switchconfig.py
-    swswitch.py
 
 [./Common]                 (common code for the framework)
-    Daemon.py
-    ExecCmd.py
-    LoggingServer.py
-    Logs.py
-    ProcessManager.py
-    ShellProcess.py
-    SlaveUtils.py
-    SshUtils.py
-    TestsCommon.py
-    Utils.py
-    XmlPreprocessor.py
-    XmlRpc.py
 
-[./example_recipes]        (inspiration for test setups – netconfigs, machineconfigs, recipes)
+[./recipes]                (inspiration for test setups – netconfigs, machineconfigs, recipes)
 
 [./NetConfig]              (network configuration class implementation)
-    NetConfigCommon.py
-    NetConfigDevice.py
-    NetConfigDevNames.py
-    NetConfigParse.py      (netconfig xml parser)
-    NetConfig.py
 
 [./NetTest]                (test execution class implementation)
-    NetTestCommand.py
-    NetTestController.py
-    NetTestParse.py
-    NetTestParse.pyc
-    NetTestResultSerializer.py
-    NetTestSlave.py
 
-[./Switch]                 (network switch configuration)
-    SwitchConfigParse.py
-    SwitchCtl.py
-    SwitchDriversCommon.py
+[./Switch]                 (network switch configuration implementation)
 
 [./Tests]                  (implementation of network tests)
-    TestDummyFailing.py
-    TestIcmp6Ping.py
-    TestIcmpPing.py
-    TestIperf.py
-    TestMulticast.py
-    TestNetCat.py
-    TestPktCounter.py
-    TestPktgenTx.py
 
-[./test_tools]            (non-python testing tools and scripts)
-    multicast/
+[./test_tools]             (place to keep non-python testing tools and scripts)
 </pre>
 
 <p></p>
@@ -167,22 +124,16 @@ traffic generated in tests executed on test machines.</p>
 
 <h2>Setting up the test environmnent</h2>
 
-<h3><em>Remote connection setup</em></h3>
+<h3><em>Controller-Slave connection setup</em></h3>
 
-<p>Every test machine has to be configured to allow remote SSH connection. This
-can be achieved either using keys or specifying root password in XML files
-(described below). It's mandatory to have a dedicated control network interface
-for the SSH connection that is used to setup network on additional network
-interfaces and execute tests. It is also important to separate "controller
-path" and "test path" infrastructure, e.g. using two switches.</p>
+<p>
+It's mandatory to have a dedicated controller network interface on all of the test machines for both the XML-RPC connection that is used to setup network interfaces for testing and for the test execution itself. By default the xml-rpc client listens on port 9999 so if you use firewall of any sort this port needs to be open. If you want to run the tests using the "remote execution" (see chapter The Workflow - running LNST at the end of this document) you also need to have SSH daemon running on all of the test machines. It is also important to separate "controller path" and "test path" infrastructure, e.g. using two switches.</p>
 
 <p></p>
 
 <h3><em>Required packages</em></h3>
 
-<p>Basically you need to have python installed. If you use RHEL5 on a machine
-you need to install additional package <strong>python-ctypes</strong> from EPEL
-repository on it.</p>
+<p>Basically you need to have python installed. If you use RHEL5 on a machine you need to install additional package <strong>python-ctypes</strong> from EPEL repository on it.</p>
 <ul>
   <li><a
     href="http://fedoraproject.org/wiki/EPEL">http://fedoraproject.org/wiki/EPEL</a></li>
@@ -193,30 +144,40 @@ repository on it.</p>
     install python-ctypes</li>
 </ul>
 
+<h3><em>Optional packages</em></h3>
+
+<p>It is recommended to install following packages. Either optional framework features rely on them or the LNST tests require them to do their work.</p>
+<ul>
+  <li>tcpdump</li>
+  <li>nc (netcat)</li>
+  <li>iperf</li>
+  <li>iptables</li>
+</ul>
+
 <p></p>
 <hr />
 
 <h2>LNST Recipes</h2>
 
-<p>The LNST recipes contains all information to do a test run.</p>
+<p>The LNST recipe contains all information to do a test run.</p>
 
 <p>It consists of:</p>
 <ul>
-  <li><span style="background-color:#ffc0cb">machineconfigs</span></li>
-  <li><span style="background-color:#90ee90">netconfigs</span></li>
-  <li><span style="background-color:#add8e6">command sequences</span></li>
+  <li><span style="background-color:#ffc0cb">machineconfigs</span> - to define the set of machines under testing</li>
+  <li><span style="background-color:#90ee90">netconfigs</span> - to define how the network interfaces should be configured</li>
+  <li><span style="background-color:#add8e6">command sequences</span> - to define all test sub-tasks</li>
 </ul>
 
 <p>The following XML code is an example of the LNST recipe:</p>
 <pre>&lt;nettestrecipe&gt;
     &lt;machines&gt;
          &lt;machine id="1"&gt;
-             <span style="background-color:#ffc0cb">&lt;netmachineconfig source="example_recipes/machine_configs/config-f14peanut.xml"/&gt;</span>
-             <span style="background-color:#90ee90">&lt;netconfig source="example_recipes/net_configs/netconfig1.xml"/&gt;</span>
+             <span style="background-color:#ffc0cb">&lt;machineconfig source="recipes/team/machineconfig-test1.xml"/&gt;</span>
+             <span style="background-color:#90ee90">&lt;netconfig source="recipes/team/netconfig-simple.xml"/&gt;</span>
          &lt;/machine&gt;
          &lt;machine id="2"&gt;
-             <span style="background-color:#ffc0cb">&lt;netmachineconfig source="my_recipes/config-f15.xml"/&gt;</span>
-             <span style="background-color:#90ee90">&lt;netconfig source="my_recipes/netconfig2.xml"/&gt;</span>
+             <span style="background-color:#ffc0cb">&lt;machineconfig source="recipes/team/machineconfig-test2.xml"/&gt;</span>
+             <span style="background-color:#90ee90">&lt;netconfig source="recipes/team/netconfig-team_ab_lw_001.xml"/&gt;</span>
          &lt;/machine&gt;
     &lt;/machines&gt;
 
@@ -224,7 +185,7 @@ repository on it.</p>
         <span style="background-color:#add8e6">&lt;command type="exec" value="sleep 4"/&gt;</span>
         <span style="background-color:#add8e6">&lt;command type="test" machine_id="1" value="IcmpPing" timeout="30"&gt;</span>
             <span style="background-color:#add8e6">&lt;options&gt;</span>
-                <span style="background-color:#add8e6">&lt;option type="recipe_eval" name="addr" value="['machines'][2]['netconfig'][1]['addresses'][0]"/&gt;</span>
+                <span style="background-color:#add8e6">&lt;option name="addr" value="{ip(2,testip)}"/&gt;</span>
                 <span style="background-color:#add8e6">&lt;option name="count" value="40"/&gt;</span>
                 <span style="background-color:#add8e6">&lt;option name="interval" value="0.2"/&gt;</span>
                 <span style="background-color:#add8e6">&lt;option name="limit_rate" value="95"/&gt;</span>
@@ -235,48 +196,40 @@ repository on it.</p>
 
 <p></p>
 
-<p>Every test machine's network setup is defined by two configuration XML
-snippets – MachineConfig describing the machine's real hardware (available
-NICs) and NetConfig describing configuration of these devices (IP addresses,
-bonding setup, bridging, vlans, etc.)</p>
+<p>Every test machine's network setup is defined by two configuration XML snippets – MachineConfig describing the machine's physical hardware (available NICs) and NetConfig describing configuration of these devices (IP addresses, bonding setup, bridging, vlans, etc.)</p>
 
 <h3><em>MachineConfig</em></h3>
 
 <p>The MachineConfig</p>
 <ul>
-  <li>describes test machine's control interface and login information (for
-    root access) - <strong>info</strong> tag</li>
-  <li>describes available network interfaces of a test machine –
-    <strong>netdevice</strong> tags</li>
+  <li>describes test machine's control interface and root login information (for remote execution) - <strong>info</strong> tag</li>
+  <li>describes available network interfaces of a test machine – <strong>netdevice</strong> tags</li>
 </ul>
 
-<p>Example (<em>example_recipes/machine_configs/config-f14peanut.xml</em>):</p>
+<p>Example:</p>
 
 <p></p>
-<pre>&lt;netmachineconfig&gt;
+<pre>&lt;machineconfig&gt;
     &lt;info hostname="10.34.37.141" rootpass="aaa"/&gt;
-    &lt;netdevice type="eth" <span style="background-color:#00ff00">phys_id="1"</span> hwaddr="00:E0:4C:14:2E:5D"/&gt;
-    &lt;netdevice type="eth" <span style="background-color:#00ff00">phys_id="2"</span> hwaddr="00:30:4F:7F:FD:30"/&gt;
-&lt;/netmachineconfig&gt;</pre>
+    &lt;netdevices&gt;
+        &lt;netdevice type="eth" network="testnet" <span style="background-color:#00ff00">phys_id="1"</span> hwaddr="00:E0:4C:14:2E:5D"/&gt;
+        &lt;netdevice type="eth" network="testnet"  <span style="background-color:#00ff00">phys_id="2"</span> hwaddr="00:30:4F:7F:FD:30"/&gt;
+    &lt;/netdevices&gt;
+&lt;/machineconfig&gt;</pre>
 
 <p></p>
 
-<p>Test machine with this configuration will be accessible via IP address
-10.34.37.141 using root password 'aaa' (<strong>rootpass</strong>). Two
-interfaces are made available for testing - one with MAC address
-00:E0:4C:14:2E:5D (<strong>hwaddr</strong>) exported as physical device '1'
-(<strong>phys_id</strong>) and second with MAC address 00:30:4F:7F:FD:30
-exported as physical device '2' in LNST framework.</p>
+<p>Test machine with this configuration will be accessible via IP address 10.34.37.141 using root password 'aaa' (<strong>rootpass</strong>). Two interfaces are made available for testing - one with MAC address 00:E0:4C:14:2E:5D (<strong>hwaddr</strong>) exported as physical device '1' (<strong>phys_id</strong>) and second with MAC address 00:30:4F:7F:FD:30 exported as physical device '2' in LNST framework.</p>
 
 <p></p>
 
 <h3><em>NetConfig</em></h3>
 
-<p>Example (<em>example_recipes/net_configs/netconfig1.xml</em>):</p>
+<p>Example:</p>
 <pre>&lt;netconfig&gt;
-    &lt;netdevice id="1" type="eth" <span style="background-color:#00ff00">phys_id="1"</span>/&gt;
-    &lt;netdevice id="2" type="eth" <span style="background-color:#00ff00">phys_id="2"</span>/&gt;
-    &lt;netdevice id="3" <span style="background-color:#add8e6">type="bond"</span>&gt;
+    &lt;interface id="1" type="eth" <span style="background-color:#00ff00">phys_id="1"</span>/&gt;
+    &lt;interface id="2" type="eth" <span style="background-color:#00ff00">phys_id="2"</span>/&gt;
+    &lt;interface id="testifc1" <span style="background-color:#add8e6">type="bond"</span>&gt;
         &lt;options&gt;
             &lt;option name="mode" value="1"/&gt;
             &lt;option name="miimon" value="100"/&gt;
@@ -289,19 +242,15 @@ exported as physical device '2' in LNST framework.</p>
         &lt;addresses&gt;
             &lt;address value="192.168.101.1/24"/&gt;
         &lt;/addresses&gt;
-    &lt;/netdevice&gt;
+    &lt;/interface&gt;
 &lt;/netconfig&gt;</pre>
 
 <p></p>
 
 <p>This configuration snippet uses two physical devices
-(<strong>phys_id</strong>="1" and <strong>phys_id</strong>="2") defined in the
-previous MachineConfig. It also defines third network device (<strong>netdevice
-id="3"</strong>) as <strong>bond</strong> device and adds the two physical
-device as its <strong>slaves</strong>. Further options are defined in
-<strong>options</strong> element and IP address of the bond interface is
-defined in <strong>addresses</strong> element.</p>
+(<strong>phys_id</strong>="1" and <strong>phys_id</strong>="2") defined in the previous MachineConfig. It also defines third network device (<strong>netdevice id="3"</strong>) as <strong>bond</strong> device and adds the two physical device as its <strong>slaves</strong>. Further options are defined in <strong>options</strong> element and IP address of the bond interface is defined in <strong>addresses</strong> element.</p>
 
+<p>Please note that you can use strings instead of just numbers for interface identification. This is very helpful when you're referring these interfaces in your command sequences. More on this in following chapter.</p>
 <p></p>
 
 <h3><em>Mapping of physical interfaces inside LNST recipes</em></h3>
@@ -316,13 +265,17 @@ src="machineconfig-netconfig-mapping.png" width="793" height="318" /></p>
 
 <h3><em>Command sequences</em></h3>
 
-<p>Command sequence in a LNST recipe is a list of commands that is executed
-on test machines or controller. </p>
+<p>Command sequence in a LNST recipe is a list of commands that is executed on test machines or controller. </p>
 
-<p>Tasks can be of type:</p>
+<h4><em>Commands</em></h4>
+
+<p>Commands can be of type:</p>
 <ul>
-  <li><strong>exec</strong> or</li>
-  <li><strong>test </strong>(can be run on test machines only)</li>
+  <li><strong>type="exec"</strong> or</li>
+  <li><strong>type="test"</strong>(can be run on test machines only)</li>
+  <li><strong>type="intr"</strong> to interrupt (SIG_INT) commands running in background</li>
+  <li><strong>type="kill"</strong> to kill (SIG_KILL) commands running in background</li>
+  <li><strong>type="wait"</strong> to wait for completion of a command running in background</li>
 </ul>
 
 <p>The <strong>exec</strong> command is anything that you can enter on a
@@ -334,12 +287,7 @@ command line. E.g. </p>
 
 <p></p>
 
-<p>The <strong>test</strong> command is an implemented test. The code of the
-test is present in Tests/Test<strong>IcmpPing</strong>.py in the example below.
-You can pass variables to a test using <strong>option</strong> tag. The options
-value can be obtained using <strong>get_opt()</strong> method. For further
-details see section <strong>Writing tests</strong> or look at code examples
-under <strong>Tests</strong> directory.</p>
+<p>The <strong>test</strong> command is an implemented test. The code of the test in the example below is present in Tests/Test<strong>IcmpPing</strong>.py. You can pass variables to a test using the <strong>option</strong> tag. The option value can be obtained using <strong>get_opt(),get_mopt()</strong> methods. For further details see section <strong>Writing tests</strong> or look at code examples under <strong>Tests</strong> directory.</p>
 
 <p></p>
 
@@ -360,27 +308,41 @@ under <strong>Tests</strong> directory.</p>
 
 <p>There are two commands in this example. </p>
 
-<p>First one would execute command sleep on the controller machine because
-attribute <strong>machine_id</strong> is not supplied (default behavior). The
-<strong>machine_id</strong> attributes defines on which of the test machines
-command is run. It's value matches one of the machine ids defined in
-<strong>&lt;machine&gt;</strong> tag in LNST recipe.</p>
+<p>First one would execute command sleep on the controller machine because attribute <strong>machine_id</strong> is not supplied (default behavior). The <strong>machine_id</strong> attribute defines on which of the test machines command should run. It's value matches one of the machine ids defined in <strong>&lt;machine&gt;</strong> tag in LNST recipe.</p>
 
-<p>The second command would start <strong>IcmpPing</strong> test from the
-LNST library on the first (<strong>id=1</strong>) test machine. </p>
+<p>The second command would start <strong>IcmpPing</strong> test from the LNST test library on the test machine with <strong>id=1</strong>.</p>
 
-<p>You can also access the configuration of machines and their interfaces from
-the command sequence through a special alias <span style="background-color:#ffc0cb"><strong>{$recipe}</strong></span>. In the
-previous example, addr option of IcmpPing test will be set to <em>first</em>
-assigned address from netconfig of <em>first</em> device on <em>second</em>
-machine.
+<p>You can also access the configuration of machines and their interfaces from the command sequence through a special alias <span style="background-color:#ffc0cb"><strong>{$recipe}</strong></span>. In the previous example, addr option of IcmpPing test will be set to <em>first</em> assigned address from netconfig of <em>first</em> device on <em>second</em> machine.
 </p>
+
+<h4><em>Running commands in background</em></h4>
+
+<p>Every command can be run in background. To put a command in background add the <strong>bg_id</strong> attribute to the command tag and set it's value to unique identifier, e.g. a number or a string like "iperf_server_in_bg". This identifier is later used to interrupt (<strong>intr</strong> or <strong>kill</strong>) the command or wait for it's completion(<strong>wait</strong>). 
+Look at following example:
+
+<pre>&lt;command_sequence&gt;
+  &lt;command type="test" machine_id="server" value="Iperf" <span style="background-color:#ffc0cb">bg_id="iperf_server_in_bg</span>"&gt;
+    &lt;options&gt;
+      &lt;option name="bind" value="{ip(server,testifc1)}" /&gt;
+      &lt;option name="role" value="server"/&gt;
+    &lt;/options&gt;
+  &lt;/command&gt;
+  &lt;command type="exec" value="sleep 3"/&gt;
+  &lt;command type="test" machine_id="client" value="Iperf"&gt;
+    &lt;options&gt;
+      &lt;option name="iperf_server" value="{ip(server,testifc1)}" /&gt;
+      &lt;option name="role" value="client"/&gt;
+      &lt;option name="duration" value="10"/&gt;
+    &lt;/options&gt;
+  &lt;/command&gt;
+  &lt;command <span style="background-color:#ffc0cb">type="intr"</span> machine_id="server" <span style="background-color:#ffc0cb">value="iperf_server_in_bg"</span>/&gt;
+&lt;/command_sequence&gt;</pre>
+
+
 
 <h3><em>System Configuration</em></h3>
 <p>
-LNST provides a native way of changing system configuration of the slave machines from within the recipe.
-This can be achieved by <strong>system_config</strong> command. There are two versions
-of <strong>system_config</strong> command:
+LNST provides a native way of changing system configuration of the slave machines from within the recipe. This can be achieved by <strong>system_config</strong> command. There are two versions of <strong>system_config</strong> command:
 </p>
 <h4>Inline version</h4>
 <pre>
@@ -401,9 +363,8 @@ of <strong>system_config</strong> command:
     In the multiline version you can set a several options at once.
 </p>
 <p>
-    Unless <strong>persistent</strong> flag is set to <strong>true</strong>, all modified
-    options are restored to their previous values <strong>at the end of the command sequence</strong>.
-    The following examlpe illustrates how this works:
+    Unless <strong>persistent</strong> flag is set to <strong>true</strong>, all modified options are restored to their previous values <strong>at the end of the command sequence</strong>.
+    The following example illustrates how this works:
 <pre>
     &lt;command_sequence&gt;
         &lt;command type="system_config" machine_id="1" <span style="background-color:#ffc0cb">persistent="true"</span>&gt;
@@ -428,31 +389,24 @@ of <strong>system_config</strong> command:
     &lt;/command_sequence&gt;
 </pre>
 <p>
-    The first command sequence serves as a global system setup phase, persistent flag is set to true,
-    so the options <strong>will not</strong> be restored when the command sequence finishes.
+    The first command sequence serves as a global system setup phase, persistent flag is set to true, so the options <strong>will not</strong> be restored when the command sequence finishes.
 </p>
 <p>
-    In the second command sequence, one option is modified for purposes of the next test, but it's
-    not marked persistent, so the change will be automatically reverted when the command sequence
-    comes to end.
+    In the second command sequence, one option is modified for purposes of the next test, but it's not marked persistent, so the change will be automatically reverted when the command sequence comes to end.
 </p>
 <p>
-    And the final command sequences issues a persistent command again, to make sure that system is left
-    in a consistent state when recipe execution is over.
+    And the final command sequences issues a persistent command again, to make sure that system is left in a consistent state when recipe execution is over.
 </p>
 
 <hr />
 
-<h2>Writing a test</h2>
+<h2>Advanced recipe techniques</h2>
 <p>
     This section introduces several features you can use when you decide to create your own recipe.
 </p>
 
 <h3><em>Defining aliases</em></h3>
-<p>LNST allows you to define arbitrary <strong>aliases</strong> and use
-them to access certain values from the whole recipe file while the value
-itself is included in the file only once. Definition of an alias occurs
-in the <code>&lt;define&gt;</code> tag anywhere in the document:</p>
+<p>LNST allows you to define arbitrary <strong>aliases</strong> and use them to access certain values from the whole recipe file while the value itself is included in the file only once. Definition of an alias occurs in the <code>&lt;define&gt;</code> tag anywhere in the document:</p>
 <pre>
 &lt;define&gt;
     <span style="background-color:#90ee90">&lt;alias name="ip_addr" value="192.168.0.1" /&gt;</span>
@@ -472,9 +426,7 @@ For instance:</p>
 
 <h3><em>Template functions</em></h3>
 <p>
-    Template functions are conceptually quite similar to aliases, but instead of a assigned value, they
-    represent an action that will be executed when the recipe is parsed. They can be used the same way
-    as aliases - inside of curly braces. Currently, there are three template functions available in LNST:
+    Template functions are conceptually quite similar to aliases, but instead of a assigned value, they represent an action that will be executed when the recipe is parsed. They can be used the same way as aliases - inside of curly braces. Currently, there are three template functions available in LNST:
 </p>
 <ul>
     <li><strong>ip</strong>(<em>machine_id</em>, <em>interface_id</em><em>[, address_id]</em>)
@@ -496,9 +448,7 @@ For instance:</p>
     </li>
 </ul>
 <p>
-    All three above mentioned functions can be used for retrieving information from machine
-    configs, therefore calling them is only valid within a command sequence. See the following
-    example on how this templates can be used:
+    All three above mentioned functions can be used for retrieving information from machine configs, therefore calling them is only valid within a command sequence. See the following example on how this templates can be used:
 </p>
 <pre>
     &lt;command type="system_config" option="/proc/sys/net/ipv4/conf/<span style="background-color:#ffc0cb">{devname(1,1)}</span>/forwarding" value="1" machine_id="1" /&gt;
@@ -511,18 +461,12 @@ For instance:</p>
     &lt;/command&gt;
 </pre>
 <p>
-    Aliases can be passed to functions as parameters, but the preprocessor
-does not support nesting (e.g. function cannot have another function
-passed as an argument).
+    Aliases can be passed to functions as parameters, but the preprocessor does not support nesting (e.g. function cannot have another function passed as an argument).
 </p>
 
 <h3><em>Splitting recipes into multiple files</em></h3>
 <p>
-LNST also offers a possibility of splitting the recipe into several
-files. This can be achieved by supplying <strong>source</strong> argument
-to an arbitrary tag. The contents of that tag then will be loaded from the
-file specified in the attribute's value. For instance, the following
-machine configuration will be loaded from file <em>peanut.xml</em>:
+LNST also offers a possibility of splitting the recipe into several files. It's very helpful if you want to re-use the code in different recipes. This can be achieved by supplying <strong>source</strong> argument to an arbitrary tag. The contents of that tag then will be loaded from the file specified in the attribute's value. For instance, the following machine configuration will be loaded from file <em>peanut.xml</em>:
 </p>
 <pre>
 &lt;machine <span style="background-color:#90ee90">source="machine_configs/peanut.xml"</span> /&gt;
@@ -530,12 +474,16 @@ machine configuration will be loaded from file <em>peanut.xml</em>:
 Example (<em>peanut.xml</em>):
 <pre>
 &lt;machine id="1"&gt;
-    &lt;netmachineconfig <span style="background-color:#add8e6">source="example_recipes/machine_configs/config-f14peanut.xml"</span> /&gt;
+    &lt;machineconfig <span style="background-color:#add8e6">source="example_recipes/machine_configs/config-f14peanut.xml"</span> /&gt;
     &lt;netconfig <span style="background-color:#add8e6">source="example_recipes/net_configs/netconfig1.xml"</span> /&gt;
 &lt;/machine&gt;
 </pre>
 <p>Note that parts of the included machine config are again external.</p>
 
+<p></p>
+<hr />
+
+<h2>Writing a test</h2>
 <p></p>
 <hr />
 
@@ -548,12 +496,7 @@ Example (<em>peanut.xml</em>):
     start &lt;domain&gt;</li>
 </ul>
 
-<p>Following is an example of libvirt xmls (reduced to network snippets only).
-MAC addresses marked with green color should be specified in the relevant
-machine configs. Don't forget to add dedicated control network interface that
-has to stay up during the whole testing. The configuration below expects that
-virt guests are accessible via host's network interface therefore they're set
-up as <strong>type='bridge'</strong>.</p>
+<p>Following is an example of libvirt xmls (reduced to network snippets only). MAC addresses marked with green color should be specified in the relevant machine configs. Don't forget to add dedicated control network interface that has to stay up during the whole testing. The configuration below expects that virt guests are accessible via host's network interface therefore they're set up as <strong>type='bridge'</strong>.</p>
 <pre>&lt;domain type='kvm'&gt;
     &lt;name&gt;rhel5.6-snap1&lt;/name&gt;
     ...
@@ -610,30 +553,18 @@ up as <strong>type='bridge'</strong>.</p>
 <h3><em>Running LNST using remote execution</em></h3>
 
 <p>On the controller machine run following command:</p>
-<pre>&gt; ./nettestctl.py <span style="color:#ff0000">-e</span> -c -r my_recipe.xml run</pre>
+<pre>&gt; ./nettestctl.py <span style="color:#ff0000">-e</span> -c my_recipe.xml run</pre>
 
-<p>The <strong>-e</strong> option of the nettestctl.py command tells the
-controller to make SSH connections to all machines specified in the xml file
-my_recipe.xml and start nettestslave.py processes on these machines. The
-nettestslave.py processes will start listening for XMLRPC connections through
-which the network interfaces will get configured. The <strong>-c</strong>
-option tells the controller to cleanup the test machines before any network
-configuration, that means removal of relevant kernel module (bonding, bridge,
-8021q, etc.).</p>
+<p>The <strong>-e</strong> option of the nettestctl.py command tells the controller to make SSH connections to all machines specified in the xml file my_recipe.xml copy the LNST code to the machines and start nettestslave.py processes on these machines. The nettestslave.py processes will start listening for XMLRPC connections through which the network interfaces will get configured. The <strong>-c</strong> option tells the controller to cleanup the test machines before any network configuration, that means removal of relevant kernel module (bonding, bridge, 8021q, etc.).</p>
 
 <h3><em>Running LNST without remote execution</em></h3>
 
-<p>In this case you have to start nettestslave.py processes first on all
-machines that are defined in recipe by yourself. Let's assume there are
-2 machines participating in the test.</p>
+<p>In this case you have to start nettestslave.py processes first on all machines that are defined in recipe by yourself. Let's assume there are 2 machines participating in the test.</p>
 
 <p>On both of these machines you have to run following command:</p>
 <pre>$ ./nettestslave.py [-d]</pre>
 
-<p>If anything goes wrong it is a good practice to pass the debug option
-<strong>-d</strong> because you will get information about established xmlrpc
-connection from the controller and also information about getting the network
-test interfaces ready and possible problems during the setup.</p>
+<p>If anything goes wrong it is a good practice to pass the debug option <strong>-d</strong> because you will get information about established xmlrpc connection from the controller and also information about getting the network test interfaces ready and possible problems during the setup.</p>
 
 <p>After a successful startup you should get following line on the output:</p>
 <pre>$ ./nettestslave.py
@@ -641,16 +572,14 @@ test interfaces ready and possible problems during the setup.</p>
 
 <p>After that you need to start nettestctl.py on the controller to run the test
 in a recipe:</p>
-<pre>$ ./nettestctl.py -c -r my_recipe.xml run</pre>
+<pre>$ ./nettestctl.py -c my_recipe.xml run</pre>
 
 <h3><em>Using LNST to configure interfaces only</em></h3>
 
-<p>You can also use LNST to do just the network configuration of the test
-machines. None of the tests inside your recipe file will get executed.</p>
+<p>You can also use LNST to do just the network configuration of the test machines. None of the tests inside your recipe file will get executed.</p>
 
-<p>To do this pass <strong>config_only</strong> instead of 'run' argument to
-nettestctl.py script.</p>
-<pre>$ ./nettestctl.py -r my_recipe.xml <span style="color:#ff0000"><span style="background-color:#ffffff">config_only</span></span></pre>
+<p>To do this pass <strong>config_only</strong> instead of 'run' argument to nettestctl.py script.</p>
+<pre>$ ./nettestctl.py my_recipe.xml <span style="color:#ff0000"><span style="background-color:#ffffff">config_only</span></span></pre>
 
 <p></p>
 </body>
