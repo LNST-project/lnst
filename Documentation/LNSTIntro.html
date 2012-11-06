@@ -483,7 +483,192 @@ Example (<em>peanut.xml</em>):
 <p></p>
 <hr />
 
-<h2>Writing a test</h2>
+<h2>Writing a test for LNST</h2>
+
+<p>In this chapter I'm going to guide you through the process of writing a test for the LNST framework.</p>
+
+<h3><em>Basic test</em></h3>
+<h4><em>Tests code location</em></h4>
+
+<p>All tests are stored within <b>Tests</b> directory in git repo.</p>
+
+<p>For the purpose of this document let's assume that you're going to implement test with name <b>MyNetworkTest</b>. LNST requires that you name the python class with the prefix <b>Test</b>, therefore the class will be called <b>TestMyNetworkTest</b> and the file <b>TestMyNetworkTest.py</b>. This prefix should be omitted when you're referring it from the recipe xml.</p>
+
+<p>So, let's start with implementation. Change to the directory <b>Tests</b> and create file <b>TestMyNetworkTest.py</b> and open it with your favorite editor.</p>
+
+<p>Every class implementing an LNST test inherits from <code>TestGeneric</code> class from <code>TestsCommon</code> module:</p>
+
+<pre><code>from Common.TestsCommon import TestGeneric
+
+class TestMyNetworkTest(TestGeneric):
+    ...
+</code></pre>
+
+<p>The only method you need to implement is the <code>run()</code> method and this is the code that will be executed whenever the test is referenced from the recipe.</p>
+
+<h4><em>Passing the parameters to the test</em></h4>
+
+<p><code>TestGeneric</code> class provides set of methods to get the parameters and their values specified in the recipe.</p>
+
+<ul>
+ <li><code>get_opt()</code></li>
+ <li><code>get_mopt()</code></li>
+ <li><code>get_multi_opt()</code></li>
+ <li><code>get_multi_mopt()</code></li>
+</ul>
+
+<p>The <code>get_opt()</code> and <code>get_multi_opt()</code> are used to get <u>optional</u> parameters. To make a parameter <u>mandatory</u> use their <b>mopt</b> variants, <code>get_mopt()</code> and <code>get_multi_mopt()</code>.</p>
+
+<p>For example, let's assume that your test requires a parameter containing an IP address to connect to. It's name is <b>remote_ip</b>. Additionally you want to let user to specify optional parameter saying how many messages the test should send. Let's name it <b>message_count</b>.</p>
+
+<pre><code>class TestMyNetworkTest(TestGeneric):
+
+    def do_some_stuff_with_parameters(self, remote_ip, count):
+        s = connect(remote_ip)
+        for n in range(count):
+            s.send_message("data%s" % n)
+        s.close()
+
+    def run(self):
+        rip = self.get_mopt("remote_ip")
+        mc = self.get_opt("message_count", default=10)
+
+        do_some_stuff_with_parameters(rip, mc)
+</code></pre>
+
+<p>And following is an example how to run your test from the recipe.</p>
+
+<pre><code>&lt;command type="test" name="MyNetworkTest"&gt;
+  &lt;options&gt;
+    &lt;option name="remote_ip" value="192.168.100.10" /&gt;
+    &lt;option name="message_count" value="50" /&gt;
+  &lt;/options&gt;
+&lt;/command&gt;
+</code></pre>
+
+<p>The <b>multi</b> variants let you specify multi-value parameters. Let's consider following example. You'd like to specify multiple remote targets for your test. Without the multi opt variant you would have to run the test multiple times from the recipe in the background. Using it you can write following command:</p>
+
+<pre><code>&lt;command type="test" value="MyNetworkTest"&gt;
+  &lt;options&gt;
+    &lt;option name="remote_target" value="192.168.100.10" /&gt;
+    &lt;option name="remote_target" value="192.168.100.20" /&gt;
+    &lt;option name="remote_target" value="192.168.100.30" /&gt;
+  &lt;/options&gt;
+&lt;/command&gt;
+</code></pre>
+
+<p>And you can use following code to use all of the values:</p>
+
+<pre><code>class TestMyNetworkTest(TestGeneric):
+
+    def do_some_stuff_with_target(self)
+        s = connect(t)
+        s.send_message("hello")
+        s.close()
+
+    def run(self):
+        targets = self.get_multi_opt("remote_target)
+        for t in targets:
+            self.do_some_stuff_with_target(t)
+</code></pre>
+
+<p>Method <code>get_multi_mopt()</code> is the same but at least one value has to be specified.</p>
+
+<h4><em>Reporting test result</em></h4>
+
+<p>For what reason do we have tests if they don't tell us their result?</p>
+
+<p>The <code>TestGeneric</code> class provides two methods related to reporting the test results.</p>
+
+<ul>
+  <li><code>set_fail([message])</code></li>
+  <li><code>set_pass([message])</code></li>
+</ul>
+
+<p>If you don't call any of these methods from your test the result will be always success (pass).
+    Both methods take optional parameter <code>message</code> that can be used to report the result in more detail, e.g. what was the transfer rate, how many connections have been established, etc.</p>
+
+<p>So let's enhance our example above a bit.</p>
+
+<pre><code>class TestMyNetworkTest(TestGeneric):
+
+    def do_some_stuff_with_target(self)
+        s = connect(t)
+        if not s:
+            return False
+        s.send_message("hello")
+        s.close()
+
+    def run(self):
+        targets = self.get_multi_opt("remote_target)
+        for t in targets:
+            rc = self.do_some_stuff_with_target(t)
+            if not rc:
+                self.set_fail("Could not connect to target %s" % t)
+
+        # if we're not reporting anything interesting, you can omit the 
+        # following line
+        self.set_pass()
+
+</code></pre>
+
+<h3><em>Advanced topics</em></h3>
+
+<h4><em>Handling interrupts</em></h4>
+
+<p>There are two approaches how to do this depending on the desired behaviour.</p>
+
+<h5><em>Using the LNST facilities</em></h5>
+
+<p>This approach is used if you need to block the execution of test. The <code>TestGeneric</code> class provides following two methods to support interrupt handling:</p>
+
+<ul>
+  <li><code>set_handle_intr()</code></li>
+  <li><code>wait_on_interrupt()</code></li>
+</ul>
+
+<p>If <code>set_handle_intr()</code> method is called from the test code it simply tells the framework that the test is interested in delivering the interrupt signal. The test then can be suspended until the delivery of this signal using the <code>wait_on_interrupt()</code> method.</p>
+
+<p>So, let's assume following command sequence:</p>
+
+<pre><code>
+&lt;command type="test" value="IntrExample" bg_id="1" /&gt; &lt;!-- (1) --&gt;
+&lt;command type="exec" value="sleep 30" /&gt;              &lt;!-- (2) --&gt;
+&lt;command type="intr" bg_id="1" /&gt;                     &lt;!-- (3) --&gt;
+&lt;command type="wait" bg_id="1" /&gt;                     &lt;!-- (4) --&gt;
+</pre></code>
+
+<p>We're telling the framework that we want to run <b>IntrExample</b> test in the background (1), then wait for 30 seconds (2) and finally interrupt the test (3) and wait for it's exit (4).</p>
+
+<p>The python code would look like following:</p>
+
+<pre><code>TestIntrExample(TestGeneric):
+    def run():
+        self.set_handle_intr()
+
+        ...
+        # parse options
+        ...
+        # spawn workers or whatever that runs in background
+        ...
+        self.wait_on_interrupt() 
+        # we're blocked until type="intr" command is executed
+</code></pre>
+
+<h5><em>Self-managed interrupt handling</em></h5>
+
+<p>If you plan to use more complex interrupt signal handling you have to code it directly into your test code. As an example you can look at the code in <b>Tests/TestPacketAssert.py</b> or <b>Tests/TCPConnect.py</b> and <b>TCPListen.py</b></p>
+
+<p>Basically you need to register a method for the interrupt signal. The following code should do it:</p>
+
+<pre><code>TestIntrExample2(TestGeneric):
+    def _interrupt_handler(self):
+        self.do_whatever_needs_to_be_done_upon_signal_delivery()
+
+    def run(self):
+        signal.signal(signal.SIGINT, self._interrupt_handler)
+</code></pre>
+
 <p></p>
 <hr />
 
