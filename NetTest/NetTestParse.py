@@ -586,6 +586,9 @@ class CommandParse(RecipeParser):
                                                             bool_it)
             else:
                 command["persistent"] = False
+        elif command["type"] == "exec":
+            if self._has_attribute(node, "from"):
+                command["from"] = self._get_attribute(node, "from")
 
         scheme = {"options": self._options}
         self._process_child_nodes(node, scheme)

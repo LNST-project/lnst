@@ -122,12 +122,15 @@ class NetTestCommandContext:
         self._kill_all_bg_cmds()
         self._dict = {}
 
-def NetTestCommandTest(command):
+def NetTestCommandTest(command, resource_table):
     test_name = command["value"]
+    if not test_name in resource_table["module"]:
+        msg = "Test module '%s' not found" % test_name
+
+    module_path = resource_table["module"][test_name]
     module_name = "Test%s" % test_name
-    fp, pathname, description = imp.find_module("Tests/%s" % module_name)
-    module = imp.load_module("Tests/%s" % module_name,
-                             fp, pathname, description)
+
+    module = imp.load_source(module_name, module_path)
     test_class = getattr(module, module_name)
     return test_class(command)
 
@@ -135,6 +138,7 @@ class NetTestCommandGeneric:
     def __init__(self, command):
         self._command = command
         self._result = None
+        self._resource_table = None
 
     def run(self):
         pass
@@ -164,10 +168,27 @@ class NetTestCommandGeneric:
     def set_handle_intr(self):
         pass
 
+    def set_resource_table(self, res_table):
+        self._resource_table = res_table
+
+    def exec_cmd(self, cmd, *args, **kwargs):
+        return exec_cmd(cmd, *args, **kwargs)
+
+    def exec_from(self, tools_name, cmd, *args, **kwargs):
+        if not tools_name in self._resource_table["tools"]:
+            msg = "Tools '%s' not found" % tools_name
+            raise CommandException(msg)
+
+        tools_path = self._resource_table["tools"][tools_name]
+        return exec_cmd("cd \"%s\" && %s" % (tools_path, cmd), *args, **kwargs)
+
 class NetTestCommandExec(NetTestCommandGeneric):
     def run(self):
         try:
-            exec_cmd(self._command["value"])
+            if "from" in self._command:
+                self.exec_from(self._command["from"], self._command["value"])
+            else:
+                self.exec_cmd(self._command["value"])
             self.set_pass()
         except ExecCmdFail:
             if "bg_id" in self._command:
@@ -253,27 +274,31 @@ class NetTestCommandKill(NetTestCommandControl):
         self._command_context.del_bg_cmd(bg_cmd)
         self.set_result({"passed": True})
 
-def get_command_class(command_context, command):
+def get_command_class(command_context, command, resource_table):
     cmd_type = command["type"]
     if cmd_type == "exec":
-        return NetTestCommandExec(command)
+        cmd_cls = NetTestCommandExec(command)
     elif cmd_type == "test":
-        return NetTestCommandTest(command)
+        cmd_cls = NetTestCommandTest(command, resource_table)
     elif cmd_type == "wait":
-        return NetTestCommandWait(command_context, command)
+        cmd_cls = NetTestCommandWait(command_context, command)
     elif cmd_type == "intr":
-        return NetTestCommandIntr(command_context, command)
+        cmd_cls = NetTestCommandIntr(command_context, command)
     elif cmd_type == "kill":
-        return NetTestCommandKill(command_context, command)
+        cmd_cls = NetTestCommandKill(command_context, command)
     elif cmd_type == "system_config":
-        return NetTestCommandSystemConfig(command)
+        cmd_cls = NetTestCommandSystemConfig(command)
     else:
         logging.error("Unknown comamnd type \"%s\"" % cmd_type)
         raise Exception("Unknown command type \"%s\"" % cmd_type)
 
+    cmd_cls.set_resource_table(resource_table)
+    return cmd_cls
+
 class NetTestCommand:
-    def __init__(self, command_context, command):
-        self._command_class = get_command_class(command_context, command)
+    def __init__(self, command_context, command, resource_table):
+        self._command_class = get_command_class(command_context, command,
+                                                resource_table)
         self._command_context = command_context
         self._command = command
 
