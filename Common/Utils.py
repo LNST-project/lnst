@@ -12,6 +12,7 @@ jzupka@redhat.com (Jiri Zupka)
 import logging
 import time
 import re
+import hashlib
 
 def die_when_parent_die():
     try:
@@ -85,3 +86,14 @@ def bool_it(val):
         elif re.match("^\s*(?i)(false)", val):
             return False
     return True if int_it(val) else False
+
+def md5sum(file_path, block_size=2**20):
+    md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(block_size)
+            if not data:
+                break
+            md5.update(data)
+
+    return md5.hexdigest()
