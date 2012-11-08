@@ -47,7 +47,14 @@ class NetTestSlaveXMLRPC:
         self._resource_table = {}
 
     def hello(self):
+        self.clear_resource_table()
+        self._cache.del_old_entries()
         return "hello"
+
+    def bye(self):
+        self.clear_resource_table()
+        self._cache.del_old_entries()
+        return "bye"
 
     def get_new_logs(self):
         buffer  = Logs.get_buffer()

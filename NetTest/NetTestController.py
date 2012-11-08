@@ -353,7 +353,7 @@ class NetTestController:
             if "rpc" not in info or "configured_interfaces" not in info:
                 continue
 
-            self._rpc_call(machine_id, "clear_resource_table")
+            self._rpc_call(machine_id, "bye")
 
             for if_id in reversed(info["configured_interfaces"]):
                 self._rpc_call(machine_id, 'deconfigure_interface', if_id)
