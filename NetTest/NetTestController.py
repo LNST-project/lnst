@@ -15,6 +15,7 @@ import logging
 import socket
 import os
 import pickle
+from xmlrpclib import Binary
 from Common.Logs import Logs, log_exc_traceback
 from Common.SshUtils import scp_from_remote
 from pprint import pprint, pformat
@@ -550,3 +551,18 @@ class NetTestController:
             data['address'] = '(' + address + ')'
             record = logging.makeLogRecord(data)
             logger.handle(record)
+
+    def _copy_to_slave(self, local_path, machine_id, remote_path=None):
+        self._rpc_call(machine_id, "start_copy", remote_path)
+        f = open(local_path, "r+b")
+
+        while True:
+            data = f.read(1024*1024) # 1MB buffer
+            if len(data) == 0:
+                break
+
+            self._rpc_call(machine_id, "copy_part", Binary(data))
+
+        # return remote path
+        rpath = self._rpc_call(machine_id, "finish_copy")
+        return rpath

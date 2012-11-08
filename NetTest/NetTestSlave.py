@@ -15,6 +15,7 @@ from Common.Logs import Logs, log_exc_traceback
 import signal
 import select, logging
 import os
+from tempfile import NamedTemporaryFile
 from Common.PacketCapture import PacketCapture
 from Common.XmlRpc import Server
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -36,6 +37,8 @@ class NetTestSlaveXMLRPC:
         self._packet_captures = {}
         self._netconfig = NetConfig()
         self._command_context = command_context
+
+        self._copy_target = None
 
     def hello(self):
         return "hello"
@@ -132,6 +135,33 @@ class NetTestSlaveXMLRPC:
         self._netconfig.cleanup()
         self._command_context.cleanup()
         return True
+
+    def start_copy(self, filename=None):
+        if self._copy_target:
+            return False
+
+        if filename:
+            self._copy_target = open(filename, "w+b")
+        else:
+            self._copy_target = NamedTemporaryFile("w+b", delete=False)
+
+        return True
+
+    def copy_part(self, binary_data):
+        if self._copy_target:
+            self._copy_target.write(binary_data.data)
+            return True
+
+        return False
+
+    def finish_copy(self):
+        if self._copy_target:
+            name = self._copy_target.name
+            del self._copy_target
+            self._copy_target = None
+            return name
+
+        return ""
 
 class MySimpleXMLRPCServer(Server):
     def __init__(self, command_context, *args, **kwargs):
