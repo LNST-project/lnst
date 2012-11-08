@@ -56,6 +56,8 @@ class Config():
         self.options['cache']['dir'] = os.path.abspath(os.path.join(
                 os.path.dirname(sys.argv[0]), './cache'))
 
+        self.options['cache']['expiration_period'] = 7*24*60*60 # 1 week
+
     def get_config(self):
         return self.options
 
@@ -126,6 +128,9 @@ class Config():
         for option in config:
             if option == 'cache_dir':
                 section['dir'] = self.optionPath(config[option], cfg_path)
+            elif option == 'expiration_period':
+                value = self.optionTimeval(config[option])
+                section['expiration_period'] = value
             else:
                 msg = "Unknown option: %s in section cache" % option
                 raise ConfigError(msg)
@@ -200,3 +205,24 @@ class Config():
             dirs.append(norm_path)
 
         return dirs
+
+    def optionTimeval(self, option):
+        timeval_re = "^(([0-9]+)days?)?\s*(([0-9]+)hours?)?\s*" \
+                     "(([0-9]+)minutes?)?\s*(([0-9]+)seconds?)?$"
+        timeval_match = re.match(timeval_re, option)
+        if timeval_match:
+            values = timeval_match.groups()
+            timeval = 0
+            if values[1]:
+                timeval += int(values[1])*24*60*60
+            if values[3]:
+                timeval += int(values[3])*60*60
+            if values[5]:
+                timeval += int(values[5])*60
+            if values[7]:
+                timeval += int(values[7])
+        else:
+            msg = "Incorrect timeval format."
+            raise ConfigError(msg)
+
+        return timeval
