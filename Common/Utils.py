@@ -129,3 +129,22 @@ def dir_md5sum(dir_path):
     os.unlink(tar_filepath)
 
     return md5_digest
+
+def has_changed_since(filepath, threshold):
+    if os.path.isfile(filepath):
+        return _is_newer_than(filepath, threshold)
+
+    for root, dirs, files in os.walk(directory):
+        for f in files:
+            if _is_newer_than(f, threshold):
+                return False
+
+        for d in dirs:
+            if _is_newer_than(d, threshold):
+                return False
+
+    return True
+
+def _is_newer_than(f, threshold):
+    stat = os.stat(f)
+    return stat.st_mtime > threshold
