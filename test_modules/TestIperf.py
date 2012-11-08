@@ -148,4 +148,3 @@ class TestIperf(TestGeneric):
                 return self.set_fail(message)
 
             return self.set_pass(message)
-

@@ -25,7 +25,6 @@ class TestMulticast(TestGeneric):
 
     """
 
-    _tools_location = "test_tools/multicast/"
     _conditions = {}
 
     @staticmethod
@@ -41,7 +40,7 @@ class TestMulticast(TestGeneric):
         cmd  = ""
         opts = {}
 
-        setup = self._tools_location + self.get_mopt("setup")
+        setup = self.get_mopt("setup")
         opts["multicast_address"] = self._remove_mask(self.get_opt("address"))
         opts["port"] = self.get_opt("port")
         opts["interface"] = self._remove_mask(self.get_opt("interface"))
@@ -108,11 +107,9 @@ class TestMulticast(TestGeneric):
         setup_name = self.get_mopt("setup")
         logging.info("Started Multicast test setup {0}".format(setup_name))
 
-        exec_cmd("cd " + self._tools_location + " && make",
-                    log_outputs=False)
-
         cmd = self._compose_cmd()
-        data_stdout = exec_cmd(cmd, die_on_err=False, log_outputs=False)[0]
+        data_stdout = self.exec_from("multicast", cmd, die_on_err=False,
+                                        log_outputs=False)[0]
 
         res = {}
 
