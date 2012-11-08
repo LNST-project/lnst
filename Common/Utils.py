@@ -12,7 +12,10 @@ jzupka@redhat.com (Jiri Zupka)
 import logging
 import time
 import re
+import os
 import hashlib
+import tempfile
+from ExecCmd import exec_cmd
 
 def die_when_parent_die():
     try:
@@ -97,3 +100,32 @@ def md5sum(file_path, block_size=2**20):
             md5.update(data)
 
     return md5.hexdigest()
+
+def create_tar_archive(input_path, target_path, compression=False):
+    if compression:
+        args = "cfj"
+    else:
+        args = "cf"
+
+    if os.path.isdir(target_path):
+        target_path += "/%s.tar.bz" % os.path.basename(input_file.rstrip("/"))
+
+    input_path = input_path.rstrip("/")
+    input_file = os.path.basename(input_path)
+    parent = os.path.dirname(input_path)
+
+    exec_cmd("cd \"%s\" && tar %s \"%s\" \"%s\"" % \
+                (parent, args, target_path, input_file))
+
+    return target_path
+
+def dir_md5sum(dir_path):
+    tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    tmp_file.close()
+
+    tar_filepath = create_tar_archive(dir_path, tmp_file.name)
+    md5_digest = md5sum(tar_filepath)
+
+    os.unlink(tar_filepath)
+
+    return md5_digest
