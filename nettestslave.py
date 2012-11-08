@@ -76,9 +76,10 @@ def main():
     logging.info("Started")
 
     if port:
-        nettestslave = NetTestSlave(port=port)
+        nettestslave = NetTestSlave(config, port=port)
     else:
-        nettestslave = NetTestSlave()
+        nettestslave = NetTestSlave(config)
+
     if daemon:
         daemon = Daemon(pidfile)
         daemon.daemonize()

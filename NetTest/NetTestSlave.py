@@ -33,7 +33,7 @@ class NetTestSlaveXMLRPC:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context):
+    def __init__(self, command_context, config):
         self._netconfig = None
         self._packet_captures = {}
         self._netconfig = NetConfig()
@@ -225,7 +225,7 @@ class MySimpleXMLRPCServer(Server):
                 pass
 
 class NetTestSlave:
-    def __init__(self, port = DefaultRPCPort):
+    def __init__(self, config, port = DefaultRPCPort):
         die_when_parent_die()
 
         command_context = NetTestCommandContext()
@@ -235,7 +235,7 @@ class NetTestSlave:
         server.register_die_signal(signal.SIGHUP)
         server.register_die_signal(signal.SIGINT)
         server.register_die_signal(signal.SIGTERM)
-        server.register_instance(NetTestSlaveXMLRPC(command_context))
+        server.register_instance(NetTestSlaveXMLRPC(command_context, config))
         self._server = server
 
     def run(self):
