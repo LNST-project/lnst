@@ -14,7 +14,9 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import socket
 import os
+import re
 import pickle
+import tempfile
 from xmlrpclib import Binary
 from Common.Logs import Logs, log_exc_traceback
 from Common.SshUtils import scp_from_remote
@@ -25,7 +27,7 @@ from Common.SlaveUtils import prepare_client_session
 from Common.NetUtils import MacPool
 from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, str_command
 from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
-from Common.Utils import wait_for
+from Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from NetTest.MachinePool import MachinePool
 
 class NetTestError(Exception):
@@ -43,7 +45,6 @@ class NetTestController:
         self._remote_capture_files = {}
         self._config = config
         self._log_root_path = Logs.get_logging_root_path()
-        self._command_context = NetTestCommandContext()
         self._machine_pool = MachinePool(config.get_option('environment',
                                                             'pool_dirs'))
 
@@ -70,6 +71,12 @@ class NetTestController:
         ntparse.register_event_handler("provisioning_requirements_ready",
                                         self._prepare_provisioning)
 
+        modules_dirs = config.get_option('environment', 'module_dirs')
+        tools_dirs = config.get_option('environment', 'tool_dirs')
+
+        self._resource_table = {}
+        self._resource_table["module"] = self._load_test_modules(modules_dirs)
+        self._resource_table["tools"] = self._load_test_tools(tools_dirs)
 
         self._ntparse = ntparse
 
@@ -241,6 +248,39 @@ class NetTestController:
 
             info["configured_interfaces"] = []
 
+            self._rpc_call(machine_id, "clear_resource_table")
+            required = self._resource_table
+
+        for res_type, resources in self._resource_table.iteritems():
+            for res_name, res in resources.iteritems():
+                has_resource = self._rpc_call(machine_id, "has_resource",
+                                                    res["hash"])
+                if not has_resource:
+                    msg = "Transfering %s %s to machine %s" % \
+                            (res_name, res_type, machine_id)
+                    logging.info(msg)
+
+                    local_path = required[res_type][res_name]["path"]
+
+                    if res_type == "tools":
+                        archive = tempfile.NamedTemporaryFile(delete=False)
+                        archive_path = archive.name
+                        archive.close()
+
+                        create_tar_archive(local_path, archive_path, True)
+                        local_path = archive_path
+
+                    remote_path = self._copy_to_slave(local_path, machine_id)
+                    self._rpc_call(machine_id, "add_resource_to_cache",
+                                res["hash"], remote_path, res_name,
+                                res["path"], res_type)
+
+                    if res_type == "tools":
+                        os.unlink(archive_path)
+
+                self._rpc_call(machine_id, "map_resource",
+                            res["hash"], res_type, res_name)
+
         # Some additional initialization is necessary in case the
         # underlying machine is provisioned from the pool
         prov_id = self._machine_pool.get_provisioner_id(machine_id)
@@ -312,6 +352,9 @@ class NetTestController:
             info = self._get_machineinfo(machine_id)
             if "rpc" not in info or "configured_interfaces" not in info:
                 continue
+
+            self._rpc_call(machine_id, "clear_resource_table")
+
             for if_id in reversed(info["configured_interfaces"]):
                 self._rpc_call(machine_id, 'deconfigure_interface', if_id)
 
@@ -360,21 +403,18 @@ class NetTestController:
         except KeyError:
             pass
 
-        if machine_id == "0":
-            cmd_res = NetTestCommand(self._command_context, command).run()
-        else:
-            if "timeout" in command:
-                timeout = command["timeout"]
-                logging.debug("Setting socket timeout to \"%d\"", timeout)
-                socket.setdefaulttimeout(timeout)
-            try:
-                cmd_res = self._rpc_call(machine_id, 'run_command', command)
-            except socket.timeout:
-                msg = "RPC connection to machine %s timed out" % machine_id
-                raise NetTestError(msg)
-            if "timeout" in command:
-                logging.debug("Setting socket timeout to default value")
-                socket.setdefaulttimeout(None)
+        if "timeout" in command:
+            timeout = command["timeout"]
+            logging.debug("Setting socket timeout to \"%d\"", timeout)
+            socket.setdefaulttimeout(timeout)
+        try:
+            cmd_res = self._rpc_call(machine_id, 'run_command', command)
+        except socket.timeout:
+            msg = "RPC connection to machine %s timed out" % machine_id
+            raise NetTestError(msg)
+        if "timeout" in command:
+            logging.debug("Setting socket timeout to default value")
+            socket.setdefaulttimeout(None)
 
         if command["type"] == "system_config":
             if cmd_res["passed"]:
@@ -438,7 +478,6 @@ class NetTestController:
 
         self._deconfigure_slaves()
         self._disconnect_slaves()
-        self._command_context.cleanup()
 
         if not err:
             return res
@@ -566,3 +605,47 @@ class NetTestController:
         # return remote path
         rpath = self._rpc_call(machine_id, "finish_copy")
         return rpath
+
+    def _load_test_modules(self, dirs):
+        modules = {}
+        for dir_name in dirs:
+            files = os.listdir(dir_name)
+            for f in files:
+                test_path = os.path.abspath("%s/%s" % (dir_name, f))
+                if os.path.isfile(test_path):
+                    match = re.match("Test(.+)\.py$", f)
+                    if match:
+                        test_name = match.group(1)
+                        test_hash = md5sum(test_path)
+
+                        if test_name in modules:
+                            msg = "Overriding previously defined test '%s' " \
+                                  "from %s with a different one located in " \
+                                  "%s" % (test_name, test_path,
+                                    modules[test_name]["path"])
+                            logging.warn(msg)
+
+                        modules[test_name] = {"path": test_path,
+                                              "hash": test_hash}
+        return modules
+
+    def _load_test_tools(self, dirs):
+        packages = {}
+        for dir_name in dirs:
+            files = os.listdir(dir_name)
+            for f in files:
+                pkg_path = os.path.abspath("%s/%s" % (dir_name, f))
+                if os.path.isdir(pkg_path):
+                    pkg_name = os.path.basename(pkg_path.rstrip("/"))
+                    pkg_hash = dir_md5sum(pkg_path)
+
+                    if pkg_name in packages:
+                        msg = "Overriding previously defined tools " \
+                              "package '%s' from %s with a different " \
+                              "one located in %s" % (pkg_name, pkg_path,
+                                            packages[pkg_name]["path"])
+                        logging.warn(msg)
+
+                    packages[pkg_name] = {"path": pkg_path,
+                                           "hash": pkg_hash}
+        return packages
