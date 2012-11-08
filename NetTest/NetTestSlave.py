@@ -25,6 +25,7 @@ from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, Comman
 from Common.Utils import die_when_parent_die
 from Common.NetUtils import scan_netdevs, test_tcp_connection
 from Common.ExecCmd import exec_cmd
+from Common.ResourceCache import ResourceCache
 
 DefaultRPCPort = 9999
 
@@ -39,6 +40,11 @@ class NetTestSlaveXMLRPC:
         self._command_context = command_context
 
         self._copy_target = None
+
+        self._cache = ResourceCache(config.get_option("cache", "dir"),
+                        config.get_option("cache", "expiration_period"))
+
+        self._resource_table = {}
 
     def hello(self):
         return "hello"
@@ -121,7 +127,9 @@ class NetTestSlaveXMLRPC:
 
     def run_command(self, command):
         try:
-            return NetTestCommand(self._command_context, command).run()
+            cmd_cls = NetTestCommand(self._command_context, command,
+                                        self._resource_table)
+            return cmd_cls.run()
         except:
             log_exc_traceback()
             cmd_type = command["type"]
@@ -134,6 +142,8 @@ class NetTestSlaveXMLRPC:
         NetConfigDeviceAllCleanup()
         self._netconfig.cleanup()
         self._command_context.cleanup()
+        self.reset_resource_table()
+        self._cache.del_old_entries()
         return True
 
     def start_copy(self, filename=None):
@@ -162,6 +172,32 @@ class NetTestSlaveXMLRPC:
             return name
 
         return ""
+
+    def clear_resource_table(self):
+        self._resource_table = {}
+        return True
+
+    def has_resource(self, res_hash):
+        if self._cache.query(res_hash):
+            return True
+
+        return False
+
+    def map_resource(self, res_hash, res_type, res_name):
+        resource_location = self._cache.get_path(res_hash)
+
+        if not res_type in self._resource_table:
+            self._resource_table[res_type] = {}
+
+        self._resource_table[res_type][res_name] = resource_location
+        self._cache.renew_entry(res_hash)
+
+        return True
+
+    def add_resource_to_cache(self, file_hash, local_path, name,
+                                res_hash, res_type):
+        self._cache.add_cache_entry(file_hash, local_path, name, res_type)
+        return True
 
 class MySimpleXMLRPCServer(Server):
     def __init__(self, command_context, *args, **kwargs):
