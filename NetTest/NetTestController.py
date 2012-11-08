@@ -309,7 +309,7 @@ class NetTestController:
             return
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
-            if "rpc" not in info:
+            if "rpc" not in info or "configured_interfaces" not in info:
                 continue
             for if_id in reversed(info["configured_interfaces"]):
                 self._rpc_call(machine_id, 'deconfigure_interface', if_id)
