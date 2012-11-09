@@ -13,12 +13,12 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import os
 import re
-from Common.XmlProcessing import RecipeParser
-from Common.XmlProcessing import XmlDomTreeInit
-from Common.XmlProcessing import XmlProcessingError
-from Common.NetUtils import normalize_hwaddr
-from Common.Utils import bool_it
-from Common.RecipePath import RecipePath
+from lnst.Common.XmlProcessing import RecipeParser
+from lnst.Common.XmlProcessing import XmlDomTreeInit
+from lnst.Common.XmlProcessing import XmlProcessingError
+from lnst.Common.NetUtils import normalize_hwaddr
+from lnst.Common.Utils import bool_it
+from lnst.Common.RecipePath import RecipePath
 
 class NetTestParse(RecipeParser):
     def __init__(self, recipe_filepath):

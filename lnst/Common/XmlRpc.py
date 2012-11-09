@@ -19,13 +19,13 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-from SimpleXMLRPCServer import SimpleXMLRPCServer
-from Common.Logs import log_exc_traceback
 import xmlrpclib
 import sys
 import socket
 import SocketServer
 import traceback
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+from lnst.Common.Logs import log_exc_traceback
 
 # All public methods in this class are callable by clients.
 class UtilityFuncs(object):

@@ -18,8 +18,8 @@ import os
 import re
 import copy
 from xml.dom import minidom
-from Common.XmlProcessing import XmlDomTreeInit
-from NetTest.NetTestParse import MachineConfigParse
+from lnst.Common.XmlProcessing import XmlDomTreeInit
+from lnst.Controller.NetTestParse import MachineConfigParse
 
 class MachinePool:
     """

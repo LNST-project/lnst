@@ -11,7 +11,7 @@ jpirko@redhat.com (Jiri Pirko)
 """
 
 import logging
-from Common.TestsCommon import TestGeneric
+from lnst.Common.TestsCommon import TestGeneric
 
 class TestDummyFailing(TestGeneric):
     def run(self):

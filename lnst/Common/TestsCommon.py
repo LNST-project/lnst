@@ -15,7 +15,7 @@ import logging
 import sys
 import os
 import signal
-from NetTest.NetTestCommand import NetTestCommandGeneric
+from lnst.Common.NetTestCommand import NetTestCommandGeneric
 
 class testLogger(logging.Logger):
     def __init__(self, name, level=logging.NOTSET):
@@ -72,7 +72,7 @@ class TestGeneric(NetTestCommandGeneric):
 
     def _signal_intr_handler(self, signum, frame):
         os.write(self._write_pipe, "a")
-    
+
     def wait_on_interrupt(self):
         '''
         Should be used by test implementation for waiting on SIGINT

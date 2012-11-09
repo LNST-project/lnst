@@ -11,7 +11,7 @@ jzupka@redhat.com (Jiri Zupka)
 """
 
 import time, logging
-from ShellProcess import ShellProcess
+from lnst.Common.ShellProcess import ShellProcess
 
 class LoginError(Exception):
     def __init__(self, msg, output):

@@ -7,12 +7,12 @@ jtluka@redhat.com (Jan Tluka)
 """
 
 import logging
-from Common.TestsCommon import TestGeneric
-from Common.ExecCmd import exec_cmd
-from Common.ShellProcess import ShellProcess
 import time
 import errno
 import re
+from lnst.Common.TestsCommon import TestGeneric
+from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.ShellProcess import ShellProcess
 
 class TestIperf(TestGeneric):
     def _compose_iperf_cmd(self, role):

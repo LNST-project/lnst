@@ -12,9 +12,9 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import os
-from NetConfigCommon import get_option
-from Common.NetUtils import normalize_hwaddr
-from Common.NetUtils import scan_netdevs
+from lnst.Slave.NetConfigCommon import get_option
+from lnst.Common.NetUtils import normalize_hwaddr
+from lnst.Common.NetUtils import scan_netdevs
 
 class NetConfigDevNames:
     def __init__(self):

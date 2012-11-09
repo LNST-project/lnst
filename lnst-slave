@@ -15,10 +15,10 @@ import getopt
 import sys
 import os
 import logging
-from NetTest.NetTestSlave import NetTestSlave
-from Common.Daemon import Daemon
-from Common.Logs import Logs
-from Common.Config import Config
+from lnst.Common.Daemon import Daemon
+from lnst.Common.Logs import Logs
+from lnst.Common.Config import Config
+from lnst.Slave.NetTestSlave import NetTestSlave
 
 def usage():
     """

@@ -15,8 +15,8 @@ from time import sleep
 from random import randrange, sample
 import logging
 import re
-from Common.TestsCommon import TestGeneric
 import ctypes
+from lnst.Common.TestsCommon import TestGeneric
 
 """
 Test description:

@@ -13,8 +13,8 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import re
 import os
-from Common.TestsCommon import TestGeneric
-from Common.ExecCmd import exec_cmd, ExecCmdFail
+from lnst.Common.TestsCommon import TestGeneric
+from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 
 def get_pkt_count(indev_name, dport, proto):
     if indev_name:

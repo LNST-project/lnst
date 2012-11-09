@@ -16,11 +16,10 @@ import sys
 import logging
 import os
 import re
-from NetTest.NetTestController import NetTestController, NetTestError
-from NetTest.NetTestResultSerializer import NetTestResultSerializer
-from Common.Logs import Logs
-import Common.ProcessManager
-from Common.Config import Config
+from lnst.Common.Logs import Logs
+from lnst.Common.Config import Config
+from lnst.Controller.NetTestController import NetTestController, NetTestError
+from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
 
 def usage():
     """

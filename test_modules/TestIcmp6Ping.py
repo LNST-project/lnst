@@ -7,8 +7,8 @@ jtluka@redhat.com (Jan Tluka)
 
 import logging
 import re
-from Common.TestsCommon import TestGeneric
-from Common.ExecCmd import exec_cmd
+from lnst.Common.TestsCommon import TestGeneric
+from lnst.Common.ExecCmd import exec_cmd
 
 
 class TestIcmp6Ping(TestGeneric):

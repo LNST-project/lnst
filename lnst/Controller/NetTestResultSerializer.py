@@ -11,8 +11,8 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-from NetTestCommand import str_command
 from xml.dom.minidom import getDOMImplementation
+from lnst.Controller.NetTestCommand import str_command
 
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):

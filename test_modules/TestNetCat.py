@@ -10,11 +10,11 @@ __author__ = """
 jtluka@redhat.com (Jan Tluka)
 """
 
-from Common.TestsCommon import TestGeneric
-from Common.ShellProcess import ShellProcess
 import re
 import time
 import logging
+from lnst.Common.TestsCommon import TestGeneric
+from lnst.Common.ShellProcess import ShellProcess
 
 class TestNetCat(TestGeneric):
     def _get_stream(self):

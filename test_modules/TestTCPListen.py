@@ -12,9 +12,9 @@ import errno
 import logging
 import re
 from multiprocessing import Process, Value
-from Common.TestsCommon import TestGeneric
 from signal import signal, SIGINT
 import ctypes
+from lnst.Common.TestsCommon import TestGeneric
 
 """
 Test description:

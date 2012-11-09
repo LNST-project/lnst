@@ -12,8 +12,8 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import re
-from Common.TestsCommon import TestGeneric
-from Common.ExecCmd import exec_cmd
+from lnst.Common.TestsCommon import TestGeneric
+from lnst.Common.ExecCmd import exec_cmd
 
 class TestIcmpPing(TestGeneric):
     def _compose_cmd(self):

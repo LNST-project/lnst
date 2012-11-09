@@ -11,21 +11,22 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-from Common.Logs import Logs, log_exc_traceback
 import signal
 import select, logging
 import os
 from tempfile import NamedTemporaryFile
-from Common.PacketCapture import PacketCapture
-from Common.XmlRpc import Server
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from NetConfig.NetConfig import NetConfig
-from NetConfig.NetConfigDevice import NetConfigDeviceAllCleanup
-from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, CommandException
-from Common.Utils import die_when_parent_die
-from Common.NetUtils import scan_netdevs, test_tcp_connection
-from Common.ExecCmd import exec_cmd
-from Common.ResourceCache import ResourceCache
+from lnst.Common.Logs import Logs, log_exc_traceback
+from lnst.Common.PacketCapture import PacketCapture
+from lnst.Common.XmlRpc import Server
+from lnst.Common.Utils import die_when_parent_die
+from lnst.Common.NetUtils import scan_netdevs, test_tcp_connection
+from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.ResourceCache import ResourceCache
+from lnst.Common.NetTestCommand import NetTestCommandContext
+from lnst.Common.NetTestCommand import CommandException, NetTestCommand
+from lnst.Slave.NetConfig import NetConfig
+from lnst.Slave.NetConfigDevice import NetConfigDeviceAllCleanup
 
 DefaultRPCPort = 9999
 

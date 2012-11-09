@@ -15,7 +15,7 @@ import logging
 import subprocess
 import re
 import signal
-from Common.TestsCommon import TestGeneric
+from lnst.Common.TestsCommon import TestGeneric
 
 class TestPacketAssert(TestGeneric):
     """ Assert for number of incomming/outgoing packets

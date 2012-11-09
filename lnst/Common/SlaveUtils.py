@@ -6,9 +6,9 @@ __autor__ = """
 jzupka@redhat.com (Jiri Zupka)
 """
 
-from Common.SshUtils import scp_to_remote, wait_for_login
-from Common.ShellProcess import ShellProcess
 import sys
+from lnst.Common.SshUtils import scp_to_remote, wait_for_login
+from lnst.Common.ShellProcess import ShellProcess
 
 def prepare_client_session(host, port, login, passwd=None, command=None,
                            prompt=None, install_path=None, test_dir=None):

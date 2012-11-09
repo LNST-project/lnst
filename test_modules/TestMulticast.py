@@ -12,9 +12,9 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import logging
 import re
-from Common.TestsCommon import TestGeneric
-from NetTest.NetTestCommand import CommandException
-from Common.ExecCmd import exec_cmd
+from lnst.Common.TestsCommon import TestGeneric
+from lnst.Controller.NetTestCommand import CommandException
+from lnst.Common.ExecCmd import exec_cmd
 
 class TestMulticast(TestGeneric):
     """ Wrapper for executing the multicast test tools in LNST

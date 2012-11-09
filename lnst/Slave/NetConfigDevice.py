@@ -14,9 +14,9 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import re
 import sys
-from Common.ExecCmd import exec_cmd
-from NetConfigCommon import get_slaves, get_option
-from Common.Utils import kmod_in_use, bool_it
+from lnst.Common.ExecCmd import exec_cmd
+from lnst.Slave.NetConfigCommon import get_slaves, get_option
+from lnst.Common.Utils import kmod_in_use, bool_it
 
 class NetConfigDeviceGeneric:
     '''

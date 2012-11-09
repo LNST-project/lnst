@@ -18,8 +18,8 @@ import time
 import logging
 from tempfile import NamedTemporaryFile
 from xml.dom import minidom
-from ExecCmd import exec_cmd, ExecCmdFail
-from Common.NetUtils import normalize_hwaddr, scan_netdevs
+from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
+from lnst.Common.NetUtils import normalize_hwaddr, scan_netdevs
 
 class VirtUtilsError(Exception):
     pass

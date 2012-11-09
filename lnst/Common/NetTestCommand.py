@@ -16,7 +16,7 @@ import sys
 import signal
 import imp
 import pickle, traceback
-from Common.ExecCmd import exec_cmd, ExecCmdFail
+from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 
 def str_command(command):
     out = ("type (%s), machine_id (%s), value (%s)"

@@ -14,8 +14,8 @@ import os
 import logging
 from xml.dom.minidom import parseString
 from xml import sax
-from Common.XmlTemplates import XmlTemplates, XmlTemplateError
-from Common.RecipePath import RecipePath
+from lnst.Common.XmlTemplates import XmlTemplates, XmlTemplateError
+from lnst.Common.RecipePath import RecipePath
 
 
 class XmlProcessingError(Exception):

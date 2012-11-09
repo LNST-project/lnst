@@ -15,7 +15,7 @@ import re
 import os
 import hashlib
 import tempfile
-from ExecCmd import exec_cmd
+from lnst.Common.ExecCmd import exec_cmd
 
 def die_when_parent_die():
     try:

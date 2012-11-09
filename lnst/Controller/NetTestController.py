@@ -18,17 +18,18 @@ import re
 import pickle
 import tempfile
 from xmlrpclib import Binary
-from Common.Logs import Logs, log_exc_traceback
-from Common.SshUtils import scp_from_remote
 from pprint import pprint, pformat
-from Common.XmlRpc import ServerProxy, ServerException
-from NetTest.NetTestParse import NetTestParse
-from Common.SlaveUtils import prepare_client_session
-from Common.NetUtils import MacPool
-from NetTest.NetTestCommand import NetTestCommandContext, NetTestCommand, str_command
-from Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
-from Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
-from NetTest.MachinePool import MachinePool
+from lnst.Common.Logs import Logs, log_exc_traceback
+from lnst.Common.SshUtils import scp_from_remote
+from lnst.Common.XmlRpc import ServerProxy, ServerException
+from lnst.Common.SlaveUtils import prepare_client_session
+from lnst.Common.NetUtils import MacPool
+from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
+from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
+from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
+from lnst.Common.NetTestCommand import str_command
+from lnst.Controller.NetTestParse import NetTestParse
+from lnst.Controller.MachinePool import MachinePool
 
 class NetTestError(Exception):
     pass
@@ -306,7 +307,7 @@ class NetTestController:
         login = "root"
         rpc_port = self._config.get_option('environment', 'rpcport')
         session = prepare_client_session(hostname, port, login, passwd,
-                                         "nettestslave.py -p %s" % rpc_port)
+                                         "lnst-slave -p %s" % rpc_port)
         session.add_kill_handler(self._session_die)
         info["session"] = session
 

@@ -15,8 +15,9 @@ import sys
 import logging
 import re
 from ConfigParser import ConfigParser
-from NetTest.NetTestSlave import DefaultRPCPort
-from NetUtils import verify_ip_address, verify_mac_address
+from lnst.Common.NetUtils import verify_ip_address, verify_mac_address
+
+DefaultRPCPort = 9999
 
 class ConfigError(Exception):
     pass

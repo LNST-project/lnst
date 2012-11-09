@@ -11,8 +11,8 @@ jzupka@redhat.com (Jiri Zupka)
 """
 import pty, os, termios, time, signal, re, select
 import logging, atexit
-from Common.Utils import wait_for
-from Common.ProcessManager import ProcessManager
+from lnst.Common.Utils import wait_for
+from lnst.Common.ProcessManager import ProcessManager
 
 class ShellProcess:
     class ProcessError(Exception):

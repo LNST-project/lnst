@@ -12,10 +12,10 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import copy
-from NetConfigDevNames import NetConfigDevNames
-from NetConfigDevice import NetConfigDevice
-from NetConfigDevice import NetConfigDeviceType
-from NetConfigCommon import get_slaves
+from lnst.Slave.NetConfigDevNames import NetConfigDevNames
+from lnst.Slave.NetConfigDevice import NetConfigDevice
+from lnst.Slave.NetConfigDevice import NetConfigDeviceType
+from lnst.Slave.NetConfigCommon import get_slaves
 
 class NetConfig:
     def __init__(self):

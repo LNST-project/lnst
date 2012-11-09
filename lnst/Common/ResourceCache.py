@@ -14,8 +14,8 @@ import os
 import re
 import time
 import shutil
-from Common.Utils import md5sum
-from Common.ExecCmd import exec_cmd
+from lnst.Common.Utils import md5sum
+from lnst.Common.ExecCmd import exec_cmd
 
 class ResourceCacheError(Exception):
     pass
