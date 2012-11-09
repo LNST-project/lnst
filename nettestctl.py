@@ -106,7 +106,15 @@ def main():
         config.load_config(gitcfg)
     else:
         config.load_config('/etc/lnst-ctl.conf')
-        config.load_config('~/.lnst/lnst-ctl.conf')
+        usr_cfg = os.path.expanduser('~/.lnst/lnst-ctl.conf')
+        if os.path.isfile(usr_cfg):
+            config.load_config(usr_cfg)
+        else:
+            if not os.path.isdir(os.path.dirname(usr_cfg)):
+                os.makedirs(os.path.dirname(usr_cfg))
+            with open(usr_cfg, 'w') as f:
+                f.write(config.dump_config())
+
 
     debug = 0
     recipe_path = None
