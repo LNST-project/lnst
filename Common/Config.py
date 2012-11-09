@@ -218,3 +218,25 @@ class Config():
             raise ConfigError(msg)
 
         return timeval
+
+    def dump_config(self):
+        string = ""
+        for section in self.options:
+            string += "[%s]\n" % section
+            for option in self.options[section]:
+                val = self.value_to_string(section, option)
+                opt_name = self.options[section][option]["name"]
+                string += "%s = %s\n" % (opt_name, val)
+
+        return string
+
+    def value_to_string(self, section, option):
+        string = ""
+        value = self.options[section][option]["value"]
+
+        if type(value) == list:
+            string = " ".join(value)
+        else:
+            string = str(value)
+
+        return string
