@@ -30,33 +30,64 @@ class Config():
 
         self._scheme = scheme
         if self._scheme == "controller":
-            self.init_controller()
+            self.controller_scheme()
         elif self._scheme == "slave":
-            self.init_slave()
+            self.slave_scheme()
         else:
             msg = "Unknow scheme: '%s', can't set up configuration"\
                     % self._scheme
             raise ConfigError(msg)
 
-    def init_controller(self):
+    def controller_scheme(self):
         self.options['log'] = dict()
-        self.options['log']['path'] = os.path.abspath(os.path.join(
-                os.path.dirname(sys.argv[0]), './Logs'))
+        self.options['log']['path'] = {\
+                "value" : os.path.abspath(os.path.join(
+                    os.path.dirname(sys.argv[0]), './Logs')),
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "path"}
 
         self.options['environment'] = dict()
-        self.options['environment']['mac_pool_range'] = \
-                ['52:54:01:00:00:01', '52:54:01:FF:FF:FF']
-        self.options['environment']['rpcport'] = DefaultRPCPort
-        self.options['environment']['pool_dirs'] = []
-        self.options['environment']['tool_dirs'] = []
-        self.options['environment']['module_dirs'] = []
+        self.options['environment']['mac_pool_range'] = {\
+                "value" : ['52:54:01:00:00:01', '52:54:01:FF:FF:FF'],
+                "additive" : False,
+                "action" : self.optionMacRange,
+                "name" : "mac_pool_range"}
+        self.options['environment']['rpcport'] = {\
+                "value" : DefaultRPCPort,
+                "additive" : False,
+                "action" : self.optionPort,
+                "name" : "rpcport"}
+        self.options['environment']['pool_dirs'] = {\
+                "value" : [],
+                "additive" : True,
+                "action" : self.optionDirList,
+                "name" : "machine_pool_dirs"}
+        self.options['environment']['tool_dirs'] = {\
+                "value" : [],
+                "additive" : True,
+                "action" : self.optionDirList,
+                "name" : "test_tool_dirs"}
+        self.options['environment']['module_dirs'] = {\
+                "value" : [],
+                "additive" : True,
+                "action" : self.optionDirList,
+                "name" : "test_module_dirs"}
 
-    def init_slave(self):
+    def slave_scheme(self):
         self.options['cache'] = dict()
-        self.options['cache']['dir'] = os.path.abspath(os.path.join(
-                os.path.dirname(sys.argv[0]), './cache'))
+        self.options['cache']['dir'] = {\
+                "value" : os.path.abspath(os.path.join(
+                    os.path.dirname(sys.argv[0]), './cache')),
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "cache_dir"}
 
-        self.options['cache']['expiration_period'] = 7*24*60*60 # 1 week
+        self.options['cache']['expiration_period'] = {\
+                "value" : 7*24*60*60, # 1 week
+                "additive" : False,
+                "action" : self.optionTimeval,
+                "name" : "expiration_period"}
 
     def get_config(self):
         return self.options
@@ -72,7 +103,7 @@ class Config():
         if option not in sect:
             msg = 'Unknown option: %s in section: %s' % (option, section)
             raise ConfigError(msg)
-        return sect[option]
+        return sect[option]["value"]
 
     def load_config(self, path):
         '''Parse and load the config file'''
@@ -83,90 +114,51 @@ class Config():
 
         sections = parser._sections
 
-        if self._scheme == "controller":
-            self.sectionsCntl(sections, abs_path)
-        elif self._scheme == "slave":
-            self.sectionsSlave(sections, abs_path)
+        self.handleSections(sections, abs_path)
+
+    def handleSections(self, sections, path):
+        for section in sections:
+            if section in self.options:
+                self.handleOptions(section, sections[section], path)
+            else:
+                msg = "Unknown section: %s" % section
+                raise ConfigError(msg)
+
+    def handleOptions(self, section_name, config, cfg_path):
+        section = self.options[section_name]
+
+        config.pop('__name__', None)
+        for opt in config:
+            option = self._find_option_by_name(section, opt)
+            if option != None:
+                if option[1]: #additive?
+                    option[0]["value"] +=\
+                            option[0]["action"](config[opt], cfg_path)
+                else:
+                    option[0]["value"] =\
+                            option[0]["action"](config[opt], cfg_path)
+            else:
+                msg = "Unknown option: %s in section %s" % (opt, section_name)
+                raise ConfigError(msg)
+
+    def _find_option_by_name(self, section, opt_name):
+        match = re.match(r'^(\w*)(\s+\+)$', opt_name)
+        if match != None:
+            additive = True
+            opt_name = match.groups()[0]
         else:
-            msg = "Unknow scheme: '%s', can't parse sections." \
-                    % self._scheme
-            raise ConfigError(msg)
+            additive = False
 
-    def sectionsCntl(self, sections, path):
-        for section in sections:
-            if section == "log":
-                self.sectionLogs(sections[section], path)
-            elif section == "environment":
-                self.sectionEnvironment(sections[section], path)
-            else:
-                msg = "Unknown section: %s" % section
-                raise ConfigError(msg)
+        for option in section.itervalues():
+            if option["name"] == opt_name:
+                if (not option["additive"]) and additive:
+                    msg = "Operator += cannot be used in option %s" % opt_name
+                    raise ConfigError(msg)
+                return (option, additive)
 
-    def sectionsSlave(self, sections, path):
-        for section in sections:
-            if section == "cache":
-                self.sectionCache(sections[section], path)
-            else:
-                msg = "Unknown section: %s" % section
-                raise ConfigError(msg)
+        return None
 
-    def sectionLogs(self, config, cfg_path):
-        section = self.options['log']
-
-        config.pop('__name__', None)
-        for option in config:
-            if option == 'path':
-                section['path'] = self.optionPath(config[option], cfg_path)
-            else:
-                msg = "Unknown option: %s in section log" % option
-                raise ConfigError(msg)
-
-    def sectionCache(self, config, cfg_path):
-        section = self.options['cache']
-
-        config.pop('__name__', None)
-        for option in config:
-            if option == 'cache_dir':
-                section['dir'] = self.optionPath(config[option], cfg_path)
-            elif option == 'expiration_period':
-                value = self.optionTimeval(config[option])
-                section['expiration_period'] = value
-            else:
-                msg = "Unknown option: %s in section cache" % option
-                raise ConfigError(msg)
-
-    def sectionEnvironment(self, config, cfg_path):
-        section = self.options['environment']
-
-        config.pop('__name__', None)
-        for option in config:
-            if option == 'mac_pool_range':
-                section['mac_pool_range'] = self.optionMacRange(config[option])
-            elif option == 'rpcport':
-                section['rpcport'] = self.optionPort(config[option])
-            elif option == 'machine_pool_dirs':
-                section['pool_dirs'] = self.optionDirList(config[option],
-                                                           cfg_path)
-            elif re.match(r'^machine_pool_dirs\s+\+$', option):
-                section['pool_dirs'] += self.optionDirList(config[option],
-                                                           cfg_path)
-            elif option == 'test_module_dirs':
-                section['module_dirs'] = self.optionDirList(config[option],
-                                                           cfg_path)
-            elif re.match(r'^test_module_dirs\s+\+$', option):
-                section['module_dirs'] += self.optionDirList(config[option],
-                                                           cfg_path)
-            elif option == 'test_tool_dirs':
-                section['tool_dirs'] = self.optionDirList(config[option],
-                                                           cfg_path)
-            elif re.match(r'^test_tool_dirs\s+\+$', option):
-                section['tool_dirs'] += self.optionDirList(config[option],
-                                                           cfg_path)
-            else:
-                msg = "Unknown option: %s in section environment" % option
-                raise ConfigError(msg)
-
-    def optionPort(self, option):
+    def optionPort(self, option, cfg_path):
         try:
             int(option)
         except ValueError:
@@ -180,7 +172,7 @@ class Config():
         norm_path = os.path.normpath(abs_path)
         return norm_path
 
-    def optionMacRange(self, option):
+    def optionMacRange(self, option, cfg_path):
         vals = option.split()
         if len(vals) != 2:
             msg = "Option mac_pool_range expects 2"\
@@ -206,7 +198,7 @@ class Config():
 
         return dirs
 
-    def optionTimeval(self, option):
+    def optionTimeval(self, option, cfg_path):
         timeval_re = "^(([0-9]+)days?)?\s*(([0-9]+)hours?)?\s*" \
                      "(([0-9]+)minutes?)?\s*(([0-9]+)seconds?)?$"
         timeval_match = re.match(timeval_re, option)
