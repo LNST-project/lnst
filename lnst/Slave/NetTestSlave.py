@@ -150,7 +150,6 @@ class NetTestSlaveXMLRPC:
         NetConfigDeviceAllCleanup()
         self._netconfig.cleanup()
         self._command_context.cleanup()
-        self.reset_resource_table()
         self._cache.del_old_entries()
         return True
 
