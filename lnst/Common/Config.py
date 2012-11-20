@@ -40,14 +40,6 @@ class Config():
             raise ConfigError(msg)
 
     def controller_scheme(self):
-        self.options['log'] = dict()
-        self.options['log']['path'] = {\
-                "value" : os.path.abspath(os.path.join(
-                    os.path.dirname(sys.argv[0]), './Logs')),
-                "additive" : False,
-                "action" : self.optionPath,
-                "name" : "path"}
-
         self.options['environment'] = dict()
         self.options['environment']['mac_pool_range'] = {\
                 "value" : ['52:54:01:00:00:01', '52:54:01:FF:FF:FF'],
@@ -74,6 +66,12 @@ class Config():
                 "additive" : True,
                 "action" : self.optionDirList,
                 "name" : "test_module_dirs"}
+        self.options['environment']['log_dir'] = {\
+                "value" : os.path.abspath(os.path.join(
+                    os.path.dirname(sys.argv[0]), './Logs')),
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "log_dir"}
 
     def slave_scheme(self):
         self.options['cache'] = dict()

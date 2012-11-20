@@ -136,7 +136,7 @@ def main():
             packet_capture = True
 
 
-    Logs(debug, log_folder=config.get_option('log', 'path'))
+    Logs(debug, log_folder=config.get_option('environment', 'log_dir'))
 
     if not args:
         logging.error("No action command passed")
