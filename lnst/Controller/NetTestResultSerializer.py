@@ -12,7 +12,7 @@ jpirko@redhat.com (Jiri Pirko)
 """
 
 from xml.dom.minidom import getDOMImplementation
-from lnst.Controller.NetTestCommand import str_command
+from lnst.Common.NetTestCommand import str_command
 
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):

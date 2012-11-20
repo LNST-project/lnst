@@ -13,7 +13,7 @@ rpazdera@redhat.com (Radek Pazdera)
 import logging
 import re
 from lnst.Common.TestsCommon import TestGeneric
-from lnst.Controller.NetTestCommand import CommandException
+from lnst.Common.NetTestCommand import CommandException
 from lnst.Common.ExecCmd import exec_cmd
 
 class TestMulticast(TestGeneric):
