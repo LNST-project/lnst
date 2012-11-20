@@ -22,7 +22,6 @@ from pprint import pprint, pformat
 from lnst.Common.Logs import Logs, log_exc_traceback
 from lnst.Common.SshUtils import scp_from_remote
 from lnst.Common.XmlRpc import ServerProxy, ServerException
-from lnst.Common.SlaveUtils import prepare_client_session
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
@@ -38,9 +37,8 @@ def ignore_event(**kwarg):
     pass
 
 class NetTestController:
-    def __init__(self, recipe_path, remoteexec=False, cleanup=False,
+    def __init__(self, recipe_path, cleanup=False,
                  res_serializer=None, config=None):
-        self._remoteexec = remoteexec
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
@@ -240,9 +238,6 @@ class NetTestController:
             domain_ctl = VirtDomainCtl(info["libvirt_domain"])
             info["virt_domain_ctl"] = domain_ctl
 
-        if self._remoteexec and not "session" in info:
-            self._init_slave_session(machine_id)
-
         if not "rpc" in info:
             self._init_slave_logging(machine_id)
             self._init_slave_rpc(machine_id)
@@ -293,23 +288,6 @@ class NetTestController:
 
         if self._docleanup:
             self._rpc_call(machine_id, 'machine_cleanup')
-
-    def _init_slave_session(self, machine_id):
-        info = self._get_machineinfo(machine_id)
-        hostname = info["hostname"]
-        if "rootpass" in info:
-            passwd = info["rootpass"]
-        else:
-            passwd = ''
-        logging.info("Executing nettestslave on machine %s", hostname)
-
-        port = "22"
-        login = "root"
-        rpc_port = self._config.get_option('environment', 'rpcport')
-        session = prepare_client_session(hostname, port, login, passwd,
-                                         "lnst-slave -p %s" % rpc_port)
-        session.add_kill_handler(self._session_die)
-        info["session"] = session
 
     def _init_slave_rpc(self, machine_id):
         info = self._get_machineinfo(machine_id)
@@ -379,9 +357,6 @@ class NetTestController:
             return
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
-            if self._remoteexec and "session" in info:
-                info["session"].kill()
-                info["session"].wait()
 
     def _prepare(self):
         # All the perparations are made within the recipe parsing

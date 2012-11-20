@@ -36,17 +36,14 @@ def usage():
           "                                          network communication during\n" \
           "                                          the test"
     print "  -h, --help                              print this message"
-    print "  -e, --remoteexec                        transfer and execute\n" \
-          "                                          application on slaves"
     print "  -c, --cleanup                           perform config cleanup\n" \
           "                                          machines"
     print "  -x, --result=FILE                       file to write xml_result"
     sys.exit()
 
-def process_recipe(action, file_path, remoteexec, cleanup, res_serializer,
+def process_recipe(action, file_path, cleanup, res_serializer,
                    packet_capture, config):
-    nettestctl = NetTestController(file_path,
-                                   remoteexec=remoteexec, cleanup=cleanup,
+    nettestctl = NetTestController(file_path, cleanup=cleanup,
                                    res_serializer=res_serializer, config=config)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
@@ -68,14 +65,14 @@ def print_summary(summary):
         logging.info("*%s* %s" % (res, recipe_file))
     logging.info("=====================================================")
 
-def get_recipe_result(args, file_path, remoteexec, cleanup,
+def get_recipe_result(args, file_path, cleanup,
                       res_serializer, packet_capture, config):
     res_serializer.add_recipe(file_path)
     Logs.set_logging_root_path(file_path)
 
     res = None
     try:
-        res = process_recipe(args, file_path, remoteexec, cleanup,
+        res = process_recipe(args, file_path, cleanup,
                 res_serializer, packet_capture, config)
     except NetTestError as err:
         logging.error(err)
@@ -89,8 +86,8 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:ecx:p",
-            ["debug", "help", "recipe=", "remoteexec", "cleanup", "result=",
+            "dhr:cx:p",
+            ["debug", "help", "recipe=", "cleanup", "result=",
              "packet_capture"]
         )
     except getopt.GetoptError as err:
@@ -117,7 +114,6 @@ def main():
 
     debug = 0
     recipe_path = None
-    remoteexec = False
     cleanup = False
     result_path = None
     packet_capture = False
@@ -126,8 +122,6 @@ def main():
             debug += 1
         elif opt in ("-h", "--help"):
             usage()
-        elif opt in ("-e", "--remoteexec"):
-            remoteexec = True
         elif opt in ("-c", "--cleanup"):
             cleanup = True
         elif opt in ("-x", "--result"):
@@ -160,13 +154,13 @@ def main():
                 if re.match(r'^.*\.xml$', recipe_file):
                     logging.info("Processing recipe file \"%s\"" % recipe_file)
                     summary.append(get_recipe_result(action, recipe_file,
-                                                     remoteexec, cleanup,
+                                                     cleanup,
                                                      res_serializer,
                                                      packet_capture,
                                                      config))
                     Logs.set_logging_root_path(clean=False)
         else:
-            summary.append(get_recipe_result(action, recipe_path, remoteexec,
+            summary.append(get_recipe_result(action, recipe_path,
                                              cleanup, res_serializer,
                                              packet_capture,
                                              config))
