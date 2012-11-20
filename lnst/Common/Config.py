@@ -74,6 +74,14 @@ class Config():
                 "name" : "log_dir"}
 
     def slave_scheme(self):
+        self.options['environment'] = dict()
+        self.options['environment']['log_dir'] = {\
+                "value" : os.path.abspath(os.path.join(
+                    os.path.dirname(sys.argv[0]), './Logs')),
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "log_dir"}
+
         self.options['cache'] = dict()
         self.options['cache']['dir'] = {\
                 "value" : os.path.abspath(os.path.join(

@@ -72,7 +72,7 @@ def main():
         elif opt in ("-p", "--port"):
             port = int(arg)
 
-    Logs(debug, True)
+    Logs(debug, True, log_folder=config.get_option('environment', 'log_dir'))
     logging.info("Started")
 
     if port:
