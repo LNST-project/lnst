@@ -1,0 +1,45 @@
+#This file is used for system-wide controller configuration. It serves mainly
+#to set the default values which will be used when no user configuration is
+#found. Users should set their own configuration in the file
+# $HOME$/.lnst/lnst-ctl.conf which will be automatically created when it
+#doesn't exist.
+
+#The section environment contains generic options mostly related to the
+#machine the controller is being run on.
+[environment]
+
+#mac_pool_range is used to specify the range of mac addresses that
+#will be used when creating new devices in virtual machines.
+#The option accepts two valid mac addresses separated by white spaces.
+mac_pool_range = 52:54:01:00:00:01 52:54:01:FF:FF:FF
+
+#The rpcport options specifies the default port we will be connecting to, when
+#connecting to slave rpc servers.
+#The option accepts a single integer value.
+rpcport = 9999
+
+#machine_pool_dirs specifies where the controller should look for specifications
+#of machines that can be used for matching templates inside recipes. This
+#option accepts a variable number of directory paths separated by white spaces.
+#It is also important to note that you can use the operator += to add to the
+#list of directories. If the operator = is used, the previous list is replaced.
+machine_pool_dirs =
+
+#test_tool_dirs specifies where the controller looks for custom tools that
+#are used in tests. Every tool has it's own subdirectory in one of the
+#directories in this list. The option behaves the same way as the option
+#machine_pool_dirs, it accepts a list of directory paths and both operators,
+# += and = can be used
+test_tool_dirs = @test_tool_dirs@
+
+#test_module_dirs specifies where the controller looks for custom test modules
+#the test modules need to be named Test<name>.py otherwise they won't be
+#recognized. The behaviour of the option is the same as test_tool_dirs, it
+#accepts a list of directory paths and both operators, += and = can be used.
+test_module_dirs = @test_module_dirs@
+
+#log_dir option redirects the location of where logs are stored. Every run of
+#the application creates its own timestamped subdirectory in the path specified
+#in this option. The option accepts one directory path that will be created if
+#it doesn't exist. You cannot use the operator += here.
+log_dir = @log_dir@
