@@ -30,16 +30,16 @@ machine_pool_dirs =
 #directories in this list. The option behaves the same way as the option
 #machine_pool_dirs, it accepts a list of directory paths and both operators,
 # += and = can be used
-test_tool_dirs = @test_tool_dirs@
+test_tool_dirs = @ctl_tools_locations@
 
 #test_module_dirs specifies where the controller looks for custom test modules
 #the test modules need to be named Test<name>.py otherwise they won't be
 #recognized. The behaviour of the option is the same as test_tool_dirs, it
 #accepts a list of directory paths and both operators, += and = can be used.
-test_module_dirs = @test_module_dirs@
+test_module_dirs = @ctl_modules_locations@
 
 #log_dir option redirects the location of where logs are stored. Every run of
 #the application creates its own timestamped subdirectory in the path specified
 #in this option. The option accepts one directory path that will be created if
 #it doesn't exist. You cannot use the operator += here.
-log_dir = @log_dir@
+log_dir = @ctl_logs_dir@

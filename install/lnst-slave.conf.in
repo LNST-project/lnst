@@ -9,7 +9,7 @@
 
 #cache_dir option specifies where the slave shoud store the transfered files.
 #The option accepts one directory path.
-cache_dir = @cache_dir@
+cache_dir = @slave_cache_dir@
 
 #expiration_period specifies for how long we keep the files stored. If a file
 #has not been used for longer than the specified duration it will be removed
@@ -24,4 +24,4 @@ expiration_period = 7days
 #a test creates its own timestamped subdirectory in the path specified
 #in this option.
 #The option accepts one directory path that will be created if it doesn't exist.
-log_dir = @log_dir@
+log_dir = @slave_logs_dir@
