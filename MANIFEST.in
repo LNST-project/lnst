@@ -1,0 +1,6 @@
+include COPYING
+recursive-include recipes *.xml
+
+include install/*.in
+exclude install/*.conf
+exclude install/*.gz
