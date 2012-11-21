@@ -1,0 +1,12 @@
+[Unit]
+Description=Linux Network Stack Test - slave daemon
+Documentation=man:lnst-slave(1) http://fedorahosted.org/lnst
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/lnst-slave
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
