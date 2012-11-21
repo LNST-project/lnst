@@ -554,12 +554,9 @@ class CommandParse(RecipeParser):
         recipe["sequences"][self._seq_num]["commands"].append(command)
         self._cmd_num = len(recipe["sequences"][self._seq_num]["commands"]) - 1
 
-        if self._has_attribute(node, "machine_id"):
-            machine_id = self._get_attribute(node, "machine_id")
-            if machine_id and not machine_id in recipe["machines"]:
-                raise XmlProcessingError("Invalid machine_id", node)
-        else:
-            machine_id = "0" # controller id
+        machine_id = self._get_attribute(node, "machine_id")
+        if machine_id and not machine_id in recipe["machines"]:
+            raise XmlProcessingError("Invalid machine_id", node)
 
         command["machine_id"] = machine_id
         command["type"]  = self._get_attribute(node, "type")
