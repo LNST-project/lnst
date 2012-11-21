@@ -24,13 +24,13 @@ def usage():
     """
     Print usage of this app
     """
-    print "Usage: nettestslave.py [OPTION...]"
+    print "Usage: %s [OPTION...]" % sys.argv[0]
     print ""
-    print "  -d, --debug                             emit debugging messages"
-    print "  -h, --help                              print this message"
-    print "  -e, --daemonize                         go to background after init"
-    print "  -i, --pidfile                           file to write daemonized process pid"
-    print "  -p, --port                              xmlrpc port"
+    print "  -d, --debug                emit debugging messages"
+    print "  -h, --help                 print this message"
+    print "  -e, --daemonize            go to background after init"
+    print "  -i, --pidfile              file to write daemonized process pid"
+    print "  -p, --port                 xmlrpc port to listen on"
     sys.exit()
 
 def main():

@@ -25,20 +25,19 @@ def usage():
     """
     Print usage of this app
     """
-    print "Usage:"
-    print "nettestctl.py [OPTION...] [RECIPE...] ACTION"
+    print "Usage: %s [OPTION...] [RECIPE...] ACTION" % sys.argv[0]
     print ""
     print "ACTION = [run | dump | config_only]"
     print ""
-    print "options:"
-    print "  -d, --debug                             emit debugging messages"
-    print "  -p, --packet_capture                    capture and log all ongoing\n" \
-          "                                          network communication during\n" \
-          "                                          the test"
-    print "  -h, --help                              print this message"
-    print "  -c, --cleanup                           perform config cleanup\n" \
-          "                                          machines"
-    print "  -x, --result=FILE                       file to write xml_result"
+    print "OPTIONS"
+    print "  -d, --debug                     emit debugging messages"
+    print "  -p, --packet_capture            capture and log all ongoing\n" \
+          "                                  network communication during\n" \
+          "                                  the test"
+    print "  -h, --help                      print this message"
+    print "  -c, --cleanup                   perform config cleanup\n" \
+          "                                  machines"
+    print "  -x, --result=FILE               file to write xml_result"
     sys.exit()
 
 def process_recipe(action, file_path, cleanup, res_serializer,
