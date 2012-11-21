@@ -33,7 +33,7 @@ class ResourceCache(object):
             else:
                 raise ResourceCacheError("Invalid cache path (%s)" % cache_path)
         else:
-            os.mkdir(cache_path)
+            os.makedirs(cache_path)
             self._root = cache_path
 
         self._read_index()
