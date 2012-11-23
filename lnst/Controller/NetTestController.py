@@ -246,6 +246,9 @@ class NetTestController:
             self._rpc_call(machine_id, "clear_resource_table")
             required = self._resource_table
 
+        if self._docleanup:
+            self._rpc_call(machine_id, 'machine_cleanup')
+
         for res_type, resources in self._resource_table.iteritems():
             for res_name, res in resources.iteritems():
                 has_resource = self._rpc_call(machine_id, "has_resource",
@@ -284,9 +287,6 @@ class NetTestController:
             logging.info("Initializing provisioned system (%s)" % prov_id)
             for device in provisioner["netdevices"].itervalues():
                 self._rpc_call(machine_id, 'set_device_down', device["hwaddr"])
-
-        if self._docleanup:
-            self._rpc_call(machine_id, 'machine_cleanup')
 
     def _init_slave_rpc(self, machine_id):
         info = self._get_machineinfo(machine_id)
