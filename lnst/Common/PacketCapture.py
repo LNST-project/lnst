@@ -50,8 +50,8 @@ class PacketCapture:
         output_file = self._file
         pcap_filter = self._filter
 
-        self._cmd = "tcpdump -p -i %s -w %s \"%s\"" % (interface, output_file,
-                                                        pcap_filter)
+        self._cmd = "tcpdump -p -i %s -w %s \"%s\" 2>/dev/null" % \
+                            (interface, output_file, pcap_filter)
 
     def _execute_tcpdump(self):
         """ Start tcpdump in the background """
