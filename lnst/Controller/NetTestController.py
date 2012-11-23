@@ -20,7 +20,6 @@ import tempfile
 from xmlrpclib import Binary
 from pprint import pprint, pformat
 from lnst.Common.Logs import Logs, log_exc_traceback
-from lnst.Common.SshUtils import scp_from_remote
 from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
@@ -490,7 +489,7 @@ class NetTestController:
             self._rpc_call(machine_id, 'stop_packet_capture')
 
     def _gather_capture_files(self):
-        logging_root = Logs.get_logging_root_path()
+        logging_root = self._log_root_path
         logging_root = os.path.abspath(logging_root)
         logging.info("Retrieving capture files from slaves")
         for machine_id in self._recipe["machines"]:
@@ -510,8 +509,7 @@ class NetTestController:
             for remote_path in capture_files:
                 filename = os.path.basename(remote_path)
                 local_path = os.path.join(slave_logging_dir, filename)
-                scp_from_remote(hostname, "22", "root", rootpass,
-                                    remote_path, local_path)
+                self._copy_from_slave(machine_id, remote_path, local_path)
 
     def _update_system_config(self, machine_id, res_data, persistent=False):
         info = self._get_machineinfo(machine_id)
@@ -568,7 +566,7 @@ class NetTestController:
             logger.handle(record)
 
     def _copy_to_slave(self, local_path, machine_id, remote_path=None):
-        self._rpc_call(machine_id, "start_copy", remote_path)
+        remote_path = self._rpc_call(machine_id, "start_copy_to", remote_path)
         f = open(local_path, "r+b")
 
         while True:
@@ -576,11 +574,28 @@ class NetTestController:
             if len(data) == 0:
                 break
 
-            self._rpc_call(machine_id, "copy_part", Binary(data))
+            self._rpc_call(machine_id, "copy_part_to",
+                                remote_path, Binary(data))
 
-        # return remote path
-        rpath = self._rpc_call(machine_id, "finish_copy")
-        return rpath
+        self._rpc_call(machine_id, "finish_copy_to", remote_path)
+        return remote_path
+
+    def _copy_from_slave(self, machine_id, remote_path, local_path):
+        status = self._rpc_call(machine_id, "start_copy_from", remote_path)
+        if not status:
+            raise NetTestError("The requested file cannot be transfered." \
+                       "It file does not exist on machine %d" % machine_id)
+
+        local_file = open(local_path, "wb")
+
+        binary = "next"
+        while binary != "":
+            binary = self._rpc_call(machine_id, "copy_part_from",
+                                        remote_path, 1024*1024) # 1MB buffer
+            local_file.write(binary.data)
+
+        local_file.close()
+        self._rpc_call(machine_id, "finish_copy_from", remote_path)
 
     def _load_test_modules(self, dirs):
         modules = {}

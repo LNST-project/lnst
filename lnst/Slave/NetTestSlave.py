@@ -14,6 +14,7 @@ jpirko@redhat.com (Jiri Pirko)
 import signal
 import select, logging
 import os
+from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from lnst.Common.Logs import Logs, log_exc_traceback
@@ -40,7 +41,8 @@ class NetTestSlaveXMLRPC:
         self._netconfig = NetConfig()
         self._command_context = command_context
 
-        self._copy_target = None
+        self._copy_targets = {}
+        self._copy_sources = {}
 
         self._cache = ResourceCache(config.get_option("cache", "dir"),
                         config.get_option("cache", "expiration_period"))
@@ -50,11 +52,13 @@ class NetTestSlaveXMLRPC:
     def hello(self):
         self.clear_resource_table()
         self._cache.del_old_entries()
+        self.reset_file_transfers()
         return "hello"
 
     def bye(self):
         self.clear_resource_table()
         self._cache.del_old_entries()
+        self.reset_file_transfers()
         return "bye"
 
     def get_new_logs(self):
@@ -153,33 +157,6 @@ class NetTestSlaveXMLRPC:
         self._cache.del_old_entries()
         return True
 
-    def start_copy(self, filename=None):
-        if self._copy_target:
-            return False
-
-        if filename:
-            self._copy_target = open(filename, "w+b")
-        else:
-            self._copy_target = NamedTemporaryFile("w+b", delete=False)
-
-        return True
-
-    def copy_part(self, binary_data):
-        if self._copy_target:
-            self._copy_target.write(binary_data.data)
-            return True
-
-        return False
-
-    def finish_copy(self):
-        if self._copy_target:
-            name = self._copy_target.name
-            del self._copy_target
-            self._copy_target = None
-            return name
-
-        return ""
-
     def clear_resource_table(self):
         self._resource_table = {}
         return True
@@ -205,6 +182,63 @@ class NetTestSlaveXMLRPC:
                                 res_hash, res_type):
         self._cache.add_cache_entry(file_hash, local_path, name, res_type)
         return True
+
+    def start_copy_to(self, filepath=None):
+        if filepath in self._copy_targets:
+            return ""
+
+        if filepath:
+            self._copy_targets[filepath] = open(filepath, "w+b")
+        else:
+            tmpfile = NamedTemporaryFile("w+b", delete=False)
+            filepath = tmpfile.name
+            self._copy_targets[filepath] = tmpfile
+
+        return filepath
+
+    def copy_part_to(self, filepath, binary_data):
+        if self._copy_targets[filepath]:
+            self._copy_targets[filepath].write(binary_data.data)
+            return True
+
+        return False
+
+    def finish_copy_to(self, filepath):
+        if self._copy_targets[filepath]:
+            self._copy_targets[filepath].close()
+
+            del self._copy_targets[filepath]
+            return True
+
+        return False
+
+    def start_copy_from(self, filepath):
+        if filepath in self._copy_sources or not os.path.exists(filepath):
+            return False
+
+        self._copy_sources[filepath] = open(filepath, "rb")
+        return True
+
+    def copy_part_from(self, filepath, buffsize):
+        data = Binary(self._copy_sources[filepath].read(buffsize))
+        return data
+
+    def finish_copy_from(self, filepath):
+        if filepath in self._copy_sources:
+            self._copy_sources[filepath].close()
+            del self._copy_sources[filepath]
+            return True
+
+        return False
+
+    def reset_file_transfers(self):
+        for file_handle in self._copy_targets.itervalues():
+            file_handle.close()
+        self._copy_targets = {}
+
+        for file_handle in self._copy_sources.itervalues():
+            file_handle.close()
+        self._copy_sources = {}
 
 class MySimpleXMLRPCServer(Server):
     def __init__(self, command_context, *args, **kwargs):
