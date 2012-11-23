@@ -17,6 +17,7 @@ import os
 import re
 import pickle
 import tempfile
+from time import sleep
 from xmlrpclib import Binary
 from pprint import pprint, pformat
 from lnst.Common.Logs import Logs, log_exc_traceback
@@ -377,6 +378,11 @@ class NetTestController:
             logging.info("Cmd description: %s", desc)
         except KeyError:
             pass
+
+        if command["type"] == "ctl_wait":
+            sleep(command["value"])
+            cmd_res = {"passed" : True}
+            return cmd_res
 
         if "timeout" in command:
             timeout = command["timeout"]

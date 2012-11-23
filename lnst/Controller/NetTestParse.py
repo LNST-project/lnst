@@ -551,12 +551,20 @@ class CommandParse(RecipeParser):
         recipe["sequences"][self._seq_num]["commands"].append(command)
         self._cmd_num = len(recipe["sequences"][self._seq_num]["commands"]) - 1
 
-        machine_id = self._get_attribute(node, "machine_id")
-        if machine_id and not machine_id in recipe["machines"]:
+        if self._has_attribute(node, "machine_id"):
+            machine_id = self._get_attribute(node, "machine_id")
+        else:
+            machine_id = None
+
+        if machine_id and machine_id not in recipe["machines"]:
             raise XmlProcessingError("Invalid machine_id", node)
 
         command["machine_id"] = machine_id
         command["type"]  = self._get_attribute(node, "type")
+
+        if (command["type"] != "ctl_wait" and not machine_id) or\
+           (machine_id and machine_id not in recipe["machines"]):
+            raise XmlProcessingError("Invalid machine_id", node)
 
         command["value"] = None
         if self._has_attribute(node, "value"):
@@ -583,6 +591,21 @@ class CommandParse(RecipeParser):
         elif command["type"] == "exec":
             if self._has_attribute(node, "from"):
                 command["from"] = self._get_attribute(node, "from")
+        elif command["type"] == "ctl_wait":
+            if command["machine_id"] != None:
+                msg = "Invalid attribute machine_id for command ctl_wait"
+                raise XmlProcessingError(msg, node)
+
+            try:
+                command["value"] = int(command["value"])
+            except ValueError:
+                msg = "Invalid value for command ctl_wait"
+                raise XmlProcessingError(msg, node)
+            for key in command.keys():
+                if key != "type" and key != "value" and\
+                        key != "desc" and key != "machine_id":
+                    msg = "Invalid attribute %s for command ctl_wait" % key
+                    raise XmlProcessingError(msg, node)
 
         scheme = {"options": self._options}
         self._process_child_nodes(node, scheme)
