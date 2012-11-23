@@ -119,7 +119,7 @@ class MachinePool:
         mcfg = dom.createElement("machineconfig")
 
         info = dom.createElement("info")
-        supported = ["hostname", "libvirt_domain", "rpcport", "rootpass"]
+        supported = ["hostname", "libvirt_domain", "rpcport"]
         for attr_name, attr_val in self._pool[pm_id]["info"].iteritems():
             if attr_name in supported:
                 info.setAttribute(attr_name, attr_val)

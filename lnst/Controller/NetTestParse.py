@@ -285,9 +285,6 @@ class MachineConfigParse(RecipeParser):
             info["libvirt_domain"] = self._get_attribute(node,
                                                 "libvirt_domain")
 
-        if self._has_attribute(node, "rootpass"):
-            info["rootpass"] = self._get_attribute(node, "rootpass")
-
         if self._has_attribute(node, "rpcport"):
             info["rpcport"] = self._get_attribute(node, "rpcport", int)
 

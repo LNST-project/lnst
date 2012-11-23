@@ -8,8 +8,8 @@ is available on LNST wiki page:
   <machines>
     <machine id="testmachine1">
       <machineconfig>
-        <!-- Change hostname and rootpass bellow -->
-        <info hostname="192.168.1.2" rootpass="r00t"/>
+        <!-- Change hostname bellow -->
+        <info hostname="192.168.1.2"/>
         <netdevices>
             <!-- Change hwaddr here -->
             <netdevice type="eth" network="tnet" hwaddr="52:54:01:00:00:05"
@@ -27,8 +27,8 @@ is available on LNST wiki page:
 
     <machine id="testmachine2">
       <machineconfig>
-        <!-- Change hostname and rootpass bellow -->
-        <info hostname="192.168.1.3" rootpass="r00t"/>
+        <!-- Change hostname bellow -->
+        <info hostname="192.168.1.3"/>
         <netdevices>
           <!-- Change hwaddr here -->
           <netdevice type="eth" network="tnet" hwaddr="52:54:01:00:00:06"

@@ -11,8 +11,7 @@
     <machines>
         <machine id="1">
             <machineconfig>
-                <info hostname="{$hostname1}" libvirt_domain="{$virtdomain1}"
-                      rootpass="redhat"/>
+                <info hostname="{$hostname1}" libvirt_domain="{$virtdomain1}"/>
                 <netdevices>
                     <libvirt_create>
                         <netdevice network="tnet" phys_id="1" type="eth"/>
@@ -35,8 +34,7 @@
         </machine>
         <machine id="2">
             <machineconfig>
-                <info hostname="{$hostname2}" libvirt_domain="{$virtdomain2}"
-                      rootpass="redhat"/>
+                <info hostname="{$hostname2}" libvirt_domain="{$virtdomain2}"/>
                 <netdevices>
                     <libvirt_create>
                         <netdevice network="tnet" phys_id="1" type="eth"/>

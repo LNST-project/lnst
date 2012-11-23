@@ -494,7 +494,6 @@ class NetTestController:
         logging.info("Retrieving capture files from slaves")
         for machine_id in self._recipe["machines"]:
             hostname = self._recipe["machines"][machine_id]['info']['hostname']
-            rootpass = self._recipe["machines"][machine_id]['info']['rootpass']
 
             slave_logging_dir = os.path.join(logging_root, hostname)
             try:
