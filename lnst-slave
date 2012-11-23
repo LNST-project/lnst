@@ -58,7 +58,7 @@ def main():
 
     debug = False
     daemon = False
-    pidfile = "nettestslave.pid"
+    pidfile = "lnst-slave.pid"
     port = None
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
