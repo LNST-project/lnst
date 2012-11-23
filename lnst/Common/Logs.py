@@ -151,11 +151,12 @@ class Logs:
     file_handlers = []
     formatter = None
     logFolder = None
-    logger = None
+    loggers = []
     root_path = None
     debug = None
     date = None
     nameExtend = None
+    state = None
     @classmethod
     def __init__(cls,debug=0, waitForNet=False, logger=logging.getLogger(),
                  recipe_path=None, to_display=True, date=None,
@@ -175,7 +176,7 @@ class Logs:
             cls.logFolder = log_folder
         else:
             cls.logFolder = os.path.join(os.path.dirname(sys.argv[0]), './Logs')
-        cls.logger = logger
+        cls.loggers.append(logger)
         cls.debug = debug
         if date is None:
             cls.date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
@@ -184,6 +185,23 @@ class Logs:
         cls.nameExtend = nameExtend
         cls.root_path = cls.prepare_logging(debug, waitForNet,
                                             recipe_path, to_display)
+
+    @classmethod
+    def save_state(cls):
+        cls.state = {"logFolder": cls.logFolder, "date": cls.date}
+
+    @classmethod
+    def reset_state(cls):
+        cls.logFolder = cls.state["logFolder"]
+        cls.date = cls.state["date"]
+
+        for logger in cls.loggers:
+            handlers = list(logger.handlers)
+            for handler in handlers:
+                if type(handler) == logging.FileHandler:
+                    logger.removeHandler(handler)
+
+        cls.loggers = cls.loggers[:1]
 
     @classmethod
     def clean_root_log_folder(cls, logRootPath):
@@ -204,8 +222,6 @@ class Logs:
         file_info.setFormatter(cls.formatter)
         file_info.setLevel(logging.INFO)
 
-        cls.file_handlers.append(file_debug)
-        cls.file_handlers.append(file_info)
         return (file_debug, file_info)
 
 
@@ -217,15 +233,17 @@ class Logs:
 
         if recipe_path is None:
             recipe_path = ""
-        root_logger = cls.logger
+        root_logger = cls.loggers[-1]
         recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
         cls.root_path = os.path.join(cls.logFolder, cls.date+cls.nameExtend,
                                     recipe_name)
         if (clean):
             cls.clean_root_log_folder(cls.root_path)
-        for fhandler in cls.file_handlers:
-            root_logger.removeHandler(fhandler)
-        del cls.file_handlers[:]
+
+        handlers = list(root_logger.handlers)
+        for handler in handlers:
+            if type(handler) == logging.FileHandler:
+                logger.removeHandler(handler)
 
         (file_debug, file_info) = cls._create_file_handler(cls.root_path)
         root_logger.addHandler(file_debug)
@@ -249,7 +267,7 @@ class Logs:
 
         @param debug: If True print to terminal debug level of logging messages.
         """
-        root_logger = cls.logger
+        root_logger = cls.loggers[-1]
         if to_display:
             display = logging.StreamHandler()
             display.setFormatter(cls.formatter)

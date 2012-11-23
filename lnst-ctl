@@ -140,6 +140,7 @@ def main():
     summary = []
 
     res_serializer = NetTestResultSerializer()
+    Logs.save_state()
     for recipe_path in args:
         if os.path.isdir(recipe_path):
             all_files = []
@@ -151,6 +152,7 @@ def main():
             for f in all_files:
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
+                    Logs.reset_state()
                     logging.info("Processing recipe file \"%s\"" % recipe_file)
                     summary.append(get_recipe_result(action, recipe_file,
                                                      cleanup,
@@ -159,11 +161,13 @@ def main():
                                                      config))
                     Logs.set_logging_root_path(clean=False)
         else:
+            Logs.reset_state()
             summary.append(get_recipe_result(action, recipe_path,
                                              cleanup, res_serializer,
                                              packet_capture,
                                              config))
 
+    Logs.reset_state()
     Logs.set_logging_root_path(clean=False)
 
     print_summary(summary)
