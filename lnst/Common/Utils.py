@@ -15,6 +15,7 @@ import re
 import os
 import hashlib
 import tempfile
+import subprocess
 from lnst.Common.ExecCmd import exec_cmd
 
 def die_when_parent_die():
@@ -148,3 +149,10 @@ def has_changed_since(filepath, threshold):
 def _is_newer_than(f, threshold):
     stat = os.stat(f)
     return stat.st_mtime > threshold
+
+def check_process_running(process_name):
+    try:
+        proc = subprocess.check_call(["pgrep", process_name])
+        return True
+    except subprocess.CalledProcessError:
+        return False

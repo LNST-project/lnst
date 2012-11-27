@@ -28,6 +28,7 @@ from lnst.Common.NetTestCommand import NetTestCommandContext
 from lnst.Common.NetTestCommand import CommandException, NetTestCommand
 from lnst.Slave.NetConfig import NetConfig
 from lnst.Slave.NetConfigDevice import NetConfigDeviceAllCleanup
+from lnst.Common.Utils import check_process_running
 
 DefaultRPCPort = 9999
 
@@ -53,6 +54,12 @@ class NetTestSlaveXMLRPC:
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
+
+        if check_process_running("NetworkManager"):
+            logging.error("=============================================")
+            logging.error("NetworkManager is running on a slave machine!")
+            logging.error("This might effect test results!")
+            logging.error("=============================================")
         return "hello"
 
     def bye(self):
