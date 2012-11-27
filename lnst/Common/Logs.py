@@ -198,7 +198,7 @@ class Logs:
         for logger in cls.loggers:
             handlers = list(logger.handlers)
             for handler in handlers:
-                if type(handler) == logging.FileHandler:
+                if isinstance(handler, logging.FileHandler):
                     logger.removeHandler(handler)
 
         cls.loggers = cls.loggers[:1]
@@ -242,8 +242,8 @@ class Logs:
 
         handlers = list(root_logger.handlers)
         for handler in handlers:
-            if type(handler) == logging.FileHandler:
-                logger.removeHandler(handler)
+            if isinstance(handler, logging.FileHandler):
+                root_logger.removeHandler(handler)
 
         (file_debug, file_info) = cls._create_file_handler(cls.root_path)
         root_logger.addHandler(file_debug)
