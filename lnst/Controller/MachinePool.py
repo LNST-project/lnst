@@ -33,7 +33,10 @@ class MachinePool:
     _machine_matches = []
     _network_matches = []
 
-    def __init__(self, pool_dirs):
+    _allow_virtual = False
+
+    def __init__(self, pool_dirs, allow_virtual=False):
+        self._allow_virtual = allow_virtual
         for pool_dir in pool_dirs:
             self.add_dir(pool_dir)
 
@@ -62,7 +65,8 @@ class MachinePool:
             machine["dom_node_ref"] = machineconfig
 
             parser.parse(machineconfig)
-            self._pool[machine_id] = machine
+            if 'libvirt_domain' not in machine['info'] or self._allow_virtual:
+                self._pool[machine_id] = machine
 
     def provision_setup(self, setup_requirements):
         """

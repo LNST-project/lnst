@@ -152,7 +152,8 @@ def _is_newer_than(f, threshold):
 
 def check_process_running(process_name):
     try:
-        proc = subprocess.check_call(["pgrep", process_name])
+        proc = subprocess.check_call(["pgrep", process_name],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return True
     except subprocess.CalledProcessError:
         return False

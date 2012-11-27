@@ -25,6 +25,7 @@ from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
+from lnst.Common.Utils import check_process_running
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command
 from lnst.Controller.NetTestParse import NetTestParse
@@ -44,8 +45,13 @@ class NetTestController:
         self._remote_capture_files = {}
         self._config = config
         self._log_root_path = Logs.get_logging_root_path()
-        self._machine_pool = MachinePool(config.get_option('environment',
-                                                            'pool_dirs'))
+
+        if check_process_running("libvirtd"):
+            self._machine_pool = MachinePool(config.get_option('environment',
+                                'pool_dirs'), allow_virtual=True)
+        else:
+            self._machine_pool = MachinePool(config.get_option('environment',
+                                'pool_dirs'), allow_virtual=False)
 
         self._recipe = {}
         definitions = {"recipe": self._recipe}
