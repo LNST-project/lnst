@@ -40,6 +40,10 @@ class LogBuffer(logging.Handler):
         s = pickle.dumps(d, 1)
         return xmlrpclib.Binary(s)
 
+    def add_buffer(self, buf):
+        for i in buf:
+            self.buffer.append(i)
+
     def emit(self, record):
         s = self.makePickle(record)
         self.buffer.append(s)

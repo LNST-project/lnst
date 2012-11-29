@@ -16,6 +16,7 @@ import sys
 import signal
 import imp
 import pickle, traceback
+from lnst.Common.Logs import Logs
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 
 def str_command(command):
@@ -64,6 +65,7 @@ class BgCommand:
                           " id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
             self._read_pipe = read_pipe
             return {"passed": True}
+        Logs.get_buffer().flush()
         os.close(read_pipe)
         os.setpgrp()
         self._cmd_cls.set_handle_intr()
@@ -75,6 +77,8 @@ class BgCommand:
         except:
             type, value, tb = sys.exc_info()
             result = {"Exception": ''.join(traceback.format_exception(type, value, tb))}
+        buf = Logs.get_buffer()
+        result["logs"] = buf.flush()
         tmp = pickle.dumps(result)
         os.write(write_pipe, tmp)
         os.close(write_pipe)
@@ -255,6 +259,10 @@ class NetTestCommandWait(NetTestCommandControl):
         bg_cmd.wait_for()
         result = bg_cmd.get_result()
         self._command_context.del_bg_cmd(bg_cmd)
+        buf = Logs.get_buffer()
+        logs = result["logs"]
+        buf.add_buffer(logs)
+        del result["logs"]
         self.set_result(result)
 
 class NetTestCommandIntr(NetTestCommandControl):
@@ -264,6 +272,10 @@ class NetTestCommandIntr(NetTestCommandControl):
         bg_cmd.interrupt()
         result = bg_cmd.get_result()
         self._command_context.del_bg_cmd(bg_cmd)
+        buf = Logs.get_buffer()
+        logs = result["logs"]
+        buf.add_buffer(logs)
+        del result["logs"]
         self.set_result(result)
 
 class NetTestCommandKill(NetTestCommandControl):
@@ -271,7 +283,11 @@ class NetTestCommandKill(NetTestCommandControl):
         bg_id = self._command["value"]
         bg_cmd = self._command_context.get_bg_cmd(bg_id)
         bg_cmd.kill()
+        result = bg_cmd.get_result()
         self._command_context.del_bg_cmd(bg_cmd)
+        buf = Logs.get_buffer()
+        logs = result["logs"]
+        buf.add_buffer(logs)
         self.set_result({"passed": True})
 
 def get_command_class(command_context, command, resource_table):
