@@ -66,6 +66,7 @@ class NetTestSlaveXMLRPC:
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
+        self._remove_capture_files()
         return "bye"
 
     def get_new_logs(self):
@@ -117,14 +118,15 @@ class NetTestSlaveXMLRPC:
         return self._netconfig.dump_config().items()
 
     def start_packet_capture(self, filt):
-        logging_dir = Logs.get_logging_root_path()
-        logging_dir = os.path.abspath(logging_dir)
         netconfig = self._netconfig.dump_config()
 
-        files = []
+        files = {}
         for dev_id, dev_spec in netconfig.iteritems():
-            dump_file = os.path.join(logging_dir, "%s.pcap" % dev_id)
-            files.append(dump_file)
+            df_handle = NamedTemporaryFile(delete=False)
+            dump_file = df_handle.name
+            df_handle.close()
+
+            files[dev_id] = dump_file
 
             pcap = PacketCapture()
             pcap.set_interface(dev_spec["name"])
@@ -134,6 +136,7 @@ class NetTestSlaveXMLRPC:
 
             self._packet_captures[dev_id] = pcap
 
+        self._capture_files = files
         return files
 
     def stop_packet_capture(self):
@@ -143,6 +146,11 @@ class NetTestSlaveXMLRPC:
             pcap.stop()
 
         return True
+
+    def _remove_capture_files(self):
+        for name in self._capture_files.itervalues():
+            logging.debug("Removing temporary packet capture file %s", name)
+            os.unlink(name)
 
     def run_command(self, command):
         try:

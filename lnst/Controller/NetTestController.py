@@ -507,7 +507,7 @@ class NetTestController:
         for machine_id in self._recipe["machines"]:
             hostname = self._recipe["machines"][machine_id]['info']['hostname']
 
-            slave_logging_dir = os.path.join(logging_root, hostname)
+            slave_logging_dir = os.path.join(logging_root, hostname + "/")
             try:
                 os.mkdir(slave_logging_dir)
             except OSError as err:
@@ -517,10 +517,13 @@ class NetTestController:
                     raise NetTestError(msg)
 
             capture_files = self._remote_capture_files[machine_id]
-            for remote_path in capture_files:
-                filename = os.path.basename(remote_path)
+            for dev_id, remote_path in capture_files.iteritems():
+                filename = "%s.pcap" % dev_id
                 local_path = os.path.join(slave_logging_dir, filename)
                 self._copy_from_slave(machine_id, remote_path, local_path)
+
+            logging.info("pcap files from machine %s stored at %s",
+                            machine_id, slave_logging_dir)
 
     def _update_system_config(self, machine_id, res_data, persistent=False):
         info = self._get_machineinfo(machine_id)
@@ -595,7 +598,7 @@ class NetTestController:
         status = self._rpc_call(machine_id, "start_copy_from", remote_path)
         if not status:
             raise NetTestError("The requested file cannot be transfered." \
-                       "It file does not exist on machine %d" % machine_id)
+                       "It does not exist on machine %s" % machine_id)
 
         local_file = open(local_path, "wb")
 
