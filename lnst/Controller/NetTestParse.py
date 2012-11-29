@@ -82,13 +82,13 @@ class FirstPass(RecipeParser):
         self._recipe["provisioning"]["setup_requirements"] = {}
 
         if node.nodeType == node.DOCUMENT_NODE:
-            scheme = {"nettestrecipe": self._nettestrecipe}
+            scheme = {"lnstrecipe": self._lnstrecipe}
             self._process_child_nodes(node, scheme,
                         default_handler=self._ignore_tag)
         else:
             raise XmlProcessingError("Passed object is not a XML document")
 
-    def _nettestrecipe(self, node, params):
+    def _lnstrecipe(self, node, params):
         scheme = {"machines": self._machines}
         self._process_child_nodes(node, scheme,
                     default_handler=self._ignore_tag)
@@ -146,12 +146,12 @@ class SecondPass(RecipeParser):
 
     def parse(self, xml_dom):
         if xml_dom.nodeType == xml_dom.DOCUMENT_NODE:
-            scheme = {"nettestrecipe": self._nettestrecipe}
+            scheme = {"lnstrecipe": self._lnstrecipe}
             self._process_child_nodes(xml_dom, scheme)
         else:
             raise XmlProcessingError("Passed object is not a XML document")
 
-    def _nettestrecipe(self, node, params):
+    def _lnstrecipe(self, node, params):
         scheme = {"machines": self._machines,
                   "switches": self._switches,
                   "command_sequence": self._command_sequence}

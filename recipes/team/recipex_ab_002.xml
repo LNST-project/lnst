@@ -1,4 +1,4 @@
-<nettestrecipe>
+<lnstrecipe>
     <machines>
         <define>
             <alias name="testip" value="192.168.111.1/24"/>
@@ -33,4 +33,4 @@
     <command_sequence source="../multicast/cmd_sequences/ttl.xml"/>
     <command_sequence source="../multicast/cmd_sequences/loop.xml"/>
     <command_sequence source="../multicast/cmd_sequences/simple.xml"/>
-</nettestrecipe>
+</lnstrecipe>

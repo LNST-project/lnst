@@ -1,4 +1,4 @@
-<nettestrecipe>
+<lnstrecipe>
     <machines>
         <define>
             <alias name="testip" value="192.168.111.1/24"/>
@@ -18,4 +18,4 @@
         </machine>
     </machines>
     <command_sequence source="sequence_pktgen_lacp.xml"/>
-</nettestrecipe>
+</lnstrecipe>

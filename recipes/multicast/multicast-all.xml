@@ -1,5 +1,5 @@
 <!-- Execute all tests for multicast -->
-<nettestrecipe>
+<lnstrecipe>
     <!-- Change these parameters to match your test environment setup -->
     <define>
         <alias name="hostname1" value="192.168.122.11"/>
@@ -67,4 +67,4 @@
     <command_sequence source="cmd_sequences/multicast/ttl.xml"/>
     <command_sequence source="cmd_sequences/multicast/loop.xml"/>
     <command_sequence source="cmd_sequences/multicast/simple.xml"/>
-</nettestrecipe>
+</lnstrecipe>
