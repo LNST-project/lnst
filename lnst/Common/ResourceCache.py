@@ -88,7 +88,13 @@ class ResourceCache(object):
             raise ResourceCacheError("File already in cache")
 
         entry_dir = "%s/%s" % (self._root, entry_hash)
-        os.mkdir(entry_dir)
+        if os.path.exists(entry_dir):
+            try:
+                shutil.rmtree(entry_dir)
+            except OSError as e:
+                if e.errno != 2:
+                    raise
+        os.makedirs(entry_dir)
 
         shutil.move(filepath, entry_dir)
         entry_path = "%s/%s" % (entry_dir, os.path.basename(filepath))
