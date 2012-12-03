@@ -52,6 +52,7 @@ class BgCommand:
         self._cmd_cls = cmd_cls
         self._pid = None
         self._read_pipe = None
+        self._killed = False
 
     def get_bg_id(self):
         return self._bg_id
@@ -95,13 +96,20 @@ class BgCommand:
 
     def kill(self):
         logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
+        self._killed = True
         os.killpg(os.getpgid(self._pid), signal.SIGKILL)
 
     def get_result(self):
-        tmp = os.read(self._read_pipe, 4096*10)
-        result = pickle.loads(tmp)
-        if "Exception" in result:
-            raise BgCommandException(result["Exception"])
+        result = {}
+        if self._killed:
+            result["logs"] = []
+            result["passed"] = True
+        else:
+            tmp = os.read(self._read_pipe, 4096*10)
+            result = pickle.loads(tmp)
+            if "Exception" in result:
+                raise BgCommandException(result["Exception"])
+
         os.close(self._read_pipe)
         return result
 
