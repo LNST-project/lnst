@@ -42,6 +42,8 @@ class NetTestSlaveXMLRPC:
         self._netconfig = NetConfig()
         self._command_context = command_context
 
+
+        self._capture_files = {}
         self._copy_targets = {}
         self._copy_sources = {}
 
