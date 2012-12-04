@@ -67,6 +67,9 @@ class MachinePool:
             parser.parse(machineconfig)
             if 'libvirt_domain' not in machine['info'] or self._allow_virtual:
                 self._pool[machine_id] = machine
+            else:
+                logging.warning("libvirtd not found- Machine Pool skipping "\
+                        "machine %s" % machine_id)
 
     def provision_setup(self, setup_requirements):
         """
