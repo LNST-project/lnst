@@ -45,6 +45,7 @@ class NetTestController:
         self._remote_capture_files = {}
         self._config = config
         self._log_root_path = Logs.get_logging_root_path()
+        self._recipe_path = recipe_path
 
         if check_process_running("libvirtd"):
             self._machine_pool = MachinePool(config.get_option('environment',
@@ -307,7 +308,7 @@ class NetTestController:
         url = "http://%s:%d" % (hostname, port)
         rpc = ServerProxy(url, allow_none = True)
         info["rpc"] = rpc
-        if self._rpc_call(machine_id, 'hello') != "hello":
+        if self._rpc_call(machine_id, 'hello', self._recipe_path) != "hello":
             msg = "Unable to establish RPC connection to machine %s. " \
                                                         % hostname
             msg += "Handshake failed"

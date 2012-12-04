@@ -14,6 +14,7 @@ jpirko@redhat.com (Jiri Pirko)
 import signal
 import select, logging
 import os
+from time import sleep
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -41,7 +42,7 @@ class NetTestSlaveXMLRPC:
         self._packet_captures = {}
         self._netconfig = NetConfig()
         self._command_context = command_context
-
+        self._config = config
 
         self._capture_files = {}
         self._copy_targets = {}
@@ -52,10 +53,16 @@ class NetTestSlaveXMLRPC:
 
         self._resource_table = {}
 
-    def hello(self):
+    def hello(self, recipe_path):
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
+
+        log_dir = self._config.get_option('environment', 'log_dir')
+        recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
+        Logs.relocate_log_folder(date=None, log_folder=log_dir,
+                                 nameExtend=recipe_name)
+        sleep(1)
 
         if check_process_running("NetworkManager"):
             logging.error("=============================================")

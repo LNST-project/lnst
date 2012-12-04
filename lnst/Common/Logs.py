@@ -148,7 +148,6 @@ class LoggingFile(object):
 
 
 class Logs:
-    file_handlers = []
     formatter = None
     logFolder = None
     loggers = []
@@ -167,7 +166,6 @@ class Logs:
             nameExtend = ""
         else:
             nameExtend = "_" + nameExtend
-        cls.file_handlers = []
         cls.formatter = MultilineFormater(
                             '%(asctime)s| %(address)17.17s%(module)15.15s'
                             ':%(lineno)4.4d| %(levelname)s: '
@@ -187,6 +185,25 @@ class Logs:
                                             recipe_path, to_display)
 
     @classmethod
+    def relocate_log_folder(cls, date=None, log_folder=None, nameExtend=None):
+        root_logger = logging.getLogger()
+        if log_folder != None:
+            cls.logFolder = log_folder
+        else:
+            cls.logFolder = os.path.join(os.path.dirname(sys.argv[0]), './Logs')
+
+        if date is None:
+            cls.date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        else:
+            cls.date = date
+
+        if nameExtend != None:
+            cls.nameExtend = "_" + nameExtend
+        else:
+            cls.nameExtend = ""
+        cls.log_root_folder = cls.set_logging_root_path(None, True)
+
+    @classmethod
     def save_state(cls):
         cls.state = {"logFolder": cls.logFolder, "date": cls.date}
 
@@ -199,6 +216,7 @@ class Logs:
             handlers = list(logger.handlers)
             for handler in handlers:
                 if isinstance(handler, logging.FileHandler):
+                    handler.close()
                     logger.removeHandler(handler)
 
         cls.loggers = cls.loggers[:1]
@@ -243,6 +261,7 @@ class Logs:
         handlers = list(root_logger.handlers)
         for handler in handlers:
             if isinstance(handler, logging.FileHandler):
+                handler.close()
                 root_logger.removeHandler(handler)
 
         (file_debug, file_info) = cls._create_file_handler(cls.root_path)
