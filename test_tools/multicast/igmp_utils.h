@@ -98,7 +98,7 @@ void ip_header_init(struct iphdr *iph, struct in_addr saddr,
 	iph->ihl = 6;
 	iph->tos = 0xc0;
 	iph->id = htons(0);
-	iph->frag_off = htons(0b0100000000000000); /* DF */
+	iph->frag_off = htons(0x4000); /* DF 0b 0100 0000 0000 0000 */
 	iph->ttl = 1;
 	iph->protocol = IPPROTO_IGMP;
 
