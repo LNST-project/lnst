@@ -288,6 +288,12 @@ class MachineConfigParse(RecipeParser):
         if self._has_attribute(node, "rpcport"):
             info["rpcport"] = self._get_attribute(node, "rpcport", int)
 
+        if self._has_attribute(node, "skip_cleanup"):
+            info["skip_cleanup"] = self._get_attribute(node,
+                                                "skip_cleanup", bool_it)
+        else:
+            info["skip_cleanup"] = False
+
         info["system_config"] = {}
 
         try:

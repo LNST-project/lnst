@@ -254,8 +254,10 @@ class NetTestController:
             self._rpc_call(machine_id, "clear_resource_table")
             required = self._resource_table
 
-        if self._docleanup:
+        if self._docleanup and not info["skip_cleanup"]:
             self._rpc_call(machine_id, 'machine_cleanup')
+        else:
+            logging.info("Skipping cleanup on machine %s" % machine_id)
 
         for res_type, resources in self._resource_table.iteritems():
             for res_name, res in resources.iteritems():
