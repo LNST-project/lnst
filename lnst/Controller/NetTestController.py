@@ -584,7 +584,7 @@ class NetTestController:
 
     def _copy_to_slave(self, local_path, machine_id, remote_path=None):
         remote_path = self._rpc_call(machine_id, "start_copy_to", remote_path)
-        f = open(local_path, "r+b")
+        f = open(local_path, "rb")
 
         while True:
             data = f.read(1024*1024) # 1MB buffer
