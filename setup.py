@@ -113,6 +113,7 @@ TEST_MODULES = [
 MULTICAST_TEST_TOOLS = [
     (CTL_TOOLS_LOCATIONS + "multicast",
         ["test_tools/multicast/igmp_utils.h",
+         "test_tools/multicast/lnst-setup.sh",
          "test_tools/multicast/Makefile",
          "test_tools/multicast/multicast_utils.h",
          "test_tools/multicast/parameters_igmp.h",
