@@ -17,6 +17,8 @@ import shutil
 from lnst.Common.Utils import md5sum
 from lnst.Common.ExecCmd import exec_cmd
 
+SETUP_SCRIPT_NAME = "lnst-setup.sh"
+
 class ResourceCacheError(Exception):
     pass
 
@@ -107,7 +109,13 @@ class ResourceCache(object):
             tools_dir = "%s/%s" % (entry_dir, filename)
 
             exec_cmd("tar xjmf \"%s\" -C \"%s\"" % (entry_path, entry_dir))
-            exec_cmd("cd \"%s\" && ./lnst-setup.sh" % tools_dir)
+
+            if os.path.exists("%s/%s" % (tools_dir, SETUP_SCRIPT_NAME)):
+                exec_cmd("cd \"%s\" && ./%s" % (tools_dir, SETUP_SCRIPT_NAME))
+            else:
+                msg = "%s not found in %s tools, skipping initialization." % \
+                           (SETUP_SCRIPT_NAME, entry_name)
+                logging.warn(msg)
 
         entry = {"type": entry_type, "name": entry_name,
                  "last_used": int(time.time()),
