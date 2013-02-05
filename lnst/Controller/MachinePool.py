@@ -129,7 +129,7 @@ class MachinePool:
         supported = ["hostname", "libvirt_domain", "rpcport"]
         for attr_name, attr_val in self._pool[pm_id]["info"].iteritems():
             if attr_name in supported:
-                info.setAttribute(attr_name, attr_val)
+                info.setAttribute(attr_name, str(attr_val))
         mcfg.appendChild(info)
 
         netdevices = dom.createElement("netdevices")
