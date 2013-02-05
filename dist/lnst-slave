@@ -1,0 +1,105 @@
+#!/bin/bash
+#
+# lnst-slave   Starts up the LNST slave daemon
+#
+# chkconfig: - 20 80
+# description: LNST is a framework to automate network configuration and
+#              testing. This service starts up the LNST slave daemon.
+#
+# processname: lnst-slave
+# pidfile: /var/run/lnst-slave.pid
+
+### BEGIN INIT INFO
+# Provides: lnst-slave
+# Required-Start: $local_fs $network
+# Required-Stop: $local_fs
+# Short-Description: Starts up the LNST slave daemon
+# Description: LNST is a framework to automate network configuration and
+#              testing. This service starts up the LNST slave daemon.
+### END INIT INFO
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+prog="lnst-slave"
+lockfile=/var/lock/subsys/$prog
+
+# Some functions to make the below more readable
+LNST=/usr/bin/lnst-slave
+PID_FILE=/var/run/lnst-slave.pid
+OPTIONS="--daemonize"
+
+start()
+{
+    [ -x $LNST ] || exit 5
+
+    echo -n $"Starting $prog: "
+    $LNST $OPTIONS && success || failure
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    echo
+    return $RETVAL
+}
+
+stop()
+{
+    echo -n $"Stopping $prog: "
+    killproc lnst-slave
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    echo
+}
+
+reload() {
+    restart
+}
+
+restart() {
+    stop
+    start
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    status lnst-slave
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        $1
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    status)
+        rh_status
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
+        RETVAL=2
+esac
+exit $RETVAL
