@@ -26,7 +26,10 @@ class TestIperf(TestGeneric):
             cmd = "iperf --%s %s -t %s %s" % (role, iperf_server, self.duration, iperf_options)
         elif role == "server":
             bind = self.get_opt("bind", opt_type="addr")
-            cmd = "iperf --%s -B %s %s" % (role, bind, iperf_options)
+            if bind != None:
+                cmd = "iperf --%s -B %s %s" % (role, bind, iperf_options)
+            else:
+                cmd = "iperf --%s %s" % (role, iperf_options)
 
         return cmd
 
