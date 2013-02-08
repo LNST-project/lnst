@@ -23,7 +23,10 @@ def get_pkt_count(indev_name, dport, proto):
         p_indev_name = "\*"
     if proto:
         p_proto = proto
-        p_protodport = "%s dpt:%s" % (proto, dport)
+        if dport:
+            p_protodport = "%s dpt:%s" % (proto, dport)
+        else:
+            p_protodport = ""
     else:
         p_proto = "all"
         p_protodport = ""
