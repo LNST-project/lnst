@@ -123,7 +123,7 @@ class TestTCPConnect(TestGeneric):
         # either port or port_range should be set
         port = self.get_opt("port")
         if port:
-            self._port = port
+            self._port = int(port)
         else:
             port_range = self.get_opt("port_range")
             if port_range:
@@ -132,9 +132,11 @@ class TestTCPConnect(TestGeneric):
                 e = TestOptionMissing()
                 raise e
 
-        sleep_time = float(self.get_opt("sleep"))
+        sleep_time = self.get_opt("sleep")
         if sleep_time:
-            self._sleep_time = sleep_time
+            self._sleep_time = float(sleep_time)
+        else:
+            self._sleep_time = 0
 
         cont = self.get_opt("cont")
         if cont:
@@ -177,7 +179,7 @@ class TestTCPConnect(TestGeneric):
 
         ports = []
         if self._port:
-            ports.extend(self._port)
+            ports.append(self._port)
         else:
             r = self.parse_port_range()
             ports.extend(r)
