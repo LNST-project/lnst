@@ -40,6 +40,26 @@ class TestPacketAssert(TestGeneric):
         """ Kill tcpdump when interrupted """
         self._tcpdump.terminate()
 
+        tcpdump_output = self._tcpdump.stdout
+        while True:
+            try:
+                next_line = tcpdump_output.readline()
+            except IOError: # Interrupted system call
+                break
+
+            if next_line == "":
+                break
+
+            next_line = next_line.strip("\n")
+
+            if re.match("[0-9]+\:[0-9]+\:[0-9\.]+", next_line) and\
+                                                            self.line != "":
+                self._process_captured_line(self.line)
+                self.line = next_line
+            else:
+                self.line += next_line
+
+
     def _prepare_grep_filters(self):
         """ Parse `grep_for' test options """
         filters = self.get_multi_opt("grep_for")
@@ -64,7 +84,9 @@ class TestPacketAssert(TestGeneric):
         cmd  = ""
 
         interface = self.get_mopt("interface")
-        pcap_filter = self.get_mopt("filter")
+        pcap_filter = self.get_opt("filter")
+        if not pcap_filter:
+            pcap_filter = ""
 
         cmd = "tcpdump -p -nn -i %s \"%s\"" % (interface, pcap_filter)
         self._cmd = cmd
@@ -104,7 +126,7 @@ class TestPacketAssert(TestGeneric):
 
         logging.info("Capturing started")
 
-        line = ""
+        self.line = ""
         tcpdump_output = self._tcpdump.stdout
         while True:
             if self._tcpdump.poll() != None:
@@ -123,11 +145,12 @@ class TestPacketAssert(TestGeneric):
 
             next_line = next_line.strip("\n")
 
-            if re.match("[0-9]+\:[0-9]+\:[0-9\.]+", next_line) and line != "":
-                self._process_captured_line(line)
-                line = next_line
+            if re.match("[0-9]+\:[0-9]+\:[0-9\.]+", next_line) and\
+                                                            self.line != "":
+                self._process_captured_line(self.line)
+                self.line = next_line
             else:
-                line += next_line
+                self.line += next_line
 
         logging.info("Capturing finished. Received %d packets", self._num_recv)
         res = {"received": self._num_recv,
