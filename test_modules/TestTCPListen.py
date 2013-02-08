@@ -48,7 +48,7 @@ class TestTCPListen(TestGeneric):
         # either port or port_range should be set
         port = self.get_opt("port")
         if port:
-            self._port = port
+            self._port = int(port)
         else:
             port_range = self.get_opt("port_range")
             if port_range:
@@ -169,7 +169,7 @@ class TestTCPListen(TestGeneric):
 
         ports = []
         if self._port:
-            ports.extend(self._port)
+            ports.append(self._port)
         else:
             r = self._parse_port_range()
             ports.extend(r)
