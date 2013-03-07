@@ -64,15 +64,12 @@ class NetTestController:
         ntparse.set_recipe(self._recipe)
         ntparse.set_definitions(definitions)
 
-        ntparse.register_event_handler("netdevice_ready",
-                                        self._prepare_device)
-        ntparse.register_event_handler("machine_info_ready",
+        ntparse.register_event_handler("provisioning_requirements_ready",
+                                        self._prepare_provisioning)
+        ntparse.register_event_handler("machine_ready",
                                         self._prepare_slave)
         ntparse.register_event_handler("interface_config_ready",
                                         self._prepare_interface)
-
-        ntparse.register_event_handler("provisioning_requirements_ready",
-                                        self._prepare_provisioning)
 
         modules_dirs = config.get_option('environment', 'module_dirs')
         tools_dirs = config.get_option('environment', 'tool_dirs')
@@ -85,9 +82,9 @@ class NetTestController:
 
     def _get_machineinfo(self, machine_id):
         try:
-            info = self._recipe["machines"][machine_id]["info"]
+            info = self._recipe["machines"][machine_id]["params"]
         except KeyError:
-            msg = "Machine info is required, but not yet available"
+            msg = "Machine parameters requested, but not yet available"
             raise NetTestError(msg)
 
         return info
@@ -126,6 +123,8 @@ class NetTestController:
             provisioner = sp.get_provisioner_id(m_id)
             provisioning["map"][m_id] = provisioner
             logging.info("  machine %s uses %s" % (m_id, provisioner))
+
+            machines[m_id]["params"]["system_config"] = {}
 
     def _prepare_device(self, machine_id, dev_id):
         info = self._get_machineinfo(machine_id)
@@ -296,6 +295,10 @@ class NetTestController:
             logging.info("Initializing provisioned system (%s)" % prov_id)
             for device in provisioner["netdevices"].itervalues():
                 self._rpc_call(machine_id, 'set_device_down', device["hwaddr"])
+
+        machine = self._recipe["machines"][machine_id]
+        for dev_id in machine["netdevices"].iterkeys():
+            self._prepare_device(machine_id, dev_id)
 
     def _init_slave_rpc(self, machine_id):
         info = self._get_machineinfo(machine_id)

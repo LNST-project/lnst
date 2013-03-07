@@ -19,7 +19,7 @@ import re
 import copy
 from xml.dom import minidom
 from lnst.Common.XmlProcessing import XmlDomTreeInit
-from lnst.Controller.NetTestParse import MachineConfigParse
+from lnst.Controller.NetTestParse import SlaveMachineParse
 
 class SlavePool:
     """
@@ -53,19 +53,19 @@ class SlavePool:
 
             dirname, basename = os.path.split(filepath)
 
-            parser = MachineConfigParse()
+            parser = SlaveMachineParse()
             parser.set_include_root(dirname)
             parser.disable_events()
 
-            machine = {"info": {}, "netdevices": {}}
+            machine = {"params": {}, "netdevices": {}}
             machine_id = re.sub("\.xml$", "", basename, flags=re.I)
             parser.set_machine(machine_id, machine)
 
-            machineconfig = dom.getElementsByTagName("machineconfig")[0]
-            machine["dom_node_ref"] = machineconfig
+            slavemachine = dom.getElementsByTagName("slavemachine")[0]
 
-            parser.parse(machineconfig)
-            if 'libvirt_domain' not in machine['info'] or self._allow_virtual:
+            parser.parse(slavemachine)
+            if 'libvirt_domain' not in machine['params'] \
+                                   or self._allow_virtual:
                 self._pool[machine_id] = machine
             else:
                 logging.warning("libvirtd not found- Machine Pool skipping "\
@@ -87,12 +87,13 @@ class SlavePool:
         mapper = SetupMapper()
         self._map = mapper.map_setup(setup_requirements, self._pool)
 
+
         if self._map == None:
             return None
 
         configs = {}
         for m_id in self._map["machines"]:
-            configs[m_id] = self._get_mapped_machineconfig_xml(m_id)
+            configs[m_id] = self._get_mapped_slave(m_id)
 
         return configs
 
@@ -118,42 +119,23 @@ class SlavePool:
     def _get_network_mapping(self, net_id):
         return self._map["networks"][net_id]
 
-    def _get_mapped_machineconfig_xml(self, tm_id):
+    def _get_mapped_slave(self, tm_id):
         pm_id = self._get_machine_mapping(tm_id)
 
-        dom = minidom.Document()
+        machine = copy.deepcopy(self._pool[pm_id])
 
-        mcfg = dom.createElement("machineconfig")
-
-        info = dom.createElement("info")
-        supported = ["hostname", "libvirt_domain", "rpcport"]
-        for attr_name, attr_val in self._pool[pm_id]["info"].iteritems():
-            if attr_name in supported:
-                info.setAttribute(attr_name, str(attr_val))
-        mcfg.appendChild(info)
-
-        netdevices = dom.createElement("netdevices")
-        mcfg.appendChild(netdevices)
-
+        new_netdevices = {}
         if_map = self._map["machines"][tm_id]["interfaces"]
         for t_if, p_if in if_map.iteritems():
-            dev_info = self._pool[pm_id]["netdevices"][p_if]
-
-            dev_node = dom.createElement("netdevice")
-
-            dev_node.setAttribute("phys_id", t_if)
-            dev_node.setAttribute("type", dev_info["type"])
-            dev_node.setAttribute("hwaddr", dev_info["hwaddr"])
+            new_netdevices[t_if] = machine["netdevices"][p_if]
 
             for t_net, p_net in self._map["networks"].iteritems():
-                if dev_info["network"] == p_net:
-                    dev_node.setAttribute("network", t_net)
+                if new_netdevices[t_if]["network"] == p_net:
+                    new_netdevices[t_if]["network"] = t_net
                     break
 
-            netdevices.appendChild(dev_node)
-
-        return mcfg.toxml()
-
+        machine["netdevices"] = new_netdevices
+        return machine
 
 class SetupMapper:
     """
@@ -265,11 +247,9 @@ class SetupMapper:
         pool_machine = self._pool_machines[pool_id]
 
         # check machine properties
-        properties = ["hostname", "libvirt_domain"]
-        for prop_name, prop_value in template_machine["info"].iteritems():
-            if prop_name in properties:
-                if pool_machine["info"][prop_name] != prop_value:
-                    return False
+        for prop_name, prop_value in template_machine["params"].iteritems():
+            if pool_machine["params"][prop_name] != prop_value:
+                return False
 
         # check number of devices
         tm_ndevs = len(template_machine["netdevices"])

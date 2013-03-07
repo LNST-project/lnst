@@ -44,23 +44,6 @@ class NetTestParse(RecipeParser):
         except Exception as exc:
             raise XmlProcessingError(str(exc), xml_dom)
 
-        # process machine requirements if used in the recipe before
-        # proceeding to the second pass
-        provisioning = self._recipe["provisioning"]
-
-        dom_init = XmlDomTreeInit()
-        for name, req in provisioning["setup_requirements"].iteritems():
-            xml = provisioning["allocated_machines"][name]
-            dom = dom_init.parse_string(xml, "pool_machine_config")
-
-            # replace the original machinerequires with
-            # the config recived from MachinePool
-            original_node = req["dom_node_ref"]
-            parent = original_node.parentNode
-            replacement_node = dom.getElementsByTagName("machineconfig")[0]
-
-            parent.replaceChild(replacement_node, original_node)
-
         second_pass = SecondPass(self)
         second_pass.parse(xml_dom)
 
@@ -73,9 +56,6 @@ class FirstPass(RecipeParser):
     The purpose is generic, but the first pass exist only to
     detect provisioning at the moment.
     """
-
-    _has_machineconfigs = False
-    _provisioned_setup = False
 
     def parse(self, node):
         self._recipe["provisioning"] = {}
@@ -102,33 +82,18 @@ class FirstPass(RecipeParser):
         params = {}
         params["id"] = self._get_attribute(node, "id")
 
-        scheme = {"machineconfig": self._machineconfig,
-                  "machinerequires": self._machinerequires}
+        scheme = {"requirements": self._requirements}
         self._process_child_nodes(node, scheme, params,
                     default_handler=self._ignore_tag)
 
-    def _machineconfig(self, node, params):
-        if self._provisioned_setup:
-            msg = "Cannot mix provisioned and non-provisioned machines"
-            raise XmlProcessingError(msg, node)
-
-        self._has_machineconfigs = True
-
-    def _machinerequires(self, node, params):
-        if self._has_machineconfigs:
-            msg = "Cannot mix provisioned and non-provisioned machines"
-            raise XmlProcessingError(msg, node)
-
-        self._provisioned_setup = True
-
+    def _requirements(self, node, params):
         machine_req = self._recipe["provisioning"]["setup_requirements"]
         m_id = params["id"]
         template = {}
-        template["info"] = {}
         template["netdevices"] = {}
         machine_req[m_id] = template
 
-        subparser = MachineRequiresParse(self)
+        subparser = RequirementsParse(self)
         subparser.set_template(template)
         subparser.parse(node)
 
@@ -158,7 +123,6 @@ class SecondPass(RecipeParser):
         self._process_child_nodes(node, scheme)
 
     def _machines(self, node, params):
-        self._recipe["machines"] = {}
         scheme = {"machine": self._machine}
         self._process_child_nodes(node, scheme)
 
@@ -198,71 +162,91 @@ class MachineParse(RecipeParser):
 
     def parse(self, node):
         self._id = self._get_attribute(node, "id")
-        self._machine = {}
-        self._recipe[self._target][self._id] = self._machine
 
-        self._machine["info"] = {}
-        self._machine["netdevices"] = {}
+        recipe = self._recipe
+        self._machine = recipe["machines"][self._id]
         self._machine["netconfig"] = {}
 
-        scheme = {"machineconfig": self._machineconfig,
+        scheme = {"requirements": self._requirements,
                   "netconfig": self._netconfig }
         self._process_child_nodes(node, scheme)
-
-    def _machineconfig(self, node, params):
-        subparser = MachineConfigParse(self)
-        subparser.set_machine(self._id, self._machine)
-        subparser.parse(node)
 
     def _netconfig(self, node, params):
         subparser = NetConfigParse(self)
         subparser.set_machine(self._id, self._machine)
         subparser.parse(node)
 
-class MachineRequiresParse(RecipeParser):
+    def _requirements(self, node, params):
+        try:
+            self._trigger_event("machine_ready", {"machine_id": self._id})
+        except Exception as exc:
+            raise XmlProcessingError(str(exc), node)
+
+class ParamsParse(RecipeParser):
+    _params = None
+
+    def set_params_dict(self, target):
+        self._params = target
+
+    def parse(self, node):
+        scheme = {"param": self._param}
+        self._process_child_nodes(node, scheme)
+
+    def _param(self, node, params):
+        name = self._get_attribute(node, "name")
+
+        if self._has_attribute(node, "value"):
+            value = self._get_attribute(node, "value")
+        else:
+            value = self._get_text_content(node)
+
+        self._params[name] = value
+
+class RequirementsParse(RecipeParser):
     _requirements = None
 
     def set_template(self, tmp_dict):
         self._requirements = tmp_dict
 
     def parse(self, node):
-        self._requirements["dom_node_ref"] = node
+        self._requirements["params"] = {}
+        self._requirements["netdevices"] = {}
 
-        scheme = {"info": self._info,
+        scheme = {"params": self._params,
                   "netdevices": self._netdevices}
-        self._process_child_nodes(node, scheme)
+        params = {"target": self._requirements["params"]}
+        self._process_child_nodes(node, scheme, params)
 
-    def _info(self, node, params):
-        template = self._requirements
-        info = template["info"]
-
-        if self._has_attribute(node, "hostname"):
-            info["hostname"] = self._get_attribute(node, "hostname")
-
-        if self._has_attribute(node, "libvirt_domain"):
-            info["libvirt_domain"] = self._get_attribute(node,
-                                                "libvirt_domain")
+    def _params(self, node, params):
+        subparser = ParamsParse(self)
+        subparser.set_params_dict(params["target"])
+        subparser.parse(node)
 
     def _netdevices(self, node, params):
         scheme = {"netdevice": self._netdevice}
         self._process_child_nodes(node, scheme)
 
     def _netdevice(self, node, params):
-        template = self._requirements
+        reqs = self._requirements
         phys_id = self._get_attribute(node, "phys_id")
 
-        dev = template["netdevices"][phys_id] = {}
+        dev = reqs["netdevices"][phys_id] = {}
         dev["network"] = self._get_attribute(node, "network")
 
-        if self._has_attribute(node, "type"):
+        dev["params"] = {}
+
+        scheme = {"params": self._params}
+        params = {"target": dev["params"]}
+        self._process_child_nodes(node, scheme)
+
+        if "type" in dev["params"]:
             dev["type"] = self._get_attribute(node, "type")
 
-        if self._has_attribute(node, "hwaddr"):
-            hwaddr = self._get_attribute(node, "hwaddr")
-            dev["hwaddr"] = normalize_hwaddr(hwaddr)
+        if "hwaddr" in dev["params"]:
+            dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
 
 
-class MachineConfigParse(RecipeParser):
+class SlaveMachineParse(RecipeParser):
     _machine_id = None
     _machine = None
 
@@ -271,36 +255,22 @@ class MachineConfigParse(RecipeParser):
         self._machine = machine
 
     def parse(self, node):
-        scheme = {"info": self._info,
+        scheme = {"params": self._params,
                   "netdevices": self._netdevices}
-        self._process_child_nodes(node, scheme)
+        params = {"target": self._machine["params"]}
+        self._process_child_nodes(node, scheme, params)
 
-    def _info(self, node, params):
-        machine = self._machine
-        info = machine["info"]
+        self._machine["params"]["skip_cleanup"] = False
+        mandatory_params = ["hostname"]
+        for mandatory in mandatory_params:
+            if mandatory not in self._machine["params"]:
+                msg = "Missing required parameter '%s'" % mandatory
+                raise XmlProcessingError(msg, node)
 
-        info["hostname"] = self._get_attribute(node, "hostname")
-
-        if self._has_attribute(node, "libvirt_domain"):
-            info["libvirt_domain"] = self._get_attribute(node,
-                                                "libvirt_domain")
-
-        if self._has_attribute(node, "rpcport"):
-            info["rpcport"] = self._get_attribute(node, "rpcport", int)
-
-        if self._has_attribute(node, "skip_cleanup"):
-            info["skip_cleanup"] = self._get_attribute(node,
-                                                "skip_cleanup", bool_it)
-        else:
-            info["skip_cleanup"] = False
-
-        info["system_config"] = {}
-
-        try:
-            self._trigger_event("machine_info_ready",
-                    {"machine_id": self._machine_id})
-        except Exception as exc:
-            raise XmlProcessingError(str(exc), node)
+    def _params(self, node, params):
+        subparser = ParamsParse(self)
+        subparser.set_params_dict(params["target"])
+        subparser.parse(node)
 
     def _netdevices(self, node, params):
         scheme = {"netdevice": self._netdevice,
@@ -321,30 +291,53 @@ class MachineConfigParse(RecipeParser):
 
         dev = machine["netdevices"][phys_id] = {}
         dev["create"] = params["create"]
-        dev["type"] = self._get_attribute(node, "type")
         dev["network"] = self._get_attribute(node, "network")
+        dev["params"] = {}
 
-        # hwaddr attribute is optional for dynamic devices,
+        # parse device parameters
+        scheme = {"params": self._params}
+        params = {"target": dev["params"]}
+        self._process_child_nodes(node, scheme, params)
+
+        if "type" in dev["params"]:
+            dev["type"] = dev["params"]["type"]
+        else:
+            msg = "Missing required parameter 'type'"
+            raise XmlProcessingError(msg, node)
+
+        # hwaddr parameter is optional for dynamic devices,
         # but it is required by non-dynamic devices
-        if dev["create"] == None or self._has_attribute(node, "hwaddr"):
-            hwaddr = self._get_attribute(node, "hwaddr")
-            dev["hwaddr"] = normalize_hwaddr(hwaddr)
+        if dev["create"] and "hwaddr" in dev["params"]:
+                dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
+        else:
+            if "hwaddr" in dev["params"]:
+                dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
+            else:
+                msg = "Missing required parameter 'hwaddr'"
+                raise XmlProcessingError(msg, node)
 
-        # name attribute is only valid when the device is not dynamic
-        if dev["create"] == None and self._has_attribute(node, "name"):
-            dev["name"] = self._get_attribute(node, "name")
+        # name parameter is only valid when the device is not dynamic
+        if "name" in dev["params"]:
+            if dev["create"]:
+                msg = "'name' parameter is not valid with dynamic devices"
+                raise XmlProcessingError(msg, node)
+            else:
+                dev["name"] = dev["params"]["name"]
 
-        # bridge attribute is valid only when the device is dynamic
-        if dev["create"] == "libvirt" and \
-           self._has_attribute(node, "libvirt_bridge"):
-            dev["libvirt_bridge"] = self._get_attribute(node, "libvirt_bridge")
+        # bridge parameter is valid only when the device is dynamic
+        if "libvirt_bridge" in dev["params"]:
+            if dev["create"] == "libvirt":
+                dev["libvirt_bridge"] = dev["params"]["libvirt_bridge"]
+            else:
+                msg = "'libvirt_bridge' parameter is not valid with" \
+                      "dynamic devices"
+                raise XmlProcessingError(msg, node)
 
         try:
             self._trigger_event("netdevice_ready",
                     {"machine_id": self._machine_id, "dev_id": phys_id})
         except Exception as exc:
             raise XmlProcessingError(str(exc), node)
-
 
 class NetConfigParse(RecipeParser):
     _machine_id = None
