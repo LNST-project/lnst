@@ -29,7 +29,7 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command
 from lnst.Controller.NetTestParse import NetTestParse
-from lnst.Controller.MachinePool import MachinePool
+from lnst.Controller.SlavePool import SlavePool
 
 class NetTestError(Exception):
     pass
@@ -47,12 +47,9 @@ class NetTestController:
         self._log_root_path = Logs.get_logging_root_path()
         self._recipe_path = recipe_path
 
-        if check_process_running("libvirtd"):
-            self._machine_pool = MachinePool(config.get_option('environment',
-                                'pool_dirs'), allow_virtual=True)
-        else:
-            self._machine_pool = MachinePool(config.get_option('environment',
-                                'pool_dirs'), allow_virtual=False)
+        sp = SlavePool(config.get_option('environment', 'pool_dirs'),
+                       check_process_running("libvirtd"))
+        self._slave_pool = sp
 
         self._recipe = {}
         definitions = {"recipe": self._recipe}
@@ -115,18 +112,20 @@ class NetTestController:
         if len(provisioning["setup_requirements"]) <= 0:
             return
 
-        mp = self._machine_pool
-        alloc_machines = mp.provision_setup(provisioning["setup_requirements"])
-        if alloc_machines == None:
+        sp = self._slave_pool
+        machines = sp.provision_setup(provisioning["setup_requirements"])
+        if machines == None:
             msg = "This setup cannot be provisioned with the current pool."
             raise NetTestError(msg)
 
-        provisioning["allocated_machines"] = alloc_machines
+        self._recipe["machines"] = machines
+        provisioning["map"] = {}
 
         logging.info("Provisioning initialized")
-        for machine in alloc_machines.keys():
-            provisioner = mp.get_provisioner_id(machine)
-            logging.info("  machine %s uses %s" % (machine, provisioner))
+        for m_id in machines.keys():
+            provisioner = sp.get_provisioner_id(m_id)
+            provisioning["map"][m_id] = provisioner
+            logging.info("  machine %s uses %s" % (m_id, provisioner))
 
     def _prepare_device(self, machine_id, dev_id):
         info = self._get_machineinfo(machine_id)
@@ -291,9 +290,9 @@ class NetTestController:
 
         # Some additional initialization is necessary in case the
         # underlying machine is provisioned from the pool
-        prov_id = self._machine_pool.get_provisioner_id(machine_id)
+        prov_id = self._slave_pool.get_provisioner_id(machine_id)
         if prov_id:
-            provisioner = self._machine_pool.get_provisioner(machine_id)
+            provisioner = self._slave_pool.get_provisioner(machine_id)
             logging.info("Initializing provisioned system (%s)" % prov_id)
             for device in provisioner["netdevices"].itervalues():
                 self._rpc_call(machine_id, 'set_device_down', device["hwaddr"])
@@ -369,7 +368,7 @@ class NetTestController:
 
     def _prepare(self):
         # All the perparations are made within the recipe parsing
-        # This is achieved by handling parser events (by registering
+        # This is achieved by handling parser events
         try:
             self._ntparse.parse_recipe()
         except Exception as exc:

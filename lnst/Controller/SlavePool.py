@@ -1,5 +1,5 @@
 """
-This module contains implementaion of MachinePool class that
+This module contains implementaion of SlavePool class that
 can be used to maintain a cluster of test machines.
 
 These machines can be provisioned and used in test recipes.
@@ -21,7 +21,7 @@ from xml.dom import minidom
 from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Controller.NetTestParse import MachineConfigParse
 
-class MachinePool:
+class SlavePool:
     """
     This class is responsible for managing test machines that
     are available at the controler and can be used for testing.
