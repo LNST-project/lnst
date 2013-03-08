@@ -16,6 +16,7 @@ import sys
 import signal
 import imp
 import pickle, traceback
+import multiprocessing
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 
 def str_command(command):
@@ -58,17 +59,25 @@ class BgCommand:
         return self._bg_id
 
     def run(self):
-        read_pipe, write_pipe = os.pipe()
+        read_pipe, write_pipe = os.pipe() #TODO multiprocessing
+        con_read_pipe, con_write_pipe = multiprocessing.Pipe()
         self._pid = os.fork()
         if self._pid:
             os.close(write_pipe)
             logging.debug("Running in background with"
                           " id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
             self._read_pipe = read_pipe
-            return {"passed": True}
+            self._connection_pipe = con_read_pipe
+            return {"passed": True, "pipe": self._read_pipe}
         os.close(read_pipe)
         os.setpgrp()
         self._cmd_cls.set_handle_intr()
+        self._connection_pipe = con_write_pipe
+
+        self._log_ctl.unset_recipe()
+        self._log_ctl.cancel_connection()
+        self._log_ctl.set_connection(self._connection_pipe)
+
         try:
             self._cmd_cls.run()
             result = self._cmd_cls.get_result()
@@ -110,6 +119,9 @@ class BgCommand:
         os.close(self._read_pipe)
         return result
 
+    def get_connection_pipe(self):
+        return self._connection_pipe
+
 class NetTestCommandContext:
     def __init__(self):
         self._dict = {}
@@ -130,6 +142,12 @@ class NetTestCommandContext:
     def cleanup(self):
         self._kill_all_bg_cmds()
         self._dict = {}
+
+    def get_read_pipes(self):
+        pipes = {}
+        for key in self._dict:
+            pipes[key] = self._dict[key].get_connection_pipe()
+        return pipes
 
 def NetTestCommandTest(command, resource_table):
     test_name = command["value"]
