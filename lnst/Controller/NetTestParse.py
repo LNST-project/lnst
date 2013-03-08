@@ -36,10 +36,7 @@ class NetTestParse(RecipeParser):
         first_pass = FirstPass(self)
         first_pass.parse(xml_dom)
 
-        try:
-            self._trigger_event("provisioning_requirements_ready", {})
-        except Exception as exc:
-            raise XmlProcessingError(str(exc), xml_dom)
+        self._trigger_event("provisioning_requirements_ready", {})
 
         second_pass = SecondPass(self)
         second_pass.parse(xml_dom)
@@ -175,7 +172,8 @@ class MachineParse(RecipeParser):
         try:
             self._trigger_event("machine_ready", {"machine_id": self._id})
         except Exception as exc:
-            raise XmlProcessingError(str(exc), node)
+            logging.error(XmlProcessingError(str(exc), xml_dom))
+            raise
 
 class ParamsParse(RecipeParser):
     _params = None
@@ -332,7 +330,8 @@ class SlaveMachineParse(RecipeParser):
             self._trigger_event("netdevice_ready",
                     {"machine_id": self._machine_id, "dev_id": phys_id})
         except Exception as exc:
-            raise XmlProcessingError(str(exc), node)
+            logging.error(XmlProcessingError(str(exc), xml_dom))
+            raise
 
 class NetConfigParse(RecipeParser):
     _machine_id = None
@@ -388,7 +387,8 @@ class NetConfigParse(RecipeParser):
         except Exception as exc:
             msg = "Unable to configure interface %s on machine %s [%s]." % \
                     (dev_id, self._machine_id, str(exc))
-            raise XmlProcessingError(msg, node)
+            logging.error(XmlProcessingError(str(msg), xml_dom))
+            raise
 
     def _process_phys_id_attr(self, node, dev):
         netconfig = self._netconfig
