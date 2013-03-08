@@ -17,6 +17,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import socket, struct, pickle
 import logging
 import xmlrpclib
+from lnst.Common.ConnectionHandler import send_data
 
 class LogBuffer(logging.Handler):
     """
@@ -59,4 +60,22 @@ class LogBuffer(logging.Handler):
 
     def close(self):
         self.flush()
+        logging.Handler.close(self)
+
+class TransmitHandler(logging.Handler):
+    def __init__(self, target):
+        logging.Handler.__init__(self)
+        self.target = target
+
+    def emit(self, record):
+        r = dict(record.__dict__)
+        r['msg'] = record.getMessage()
+        r['args'] = None
+        r['exc_info'] = None
+
+        data = {"type": "log", "record": r}
+
+        send_data(self.target, data)
+
+    def close(self):
         logging.Handler.close(self)
