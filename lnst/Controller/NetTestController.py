@@ -20,7 +20,7 @@ import tempfile
 from time import sleep
 from xmlrpclib import Binary
 from pprint import pprint, pformat
-from lnst.Common.Logs import Logs, log_exc_traceback
+from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
@@ -38,13 +38,13 @@ def ignore_event(**kwarg):
     pass
 
 class NetTestController:
-    def __init__(self, recipe_path, cleanup=False,
+    def __init__(self, recipe_path, log_ctl, cleanup=False,
                  res_serializer=None, config=None):
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._config = config
-        self._log_root_path = Logs.get_logging_root_path()
+        self._log_ctl = log_ctl
         self._recipe_path = recipe_path
 
         sp = SlavePool(config.get_option('environment', 'pool_dirs'),
@@ -323,18 +323,7 @@ class NetTestController:
         info = self._get_machineinfo(machine_id)
         address = socket.gethostbyname(info["hostname"])
 
-        slave_root_path = os.path.join(self._log_root_path, address)
-        try:
-            os.mkdir(slave_root_path)
-        except OSError as e:
-            if e.errno != 17:
-                raise
-
-        logger = logging.getLogger(address)
-        Logs(Logs.debug, False, logger, log_folder=slave_root_path,
-                     to_display=False, date="")
-
-        info['logger'] = logger
+        info['logger'] = self._log_ctl.add_slave(address)
 
     def _deconfigure_slaves(self):
         if 'machines' not in self._recipe:
@@ -357,6 +346,10 @@ class NetTestController:
                                 dev_id, dev["hwaddr"], machine_id)
                 domain_ctl = info["virt_domain_ctl"]
                 domain_ctl.detach_interface(dev["hwaddr"])
+
+            #clean-up slave logger
+            address = socket.gethostbyname(info["hostname"])
+            self._log_ctl.remove_slave(address)
 
         # remove dynamically created bridges
         networks = self._recipe["networks"]

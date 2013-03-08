@@ -18,7 +18,7 @@ from time import sleep
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from lnst.Common.Logs import Logs, log_exc_traceback
+from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.PacketCapture import PacketCapture
 from lnst.Common.XmlRpc import Server
 from lnst.Common.Utils import die_when_parent_die
@@ -37,12 +37,13 @@ class NetTestSlaveXMLRPC:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context, config):
+    def __init__(self, command_context, config, log_ctl):
         self._netconfig = None
         self._packet_captures = {}
         self._netconfig = NetConfig()
         self._command_context = command_context
         self._config = config
+        self._log_ctl = log_ctl
 
         self._capture_files = {}
         self._copy_targets = {}
@@ -58,10 +59,8 @@ class NetTestSlaveXMLRPC:
         self._cache.del_old_entries()
         self.reset_file_transfers()
 
-        log_dir = self._config.get_option('environment', 'log_dir')
-        recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
-        Logs.relocate_log_folder(date=None, log_folder=log_dir,
-                                 nameExtend=recipe_name)
+        date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        self._log_ctl.set_recipe(recipe_path, expand=date)
         sleep(1)
 
         if check_process_running("NetworkManager"):
@@ -77,11 +76,6 @@ class NetTestSlaveXMLRPC:
         self.reset_file_transfers()
         self._remove_capture_files()
         return "bye"
-
-    def get_new_logs(self):
-        buffer  = Logs.get_buffer()
-        logs = buffer.flush()
-        return logs
 
     def get_devices_by_hwaddr(self, hwaddr):
         name_scan = scan_netdevs()
@@ -164,7 +158,7 @@ class NetTestSlaveXMLRPC:
     def run_command(self, command):
         try:
             cmd_cls = NetTestCommand(self._command_context, command,
-                                        self._resource_table)
+                                        self._resource_table, self._log_ctl)
             return cmd_cls.run()
         except:
             log_exc_traceback()
@@ -290,7 +284,7 @@ class MySimpleXMLRPCServer(Server):
                 pass
 
 class NetTestSlave:
-    def __init__(self, config, port = DefaultRPCPort):
+    def __init__(self, config, log_ctl, port = DefaultRPCPort):
         die_when_parent_die()
 
         command_context = NetTestCommandContext()
