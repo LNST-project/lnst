@@ -74,3 +74,128 @@ class MultilineFormater(Formatter):
                 # See issue 8924
                 s = s + record.exc_text.decode(sys.getfilesystemencoding())
         return s
+
+class LoggingCtl:
+    log_folder = ""
+    formatter = None
+    recipe_handlers = (None,None)
+    recipe_log_path = ""
+    slaves = {}
+    transmit_handler = None
+
+    def __init__(self, debug=False, log_dir=None, log_subdir=""):
+        if log_dir != None:
+            self.log_folder = os.path.abspath(os.path.join(log_dir, log_subdir))
+        else:
+            self.log_folder = os.path.abspath(os.path.join(
+                                                os.path.dirname(sys.argv[0]),
+                                                './Logs',
+                                                log_subdir))
+        if not os.path.isdir(self.log_folder):
+            self._clean_folder(self.log_folder)
+
+
+        self.formatter = MultilineFormater(
+                            '%(asctime)s| %(address)17.17s| %(levelname)5.5s: '
+                            '%(message)s', '%Y-%m-%d %H:%M:%S', " "*4)
+
+
+        #the display_handler will display logs in the terminal
+        display_handler = logging.StreamHandler(sys.stdout)
+        display_handler.setFormatter(self.formatter)
+        if not debug:
+            display_handler.setLevel(logging.INFO)
+        else:
+            if debug == 1:
+                display_handler.setLevel(logging.DEBUG)
+            else:
+                display_handler.setLevel(logging.NOTSET)
+
+        logger = logging.getLogger()
+        logger.setLevel(logging.NOTSET)
+        logger.addHandler(display_handler)
+
+    def set_recipe(self, recipe_path, clean=True, expand=""):
+        recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
+        if expand != "":
+            recipe_name += "_" + expand
+        self.recipe_log_path = os.path.join(self.log_folder, recipe_name)
+        if clean:
+            self._clean_folder(self.recipe_log_path)
+
+        (recipe_info, recipe_debug) = self._create_file_handler(
+                                                        self.recipe_log_path)
+        logger = logging.getLogger()
+        #remove handlers of the previous recipe
+        logger.removeHandler(self.recipe_handlers[0])
+        logger.removeHandler(self.recipe_handlers[1])
+
+        self.recipe_handlers = (recipe_info, recipe_debug)
+        logger.addHandler(recipe_info)
+        logger.addHandler(recipe_debug)
+
+    def unset_recipe(self):
+        logger = logging.getLogger()
+        logger.removeHandler(self.recipe_handlers[0])
+        logger.removeHandler(self.recipe_handlers[1])
+        self.recipe_handlers = (None, None)
+
+    def add_slave(self, name):
+        slave_log_path = os.path.join(self.recipe_log_path, name)
+        self._clean_folder(slave_log_path)
+
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        logger.propagate = True
+
+        (slave_info, slave_debug) = self._create_file_handler(slave_log_path)
+        logger.addHandler(slave_info)
+        logger.addHandler(slave_debug)
+
+        self.slaves[name] = (slave_info, slave_debug)
+        return logger
+
+    def remove_slave(self, name):
+        logger = logging.getLogger(name)
+        logger.propagate = False
+
+        logger.removeHandler(self.slaves[name][0])
+        logger.removeHandler(self.slaves[name][1])
+
+        del slaves[name]
+
+    def set_connection(self, target):
+        if self.transmit_handler != None:
+            self.cancel_connection()
+        self.transmit_handler = TransmitHandler(target)
+
+        logger = logging.getLogger()
+        logger.addHandler(self.transmit_handler)
+
+        for k in self.slaves.keys():
+            self.remove_slave(k)
+
+    def cancel_connection(self):
+        if self.transmit_handler != None:
+            logger = logging.getLogger()
+            logger.removeHandler(self.transmit_handler)
+            del self.transmit_handler
+
+    def _clean_folder(self, path):
+        try:
+            shutil.rmtree(path)
+        except OSError as e:
+            if e.errno != 2:
+                raise
+        os.makedirs(path)
+
+    def _create_file_handler(self, folder_path):
+        file_debug = logging.FileHandler(os.path.join(folder_path, 'debug'))
+        file_debug.setFormatter(self.formatter)
+        file_debug.setLevel(logging.DEBUG)
+
+        file_info = logging.FileHandler(os.path.join(folder_path, 'info'))
+        file_info.setFormatter(self.formatter)
+        file_info.setLevel(logging.INFO)
+
+        return (file_debug, file_info)
