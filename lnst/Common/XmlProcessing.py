@@ -237,6 +237,7 @@ class RecipeParser(XmlParser):
 
     def set_recipe(self, recipe):
         self._recipe = recipe
+        self._template_proc.set_machines(recipe["machines"])
 
     def set_definitions(self, defs):
         self._template_proc.set_definitions(defs)

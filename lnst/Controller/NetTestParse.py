@@ -28,9 +28,6 @@ class NetTestParse(RecipeParser):
         self._rp = RecipePath(None, self._filepath)
         self._include_root = self._rp.get_root()
 
-        self._recipe = {}
-        self._template_proc.set_definitions({"recipe": self._recipe})
-
     def parse_recipe(self):
         dom_init = XmlDomTreeInit()
         rp = self._rp
@@ -58,7 +55,6 @@ class FirstPass(RecipeParser):
     """
 
     def parse(self, node):
-        self._recipe["provisioning"] = {}
         self._recipe["provisioning"]["setup_requirements"] = {}
 
         if node.nodeType == node.DOCUMENT_NODE:
@@ -132,7 +128,6 @@ class SecondPass(RecipeParser):
         subparser.parse(node)
 
     def _switches(self, node, params):
-        self._recipe["switches"] = {}
         scheme = {"switch": self._switch}
         self._process_child_nodes(node, scheme)
 

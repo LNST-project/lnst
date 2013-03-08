@@ -51,10 +51,11 @@ class NetTestController:
                        check_process_running("libvirtd"))
         self._slave_pool = sp
 
-        self._recipe = {}
-        definitions = {"recipe": self._recipe}
-
-        self._recipe["networks"] = {}
+        self._recipe = recipe = {}
+        recipe["networks"] = {}
+        recipe["machines"] = {}
+        recipe["provisioning"] = {}
+        recipe["switches"] = {}
 
         mac_pool_range = config.get_option('environment', 'mac_pool_range')
         self._mac_pool = MacPool(mac_pool_range[0],
@@ -62,7 +63,6 @@ class NetTestController:
 
         ntparse = NetTestParse(recipe_path)
         ntparse.set_recipe(self._recipe)
-        ntparse.set_definitions(definitions)
 
         ntparse.register_event_handler("provisioning_requirements_ready",
                                         self._prepare_provisioning)
@@ -115,7 +115,8 @@ class NetTestController:
             msg = "This setup cannot be provisioned with the current pool."
             raise NetTestError(msg)
 
-        self._recipe["machines"] = machines
+        for m_id, machine in machines.iteritems():
+            self._recipe["machines"][m_id] = machine
         provisioning["map"] = {}
 
         logging.info("Provisioning initialized")

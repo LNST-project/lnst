@@ -29,7 +29,7 @@ class XmlTemplateError(Exception):
 class XmlTemplates:
     """ This class serves as template processor """
 
-    _alias_re = "\{\$([a-zA-Z0-9_]+)(\[[^{}]+\])?\}"
+    _alias_re = "\{\$([a-zA-Z0-9_]+)\}"
     _func_re  = "\{([a-zA-Z0-9_]+)\(([^\(\)]*)\)\}"
 
     def __init__(self, definitions=None):
@@ -38,7 +38,8 @@ class XmlTemplates:
         else:
             self._definitions = [{}]
 
-        self._reserved_aliases = ["recipe"]
+        self._machines = {}
+        self._reserved_aliases = []
 
     def set_definitions(self, defs):
         """ Set alias definitions
@@ -62,6 +63,14 @@ class XmlTemplates:
                 defs[name] = val
 
         return defs
+
+    def set_machines(self, machines):
+        """ Assign machine information
+
+        XmlTemplates use these information about the machines
+        to resolve template functions within the recipe.
+        """
+        self._machines = machines
 
     def define_alias(self, name, value, skip_reserved_check=False):
         """ Associate an alias name with some value
@@ -163,19 +172,7 @@ class XmlTemplates:
         alias_match = re.match(self._alias_re, string)
         if alias_match:
             alias_name = alias_match.group(1)
-            array_subscript = alias_match.group(2)
-
             alias_obj = self._find_definition(alias_name)
-
-            if array_subscript != None:
-                try:
-                    result = str(eval("alias_obj%s" % array_subscript))
-                except (KeyError, IndexError):
-                    err = "Wrong array subscript in '%s%s'" \
-                                % (alias_name, array_subscript)
-                    raise XmlTemplateError(err)
-            else:
-                result = alias_obj
 
         return result
 
@@ -217,17 +214,17 @@ class XmlTemplates:
 
     def _ip_func(self, params):
         self._validate_func_params("ip", params, 2, 1)
-        recipe = self._get_recipe_data("ip")
+        machines = self._machines
 
         m_id = params[0]
         if_id = params[1]
         ip_id = int(params[2]) if len(params) == 3 else 0
 
-        if 'machines' not in recipe or m_id not in recipe['machines']:
+        if m_id not in machines:
             msg = "First parameter of function ip() is invalid: "\
                     "Machine %s does not exist." % m_id
             raise XmlTemplateError(msg)
-        machine = recipe["machines"][m_id]
+        machine = machines[m_id]
 
 
         if if_id not in machine['netconfig']:
@@ -245,15 +242,15 @@ class XmlTemplates:
 
     def _hwaddr_func(self, params):
         self._validate_func_params("hwaddr", params, 2, 0)
-        recipe = self._get_recipe_data("hwaddr")
+        machines = self._machines
         m_id = params[0]
         if_id = params[1]
 
-        if 'machines' not in recipe or m_id not in recipe['machines']:
+        if m_id not in machines:
             msg = "First parameter of function hwaddr() is invalid: "\
                     "Machine %s does not exist." % m_id
             raise XmlTemplateError(msg)
-        machine = recipe["machines"][m_id]
+        machine = machines[m_id]
 
         if if_id not in machine['netconfig']:
             msg = "Second parameter of function hwaddr() is invalid: "\
@@ -266,15 +263,15 @@ class XmlTemplates:
 
     def _devname_func(self, params):
         self._validate_func_params("devname", params, 2, 0)
-        recipe = self._get_recipe_data("devname")
+        machines = self._machines
         m_id = params[0]
         if_id = params[1]
 
-        if 'machines' not in recipe or m_id not in recipe['machines']:
+        if m_id not in machines:
             msg = "First parameter of function devname() is invalid: "\
                     "Machine %s does not exist." % m_id
             raise XmlTemplateError(msg)
-        machine = recipe["machines"][m_id]
+        machine = machine[m_id]
 
         if if_id not in machine['netconfig']:
             msg = "Second parameter of function devname() is invalid: "\
@@ -301,12 +298,3 @@ class XmlTemplates:
             except ValueError:
                 err = "Non-integer parameter passed to '%s'" % name
                 raise XmlTemplateError(err)
-
-    def _get_recipe_data(self, template_name):
-        try:
-            recipe = self._find_definition("recipe")
-            return recipe
-        except XmlTemplateError as err:
-            msg = "Cannot resolve %s(): " % template_name
-            msg += str(err)
-            raise XmlTemplateError(msg)
