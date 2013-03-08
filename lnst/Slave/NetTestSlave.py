@@ -17,10 +17,8 @@ import os
 from time import sleep
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.PacketCapture import PacketCapture
-from lnst.Common.XmlRpc import Server
 from lnst.Common.Utils import die_when_parent_die
 from lnst.Common.NetUtils import scan_netdevs, test_tcp_connection
 from lnst.Common.ExecCmd import exec_cmd
@@ -257,45 +255,3 @@ class NetTestSlaveXMLRPC:
         for file_handle in self._copy_sources.itervalues():
             file_handle.close()
         self._copy_sources = {}
-
-class MySimpleXMLRPCServer(Server):
-    def __init__(self, command_context, *args, **kwargs):
-        self._finished = False
-        self._command_context = command_context
-        Server.__init__(self, *args, **kwargs)
-
-    def register_die_signal(self, signum):
-        signal.signal(signum, self._signal_die_handler)
-
-    def _signal_die_handler(self, signum, frame):
-        logging.info("Caught signal %d -> dying" % signum)
-        self._finished = True
-
-    def serve_forever_with_signal_check(self):
-        while True:
-            try:
-                if self._finished:
-                    self._command_context.cleanup()
-                    import sys
-                    sys.exit()
-                    return
-                self.handle_request()
-            except select.error:
-                pass
-
-class NetTestSlave:
-    def __init__(self, config, log_ctl, port = DefaultRPCPort):
-        die_when_parent_die()
-
-        command_context = NetTestCommandContext()
-        server = MySimpleXMLRPCServer(command_context,
-                                      ("", port), SimpleXMLRPCRequestHandler,
-                                      logRequests = False)
-        server.register_die_signal(signal.SIGHUP)
-        server.register_die_signal(signal.SIGINT)
-        server.register_die_signal(signal.SIGTERM)
-        server.register_instance(NetTestSlaveXMLRPC(command_context, config))
-        self._server = server
-
-    def run(self):
-        self._server.serve_forever_with_signal_check()
