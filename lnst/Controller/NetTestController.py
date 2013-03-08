@@ -30,6 +30,8 @@ from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command
 from lnst.Controller.NetTestParse import NetTestParse
 from lnst.Controller.SlavePool import SlavePool
+from lnst.Common.ConnectionHandler import send_data, recv_data
+from lnst.Common.ConnectionHandler import ConnectionHandler
 
 class NetTestError(Exception):
     pass
@@ -46,6 +48,7 @@ class NetTestController:
         self._config = config
         self._log_ctl = log_ctl
         self._recipe_path = recipe_path
+        self._msg_dispatcher = MessageDispatcher()
 
         sp = SlavePool(config.get_option('environment', 'pool_dirs'),
                        check_process_running("libvirtd"))
@@ -88,15 +91,6 @@ class NetTestController:
             raise NetTestError(msg)
 
         return info
-
-    def _get_machinerpc(self, machine_id):
-        try:
-            rpc = self._get_machineinfo(machine_id)["rpc"]
-        except KeyError:
-            msg = "XMLRPC connection required, but not yet available"
-            raise NetTestError(msg)
-
-        return rpc
 
     @staticmethod
     def _session_die(session, status):
@@ -244,14 +238,13 @@ class NetTestController:
             domain_ctl = VirtDomainCtl(info["libvirt_domain"])
             info["virt_domain_ctl"] = domain_ctl
 
-        if not "rpc" in info:
-            self._init_slave_logging(machine_id)
-            self._init_slave_rpc(machine_id)
+        self._init_slave_logging(machine_id)
+        self._init_slave_rpc(machine_id)
 
-            info["configured_interfaces"] = []
+        info["configured_interfaces"] = []
 
-            self._rpc_call(machine_id, "clear_resource_table")
-            required = self._resource_table
+        self._rpc_call(machine_id, "clear_resource_table")
+        required = self._resource_table
 
         if self._docleanup and not info["skip_cleanup"]:
             self._rpc_call(machine_id, 'machine_cleanup')
@@ -310,9 +303,9 @@ class NetTestController:
             port = self._config.get_option('environment', 'rpcport')
         logging.info("Connecting to RPC on machine %s", hostname)
 
-        url = "http://%s:%d" % (hostname, port)
-        rpc = ServerProxy(url, allow_none = True)
-        info["rpc"] = rpc
+        rpc = socket.create_connection((hostname, port))
+        self._msg_dispatcher.add_slave(machine_id, rpc, info)
+
         if self._rpc_call(machine_id, 'hello', self._recipe_path) != "hello":
             msg = "Unable to establish RPC connection to machine %s. " \
                                                         % hostname
@@ -330,7 +323,7 @@ class NetTestController:
             return
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
-            if "rpc" not in info or "configured_interfaces" not in info:
+            if "configured_interfaces" not in info:
                 continue
 
             self._rpc_call(machine_id, "bye")
@@ -557,26 +550,16 @@ class NetTestController:
             info["system_config"] = {}
 
     def _rpc_call(self, machine_id, method_name, *args):
-        rpc = self._get_machinerpc(machine_id)
-        rpc_method = getattr(rpc, method_name)
+        data = {}
+        data["type"] = "command"
+        data["method_name"] = method_name
+        data["args"] = args
 
-        result = rpc_method(*args)
+        self._msg_dispatcher.send_message(machine_id, data)
 
-        logs = rpc.get_new_logs()
-        self._add_client_logs(machine_id, logs)
+        result = self._msg_dispatcher.wait_for_result(machine_id)
+
         return result
-
-    def _add_client_logs(self, machine_id, logs):
-        info = self._get_machineinfo(machine_id)
-        address = socket.gethostbyname(info['hostname'])
-        logger = info['logger']
-
-        for log in logs:
-            data = log.data
-            data = pickle.loads(data)
-            data['address'] = '(' + address + ')'
-            record = logging.makeLogRecord(data)
-            logger.handle(record)
 
     def _copy_to_slave(self, local_path, machine_id, remote_path=None):
         remote_path = self._rpc_call(machine_id, "start_copy_to", remote_path)
@@ -653,3 +636,52 @@ class NetTestController:
                     packages[pkg_name] = {"path": pkg_path,
                                            "hash": pkg_hash}
         return packages
+
+class MessageDispatcher(ConnectionHandler):
+    def __init__(self):
+        super(MessageDispatcher, self).__init__()
+        self._slaves = {}
+
+    def add_slave(self, machine_id, connection, machine_info):
+        self._slaves[machine_id] = machine_info
+        self.add_connection(machine_id, connection)
+
+    def send_message(self, machine_id, data):
+        soc = self.get_connection(machine_id)
+
+        if send_data(soc, data) == False:
+            msg = "Connection error from slave %s" % machine_id
+            raise NetTestError(msg)
+
+    def wait_for_result(self, machine_id):
+        wait = True
+        while wait:
+            messages = self.check_connections()
+            for msg in messages:
+                if msg[1]["type"] == "result" and msg[0] == machine_id:
+                    wait = False
+                    result = msg[1]["result"]
+                else:
+                    self._process_message(msg)
+
+        return result
+
+    def _process_message(self, message):
+        if message[1]["type"] == "log":
+            record = message[1]["record"]
+            self._add_client_log(message[0], record)
+        elif message[1]["type"] == "result":
+            msg = "Recieved result message from different slave %s" % message[0]
+            logging.debug(msg)
+        else:
+            msg = "Unknown message type: %s" % message[1]["type"]
+            raise NetTestError(msg)
+
+    def _add_client_log(self, machine_id, log_record):
+        info = self._slaves[machine_id]
+        address = socket.gethostbyname(info['hostname'])
+        logger = info['logger']
+
+        log_record['address'] = '(' + address + ')'
+        record = logging.makeLogRecord(log_record)
+        logger.handle(record)
