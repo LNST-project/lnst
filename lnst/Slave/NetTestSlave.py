@@ -14,6 +14,8 @@ jpirko@redhat.com (Jiri Pirko)
 import signal
 import select, logging
 import os
+import datetime
+import socket
 from time import sleep
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
@@ -28,10 +30,12 @@ from lnst.Common.NetTestCommand import CommandException, NetTestCommand
 from lnst.Slave.NetConfig import NetConfig
 from lnst.Slave.NetConfigDevice import NetConfigDeviceAllCleanup
 from lnst.Common.Utils import check_process_running
+from lnst.Common.ConnectionHandler import recv_data, send_data
+from lnst.Common.ConnectionHandler import ConnectionHandler
 
 DefaultRPCPort = 9999
 
-class NetTestSlaveXMLRPC:
+class SlaveMethods:
     '''
     Exported xmlrpc methods
     '''
@@ -255,3 +259,125 @@ class NetTestSlaveXMLRPC:
         for file_handle in self._copy_sources.itervalues():
             file_handle.close()
         self._copy_sources = {}
+
+class ServerHandler(object):
+    def __init__(self, addr):
+        self._connection_handler = ConnectionHandler()
+        try:
+            self._s_socket = socket.socket()
+            self._s_socket.bind(addr)
+            self._s_socket.listen(1)
+        except socket.error as e:
+            logging.error(e[1])
+            exit(1)
+
+        self._c_socket = None
+
+    def accept_connection(self):
+        self._c_socket, addr = self._s_socket.accept()
+        self._c_socket = (self._c_socket, addr[0])
+        logging.info("Recieved connection from %s" % self._c_socket[1])
+
+        self._connection_handler.add_connection(self._c_socket[1],
+                                                self._c_socket[0])
+        return self._c_socket
+
+    def get_ctl_sock(self):
+        if self._c_socket != None:
+            return self._c_socket[0]
+        else:
+            return None
+
+    def get_messages(self):
+        messages = self._connection_handler.check_connections()
+        addr = self._c_socket[1]
+        if self._connection_handler.get_connection(addr) == None:
+            self._c_socket = None
+        return messages
+
+    def send_data_to_ctl(self, data):
+        if self._c_socket != None:
+            return send_data(self._c_socket[0], data)
+        else:
+            return False
+
+    def add_connection(self, id, connection):
+        self._connection_handler.add_connection(id, connection)
+
+    def remove_connection(self, id):
+        self._connection_handler.remove_connection(id, connection)
+
+    def clear_connections(self):
+        self._connection_handler.clear_connections()
+
+    def update_connections(self, connections):
+        for key, connection in connections.iteritems():
+            self.add_connection(key, connection)
+
+class NetTestSlave:
+    def __init__(self, config, log_ctl, port = DefaultRPCPort):
+        die_when_parent_die()
+
+        self._cmd_context = NetTestCommandContext()
+        self._methods = SlaveMethods(self._cmd_context, config, log_ctl)
+
+        self.register_die_signal(signal.SIGHUP)
+        self.register_die_signal(signal.SIGINT)
+        self.register_die_signal(signal.SIGTERM)
+
+        self._server_handler = ServerHandler(("", port))
+
+        self._finished = False
+
+        self._log_ctl = log_ctl
+
+    def run(self):
+        while not self._finished:
+            if self._server_handler.get_ctl_sock() == None:
+                try:
+                    self._server_handler.accept_connection()
+                except socket.error:
+                    continue
+                self._log_ctl.set_connection(
+                                            self._server_handler.get_ctl_sock())
+
+            msgs = self._server_handler.get_messages()
+
+            for msg in msgs:
+                self._process_msg(msg[1])
+
+            if self._server_handler.get_ctl_sock() == None:
+                self._log_ctl.cancel_connection()
+
+    def _process_msg(self, msg):
+        if msg["type"] == "command":
+            method = getattr(self._methods, msg["method_name"], None)
+            if method != None:
+                result = method(*msg["args"])
+                response = {"type": "result", "result": result}
+                if not self._server_handler.send_data_to_ctl(response):
+                    self._log_ctl.cancel_connection()
+            else:
+                err = "Method not found: %s" % msg["method_name"]
+                response = {"type": "error", "err": err}
+                if not self._server_handler.send_data_to_ctl(response):
+                    self._log_ctl.cancel_connection()
+
+        elif msg["type"] == "log":
+            if not self._server_handler.send_data_to_ctl(msg):
+                self._log_ctl.cancel_connection()
+        elif msg["type"] == "exception":
+            if not self._server_handler.send_data_to_ctl(msg):
+                self._log_ctl.cancel_connection()
+        else:
+            raise Exception("Recieved unknown command")
+
+        pipes = self._cmd_context.get_read_pipes()
+        self._server_handler.update_connections(pipes)
+
+    def register_die_signal(self, signum):
+        signal.signal(signum, self._signal_die_handler)
+
+    def _signal_die_handler(self, signum, frame):
+        logging.info("Caught signal %d -> dying" % signum)
+        self._finished = True
