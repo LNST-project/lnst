@@ -16,7 +16,8 @@ import sys
 import logging
 import os
 import re
-from lnst.Common.Logs import Logs
+import datetime
+from lnst.Common.Logs import LoggingCtl
 from lnst.Common.Config import Config
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
@@ -41,8 +42,8 @@ def usage():
     sys.exit()
 
 def process_recipe(action, file_path, cleanup, res_serializer,
-                   packet_capture, config):
-    nettestctl = NetTestController(file_path, cleanup=cleanup,
+                   packet_capture, config, log_ctl):
+    nettestctl = NetTestController(file_path, log_ctl, cleanup=cleanup,
                                    res_serializer=res_serializer, config=config)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
@@ -65,14 +66,14 @@ def print_summary(summary):
     logging.info("=====================================================")
 
 def get_recipe_result(args, file_path, cleanup,
-                      res_serializer, packet_capture, config):
+                      res_serializer, packet_capture, config, log_ctl):
     res_serializer.add_recipe(file_path)
-    Logs.set_logging_root_path(file_path)
+    log_ctl.set_recipe(file_path)
 
     res = None
     try:
         res = process_recipe(args, file_path, cleanup,
-                res_serializer, packet_capture, config)
+                res_serializer, packet_capture, config, log_ctl)
     except NetTestError as err:
         logging.error(err)
 
@@ -130,7 +131,10 @@ def main():
             packet_capture = True
 
 
-    Logs(debug, log_folder=config.get_option('environment', 'log_dir'))
+    date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    log_ctl = LoggingCtl(debug,
+                         log_dir=config.get_option('environment', 'log_dir'),
+                         log_subdir=date)
 
     if not args:
         logging.error("No action command passed")
@@ -141,7 +145,6 @@ def main():
     summary = []
 
     res_serializer = NetTestResultSerializer()
-    Logs.save_state()
     for recipe_path in args:
         if os.path.isdir(recipe_path):
             all_files = []
@@ -153,23 +156,19 @@ def main():
             for f in all_files:
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
-                    Logs.reset_state()
                     logging.info("Processing recipe file \"%s\"" % recipe_file)
                     summary.append(get_recipe_result(action, recipe_file,
                                                      cleanup,
                                                      res_serializer,
                                                      packet_capture,
-                                                     config))
-                    Logs.set_logging_root_path(clean=False)
+                                                     config, log_ctl))
         else:
-            Logs.reset_state()
             summary.append(get_recipe_result(action, recipe_path,
                                              cleanup, res_serializer,
                                              packet_capture,
-                                             config))
+                                             config, log_ctl))
 
-    Logs.reset_state()
-    Logs.set_logging_root_path(clean=False)
+    log_ctl.set_recipe("", clean=False)
 
     print_summary(summary)
 

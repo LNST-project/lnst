@@ -16,7 +16,7 @@ import sys
 import os
 import logging
 from lnst.Common.Daemon import Daemon
-from lnst.Common.Logs import Logs
+from lnst.Common.Logs import LoggingCtl
 from lnst.Common.Config import Config
 from lnst.Slave.NetTestSlave import NetTestSlave
 
@@ -72,13 +72,14 @@ def main():
         elif opt in ("-p", "--port"):
             port = int(arg)
 
-    Logs(debug, True, log_folder=config.get_option('environment', 'log_dir'))
+    log_ctl = LoggingCtl(debug,
+                         log_dir=config.get_option('environment', 'log_dir'))
     logging.info("Started")
 
     if port:
-        nettestslave = NetTestSlave(config, port=port)
+        nettestslave = NetTestSlave(config, log_ctl, port=port)
     else:
-        nettestslave = NetTestSlave(config)
+        nettestslave = NetTestSlave(config, log_ctl)
 
     if daemon:
         daemon = Daemon(pidfile)
