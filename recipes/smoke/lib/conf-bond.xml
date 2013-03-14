@@ -1,0 +1,13 @@
+<netconfig>
+    <interface id="if-1" phys_id="dev-1" type="eth"/>
+    <interface id="if-2" phys_id="dev-2" type="eth"/>
+    <interface id="testiface" type="bond">
+        <slaves>
+            <slave id="if-1"/>
+            <slave id="if-2"/>
+        </slaves>
+        <addresses>
+            <address value="{$testip}"/>
+        </addresses>
+    </interface>
+</netconfig>

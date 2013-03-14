@@ -1,0 +1,14 @@
+<requirements>
+    <netdevices>
+        <netdevice network="net" phys_id="dev-1">
+            <params>
+                <param name="type" value="eth"/>
+            </params>
+        </netdevice>
+        <netdevice network="net" phys_id="dev-2">
+            <params>
+                <param name="type" value="eth"/>
+            </params>
+        </netdevice>
+    </netdevices>
+</requirements>

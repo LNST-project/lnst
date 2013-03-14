@@ -1,0 +1,7 @@
+<command_sequence>
+    <command machine_id="1" timeout="30" type="exec"
+             value="[ `ip -o link | grep {devname(1,testiface)} | wc -l` -gt 0 ]"/>
+    <!-- This does not yet work for non-eth devices -->
+    <!--<command machine_id="1" timeout="30" type="exec"
+             value="[ `ip -o link | grep {hwaddr(1,testiface)} | wc -l` -gt 0 ]"/>-->
+</command_sequence>

@@ -1,0 +1,10 @@
+<command_sequence>
+    <command machine_id="1" timeout="30" type="test" value="IcmpPing">
+        <options>
+            <option name="addr" value="{ip(2,testiface)}"/>
+            <option name="count" value="40"/>
+            <option name="interval" value="0.2"/>
+            <option name="limit_rate" value="95"/>
+        </options>
+    </command>
+</command_sequence>
