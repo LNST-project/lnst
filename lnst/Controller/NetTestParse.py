@@ -230,10 +230,10 @@ class RequirementsParse(RecipeParser):
 
         scheme = {"params": self._params}
         params = {"target": dev["params"]}
-        self._process_child_nodes(node, scheme)
+        self._process_child_nodes(node, scheme, params)
 
         if "type" in dev["params"]:
-            dev["type"] = self._get_attribute(node, "type")
+            dev["type"] = dev["params"]["type"]
 
         if "hwaddr" in dev["params"]:
             dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
