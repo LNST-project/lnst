@@ -172,7 +172,7 @@ class XmlTemplates:
         alias_match = re.match(self._alias_re, string)
         if alias_match:
             alias_name = alias_match.group(1)
-            alias_obj = self._find_definition(alias_name)
+            result = self._find_definition(alias_name)
 
         return result
 
