@@ -58,7 +58,7 @@ class SlavePool:
             parser.disable_events()
 
             machine = {"params": {}, "netdevices": {}}
-            machine_id = re.sub("\.xml$", "", basename, flags=re.I)
+            machine_id = re.sub("\.[xX][mM][lL]$", "", basename)
             parser.set_machine(machine_id, machine)
 
             slavemachine = dom.getElementsByTagName("slavemachine")[0]
