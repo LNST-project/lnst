@@ -27,7 +27,7 @@ from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
-from lnst.Common.NetTestCommand import str_command
+from lnst.Common.NetTestCommand import str_command, CommandException
 from lnst.Controller.NetTestParse import NetTestParse
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Common.ConnectionHandler import send_data, recv_data
@@ -467,7 +467,12 @@ class NetTestController:
         overall_res = True
 
         for sequence in self._recipe["sequences"]:
-            res = self._run_command_sequence(sequence)
+            try:
+                res = self._run_command_sequence(sequence)
+            except CommandException as exc:
+                logging.debug(exc)
+                overall_res = False
+                break
 
             for machine_id in self._recipe["machines"]:
                 self._restore_system_config(machine_id)
@@ -673,6 +678,9 @@ class MessageDispatcher(ConnectionHandler):
         elif message[1]["type"] == "result":
             msg = "Recieved result message from different slave %s" % message[0]
             logging.debug(msg)
+        elif message[1]["type"] == "exception":
+            msg = "Recieved an exception from slave: %s" % message[0]
+            raise CommandException(msg)
         else:
             msg = "Unknown message type: %s" % message[1]["type"]
             raise NetTestError(msg)
