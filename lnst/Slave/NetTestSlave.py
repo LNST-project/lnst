@@ -304,14 +304,16 @@ class ServerHandler(object):
     def add_connection(self, id, connection):
         self._connection_handler.add_connection(id, connection)
 
-    def remove_connection(self, id):
-        self._connection_handler.remove_connection(id, connection)
+    def remove_connection(self, key):
+        connection = self._connection_handler.get_connection(key)
+        self._connection_handler.remove_connection(connection)
 
     def clear_connections(self):
         self._connection_handler.clear_connections()
 
     def update_connections(self, connections):
         for key, connection in connections.iteritems():
+            self.remove_connection(key)
             self.add_connection(key, connection)
 
 class NetTestSlave:
