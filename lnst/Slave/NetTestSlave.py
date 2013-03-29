@@ -377,6 +377,15 @@ class NetTestSlave:
             if not self._server_handler.send_data_to_ctl(msg):
                 self._log_ctl.cancel_connection()
         elif msg["type"] == "exception":
+            if msg["cmd_id"] != None:
+                logging.debug("Recieved an exception from command with id: %s"
+                                % msg["cmd_id"])
+            else:
+                logging.debug("Recieved an exception from foreground command")
+            logging.error(msg["Exception"])
+            cmd = self._cmd_context.get_cmd(msg["cmd_id"])
+            cmd.join()
+            self._cmd_context.del_cmd(cmd)
             if not self._server_handler.send_data_to_ctl(msg):
                 self._log_ctl.cancel_connection()
         elif msg["type"] == "result":

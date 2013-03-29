@@ -126,6 +126,7 @@ class NetTestCommand:
         except:
             type, value, tb = sys.exc_info()
             result = {"type": "exception",
+                    "cmd_id": self._id,
                     "Exception": ''.join(traceback.format_exception(type,
                                                                     value, tb))}
         send_data(self._write_pipe, result)
