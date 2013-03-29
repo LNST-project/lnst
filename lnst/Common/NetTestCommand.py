@@ -172,27 +172,29 @@ class NetTestCommandContext:
     def __init__(self):
         self._dict = {}
 
-    def add_bg_cmd(self, bg_cmd):
-        self._dict[bg_cmd.get_bg_id()] = bg_cmd
+    def add_cmd(self, cmd):
+        self._dict[cmd.get_id()] = cmd
 
-    def del_bg_cmd(self, bg_cmd):
-        del self._dict[bg_cmd.get_bg_id()]
+    def del_cmd(self, cmd):
+        del self._dict[cmd.get_id()]
 
-    def get_bg_cmd(self, bg_id):
-        return self._dict[bg_id]
+    def get_cmd(self, id):
+        return self._dict[id]
 
-    def _kill_all_bg_cmds(self):
-        for bg_id in self._dict:
-            self._dict[bg_id].kill()
+    def _kill_all_cmds(self):
+        for id in self._dict:
+            self._dict[id].kill()
 
     def cleanup(self):
-        self._kill_all_bg_cmds()
+        self._kill_all_cmds()
         self._dict = {}
 
     def get_read_pipes(self):
         pipes = {}
         for key in self._dict:
-            pipes[key] = self._dict[key].get_connection_pipe()
+            pipe = self._dict[key].get_connection_pipe()
+            if pipe != None:
+                pipes[key] = pipe
         return pipes
 
 def NetTestCommandTest(command, resource_table):
