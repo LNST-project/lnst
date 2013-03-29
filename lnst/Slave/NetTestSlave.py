@@ -80,6 +80,11 @@ class SlaveMethods:
         self._remove_capture_files()
         return "bye"
 
+    def kill_cmds(self):
+        logging.info("Killing all forked processes.")
+        self._command_context.cleanup()
+        return "Commands killed"
+
     def get_devices_by_hwaddr(self, hwaddr):
         name_scan = scan_netdevs()
         netdevs = []
@@ -346,6 +351,7 @@ class NetTestSlave:
                     self._server_handler.accept_connection()
                 except socket.error:
                     continue
+                self._cmd_context.cleanup()
                 self._log_ctl.set_connection(
                                             self._server_handler.get_ctl_sock())
 
@@ -355,6 +361,7 @@ class NetTestSlave:
                 self._process_msg(msg[1])
 
             if self._server_handler.get_ctl_sock() == None:
+                self._cmd_context.cleanup()
                 self._log_ctl.cancel_connection()
 
         self._cmd_context.cleanup()
@@ -380,14 +387,17 @@ class NetTestSlave:
                 if result != None:
                     response = {"type": "result", "result": result}
                     if not self._server_handler.send_data_to_ctl(response):
+                        self._cmd_context.cleanup()
                         self._log_ctl.cancel_connection()
             else:
                 err = "Method not found: %s" % msg["method_name"]
                 response = {"type": "error", "err": err}
                 if not self._server_handler.send_data_to_ctl(response):
+                    self._cmd_context.cleanup()
                     self._log_ctl.cancel_connection()
         elif msg["type"] == "log":
             if not self._server_handler.send_data_to_ctl(msg):
+                self._cmd_context.cleanup()
                 self._log_ctl.cancel_connection()
         elif msg["type"] == "exception":
             if msg["cmd_id"] != None:
@@ -400,11 +410,13 @@ class NetTestSlave:
             cmd.join()
             self._cmd_context.del_cmd(cmd)
             if not self._server_handler.send_data_to_ctl(msg):
+                self._cmd_context.cleanup()
                 self._log_ctl.cancel_connection()
         elif msg["type"] == "result":
             if msg["cmd_id"] == None:
                 del msg["cmd_id"]
                 if not self._server_handler.send_data_to_ctl(msg):
+                    self._cmd_context.cleanup()
                     self._log_ctl.cancel_connection()
                 cmd = self._cmd_context.get_cmd(None)
                 cmd.join()
@@ -416,6 +428,7 @@ class NetTestSlave:
 
                 if cmd.finished():
                     if not self._server_handler.send_data_to_ctl(msg):
+                        self._cmd_context.cleanup()
                         self._log_ctl.cancel_connection()
                     self._cmd_context.del_cmd(cmd)
                 else:
