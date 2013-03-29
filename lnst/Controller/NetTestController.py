@@ -323,10 +323,14 @@ class NetTestController:
             return
         for machine_id in self._recipe["machines"]:
             info = self._get_machineinfo(machine_id)
-            if "configured_interfaces" not in info:
+
+            if self._msg_dispatcher.get_connection(machine_id):
+                self._rpc_call(machine_id, "kill_cmds")
+            else:
                 continue
 
-            self._rpc_call(machine_id, "bye")
+            if "configured_interfaces" not in info:
+                continue
 
             for if_id in reversed(info["configured_interfaces"]):
                 self._rpc_call(machine_id, 'deconfigure_interface', if_id)
@@ -353,8 +357,11 @@ class NetTestController:
     def _disconnect_slaves(self):
         if 'machines' not in self._recipe:
             return
+
         for machine_id in self._recipe["machines"]:
-            info = self._get_machineinfo(machine_id)
+            if self._msg_dispatcher.get_connection(machine_id):
+                self._rpc_call(machine_id, "bye")
+                self._msg_dispatcher.disconnect_slave(machine_id)
 
     def _prepare(self):
         # All the perparations are made within the recipe parsing
@@ -693,3 +700,8 @@ class MessageDispatcher(ConnectionHandler):
         log_record['address'] = '(' + address + ')'
         record = logging.makeLogRecord(log_record)
         logger.handle(record)
+
+    def disconnect_slave(self, machine_id):
+        del self._slaves[machine_id]
+        soc = self.get_connection(machine_id)
+        self.remove_connection(soc)
