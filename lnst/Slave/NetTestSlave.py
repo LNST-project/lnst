@@ -14,6 +14,7 @@ jpirko@redhat.com (Jiri Pirko)
 import signal
 import select, logging
 import os
+import sys, traceback
 import datetime
 import socket
 from time import sleep
@@ -362,7 +363,19 @@ class NetTestSlave:
         if msg["type"] == "command":
             method = getattr(self._methods, msg["method_name"], None)
             if method != None:
-                result = method(*msg["args"])
+                try:
+                    result = method(*msg["args"])
+                except:
+                    log_exc_traceback()
+                    type, value, tb = sys.exc_info()
+                    exc_trace = ''.join(traceback.format_exception(type,
+                                                                   value, tb))
+                    response = {"type": "exception",
+                            "Exception": exc_trace}
+                    if not self._server_handler.send_data_to_ctl(response):
+                        self._cmd_context.cleanup()
+                        self._log_ctl.cancel_connection()
+                    return
 
                 if result != None:
                     response = {"type": "result", "result": result}
