@@ -159,9 +159,14 @@ class SlaveMethods:
 
     def run_command(self, command):
         try:
-            cmd_cls = NetTestCommand(self._command_context, command,
+            cmd = NetTestCommand(self._command_context, command,
                                         self._resource_table, self._log_ctl)
-            return cmd_cls.run()
+            self._command_context.add_cmd(cmd)
+
+            res = cmd.run()
+            if not cmd.forked():
+                self._command_context.del_cmd(cmd)
+            return res
         except:
             log_exc_traceback()
             cmd_type = command["type"]
@@ -351,26 +356,48 @@ class NetTestSlave:
             if self._server_handler.get_ctl_sock() == None:
                 self._log_ctl.cancel_connection()
 
+        self._cmd_context.cleanup()
+
     def _process_msg(self, msg):
         if msg["type"] == "command":
             method = getattr(self._methods, msg["method_name"], None)
             if method != None:
                 result = method(*msg["args"])
-                response = {"type": "result", "result": result}
-                if not self._server_handler.send_data_to_ctl(response):
-                    self._log_ctl.cancel_connection()
+
+                if result != None:
+                    response = {"type": "result", "result": result}
+                    if not self._server_handler.send_data_to_ctl(response):
+                        self._log_ctl.cancel_connection()
             else:
                 err = "Method not found: %s" % msg["method_name"]
                 response = {"type": "error", "err": err}
                 if not self._server_handler.send_data_to_ctl(response):
                     self._log_ctl.cancel_connection()
-
         elif msg["type"] == "log":
             if not self._server_handler.send_data_to_ctl(msg):
                 self._log_ctl.cancel_connection()
         elif msg["type"] == "exception":
             if not self._server_handler.send_data_to_ctl(msg):
                 self._log_ctl.cancel_connection()
+        elif msg["type"] == "result":
+            if msg["cmd_id"] == None:
+                del msg["cmd_id"]
+                if not self._server_handler.send_data_to_ctl(msg):
+                    self._log_ctl.cancel_connection()
+                cmd = self._cmd_context.get_cmd(None)
+                cmd.join()
+                self._cmd_context.del_cmd(cmd)
+            else:
+                cmd = self._cmd_context.get_cmd(msg["cmd_id"])
+                cmd.join()
+                del msg["cmd_id"]
+
+                if cmd.finished():
+                    if not self._server_handler.send_data_to_ctl(msg):
+                        self._log_ctl.cancel_connection()
+                    self._cmd_context.del_cmd(cmd)
+                else:
+                    cmd.set_result(msg["result"])
         else:
             raise Exception("Recieved unknown command")
 
