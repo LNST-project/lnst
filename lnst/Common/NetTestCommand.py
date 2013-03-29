@@ -18,6 +18,7 @@ import imp
 import pickle, traceback
 import multiprocessing
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
+from lnst.Common.ConnectionHandler import recv_data, send_data
 
 def str_command(command):
     out = ("type (%s), machine_id (%s), value (%s)"
@@ -46,78 +47,123 @@ class BgCommandException(Exception):
     def __str__(self):
         return "BgCommandError: " + self._str
 
-class BgCommand:
-    def __init__(self, bg_id, cmd_cls, log_ctl):
-        self._bg_id = bg_id
-        self._cmd_cls = cmd_cls
-        self._pid = None
+
+class NetTestCommand:
+    def __init__(self, command_context, command, resource_table, log_ctl):
+        self._cmd_cls = get_command_class(command_context, command,
+                                                resource_table)
+        self._command_context = command_context
+        self._command = command
+
+        self._process = None
+        self._id = None
         self._read_pipe = None
+        self._write_pipe = None
+        self._connection_pipe = None
         self._killed = False
+        self._finished = False
+        self._result = None
         self._log_ctl = log_ctl
 
-    def get_bg_id(self):
-        return self._bg_id
+        if "bg_id" not in self._command:
+            self._id = None
+        else:
+            self._id = self._command["bg_id"]
+
+    def get_id(self):
+        return self._id
+
+    def forked(self):
+        return self._process != None
+
+    def finished(self):
+        return self._finished
 
     def run(self):
-        read_pipe, write_pipe = os.pipe() #TODO multiprocessing
-        con_read_pipe, con_write_pipe = multiprocessing.Pipe()
-        self._pid = os.fork()
-        if self._pid:
-            os.close(write_pipe)
+        if isinstance(self._cmd_cls, NetTestCommandControl):
+            return self._cmd_cls.run()
+
+        self._read_pipe, self._write_pipe = multiprocessing.Pipe()
+        self._process = multiprocessing.Process(target=self._run)
+
+        self._process.daemon = False
+        self._process.start()
+        self._pid = self._process.pid
+
+        self._connection_pipe = self._read_pipe
+
+        if not self._id:
+            logging.debug("Running command with"
+                          " pid \"%d\"" % (self._pid))
+            return None
+        else:
             logging.debug("Running in background with"
-                          " id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
-            self._read_pipe = read_pipe
-            self._connection_pipe = con_read_pipe
-            return {"passed": True, "pipe": self._read_pipe}
-        os.close(read_pipe)
+                          " bg_id \"%s\" pid \"%d\"" % (self._id, self._pid))
+            return {"passed": True}
+
+    def _run(self):
         os.setpgrp()
         self._cmd_cls.set_handle_intr()
-        self._connection_pipe = con_write_pipe
+
+        self._connection_pipe = self._write_pipe
 
         self._log_ctl.unset_recipe()
         self._log_ctl.cancel_connection()
-        self._log_ctl.set_connection(self._connection_pipe)
+        self._log_ctl.set_connection(self._write_pipe)
 
+        result = {}
         try:
             self._cmd_cls.run()
-            result = self._cmd_cls.get_result()
+            res_data = self._cmd_cls.get_result()
+            result["type"] = "result"
+            result["cmd_id"] = self._id
+            result["result"] = res_data
         except KeyboardInterrupt:
-            result = self._cmd_cls.get_result()
+            res_data = self._cmd_cls.get_result()
+            result["type"] = "result"
+            result["cmd_id"] = self._id
+            result["result"] = res_data
         except:
             type, value, tb = sys.exc_info()
-            result = {"Exception": ''.join(traceback.format_exception(type, value, tb))}
-        tmp = pickle.dumps(result)
-        os.write(write_pipe, tmp)
-        os.close(write_pipe)
-        os._exit(0)
+            result = {"type": "exception",
+                    "Exception": ''.join(traceback.format_exception(type,
+                                                                    value, tb))}
+        send_data(self._write_pipe, result)
+        self._write_pipe.close()
+
+    def join(self):
+        self._process.join()
 
     def wait_for(self):
-        logging.debug("Waiting for background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
-        os.waitpid(self._pid, 0)
+        logging.debug("Waiting for background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
+        self._finished = True
 
     def interrupt(self):
-        logging.debug("Interrupting background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
-        os.killpg(os.getpgid(self._pid), signal.SIGINT)
-        os.waitpid(self._pid, 0)
+        self._finished = True
+        if os.path.exists("/proc/%d" % self._pid):
+            logging.debug("Interrupting background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
+            os.killpg(os.getpgid(self._pid), signal.SIGINT)
+            self._process.join()
 
     def kill(self):
-        logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._bg_id, self._pid))
-        self._killed = True
-        os.killpg(os.getpgid(self._pid), signal.SIGKILL)
+        if os.path.exists("/proc/%d" % self._pid):
+            logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
+            self._killed = True
+            os.killpg(os.getpgid(self._pid), signal.SIGKILL)
+            self._process.join()
 
     def get_result(self):
-        result = {}
         if self._killed:
-            result["logs"] = []
+            result = {}
+            result["type"] = "result"
             result["passed"] = True
         else:
-            tmp = os.read(self._read_pipe, 4096*10)
-            result = pickle.loads(tmp)
-            if "Exception" in result:
-                raise BgCommandException(result["Exception"])
+            result = self._result
 
-        os.close(self._read_pipe)
         return result
+
+    def set_result(self, result):
+        self._result = result
 
     def get_connection_pipe(self):
         return self._connection_pipe
@@ -322,22 +368,3 @@ def get_command_class(command_context, command, resource_table):
 
     cmd_cls.set_resource_table(resource_table)
     return cmd_cls
-
-class NetTestCommand:
-    def __init__(self, command_context, command, resource_table, log_ctl):
-        self._log_ctl = log_ctl
-        self._command_class = get_command_class(command_context, command,
-                                                resource_table)
-        self._command_context = command_context
-        self._command = command
-
-    def run(self):
-        cmd_cls = self._command_class
-        if "bg_id" in self._command:
-            bg_id = self._command["bg_id"]
-            bg_cmd = BgCommand(bg_id, cmd_cls, self._log_ctl)
-            self._command_context.add_bg_cmd(bg_cmd)
-            return bg_cmd.run()
-        else:
-            cmd_cls.run()
-            return cmd_cls.get_result()
