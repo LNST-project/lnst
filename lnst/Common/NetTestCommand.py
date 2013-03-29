@@ -326,29 +326,35 @@ class NetTestCommandControl(NetTestCommandGeneric):
 class NetTestCommandWait(NetTestCommandControl):
     def run(self):
         bg_id = self._command["value"]
-        bg_cmd = self._command_context.get_bg_cmd(bg_id)
+        bg_cmd = self._command_context.get_cmd(bg_id)
         bg_cmd.wait_for()
         result = bg_cmd.get_result()
-        self._command_context.del_bg_cmd(bg_cmd)
-        self.set_result(result)
+        if result != None:
+            bg_cmd.join()
+            self._command_context.del_cmd(bg_cmd)
+        return result
 
 class NetTestCommandIntr(NetTestCommandControl):
     def run(self):
         bg_id = self._command["value"]
-        bg_cmd = self._command_context.get_bg_cmd(bg_id)
+        bg_cmd = self._command_context.get_cmd(bg_id)
         bg_cmd.interrupt()
         result = bg_cmd.get_result()
-        self._command_context.del_bg_cmd(bg_cmd)
-        self.set_result(result)
+        if result != None:
+            bg_cmd.join()
+            self._command_context.del_cmd(bg_cmd)
+        return result
 
 class NetTestCommandKill(NetTestCommandControl):
     def run(self):
         bg_id = self._command["value"]
-        bg_cmd = self._command_context.get_bg_cmd(bg_id)
+        bg_cmd = self._command_context.get_cmd(bg_id)
         bg_cmd.kill()
         result = bg_cmd.get_result()
-        self._command_context.del_bg_cmd(bg_cmd)
-        self.set_result({"passed": True})
+        if result != None:
+            bg_cmd.join()
+            self._command_context.del_cmd(bg_cmd)
+        return result
 
 def get_command_class(command_context, command, resource_table):
     cmd_type = command["type"]
