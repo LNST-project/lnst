@@ -51,7 +51,7 @@ class NetTestController:
         self._msg_dispatcher = MessageDispatcher()
 
         sp = SlavePool(config.get_option('environment', 'pool_dirs'),
-                       check_process_running("libvirtd"))
+                       check_process_running("libvirtd"), config)
         self._slave_pool = sp
 
         self._recipe = recipe = {}
