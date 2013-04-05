@@ -1,11 +1,11 @@
 <netconfig>
     <interface id="if-1" phys_id="dev-1" type="eth"/>
-    <interface id="testiface" type="vlan"/>
+    <interface id="testiface" type="vlan">
         <options>
             <option name="vlan_tci" value="10"/>
         </options>
         <slaves>
-            <slave id="1"/>
+            <slave id="if-1"/>
         </slaves>
         <addresses>
             <address value="{$testip}"/>
