@@ -271,16 +271,18 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         port_netdev = self._config[slaveid]
         port_name = port_netdev["name"]
         teamd_port_config = get_option(port_netdev, "teamd_port_config")
+        dbus_option = "-D" if self._should_enable_dbus() else ""
         if teamd_port_config:
             teamd_port_config = prepare_json_str(teamd_port_config)
-            exec_cmd("teamdctl %s PortConfigUpdate %s \"%s\"" % (dev_name, port_name, teamd_port_config))
+            exec_cmd("teamdctl %s %s port config update %s \"%s\"" % (dbus_option, dev_name, port_name, teamd_port_config))
         NetConfigDevice(port_netdev, self._config).down()
-        exec_cmd("teamdctl %s PortAdd %s" % (dev_name, port_name))
+        exec_cmd("teamdctl %s %s port add %s" % (dbus_option, dev_name, port_name))
 
     def slave_del(self, slaveid):
         dev_name = self._netdev["name"]
         port_name = self._config[slaveid]["name"]
-        exec_cmd("teamdctl %s PortRemove %s" % (dev_name, port_name))
+        dbus_option = "-D" if self._should_enable_dbus() else ""
+        exec_cmd("teamdctl %s %s port remove %s" % (dbus_option, dev_name, port_name))
 
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
