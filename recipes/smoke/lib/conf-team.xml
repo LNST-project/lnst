@@ -5,14 +5,13 @@
         <options>
             <option name="teamd_config">
                 {
-                    "hwaddr": "00:11:22:33:44:55",
                     "runner": {"name": "roundrobin"}
                 }
             </option>
         </options>
         <slaves>
-            <slave id="1"/>
-            <slave id="2"/>
+            <slave id="if-1"/>
+            <slave id="if-2"/>
         </slaves>
         <addresses>
              <address value="{$testip}"/>
