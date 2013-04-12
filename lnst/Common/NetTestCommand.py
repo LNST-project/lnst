@@ -107,9 +107,8 @@ class NetTestCommand:
 
         self._connection_pipe = self._write_pipe
 
-        self._log_ctl.unset_recipe()
-        self._log_ctl.cancel_connection()
-        self._log_ctl.set_connection(self._write_pipe)
+        self._log_ctl.disable_logging()
+        self._log_ctl.set_connection(self._connection_pipe)
 
         result = {}
         try:
