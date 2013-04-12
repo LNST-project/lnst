@@ -396,9 +396,9 @@ class NetTestSlave:
                     self._cmd_context.cleanup()
                     self._log_ctl.cancel_connection()
         elif msg["type"] == "log":
-            if not self._server_handler.send_data_to_ctl(msg):
-                self._cmd_context.cleanup()
-                self._log_ctl.cancel_connection()
+            logger = logging.getLogger()
+            record = logging.makeLogRecord(msg["record"])
+            logger.handle(record)
         elif msg["type"] == "exception":
             if msg["cmd_id"] != None:
                 logging.debug("Recieved an exception from command with id: %s"
