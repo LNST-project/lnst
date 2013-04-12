@@ -17,16 +17,15 @@ import socket
 from _multiprocessing import Connection
 
 def send_data(s, data):
-    pickled_data = cPickle.dumps(data)
-    length = len(pickled_data)
-
-    data_to_send = str(length) + " " + pickled_data
-
     try:
         if isinstance(s, socket.SocketType):
+            pickled_data = cPickle.dumps(data)
+            length = len(pickled_data)
+
+            data_to_send = str(length) + " " + pickled_data
             s.sendall(data_to_send)
         elif isinstance(s, Connection):
-            s.send(pickled_data)
+            s.send(data)
         else:
             return False
     except socket.error:
@@ -57,7 +56,6 @@ def recv_data(s):
         data = cPickle.loads(data)
     elif isinstance(s, Connection):
         data = s.recv()
-        data = cPickle.loads(data)
     else:
         return None
     return data
