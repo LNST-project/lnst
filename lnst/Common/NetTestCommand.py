@@ -144,7 +144,6 @@ class NetTestCommand:
         if os.path.exists("/proc/%d" % self._pid):
             logging.debug("Interrupting background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
             os.killpg(os.getpgid(self._pid), signal.SIGINT)
-            self._process.join()
 
     def kill(self):
         if os.path.exists("/proc/%d" % self._pid):
