@@ -78,6 +78,7 @@ class MultilineFormater(Formatter):
 class LoggingCtl:
     log_folder = ""
     formatter = None
+    display_handler = None
     recipe_handlers = (None,None)
     recipe_log_path = ""
     slaves = {}
@@ -101,19 +102,19 @@ class LoggingCtl:
 
 
         #the display_handler will display logs in the terminal
-        display_handler = logging.StreamHandler(sys.stdout)
-        display_handler.setFormatter(self.formatter)
+        self.display_handler = logging.StreamHandler(sys.stdout)
+        self.display_handler.setFormatter(self.formatter)
         if not debug:
-            display_handler.setLevel(logging.INFO)
+            self.display_handler.setLevel(logging.INFO)
         else:
             if debug == 1:
-                display_handler.setLevel(logging.DEBUG)
+                self.display_handler.setLevel(logging.DEBUG)
             else:
-                display_handler.setLevel(logging.NOTSET)
+                self.display_handler.setLevel(logging.NOTSET)
 
         logger = logging.getLogger()
         logger.setLevel(logging.NOTSET)
-        logger.addHandler(display_handler)
+        logger.addHandler(self.display_handler)
 
     def set_recipe(self, recipe_path, clean=True, expand=""):
         recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
@@ -162,7 +163,7 @@ class LoggingCtl:
         logger.removeHandler(self.slaves[name][0])
         logger.removeHandler(self.slaves[name][1])
 
-        del slaves[name]
+        del self.slaves[name]
 
     def set_connection(self, target):
         if self.transmit_handler != None:
@@ -180,6 +181,17 @@ class LoggingCtl:
             logger = logging.getLogger()
             logger.removeHandler(self.transmit_handler)
             del self.transmit_handler
+
+    def disable_logging(self):
+        self.cancel_connection()
+
+        for s in self.slaves.keys():
+            self.remove_slave(s)
+
+        self.unset_recipe()
+        logger = logging.getLogger()
+        logger.removeHandler(self.display_handler)
+        self.display_handler = None
 
     def _clean_folder(self, path):
         try:
