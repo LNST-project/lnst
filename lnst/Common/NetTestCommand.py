@@ -167,6 +167,9 @@ class NetTestCommand:
     def get_connection_pipe(self):
         return self._connection_pipe
 
+    def get_type(self):
+        return self._command["type"]
+
 class NetTestCommandContext:
     def __init__(self):
         self._dict = {}
