@@ -218,3 +218,6 @@ class LoggingCtl:
         file_info.setLevel(logging.INFO)
 
         return (file_debug, file_info)
+
+    def get_recipe_log_path(self):
+        return self.recipe_log_path
