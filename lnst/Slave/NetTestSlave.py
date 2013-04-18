@@ -162,9 +162,11 @@ class SlaveMethods:
         return True
 
     def _remove_capture_files(self):
-        for name in self._capture_files.itervalues():
+        for key, name in self._capture_files.iteritems():
             logging.debug("Removing temporary packet capture file %s", name)
             os.unlink(name)
+
+        self._capture_files.clear()
 
     def _update_system_config(self, options, persistent):
         system_config = self._system_config
