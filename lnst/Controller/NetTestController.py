@@ -30,6 +30,7 @@ from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
 from lnst.Controller.RecipeParse import RecipeParse
 from lnst.Controller.SlavePool import SlavePool
+from lnst.Controller.Machine import Machine, MachineError
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 
@@ -54,24 +55,24 @@ class NetTestController:
                        check_process_running("libvirtd"), config)
         self._slave_pool = sp
 
+        self._machines = {}
+        self._network_bridges = {}
+
         self._recipe = recipe = {}
         recipe["networks"] = {}
         recipe["machines"] = {}
-        recipe["provisioning"] = {}
         recipe["switches"] = {}
 
         mac_pool_range = config.get_option('environment', 'mac_pool_range')
-        self._mac_pool = MacPool(mac_pool_range[0],
-                                 mac_pool_range[1])
+        self._mac_pool = MacPool(mac_pool_range[0], mac_pool_range[1])
 
-        ntparse = RecipeParse(recipe_path)
-        ntparse.set_target(self._recipe)
+        parser = RecipeParse(recipe_path)
+        parser.set_target(self._recipe)
+        parser.set_machines(self._machines)
 
-        ntparse.register_event_handler("provisioning_requirements_ready",
+        parser.register_event_handler("provisioning_requirements_ready",
                                         self._prepare_provisioning)
-        ntparse.register_event_handler("machine_ready",
-                                        self._prepare_slave)
-        ntparse.register_event_handler("interface_config_ready",
+        parser.register_event_handler("interface_config_ready",
                                         self._prepare_interface)
 
         modules_dirs = config.get_option('environment', 'module_dirs')
@@ -81,7 +82,7 @@ class NetTestController:
         self._resource_table["module"] = self._load_test_modules(modules_dirs)
         self._resource_table["tools"] = self._load_test_tools(tools_dirs)
 
-        self._ntparse = ntparse
+        self._parser = parser
 
     def _get_machineinfo(self, machine_id):
         try:
@@ -99,317 +100,104 @@ class NetTestController:
         raise NetTestError(msg)
 
     def _prepare_provisioning(self):
-        provisioning = self._recipe["provisioning"]
-        if len(provisioning["setup_requirements"]) <= 0:
+        machines = self._recipe["machines"]
+        if len(machines) <= 0:
             return
 
         sp = self._slave_pool
-        machines = sp.provision_setup(provisioning["setup_requirements"])
+        machines = sp.provision_machines(machines)
         if machines == None:
             msg = "This setup cannot be provisioned with the current pool."
             raise NetTestError(msg)
 
         for m_id, machine in machines.iteritems():
-            self._recipe["machines"][m_id] = machine
-        provisioning["map"] = {}
+            self._machines[m_id] = machine
 
         logging.info("Provisioning initialized")
         for m_id in machines.keys():
             provisioner = sp.get_provisioner_id(m_id)
-            provisioning["map"][m_id] = provisioner
             logging.info("  machine %s uses %s" % (m_id, provisioner))
 
-            machines[m_id]["params"]["system_config"] = {}
+        for m_id in machines.keys():
+            self._prepare_machine(m_id)
 
-    def _prepare_device(self, machine_id, dev_id):
-        info = self._get_machineinfo(machine_id)
-        dev = self._recipe["machines"][machine_id]["interfaces"][dev_id]
+    def _prepare_machine(self, m_id):
+        machine = self._machines[m_id]
+        address = socket.gethostbyname(machine.get_hostname())
 
-        dev_net_name = dev["network"]
-        networks = self._recipe["networks"]
-        if not dev_net_name in networks:
-            networks[dev_net_name] = {"members": []}
+        self._log_ctl.add_slave(m_id, address)
+        port = self._config.get_option('environment', 'rpcport')
+        machine.set_rpc(self._msg_dispatcher, port)
+        machine.set_mac_pool(self._mac_pool)
 
-        dev_net = networks[dev_net_name]
-        dev_net["members"].append((machine_id, dev_id))
+        recipe_name = os.path.basename(self._recipe_path)
+        machine.configure(recipe_name, self._docleanup)
+        machine.sync_resources(self._resource_table)
 
-        if dev["create"] == "libvirt":
-            if not "virt_domain_ctl" in info:
-                msg = "Cannot create device. " \
-                      "Machine '%s' is not virtual." % (machine_id)
-                raise NetTestError(msg)
+    def _prepare_interface(self, machine_id, if_id):
+        machine = self._machines[machine_id]
+        ifconfig = self._recipe["machines"][machine_id]["interfaces"][if_id]
+        if_type = ifconfig["type"]
 
-            if "hwaddr" in dev:
-                query_result = self._rpc_call(machine_id,
-                        'get_devices_by_hwaddr', dev["hwaddr"])
-                if query_result:
-                    msg = "Device with hwaddr %s already exists" \
-                                                % dev["hwaddr"]
-                    raise NetTestError(msg)
-            else:
-                while True:
-                    dev["hwaddr"] = self._mac_pool.get_addr()
-                    query_result = self._rpc_call(machine_id,
-                            'get_devices_by_hwaddr', dev["hwaddr"])
-                    if not len(query_result):
-                        break
+        try:
+            iface = machine.get_interface(if_id)
+        except MachineError:
+            iface = machine.new_soft_interface(if_id, if_type)
 
-            if "libvirt_bridge" in dev:
-                brctl = BridgeCtl(dev["libvirt_bridge"])
-            else:
-                if "default_bridge" in dev_net:
-                    brctl = dev_net["default_bridge"]
-                else:
-                    brctl = BridgeCtl()
-                    dev_net["default_bridge"] = brctl
+        if "slaves" in ifconfig:
+            for slave_id in ifconfig["slaves"]:
+                iface.add_slave(machine.get_interface(slave_id))
 
-            br_name = brctl.get_name()
-            brctl.init()
+        if "addresses" in ifconfig:
+            for addr in ifconfig["addresses"]:
+                iface.add_address(addr)
 
-            logging.info("Creating interface %s (%s) on machine %s",
-                            dev_id, dev["hwaddr"], machine_id)
+        if "options" in ifconfig:
+            for name, value in ifconfig["options"]:
+                iface.set_option(name, value)
 
-            domain_ctl = info["virt_domain_ctl"]
-            domain_ctl.attach_interface(dev["hwaddr"], br_name)
+        iface.configure()
 
-            ready_check_func = lambda: self._device_ready(machine_id, dev_id)
-            ready = wait_for(ready_check_func, timeout=10)
-
-            if not ready:
-                msg = "Netdevice initialization failed." \
-                      "Unable to create device %s (%s) on machine %s" \
-                                % (dev_id, dev["hwaddr"], machine_id)
-                raise NetTestError(msg)
-
-            if 'created_devices' not in info:
-                info['created_devices'] = []
-            info['created_devices'].append((dev_id, dev))
-
-        phys_devs = self._rpc_call(machine_id,
-                'get_devices_by_hwaddr', dev["hwaddr"])
-        if len(phys_devs) == 1:
-            pass
-        elif len(phys_devs) < 1:
-            msg = "Device %s not found on machine %s" \
-                            % (dev_id, machine_id)
-            raise NetTestError(msg)
-        elif len(phys_devs) > 1:
-            msg = "Multiple interfaces with same address %s on machine %s" \
-                                    % (dev["hwaddr"], machine_id)
-            raise NetTestError(msg)
-
-    def _device_ready(self, machine_id, dev_id):
-        dev = self._recipe["machines"][machine_id]["interfaces"][dev_id]
-
-        devs = self._rpc_call(machine_id,
-                'get_devices_by_hwaddr', dev["hwaddr"])
-        return len(devs) > 0
-
-    def _prepare_interface(self, machine_id, netdev_config_id):
-        info = self._get_machineinfo(machine_id)
-        logging.info("Configuring interface %s on %s", netdev_config_id,
-                                                        info["hostname"])
-
-        self._configure_interface(machine_id, netdev_config_id)
-
-        if_info = self._rpc_call(machine_id,
-                'get_interface_info', netdev_config_id)
-        machine = self._recipe["machines"][machine_id]
-        if "name" in if_info:
-            machine["netconfig"][netdev_config_id]["name"] = if_info["name"]
-
-        info["configured_interfaces"].append(netdev_config_id)
-
-    def _configure_interface(self, machine_id, netdev_config_id):
-        netconfig = self._recipe["machines"][machine_id]["netconfig"]
-        dev_config = netconfig[netdev_config_id]
-
-        self._rpc_call(machine_id,
-                'configure_interface', netdev_config_id, dev_config)
-
-    def _deconfigure_interface(self, machine_id, netdev_config_id):
-        self._rpc_call(machine_id, 'deconfigure_interface', netdev_config_id)
-
-    def _prepare_slave(self, machine_id):
-        logging.info("Preparing machine %s", machine_id)
-        info = self._get_machineinfo(machine_id)
-
-        if "libvirt_domain" in info:
-            domain_ctl = VirtDomainCtl(info["libvirt_domain"])
-            info["virt_domain_ctl"] = domain_ctl
-
-        self._init_slave_logging(machine_id)
-        self._init_slave_rpc(machine_id)
-
-        info["configured_interfaces"] = []
-
-        self._rpc_call(machine_id, "clear_resource_table")
-        required = self._resource_table
-
-        if self._docleanup and not info["skip_cleanup"]:
-            self._rpc_call(machine_id, 'machine_cleanup')
-        else:
-            logging.info("Skipping cleanup on machine %s" % machine_id)
-
-        for res_type, resources in self._resource_table.iteritems():
-            for res_name, res in resources.iteritems():
-                has_resource = self._rpc_call(machine_id, "has_resource",
-                                                    res["hash"])
-                if not has_resource:
-                    msg = "Transfering %s %s to machine %s" % \
-                            (res_name, res_type, machine_id)
-                    logging.info(msg)
-
-                    local_path = required[res_type][res_name]["path"]
-
-                    if res_type == "tools":
-                        archive = tempfile.NamedTemporaryFile(delete=False)
-                        archive_path = archive.name
-                        archive.close()
-
-                        create_tar_archive(local_path, archive_path, True)
-                        local_path = archive_path
-
-                    remote_path = self._copy_to_slave(local_path, machine_id)
-                    self._rpc_call(machine_id, "add_resource_to_cache",
-                                res["hash"], remote_path, res_name,
-                                res["path"], res_type)
-
-                    if res_type == "tools":
-                        os.unlink(archive_path)
-
-                self._rpc_call(machine_id, "map_resource",
-                            res["hash"], res_type, res_name)
-
-        # Some additional initialization is necessary in case the
-        # underlying machine is provisioned from the pool
-        prov_id = self._slave_pool.get_provisioner_id(machine_id)
-        if prov_id:
-            provisioner = self._slave_pool.get_provisioner(machine_id)
-            logging.info("Initializing provisioned system (%s)" % prov_id)
-            for device in provisioner["interfaces"].itervalues():
-                self._rpc_call(machine_id, 'set_device_down', device["hwaddr"])
-
-        machine = self._recipe["machines"][machine_id]
-        for dev_id in machine["interfaces"].iterkeys():
-            self._prepare_device(machine_id, dev_id)
-
-    def _init_slave_rpc(self, machine_id):
-        info = self._get_machineinfo(machine_id)
-        hostname = info["hostname"]
-        if "rpcport" in info:
-            port = info["rpcport"]
-        else:
-            port = self._config.get_option('environment', 'rpcport')
-        logging.info("Connecting to RPC on machine %s", hostname)
-
-        rpc = socket.create_connection((hostname, port))
-        self._msg_dispatcher.add_slave(machine_id, rpc, info)
-
-        if self._rpc_call(machine_id, 'hello', self._recipe_path) != "hello":
-            msg = "Unable to establish RPC connection to machine %s. " \
-                                                        % hostname
-            msg += "Handshake failed"
-            raise NetTestError(msg)
-
-    def _init_slave_logging(self, machine_id):
-        info = self._get_machineinfo(machine_id)
-        address = socket.gethostbyname(info["hostname"])
-
-        info['logger'] = self._log_ctl.add_slave(address)
-
-    def _deconfigure_slaves(self):
-        if 'machines' not in self._recipe:
+    def _cleanup_slaves(self, deconfigure=True):
+        if self._machines == None:
             return
-        for machine_id in self._recipe["machines"]:
-            info = self._get_machineinfo(machine_id)
 
-            if self._msg_dispatcher.get_connection(machine_id):
-                self._rpc_call(machine_id, "kill_cmds")
-            else:
-                continue
+        for machine_id, machine in self._machines.iteritems():
+            if machine.is_configured():
+                machine.cleanup()
 
-            if "configured_interfaces" not in info:
-                continue
-
-            for if_id in reversed(info["configured_interfaces"]):
-                self._rpc_call(machine_id, 'deconfigure_interface', if_id)
-
-            # detach dynamically created devices
-            if "created_devices" not in info:
-                continue
-            for dev_id, dev in reversed(info["created_devices"]):
-                logging.info("Removing interface %s (%s) from machine %s",
-                                dev_id, dev["hwaddr"], machine_id)
-                domain_ctl = info["virt_domain_ctl"]
-                domain_ctl.detach_interface(dev["hwaddr"])
-
-            #clean-up slave logger
-            self._log_ctl.remove_slave(machine_id)
+                #clean-up slave logger
+                self._log_ctl.remove_slave(machine_id)
 
         # remove dynamically created bridges
-        networks = self._recipe["networks"]
-        for net in networks.itervalues():
-            if "default_bridge" in net:
-                net["default_bridge"].cleanup()
-
-    def _disconnect_slaves(self):
-        if 'machines' not in self._recipe:
-            return
-
-        for machine_id in self._recipe["machines"]:
-            if self._msg_dispatcher.get_connection(machine_id):
-                self._rpc_call(machine_id, "bye")
-                self._msg_dispatcher.disconnect_slave(machine_id)
+        for bridge in self._network_bridges:
+            bridge.cleanup()
 
     def _prepare(self):
         # All the perparations are made within the recipe parsing
         # This is achieved by handling parser events
         try:
-            self._ntparse.parse_recipe()
+            self._parser.parse_recipe()
         except Exception as exc:
             logging.debug("Exception raised during recipe parsing. "\
                     "Deconfiguring machines.")
             log_exc_traceback()
-            self._deconfigure_slaves()
-            self._disconnect_slaves()
+            self._cleanup_slaves()
             raise NetTestError(exc)
 
     def _run_command(self, command):
-        machine_id = command["machine_id"]
-        try:
-            desc = command["desc"]
+        if "desc" in command:
             logging.info("Cmd description: %s", desc)
-        except KeyError:
-            pass
 
         if command["type"] == "ctl_wait":
             sleep(command["value"])
             cmd_res = {"passed" : True}
             return cmd_res
 
-        if "timeout" in command:
-            timeout = command["timeout"]
-            logging.debug("Setting socket timeout to \"%d\"", timeout)
-            socket.setdefaulttimeout(timeout)
-        try:
-            cmd_res = self._rpc_call(machine_id, 'run_command', command)
-        except socket.timeout:
-            msg = "RPC connection to machine %s timed out" % machine_id
-            raise NetTestError(msg)
-        if "timeout" in command:
-            logging.debug("Setting socket timeout to default value")
-            socket.setdefaulttimeout(None)
+        machine_id = command["machine_id"]
+        machine = self._machines[machine_id]
 
-        if command["type"] == "system_config":
-            if cmd_res["passed"]:
-                self._update_system_config(machine_id, cmd_res["res_data"],
-                                                command["persistent"])
-            else:
-                err = "Error occured while setting system configuration (%s)" \
-                                                    % cmd_res["err_msg"]
-                logging.error(err)
-
+        cmd_res = machine.run_command(command)
         return cmd_res
 
     def _run_command_sequence(self, sequence):
@@ -432,13 +220,12 @@ class NetTestController:
     def dump_recipe(self):
         self._prepare()
         pprint(self._recipe)
-        self._deconfigure_slaves()
-        self._disconnect_slaves()
+        self._cleanup_slaves()
         return True
 
     def config_only_recipe(self):
         self._prepare()
-        self._disconnect_slaves()
+        self._cleanup_slaves(deconfigure=False)
         return True
 
     def run_recipe(self, packet_capture=False):
@@ -461,8 +248,7 @@ class NetTestController:
             self._stop_packet_capture()
             self._gather_capture_files()
 
-        self._deconfigure_slaves()
-        self._disconnect_slaves()
+        self._cleanup_slaves()
 
         if not err:
             return res
@@ -480,8 +266,8 @@ class NetTestController:
                 overall_res = False
                 break
 
-            for machine_id in self._recipe["machines"]:
-                self._restore_system_config(machine_id)
+            for machine in self._machines.itervalues():
+                machine.restore_system_config()
 
             # sequence failed, check if we should quit_on_fail
             if not res:
@@ -493,22 +279,22 @@ class NetTestController:
 
     def _start_packet_capture(self):
         logging.info("Starting packet capture")
-        for machine_id in self._recipe["machines"]:
-            capture_files = self._rpc_call(machine_id,
-                    'start_packet_capture', "")
+        for machine_id, machine in self._machines.iteritems():
+            capture_files = machine.start_packet_capture()
             self._remote_capture_files[machine_id] = capture_files
 
     def _stop_packet_capture(self):
         logging.info("Stopping packet capture")
-        for machine_id in self._recipe["machines"]:
-            self._rpc_call(machine_id, 'stop_packet_capture')
+        for machine_id, machine in self._machines.iteritems():
+            machine.stop_packet_capture()
 
+    # TODO: Move this function to logging
     def _gather_capture_files(self):
-        logging_root = self._log_root_path
+        logging_root = self._log_ctl.get_recipe_log_path()
         logging_root = os.path.abspath(logging_root)
         logging.info("Retrieving capture files from slaves")
-        for machine_id in self._recipe["machines"]:
-            hostname = self._recipe["machines"][machine_id]['info']['hostname']
+        for machine_id, machine in self._machines.iteritems():
+            hostname = machine.get_hostname()
 
             slave_logging_dir = os.path.join(logging_root, hostname + "/")
             try:
@@ -520,89 +306,13 @@ class NetTestController:
                     raise NetTestError(msg)
 
             capture_files = self._remote_capture_files[machine_id]
-            for dev_id, remote_path in capture_files.iteritems():
-                filename = "%s.pcap" % dev_id
+            for if_id, remote_path in capture_files.iteritems():
+                filename = "%s.pcap" % if_id
                 local_path = os.path.join(slave_logging_dir, filename)
-                self._copy_from_slave(machine_id, remote_path, local_path)
+                machine.copy_file_from_machine(remote_path, local_path)
 
             logging.info("pcap files from machine %s stored at %s",
                             machine_id, slave_logging_dir)
-
-    def _update_system_config(self, machine_id, res_data, persistent=False):
-        info = self._get_machineinfo(machine_id)
-        system_config = info["system_config"]
-        for option, values in res_data.iteritems():
-            if persistent:
-                if option in system_config:
-                    del system_config[option]
-            else:
-                if not option in system_config:
-                    initial_val = {"initial_val": values["previous_val"]}
-                    system_config[option] = initial_val
-                system_config[option]["current_val"] = values["current_val"]
-
-
-    def _restore_system_config(self, machine_id):
-        info = self._get_machineinfo(machine_id)
-        system_config = info["system_config"]
-
-        if len(system_config) > 0:
-            command = {}
-            command["machine_id"] = machine_id
-            command["type"] = "system_config"
-            command["value"] = ""
-            command["options"] = {}
-            command["persistent"] = True
-            for option, values in system_config.iteritems():
-                command["options"][option] = [{"value": values["initial_val"]}]
-
-            seq = {"commands": [command], "quit_on_fail": "no"}
-            self._run_command_sequence(seq)
-            info["system_config"] = {}
-
-    def _rpc_call(self, machine_id, method_name, *args):
-        data = {}
-        data["type"] = "command"
-        data["method_name"] = method_name
-        data["args"] = args
-
-        self._msg_dispatcher.send_message(machine_id, data)
-
-        result = self._msg_dispatcher.wait_for_result(machine_id)
-
-        return result
-
-    def _copy_to_slave(self, local_path, machine_id, remote_path=None):
-        remote_path = self._rpc_call(machine_id, "start_copy_to", remote_path)
-        f = open(local_path, "rb")
-
-        while True:
-            data = f.read(1024*1024) # 1MB buffer
-            if len(data) == 0:
-                break
-
-            self._rpc_call(machine_id, "copy_part_to",
-                                remote_path, Binary(data))
-
-        self._rpc_call(machine_id, "finish_copy_to", remote_path)
-        return remote_path
-
-    def _copy_from_slave(self, machine_id, remote_path, local_path):
-        status = self._rpc_call(machine_id, "start_copy_from", remote_path)
-        if not status:
-            raise NetTestError("The requested file cannot be transfered." \
-                       "It does not exist on machine %s" % machine_id)
-
-        local_file = open(local_path, "wb")
-
-        binary = "next"
-        while binary != "":
-            binary = self._rpc_call(machine_id, "copy_part_from",
-                                        remote_path, 1024*1024) # 1MB buffer
-            local_file.write(binary.data)
-
-        local_file.close()
-        self._rpc_call(machine_id, "finish_copy_from", remote_path)
 
     def _load_test_modules(self, dirs):
         modules = {}

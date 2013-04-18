@@ -226,19 +226,21 @@ class XmlTemplates:
             raise XmlTemplateError(msg)
         machine = machines[m_id]
 
-
-        if if_id not in machine['netconfig']:
+        try:
+            iface = machine.get_interface(if_id)
+        except:
             msg = "Second parameter of function ip() is invalid: "\
                     "Interface %s does not exist." % if_id
             raise XmlTemplateError(msg)
-        if ip_id >= len(machine['netconfig'][if_id]['addresses']) or ip_id < 0:
-            msg = "Third parameter of function ip() is invalid: "\
-                    "Address %s does not exist." % ip_id
-            raise XmlTemplateError(msg)
-        ip_addr = machine['netconfig'][if_id]['addresses'][ip_id]
 
+        #try:
+        addr = iface.get_address(ip_id)
+        #except:
+        #    msg = "Third parameter of function ip() is invalid: "\
+        #          "Address %s does not exist." % ip_id
+        #    raise XmlTemplateError(msg)
 
-        return ip_addr.split('/')[0]
+        return addr.split('/')[0]
 
     def _hwaddr_func(self, params):
         self._validate_func_params("hwaddr", params, 2, 0)
@@ -252,13 +254,14 @@ class XmlTemplates:
             raise XmlTemplateError(msg)
         machine = machines[m_id]
 
-        if if_id not in machine['netconfig']:
-            msg = "Second parameter of function hwaddr() is invalid: "\
+        try:
+            iface = machine.get_interface(if_id)
+        except:
+            msg = "Second parameter of function ip() is invalid: "\
                     "Interface %s does not exist." % if_id
             raise XmlTemplateError(msg)
-        mac_addr = machine['netconfig'][if_id]['hwaddr']
 
-        return mac_addr
+        return iface.get_hwaddr()
 
 
     def _devname_func(self, params):
@@ -273,13 +276,14 @@ class XmlTemplates:
             raise XmlTemplateError(msg)
         machine = machines[m_id]
 
-        if if_id not in machine['netconfig']:
-            msg = "Second parameter of function devname() is invalid: "\
+        try:
+            iface = machine.get_interface(if_id)
+        except:
+            msg = "Second parameter of function ip() is invalid: "\
                     "Interface %s does not exist." % if_id
             raise XmlTemplateError(msg)
-        dev_name = machine['netconfig'][if_id]['name']
 
-        return dev_name
+        return iface.get_devname()
 
     @staticmethod
     def _validate_func_params(name, params, mandatory, optional):

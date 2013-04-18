@@ -237,9 +237,9 @@ class LnstParser(XmlParser):
 
     def set_target(self, data_dict):
         self._data = data_dict
-        # TODO: This should be removed and done differently after we
-        # figure out the new design of template functions
-        self._template_proc.set_machines(data_dict["machines"])
+
+    def set_machines(self, machines):
+        self._template_proc.set_machines(machines)
 
     def set_definitions(self, defs):
         self._template_proc.set_definitions(defs)

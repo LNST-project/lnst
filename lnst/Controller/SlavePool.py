@@ -21,6 +21,7 @@ from xml.dom import minidom
 from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.NetUtils import test_tcp_connection
 from lnst.Controller.SlaveMachineParse import SlaveMachineParse
+from lnst.Controller.Machine import Machine
 
 class SlavePool:
     """
@@ -85,7 +86,7 @@ class SlavePool:
                 logging.warning("libvirtd not found- Machine Pool skipping "\
                         "machine %s" % machine_id)
 
-    def provision_setup(self, setup_requirements):
+    def provision_machines(self, mreqs):
         """
         This method will try to map a dictionary of machines'
         requirements to a pool of machines that is available to
@@ -99,16 +100,16 @@ class SlavePool:
         """
 
         mapper = SetupMapper()
-        self._map = mapper.map_setup(setup_requirements, self._pool)
+        self._map = mapper.map_setup(mreqs, self._pool)
 
         if self._map == None:
             return None
 
-        configs = {}
+        machines = {}
         for m_id in self._map["machines"]:
-            configs[m_id] = self._get_mapped_slave(m_id)
+            machines[m_id] = self._get_mapped_slave(m_id)
 
-        return configs
+        return machines
 
     def get_provisioner_id(self, m_id):
         try:
@@ -134,20 +135,33 @@ class SlavePool:
 
     def _get_mapped_slave(self, tm_id):
         pm_id = self._get_machine_mapping(tm_id)
+        pm = self._pool[pm_id]
 
-        machine = copy.deepcopy(self._pool[pm_id])
+        hostname = pm["params"]["hostname"]
+        libvirt_domain = pm["params"]["libvirt_domain"]
 
-        new_interfaces = {}
+        machine = Machine(tm_id, hostname, libvirt_domain)
+
+        used = []
         if_map = self._map["machines"][tm_id]["interfaces"]
         for t_if, p_if in if_map.iteritems():
-            new_interfaces[t_if] = machine["interfaces"][p_if]
+            used.append(p_if)
+            if_data = pm["interfaces"][p_if]
 
             for t_net, p_net in self._map["networks"].iteritems():
-                if new_interfaces[t_if]["network"] == p_net:
-                    new_interfaces[t_if]["network"] = t_net
+                if pm["interfaces"][p_if]["network"] == p_net:
                     break
 
-        machine["interfaces"] = new_interfaces
+            iface = machine.new_static_interface(t_if, "eth")
+            iface.set_hwaddr(if_data["hwaddr"])
+            iface.set_network(t_net)
+
+        for if_id, if_data in pm["interfaces"].iteritems():
+            if if_id not in used:
+                iface = machine.new_unused_interface("eth")
+                iface.set_hwaddr(if_data["hwaddr"])
+                iface.set_network(t_net)
+
         return machine
 
 class SetupMapper:
@@ -190,13 +204,13 @@ class SetupMapper:
     _pool_machines = None
 
     @staticmethod
-    def _get_topology(machine_configs):
+    def _get_topology(machine_desc):
         """
         This function will generate an adjacenty list from machine
         configuration dictionary. It can handle both machines and
         templates.
 
-        :param machine_configs: dictionary of machines in the topology
+        :param machine_desc: dictionary of machines in the topology
         :type machines_configs: dict
 
         :return: Topology - neighbour connection list (adjacency list-like
@@ -205,7 +219,7 @@ class SetupMapper:
         """
 
         networks = {}
-        for m_id, m_config in machine_configs.iteritems():
+        for m_id, m_config in machine_desc.iteritems():
             for dev_id, dev_info in m_config["interfaces"].iteritems():
                 net = dev_info["network"]
                 if not net in networks:
@@ -213,7 +227,7 @@ class SetupMapper:
                 networks[net].append((m_id, dev_id))
 
         topology = {}
-        for m_id, m_config in machine_configs.iteritems():
+        for m_id, m_config in machine_desc.iteritems():
             topology[m_id] = []
             for net_name, net in networks.iteritems():
                 devs_in_net = []
@@ -316,7 +330,12 @@ class SetupMapper:
         t_if = self._template_machines[tm_id]["interfaces"][t_if_id]
         p_if = self._pool_machines[pm_id]["interfaces"][pm_if_id]
 
-        properties = ["type", "hwaddr"]
+
+        for prop_name, prop_value in t_if["params"].iteritems():
+            if p_if["params"][prop_name] != prop_value:
+                return False
+
+        properties = ["type"]
         for prop_name, prop_value in t_if.iteritems():
             if prop_name in properties:
                 if p_if[prop_name] != prop_value:
