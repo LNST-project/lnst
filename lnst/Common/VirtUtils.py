@@ -42,7 +42,8 @@ def _virsh(cmd):
     except ExecCmdFail as err:
         raise VirtUtilsError("virsh error: %s" % err)
 
-
+# TODO: This class should use the python bindings to libvirt,
+# not the virsh CLI interface
 class VirtDomainCtl:
     _name = None
 
