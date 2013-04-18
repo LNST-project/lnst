@@ -13,14 +13,14 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import os
 import re
-from lnst.Common.XmlProcessing import RecipeParser
+from lnst.Common.XmlProcessing import LnstParser
 from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.XmlProcessing import XmlProcessingError
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import bool_it
 from lnst.Common.RecipePath import RecipePath
 
-class NetTestParse(RecipeParser):
+class NetTestParse(LnstParser):
     def __init__(self, recipe_filepath):
         super(NetTestParse, self).__init__()
 
@@ -42,7 +42,7 @@ class NetTestParse(RecipeParser):
         second_pass.parse(xml_dom)
 
 
-class FirstPass(RecipeParser):
+class FirstPass(LnstParser):
     """
     Purpose of the first pass through the recipe is to detect
     machine requirements for provisioning.
@@ -52,7 +52,7 @@ class FirstPass(RecipeParser):
     """
 
     def parse(self, node):
-        self._recipe["provisioning"]["setup_requirements"] = {}
+        self._data["provisioning"]["setup_requirements"] = {}
 
         if node.nodeType == node.DOCUMENT_NODE:
             scheme = {"lnstrecipe": self._lnstrecipe}
@@ -80,7 +80,7 @@ class FirstPass(RecipeParser):
                     default_handler=self._ignore_tag)
 
     def _requirements(self, node, params):
-        machine_req = self._recipe["provisioning"]["setup_requirements"]
+        machine_req = self._data["provisioning"]["setup_requirements"]
         m_id = params["id"]
         template = {}
         template["netdevices"] = {}
@@ -94,10 +94,10 @@ class FirstPass(RecipeParser):
         pass
 
 
-class SecondPass(RecipeParser):
+class SecondPass(LnstParser):
     """
     Second pass makes sure all recognized values from the recipe
-    are properly saved into the self._recipe.
+    are properly saved into the self._data.
 
     This is where the real parsing is done.
     """
@@ -134,14 +134,14 @@ class SecondPass(RecipeParser):
         subparser.parse(node)
 
     def _command_sequence(self, node, params):
-        if not "sequences" in self._recipe:
-            self._recipe["sequences"] = []
+        if not "sequences" in self._data:
+            self._data["sequences"] = []
 
         subparser = CommandSequenceParse(self)
         subparser.parse(node)
 
 
-class MachineParse(RecipeParser):
+class MachineParse(LnstParser):
     _target = "machines"
 
     def set_type(self, machine_type):
@@ -155,7 +155,7 @@ class MachineParse(RecipeParser):
     def parse(self, node):
         self._id = self._get_attribute(node, "id")
 
-        recipe = self._recipe
+        recipe = self._data
         self._machine = recipe["machines"][self._id]
         self._machine["netconfig"] = {}
 
@@ -175,7 +175,7 @@ class MachineParse(RecipeParser):
             logging.error(XmlProcessingError(str(exc), node))
             raise
 
-class ParamsParse(RecipeParser):
+class ParamsParse(LnstParser):
     _params = None
 
     def set_params_dict(self, target):
@@ -195,7 +195,7 @@ class ParamsParse(RecipeParser):
 
         self._params[name] = value
 
-class RequirementsParse(RecipeParser):
+class RequirementsParse(LnstParser):
     _requirements = None
 
     def set_template(self, tmp_dict):
@@ -239,7 +239,7 @@ class RequirementsParse(RecipeParser):
             dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
 
 
-class SlaveMachineParse(RecipeParser):
+class SlaveMachineParse(LnstParser):
     _machine_id = None
     _machine = None
 
@@ -333,7 +333,7 @@ class SlaveMachineParse(RecipeParser):
             logging.error(XmlProcessingError(str(exc), node))
             raise
 
-class NetConfigParse(RecipeParser):
+class NetConfigParse(LnstParser):
     _machine_id = None
     _machine = None
 
@@ -467,9 +467,9 @@ class NetConfigParse(RecipeParser):
         self._process_child_nodes(node, scheme, params)
 
 
-class CommandSequenceParse(RecipeParser):
+class CommandSequenceParse(LnstParser):
     def parse(self, node):
-        sequences = self._recipe["sequences"]
+        sequences = self._data["sequences"]
         sequences.append({})
         seq_num = len(sequences) - 1
         sequences[seq_num]["commands"] = []
@@ -532,7 +532,7 @@ class CommandSequenceParse(RecipeParser):
             raise XmlProcessingError(msg, self._seq_node)
 
 
-class CommandParse(RecipeParser):
+class CommandParse(LnstParser):
     _seq_num = None
     _cmd_num = None
 
@@ -540,7 +540,7 @@ class CommandParse(RecipeParser):
         self._seq_num = num
 
     def parse(self, node):
-        recipe = self._recipe
+        recipe = self._data
         command = {}
         recipe["sequences"][self._seq_num]["commands"].append(command)
         self._cmd_num = len(recipe["sequences"][self._seq_num]["commands"]) - 1
@@ -607,7 +607,7 @@ class CommandParse(RecipeParser):
     def _options(self, node, params):
         seq = self._seq_num
         cmd = self._cmd_num
-        self._recipe["sequences"][seq]["commands"][cmd]["options"] = {}
+        self._data["sequences"][seq]["commands"][cmd]["options"] = {}
 
         scheme = {"option": self._option}
         self._process_child_nodes(node, scheme)
@@ -615,7 +615,7 @@ class CommandParse(RecipeParser):
     def _option(self, node, params):
         seq = self._seq_num
         cmd = self._cmd_num
-        options = self._recipe["sequences"][seq]["commands"][cmd]["options"]
+        options = self._data["sequences"][seq]["commands"][cmd]["options"]
 
         name = self._get_attribute(node, "name")
         if not name in options:

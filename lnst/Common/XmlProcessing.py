@@ -205,39 +205,41 @@ class XmlParser(object):
 
         return res
 
-class RecipeParser(XmlParser):
+class LnstParser(XmlParser):
     """ Enhanced XmlParser
 
         This class enhances XmlParser with advanced features that are
-        used in parsing XML recipe files. All recipe (sub)parsers should
+        used in parsing LNST XML files. All (sub)parsers should
         use this as their base class.
     """
 
-    _recipe = None
+    _data = None
     _template_proc = None
     _include_root = None
     _events_enabled = None
     _event_handlers = None
 
     def __init__(self, parent=None):
-        super(RecipeParser, self).__init__()
+        super(LnstParser, self).__init__()
 
         if parent:
-            self._recipe = parent._recipe
+            self._data = parent._data
             self._template_proc = parent._template_proc
             self._include_root = parent._include_root
             self._events_enabled = parent._events_enabled
             self._event_handlers = parent._event_handlers
         else:
-            self._recipe = {}
+            self._data = {}
             self._template_proc = XmlTemplates()
             self._include_root = os.getcwd()
             self._events_enabled = True
             self._event_handlers = {}
 
-    def set_recipe(self, recipe):
-        self._recipe = recipe
-        self._template_proc.set_machines(recipe["machines"])
+    def set_target(self, data_dict):
+        self._data = data_dict
+        # TODO: This should be removed and done differently after we
+        # figure out the new design of template functions
+        self._template_proc.set_machines(data_dict["machines"])
 
     def set_definitions(self, defs):
         self._template_proc.set_definitions(defs)
@@ -276,7 +278,7 @@ class RecipeParser(XmlParser):
         if new_ns_level:
             self._template_proc.add_namespace_level()
 
-        parent = super(RecipeParser, self)
+        parent = super(LnstParser, self)
         result = parent._process_child_nodes(node, scheme, params,
                                                 default_handler)
 
@@ -324,14 +326,14 @@ class RecipeParser(XmlParser):
                 if not node.hasAttribute(name):
                     node.setAttribute(name, value)
 
-        parent = super(RecipeParser, self)
+        parent = super(LnstParser, self)
         parent._process_node(node, handler, params)
 
         if old_include_root:
             self._include_root = old_include_root
 
     def _get_attribute(self, node, attr_name, conversion_cb=None):
-        parent = super(RecipeParser, self)
+        parent = super(LnstParser, self)
         raw_attr_val = parent._get_attribute(node, attr_name)
 
         try:
@@ -342,7 +344,7 @@ class RecipeParser(XmlParser):
         return self._convert_string(node, attr_val, conversion_cb)
 
     def _get_text_content(self, node, conversion_cb=None):
-        parent = super(RecipeParser, self)
+        parent = super(LnstParser, self)
         raw_content = parent._get_text_content(node)
 
         try:

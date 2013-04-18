@@ -65,7 +65,7 @@ class NetTestController:
                                  mac_pool_range[1])
 
         ntparse = NetTestParse(recipe_path)
-        ntparse.set_recipe(self._recipe)
+        ntparse.set_target(self._recipe)
 
         ntparse.register_event_handler("provisioning_requirements_ready",
                                         self._prepare_provisioning)
