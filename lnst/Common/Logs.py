@@ -162,7 +162,7 @@ class LoggingCtl:
         logger.removeHandler(self.slaves[slave_id][1])
         logger.removeHandler(self.slaves[slave_id][2])
 
-        del slaves[slave_id]
+        del self.slaves[slave_id]
 
     def add_client_log(self, slave_id, log_record):
         name = self.slaves[slave_id][0]
