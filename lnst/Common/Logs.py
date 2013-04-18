@@ -141,7 +141,7 @@ class LoggingCtl:
         logger.removeHandler(self.recipe_handlers[1])
         self.recipe_handlers = (None, None)
 
-    def add_slave(self, name):
+    def add_slave(self, slave_id, name):
         slave_log_path = os.path.join(self.recipe_log_path, name)
         self._clean_folder(slave_log_path)
 
@@ -153,17 +153,24 @@ class LoggingCtl:
         logger.addHandler(slave_info)
         logger.addHandler(slave_debug)
 
-        self.slaves[name] = (slave_info, slave_debug)
-        return logger
+        self.slaves[slave_id] = (name, slave_info, slave_debug)
 
-    def remove_slave(self, name):
-        logger = logging.getLogger(name)
+    def remove_slave(self, slave_id):
+        logger = logging.getLogger(self.slaves[slave_id][0])
         logger.propagate = False
 
-        logger.removeHandler(self.slaves[name][0])
-        logger.removeHandler(self.slaves[name][1])
+        logger.removeHandler(self.slaves[slave_id][1])
+        logger.removeHandler(self.slaves[slave_id][2])
 
-        del self.slaves[name]
+        del slaves[slave_id]
+
+    def add_client_log(self, slave_id, log_record):
+        name = self.slaves[slave_id][0]
+        logger = logging.getLogger(name)
+
+        log_record['address'] = '(' + name + ')'
+        record = logging.makeLogRecord(log_record)
+        logger.handle(record)
 
     def set_connection(self, target):
         if self.transmit_handler != None:

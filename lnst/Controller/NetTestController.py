@@ -48,7 +48,7 @@ class NetTestController:
         self._config = config
         self._log_ctl = log_ctl
         self._recipe_path = recipe_path
-        self._msg_dispatcher = MessageDispatcher()
+        self._msg_dispatcher = MessageDispatcher(log_ctl)
 
         sp = SlavePool(config.get_option('environment', 'pool_dirs'),
                        check_process_running("libvirtd"), config)
@@ -345,8 +345,7 @@ class NetTestController:
                 domain_ctl.detach_interface(dev["hwaddr"])
 
             #clean-up slave logger
-            address = socket.gethostbyname(info["hostname"])
-            self._log_ctl.remove_slave(address)
+            self._log_ctl.remove_slave(machine_id)
 
         # remove dynamically created bridges
         networks = self._recipe["networks"]
@@ -650,12 +649,11 @@ class NetTestController:
         return packages
 
 class MessageDispatcher(ConnectionHandler):
-    def __init__(self):
+    def __init__(self, log_ctl):
         super(MessageDispatcher, self).__init__()
-        self._slaves = {}
+        self._log_ctl = log_ctl
 
-    def add_slave(self, machine_id, connection, machine_info):
-        self._slaves[machine_id] = machine_info
+    def add_slave(self, machine_id, connection):
         self.add_connection(machine_id, connection)
 
     def send_message(self, machine_id, data):
@@ -681,7 +679,7 @@ class MessageDispatcher(ConnectionHandler):
     def _process_message(self, message):
         if message[1]["type"] == "log":
             record = message[1]["record"]
-            self._add_client_log(message[0], record)
+            self._log_ctl.add_client_log(message[0], record)
         elif message[1]["type"] == "result":
             msg = "Recieved result message from different slave %s" % message[0]
             logging.debug(msg)
@@ -692,16 +690,6 @@ class MessageDispatcher(ConnectionHandler):
             msg = "Unknown message type: %s" % message[1]["type"]
             raise NetTestError(msg)
 
-    def _add_client_log(self, machine_id, log_record):
-        info = self._slaves[machine_id]
-        address = socket.gethostbyname(info['hostname'])
-        logger = info['logger']
-
-        log_record['address'] = '(' + address + ')'
-        record = logging.makeLogRecord(log_record)
-        logger.handle(record)
-
     def disconnect_slave(self, machine_id):
-        del self._slaves[machine_id]
         soc = self.get_connection(machine_id)
         self.remove_connection(soc)
