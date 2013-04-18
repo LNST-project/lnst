@@ -285,7 +285,7 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
         (stdout, stderr) = exec_cmd(cmd_str)
 
     def run(self):
-        res_data = {}
+        res_data = {"options": {}, "persistent": False}
 
         # inline version
         if "option" in self._command:
@@ -313,8 +313,11 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
                 self.set_fail("Unable to set %s config option!" % option)
                 return
 
-            res_data[option] = {"current_val": new_values[-1],
-                                "previous_val": prev_val}
+            if "persistent" in self._command:
+                res_data["persistent"] = self._command["persistent"]
+
+            res_data["options"][option] = {"current_val": new_values[-1],
+                                           "previous_val": prev_val}
 
         res = {"passed": True}
         res["res_data"] = res_data
