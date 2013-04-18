@@ -4,15 +4,13 @@
             <define>
                 <alias name="testip" value="192.168.100.240/24"/>
             </define>
-            <requirements source="../lib/req.xml"/>
-            <netconfig source="#CONF1#"/>
+            <interfaces source="#CONF1#"/>
         </machine>
         <machine id="2">
             <define>
                 <alias name="testip" value="192.168.100.215/24"/>
             </define>
-            <requirements source="../lib/req.xml"/>
-            <netconfig source="#CONF2#"/>
+            <interfaces source="#CONF2#"/>
         </machine>
     </machines>
     #SEQUENCES#

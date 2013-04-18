@@ -233,12 +233,12 @@ class XmlTemplates:
                     "Interface %s does not exist." % if_id
             raise XmlTemplateError(msg)
 
-        #try:
-        addr = iface.get_address(ip_id)
-        #except:
-        #    msg = "Third parameter of function ip() is invalid: "\
-        #          "Address %s does not exist." % ip_id
-        #    raise XmlTemplateError(msg)
+        try:
+            addr = iface.get_address(ip_id)
+        except:
+            msg = "Third parameter of function ip() is invalid: "\
+                  "Address %s does not exist." % ip_id
+            raise XmlTemplateError(msg)
 
         return addr.split('/')[0]
 

@@ -1,7 +1,7 @@
-<netconfig>
-    <interface id="testiface" phys_id="dev-1" type="eth">
+<interfaces>
+    <interface id="testiface" network="net" type="eth">
         <addresses>
             <address value="{$testip}"/>
         </addresses>
     </interface>
-</netconfig>
+</interfaces>
