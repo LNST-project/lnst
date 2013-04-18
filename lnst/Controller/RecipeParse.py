@@ -1,5 +1,5 @@
 """
-This module defines NetTestParse class useful to parse xml recipes
+This module defines RecipeParse class useful to parse xml recipes
 
 Copyright 2011 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -20,9 +20,9 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import bool_it
 from lnst.Common.RecipePath import RecipePath
 
-class NetTestParse(LnstParser):
+class RecipeParse(LnstParser):
     def __init__(self, recipe_filepath):
-        super(NetTestParse, self).__init__()
+        super(RecipeParse, self).__init__()
 
         self._filepath = recipe_filepath
         self._rp = RecipePath(None, self._filepath)

@@ -18,7 +18,7 @@ from lnst.Common.XmlProcessing import LnstParser
 from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.XmlProcessing import XmlProcessingError
 from lnst.Common.NetUtils import normalize_hwaddr
-from lnst.Controller.NetTestParse import ParamsParse
+from lnst.Controller.RecipeParse import ParamsParse
 
 class SlaveMachineParse(LnstParser):
     _machine_id = None

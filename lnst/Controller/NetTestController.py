@@ -28,7 +28,7 @@ from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
-from lnst.Controller.NetTestParse import NetTestParse
+from lnst.Controller.RecipeParse import RecipeParse
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
@@ -64,7 +64,7 @@ class NetTestController:
         self._mac_pool = MacPool(mac_pool_range[0],
                                  mac_pool_range[1])
 
-        ntparse = NetTestParse(recipe_path)
+        ntparse = RecipeParse(recipe_path)
         ntparse.set_target(self._recipe)
 
         ntparse.register_event_handler("provisioning_requirements_ready",
