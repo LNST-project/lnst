@@ -33,6 +33,7 @@ from lnst.Slave.NetConfigDevice import NetConfigDeviceAllCleanup
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+from lnst.Common.NetTestCommand import NetTestCommandSystemConfig
 
 DefaultRPCPort = 9999
 
@@ -51,6 +52,7 @@ class SlaveMethods:
         self._capture_files = {}
         self._copy_targets = {}
         self._copy_sources = {}
+        self._system_config = {}
 
         self._cache = ResourceCache(config.get_option("cache", "dir"),
                         config.get_option("cache", "expiration_period"))
@@ -74,6 +76,7 @@ class SlaveMethods:
         return "hello"
 
     def bye(self):
+        self.restore_system_config()
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
@@ -163,6 +166,30 @@ class SlaveMethods:
             logging.debug("Removing temporary packet capture file %s", name)
             os.unlink(name)
 
+    def _update_system_config(self, options, persistent):
+        system_config = self._system_config
+        for option, values in options.iteritems():
+            if persistent:
+                if option in system_config:
+                    del system_config[option]
+            else:
+                if not option in system_config:
+                    initial_val = {"initial_val": values["previous_val"]}
+                    system_config[option] = initial_val
+                system_config[option]["current_val"] = values["current_val"]
+
+    def restore_system_config(self):
+        logging.info("Restoring system configuration")
+        for option, values in self._system_config.iteritems():
+            try:
+                cmd_str = "echo \"%s\" >%s" % (values["initial_val"], option)
+                (stdout, stderr) = exec_cmd(cmd_str)
+            except ExecCmdFail:
+                logging.warn("Unable to restore '%s' config option!", option)
+                return False
+
+        return True
+
     def run_command(self, command):
         try:
             cmd = NetTestCommand(self._command_context, command,
@@ -186,6 +213,7 @@ class SlaveMethods:
         self._netconfig.cleanup()
         self._command_context.cleanup()
         self._cache.del_old_entries()
+        self.restore_system_config()
         return True
 
     def clear_resource_table(self):
