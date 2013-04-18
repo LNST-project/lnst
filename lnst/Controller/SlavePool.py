@@ -59,7 +59,7 @@ class SlavePool:
             parser.set_include_root(dirname)
             parser.disable_events()
 
-            machine = {"params": {}, "netdevices": {}}
+            machine = {"params": {}, "interfaces": {}}
             machine_id = re.sub("\.[xX][mM][lL]$", "", basename)
             parser.set_machine(machine_id, machine)
 
@@ -101,7 +101,6 @@ class SlavePool:
         mapper = SetupMapper()
         self._map = mapper.map_setup(setup_requirements, self._pool)
 
-
         if self._map == None:
             return None
 
@@ -138,17 +137,17 @@ class SlavePool:
 
         machine = copy.deepcopy(self._pool[pm_id])
 
-        new_netdevices = {}
+        new_interfaces = {}
         if_map = self._map["machines"][tm_id]["interfaces"]
         for t_if, p_if in if_map.iteritems():
-            new_netdevices[t_if] = machine["netdevices"][p_if]
+            new_interfaces[t_if] = machine["interfaces"][p_if]
 
             for t_net, p_net in self._map["networks"].iteritems():
-                if new_netdevices[t_if]["network"] == p_net:
-                    new_netdevices[t_if]["network"] = t_net
+                if new_interfaces[t_if]["network"] == p_net:
+                    new_interfaces[t_if]["network"] = t_net
                     break
 
-        machine["netdevices"] = new_netdevices
+        machine["interfaces"] = new_interfaces
         return machine
 
 class SetupMapper:
@@ -207,7 +206,7 @@ class SetupMapper:
 
         networks = {}
         for m_id, m_config in machine_configs.iteritems():
-            for dev_id, dev_info in m_config["netdevices"].iteritems():
+            for dev_id, dev_info in m_config["interfaces"].iteritems():
                 net = dev_info["network"]
                 if not net in networks:
                     networks[net] = []
@@ -218,7 +217,7 @@ class SetupMapper:
             topology[m_id] = []
             for net_name, net in networks.iteritems():
                 devs_in_net = []
-                for dev_id, dev_info in m_config["netdevices"].iteritems():
+                for dev_id, dev_info in m_config["interfaces"].iteritems():
                     if dev_info["network"] == net_name:
                         devs_in_net.append(dev_id)
 
@@ -266,8 +265,8 @@ class SetupMapper:
                 return False
 
         # check number of devices
-        tm_ndevs = len(template_machine["netdevices"])
-        pm_ndevs = len(pool_machine["netdevices"])
+        tm_ndevs = len(template_machine["interfaces"])
+        pm_ndevs = len(pool_machine["interfaces"])
         if tm_ndevs > pm_ndevs:
             return False
 
@@ -314,8 +313,8 @@ class SetupMapper:
         :rtype: Bool
         """
 
-        t_if = self._template_machines[tm_id]["netdevices"][t_if_id]
-        p_if = self._pool_machines[pm_id]["netdevices"][pm_if_id]
+        t_if = self._template_machines[tm_id]["interfaces"][t_if_id]
+        p_if = self._pool_machines[pm_id]["interfaces"][pm_if_id]
 
         properties = ["type", "hwaddr"]
         for prop_name, prop_value in t_if.iteritems():

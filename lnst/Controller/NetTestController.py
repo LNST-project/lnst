@@ -123,7 +123,7 @@ class NetTestController:
 
     def _prepare_device(self, machine_id, dev_id):
         info = self._get_machineinfo(machine_id)
-        dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
+        dev = self._recipe["machines"][machine_id]["interfaces"][dev_id]
 
         dev_net_name = dev["network"]
         networks = self._recipe["networks"]
@@ -166,7 +166,7 @@ class NetTestController:
             br_name = brctl.get_name()
             brctl.init()
 
-            logging.info("Creating netdevice %s (%s) on machine %s",
+            logging.info("Creating interface %s (%s) on machine %s",
                             dev_id, dev["hwaddr"], machine_id)
 
             domain_ctl = info["virt_domain_ctl"]
@@ -194,12 +194,12 @@ class NetTestController:
                             % (dev_id, machine_id)
             raise NetTestError(msg)
         elif len(phys_devs) > 1:
-            msg = "Multiple netdevices with same address %s on machine %s" \
+            msg = "Multiple interfaces with same address %s on machine %s" \
                                     % (dev["hwaddr"], machine_id)
             raise NetTestError(msg)
 
     def _device_ready(self, machine_id, dev_id):
-        dev = self._recipe["machines"][machine_id]["netdevices"][dev_id]
+        dev = self._recipe["machines"][machine_id]["interfaces"][dev_id]
 
         devs = self._rpc_call(machine_id,
                 'get_devices_by_hwaddr', dev["hwaddr"])
@@ -287,11 +287,11 @@ class NetTestController:
         if prov_id:
             provisioner = self._slave_pool.get_provisioner(machine_id)
             logging.info("Initializing provisioned system (%s)" % prov_id)
-            for device in provisioner["netdevices"].itervalues():
+            for device in provisioner["interfaces"].itervalues():
                 self._rpc_call(machine_id, 'set_device_down', device["hwaddr"])
 
         machine = self._recipe["machines"][machine_id]
-        for dev_id in machine["netdevices"].iterkeys():
+        for dev_id in machine["interfaces"].iterkeys():
             self._prepare_device(machine_id, dev_id)
 
     def _init_slave_rpc(self, machine_id):
@@ -339,7 +339,7 @@ class NetTestController:
             if "created_devices" not in info:
                 continue
             for dev_id, dev in reversed(info["created_devices"]):
-                logging.info("Removing netdevice %s (%s) from machine %s",
+                logging.info("Removing interface %s (%s) from machine %s",
                                 dev_id, dev["hwaddr"], machine_id)
                 domain_ctl = info["virt_domain_ctl"]
                 domain_ctl.detach_interface(dev["hwaddr"])

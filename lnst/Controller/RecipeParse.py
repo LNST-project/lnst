@@ -52,8 +52,6 @@ class FirstPass(LnstParser):
     """
 
     def parse(self, node):
-        self._data["provisioning"]["setup_requirements"] = {}
-
         if node.nodeType == node.DOCUMENT_NODE:
             scheme = {"lnstrecipe": self._lnstrecipe}
             self._process_child_nodes(node, scheme,
@@ -67,28 +65,71 @@ class FirstPass(LnstParser):
                     default_handler=self._ignore_tag)
 
     def _machines(self, node, params):
+        if not "machines" in self._data:
+            self._data["machines"] = {}
+
         scheme = {"machine": self._machine}
         self._process_child_nodes(node, scheme,
                     default_handler=self._ignore_tag)
 
     def _machine(self, node, params):
-        params = {}
-        params["id"] = self._get_attribute(node, "id")
+        m_id = self._get_attribute(node, "id")
+        if not m_id in self._data["machines"]:
+            self._data["machines"][m_id] = {}
 
-        scheme = {"requirements": self._requirements}
+        if not "params" in self._data["machines"][m_id]:
+            self._data["machines"][m_id]["params"] = {}
+
+        if not "interfaces" in self._data["machines"][m_id]:
+            self._data["machines"][m_id]["interfaces"] = {}
+
+        target = self._data["machines"][m_id]["params"]
+        params = {"id": m_id, "target": target}
+        scheme = {"params": self._params,
+                  "interfaces": self._interfaces}
         self._process_child_nodes(node, scheme, params,
                     default_handler=self._ignore_tag)
 
-    def _requirements(self, node, params):
-        machine_req = self._data["provisioning"]["setup_requirements"]
-        m_id = params["id"]
-        template = {}
-        template["netdevices"] = {}
-        machine_req[m_id] = template
-
-        subparser = RequirementsParse(self)
-        subparser.set_template(template)
+    def _params(self, node, params):
+        subparser = ParamsParse(self)
+        subparser.set_params_dict(params["target"])
         subparser.parse(node)
+
+    def _interfaces(self, node, params):
+        params = {"id": params["id"]}
+        scheme = {"interface": self._interface}
+        self._process_child_nodes(node, scheme, params)
+
+    def _interface(self, node, params):
+        m_id = params["id"]
+        machine = self._data["machines"][m_id]
+
+        if_id = self._get_attribute(node, "id")
+        if_type = self._get_attribute(node, "type")
+
+        if if_id in machine["interfaces"]:
+            msg = "Two interfaces with the same id '%s', " % if_id
+            raise XmlProcessingError(msg)
+
+        # Matching works with eth devices only
+        if if_type != "eth":
+            return
+
+        if not if_id in machine["interfaces"]:
+            machine["interfaces"][if_id] = {}
+        iface = machine["interfaces"][if_id]
+
+        iface["type"] = if_type
+        iface["network"] = self._get_attribute(node, "network")
+
+        if not "params" in machine["interfaces"][if_id]:
+            machine["interfaces"][if_id]["params"] = {}
+
+        target = machine["interfaces"][if_id]["params"]
+        params = {"target": target}
+        scheme = {"params": self._params}
+        self._process_child_nodes(node, scheme, params,
+                                  default_handler=self._ignore_tag)
 
     def _ignore_tag(self, node, params):
         pass
@@ -159,21 +200,107 @@ class MachineParse(LnstParser):
         self._machine = recipe["machines"][self._id]
         self._machine["netconfig"] = {}
 
-        scheme = {"requirements": self._requirements,
-                  "netconfig": self._netconfig }
+        scheme = {"params": self._ignore_tag,
+                  "interfaces": self._interfaces}
         self._process_child_nodes(node, scheme)
 
-    def _netconfig(self, node, params):
-        subparser = NetConfigParse(self)
+    def _interfaces(self, node, params):
+        scheme = {"interface": self._interface}
+        self._process_child_nodes(node, scheme)
+
+    def _interface(self, node, params):
+        subparser = InterfaceParse(self)
         subparser.set_machine(self._id, self._machine)
         subparser.parse(node)
 
-    def _requirements(self, node, params):
+    def _ignore_tag(self, node, params):
+        pass
+
+class InterfaceParse(LnstParser):
+    _machine_id = None
+    _machine = None
+    _iface = None
+
+    def set_machine(self, machine_id, machine):
+        self._machine_id = machine_id
+        self._machine = machine
+
+    def parse(self, node):
+        if_id = self._get_attribute(node, "id")
+
+        if not if_id in self._machine["interfaces"]:
+            self._machine["interfaces"][if_id] = {}
+        self._iface = iface = self._machine["interfaces"][if_id]
+
+        iface["type"] = self._get_attribute(node, "type")
+
+        scheme = {"addresses": self._addresses}
+        if iface["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
+            scheme["slaves"] = self._slaves
+            scheme["options"] = self._options
+
+            if self._has_attribute(node, "network"):
+                msg = "Attribute network is not supported by type '%s' " + \
+                      "interfaces" % iface["type"]
+                raise XmlProcessingError(msg)
+        elif iface["type"] == "eth":
+            iface["network"] = self._get_attribute(node, "network")
+
+            scheme["params"] = self._ignore_tag
+
+        self._process_child_nodes(node, scheme)
+
         try:
-            self._trigger_event("machine_ready", {"machine_id": self._id})
+            event_params = {"machine_id": self._machine_id, "if_id": if_id}
+            self._trigger_event("interface_config_ready", event_params)
         except Exception as exc:
-            logging.error(XmlProcessingError(str(exc), node))
+            msg = "Unable to configure interface %s on machine %s [%s]." % \
+                    (if_id, self._machine_id, str(exc))
+            logging.error(XmlProcessingError(str(msg), node))
             raise
+
+    def _addresses(self, node, params):
+        self._list_init(node, params, "addresses", {"address": self._address})
+
+    def _address(self, node, params):
+        if self._has_attribute(node, "value"):
+            addr = self._get_attribute(node, "value")
+        else:
+            addr = self._get_text_content(node)
+
+        self._iface["addresses"].append(addr)
+
+    def _options(self, node, params):
+        self._list_init(node, params, "options", {"option": self._option})
+
+    def _option(self, node, params):
+        name = self._get_attribute(node, "name")
+
+        if self._has_attribute(node, "value"):
+            value = self._get_attribute(node, "value")
+        else:
+            value = self._get_text_content(node)
+
+        self._iface["options"].append((name, value))
+
+    def _slaves(self, node, params):
+        self._list_init(node, params, "slaves", {"slave": self._slave})
+
+    def _slave(self, node, params):
+        if self._has_attribute(node, "id"):
+            slave_id = self._get_attribute(node, "id")
+        else:
+            slave_id = self._get_text_content(node)
+
+        self._iface["slaves"].append(slave_id)
+
+    def _list_init(self, node, params, node_name, scheme):
+        self._iface[node_name] = []
+
+        self._process_child_nodes(node, scheme, params)
+
+    def _ignore_tag(self, node, params):
+        pass
 
 class ParamsParse(LnstParser):
     _params = None
@@ -194,184 +321,6 @@ class ParamsParse(LnstParser):
             value = self._get_text_content(node)
 
         self._params[name] = value
-
-class RequirementsParse(LnstParser):
-    _requirements = None
-
-    def set_template(self, tmp_dict):
-        self._requirements = tmp_dict
-
-    def parse(self, node):
-        self._requirements["params"] = {}
-        self._requirements["netdevices"] = {}
-
-        scheme = {"params": self._params,
-                  "netdevices": self._netdevices}
-        params = {"target": self._requirements["params"]}
-        self._process_child_nodes(node, scheme, params)
-
-    def _params(self, node, params):
-        subparser = ParamsParse(self)
-        subparser.set_params_dict(params["target"])
-        subparser.parse(node)
-
-    def _netdevices(self, node, params):
-        scheme = {"netdevice": self._netdevice}
-        self._process_child_nodes(node, scheme)
-
-    def _netdevice(self, node, params):
-        reqs = self._requirements
-        phys_id = self._get_attribute(node, "phys_id")
-
-        dev = reqs["netdevices"][phys_id] = {}
-        dev["network"] = self._get_attribute(node, "network")
-
-        dev["params"] = {}
-
-        scheme = {"params": self._params}
-        params = {"target": dev["params"]}
-        self._process_child_nodes(node, scheme, params)
-
-        if "type" in dev["params"]:
-            dev["type"] = dev["params"]["type"]
-
-        if "hwaddr" in dev["params"]:
-            dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
-
-
-class NetConfigParse(LnstParser):
-    _machine_id = None
-    _machine = None
-
-    def set_machine(self, machine_id, machine):
-        self._machine_id = machine_id
-        self._machine = machine
-
-    def parse(self, node):
-        netconfig = self._machine["netconfig"]
-        self._netconfig = netconfig
-
-        devices = self._machine["netdevices"]
-        self._devices = devices
-
-        scheme = {"interface": self._interface}
-        self._process_child_nodes(node, scheme)
-
-    def _interface(self, node, params):
-        netconfig = self._netconfig
-        devices = self._devices
-
-        dev_id = self._get_attribute(node, "id")
-        if not dev_id in netconfig:
-            netconfig[dev_id] = {}
-        else:
-            msg = "Netdevice 'id' used more than once"
-            raise XmlProcessingError(msg, node)
-
-        dev = netconfig[dev_id]
-        dev["type"] = self._get_attribute(node, "type")
-
-        if self._has_attribute(node, "phys_id"):
-            self._process_phys_id_attr(node, dev)
-
-        params = {"dev_id": dev_id}
-        scheme = {"addresses": self._addresses}
-        scheme["options"] = self._options
-        if dev["type"] == "eth":
-            pass
-        elif dev["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
-            scheme["slaves"] = self._slaves
-        else:
-            logging.warn("unknown type \"%s\"" % dev["type"])
-
-        self._process_child_nodes(node, scheme, params)
-
-        try:
-            self._trigger_event("interface_config_ready",
-                    {"machine_id": self._machine_id,
-                     "netdev_config_id": dev_id})
-        except Exception as exc:
-            msg = "Unable to configure interface %s on machine %s [%s]." % \
-                    (dev_id, self._machine_id, str(exc))
-            logging.error(XmlProcessingError(str(msg), node))
-            raise
-
-    def _process_phys_id_attr(self, node, dev):
-        netconfig = self._netconfig
-        devices = self._devices
-
-        if dev["type"] == "eth":
-            phys_id = self._get_attribute(node, "phys_id")
-            self._check_phys_id(node, phys_id, netconfig)
-            dev["phys_id"] = phys_id
-
-            if phys_id in devices:
-                phys_dev = devices[phys_id]
-                if phys_dev["type"] == dev["type"]:
-                    dev["hwaddr"] = phys_dev["hwaddr"]
-                    if "name" in phys_dev:
-                        dev["name"] = phys_dev["name"]
-            else:
-                msg = "phys_id passed but does not match any device on machine"
-                raise XmlProcessingError(msg, node)
-        else:
-            logging.warn("phys_id found on non-eth netdev, ignoring")
-
-
-    @staticmethod
-    def _check_phys_id(node, dev_pid, config):
-        for key in config:
-            if not "phys_id" in config[key]:
-                continue
-            if config[key]["phys_id"] == dev_pid:
-                msg = "same phys_id \"%s\" used more than once" % dev_pid
-                raise XmlProcessingError(msg, node)
-
-    def _addresses(self, node, params):
-        self._list_init(node, params, "addresses", {"address": self._address})
-
-    def _address(self, node, params):
-        if self._has_attribute(node, "value"):
-            addr = self._get_attribute(node, "value")
-        else:
-            addr = self._get_text_content(node)
-
-        dev_id = params["dev_id"]
-        self._netconfig[dev_id]["addresses"].append(addr)
-
-    def _options(self, node, params):
-        self._list_init(node, params, "options", {"option": self._option})
-
-    def _option(self, node, params):
-        name = self._get_attribute(node, "name")
-
-        if self._has_attribute(node, "value"):
-            value = self._get_attribute(node, "value")
-        else:
-            value = self._get_text_content(node)
-
-        dev_id = params["dev_id"]
-        self._netconfig[dev_id]["options"].append((name, value))
-
-    def _slaves(self, node, params):
-        self._list_init(node, params, "slaves", {"slave": self._slave})
-
-    def _slave(self, node, params):
-        if self._has_attribute(node, "id"):
-            slave_id = self._get_attribute(node, "id")
-        else:
-            slave_id = self._get_text_content(node)
-
-        dev_id = params["dev_id"]
-        self._netconfig[dev_id]["slaves"].append(slave_id)
-
-    def _list_init(self, node, params, node_name, scheme):
-        dev_id = params["dev_id"]
-        dev = self._netconfig[dev_id]
-        dev[node_name] = []
-
-        self._process_child_nodes(node, scheme, params)
-
 
 class CommandSequenceParse(LnstParser):
     def parse(self, node):

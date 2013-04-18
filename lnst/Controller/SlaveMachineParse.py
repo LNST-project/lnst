@@ -30,7 +30,7 @@ class SlaveMachineParse(LnstParser):
 
     def parse(self, node):
         scheme = {"params": self._params,
-                  "netdevices": self._netdevices}
+                  "interfaces": self._interfaces}
         params = {"target": self._machine["params"]}
         self._process_child_nodes(node, scheme, params)
 
@@ -46,70 +46,63 @@ class SlaveMachineParse(LnstParser):
         subparser.set_params_dict(params["target"])
         subparser.parse(node)
 
-    def _netdevices(self, node, params):
-        scheme = {"netdevice": self._netdevice,
+    def _interfaces(self, node, params):
+        scheme = {"interface": self._interface,
                   "libvirt_create": self._libvirt_create}
 
         new_params = {"create": None}
         self._process_child_nodes(node, scheme, new_params)
 
     def _libvirt_create(self, node, params):
-        scheme = {"netdevice": self._netdevice}
+        scheme = {"interface": self._interface}
 
         new_params = {"create": "libvirt"}
         self._process_child_nodes(node, scheme, new_params)
 
-    def _netdevice(self, node, params):
+    def _interface(self, node, params):
         machine = self._machine
-        phys_id = self._get_attribute(node, "phys_id")
+        iface_id = self._get_attribute(node, "id")
 
-        dev = machine["netdevices"][phys_id] = {}
-        dev["create"] = params["create"]
-        dev["network"] = self._get_attribute(node, "network")
-        dev["params"] = {}
+        iface = machine["interfaces"][iface_id] = {}
+        iface["create"] = params["create"]
+        iface["network"] = self._get_attribute(node, "network")
+        iface["params"] = {}
 
-        # parse device parameters
+        # parse interface parameters
         scheme = {"params": self._params}
-        params = {"target": dev["params"]}
+        params = {"target": iface["params"]}
         self._process_child_nodes(node, scheme, params)
 
-        if "type" in dev["params"]:
-            dev["type"] = dev["params"]["type"]
+        if "type" in iface["params"]:
+            iface["type"] = iface["params"]["type"]
         else:
             msg = "Missing required parameter 'type'"
             raise XmlProcessingError(msg, node)
 
-        # hwaddr parameter is optional for dynamic devices,
-        # but it is required by non-dynamic devices
-        if dev["create"] and "hwaddr" in dev["params"]:
-                dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
+        # hwaddr parameter is optional for dynamic interface,
+        # but it is required by non-dynamic interfaces
+        if iface["create"] and "hwaddr" in iface["params"]:
+                iface["hwaddr"] = normalize_hwaddr(iface["params"]["hwaddr"])
         else:
-            if "hwaddr" in dev["params"]:
-                dev["hwaddr"] = normalize_hwaddr(dev["params"]["hwaddr"])
+            if "hwaddr" in iface["params"]:
+                iface["hwaddr"] = normalize_hwaddr(iface["params"]["hwaddr"])
             else:
                 msg = "Missing required parameter 'hwaddr'"
                 raise XmlProcessingError(msg, node)
 
-        # name parameter is only valid when the device is not dynamic
-        if "name" in dev["params"]:
-            if dev["create"]:
-                msg = "'name' parameter is not valid with dynamic devices"
+        # name parameter is only valid when the interface is not dynamic
+        if "name" in iface["params"]:
+            if iface["create"]:
+                msg = "'name' parameter is not valid with dynamic interfaces"
                 raise XmlProcessingError(msg, node)
             else:
-                dev["name"] = dev["params"]["name"]
+                iface["name"] = iface["params"]["name"]
 
-        # bridge parameter is valid only when the device is dynamic
-        if "libvirt_bridge" in dev["params"]:
-            if dev["create"] == "libvirt":
-                dev["libvirt_bridge"] = dev["params"]["libvirt_bridge"]
+        # bridge parameter is valid only when the interface is dynamic
+        if "libvirt_bridge" in iface["params"]:
+            if iface["create"] == "libvirt":
+                iface["libvirt_bridge"] = iface["params"]["libvirt_bridge"]
             else:
                 msg = "'libvirt_bridge' parameter is not valid with" \
-                      "dynamic devices"
+                      "dynamic ifaceices"
                 raise XmlProcessingError(msg, node)
-
-        try:
-            self._trigger_event("netdevice_ready",
-                    {"machine_id": self._machine_id, "dev_id": phys_id})
-        except Exception as exc:
-            logging.error(XmlProcessingError(str(exc), node))
-            raise
