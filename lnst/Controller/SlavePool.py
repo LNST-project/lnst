@@ -20,7 +20,7 @@ import copy
 from xml.dom import minidom
 from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.NetUtils import test_tcp_connection
-from lnst.Controller.NetTestParse import SlaveMachineParse
+from lnst.Controller.SlaveMachineParse import SlaveMachineParse
 
 class SlavePool:
     """
