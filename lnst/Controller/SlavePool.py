@@ -138,7 +138,10 @@ class SlavePool:
         pm = self._pool[pm_id]
 
         hostname = pm["params"]["hostname"]
-        libvirt_domain = pm["params"]["libvirt_domain"]
+
+        libvirt_domain = None
+        if "libvirt_domain" in pm["params"]:
+            libvirt_domain = pm["params"]["libvirt_domain"]
 
         machine = Machine(tm_id, hostname, libvirt_domain)
 
