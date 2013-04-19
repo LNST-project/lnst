@@ -17,7 +17,7 @@ import logging
 import os
 import re
 import datetime
-from lnst.Common.Logs import LoggingCtl
+from lnst.Common.Logs import LoggingCtl, log_exc_traceback
 from lnst.Common.Config import Config
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
@@ -72,9 +72,10 @@ def get_recipe_result(args, file_path, cleanup,
 
     res = None
     try:
-        res = process_recipe(args, file_path, cleanup,
-                res_serializer, packet_capture, config, log_ctl)
-    except NetTestError as err:
+        res = process_recipe(args, file_path, cleanup, res_serializer,
+                             packet_capture, config, log_ctl)
+    except Exception as err:
+        log_exc_traceback()
         logging.error(err)
 
     return ((file_path, res))

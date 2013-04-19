@@ -20,7 +20,6 @@ import tempfile
 from time import sleep
 from xmlrpclib import Binary
 from pprint import pprint, pformat
-from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
@@ -179,11 +178,10 @@ class NetTestController:
         try:
             self._parser.parse_recipe()
         except Exception as exc:
-            logging.debug("Exception raised during recipe parsing. "\
-                    "Deconfiguring machines.")
-            log_exc_traceback()
+            logging.error("Exception raised during recipe parsing. "\
+                          "Deconfiguring machines.")
             self._cleanup_slaves()
-            raise NetTestError(exc)
+            raise
 
     def _run_command(self, command):
         if "desc" in command:
@@ -237,23 +235,16 @@ class NetTestController:
         err = None
         try:
             res = self._run_recipe()
-        except ServerException as exc:
-            err = NetTestError(exc)
         except Exception as exc:
-            logging.info("Recipe execution terminated by unexpected exception")
-            log_exc_traceback()
-            err = exc
+            logging.error("Recipe execution terminated by unexpected exception")
+            raise
+        finally:
+            if packet_capture:
+                self._stop_packet_capture()
+                self._gather_capture_files()
+            self._cleanup_slaves()
 
-        if packet_capture:
-            self._stop_packet_capture()
-            self._gather_capture_files()
-
-        self._cleanup_slaves()
-
-        if not err:
-            return res
-        else:
-            raise err
+        return res
 
     def _run_recipe(self):
         overall_res = True

@@ -73,10 +73,15 @@ class SlaveMachineParse(LnstParser):
         params = {"target": iface["params"]}
         self._process_child_nodes(node, scheme, params)
 
-        if "type" in iface["params"]:
-            iface["type"] = iface["params"]["type"]
-        else:
+        if "type" not in iface["params"]:
             msg = "Missing required parameter 'type'"
+            raise XmlProcessingError(msg, node)
+
+        iface["type"] = iface["params"]["type"]
+        if iface["type"] not in ["eth"]:
+            msg = "Interface type '%s' is not allowed here. " \
+                  "Interface types other than 'eth' mus be configured " \
+                  "in LNST recipes directly." % iface["type"]
             raise XmlProcessingError(msg, node)
 
         # hwaddr parameter is optional for dynamic interface,
