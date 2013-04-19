@@ -76,7 +76,7 @@ class Machine(object):
         return self._add_interface(if_id, if_type, StaticInterface)
 
     def new_unused_interface(self, if_type):
-        return self._add_interface(if_type, None, UnusedInterface)
+        return self._add_interface(None, if_type, UnusedInterface)
 
     def new_virtual_interface(self, if_id, if_type):
         return self._add_interface(if_id, if_type, VirtualInterface)
