@@ -58,6 +58,8 @@ class TestPacketAssert(TestGeneric):
                 self.line = next_line
             else:
                 self.line += next_line
+        if self.line != "":
+            self._process_captured_line(self.line)
 
 
     def _prepare_grep_filters(self):
@@ -151,6 +153,9 @@ class TestPacketAssert(TestGeneric):
                 self.line = next_line
             else:
                 self.line += next_line
+
+        if self.line != "":
+            self._process_captured_line(self.line)
 
         logging.info("Capturing finished. Received %d packets", self._num_recv)
         res = {"received": self._num_recv,
