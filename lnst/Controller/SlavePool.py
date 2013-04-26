@@ -80,11 +80,11 @@ class SlavePool:
             if 'libvirt_domain' not in machine['params'] \
                                    or self._allow_virtual:
                 logging.info("Adding slave machine %s to slave pool."
-                                    % machine_id)
+                             % machine_id)
                 self._pool[machine_id] = machine
             else:
                 logging.warning("libvirtd not found- Machine Pool skipping "\
-                        "machine %s" % machine_id)
+                                "machine %s" % machine_id)
 
     def provision_machines(self, mreqs):
         """
@@ -114,6 +114,9 @@ class SlavePool:
                 machines[m_id] = self._get_mapped_slave(m_id)
 
         return machines
+
+    def is_setup_virtual(self):
+        return self._map["virtual"]
 
     def get_provisioner_id(self, m_id):
         try:
