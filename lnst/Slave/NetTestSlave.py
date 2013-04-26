@@ -24,6 +24,7 @@ from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.PacketCapture import PacketCapture
 from lnst.Common.Utils import die_when_parent_die
 from lnst.Common.NetUtils import scan_netdevs, test_tcp_connection
+from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ResourceCache import ResourceCache
 from lnst.Common.NetTestCommand import NetTestCommandContext
@@ -93,7 +94,17 @@ class SlaveMethods:
         netdevs = []
 
         for entry in name_scan:
-            if entry["hwaddr"] == hwaddr:
+            if entry["hwaddr"] == normalize_hwaddr(hwaddr):
+                netdevs.append(entry)
+
+        return netdevs
+
+    def get_devices_by_devname(self, devname):
+        name_scan = scan_netdevs()
+        netdevs = []
+
+        for entry in name_scan:
+            if entry["name"] == devname:
                 netdevs.append(entry)
 
         return netdevs
@@ -110,11 +121,17 @@ class SlaveMethods:
         if_config = self._netconfig.get_interface_config(if_id)
         info = {}
 
-        if "name" in if_config:
+        if "name" in if_config and if_config["name"] != None:
             info["name"] = if_config["name"]
+        else:
+            devs = self.get_devices_by_hwaddr(if_config["hwaddr"])
+            info["name"] = devs[0]["name"]
 
-        if "hwaddr" in if_config:
+        if "hwaddr" in if_config and if_config["hwaddr"] != None:
             info["hwaddr"] = if_config["hwaddr"]
+        else:
+            devs = self.get_devices_by_devname(if_config["name"])
+            info["hwaddr"] = devs[0]["hwaddr"]
 
         return info
 
