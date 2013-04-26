@@ -38,7 +38,7 @@ def _brctl(cmd):
 
 def _virsh(cmd):
     try:
-        exec_cmd("virsh %s" % cmd)
+        exec_cmd("virsh %s" % cmd, log_outputs=False)
     except ExecCmdFail as err:
         raise VirtUtilsError("virsh error: %s" % err)
 
