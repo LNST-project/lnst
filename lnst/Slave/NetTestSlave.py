@@ -437,7 +437,7 @@ class NetTestSlave:
                         self._cmd_context.cleanup()
                         self._log_ctl.cancel_connection()
             else:
-                err = "Method not found: %s" % msg["method_name"]
+                err = "Method '%s' not supported." % msg["method_name"]
                 response = {"type": "error", "err": err}
                 if not self._server_handler.send_data_to_ctl(response):
                     self._cmd_context.cleanup()

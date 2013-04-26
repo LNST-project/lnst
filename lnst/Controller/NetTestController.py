@@ -394,6 +394,10 @@ class MessageDispatcher(ConnectionHandler):
         elif message[1]["type"] == "exception":
             msg = "Recieved an exception from slave: %s" % message[0]
             raise CommandException(msg)
+        elif message[1]["type"] == "error":
+            msg = "Recieved an error message from slave %s: %s" %\
+                    (message[0], message[1]["err"])
+            raise CommandException(msg)
         else:
             msg = "Unknown message type: %s" % message[1]["type"]
             raise NetTestError(msg)
