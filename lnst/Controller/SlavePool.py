@@ -106,8 +106,12 @@ class SlavePool:
             return None
 
         machines = {}
-        for m_id in self._map["machines"]:
-            machines[m_id] = self._get_mapped_slave(m_id)
+        if self._map["virtual"]:
+            for m_id in self._map["machines"]:
+                machines[m_id] = self._prepare_virtual_slave(m_id, mreqs[m_id])
+        else:
+            for m_id in self._map["machines"]:
+                machines[m_id] = self._get_mapped_slave(m_id)
 
         return machines
 
@@ -164,6 +168,30 @@ class SlavePool:
                 iface = machine.new_unused_interface("eth")
                 iface.set_hwaddr(if_data["hwaddr"])
                 iface.set_network(t_net)
+
+        return machine
+
+    def _prepare_virtual_slave(self, tm_id, tm):
+        pm_id = self._get_machine_mapping(tm_id)
+        pm = self._pool[pm_id]
+
+        hostname = pm["params"]["hostname"]
+        libvirt_domain = pm["params"]["libvirt_domain"]
+
+        machine = Machine(tm_id, hostname, libvirt_domain)
+
+        # make all the existing unused
+        for if_id, if_data in pm["interfaces"].iteritems():
+            iface = machine.new_unused_interface("eth")
+            iface.set_hwaddr(if_data["hwaddr"])
+            iface.set_network(if_data["network"])
+
+        # add all the other devices
+        for if_id, if_data in tm["interfaces"].iteritems():
+            iface = machine.new_virtual_interface(if_id, "eth")
+            iface.set_network(if_data["network"])
+            if "hwaddr" in if_data["params"]:
+                iface.set_hwaddr(if_data["params"]["hwaddr"])
 
         return machine
 
@@ -503,7 +531,14 @@ class SetupMapper:
             machine_map = [(tm, pm, self._iface_map[tm]) \
                             for tm, pm in self._machine_map]
             network_map = list(self._network_map)
-            return self._format_map_dict(machine_map, network_map)
+            mmap = self._format_map_dict(machine_map, network_map)
+            mmap["virtual"] = False
+            return mmap
+        elif self._map_setup_virt(template_machines, pool_machines):
+            machine_map = [(tm, pm, []) for tm, pm in self._machine_map]
+            mmap = self._format_map_dict(machine_map, [])
+            mmap["virtual"] = True
+            return mmap
         else:
             return None
 
@@ -552,3 +587,32 @@ class SetupMapper:
             mmap.discard((machine, possible_match))
 
         return False
+
+    def _machine_matches(self, tm, pm):
+        for prop_name, prop_value in tm["params"].iteritems():
+            if pm["params"][prop_name] != prop_value:
+                return False
+
+        return True
+
+    def _map_setup_virt(self, template_machines, pool_machines):
+        available = set()
+        matches = set()
+        for m_id in pool_machines.iterkeys():
+            available.add(m_id)
+
+        for tm_id, tm in template_machines.iteritems():
+            match = None
+            for am_id in available:
+                if self._machine_matches(tm, pool_machines[am_id]):
+                    match = (tm_id, am_id)
+                    available.remove(am_id)
+                    break
+
+            if match:
+                matches.add(match)
+            else:
+                return False
+
+        self._machine_map = list(matches)
+        return True
