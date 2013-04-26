@@ -109,6 +109,12 @@ class NetTestController:
             msg = "This setup cannot be provisioned with the current pool."
             raise NetTestError(msg)
 
+        if sp.is_setup_virtual() and os.geteuid() != 0:
+            msg = "Provisioning this setup requires additional configuration "\
+                  "of the virtual machines in the pool. LNST needs root "\
+                  "priviledges so it can connect to qemu."
+            raise NetTestError(msg)
+
         for m_id, machine in machines.iteritems():
             self._machines[m_id] = machine
 
