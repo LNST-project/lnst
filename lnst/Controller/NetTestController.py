@@ -169,7 +169,7 @@ class NetTestController:
                 self._log_ctl.remove_slave(machine_id)
 
         # remove dynamically created bridges
-        for bridge in self._network_bridges:
+        for bridge in self._network_bridges.itervalues():
             bridge.cleanup()
 
     def _prepare(self):
