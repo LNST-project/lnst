@@ -128,6 +128,7 @@ class NetTestController:
         port = self._config.get_option('environment', 'rpcport')
         machine.set_rpc(self._msg_dispatcher, port)
         machine.set_mac_pool(self._mac_pool)
+        machine.set_network_bridges(self._network_bridges)
 
         recipe_name = os.path.basename(self._recipe_path)
         machine.configure(recipe_name, self._docleanup)

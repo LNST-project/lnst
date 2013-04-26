@@ -22,7 +22,7 @@ from xmlrpclib import Binary
 from pprint import pprint, pformat
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.XmlRpc import ServerProxy, ServerException
-from lnst.Common.NetUtils import MacPool
+from lnst.Common.NetUtils import MacPool, normalize_hwaddr
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.ConnectionHandler import send_data, recv_data
@@ -47,6 +47,7 @@ class Machine(object):
         self._system_config = {}
 
         self._domain_ctl = None
+        self._network_bridges = None
         self._libvirt_domain = libvirt_domain
         if libvirt_domain:
             self._domain_ctl = VirtDomainCtl(libvirt_domain)
@@ -207,11 +208,17 @@ class Machine(object):
     def set_network_bridges(self, bridges):
         self._network_bridges = bridges
 
-    def get_network_bridges(self, bridges):
-        if self._network_bridges:
+    def get_network_bridges(self):
+        if self._network_bridges != None:
             return self._network_bridges
         else:
             raise MachineError("Network bridges not available.")
+
+    def get_domain_ctl(self):
+        if not self._domain_ctl:
+            raise MachineError("Machine '%s' is not virtual." % self.get_id())
+
+        return self._domain_ctl
 
     def start_packet_capture(self):
         return self._rpc_call("start_packet_capture", "")
@@ -309,7 +316,7 @@ class Interface(object):
         return self._id
 
     def set_hwaddr(self, hwaddr):
-        self._hwaddr = hwaddr
+        self._hwaddr = normalize_hwaddr(hwaddr)
 
     def get_hwaddr(self):
         if not self._hwaddr:
@@ -396,8 +403,10 @@ class Interface(object):
 
         if_info = self._machine._rpc_call("get_interface_info", self.get_id())
         if "name" in if_info:
-            self._devname = if_info["name"]
-            self._hwaddr = if_info["hwaddr"]
+            self.set_devname(if_info["name"])
+
+        if "hwaddr" in if_info:
+            self.set_hwaddr(if_info["hwaddr"])
 
     def deconfigure(self):
         if not self._configured:
@@ -431,10 +440,7 @@ class VirtualInterface(Interface):
         super(VirtualInterface, self).__init__(machine, if_id, if_type)
 
     def initialize(self):
-        if not self._domain_ctl:
-            msg = "Cannot create an interface. " \
-                  "Machine '%s' is not virtual." % machine_id
-            raise MachineError(msg)
+        domain_ctl = self._machine.get_domain_ctl()
 
         if self._hwaddr:
             query = self._machine._rpc_call('get_devices_by_hwaddr',
@@ -447,14 +453,14 @@ class VirtualInterface(Interface):
                 self._hwaddr = self._machine.get_mac_pool().get_addr()
                 query = self._machine._rpc_call('get_devices_by_hwaddr',
                                                self._hwaddr)
-                if not len(query_result):
+                if not len(query):
                     break
 
         bridges = self._machine.get_network_bridges()
         if self._network in bridges:
-            brctl = bridges[network]
+            brctl = bridges[self._network]
         else:
-            bridges["network"] = brctl = BridgeCtl()
+            bridges[self._network] = brctl = BridgeCtl()
 
         br_name = brctl.get_name()
         brctl.init()
@@ -462,14 +468,20 @@ class VirtualInterface(Interface):
         logging.info("Creating interface %s (%s) on machine %s",
                      self.get_id(), self._hwaddr, self._machine.get_id())
 
-        domain_ctl = self._machine.get_domain_ctl()
         domain_ctl.attach_interface(self._hwaddr, br_name)
 
-        ready = wait_for(self._ready, timeout=10)
+
+        # The sleep here is necessary, because udev sometimes renames the
+        # newly created device and if the query for name comes too early,
+        # the controller will then try to configure an nonexistent device
+        sleep(1)
+
+        ready = wait_for(self.is_ready, timeout=10)
+
         if not ready:
             msg = "Netdevice initialization failed." \
                   "Unable to create device %s (%s) on machine %s" \
-                  % (self._get_id, self._hwaddr, self._machine.get_id())
+                  % (self.get_id(), self._hwaddr, self._machine.get_id())
             raise MachineError(msg)
 
         super(VirtualInterface, self).initialize()
@@ -479,7 +491,7 @@ class VirtualInterface(Interface):
         domain_ctl.detach_interface(self._hwaddr)
 
     def is_ready(self):
-        ifaces = self._rpc_call('get_devices_by_hwaddr', self._hwaddr)
+        ifaces = self._machine._rpc_call('get_devices_by_hwaddr', self._hwaddr)
         return len(ifaces) > 0
 
 class SoftInterface(Interface):
