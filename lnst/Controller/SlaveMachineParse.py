@@ -47,67 +47,35 @@ class SlaveMachineParse(LnstParser):
         subparser.parse(node)
 
     def _interfaces(self, node, params):
-        scheme = {"interface": self._interface,
-                  "libvirt_create": self._libvirt_create}
+        scheme = {"eth": self._eth}
 
-        new_params = {"create": None}
-        self._process_child_nodes(node, scheme, new_params)
+        try:
+            self._process_child_nodes(node, scheme)
+        except XmlProcessingError as err:
+            msg = "Interface type other than 'eth' is not allowed here. " \
+                  "Other types must be configured in LNST recipes directly."
+            logging.error(msg)
+            raise
 
-    def _libvirt_create(self, node, params):
-        scheme = {"interface": self._interface}
-
-        new_params = {"create": "libvirt"}
-        self._process_child_nodes(node, scheme, new_params)
-
-    def _interface(self, node, params):
+    def _eth(self, node, params):
         machine = self._machine
         iface_id = self._get_attribute(node, "id")
 
         iface = machine["interfaces"][iface_id] = {}
-        iface["create"] = params["create"]
         iface["network"] = self._get_attribute(node, "network")
         iface["params"] = {}
+        iface["type"] = "eth"
 
         # parse interface parameters
         scheme = {"params": self._params}
         params = {"target": iface["params"]}
         self._process_child_nodes(node, scheme, params)
 
-        if "type" not in iface["params"]:
-            msg = "Missing required parameter 'type'"
-            raise XmlProcessingError(msg, node)
-
-        iface["type"] = iface["params"]["type"]
-        if iface["type"] not in ["eth"]:
-            msg = "Interface type '%s' is not allowed here. " \
-                  "Interface types other than 'eth' mus be configured " \
-                  "in LNST recipes directly." % iface["type"]
-            raise XmlProcessingError(msg, node)
-
-        # hwaddr parameter is optional for dynamic interface,
-        # but it is required by non-dynamic interfaces
-        if iface["create"] and "hwaddr" in iface["params"]:
-                iface["hwaddr"] = normalize_hwaddr(iface["params"]["hwaddr"])
+        if "hwaddr" in iface["params"]:
+            iface["hwaddr"] = normalize_hwaddr(iface["params"]["hwaddr"])
         else:
-            if "hwaddr" in iface["params"]:
-                iface["hwaddr"] = normalize_hwaddr(iface["params"]["hwaddr"])
-            else:
-                msg = "Missing required parameter 'hwaddr'"
-                raise XmlProcessingError(msg, node)
+            msg = "Missing required parameter 'hwaddr'"
+            raise XmlProcessingError(msg, node)
 
-        # name parameter is only valid when the interface is not dynamic
         if "name" in iface["params"]:
-            if iface["create"]:
-                msg = "'name' parameter is not valid with dynamic interfaces"
-                raise XmlProcessingError(msg, node)
-            else:
-                iface["name"] = iface["params"]["name"]
-
-        # bridge parameter is valid only when the interface is dynamic
-        if "libvirt_bridge" in iface["params"]:
-            if iface["create"] == "libvirt":
-                iface["libvirt_bridge"] = iface["params"]["libvirt_bridge"]
-            else:
-                msg = "'libvirt_bridge' parameter is not valid with" \
-                      "dynamic ifaceices"
-                raise XmlProcessingError(msg, node)
+            iface["name"] = iface["params"]["name"]

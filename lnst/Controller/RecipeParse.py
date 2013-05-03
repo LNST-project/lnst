@@ -97,7 +97,12 @@ class FirstPass(LnstParser):
 
     def _interfaces(self, node, params):
         params = {"id": params["id"]}
-        scheme = {"interface": self._interface}
+        scheme = {"eth": self._interface,
+                  "bond": self._interface,
+                  "team": self._interface,
+                  "vlan": self._interface,
+                  "macvlan": self._interface,
+                  "bridge": self._interface}
         self._process_child_nodes(node, scheme, params)
 
     def _interface(self, node, params):
@@ -105,7 +110,7 @@ class FirstPass(LnstParser):
         machine = self._data["machines"][m_id]
 
         if_id = self._get_attribute(node, "id")
-        if_type = self._get_attribute(node, "type")
+        if_type = node.tagName
 
         if if_id in machine["interfaces"]:
             msg = "Two interfaces with the same id '%s', " % if_id
@@ -205,7 +210,12 @@ class MachineParse(LnstParser):
         self._process_child_nodes(node, scheme)
 
     def _interfaces(self, node, params):
-        scheme = {"interface": self._interface}
+        scheme = {"eth": self._interface,
+                  "bond": self._interface,
+                  "team": self._interface,
+                  "vlan": self._interface,
+                  "macvlan": self._interface,
+                  "bridge": self._interface}
         self._process_child_nodes(node, scheme)
 
     def _interface(self, node, params):
@@ -232,7 +242,7 @@ class InterfaceParse(LnstParser):
             self._machine["interfaces"][if_id] = {}
         self._iface = iface = self._machine["interfaces"][if_id]
 
-        iface["type"] = self._get_attribute(node, "type")
+        iface["type"] = node.tagName
 
         scheme = {"addresses": self._addresses}
         if iface["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
