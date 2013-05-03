@@ -28,18 +28,20 @@ class RecipeParse(LnstParser):
         self._rp = RecipePath(None, self._filepath)
         self._include_root = self._rp.get_root()
 
-    def parse_recipe(self):
+    def first_pass(self):
         dom_init = XmlDomTreeInit()
         rp = self._rp
-        xml_dom = dom_init.parse_string(rp.to_str(), rp.abs_path())
+        self._xml_dom = dom_init.parse_string(rp.to_str(), rp.abs_path())
 
         first_pass = FirstPass(self)
-        first_pass.parse(xml_dom)
+        first_pass.parse(self._xml_dom)
 
+    def parse_recipe(self):
+        self.first_pass()
         self._trigger_event("provisioning_requirements_ready", {})
 
         second_pass = SecondPass(self)
-        second_pass.parse(xml_dom)
+        second_pass.parse(self._xml_dom)
 
 
 class FirstPass(LnstParser):

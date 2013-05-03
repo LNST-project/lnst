@@ -228,6 +228,32 @@ class NetTestController:
         self._cleanup_slaves()
         return True
 
+    def match_setup(self):
+        try:
+            self._parser.first_pass()
+        except Exception as exc:
+            logging.error("Exception raised during recipe parsing. "\
+                          "Deconfiguring machines.")
+            self._cleanup_slaves()
+            raise
+
+        machines = self._recipe["machines"]
+        if len(machines) <= 0:
+            return
+
+        sp = self._slave_pool
+        machines = sp.provision_machines(machines)
+        if machines == None:
+            msg = "This setup cannot be provisioned with the current pool."
+            raise NetTestError(msg)
+
+        logging.info("Provisioning initialized")
+        for m_id in machines.keys():
+            provisioner = sp.get_provisioner_id(m_id)
+            logging.info("  machine %s matched to %s" % (m_id, provisioner))
+
+        return True
+
     def config_only_recipe(self):
         self._prepare()
         self._cleanup_slaves(deconfigure=False)

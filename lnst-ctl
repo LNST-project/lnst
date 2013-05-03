@@ -28,7 +28,7 @@ def usage():
     """
     print "Usage: %s [OPTION...] [RECIPE...] ACTION" % sys.argv[0]
     print ""
-    print "ACTION = [run | dump | config_only]"
+    print "ACTION = [run | dump | config_only | match_setup]"
     print ""
     print "OPTIONS"
     print "  -d, --debug                     emit debugging messages"
