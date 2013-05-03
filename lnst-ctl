@@ -32,7 +32,7 @@ def usage():
     print ""
     print "OPTIONS"
     print "  -d, --debug                     emit debugging messages"
-    print "  -p, --packet_capture            capture and log all ongoing\n" \
+    print "  -p, --packet-capture            capture and log all ongoing\n" \
           "                                  network communication during\n" \
           "                                  the test"
     print "  -h, --help                      print this message"
@@ -94,7 +94,7 @@ def main():
             sys.argv[1:],
             "dhr:cx:po",
             ["debug", "help", "recipe=", "cleanup", "result=",
-             "packet_capture", "disable-pool-checks"]
+             "packet-capture", "disable-pool-checks"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -133,7 +133,7 @@ def main():
             cleanup = True
         elif opt in ("-x", "--result"):
             result_path = arg
-        elif opt in ("-p", "--packet_capture"):
+        elif opt in ("-p", "--packet-capture"):
             packet_capture = True
         elif opt in ("-o", "--disable-pool-checks"):
             pool_checks = False
