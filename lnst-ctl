@@ -36,21 +36,26 @@ def usage():
           "                                  network communication during\n" \
           "                                  the test"
     print "  -h, --help                      print this message"
+    print "  -o, --disable-pool-checks       don't check the availability of\n"\
+          "                                  machines in the pool"
     print "  -c, --cleanup                   perform config cleanup\n" \
           "                                  machines"
     print "  -x, --result=FILE               file to write xml_result"
     sys.exit()
 
 def process_recipe(action, file_path, cleanup, res_serializer,
-                   packet_capture, config, log_ctl):
+                   packet_capture, config, log_ctl, pool_checks):
     nettestctl = NetTestController(file_path, log_ctl, cleanup=cleanup,
-                                   res_serializer=res_serializer, config=config)
+                                   res_serializer=res_serializer,
+                                   config=config, pool_checks=pool_checks)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "dump":
         return nettestctl.dump_recipe()
     elif action == "config_only":
         return nettestctl.config_only_recipe()
+    elif action == "match_setup":
+        return nettestctl.match_setup()
     else:
         logging.error("Unknown action \"%s\"" % action)
         usage();
@@ -65,15 +70,15 @@ def print_summary(summary):
         logging.info("*%s* %s" % (res, recipe_file))
     logging.info("=====================================================")
 
-def get_recipe_result(args, file_path, cleanup,
-                      res_serializer, packet_capture, config, log_ctl):
+def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
+                      config, log_ctl, pool_checks):
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
 
     res = None
     try:
         res = process_recipe(args, file_path, cleanup, res_serializer,
-                             packet_capture, config, log_ctl)
+                             packet_capture, config, log_ctl, pool_checks)
     except Exception as err:
         log_exc_traceback()
         logging.error(err)
@@ -87,9 +92,9 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:cx:p",
+            "dhr:cx:po",
             ["debug", "help", "recipe=", "cleanup", "result=",
-             "packet_capture"]
+             "packet_capture", "disable-pool-checks"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -113,12 +118,12 @@ def main():
         with open(usr_cfg, 'w') as f:
             f.write(config.dump_config())
 
-
     debug = 0
     recipe_path = None
     cleanup = False
     result_path = None
     packet_capture = False
+    pool_checks = True
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -130,7 +135,8 @@ def main():
             result_path = arg
         elif opt in ("-p", "--packet_capture"):
             packet_capture = True
-
+        elif opt in ("-o", "--disable-pool-checks"):
+            pool_checks = False
 
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     log_ctl = LoggingCtl(debug,
@@ -162,12 +168,13 @@ def main():
                                                      cleanup,
                                                      res_serializer,
                                                      packet_capture,
-                                                     config, log_ctl))
+                                                     config, log_ctl,
+                                                     pool_checks))
         else:
             summary.append(get_recipe_result(action, recipe_path,
                                              cleanup, res_serializer,
                                              packet_capture,
-                                             config, log_ctl))
+                                             config, log_ctl, pool_checks))
 
     log_ctl.set_recipe("", clean=False)
 

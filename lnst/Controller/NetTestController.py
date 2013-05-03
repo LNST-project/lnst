@@ -41,7 +41,7 @@ def ignore_event(**kwarg):
 
 class NetTestController:
     def __init__(self, recipe_path, log_ctl, cleanup=False,
-                 res_serializer=None, config=None):
+                 res_serializer=None, config=None, pool_checks=True):
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
@@ -51,7 +51,7 @@ class NetTestController:
         self._msg_dispatcher = MessageDispatcher(log_ctl)
 
         sp = SlavePool(config.get_option('environment', 'pool_dirs'),
-                       check_process_running("libvirtd"), config)
+                       check_process_running("libvirtd"), config, pool_checks)
         self._slave_pool = sp
 
         self._machines = {}

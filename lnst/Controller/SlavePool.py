@@ -35,11 +35,14 @@ class SlavePool:
     _machine_matches = []
     _network_matches = []
 
-    _allow_virtual = False
+    _allow_virt = False
+    _pool_checks = True
 
-    def __init__(self, pool_dirs, allow_virtual=False, config=None):
+    def __init__(self, pool_dirs, allow_virtual=False, config=None,
+                 pool_checks=True):
         self._config = config
-        self._allow_virtual = allow_virtual
+        self._allow_virt = allow_virtual
+        self._pool_checks = pool_checks
         for pool_dir in pool_dirs:
             self.add_dir(pool_dir)
 
@@ -61,30 +64,33 @@ class SlavePool:
             parser.disable_events()
 
             machine = {"params": {}, "interfaces": {}}
-            machine_id = re.sub("\.[xX][mM][lL]$", "", basename)
-            parser.set_machine(machine_id, machine)
+            m_id = re.sub("\.[xX][mM][lL]$", "", basename)
+            parser.set_machine(m_id, machine)
 
             slavemachine = dom.getElementsByTagName("slavemachine")[0]
 
             parser.parse(slavemachine)
 
-            hostname = machine["params"]["hostname"]
-            if "rpcport" in machine:
-                port = machine["params"]["rpcport"]
-            else:
-                port = self._config.get_option('environment', 'rpcport')
-            logging.info("Querying slave machine %s." % machine_id)
-            if not test_tcp_connection(hostname, port):
-                return
+            if self._pool_checks:
+                hostname = machine["params"]["hostname"]
+                if "rpcport" in machine:
+                    port = machine["params"]["rpcport"]
+                else:
+                    port = self._config.get_option('environment', 'rpcport')
 
-            if 'libvirt_domain' not in machine['params'] \
-                                   or self._allow_virtual:
-                logging.info("Adding slave machine %s to slave pool."
-                             % machine_id)
-                self._pool[machine_id] = machine
-            else:
-                logging.warning("libvirtd not found- Machine Pool skipping "\
-                                "machine %s" % machine_id)
+                logging.info("Querying slave machine %s." % m_id)
+                if not test_tcp_connection(hostname, port):
+                    msg = "Machine '%s' not responding. Skipping." % m_id
+                    logging.warning(msg)
+                    return
+
+                if 'libvirt_domain' in machine['params'] and \
+                   not self._allow_virt:
+                    msg = "libvird not running. Skipping machine '%s'." % m_id
+                    logging.warning(msg)
+
+            logging.info("Adding slave machine %s to slave pool." % m_id)
+            self._pool[m_id] = machine
 
     def provision_machines(self, mreqs):
         """
