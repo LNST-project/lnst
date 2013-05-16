@@ -97,7 +97,7 @@ class LoggingCtl:
 
 
         self.formatter = MultilineFormater(
-                            '%(asctime)s| %(address)17.17s| %(levelname)5.5s: '
+                            '%(asctime)s| %(address)17.17s| %(levelname)7.7s: '
                             '%(message)s', '%Y-%m-%d %H:%M:%S', " "*4)
 
 
