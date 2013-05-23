@@ -296,6 +296,7 @@ class InterfaceParse(LnstParser):
         self._iface["options"].append((name, value))
 
     def _slaves(self, node, params):
+        self._iface["slave_options"] = {}
         self._list_init(node, params, "slaves", {"slave": self._slave})
 
     def _slave(self, node, params):
@@ -305,6 +306,26 @@ class InterfaceParse(LnstParser):
             slave_id = self._get_text_content(node)
 
         self._iface["slaves"].append(slave_id)
+
+        self._iface["slave_options"][slave_id] = []
+        self._slave_opts = self._iface["slave_options"][slave_id]
+
+        scheme = {"options": self._slave_options}
+        self._process_child_nodes(node, scheme, params)
+
+    def _slave_options(self, node, params):
+        scheme = {"option": self._slave_option}
+        self._process_child_nodes(node, scheme, params)
+
+    def _slave_option(self, node, params):
+        name = self._get_attribute(node, "name")
+
+        if self._has_attribute(node, "value"):
+            value = self._get_attribute(node, "value")
+        else:
+            value = self._get_text_content(node)
+
+        self._slave_opts.append((name, value))
 
     def _list_init(self, node, params, node_name, scheme):
         self._iface[node_name] = []

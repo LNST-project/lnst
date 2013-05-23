@@ -15,7 +15,7 @@ import logging
 import re
 import sys
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Slave.NetConfigCommon import get_slaves, get_option
+from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
 
 class NetConfigDeviceGeneric:
@@ -270,7 +270,8 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         dev_name = self._netdev["name"]
         port_netdev = self._config[slaveid]
         port_name = port_netdev["name"]
-        teamd_port_config = get_option(port_netdev, "teamd_port_config")
+        teamd_port_config = get_slave_option(self._netdev,
+                                             slaveid, "teamd_port_config")
         dbus_option = "-D" if self._should_enable_dbus() else ""
         if teamd_port_config:
             teamd_port_config = prepare_json_str(teamd_port_config)

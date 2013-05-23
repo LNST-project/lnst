@@ -309,6 +309,7 @@ class Interface(object):
         self._network = None
 
         self._slaves = {}
+        self._slave_options = {}
         self._addresses = []
         self._options = []
 
@@ -351,6 +352,12 @@ class Interface(object):
     def add_slave(self, iface):
         self._slaves[iface.get_id()] = iface
 
+    def set_slave_options(self, slave_options):
+        self._slave_options = slave_options
+
+    def get_slave_options(self):
+        return self._slave_options
+
     def add_address(self, addr):
         self._addresses.append(addr)
 
@@ -360,7 +367,8 @@ class Interface(object):
     def _get_config(self):
         config = {"hwaddr": self._hwaddr, "type": self._type,
                   "addresses": self._addresses, "slaves": self._slaves.keys(),
-                  "options": self._options}
+                  "options": self._options,
+                  "slave_options": self._slave_options}
         if self._type == "eth":
             config["phys_id"] = self.get_id()
         return config

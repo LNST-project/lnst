@@ -25,3 +25,13 @@ def get_option(netdev, opt_name):
         if option == opt_name:
             return value
     return None
+
+def get_slave_option(netdev, slave_id, opt_name):
+    try:
+        options = netdev["slave_options"][slave_id]
+    except KeyError:
+        return None
+    for option, value in options:
+        if option == opt_name:
+            return value
+    return None

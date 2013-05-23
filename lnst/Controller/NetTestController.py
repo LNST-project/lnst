@@ -153,6 +153,7 @@ class NetTestController:
         if "slaves" in ifconfig:
             for slave_id in ifconfig["slaves"]:
                 iface.add_slave(machine.get_interface(slave_id))
+            iface.set_slave_options(ifconfig["slave_options"])
 
         if "addresses" in ifconfig:
             for addr in ifconfig["addresses"]:
