@@ -1,6 +1,6 @@
 <interfaces>
-    <interface id="if-1" network="net" type="eth"/>
-    <interface id="testiface" type="vlan">
+    <eth id="if-1" network="net"/>
+    <vlan id="testiface" type="vlan">
         <options>
             <option name="vlan_tci" value="10"/>
         </options>
@@ -10,5 +10,5 @@
         <addresses>
             <address value="{$testip}"/>
         </addresses>
-    </interface>
+    </vlan>
 </interfaces>

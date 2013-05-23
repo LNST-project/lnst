@@ -1,7 +1,7 @@
 <interfaces>
-    <interface id="if-1" network="net" type="eth"/>
-    <interface id="if-2" network="net" type="eth"/>
-    <interface id="testiface" type="bond">
+    <eth id="if-1" network="net"/>
+    <eth id="if-2" network="net"/>
+    <bond id="testiface">
         <slaves>
             <slave id="if-1"/>
             <slave id="if-2"/>
@@ -9,5 +9,5 @@
         <addresses>
             <address value="{$testip}"/>
         </addresses>
-    </interface>
+    </bond>
 </interfaces>

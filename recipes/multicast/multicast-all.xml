@@ -10,44 +10,35 @@
     </define>
     <machines>
         <machine id="1">
-            <machineconfig>
-                <info hostname="{$hostname1}" libvirt_domain="{$virtdomain1}"/>
-                <netdevices>
-                    <libvirt_create>
-                        <netdevice network="tnet" phys_id="1" type="eth"/>
-                        <netdevice network="tnet" phys_id="2" type="eth"/>
-                    </libvirt_create>
-                </netdevices>
-            </machineconfig>
-            <netconfig>
-                <interface id="testiface" phys_id="1" type="eth">
+            <params>
+                <param name="hostname" value="{$hostname1}"/>
+                <param name="libvirt_domain" value="{$virtdomain1}"/>
+            </params>
+            <interfaces>
+                <eth id="testiface" network="tnet">
                     <addresses>
                         <address value="192.168.100.226/24"/>
                     </addresses>
-                </interface>
-                <interface id="2" phys_id="2" type="eth">
+                </eth>
+                <eth id="2" network="tnet">
                     <addresses>
                         <address value="192.168.100.240/24"/>
                     </addresses>
-                </interface>
-            </netconfig>
+                </eth>
+            </interfaces>
         </machine>
         <machine id="2">
-            <machineconfig>
-                <info hostname="{$hostname2}" libvirt_domain="{$virtdomain2}"/>
-                <netdevices>
-                    <libvirt_create>
-                        <netdevice network="tnet" phys_id="1" type="eth"/>
-                    </libvirt_create>
-                </netdevices>
-            </machineconfig>
-            <netconfig>
-                <interface id="testiface" phys_id="1" type="eth">
+            <params>
+                <param name="hostname" value="{$hostname2}"/>
+                <param name="libvirt_domain" value="{$virtdomain2}"/>
+            </params>
+            <interfaces>
+                <eth id="testiface" network="tnet">
                     <addresses>
                         <address value="192.168.100.215/24"/>
                     </addresses>
-                </interface>
-            </netconfig>
+                </eth>
+            </interfaces>
         </machine>
     </machines>
 

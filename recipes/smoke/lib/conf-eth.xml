@@ -1,7 +1,7 @@
 <interfaces>
-    <interface id="testiface" network="net" type="eth">
+    <eth id="testiface" network="net">
         <addresses>
             <address value="{$testip}"/>
         </addresses>
-    </interface>
+    </eth>
 </interfaces>
