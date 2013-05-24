@@ -143,11 +143,11 @@ def main():
                          log_dir=config.get_option('environment', 'log_dir'),
                          log_subdir=date)
 
-    if not args:
+    action = args.pop()
+
+    if not action in {'run', 'dump', 'config_only', 'match_setup'}:
         logging.error("No action command passed")
         usage();
-
-    action = args.pop()
 
     summary = []
 
