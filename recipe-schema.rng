@@ -1,0 +1,462 @@
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+    datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="lnstrecipe">
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <ref name="machines"/>
+
+                <oneOrMore>
+                    <ref name="command_sequence"/>
+                </oneOrMore>
+            </interleave>
+        </element>
+    </start>
+
+    <define name="define">
+        <element name="define">
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <zeroOrMore>
+                <element name="alias">
+                    <attribute name="name"/>
+                    <attribute name="value"/>
+                    <text/>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="machines">
+        <element name="machines">
+            <optional>
+                <attribute name="source"/>
+            </optional>
+
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <oneOrMore>
+                    <ref name="machine"/>
+                </oneOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="command_sequence">
+        <element name="command_sequence">
+            <optional>
+                <attribute name="source"/>
+            </optional>
+
+            <optional>
+                <attribute name="quit_on_fail">
+                    <choice>
+                        <value>yes</value>
+                        <value>no</value>
+                    </choice>
+                </attribute>
+            </optional>
+
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <ref name="command"/>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="machine">
+        <element name="machine">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <ref name="params"/>
+                </zeroOrMore>
+
+                <element name="interfaces">
+                    <optional>
+                        <attribute name="source"/>
+                    </optional>
+                    <zeroOrMore>
+                        <choice>
+                            <ref name="eth"/>
+                            <ref name="bond"/>
+                            <ref name="bridge"/>
+                            <ref name="vlan"/>
+                            <ref name="macvlan"/>
+                            <ref name="team"/>
+                        </choice>
+                    </zeroOrMore>
+                </element>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="eth">
+        <element name="eth">
+            <attribute name="id"/>
+            <attribute name="network"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <ref name="params"/>
+                </zeroOrMore>
+
+                <optional>
+                    <ref name="addresses"/>
+                </optional>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="bond">
+        <element name="bond">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="bridge">
+        <element name="bridge">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="vlan">
+        <element name="vlan">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="macvlan">
+        <element name="macvlan">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="team">
+        <element name="team">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="source"/>
+            </optional>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="softdevice">
+        <interleave>
+            <zeroOrMore>
+                <ref name="define"/>
+            </zeroOrMore>
+
+            <optional>
+                <ref name="options"/>
+            </optional>
+
+            <optional>
+                <element name="slaves">
+                    <optional>
+                        <attribute name="source"/>
+                    </optional>
+
+                    <interleave>
+                        <zeroOrMore>
+                            <ref name="define"/>
+                        </zeroOrMore>
+
+                        <zeroOrMore>
+                            <element name="slave">
+                                <attribute name="id"/>
+
+                                <optional>
+                                    <attribute name="source"/>
+                                </optional>
+
+                                <optional>
+                                    <interleave>
+                                        <zeroOrMore>
+                                            <ref name="define"/>
+                                        </zeroOrMore>
+
+                                        <zeroOrMore>
+                                            <ref name="options"/>
+                                        </zeroOrMore>
+                                    </interleave>
+                                </optional>
+
+                            </element>
+                        </zeroOrMore>
+                    </interleave>
+                </element>
+            </optional>
+
+            <optional>
+                <ref name="addresses"/>
+            </optional>
+        </interleave>
+    </define>
+
+    <define name="options">
+        <element name="options">
+            <optional>
+                <attribute name="source"/>
+            </optional>
+
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <element name="option">
+                        <optional>
+                            <attribute name="source"/>
+                        </optional>
+                        <attribute name="name"/>
+                        <choice>
+                            <attribute name="value"/>
+                            <text/>
+                        </choice>
+                    </element>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="addresses">
+        <element name="addresses">
+            <optional>
+                <attribute name="source"/>
+            </optional>
+
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <element name="address">
+                        <optional>
+                            <attribute name="source"/>
+                        </optional>
+                        <attribute name="value"/>
+                        <text/>
+                    </element>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="params">
+        <element name="params">
+            <optional>
+                <attribute name="source"/>
+            </optional>
+
+            <interleave>
+                <zeroOrMore>
+                    <ref name="define"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <element name="param">
+                        <optional>
+                            <attribute name="source"/>
+                        </optional>
+                        <attribute name="name"/>
+                        <attribute name="value"/>
+                        <text/>
+                    </element>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="command">
+        <element name="command">
+            <choice>
+                <ref name="ctl_wait"/>
+                <ref name="exec"/>
+                <ref name="system_config"/>
+                <ref name="other_commands"/>
+            </choice>
+
+            <optional>
+                <ref name="options"/>
+            </optional>
+        </element>
+    </define>
+
+    <define name="ctl_wait">
+        <attribute name="type">
+            <value>ctl_wait</value>
+        </attribute>
+
+        <optional>
+            <attribute name="value">
+                <data type="integer"/>
+            </attribute>
+        </optional>
+    </define>
+
+    <define name="exec">
+        <attribute name="machine_id"/>
+
+        <attribute name="type">
+            <value>exec</value>
+        </attribute>
+
+        <optional>
+            <attribute name="bg_id"/>
+        </optional>
+
+        <optional>
+            <attribute name="value"/>
+        </optional>
+
+        <optional>
+            <attribute name="timeout">
+                <data type="integer"/>
+            </attribute>
+        </optional>
+
+        <optional>
+            <attribute name="option"/>
+        </optional>
+
+        <optional>
+            <attribute name="desc"/>
+        </optional>
+
+        <optional>
+            <attribute name="from"/>
+        </optional>
+
+        <optional>
+            <attribute name="source"/>
+        </optional>
+    </define>
+
+    <define name="system_config">
+        <attribute name="machine_id"/>
+
+        <attribute name="type">
+            <value>system_config</value>
+        </attribute>
+
+        <optional>
+            <attribute name="bg_id"/>
+        </optional>
+
+        <optional>
+            <attribute name="value"/>
+        </optional>
+
+        <optional>
+            <attribute name="timeout">
+                <data type="integer"/>
+            </attribute>
+        </optional>
+
+        <optional>
+            <attribute name="option"/>
+        </optional>
+
+        <optional>
+            <attribute name="persistent">
+                <choice>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
+            </attribute>
+        </optional>
+
+        <optional>
+            <attribute name="desc"/>
+        </optional>
+
+        <optional>
+            <attribute name="source"/>
+        </optional>
+    </define>
+
+    <define name="other_commands">
+        <attribute name="machine_id"/>
+
+        <attribute name="type">
+            <choice>
+                <value>test</value>
+                <value>wait</value>
+                <value>intr</value>
+                <value>kill</value>
+            </choice>
+        </attribute>
+
+        <optional>
+            <attribute name="bg_id"/>
+        </optional>
+
+        <optional>
+            <attribute name="value"/>
+        </optional>
+
+        <optional>
+            <attribute name="timeout">
+                <data type="integer"/>
+            </attribute>
+        </optional>
+
+        <optional>
+            <attribute name="option"/>
+        </optional>
+
+        <optional>
+            <attribute name="desc"/>
+        </optional>
+
+        <optional>
+            <attribute name="source"/>
+        </optional>
+    </define>
+</grammar>
