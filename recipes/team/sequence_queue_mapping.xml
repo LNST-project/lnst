@@ -1,5 +1,5 @@
 <command_sequence>
-  <command type="exec" value="sleep 4"/>
+  <command type="ctl_wait" value="4"/>
   <command machine_id="1" type="exec" value="tc qdisc add dev {devname(1,testiface)} handle 1 root multiq"/>
   <command machine_id="1" type="exec" value="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,0)} action skbedit queue_mapping 1"/>
   <command machine_id="1" type="exec" value="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,1)} action skbedit queue_mapping 2"/>

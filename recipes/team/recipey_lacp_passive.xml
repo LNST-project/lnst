@@ -5,16 +5,14 @@
             <alias name="testip6" value="fe01::1/64"/>
         </define>
         <machine id="1">
-            <machineconfig source="machineconfig-peanut.xml"/>
-            <netconfig source="netconfig-team_lacp_passive.xml"/>
+            <interfaces source="interfaces-team_lacp_passive.xml"/>
         </machine>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
             <alias name="testip6" value="fe01::2/64"/>
         </define>
         <machine id="2">
-            <machineconfig source="machineconfig-dhcp-37-128.xml"/>
-            <netconfig source="netconfig-bond_lacp.xml"/>
+            <interfaces source="interfaces-bond_lacp.xml"/>
         </machine>
     </machines>
     <command_sequence source="sequence_ping_simple.xml"/>

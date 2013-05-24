@@ -5,16 +5,14 @@
             <alias name="testip6" value="fe01::1/64"/>
         </define>
         <machine id="1">
-            <machineconfig source="machineconfig-peanut.xml"/>
-            <netconfig source="netconfig-team_ab.xml"/>
+            <interfaces source="interfaces-team_ab.xml"/>
         </machine>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
             <alias name="testip6" value="fe01::2/64"/>
         </define>
         <machine id="2">
-            <machineconfig source="machineconfig-dhcp-37-128.xml"/>
-            <netconfig source="netconfig-simple_br.xml"/>
+            <interfaces source="interfaces-simple_br.xml"/>
         </machine>
     </machines>
     <define>

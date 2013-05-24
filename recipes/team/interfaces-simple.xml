@@ -1,0 +1,9 @@
+<interfaces>
+    <eth id="testiface" network="net1">
+        <addresses>
+             <address value="{$testip}"/>
+        </addresses>
+    </eth>
+    <eth id="2" network="net2"/>
+    <eth id="3" network="net3"/>
+</interfaces>

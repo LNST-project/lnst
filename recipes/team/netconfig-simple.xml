@@ -1,9 +1,0 @@
-<netconfig>
-    <interface id="testiface" phys_id="1" type="eth">
-        <addresses>
-             <address value="{$testip}"/>
-        </addresses>
-    </interface>
-    <interface id="2" phys_id="2" type="eth"/>
-    <interface id="3" phys_id="3" type="eth"/>
-</netconfig>

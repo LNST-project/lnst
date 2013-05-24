@@ -1,0 +1,60 @@
+<interfaces>
+    <eth id="1" network="net1"/>
+    <eth id="2" network="net2"/>
+    <eth id="3" network="net3"/>
+    <team id="testiface">
+        <options>
+            <option name="teamd_config">
+                {
+                    "hwaddr": "00:11:22:33:44:55",
+                    "runner": {"name": "activebackup"}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="1">
+                <options>
+                    <option name="teamd_port_config">
+                        {
+                            "link_watch": {
+                                "name": "ethtool",
+                                "delay_up": 3000,
+                                "delay_down": 3000
+                            }
+                        }
+                    </option>
+                </options>
+            </slave>
+            <slave id="2">
+                <options>
+                    <option name="teamd_port_config">
+                        {
+                            "link_watch": {
+                                "name": "ethtool",
+                                "delay_up": 1000,
+                                "delay_down": 1000
+                            }
+                        }
+                    </option>
+                </options>
+            </slave>
+            <slave id="3">
+                <options>
+                    <option name="teamd_port_config">
+                        {
+                            "link_watch": {
+                                "name": "ethtool",
+                                "delay_up": 500,
+                                "delay_down": 500
+                            }
+                        }
+                    </option>
+                </options>
+            </slave>
+        </slaves>
+        <addresses>
+             <address value="{$testip}"/>
+             <address value="{$testip6}"/>
+        </addresses>
+    </team>
+</interfaces>
