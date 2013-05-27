@@ -17,6 +17,7 @@ import os
 import re
 import pickle
 import tempfile
+import signal
 from time import sleep
 from xmlrpclib import Binary
 from pprint import pprint, pformat
@@ -158,22 +159,24 @@ class Machine(object):
 
         self._configured = False
 
+    def _timeout_handler(self, signum, frame):
+        msg = "RPC connection to machine %s timed out" % self.get_id()
+        raise MachineError(msg)
+
     def run_command(self, command):
         """ Run a command on the machine """
 
+        prev_handler = signal.signal(signal.SIGALRM, self._timeout_handler)
+
         if "timeout" in command:
             timeout = command["timeout"]
-            logging.debug("Setting socket timeout to \"%d\"", timeout)
-            socket.setdefaulttimeout(timeout)
-        try:
-            cmd_res = self._rpc_call("run_command", command)
-        except socket.timeout:
-            msg = "RPC connection to machine %s timed out" % self.get_id()
-            raise Machine(msg)
-        finally:
-            if "timeout" in command:
-                logging.debug("Setting socket timeout to default value")
-                socket.setdefaulttimeout(None)
+            logging.debug("Setting timeout to \"%d\"", timeout)
+            signal.alarm(timeout)
+
+        cmd_res = self._rpc_call("run_command", command)
+
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, prev_handler)
 
         return cmd_res
 
