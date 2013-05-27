@@ -36,6 +36,18 @@ def _brctl(cmd):
     except ExecCmdFail as err:
         raise VirtUtilsError("brctl error: %s" % err)
 
+def _iptables(cmd):
+    try:
+        exec_cmd("iptables %s" % cmd)
+    except ExecCmdFail as err:
+        raise VirtUtilsError("iptables error: %s" % err)
+
+def _ip6tables(cmd):
+    try:
+        exec_cmd("ip6tables %s" % cmd)
+    except ExecCmdFail as err:
+        raise VirtUtilsError("ip6tables error: %s" % err)
+
 def _virsh(cmd):
     try:
         exec_cmd("virsh %s" % cmd, log_outputs=False)
@@ -233,6 +245,14 @@ class BridgeCtl(NetCtl):
     def init(self):
         if not self._exists():
             _brctl("addbr %s" % self._name)
+            _iptables("-I FORWARD 1 -j REJECT -i %s -o any" % self._name)
+            _iptables("-I FORWARD 1 -j REJECT -i any -o %s" % self._name)
+            _iptables("-I FORWARD 1 -j ACCEPT -i %s -o %s" %
+                                                    (self._name, self._name))
+            _ip6tables("-I FORWARD 1 -j REJECT -i %s -o any" % self._name)
+            _ip6tables("-I FORWARD 1 -j REJECT -i any -o %s" % self._name)
+            _ip6tables("-I FORWARD 1 -j ACCEPT -i %s -o %s" %
+                                                    (self._name, self._name))
             self._remove = True
 
         _ip("link set %s up" % self._name)
@@ -241,3 +261,11 @@ class BridgeCtl(NetCtl):
         if self._remove:
             _ip("link set %s down" % self._name)
             _brctl("delbr %s" % self._name)
+            _iptables("-D FORWARD -j REJECT -i %s -o any" % self._name)
+            _iptables("-D FORWARD -j REJECT -i any -o %s" % self._name)
+            _iptables("-D FORWARD -j ACCEPT -i %s -o %s" %
+                                                    (self._name, self._name))
+            _ip6tables("-D FORWARD -j REJECT -i %s -o any" % self._name)
+            _ip6tables("-D FORWARD -j REJECT -i any -o %s" % self._name)
+            _ip6tables("-D FORWARD -j ACCEPT -i %s -o %s" %
+                                                    (self._name, self._name))
