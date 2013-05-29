@@ -145,7 +145,7 @@ def main():
 
     action = args.pop()
 
-    if not action in {'run', 'dump', 'config_only', 'match_setup'}:
+    if not action in ['run', 'dump', 'config_only', 'match_setup']:
         logging.error("No action command passed")
         usage();
 
