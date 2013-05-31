@@ -285,6 +285,7 @@ class NetTestController:
 
         for sequence in self._recipe["sequences"]:
             try:
+                self._res_serializer.add_command_sequence()
                 res = self._run_command_sequence(sequence)
             except CommandException as exc:
                 logging.debug(exc)
