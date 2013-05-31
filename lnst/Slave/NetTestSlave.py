@@ -207,6 +207,7 @@ class SlaveMethods:
                 logging.warn("Unable to restore '%s' config option!", option)
                 return False
 
+        self._system_config = {}
         return True
 
     def run_command(self, command):
@@ -218,6 +219,16 @@ class SlaveMethods:
             res = cmd.run()
             if not cmd.forked():
                 self._command_context.del_cmd(cmd)
+
+            if command["type"] == "system_config":
+                if res["passed"]:
+                    self._update_system_config(res["res_data"]["options"],
+                                               command["persistent"])
+                else:
+                    err = "Error occured while setting system "\
+                          "configuration (%s)" % res["err_msg"]
+                    logging.error(err)
+
             return res
         except:
             log_exc_traceback()

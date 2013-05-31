@@ -80,7 +80,8 @@ class NetTestCommand:
         return self._finished
 
     def run(self):
-        if isinstance(self._cmd_cls, NetTestCommandControl):
+        if isinstance(self._cmd_cls, NetTestCommandControl) or \
+           isinstance(self._cmd_cls, NetTestCommandSystemConfig):
             return self._cmd_cls.run()
 
         self._read_pipe, self._write_pipe = multiprocessing.Pipe()
@@ -321,7 +322,7 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
 
         res = {"passed": True}
         res["res_data"] = res_data
-        self.set_result(res)
+        return res
 
 class NetTestCommandControl(NetTestCommandGeneric):
     def __init__(self, command_context, command):
