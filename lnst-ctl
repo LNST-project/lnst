@@ -60,16 +60,6 @@ def process_recipe(action, file_path, cleanup, res_serializer,
         logging.error("Unknown action \"%s\"" % action)
         usage();
 
-def print_summary(summary):
-    logging.info("====================== SUMMARY ======================")
-    for recipe_file, res in summary:
-        if res:
-            res = "PASS"
-        else:
-            res = "FAIL"
-        logging.info("*%s* %s" % (res, recipe_file))
-    logging.info("=====================================================")
-
 def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
                       config, log_ctl, pool_checks):
     res_serializer.add_recipe(file_path)
@@ -178,7 +168,7 @@ def main():
 
     log_ctl.set_recipe("", clean=False)
 
-    print_summary(summary)
+    res_serializer.print_summary()
 
     if result_path:
         result_path = os.path.expanduser(result_path)
