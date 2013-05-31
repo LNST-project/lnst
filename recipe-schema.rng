@@ -319,7 +319,8 @@
                 <ref name="ctl_wait"/>
                 <ref name="exec"/>
                 <ref name="system_config"/>
-                <ref name="other_commands"/>
+                <ref name="test"/>
+                <ref name="control_commands"/>
             </choice>
 
             <optional>
@@ -386,10 +387,6 @@
         </attribute>
 
         <optional>
-            <attribute name="bg_id"/>
-        </optional>
-
-        <optional>
             <attribute name="value"/>
         </optional>
 
@@ -421,21 +418,50 @@
         </optional>
     </define>
 
-    <define name="other_commands">
+    <define name="test">
         <attribute name="machine_id"/>
 
         <attribute name="type">
-            <choice>
-                <value>test</value>
-                <value>wait</value>
-                <value>intr</value>
-                <value>kill</value>
-            </choice>
+            <value>test</value>
         </attribute>
 
         <optional>
             <attribute name="bg_id"/>
         </optional>
+
+        <optional>
+            <attribute name="value"/>
+        </optional>
+
+        <optional>
+            <attribute name="timeout">
+                <data type="integer"/>
+            </attribute>
+        </optional>
+
+        <optional>
+            <attribute name="option"/>
+        </optional>
+
+        <optional>
+            <attribute name="desc"/>
+        </optional>
+
+        <optional>
+            <attribute name="source"/>
+        </optional>
+    </define>
+
+    <define name="control_commands">
+        <attribute name="machine_id"/>
+
+        <attribute name="type">
+            <choice>
+                <value>wait</value>
+                <value>intr</value>
+                <value>kill</value>
+            </choice>
+        </attribute>
 
         <optional>
             <attribute name="value"/>

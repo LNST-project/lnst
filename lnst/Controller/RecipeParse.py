@@ -458,6 +458,11 @@ class CommandParse(LnstParser):
         if self._has_attribute(node, "bg_id"):
             command["bg_id"] = self._get_attribute(node, "bg_id")
 
+            if command["type"] in ["system_config", "wait", "intr", "kill"]:
+                msg = "Command %s cannot be run in the background!" \
+                        % command["type"]
+                raise XmlProcessingError(msg, node)
+
         if self._has_attribute(node, "desc"):
             command["desc"] = self._get_attribute(node, "desc")
 
