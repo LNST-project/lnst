@@ -18,7 +18,11 @@ import logging
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):
         for key in obj:
-            new_el = dom.createElement(key)
+            if upper_name == "options":
+                new_el = dom.createElement("option")
+                new_el.setAttribute("name", key)
+            else:
+                new_el = dom.createElement(key)
             el.appendChild(new_el)
             serialize_obj(obj[key], dom, new_el, upper_name=key)
     elif isinstance(obj, list):
@@ -203,12 +207,12 @@ class NetTestResultSerializer:
             result_data_node = result_data_nodes[0]
             options_nodes = result_data_node.getElementsByTagName("options")
             for options_node in options_nodes:
-                for option in options_node.childNodes:
+                for option in options_node.getElementsByTagName("option"):
                     previous_node = option.getElementsByTagName("previous_val")[0]
                     current_node = option.getElementsByTagName("current_val")[0]
                     previous_val = get_node_val(previous_node)
                     current_val = get_node_val(current_node)
-                    opt_left = 12*" "+"%s" % option.tagName
+                    opt_left = 12*" "+"%s" % option.getAttribute("name")
                     opt_right = "previous: %s current: %s" \
                                 % (previous_val, current_val)
                     output_pairs.append((opt_left, opt_right))
