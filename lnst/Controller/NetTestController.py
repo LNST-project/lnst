@@ -210,9 +210,15 @@ class NetTestController:
         seq_passed = True
         for command in sequence["commands"]:
             logging.info("Executing command: [%s]", str_command(command))
-            cmd_res = self._run_command(command)
-            if self._res_serializer:
-                self._res_serializer.add_cmd_result(command, cmd_res)
+
+            try:
+                cmd_res = self._run_command(command)
+            except Exception as exc:
+                cmd_res = {"passed": False, "err_msg": "Exception raised."}
+                raise exc
+            finally:
+                if self._res_serializer:
+                    self._res_serializer.add_cmd_result(command, cmd_res)
             logging.debug("Result: %s", str(cmd_res))
             if "res_data" in cmd_res:
                 res_data = pformat(cmd_res["res_data"])
