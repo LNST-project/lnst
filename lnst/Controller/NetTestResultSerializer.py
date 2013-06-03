@@ -59,7 +59,12 @@ class NetTestResultSerializer:
         self._top_el.appendChild(recipe_el)
         self._cur_recipe_el = recipe_el
         self._cur_cmd_seq_el = None
-        self._first_command = True
+
+    def set_recipe_result(self, result):
+        if result:
+            self._cur_recipe_el.setAttribute("result", "PASS")
+        else:
+            self._cur_recipe_el.setAttribute("result", "FAIL")
 
     def add_command_sequence(self):
         cmd_seq_el = self._dom.createElement("command_sequence")
@@ -80,13 +85,9 @@ class NetTestResultSerializer:
 
         if cmd_res["passed"]:
             res = "PASS"
-            if self._first_command:
-                self._cur_recipe_el.setAttribute("result", "PASS")
         else:
             res = "FAIL"
-            self._cur_recipe_el.setAttribute("result", "FAIL")
         result_el.setAttribute("result", res)
-        self._first_command = False
 
         if "err_msg" in cmd_res:
             err_el = self._dom.createElement("error_message")

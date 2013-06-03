@@ -73,6 +73,8 @@ def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
         log_exc_traceback()
         logging.error(err)
 
+    res_serializer.set_recipe_result(res)
+
     return ((file_path, res))
 
 def main():
