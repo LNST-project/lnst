@@ -377,6 +377,15 @@
         <optional>
             <attribute name="source"/>
         </optional>
+
+        <optional>
+            <attribute name="pass_result">
+                <choice>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
+            </attribute>
+        </optional>
     </define>
 
     <define name="system_config">
@@ -450,6 +459,15 @@
         <optional>
             <attribute name="source"/>
         </optional>
+
+        <optional>
+            <attribute name="pass_result">
+                <choice>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
+            </attribute>
+        </optional>
     </define>
 
     <define name="control_commands">
@@ -483,6 +501,15 @@
 
         <optional>
             <attribute name="source"/>
+        </optional>
+
+        <optional>
+            <attribute name="pass_result">
+                <choice>
+                    <value>true</value>
+                    <value>false</value>
+                </choice>
+            </attribute>
         </optional>
     </define>
 </grammar>

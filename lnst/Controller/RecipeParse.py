@@ -452,6 +452,13 @@ class CommandParse(LnstParser):
         if self._has_attribute(node, "value"):
             command["value"] = self._get_attribute(node, "value")
 
+        if self._has_attribute(node, "pass_result"):
+            command["pass_result"] = self._get_attribute(node, "pass_result",
+                                                         bool_it)
+            if command["type"] == "system_config":
+                msg = "Invalid attribute pass_result for command system_config"
+                raise XmlProcessingError(msg, node)
+
         if self._has_attribute(node, "timeout"):
             command["timeout"] = self._get_attribute(node, "timeout", int)
 

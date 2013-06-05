@@ -178,6 +178,9 @@ class Machine(object):
         signal.alarm(0)
         signal.signal(signal.SIGALRM, prev_handler)
 
+        if "pass_result" in command:
+            cmd_res["passed"] = cmd_res["passed"] == command["pass_result"]
+
         return cmd_res
 
     def get_hostname(self):
