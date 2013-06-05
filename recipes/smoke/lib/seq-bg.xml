@@ -9,5 +9,5 @@
         </options>
     </command>
     <command type="ctl_wait" value="5"/>
-    <command machine_id="1" timeout="30" type="intr" value="1"/>
+    <command machine_id="1" timeout="30" type="intr" pass_result="#icmp_result#" value="1"/>
 </command_sequence>

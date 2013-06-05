@@ -1,5 +1,5 @@
 <command_sequence>
-    <command machine_id="1" timeout="30" type="test" value="IcmpPing">
+    <command machine_id="1" timeout="30" type="test" value="IcmpPing" pass_result="#icmp_result#">
         <options>
             <option name="addr" value="{ip(2,testiface)}"/>
             <option name="count" value="40"/>
