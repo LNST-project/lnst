@@ -1,7 +1,7 @@
 <interfaces>
     <eth id="if-1" network="net"/>
     <eth id="if-2" network="net"/>
-    <team id="testiface" type="team">
+    <team id="testiface">
         <options>
             <option name="teamd_config">
                 {
