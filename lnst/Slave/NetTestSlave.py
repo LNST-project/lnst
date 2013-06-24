@@ -211,32 +211,24 @@ class SlaveMethods:
         return True
 
     def run_command(self, command):
-        try:
-            cmd = NetTestCommand(self._command_context, command,
-                                        self._resource_table, self._log_ctl)
-            self._command_context.add_cmd(cmd)
+        cmd = NetTestCommand(self._command_context, command,
+                                    self._resource_table, self._log_ctl)
+        self._command_context.add_cmd(cmd)
 
-            res = cmd.run()
-            if not cmd.forked():
-                self._command_context.del_cmd(cmd)
+        res = cmd.run()
+        if not cmd.forked():
+            self._command_context.del_cmd(cmd)
 
-            if command["type"] == "system_config":
-                if res["passed"]:
-                    self._update_system_config(res["res_data"]["options"],
-                                               command["persistent"])
-                else:
-                    err = "Error occured while setting system "\
-                          "configuration (%s)" % res["err_msg"]
-                    logging.error(err)
+        if command["type"] == "system_config":
+            if res["passed"]:
+                self._update_system_config(res["res_data"]["options"],
+                                           command["persistent"])
+            else:
+                err = "Error occured while setting system "\
+                      "configuration (%s)" % res["err_msg"]
+                logging.error(err)
 
-            return res
-        except:
-            log_exc_traceback()
-            cmd_type = command["type"]
-            m_id = command["machine_id"]
-            msg = "Execution of %s command on machine %s failed" \
-                                    % (cmd_type, m_id)
-            raise CommandException(msg)
+        return res
 
     def machine_cleanup(self):
         NetConfigDeviceAllCleanup()
