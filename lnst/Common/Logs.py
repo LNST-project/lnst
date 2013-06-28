@@ -15,69 +15,79 @@ import logging.handlers
 import traceback
 from lnst.Common.LoggingHandler import LogBuffer
 from lnst.Common.LoggingHandler import TransmitHandler
+from lnst.Common.Colours import decorate_with_preset, strip_colours
 
 def log_exc_traceback():
     cmd_type, value, tb = sys.exc_info()
     exception = traceback.format_exception(cmd_type, value, tb)
     logging.debug(''.join(exception))
 
+class MultilineFormatter(Formatter): # addr:17 level:7
+    _ADDR_WIDTH  = 17
+    _LEVEL_WIDTH = 7
+    _coloured    = False
 
-class MultilineFormater(Formatter):
-    """
-    Better formating of multiline logs.
-    """
-    def __init__(self, fmt=None, datefmt=None, linefmt=None):
+    def __init__(self, coloured=False):
+        fmt = "%(asctime)s  %(address)s  %(levelname)s: %(message)s"
+        datefmt = "%Y-%m-%d %H:%M:%S"
+        self.linefmt = "    "
+        self._coloured = coloured
+
         Formatter.__init__(self, fmt, datefmt)
-        if linefmt:
-            self.linefmt = linefmt
+
+    def _decorate_value(self, string, preset):
+        value = strip_colours(string)
+        if sys.stdout.isatty() and self._coloured:
+            return decorate_with_preset(value, preset)
         else:
-            self.linefmt = ""
+            return value
+
+    def _format_addr(self, record):
+        if not "address" in record.__dict__:
+            addr = "(127.0.0.1)".rjust(17)
+        else:
+            addr = record.address.rjust(17)
+
+        just  = " " * (self._ADDR_WIDTH - len(addr))
+        return just + self._decorate_value(addr, "log_header")
+
+    def _format_level(self, record):
+        level = record.levelname
+
+        just  = " " * (self._LEVEL_WIDTH - len(level))
+        return just + self._decorate_value(level, level.lower())
 
     def format(self, record):
-        """
-        Format the specified record as text.
+        values = {}
 
-        The record's attribute dictionary is used as the operand to a
-        string formatting operation which yields the returned string.
-        Before formatting the dictionary, a couple of preparatory steps
-        are carried out. The message attribute of the record is computed
-        using LogRecord.getMessage(). If the formatting string uses the
-        time (as determined by a call to usesTime(), formatTime() is
-        called to format the event time. If there is exception information,
-        it is formatted using formatException() and appended to the message.
-        """
-        record.message = record.getMessage()
-        if not "address" in record.__dict__:
-            record.address = "(127.0.0.1)"
-        if self._fmt.find("%(asctime)") >= 0:
-            record.asctime = self.formatTime(record, self.datefmt)
-        lines = record.__dict__["message"].split("\n")
-        s = ""
+        asctime = self.formatTime(record, self.datefmt)
+        values["asctime"] = self._decorate_value(asctime, "log_header")
+
+        values["address"] = self._format_addr(record)
+        values["levelname"] = self._format_level(record)
+
+        msg = ""
+        level = record.levelname
+        lines = record.getMessage().split("\n")
         if len(lines) > 1:
-            record.__dict__['message'] = ""
             for line in lines:
-                s += "\n" + self.linefmt + line
-        s = self._fmt % record.__dict__ + s
-        if record.exc_info:
-            # Cache the traceback text to avoid converting it multiple times
-            # (it's constant anyway)
-            if not record.exc_text:
-                record.exc_text = self.formatException(record.exc_info)
-        if record.exc_text:
-            if s[-1:] != "\n":
-                s = s + "\n"
-            try:
-                s = s + record.exc_text
-            except UnicodeError:
-                # Sometimes filenames have non-ASCII chars, which can lead
-                # to errors when s is Unicode and record.exc_text is str
-                # See issue 8924
-                s = s + record.exc_text.decode(sys.getfilesystemencoding())
-        return s
+                if level == "DEBUG":
+                    line = self._decorate_value(line, "faded")
+                msg += "\n" + self.linefmt + line
+            values["message"] = msg
+        else:
+            if level == "DEBUG":
+                values["message"] = self._decorate_value(lines[0], "faded")
+            else:
+                if sys.stdout.isatty() and self._coloured:
+                    values["message"] = lines[0]
+                else:
+                    values["message"] = strip_colours(lines[0])
+
+        return self._fmt % values
 
 class LoggingCtl:
     log_folder = ""
-    formatter = None
     display_handler = None
     recipe_handlers = (None,None)
     recipe_log_path = ""
@@ -95,15 +105,9 @@ class LoggingCtl:
         if not os.path.isdir(self.log_folder):
             self._clean_folder(self.log_folder)
 
-
-        self.formatter = MultilineFormater(
-                            '%(asctime)s| %(address)17.17s| %(levelname)7.7s: '
-                            '%(message)s', '%Y-%m-%d %H:%M:%S', " "*4)
-
-
         #the display_handler will display logs in the terminal
         self.display_handler = logging.StreamHandler(sys.stdout)
-        self.display_handler.setFormatter(self.formatter)
+        self.display_handler.setFormatter(MultilineFormatter(coloured=True))
         if not debug:
             self.display_handler.setLevel(logging.INFO)
         else:
@@ -210,11 +214,11 @@ class LoggingCtl:
 
     def _create_file_handler(self, folder_path):
         file_debug = logging.FileHandler(os.path.join(folder_path, 'debug'))
-        file_debug.setFormatter(self.formatter)
+        file_debug.setFormatter(MultilineFormatter())
         file_debug.setLevel(logging.DEBUG)
 
         file_info = logging.FileHandler(os.path.join(folder_path, 'info'))
-        file_info.setFormatter(self.formatter)
+        file_info.setFormatter(MultilineFormatter())
         file_info.setLevel(logging.INFO)
 
         return (file_debug, file_info)
