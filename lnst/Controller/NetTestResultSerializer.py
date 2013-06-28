@@ -11,9 +11,10 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
+import logging
 from xml.dom.minidom import getDOMImplementation
 from lnst.Common.NetTestCommand import str_command
-import logging
+from lnst.Common.Colours import decorate_string, decorate_with_preset
 
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):
@@ -227,18 +228,30 @@ class NetTestResultSerializer:
             if len(right) > max_right:
                 max_right = len(right)
 
-        full_length = max_left + max_right
-        if full_length % 2:
-            full_length = full_length+2
-        else:
-            full_length = full_length+1
+        # +1 for the alignment of " PASS" or " FAIL"
+        # +2 for spacing aroun the whole block
+        full_length = max_left + max_right + 1 + 2
 
-        logging.info("="*((full_length-9)/2) + " SUMMARY " + "="*((full_length-9)/2))
+        if full_length % 2:
+            full_length = full_length + 2
+        else:
+            full_length = full_length + 1
+
+        header = " SUMMARY ".center(full_length, "=")
+        coloured_summary = decorate_with_preset("SUMMARY", "highlight")
+        logging.info(header.replace("SUMMARY", coloured_summary))
+
         for left, right in output_pairs:
             if right != "":
-                space_fill = full_length - len(left) - len(right)
+                space_fill = full_length - len(left) - len(right) - 1 - 2
+                if right == "PASS":
+                    right = decorate_with_preset(right, "pass")
+                elif right == "FAIL":
+                    right = decorate_with_preset(right, "fail")
+                right = " %s" % right
+
                 output = left + (space_fill)*" " + right
             else:
-                output = left
-            logging.info(output)
+                output = left + " "
+            logging.info(" %s " % output)
         logging.info("="*(full_length))
