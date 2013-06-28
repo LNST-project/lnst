@@ -15,6 +15,7 @@ import sys
 import logging
 import re
 from ConfigParser import ConfigParser
+from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_ip_address, verify_mac_address
 
 DefaultRPCPort = 9999
@@ -73,6 +74,8 @@ class Config():
                 "action" : self.optionPath,
                 "name" : "log_dir"}
 
+        self.colours_scheme()
+
     def slave_scheme(self):
         self.options['environment'] = dict()
         self.options['environment']['log_dir'] = {\
@@ -95,6 +98,21 @@ class Config():
                 "additive" : False,
                 "action" : self.optionTimeval,
                 "name" : "expiration_period"}
+
+        self.colours_scheme()
+
+    def colours_scheme(self):
+        self.options['colours'] = dict()
+        for preset in ["default", "faded", "alert", "highlight",
+                       "pass", "fail", "error", "info", "debug", "warning",
+                       "log_header"]:
+            self.options['colours'][preset] = {\
+                    "value" : None, "additive" : False,
+                    "action" : self.optionColour, "name" : preset}
+
+        self.options['colours']["disable_colours"] = {\
+                "value" : False, "additive" : False,
+                "action" : self.optionBool, "name" : "disable_colours"}
 
     def get_config(self):
         return self.options
@@ -225,6 +243,19 @@ class Config():
             raise ConfigError(msg)
 
         return timeval
+
+    def optionColour(self, option, cfg_path):
+        colour = option.split()
+        if len(colour) != 3:
+            msg = "Colour must be specified by 3"\
+                    " values (foreground, background, bold)"\
+                    " sepparated by whitespace."
+            raise ConfigError(msg)
+
+        return colour
+
+    def optionBool(self, option, cfg_path):
+        return bool_it(option)
 
     def dump_config(self):
         string = ""

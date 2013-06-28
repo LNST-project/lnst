@@ -19,6 +19,7 @@ import re
 import datetime
 from lnst.Common.Logs import LoggingCtl, log_exc_traceback
 from lnst.Common.Config import Config
+from lnst.Common.Colours import load_presets_from_config
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
 
@@ -129,6 +130,8 @@ def main():
             packet_capture = True
         elif opt in ("-o", "--disable-pool-checks"):
             pool_checks = False
+
+    load_presets_from_config(config)
 
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     log_ctl = LoggingCtl(debug,
