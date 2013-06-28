@@ -30,6 +30,7 @@ def usage():
     print "  -h, --help                 print this message"
     print "  -e, --daemonize            go to background after init"
     print "  -i, --pidfile              file to write daemonized process pid"
+    print "  -m, --no-colours           disable coloured terminal output"
     print "  -p, --port                 xmlrpc port to listen on"
     sys.exit()
 
@@ -40,8 +41,8 @@ def main():
     try:
         opts = getopt.getopt(
             sys.argv[1:],
-            "dhei:p:",
-            ["debug", "help", "daemonize", "pidfile", "port"]
+            "dhei:p:m",
+            ["debug", "help", "daemonize", "pidfile", "port", "no-colours"]
         )[0]
     except getopt.GetoptError as err:
         print str(err)
@@ -60,6 +61,7 @@ def main():
     daemon = False
     pidfile = "lnst-slave.pid"
     port = None
+    coloured_output = not config.get_option("colours", "disable_colours")
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug = True
@@ -71,9 +73,12 @@ def main():
             pidfile = arg
         elif opt in ("-p", "--port"):
             port = int(arg)
+        elif opt in ("-m", "--no-colours"):
+            coloured_output = False
 
     log_ctl = LoggingCtl(debug,
-                         log_dir=config.get_option('environment', 'log_dir'))
+                         log_dir=config.get_option('environment', 'log_dir'),
+                         colours=coloured_output)
     logging.info("Started")
 
     if port:

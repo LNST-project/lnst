@@ -37,6 +37,7 @@ def usage():
           "                                  network communication during\n" \
           "                                  the test"
     print "  -h, --help                      print this message"
+    print "  -m, --no-colours                disable coloured terminal output"
     print "  -o, --disable-pool-checks       don't check the availability of\n"\
           "                                  machines in the pool"
     print "  -c, --cleanup                   perform config cleanup\n" \
@@ -85,9 +86,9 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:cx:po",
+            "dhr:cx:pom",
             ["debug", "help", "recipe=", "cleanup", "result=",
-             "packet-capture", "disable-pool-checks"]
+             "packet-capture", "disable-pool-checks", "no-colours"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -117,6 +118,7 @@ def main():
     result_path = None
     packet_capture = False
     pool_checks = True
+    coloured_output = not config.get_option("colours", "disable_colours")
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -130,13 +132,15 @@ def main():
             packet_capture = True
         elif opt in ("-o", "--disable-pool-checks"):
             pool_checks = False
+        elif opt in ("-m", "--no-colours"):
+            coloured_output = False
 
     load_presets_from_config(config)
 
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     log_ctl = LoggingCtl(debug,
                          log_dir=config.get_option('environment', 'log_dir'),
-                         log_subdir=date)
+                         log_subdir=date, colours=coloured_output)
 
     action = args.pop()
 

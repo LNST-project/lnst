@@ -94,7 +94,7 @@ class LoggingCtl:
     slaves = {}
     transmit_handler = None
 
-    def __init__(self, debug=False, log_dir=None, log_subdir=""):
+    def __init__(self, debug=False, log_dir=None, log_subdir="", colours=True):
         if log_dir != None:
             self.log_folder = os.path.abspath(os.path.join(log_dir, log_subdir))
         else:
@@ -107,7 +107,7 @@ class LoggingCtl:
 
         #the display_handler will display logs in the terminal
         self.display_handler = logging.StreamHandler(sys.stdout)
-        self.display_handler.setFormatter(MultilineFormatter(coloured=True))
+        self.display_handler.setFormatter(MultilineFormatter(colours))
         if not debug:
             self.display_handler.setLevel(logging.INFO)
         else:
