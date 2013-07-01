@@ -171,7 +171,7 @@ class NetTestController:
 
         for machine_id, machine in self._machines.iteritems():
             if machine.is_configured():
-                machine.cleanup()
+                machine.cleanup(deconfigure)
 
                 #clean-up slave logger
                 self._log_ctl.remove_slave(machine_id)

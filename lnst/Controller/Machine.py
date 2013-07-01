@@ -150,9 +150,10 @@ class Machine(object):
 
         self._rpc_call("kill_cmds")
 
-        for iface in reversed(self._interfaces):
-            iface.deconfigure()
-            iface.cleanup()
+        if deconfigure:
+            for iface in reversed(self._interfaces):
+                iface.deconfigure()
+                iface.cleanup()
 
         self._rpc_call("bye")
         self._msg_dispatcher.disconnect_slave(self.get_id())
