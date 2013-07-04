@@ -17,6 +17,8 @@ import sys
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
+from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
+
 
 class NetConfigDeviceGeneric:
     '''
@@ -298,14 +300,24 @@ def NetConfigDevice(netdev, config):
     '''
     Class dispatcher
     '''
-    return type_class_mapping[netdev["type"]](netdev, config)
+    if check_process_running("NetworkManager"):
+        return nm_type_class_mapping[netdev["type"]](netdev, config)
+    else:
+        return type_class_mapping[netdev["type"]](netdev, config)
 
 def NetConfigDeviceType(dev_type):
     '''
     Class dispatcher for classmethods
     '''
-    return type_class_mapping[dev_type]
+    if check_process_running("NetworkManager"):
+        return nm_type_class_mapping[dev_type]
+    else:
+        return type_class_mapping[dev_type]
 
 def NetConfigDeviceAllCleanup():
-    for dev_type in type_class_mapping:
-        NetConfigDeviceType(dev_type).type_cleanup()
+    if check_process_running("NetworkManager"):
+        for dev_type in nm_type_class_mapping:
+            NetConfigDeviceType(dev_type).type_cleanup()
+    else:
+        for dev_type in type_class_mapping:
+            NetConfigDeviceType(dev_type).type_cleanup()

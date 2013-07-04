@@ -70,10 +70,10 @@ class SlaveMethods:
         sleep(1)
 
         if check_process_running("NetworkManager"):
-            logging.error("=============================================")
-            logging.error("NetworkManager is running on a slave machine!")
-            logging.error("This might effect test results!")
-            logging.error("=============================================")
+            logging.warning("=============================================")
+            logging.warning("NetworkManager is running on a slave machine!")
+            logging.warning("Support of NM is still experimental!")
+            logging.warning("=============================================")
         return "hello"
 
     def bye(self):
