@@ -221,7 +221,6 @@ def prepare_json_str(json_str):
     return json_str
 
 class NetConfigDeviceTeam(NetConfigDeviceGeneric):
-    _pidfile = None
     _modulename = "team_mode_roundrobin team_mode_activebackup team_mode_broadcast team_mode_loadbalance team"
     _moduleload = False
     _cleanupcmd = "killall -q teamd"
@@ -249,12 +248,9 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         teamd_config = prepare_json_str(teamd_config)
 
         dev_name = self._netdev["name"]
-        pidfile = "/var/run/teamd_%s.pid" % dev_name
 
         dbus_option = " -D" if self._should_enable_dbus() else ""
-        exec_cmd("teamd -r -d -c \"%s\" -t %s -p %s%s" % (teamd_config, dev_name, pidfile, dbus_option))
-
-        self._pidfile = pidfile
+        exec_cmd("teamd -r -d -c \"%s\" -t %s %s" % (teamd_config, dev_name, dbus_option))
 
         for slave_id in get_slaves(self._netdev):
             self.slave_add(slave_id)
@@ -265,9 +261,8 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
             self.slave_del(slave_id)
 
         dev_name = self._netdev["name"]
-        pidfile = "/var/run/teamd_%s.pid" % dev_name
 
-        exec_cmd("teamd -k -p %s" % pidfile)
+        exec_cmd("teamd -k -t %s" % dev_name)
 
     def slave_add(self, slaveid):
         dev_name = self._netdev["name"]
