@@ -84,6 +84,11 @@ class Config():
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "log_dir"}
+        self.options['environment']['use_nm'] = {\
+                "value" : True,
+                "additive" : False,
+                "action" : self.optionBool,
+                "name" : "use_nm"}
 
         self.options['cache'] = dict()
         self.options['cache']['dir'] = {\

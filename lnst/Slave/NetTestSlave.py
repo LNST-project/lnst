@@ -45,7 +45,7 @@ class SlaveMethods:
     def __init__(self, command_context, config, log_ctl):
         self._netconfig = None
         self._packet_captures = {}
-        self._netconfig = NetConfig()
+        self._netconfig = NetConfig(config)
         self._command_context = command_context
         self._config = config
         self._log_ctl = log_ctl
@@ -72,7 +72,10 @@ class SlaveMethods:
         if check_process_running("NetworkManager"):
             logging.warning("=============================================")
             logging.warning("NetworkManager is running on a slave machine!")
-            logging.warning("Support of NM is still experimental!")
+            if self._config.get_option("environment", "use_nm"):
+                logging.warning("Support of NM is still experimental!")
+            else:
+                logging.warning("Usage of NM is disabled!")
             logging.warning("=============================================")
         return "hello"
 
@@ -231,7 +234,7 @@ class SlaveMethods:
         return res
 
     def machine_cleanup(self):
-        NetConfigDeviceAllCleanup()
+        NetConfigDeviceAllCleanup(self._config)
         self._netconfig.cleanup()
         self._command_context.cleanup()
         self._cache.del_old_entries()
