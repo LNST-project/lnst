@@ -104,9 +104,7 @@ TEST_MODULES = [
          "test_modules/TestNetCat.py",
          "test_modules/TestPacketAssert.py",
          "test_modules/TestPktCounter.py",
-         "test_modules/TestPktgenTx.py",
-         "test_modules/TestTCPConnect.py",
-         "test_modules/TestTCPListen.py"]
+         "test_modules/TestPktgenTx.py"]
     )
 ]
 
@@ -135,7 +133,12 @@ MULTICAST_TEST_TOOLS = [
         ["test_tools/multicast/server/recv_block_source.c",
          "test_tools/multicast/server/recv_membership.c",
          "test_tools/multicast/server/recv_simple.c",
-         "test_tools/multicast/server/recv_source_membership.c"])
+         "test_tools/multicast/server/recv_source_membership.c"]),
+    (CTL_TOOLS_LOCATIONS + "tcp_conn",
+        ["test_tools/tcp_conn/lnst-setup.sh",
+         "test_tools/tcp_conn/Makefile",
+         "test_tools/tcp_conn/tcp_connect.c",
+         "test_tools/tcp_conn/tcp_listen.c"])
 ]
 
 MAN_PAGES = [(MAN_DIR, ["install/lnst-ctl.1.gz", "install/lnst-slave.1.gz"])]
