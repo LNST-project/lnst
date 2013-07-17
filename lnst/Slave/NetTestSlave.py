@@ -233,6 +233,12 @@ class SlaveMethods:
 
         return res
 
+    def kill_command(self, id):
+        cmd = self._command_context.get_cmd(id)
+        cmd.kill()
+        self._command_context.del_cmd(cmd)
+        return True
+
     def machine_cleanup(self):
         NetConfigDeviceAllCleanup(self._config)
         self._netconfig.cleanup()
