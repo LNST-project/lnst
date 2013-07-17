@@ -174,7 +174,14 @@ class Machine(object):
             logging.debug("Setting timeout to \"%d\"", timeout)
             signal.alarm(timeout)
 
-        cmd_res = self._rpc_call("run_command", command)
+        try:
+            cmd_res = self._rpc_call("run_command", command)
+        except MachineError as exc:
+            if "bg_id" in command:
+                self._rpc_call("kill_command", command["bg_id"])
+            else:
+                self._rpc_call("kill_command", None)
+            cmd_res = {"passed": False, "err_msg": str(exc)}
 
         signal.alarm(0)
         signal.signal(signal.SIGALRM, prev_handler)
