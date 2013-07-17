@@ -39,6 +39,9 @@ Display usage of this command.
 .BI "\-i, \-\-pidfile" =file
 File to write damonized process' PID to.
 .TP
+.B \-m, \-\-no\-colours
+Disable coloured terminal output.
+.TP
 .BI "\-p, \-\-port" =port_number
 The port number
 .B lnst-slave
@@ -92,7 +95,7 @@ Mailing List:    <lnst-developers@lists.fedorahosted.org>
 .br
 \fBOndrej Lichtner\fR <olichtne@redhat.com>
 .SH COPYRIGHT
-Copyright (C) 2012 Red Hat, Inc.
+Copyright (C) 2011\-2013 Red Hat, Inc.
 
 LNST is distributed under GNU General Public License version 2. See
 the file "COPYING" in the source distribution for information on terms &
