@@ -392,7 +392,8 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
             'id': netdev["name"]+"_con"})
 
         s_bridge = dbus.Dictionary({
-            'interface-name': netdev["name"]})
+            'interface-name': netdev["name"],
+            'stp': dbus.Boolean(False)})
 
         s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
 
