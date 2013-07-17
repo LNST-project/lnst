@@ -36,7 +36,7 @@ def process_template(template_path, values):
         f.write(template)
 
 def gzip_file(path):
-    with open(path, "rb") as src, open(path + ".gz", "wb") as dst:
+    with open(path, "rb") as src, gzip.open(path + ".gz", "wb") as dst:
         dst.writelines(src)
 
 # Various paths
