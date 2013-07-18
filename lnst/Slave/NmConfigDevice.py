@@ -18,7 +18,6 @@ import dbus
 import uuid
 import socket, struct
 import time
-from gi.repository import NetworkManager, GObject
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
@@ -26,6 +25,11 @@ from lnst.Common.Utils import kmod_in_use, bool_it
 NM_BUS = "org.freedesktop.NetworkManager"
 OBJ_PRE = "/org/freedesktop/NetworkManager"
 IF_PRE = NM_BUS
+
+#NetworkManager constants for state values
+_ACON_ACTIVATED = 2
+_DEV_UNAVAILABLE = 20
+_DEV_DISCONNECTED = 30
 
 class NmConfigDeviceGeneric(object):
     '''
@@ -185,7 +189,7 @@ class NmConfigDeviceGeneric(object):
             act_con_props = dbus.Interface(act_con,
                                            "org.freedesktop.DBus.Properties")
             self._poll_loop(act_con_props.Get,
-                            NetworkManager.ActiveConnectionState.ACTIVATED,
+                            _ACON_ACTIVATED,
                             IF_PRE + ".Connection.Active", "State")
 
     def _nm_deactivate_connection(self, netdev):
@@ -212,13 +216,13 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
         dev_props = dbus.Interface(dev, "org.freedesktop.DBus.Properties")
 
         state = dev_props.Get(IF_PRE + ".Device", "State")
-        if state == NetworkManager.DeviceState.UNAVAILABLE:
+        if state == _DEV_UNAVAILABLE:
             logging.info("Resetting interface so NM manages it.")
             exec_cmd("ip link set %s down" % netdev["name"])
             exec_cmd("ip link set %s up" % netdev["name"])
 
             self._poll_loop(dev_props.Get,
-                            NetworkManager.DeviceState.DISCONNECTED,
+                            _DEV_DISCONNECTED,
                             IF_PRE + ".Device", "State")
 
         super(NmConfigDeviceEth, self).up()
