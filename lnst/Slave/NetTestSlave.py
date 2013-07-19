@@ -17,6 +17,7 @@ import os
 import sys, traceback
 import datetime
 import socket
+import dbus
 from time import sleep
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
@@ -116,7 +117,26 @@ class SlaveMethods:
         devs = self.get_devices_by_hwaddr(hwaddr)
 
         for dev in devs:
-            exec_cmd("ip link set %s down" % dev["name"])
+            if check_process_running("NetworkManager") and\
+                    self._config.get_option("environment", "use_nm"):
+                bus = dbus.SystemBus()
+                nm_obj = bus.get_object("org.freedesktop.NetworkManager",
+                                        "/org/freedesktop/NetworkManager")
+                nm_if = dbus.Interface(nm_obj, "org.freedesktop.NetworkManager")
+                dev_obj_path = nm_if.GetDeviceByIpIface(dev["name"])
+                dev_obj = bus.get_object("org.freedesktop.NetworkManager",
+                                         dev_obj_path)
+                dev_props = dbus.Interface(dev_obj,
+                                        "org.freedesktop.DBus.Properties")
+                if dev_props.Get("org.freedesktop.NetworkManager.Device",
+                                 "ActiveConnection") != "/":
+                    dev_if = dbus.Interface(dev_obj,
+                                        "org.freedesktop.NetworkManager.Device")
+                    logging.debug("Disconnecting device %s: %s" %
+                                            (dev["name"], dev_obj_path))
+                    dev_if.Disconnect()
+            else:
+                exec_cmd("ip link set %s down" % dev["name"])
 
         return True
 
