@@ -290,7 +290,10 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
                 '''
                 value = self._config[int(value)]["name"]
             options[option] = value
-        return dbus.Dictionary(options, signature="ss")
+        if options:
+            return dbus.Dictionary(options, signature="ss")
+        else:
+            return None
 
     def _add_bond(self):
         netdev = self._netdev
@@ -304,9 +307,13 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
 
         options = self._setup_options()
 
-        s_bond = dbus.Dictionary({
-            'interface-name': netdev["name"],
-            'options': options})
+        if options:
+            s_bond = dbus.Dictionary({
+                'interface-name': netdev["name"],
+                'options': options})
+        else:
+            s_bond = dbus.Dictionary({
+                'interface-name': netdev["name"]})
 
         s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
 
