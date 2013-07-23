@@ -18,13 +18,11 @@ from lnst.Slave.NetConfigDevice import NetConfigDeviceType
 from lnst.Slave.NetConfigCommon import get_slaves
 
 class NetConfig:
-    def __init__(self, lnst_config):
+    def __init__(self):
         devnames = NetConfigDevNames()
         config = {}
         self._devnames = devnames
         self._config = config
-
-        self._lnst_config = lnst_config
 
     def _get_leafs(self):
         leafs = []
@@ -64,7 +62,7 @@ class NetConfig:
         dev_type = config["type"]
         if not dev_type in self._get_used_types():
             logging.info("Initializing '%s' device class", dev_type)
-            NetConfigDeviceType(dev_type, self._lnst_config).type_init()
+            NetConfigDeviceType(dev_type).type_init()
 
         self._config[if_id] = config
 
@@ -78,14 +76,14 @@ class NetConfig:
         dev_type = config["type"]
         if not dev_type in self._get_used_types():
             logging.info("Cleaning up '%s' device class.", dev_type)
-            NetConfigDeviceType(dev_type, self._lnst_config).type_cleanup()
+            NetConfigDeviceType(dev_type).type_cleanup()
 
     def get_interface_config(self, if_id):
         return self._config[if_id]
 
     def configure(self, dev_id):
         netdev = self._config[dev_id]
-        device = NetConfigDevice(netdev, self._config, self._lnst_config)
+        device = NetConfigDevice(netdev, self._config)
         device.configure()
         device.up()
 
@@ -96,7 +94,7 @@ class NetConfig:
 
     def deconfigure(self, dev_id):
         netdev = self._config[dev_id]
-        device = NetConfigDevice(netdev, self._config, self._lnst_config)
+        device = NetConfigDevice(netdev, self._config)
         device.down()
         device.deconfigure()
 
@@ -144,7 +142,7 @@ class NetConfig:
         elif slave_dev_id in netdev["slaves"]:
             return False
         netdev["slaves"].append(slave_dev_id)
-        device = NetConfigDevice(netdev, self._config, self._lnst_config)
+        device = NetConfigDevice(netdev, self._config)
         device.slave_add(slave_dev_id)
         return True
 
@@ -153,7 +151,7 @@ class NetConfig:
         if not "slaves" in netdev or not slave_dev_id in netdev["slaves"]:
             return False
         netdev["slaves"].remove(slave_dev_id)
-        device = NetConfigDevice(netdev, self._config, self._lnst_config)
+        device = NetConfigDevice(netdev, self._config)
         device.slave_del(slave_dev_id)
         return True
 

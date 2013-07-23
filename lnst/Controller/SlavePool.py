@@ -22,6 +22,7 @@ from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.NetUtils import test_tcp_connection
 from lnst.Controller.SlaveMachineParse import SlaveMachineParse
 from lnst.Controller.Machine import Machine
+from lnst.Common.Config import lnst_config
 
 class SlavePool:
     """
@@ -38,9 +39,7 @@ class SlavePool:
     _allow_virt = False
     _pool_checks = True
 
-    def __init__(self, pool_dirs, allow_virtual=False, config=None,
-                 pool_checks=True):
-        self._config = config
+    def __init__(self, pool_dirs, allow_virtual=False, pool_checks=True):
         self._allow_virt = allow_virtual
         self._pool_checks = pool_checks
         for pool_dir in pool_dirs:
@@ -76,7 +75,7 @@ class SlavePool:
                 if "rpcport" in machine:
                     port = machine["params"]["rpcport"]
                 else:
-                    port = self._config.get_option('environment', 'rpcport')
+                    port = lnst_config.get_option('environment', 'rpcport')
 
                 logging.info("Querying slave machine %s." % m_id)
                 if not test_tcp_connection(hostname, port):

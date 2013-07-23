@@ -17,7 +17,7 @@ import os
 import logging
 from lnst.Common.Daemon import Daemon
 from lnst.Common.Logs import LoggingCtl
-from lnst.Common.Config import Config
+from lnst.Common.Config import lnst_config
 from lnst.Slave.NetTestSlave import NetTestSlave
 
 def usage():
@@ -49,19 +49,19 @@ def main():
         usage()
         sys.exit()
 
-    config = Config("slave")
+    lnst_config.slave_init()
     dirname = os.path.dirname(sys.argv[0])
     gitcfg = os.path.join(dirname, "lnst-slave.conf")
     if os.path.isfile(gitcfg):
-        config.load_config(gitcfg)
+        lnst_config.load_config(gitcfg)
     else:
-        config.load_config('/etc/lnst-slave.conf')
+        lnst_config.load_config('/etc/lnst-slave.conf')
 
     debug = False
     daemon = False
     pidfile = "lnst-slave.pid"
     port = None
-    coloured_output = not config.get_option("colours", "disable_colours")
+    coloured_output = not lnst_config.get_option("colours", "disable_colours")
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug = True
@@ -77,14 +77,14 @@ def main():
             coloured_output = False
 
     log_ctl = LoggingCtl(debug,
-                         log_dir=config.get_option('environment', 'log_dir'),
-                         colours=coloured_output)
+                     log_dir=lnst_config.get_option('environment', 'log_dir'),
+                     colours=coloured_output)
     logging.info("Started")
 
     if port:
-        nettestslave = NetTestSlave(config, log_ctl, port=port)
+        nettestslave = NetTestSlave(log_ctl, port=port)
     else:
-        nettestslave = NetTestSlave(config, log_ctl)
+        nettestslave = NetTestSlave(log_ctl)
 
     if daemon:
         daemon = Daemon(pidfile)

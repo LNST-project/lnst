@@ -36,6 +36,7 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.NetTestCommand import NetTestCommandSystemConfig
+from lnst.Common.Config import lnst_config
 
 DefaultRPCPort = 9999
 
@@ -43,12 +44,10 @@ class SlaveMethods:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context, config, log_ctl):
-        self._netconfig = None
+    def __init__(self, command_context, log_ctl):
         self._packet_captures = {}
-        self._netconfig = NetConfig(config)
+        self._netconfig = NetConfig()
         self._command_context = command_context
-        self._config = config
         self._log_ctl = log_ctl
 
         self._capture_files = {}
@@ -56,8 +55,8 @@ class SlaveMethods:
         self._copy_sources = {}
         self._system_config = {}
 
-        self._cache = ResourceCache(config.get_option("cache", "dir"),
-                        config.get_option("cache", "expiration_period"))
+        self._cache = ResourceCache(lnst_config.get_option("cache", "dir"),
+                        lnst_config.get_option("cache", "expiration_period"))
 
         self._resource_table = {}
 
@@ -73,7 +72,7 @@ class SlaveMethods:
         if check_process_running("NetworkManager"):
             logging.warning("=============================================")
             logging.warning("NetworkManager is running on a slave machine!")
-            if self._config.get_option("environment", "use_nm"):
+            if lnst_config.get_option("environment", "use_nm"):
                 logging.warning("Support of NM is still experimental!")
             else:
                 logging.warning("Usage of NM is disabled!")
@@ -118,7 +117,7 @@ class SlaveMethods:
 
         for dev in devs:
             if check_process_running("NetworkManager") and\
-                    self._config.get_option("environment", "use_nm"):
+                    lnst_config.get_option("environment", "use_nm"):
                 bus = dbus.SystemBus()
                 nm_obj = bus.get_object("org.freedesktop.NetworkManager",
                                         "/org/freedesktop/NetworkManager")
@@ -260,7 +259,7 @@ class SlaveMethods:
         return True
 
     def machine_cleanup(self):
-        NetConfigDeviceAllCleanup(self._config)
+        NetConfigDeviceAllCleanup()
         self._netconfig.cleanup()
         self._command_context.cleanup()
         self._cache.del_old_entries()
@@ -407,11 +406,11 @@ class ServerHandler(object):
             self.add_connection(key, connection)
 
 class NetTestSlave:
-    def __init__(self, config, log_ctl, port = DefaultRPCPort):
+    def __init__(self, log_ctl, port = DefaultRPCPort):
         die_when_parent_die()
 
         self._cmd_context = NetTestCommandContext()
-        self._methods = SlaveMethods(self._cmd_context, config, log_ctl)
+        self._methods = SlaveMethods(self._cmd_context, log_ctl)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)

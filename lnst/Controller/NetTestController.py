@@ -32,6 +32,7 @@ from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.Machine import Machine, MachineError
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+from lnst.Common.Config import lnst_config
 
 class NetTestError(Exception):
     pass
@@ -41,17 +42,16 @@ def ignore_event(**kwarg):
 
 class NetTestController:
     def __init__(self, recipe_path, log_ctl, cleanup=False,
-                 res_serializer=None, config=None, pool_checks=True):
+                 res_serializer=None, pool_checks=True):
         self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
-        self._config = config
         self._log_ctl = log_ctl
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
 
-        sp = SlavePool(config.get_option('environment', 'pool_dirs'),
-                       check_process_running("libvirtd"), config, pool_checks)
+        sp = SlavePool(lnst_config.get_option('environment', 'pool_dirs'),
+                       check_process_running("libvirtd"), pool_checks)
         self._slave_pool = sp
 
         self._machines = {}
@@ -62,7 +62,7 @@ class NetTestController:
         recipe["machines"] = {}
         recipe["switches"] = {}
 
-        mac_pool_range = config.get_option('environment', 'mac_pool_range')
+        mac_pool_range = lnst_config.get_option('environment', 'mac_pool_range')
         self._mac_pool = MacPool(mac_pool_range[0], mac_pool_range[1])
 
         parser = RecipeParse(recipe_path)
@@ -74,8 +74,8 @@ class NetTestController:
         parser.register_event_handler("interface_config_ready",
                                         self._prepare_interface)
 
-        modules_dirs = config.get_option('environment', 'module_dirs')
-        tools_dirs = config.get_option('environment', 'tool_dirs')
+        modules_dirs = lnst_config.get_option('environment', 'module_dirs')
+        tools_dirs = lnst_config.get_option('environment', 'tool_dirs')
 
         self._resource_table = {}
         self._resource_table["module"] = self._load_test_modules(modules_dirs)
@@ -131,7 +131,7 @@ class NetTestController:
         address = socket.gethostbyname(machine.get_hostname())
 
         self._log_ctl.add_slave(m_id, address)
-        port = self._config.get_option('environment', 'rpcport')
+        port = lnst_config.get_option('environment', 'rpcport')
         machine.set_rpc(self._msg_dispatcher, port)
         machine.set_mac_pool(self._mac_pool)
         machine.set_network_bridges(self._network_bridges)

@@ -27,20 +27,10 @@ class Config():
     options = None
     _scheme = None
 
-    def __init__(self, scheme):
+    def __init__(self):
         self.options = dict()
 
-        self._scheme = scheme
-        if self._scheme == "controller":
-            self.controller_scheme()
-        elif self._scheme == "slave":
-            self.slave_scheme()
-        else:
-            msg = "Unknow scheme: '%s', can't set up configuration"\
-                    % self._scheme
-            raise ConfigError(msg)
-
-    def controller_scheme(self):
+    def controller_init(self):
         self.options['environment'] = dict()
         self.options['environment']['mac_pool_range'] = {\
                 "value" : ['52:54:01:00:00:01', '52:54:01:FF:FF:FF'],
@@ -76,7 +66,7 @@ class Config():
 
         self.colours_scheme()
 
-    def slave_scheme(self):
+    def slave_init(self):
         self.options['environment'] = dict()
         self.options['environment']['log_dir'] = {\
                 "value" : os.path.abspath(os.path.join(
@@ -283,3 +273,9 @@ class Config():
             string = str(value)
 
         return string
+
+#Global object containing lnst configuration, available across modules
+#The object is created here but the contents are initialized
+#in lnst-ctl and lnst-slave, after that the modules that need the configuration
+#just import this object
+lnst_config = Config()
