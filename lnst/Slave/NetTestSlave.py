@@ -449,7 +449,11 @@ class NetTestSlave:
             for msg in msgs:
                 self._process_msg(msg[1])
 
+        logging.info("Cleaning up leftover commands.")
         self._cmd_context.cleanup()
+        logging.info("Cleaning up configured interfaces.")
+        self._netconfig.deconfigure_all()
+        self._netconfig.cleanup()
 
     def _process_msg(self, msg):
         if msg["type"] == "command":
