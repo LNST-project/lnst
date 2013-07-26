@@ -32,6 +32,7 @@ from lnst.Common.NetTestCommand import NetTestCommandContext
 from lnst.Common.NetTestCommand import CommandException, NetTestCommand
 from lnst.Slave.NetConfig import NetConfig
 from lnst.Slave.NetConfigDevice import NetConfigDeviceAllCleanup
+from lnst.Slave.NmConfigDevice import is_nm_managed_by_name
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
@@ -117,8 +118,9 @@ class SlaveMethods:
         devs = self.get_devices_by_hwaddr(hwaddr)
 
         for dev in devs:
-            if check_process_running("NetworkManager") and\
-                    lnst_config.get_option("environment", "use_nm"):
+            if check_process_running("NetworkManager") and \
+               lnst_config.get_option("environment", "use_nm") and \
+               is_nm_managed_by_name(dev["name"]):
                 bus = dbus.SystemBus()
                 nm_obj = bus.get_object("org.freedesktop.NetworkManager",
                                         "/org/freedesktop/NetworkManager")

@@ -81,7 +81,7 @@ class NetConfig:
         dev_type = config["type"]
         if not dev_type in self._get_used_types():
             logging.info("Cleaning up '%s' device class.", dev_type)
-            NetConfigDeviceType(dev_type).type_cleanup()
+            NetConfigDeviceType(config, self._config).type_cleanup()
 
     def get_interface_config(self, if_id):
         return self._config[if_id]

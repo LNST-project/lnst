@@ -18,6 +18,7 @@ from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
 from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
+from lnst.Slave.NmConfigDevice import is_nm_managed
 from lnst.Common.Utils import check_process_running
 from lnst.Common.Config import lnst_config
 
@@ -298,26 +299,28 @@ def NetConfigDevice(netdev, config):
     Class dispatcher
     '''
     if check_process_running("NetworkManager") and \
-       lnst_config.get_option("environment", "use_nm"):
+       lnst_config.get_option("environment", "use_nm") and \
+       is_nm_managed(netdev, config):
         return nm_type_class_mapping[netdev["type"]](netdev, config)
     else:
         return type_class_mapping[netdev["type"]](netdev, config)
 
-def NetConfigDeviceType(dev_type):
+def NetConfigDeviceType(netdev, config):
     '''
     Class dispatcher for classmethods
     '''
     if check_process_running("NetworkManager") and \
-       lnst_config.get_option("environment", "use_nm"):
-        return nm_type_class_mapping[dev_type]
+       lnst_config.get_option("environment", "use_nm") and \
+       is_nm_managed(netdev, config):
+        return nm_type_class_mapping[netdev["type"]]
     else:
-        return type_class_mapping[dev_type]
+        return type_class_mapping[netdev["type"]]
 
 def NetConfigDeviceAllCleanup():
     if check_process_running("NetworkManager") and \
        lnst_config.get_option("environment", "use_nm"):
         for dev_type in nm_type_class_mapping:
-            NetConfigDeviceType(dev_type).type_cleanup()
+            nm_type_class_mapping[dev_type].type_cleanup()
     else:
         for dev_type in type_class_mapping:
-            NetConfigDeviceType(dev_type).type_cleanup()
+            type_class_mapping[dev_type].type_cleanup()
