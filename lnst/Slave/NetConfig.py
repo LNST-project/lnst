@@ -23,6 +23,7 @@ class NetConfig:
         config = {}
         self._devnames = devnames
         self._config = config
+        self._dev_configs = {}
 
     def _get_leafs(self):
         leafs = []
@@ -59,19 +60,23 @@ class NetConfig:
         return types
 
     def add_interface_config(self, if_id, config):
-        dev_type = config["type"]
-        if not dev_type in self._get_used_types():
-            logging.info("Initializing '%s' device class", dev_type)
-            NetConfigDeviceType(dev_type).type_init()
-
         self._config[if_id] = config
 
         self._devnames.rescan_netdevs()
         self._devnames.assign_name(if_id, self._config)
 
+        dev_config = NetConfigDevice(config, self._config)
+        self._dev_configs[if_id] = dev_config
+
+        dev_type = config["type"]
+        if not dev_type in self._get_used_types():
+            logging.info("Initializing '%s' device class", dev_type)
+            dev_config.type_init()
+
     def remove_interface_config(self, if_id):
         config = self._config[if_id]
         del self._config[if_id]
+        del self._dev_configs[if_id]
 
         dev_type = config["type"]
         if not dev_type in self._get_used_types():
@@ -82,8 +87,7 @@ class NetConfig:
         return self._config[if_id]
 
     def configure(self, dev_id):
-        netdev = self._config[dev_id]
-        device = NetConfigDevice(netdev, self._config)
+        device = self._dev_configs[dev_id]
         device.configure()
         device.up()
 
@@ -93,8 +97,7 @@ class NetConfig:
             self.configure(dev_id)
 
     def deconfigure(self, dev_id):
-        netdev = self._config[dev_id]
-        device = NetConfigDevice(netdev, self._config)
+        device = self._dev_configs[dev_id]
         device.down()
         device.deconfigure()
 
@@ -156,7 +159,8 @@ class NetConfig:
         return True
 
     def cleanup(self):
-        tmp = copy.deepcopy(self._config)
-        for dev_id in tmp:
+        for dev_id in self._config.keys():
             del self._config[dev_id]
+        for dev_id in self._dev_configs.keys():
+            del self._dev_configs[dev_id]
         self._devnames.rescan_netdevs()
