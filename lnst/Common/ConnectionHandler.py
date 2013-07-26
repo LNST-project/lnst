@@ -67,7 +67,10 @@ class ConnectionHandler(object):
 
     def check_connections(self):
         requests = []
-        rl, wl, xl = select.select(self._connections.values(), [], [])
+        try:
+            rl, wl, xl = select.select(self._connections.values(), [], [])
+        except select.error:
+            return []
         for f in rl:
             try:
                 data = recv_data(f)
