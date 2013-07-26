@@ -21,6 +21,7 @@ import time
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
+from lnst.Common.NetUtils import scan_netdevs
 
 NM_BUS = "org.freedesktop.NetworkManager"
 OBJ_PRE = "/org/freedesktop/NetworkManager"
@@ -30,6 +31,25 @@ IF_PRE = NM_BUS
 _ACON_ACTIVATED = 2
 _DEV_UNAVAILABLE = 20
 _DEV_DISCONNECTED = 30
+
+def is_nm_managed_by_name(dev_name):
+    if not check_process_running("NetworkManager"):
+        return False
+
+    bus = dbus.SystemBus()
+    nm_obj = bus.get_object(NM_BUS, OBJ_PRE)
+    nm_if = dbus.Interface(nm_obj, IF_PRE)
+    try:
+        device_obj_path = nm_if.GetDeviceByIpIface(dev_name)
+    except:
+        #There is a higher possibility that if the interface doesn't exist
+        #it's a software interface that can be created by NM so we say that it's
+        #managed and check existance of physical interfaces sepparately
+        return True
+
+    dev = bus.get_object(NM_BUS, device_obj_path)
+    dev_props = dbus.Interface(dev, "org.freedesktop.DBus.Properties")
+    return dev_props.Get(IF_PRE + ".Device", "Managed")
 
 class NmConfigDeviceGeneric(object):
     '''
@@ -80,6 +100,10 @@ class NmConfigDeviceGeneric(object):
     @classmethod
     def type_cleanup(self):
         pass
+
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        return is_nm_managed_by_name(netdev["name"])
 
     def _wait_for_state(self, new_state, old_state, reason):
         self._device_state = new_state
@@ -204,6 +228,15 @@ class NmConfigDeviceGeneric(object):
             netdev["acon_obj_path"] = ""
 
 class NmConfigDeviceEth(NmConfigDeviceGeneric):
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        managed = super(NmConfigDeviceEth, cls).is_nm_managed(netdev, config)
+        devnames = scan_netdevs()
+        for dev in devnames:
+            if dev["hwaddr"] == netdev["hwaddr"]:
+                return managed
+        return False
+
     def up(self):
         netdev = self._netdev
 
@@ -263,6 +296,19 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
 class NmConfigDeviceBond(NmConfigDeviceGeneric):
     _modulename = "bonding"
     _moduleparams = "max_bonds=0"
+
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev, config)
+
+        for slave in get_slaves(netdev):
+            netdev = config[slave]
+            if is_nm_managed(netdev, config) != managed:
+                msg = "Mixing NM managed and not managed devices in a "\
+                        "master-slave relationship is not allowed!"
+                raise Exception(msg)
+
+        return managed
 
     def up(self):
         super(NmConfigDeviceBond, self).up()
@@ -378,6 +424,19 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
 class NmConfigDeviceBridge(NmConfigDeviceGeneric):
     _modulename = "bridge"
 
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        managed = super(NmConfigDeviceBridge, cls).is_nm_managed(netdev, config)
+
+        for slave in get_slaves(netdev):
+            netdev = config[slave]
+            if is_nm_managed(netdev, config) != managed:
+                msg = "Mixing NM managed and not managed devices in a "\
+                        "master-slave relationship is not allowed!"
+                raise Exception(msg)
+
+        return managed
+
     def up(self):
         super(NmConfigDeviceBridge, self).up()
 
@@ -480,10 +539,34 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
 
 class NmConfigDeviceMacvlan(NmConfigDeviceGeneric):
     #Not supported by NetworkManager yet
-    pass
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        managed = False
+
+        for slave in get_slaves(netdev):
+            slave_netdev = config[slave]
+            if is_nm_managed(slave_netdev, config) != managed:
+                msg = "Mixing NM managed and not managed devices in a "\
+                        "master-slave relationship is not allowed!"
+                raise Exception(msg)
+
+        return managed
 
 class NmConfigDeviceVlan(NmConfigDeviceGeneric):
     _modulename = "8021q"
+
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        managed = super(NmConfigDeviceVlan, cls).is_nm_managed(netdev, config)
+
+        for slave in get_slaves(netdev):
+            slave_netdev = config[slave]
+            if is_nm_managed(slave_netdev, config) != managed:
+                msg = "Mixing NM managed and not managed devices in a "\
+                        "master-slave relationship is not allowed!"
+                raise Exception(msg)
+
+        return managed
 
     def _check_ip_link_add(self):
         output = exec_cmd("ip link help", die_on_err=False,
@@ -541,7 +624,18 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
 
 class NmConfigDeviceTeam(NmConfigDeviceGeneric):
     #Not supported by NetworkManager yet
-    pass
+    @classmethod
+    def is_nm_managed(cls, netdev, config):
+        managed = False
+
+        for slave in get_slaves(netdev):
+            slave_netdev = config[slave]
+            if is_nm_managed(slave_netdev, config) != managed:
+                msg = "Mixing NM managed and not managed devices in a "\
+                        "master-slave relationship is not allowed!"
+                raise Exception(msg)
+
+        return managed
 
 type_class_mapping = {
     "eth": NmConfigDeviceEth,
@@ -551,3 +645,6 @@ type_class_mapping = {
     "vlan": NmConfigDeviceVlan,
     "team": NmConfigDeviceTeam
 }
+
+def is_nm_managed(netdev, config):
+    return type_class_mapping[netdev["type"]].is_nm_managed(netdev, config)
