@@ -22,6 +22,7 @@ from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
 from lnst.Common.NetUtils import scan_netdevs
+from lnst.Common.Utils import check_process_running
 
 NM_BUS = "org.freedesktop.NetworkManager"
 OBJ_PRE = "/org/freedesktop/NetworkManager"
