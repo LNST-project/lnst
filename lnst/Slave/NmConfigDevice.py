@@ -54,6 +54,12 @@ def is_nm_managed_by_name(dev_name):
     dev_props = dbus.Interface(dev, "org.freedesktop.DBus.Properties")
     return dev_props.Get(IF_PRE + ".Device", "Managed")
 
+def _dev_exists(hwaddr):
+    devnames = scan_netdevs()
+    for dev in devnames:
+        if dev["hwaddr"] == hwaddr:
+            return True
+
 class NmConfigDeviceGeneric(object):
     '''
     Generic class for device manipulation all type classes should
@@ -234,11 +240,10 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
     @classmethod
     def is_nm_managed(cls, netdev, config):
         managed = super(NmConfigDeviceEth, cls).is_nm_managed(netdev, config)
-        devnames = scan_netdevs()
-        for dev in devnames:
-            if dev["hwaddr"] == netdev["hwaddr"]:
-                return managed
-        return False
+        if _dev_exists(netdev["hwaddr"]):
+            return managed
+        else:
+            return False
 
     def up(self):
         netdev = self._netdev
@@ -302,7 +307,13 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
 
     @classmethod
     def is_nm_managed(cls, netdev, config):
-        managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev, config)
+        if _dev_exists(netdev["hwaddr"]):
+            managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
+                                                                   config)
+        else:
+            slave_id = get_slaves(netdev)[1]
+            netdev = config[slave_id]
+            managed = is_nm_managed(netdev, config)
 
         for slave in get_slaves(netdev):
             netdev = config[slave]
@@ -429,7 +440,13 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
 
     @classmethod
     def is_nm_managed(cls, netdev, config):
-        managed = super(NmConfigDeviceBridge, cls).is_nm_managed(netdev, config)
+        if _dev_exists(netdev["hwaddr"]):
+            managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
+                                                                   config)
+        else:
+            slave_id = get_slaves(netdev)[1]
+            netdev = config[slave_id]
+            managed = is_nm_managed(netdev, config)
 
         for slave in get_slaves(netdev):
             netdev = config[slave]
@@ -560,7 +577,13 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
 
     @classmethod
     def is_nm_managed(cls, netdev, config):
-        managed = super(NmConfigDeviceVlan, cls).is_nm_managed(netdev, config)
+        if _dev_exists(netdev["hwaddr"]):
+            managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
+                                                                   config)
+        else:
+            slave_id = get_slaves(netdev)[1]
+            netdev = config[slave_id]
+            managed = is_nm_managed(netdev, config)
 
         for slave in get_slaves(netdev):
             slave_netdev = config[slave]
