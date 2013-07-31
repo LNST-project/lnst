@@ -298,9 +298,7 @@ def NetConfigDevice(netdev, config):
     '''
     Class dispatcher
     '''
-    if check_process_running("NetworkManager") and \
-       lnst_config.get_option("environment", "use_nm") and \
-       is_nm_managed(netdev, config):
+    if is_nm_managed(netdev, config):
         return nm_type_class_mapping[netdev["type"]](netdev, config)
     else:
         return type_class_mapping[netdev["type"]](netdev, config)
@@ -309,9 +307,7 @@ def NetConfigDeviceType(netdev, config):
     '''
     Class dispatcher for classmethods
     '''
-    if check_process_running("NetworkManager") and \
-       lnst_config.get_option("environment", "use_nm") and \
-       is_nm_managed(netdev, config):
+    if is_nm_managed(netdev, config):
         return nm_type_class_mapping[netdev["type"]]
     else:
         return type_class_mapping[netdev["type"]]

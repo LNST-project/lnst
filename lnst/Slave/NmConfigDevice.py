@@ -23,6 +23,7 @@ from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.Utils import check_process_running
+from lnst.Common.Config import lnst_config
 
 NM_BUS = "org.freedesktop.NetworkManager"
 OBJ_PRE = "/org/freedesktop/NetworkManager"
@@ -34,7 +35,8 @@ _DEV_UNAVAILABLE = 20
 _DEV_DISCONNECTED = 30
 
 def is_nm_managed_by_name(dev_name):
-    if not check_process_running("NetworkManager"):
+    if not check_process_running("NetworkManager") or\
+       not lnst_config.get_option("environment", "use_nm"):
         return False
 
     bus = dbus.SystemBus()

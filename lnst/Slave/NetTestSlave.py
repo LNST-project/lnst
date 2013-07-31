@@ -118,9 +118,7 @@ class SlaveMethods:
         devs = self.get_devices_by_hwaddr(hwaddr)
 
         for dev in devs:
-            if check_process_running("NetworkManager") and \
-               lnst_config.get_option("environment", "use_nm") and \
-               is_nm_managed_by_name(dev["name"]):
+            if is_nm_managed_by_name(dev["name"]):
                 bus = dbus.SystemBus()
                 nm_obj = bus.get_object("org.freedesktop.NetworkManager",
                                         "/org/freedesktop/NetworkManager")
