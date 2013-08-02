@@ -60,6 +60,9 @@ class NetConfig:
         return types
 
     def add_interface_config(self, if_id, config):
+        dev_type = config["type"]
+        class_initialized = dev_type in self._get_used_types()
+
         self._config[if_id] = config
 
         self._devnames.rescan_netdevs()
@@ -68,8 +71,7 @@ class NetConfig:
         dev_config = NetConfigDevice(config, self._config)
         self._dev_configs[if_id] = dev_config
 
-        dev_type = config["type"]
-        if not dev_type in self._get_used_types():
+        if not class_initialized:
             logging.info("Initializing '%s' device class", dev_type)
             dev_config.type_init()
 
