@@ -1,20 +1,21 @@
-<!-- Offline IP_MULTICAST_TTL test --><!-- Requires: 2 hosts
+<!-- Offline IP_MULTICAST_TTL test -->
+<!-- Requires: 2 hosts
    -    [1] with one interface
    -    [2] with one interface
    - -->
-<command_sequence>
+<task>
     <!-- IP_MULTICAST_TTL sockopt conformance test -->
-    <command machine_id="1" timeout="30" type="test" value="Multicast">
+    <run machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="sockopt_ttl"/>
             <option name="condition" value="status == 'pass'"/>
         </options>
-    </command>
+    </run>
 
     <!-- IP_MULTICAST_TTL = 0, looped on one host -->
-    <command machine_id="1" type="exec" value="sleep 1"/>
+    <run command="sleep 1" machine="1"/>
 
-    <command bg_id="1" machine_id="1" timeout="30" type="test" value="Multicast">
+    <run bg_id="1" machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -25,9 +26,9 @@
             <option name="loop" value="1"/>
             <option name="interface" value="{ip(1,testiface)}"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="1" timeout="30" type="test" value="Multicast">
+    <run machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -37,9 +38,9 @@
 
             <option name="condition" value="packets_received > 0"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="1" type="wait" value="1"/>
+    <wait bg_id="1" machine="1"/>
 
     <!-- IP_MULTICAST_TTL = 0 between 2 hosts -->
     <!-- KNOWN BUG: according to the specs, packets
@@ -50,10 +51,10 @@
 
          http://www.spinics.net/lists/netdev/msg183704.html
       -->
-    <command machine_id="1" type="exec" value="sleep 1"/>
-    <command machine_id="2" type="exec" value="sleep 1"/>
+    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" machine="2"/>
 
-    <command bg_id="1" machine_id="1" timeout="30" type="test" value="Multicast">
+    <run bg_id="1" machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -63,9 +64,9 @@
             <option name="ttl" value="0"/>
             <option name="interface" value="{ip(1,testiface)}"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="2" timeout="30" type="test" value="Multicast">
+    <run machine="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -75,14 +76,14 @@
 
             <option name="condition" value="packets_received > 0"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="1" type="wait" value="1"/>
+    <wait bg_id="1" machine="1"/>
 
     <!-- IP_MULTICAST_TTL = 1 between 2 hosts -->
-    <command machine_id="1" type="exec" value="sleep 1"/>
+    <run command="sleep 1" machine="1"/>
 
-    <command bg_id="1" machine_id="1" timeout="30" type="test" value="Multicast">
+    <run bg_id="1" machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -92,9 +93,9 @@
             <option name="ttl" value="1"/>
             <option name="interface" value="{ip(1,testiface)}"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="2" timeout="30" type="test" value="Multicast">
+    <run machine="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -104,7 +105,7 @@
 
             <option name="condition" value="packets_received > 0"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="1" type="wait" value="1"/>
-</command_sequence>
+    <wait bg_id="1" machine="1"/>
+</task>

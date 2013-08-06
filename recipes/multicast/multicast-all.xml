@@ -1,19 +1,7 @@
 <!-- Execute all tests for multicast -->
 <lnstrecipe>
-    <!-- Change these parameters to match your test environment setup -->
-    <define>
-        <alias name="hostname1" value="192.168.122.11"/>
-        <alias name="virtdomain1" value="RHEL6"/>
-
-        <alias name="hostname2" value="192.168.122.10"/>
-        <alias name="virtdomain2" value="Fedora16-clone"/>
-    </define>
     <machines>
         <machine id="1">
-            <params>
-                <param name="hostname" value="{$hostname1}"/>
-                <param name="libvirt_domain" value="{$virtdomain1}"/>
-            </params>
             <interfaces>
                 <eth id="testiface" network="tnet">
                     <addresses>
@@ -28,10 +16,6 @@
             </interfaces>
         </machine>
         <machine id="2">
-            <params>
-                <param name="hostname" value="{$hostname2}"/>
-                <param name="libvirt_domain" value="{$virtdomain2}"/>
-            </params>
             <interfaces>
                 <eth id="testiface" network="tnet">
                     <addresses>
@@ -50,12 +34,12 @@
         <alias name="nonexistent_ip" value="127.0.0.200"/>
     </define>
 
-    <command_sequence source="cmd_sequences/multicast/max_groups.xml"/>
-    <command_sequence source="cmd_sequences/multicast/block_source.xml"/>
-    <command_sequence source="cmd_sequences/multicast/source_membership.xml"/>
-    <command_sequence source="cmd_sequences/multicast/membership.xml"/>
-    <command_sequence source="cmd_sequences/multicast/if.xml"/>
-    <command_sequence source="cmd_sequences/multicast/ttl.xml"/>
-    <command_sequence source="cmd_sequences/multicast/loop.xml"/>
-    <command_sequence source="cmd_sequences/multicast/simple.xml"/>
+    <task source="cmd_sequences/max_groups.xml"/>
+    <task source="cmd_sequences/block_source.xml"/>
+    <task source="cmd_sequences/source_membership.xml"/>
+    <task source="cmd_sequences/membership.xml"/>
+    <task source="cmd_sequences/if.xml"/>
+    <task source="cmd_sequences/ttl.xml"/>
+    <task source="cmd_sequences/loop.xml"/>
+    <task source="cmd_sequences/simple.xml"/>
 </lnstrecipe>

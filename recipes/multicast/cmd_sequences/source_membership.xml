@@ -1,27 +1,26 @@
-<!-- IP_ADD/DROP_SOURCE_MEMBERSHIP test -->
-<!-- Requires: 2 hosts
+<!-- IP_ADD/DROP_SOURCE_MEMBERSHIP test --><!-- Requires: 2 hosts
    -    [1] with one interface
    -    [2] with one interface
    - -->
 <!-- NOTICE: IGMP packets must be forwarded through the network!
      In kvm/libvirt environment, iptables on host must be off or
      configured to forward igmp traffic through the bridge -->
-<command_sequence>
+<task>
     <!-- IP_ADD/DROP_MEMBERSHIP sockopt conformance test -->
-    <command machine_id="1" timeout="30" type="test" value="Multicast">
+    <run machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="sockopt_source_membership"/>
             <option name="condition" value="status == 'pass'"/>
         </options>
-    </command>
+    </run>
 
     <!-- This simple test case verifies that if one side leaves multicast group
        - in the middle of ongoing communication, no further packets are delivered
        - to the process. -->
-    <command machine_id="1" type="exec" value="sleep 1"/>
-    <command machine_id="2" type="exec" value="sleep 1"/>
+    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" machine="2"/>
 
-    <command bg_id="1" machine_id="1" timeout="30" type="test" value="Multicast">
+    <run bg_id="1" machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -31,9 +30,9 @@
             <option name="ttl" value="1"/>
             <option name="interface" value="{ip(1,testiface)}"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="2" timeout="30" type="test" value="Multicast">
+    <run machine="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_source_membership"/>
             <option name="address" value="{$multicast_group}"/>
@@ -45,14 +44,14 @@
             <option name="condition" value="packets_received > 0"/>
             <option name="condition" value="packets_received_after_drop == 0"/>
         </options>
-    </command>
-    <command machine_id="1" type="wait" value="1"/>
+    </run>
+    <wait bg_id="1" machine="1"/>
 
     <!-- Nonexistent source -->
-    <command machine_id="1" type="exec" value="sleep 1"/>
-    <command machine_id="2" type="exec" value="sleep 1"/>
+    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" machine="2"/>
 
-    <command bg_id="1" machine_id="1" timeout="30" type="test" value="Multicast">
+    <run bg_id="1" machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -62,9 +61,9 @@
             <option name="ttl" value="1"/>
             <option name="interface" value="{ip(1,testiface)}"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="2" timeout="30" type="test" value="Multicast">
+    <run machine="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_source_membership"/>
             <option name="address" value="{$multicast_group}"/>
@@ -76,7 +75,7 @@
             <option name="condition" value="packets_received == 0"/>
             <option name="condition" value="packets_received_after_drop == 0"/>
         </options>
-    </command>
-    <command machine_id="1" type="wait" value="1"/>
+    </run>
+    <wait bg_id="1" machine="1"/>
 
-</command_sequence>
+</task>

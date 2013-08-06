@@ -1,10 +1,9 @@
 <!-- Requires: 2 hosts with at least one interface -->
-<!-- ['machines'][2]['netconfig'][1]['addresses'][0] -->
-<command_sequence>
-    <command machine_id="1" type="exec" value="sleep 1"/>
-    <command machine_id="2" type="exec" value="sleep 1"/>
+<task>
+    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" machine="2"/>
 
-    <command bg_id="1" machine_id="1" timeout="30" type="test" value="Multicast">
+    <run bg_id="1" machine="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -13,9 +12,9 @@
             <option name="delay" value="{$send_delay}"/>
             <option name="interface" value="{ip(1,testiface)}"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="2" timeout="30" type="test" value="Multicast">
+    <run machine="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -25,7 +24,7 @@
 
             <option name="condition" value="packets_received > 0"/>
         </options>
-    </command>
+    </run>
 
-    <command machine_id="1" type="wait" value="1"/>
-</command_sequence>
+    <wait bg_id="1" machine="1"/>
+</task>
