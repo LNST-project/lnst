@@ -101,10 +101,10 @@ def main():
 
     sequences = ""
     for seq in os.listdir(LIB):
-        if not re.match("seq-.*", seq):
+        if not re.match("task-.*", seq):
             continue
-        print "Found command sequence %s%s" % (LIB, seq)
-        sequences += "\n    <command_sequence source=\"%s%s\"/>" % (LIB, seq)
+        print "Found a task: %s%s" % (LIB, seq)
+        sequences += "\n    <task source=\"%s%s\"/>" % (LIB, seq)
 
     conf_files = [LIB+i for i in os.listdir(LIB) if re.match("conf-.*", i)]
     for conf in conf_files:

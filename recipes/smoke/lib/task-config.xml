@@ -1,10 +1,10 @@
-<command_sequence>
-    <command machine_id="1" type="system_config">
+<task>
+    <config machine="1">
         <options>
             <option name="/proc/sys/net/ipv4/igmp_max_memberships" value="5"/>
             <option name="/proc/sys/net/ipv4/igmp_max_memberships" value="6"/>
             <option name="/proc/sys/net/ipv4/igmp_max_memberships" value="7"/>
             <option name="/proc/sys/net/ipv4/igmp_max_memberships" value="8"/>
         </options>
-    </command>
-</command_sequence>
+    </config>
+</task>
