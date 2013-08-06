@@ -68,9 +68,7 @@ class SlavePool:
             m_id = re.sub("\.[xX][mM][lL]$", "", basename)
 
             slavemachine = dom.getElementsByTagName("slavemachine")[0]
-            xml_data = XmlData(slavemachine)
-            parser.set_target(xml_data)
-            parser.parse(slavemachine)
+            xml_data = parser.parse(slavemachine)
 
             machine_spec = self._process_machine_xml_data(m_id, xml_data)
 
@@ -155,7 +153,7 @@ class SlavePool:
 
         return iface_spec
 
-    def provision_machines(self, mreqs):
+    def provision_machines(self, mreqs, machines):
         """
         This method will try to map a dictionary of machines'
         requirements to a pool of machines that is available to
@@ -172,9 +170,8 @@ class SlavePool:
         self._map = mapper.map_setup(mreqs, self._pool)
 
         if self._map == None:
-            return None
+            return False
 
-        machines = {}
         if self._map["virtual"]:
             for m_id in self._map["machines"]:
                 machines[m_id] = self._prepare_virtual_slave(m_id, mreqs[m_id])
@@ -182,7 +179,7 @@ class SlavePool:
             for m_id in self._map["machines"]:
                 machines[m_id] = self._get_mapped_slave(m_id)
 
-        return machines
+        return True
 
     def is_setup_virtual(self):
         return self._map["virtual"]
@@ -232,13 +229,13 @@ class SlavePool:
                     break
 
             iface = machine.new_static_interface(t_if, "eth")
-            iface.set_hwaddr(if_data["hwaddr"])
+            iface.set_hwaddr(if_data["params"]["hwaddr"])
             iface.set_network(t_net)
 
         for if_id, if_data in pm["interfaces"].iteritems():
             if if_id not in used:
                 iface = machine.new_unused_interface("eth")
-                iface.set_hwaddr(if_data["hwaddr"])
+                iface.set_hwaddr(if_data["params"]["hwaddr"])
                 iface.set_network(t_net)
 
         return machine
@@ -255,7 +252,7 @@ class SlavePool:
         # make all the existing unused
         for if_id, if_data in pm["interfaces"].iteritems():
             iface = machine.new_unused_interface("eth")
-            iface.set_hwaddr(if_data["hwaddr"])
+            iface.set_hwaddr(if_data["params"]["hwaddr"])
             iface.set_network(if_data["network"])
 
         # add all the other devices
