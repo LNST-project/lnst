@@ -24,10 +24,10 @@ from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
-from lnst.Common.Utils import check_process_running
+from lnst.Common.Utils import check_process_running, bool_it
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
-from lnst.Controller.RecipeParse import RecipeParse
+from lnst.Controller.RecipeParse import RecipeParse, RecipeError
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.Machine import Machine, MachineError
 from lnst.Common.ConnectionHandler import send_data, recv_data
@@ -56,23 +56,14 @@ class NetTestController:
 
         self._machines = {}
         self._network_bridges = {}
-
-        self._recipe = recipe = {}
-        recipe["networks"] = {}
-        recipe["machines"] = {}
-        recipe["switches"] = {}
+        self._tasks = []
 
         mac_pool_range = lnst_config.get_option('environment', 'mac_pool_range')
         self._mac_pool = MacPool(mac_pool_range[0], mac_pool_range[1])
 
         parser = RecipeParse(recipe_path)
-        parser.set_target(self._recipe)
         parser.set_machines(self._machines)
-
-        parser.register_event_handler("provisioning_requirements_ready",
-                                        self._prepare_provisioning)
-        parser.register_event_handler("interface_config_ready",
-                                        self._prepare_interface)
+        self._recipe = parser.parse_recipe()
 
         modules_dirs = lnst_config.get_option('environment', 'module_dirs')
         tools_dirs = lnst_config.get_option('environment', 'tool_dirs')
@@ -80,8 +71,6 @@ class NetTestController:
         self._resource_table = {}
         self._resource_table["module"] = self._load_test_modules(modules_dirs)
         self._resource_table["tools"] = self._load_test_tools(tools_dirs)
-
-        self._parser = parser
 
     def _get_machineinfo(self, machine_id):
         try:
@@ -98,14 +87,95 @@ class NetTestController:
         msg = "SSH session terminated with status %s" % status
         raise NetTestError(msg)
 
-    def _prepare_provisioning(self):
-        machines = self._recipe["machines"]
-        if len(machines) <= 0:
-            return
+    def _get_machine_requirements(self):
+        recipe = self._recipe
 
+        # There must be some machines specified in the recipe
+        if "machines" not in recipe or \
+          ("machines" in recipe and len(recipe["machines"]) == 0):
+            msg = "No machines specified in the recipe. At least two " \
+                  "machines are required to perform a network test."
+            raise RecipeError(msg, recipe)
+
+        # machine requirements
+        mreq = {}
+        for machine in recipe["machines"]:
+            m_id = machine["id"]
+
+            if m_id in mreq:
+                msg = "Machine with id='%s' already exists." % m_id
+                raise RecipeError(msg, machine)
+
+            params = {}
+            if "params" in machine:
+                for p in machine["params"]:
+                    if p["name"] in params:
+                        msg = "Parameter '%s' of machine %s was specified " \
+                              "multiple times. Overriding the previous value." \
+                              % (p["name"], m_id)
+                        logging.warn(RecipeError(msg, p))
+                    name = p["name"]
+                    val = p["value"]
+                    params[name] = val
+
+            # Each machine must have at least one interface
+            if "interfaces" not in machine or \
+              ("interfaces" in machine and len(machine["interfaces"]) == 0):
+                msg = "Machine '%s' has no interfaces specified." % m_id
+                raise RecipeError(msg, machine)
+
+            ifaces = {}
+            for iface in machine["interfaces"]:
+                if_id = iface["id"]
+                if if_id in ifaces:
+                    msg = "Interface with id='%s' already exists on machine " \
+                          "'%s'." % (if_id, m_id)
+
+                iface_type = iface["type"]
+                if iface_type != "eth":
+                    continue
+
+                iface_params = {}
+                if "params" in iface:
+                    for i in iface["params"]:
+                        if i["name"] in iface_params:
+                            msg = "Parameter '%s' of interface %s of " \
+                                  "machine %s was defined multiple times. " \
+                                  "Overriding the previous value." \
+                                  % (i["name"], if_id, m_id)
+                            logging.warn(RecipeError(msg, p))
+                        name = i["name"]
+                        val = i["value"]
+                        iface_params[name] = val
+
+                ifaces[if_id] = {
+                    "network": iface["network"],
+                    "params": iface_params
+                }
+
+            mreq[m_id] = {"params": params, "interfaces": ifaces}
+
+        return mreq
+
+    def _prepare_network(self):
+        recipe = self._recipe
+
+        mreq = self._get_machine_requirements()
+        self._prepare_provisioning(mreq)
+
+        machines = self._machines
+        for m_id in machines.keys():
+            self._prepare_machine(m_id)
+
+        for machine_xml_data in recipe["machines"]:
+            m_id = machine_xml_data["id"]
+            for iface_xml_data in machine_xml_data["interfaces"]:
+                self._prepare_interface(m_id, iface_xml_data)
+
+    def _prepare_provisioning(self, mreq):
         sp = self._slave_pool
-        machines = sp.provision_machines(machines)
-        if machines == None:
+        machines = self._machines
+        if not sp.provision_machines(mreq, machines):
             msg = "This setup cannot be provisioned with the current pool."
             raise NetTestError(msg)
 
@@ -115,16 +185,10 @@ class NetTestController:
                   "priviledges so it can connect to qemu."
             raise NetTestError(msg)
 
-        for m_id, machine in machines.iteritems():
-            self._machines[m_id] = machine
-
         logging.info("Provisioning initialized")
         for m_id in machines.keys():
             provisioner = sp.get_provisioner_id(m_id)
             logging.info("  machine %s uses %s" % (m_id, provisioner))
-
-        for m_id in machines.keys():
-            self._prepare_machine(m_id)
 
     def _prepare_machine(self, m_id):
         machine = self._machines[m_id]
@@ -140,30 +204,163 @@ class NetTestController:
         machine.configure(recipe_name, self._docleanup)
         machine.sync_resources(self._resource_table)
 
-    def _prepare_interface(self, machine_id, if_id):
-        machine = self._machines[machine_id]
-        ifconfig = self._recipe["machines"][machine_id]["interfaces"][if_id]
-        if_type = ifconfig["type"]
+    def _prepare_interface(self, m_id, iface_xml_data):
+        machine = self._machines[m_id]
+        if_id = iface_xml_data["id"]
+        if_type = iface_xml_data["type"]
 
         try:
             iface = machine.get_interface(if_id)
         except MachineError:
             iface = machine.new_soft_interface(if_id, if_type)
 
-        if "slaves" in ifconfig:
-            for slave_id in ifconfig["slaves"]:
+        if "slaves" in iface_xml_data:
+            for slave in iface_xml_data["slaves"]:
+                slave_id = slave["id"]
                 iface.add_slave(machine.get_interface(slave_id))
-            iface.set_slave_options(ifconfig["slave_options"])
 
-        if "addresses" in ifconfig:
-            for addr in ifconfig["addresses"]:
+                # Some soft devices (such as team) use per-slave options
+                if "options" in slave:
+                    for opt in slave["options"]:
+                        iface.set_slave_option(slave_id, opt["name"],
+                                               opt["value"])
+
+        if "addresses" in iface_xml_data:
+            for addr in iface_xml_data["addresses"]:
                 iface.add_address(addr)
 
-        if "options" in ifconfig:
-            for name, value in ifconfig["options"]:
-                iface.set_option(name, value)
+        if "options" in iface_xml_data:
+            for opt in iface_xml_data["options"]:
+                iface.set_option(opt["name"], opt["value"])
 
         iface.configure()
+
+    def _prepare_tasks(self):
+        recipe = self._recipe
+        for task_data in self._recipe["tasks"]:
+            task = {}
+
+            if "quit_on_fail" in task_data:
+                task["quit_on_fail"] = bool_it(task_data["quit_on_fail"])
+
+            task["commands"] = []
+            for cmd_data in task_data["commands"]:
+                cmd = {"type": cmd_data["type"]}
+
+                if "machine" in cmd_data:
+                    cmd["machine"] = cmd_data["machine"]
+                    if cmd["machine"] not in self._machines:
+                        msg = "Invalid machine id '%s'." % cmd["machine"]
+                        raise RecipeError(msg, cmd_data)
+
+                if "expect" in cmd_data:
+                    expect = cmd_data["expect"]
+                    if expect not in ["pass", "fail"]:
+                        msg = "Illegal expect attribute value."
+                        raise RecipeError(msg, cmd_data)
+                    cmd["expect"] = expect == "pass"
+
+                if cmd["type"] == "test":
+                    cmd["module"] = cmd_data["module"]
+
+                    cmd_opts = {}
+                    if "options" in cmd_data:
+                        for opt in cmd_data["options"]:
+                            name = opt["name"]
+                            val = opt["value"]
+
+                            if name not in cmd_opts:
+                                cmd_opts[name] = []
+
+                            cmd_opts[name].append({"value": val})
+                    cmd["options"] = cmd_opts
+                elif cmd["type"] == "exec":
+                    cmd["command"] = cmd_data["command"]
+
+                    if "from" in cmd_data:
+                        tool = cmd_data["from"]
+                        if tool in self._resource_table["tools"]:
+                            cmd["command"] = cmd_data["command"]
+                        else:
+                            msg = "Tool '%s' not found on the controller" % tool
+                            raise RecipeError(msg, cmd_data)
+                elif cmd["type"] in ["wait", "intr", "kill"]:
+                    # XXX The internal name (proc_id) is different, because
+                    # bg_id is already used by LNST in a different context
+                    cmd["proc_id"] = cmd_data["bg_id"]
+                elif cmd["type"] == "config":
+                    cmd["persistent"] = False
+                    if "persistent" in cmd_data:
+                        cmd["persistent"] = bool_it(cmd_data["persistent"])
+
+                    cmd["options"] = []
+                    for opt in cmd_data["options"]:
+                        name = opt["name"]
+                        value = opt["value"]
+                        cmd["options"].append({"name": name, "value": value})
+                elif cmd["type"] == "ctl_wait":
+                    cmd["seconds"] = int(cmd_data["seconds"])
+                else:
+                    msg = "Unknown command type '%s'" % cmd["type"]
+                    raise RecipeError(msg, cmd_data)
+
+
+                if cmd["type"] in ["test", "exec"]:
+                    if "bg_id" in cmd_data:
+                        cmd["bg_id"] = cmd_data["bg_id"]
+
+                    if "timeout" in cmd_data:
+                        try:
+                            cmd["timeout"] = int(cmd_data["timeout"])
+                        except ValueError:
+                            msg = "Timeout value must be an integer."
+                            raise RecipeError(msg, cmd_data)
+
+                task["commands"].append(cmd)
+
+            if self._check_task(task):
+                raise RecipeError("Incorrect command sequence.", task_data)
+            self._tasks.append(task)
+
+    def _check_task(self, task):
+        err = False
+        bg_ids = {}
+        for i, command in enumerate(task["commands"]):
+            if command["type"] == "ctl_wait":
+                continue
+
+            machine_id = command["machine"]
+            if not machine_id in bg_ids:
+                bg_ids[machine_id] = set()
+
+            cmd_type = command["type"]
+            if cmd_type in ["wait", "intr", "kill"]:
+                bg_id = command["proc_id"]
+                if bg_id in bg_ids[machine_id]:
+                    bg_ids[machine_id].remove(bg_id)
+                else:
+                    logging.error("Found command \"%s\" for bg_id \"%s\" on "
+                              "machine \"%s\" which was not previously "
+                              "defined", cmd_type, bg_id, machine_id)
+                    err = True
+
+            if "bg_id" in command:
+                bg_id = command["bg_id"]
+                if not bg_id in bg_ids[machine_id]:
+                    bg_ids[machine_id].add(bg_id)
+                else:
+                    logging.error("Command \"%d\" uses bg_id \"%s\" on machine "
+                              "\"%s\" which is already used",
+                                            i, bg_id, machine_id)
+                    err = True
+
+        for machine_id in bg_ids:
+            for bg_id in bg_ids[machine_id]:
+                logging.error("bg_id \"%s\" on machine \"%s\" has no kill/wait "
+                          "command to it", bg_id, machine_id)
+                err = True
+
+        return err
 
     def _cleanup_slaves(self, deconfigure=True):
         if self._machines == None:
@@ -180,94 +377,27 @@ class NetTestController:
         for bridge in self._network_bridges.itervalues():
             bridge.cleanup()
 
-    def _prepare(self):
-        # All the perparations are made within the recipe parsing
-        # This is achieved by handling parser events
-        try:
-            self._parser.parse_recipe()
-        except Exception as exc:
-            logging.error("Exception raised during recipe parsing. "\
-                          "Deconfiguring machines.")
-            self._cleanup_slaves()
-            raise
-
-    def _run_command(self, command):
-        if "desc" in command:
-            logging.info("Cmd description: %s", desc)
-
-        if command["type"] == "ctl_wait":
-            sleep(command["value"])
-            cmd_res = {"passed" : True}
-            return cmd_res
-
-        machine_id = command["machine_id"]
-        machine = self._machines[machine_id]
-
-        cmd_res = machine.run_command(command)
-        return cmd_res
-
-    def _run_command_sequence(self, sequence):
-        seq_passed = True
-        for command in sequence["commands"]:
-            logging.info("Executing command: [%s]", str_command(command))
-
-            try:
-                cmd_res = self._run_command(command)
-            except Exception as exc:
-                cmd_res = {"passed": False, "err_msg": "Exception raised."}
-                raise exc
-            finally:
-                if self._res_serializer:
-                    self._res_serializer.add_cmd_result(command, cmd_res)
-            logging.debug("Result: %s", str(cmd_res))
-            if "res_data" in cmd_res:
-                res_data = pformat(cmd_res["res_data"])
-                logging.info("Result data: %s", (res_data))
-            if not cmd_res["passed"]:
-                logging.error("Command failed: [%s], Error message: \"%s\"",
-                              str_command(command), cmd_res["err_msg"])
-                seq_passed = False
-        return seq_passed
-
+    # TODO: This should go away.
     def dump_recipe(self):
-        self._prepare()
+        self._prepare_network()
         pprint(self._recipe)
         self._cleanup_slaves()
         return True
 
     def match_setup(self):
-        try:
-            self._parser.first_pass()
-        except Exception as exc:
-            logging.error("Exception raised during recipe parsing. "\
-                          "Deconfiguring machines.")
-            self._cleanup_slaves()
-            raise
-
-        machines = self._recipe["machines"]
-        if len(machines) <= 0:
-            return
-
-        sp = self._slave_pool
-        machines = sp.provision_machines(machines)
-        if machines == None:
-            msg = "This setup cannot be provisioned with the current pool."
-            raise NetTestError(msg)
-
-        logging.info("Provisioning initialized")
-        for m_id in machines.keys():
-            provisioner = sp.get_provisioner_id(m_id)
-            logging.info("  machine %s matched to %s" % (m_id, provisioner))
+        mreq = self._get_machine_requirements()
+        self._prepare_provisioning(mreq)
 
         return True
 
     def config_only_recipe(self):
-        self._prepare()
+        self._prepare_network()
         self._cleanup_slaves(deconfigure=False)
         return True
 
     def run_recipe(self, packet_capture=False):
-        self._prepare()
+        self._prepare_network()
+        self._prepare_tasks()
 
         if packet_capture:
             self._start_packet_capture()
@@ -289,10 +419,10 @@ class NetTestController:
     def _run_recipe(self):
         overall_res = True
 
-        for sequence in self._recipe["sequences"]:
+        for task in self._tasks:
             try:
-                self._res_serializer.add_command_sequence()
-                res = self._run_command_sequence(sequence)
+                self._res_serializer.add_task()
+                res = self._run_task(task)
             except CommandException as exc:
                 logging.debug(exc)
                 overall_res = False
@@ -301,13 +431,51 @@ class NetTestController:
             for machine in self._machines.itervalues():
                 machine.restore_system_config()
 
-            # sequence failed, check if we should quit_on_fail
+            # task failed, check if we should quit_on_fail
             if not res:
                 overall_res = False
-                if sequence["quit_on_fail"] == "yes":
+                if task["quit_on_fail"]:
                     break
 
         return overall_res
+
+    def _run_task(self, task):
+        seq_passed = True
+        for command in task["commands"]:
+            logging.info("Executing command: [%s]", str_command(command))
+
+            try:
+                cmd_res = self._run_command(command)
+            except Exception as exc:
+                cmd_res = {"passed": False, "err_msg": "Exception raised."}
+                raise exc
+            finally:
+                if self._res_serializer:
+                    self._res_serializer.add_cmd_result(command, cmd_res)
+            logging.debug("Result: %s", str(cmd_res))
+            if "res_data" in cmd_res:
+                res_data = pformat(cmd_res["res_data"])
+                logging.info("Result data: %s", (res_data))
+            if not cmd_res["passed"]:
+                logging.error("Command failed: [%s], Error message: \"%s\"",
+                              str_command(command), cmd_res["err_msg"])
+                seq_passed = False
+        return seq_passed
+
+    def _run_command(self, command):
+        if "desc" in command:
+            logging.info("Cmd description: %s", desc)
+
+        if command["type"] == "ctl_wait":
+            sleep(command["seconds"])
+            cmd_res = {"passed" : True}
+            return cmd_res
+
+        machine_id = command["machine"]
+        machine = self._machines[machine_id]
+
+        cmd_res = machine.run_command(command)
+        return cmd_res
 
     def _start_packet_capture(self):
         logging.info("Starting packet capture")
