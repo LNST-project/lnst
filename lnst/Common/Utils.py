@@ -85,9 +85,9 @@ def int_it(val):
 
 def bool_it(val):
     if isinstance(val, str):
-        if re.match("^\s*(?i)(true)", val):
+        if re.match("^\s*(?i)(true)", val) or re.match("^\s*(?i)(yes)", val):
             return True
-        elif re.match("^\s*(?i)(false)", val):
+        elif re.match("^\s*(?i)(false)", val) or re.match("^\s*(?i)(no)", val):
             return False
     return True if int_it(val) else False
 
