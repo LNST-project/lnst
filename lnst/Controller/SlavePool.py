@@ -18,9 +18,10 @@ import os
 import re
 import copy
 from xml.dom import minidom
-from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.NetUtils import test_tcp_connection
 from lnst.Controller.SlaveMachineParse import SlaveMachineParse
+from lnst.Common.XmlProcessing import XmlDomTreeInit
+from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.Machine import Machine
 from lnst.Common.Config import lnst_config
 

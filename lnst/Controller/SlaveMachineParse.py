@@ -14,11 +14,11 @@ rpazdera@redhat.com (Radek Pazdera)
 import logging
 import os
 import re
-from lnst.Common.XmlProcessing import LnstParser
-from lnst.Common.XmlProcessing import XmlDomTreeInit
-from lnst.Common.XmlProcessing import XmlProcessingError
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Controller.RecipeParse import ParamsParse
+from lnst.Common.XmlParser import LnstParser
+from lnst.Common.XmlProcessing import XmlDomTreeInit
+from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 
 class SlaveMachineParse(LnstParser):
     _machine_id = None

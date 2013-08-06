@@ -22,6 +22,7 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import re
+from lnst.Common.XmlProcessing import XmlTemplateString
 
 class XmlTemplateError(Exception):
     pass

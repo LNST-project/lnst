@@ -13,12 +13,12 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import os
 import re
-from lnst.Common.XmlProcessing import LnstParser
-from lnst.Common.XmlProcessing import XmlDomTreeInit
-from lnst.Common.XmlProcessing import XmlProcessingError
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import bool_it
 from lnst.Common.RecipePath import RecipePath
+from lnst.Common.XmlProcessing import XmlDomTreeInit, XmlData
+from lnst.Common.XmlProcessing import XmlProcessingError
+from lnst.Common.XmlParser import LnstParser
 
 class RecipeParse(LnstParser):
     def __init__(self, recipe_filepath):
