@@ -21,15 +21,41 @@ from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import recv_data, send_data
 
 def str_command(command):
-    out = ("type (%s), machine_id (%s), value (%s)"
-                % (command["type"], command["machine_id"], command["value"]))
-    if "timeout" in command:
-        out += ", timeout (%d)" % command["timeout"]
-    if "bg_id" in command:
-        out += ", bg_id (%s)" % command["bg_id"]
-    if "desc" in command:
-        out += ", desc (%s)" % command["desc"]
-    return out
+    attrs = ["type(%s)" % command["type"]]
+    if command["type"] == "test":
+        attrs.append("module(%s)" % command["module"])
+        attrs.append("machine(%s)" % command["machine"])
+
+        if "bg_id" in command:
+            attrs.append("bg_id(%s)" % command["bg_id"])
+        if "timeout" in command:
+            attrs.append("timeout(%s)" % command["timeout"])
+    elif command["type"] == "exec":
+        attrs.append("command(%s)" % command["command"])
+        attrs.append("machine(%s)" % command["machine"])
+
+        if "from" in command:
+            attrs.append("from(%s)" % command["from"])
+        if "bg_id" in command:
+            attrs.append("bg_id(%s)" % command["bg_id"])
+        if "timeout" in command:
+            attrs.append("timeout(%s)" % command["timeout"])
+    elif command["type"] in ["wait", "intr", "kill"]:
+        attrs.append("machine(%s)" % command["machine"])
+        attrs.append("bg_id(%s)" % command["proc_id"])
+    elif command["type"] == "config":
+        attrs.append("machine(%s)" % command["machine"])
+
+        if "option" in command:
+            attrs.append("option(%s)" % command["option"])
+        if "value" in command:
+            attrs.append("value(%s)" % command["value"])
+    elif command["type"] == "ctl_wait":
+        attrs.append("seconds(%s)" % command["seconds"])
+    else:
+        raise RuntimeError("Unknown command type '%s'" % command["type"])
+
+    return ", ".join(attrs)
 
 class CommandException(Exception):
     """Base class for client errors."""
@@ -81,7 +107,7 @@ class NetTestCommand:
 
     def run(self):
         if isinstance(self._cmd_cls, NetTestCommandControl) or \
-           isinstance(self._cmd_cls, NetTestCommandSystemConfig):
+           isinstance(self._cmd_cls, NetTestCommandConfig):
             return self._cmd_cls.run()
 
         self._read_pipe, self._write_pipe = multiprocessing.Pipe()
@@ -146,6 +172,8 @@ class NetTestCommand:
             os.killpg(os.getpgid(self._pid), signal.SIGINT)
 
     def kill(self):
+        print self, dir(self)
+        print self._cmd_cls
         if os.path.exists("/proc/%d" % self._pid):
             if self._id:
                 logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
@@ -204,7 +232,7 @@ class NetTestCommandContext:
         return pipes
 
 def NetTestCommandTest(command, resource_table):
-    test_name = command["value"]
+    test_name = command["module"]
     if not test_name in resource_table["module"]:
         msg = "Test module '%s' not found" % test_name
 
@@ -267,9 +295,9 @@ class NetTestCommandExec(NetTestCommandGeneric):
     def run(self):
         try:
             if "from" in self._command:
-                self.exec_from(self._command["from"], self._command["value"])
+                self.exec_from(self._command["from"], self._command["command"])
             else:
-                self.exec_cmd(self._command["value"])
+                self.exec_cmd(self._command["command"])
             self.set_pass()
         except ExecCmdFail:
             if "bg_id" in self._command:
@@ -278,7 +306,7 @@ class NetTestCommandExec(NetTestCommandGeneric):
             else:
                 self.set_fail("Command failed to execute")
 
-class NetTestCommandSystemConfig(NetTestCommandGeneric):
+class NetTestCommandConfig(NetTestCommandGeneric):
     def _retrive_option(self, option):
         cmd_str = "cat %s" % option
         (stdout, stderr) = exec_cmd(cmd_str)
@@ -289,30 +317,22 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
         (stdout, stderr) = exec_cmd(cmd_str)
 
     def run(self):
-        res_data = {"options": {}, "persistent": False}
+        res_data = {"options": [], "persistent": False}
 
-        # inline version
-        if "option" in self._command:
-            opt = self._command["option"]
-            val = [{"value": self._command["value"]}]
-            self._command["options"] = {opt: val}
-
-        for option, opt_data in self._command["options"].iteritems():
-            new_values = []
-            for record in opt_data:
-                new_values.append(record["value"])
-
+        for opt in self._command["options"]:
+            option = opt["name"]
+            value = opt["value"]
             option_abspath = os.path.abspath(option)
             if option_abspath[0:5] != "/sys/" and \
                option_abspath[0:6] != "/proc/":
-                err = "Wrong config option %s. Only /proc or /sys paths are allowed." % option
+                err = "Wrong config option %s. Only /proc or /sys paths are " \
+                      "allowed." % option
                 self.set_fail(err)
                 return
 
             try:
                 prev_val = self._retrive_option(option)
-                for new_val in new_values:
-                    self._set_option(option, new_val)
+                self._set_option(option, value)
             except ExecCmdFail:
                 self.set_fail("Unable to set %s config option!" % option)
                 return
@@ -320,8 +340,9 @@ class NetTestCommandSystemConfig(NetTestCommandGeneric):
             if "persistent" in self._command:
                 res_data["persistent"] = self._command["persistent"]
 
-            res_data["options"][option] = {"current_val": new_values[-1],
-                                           "previous_val": prev_val}
+            res_data["options"].append({"name": option,
+                                        "current_val": value,
+                                        "previous_val": prev_val})
 
         res = {"passed": True}
         res["res_data"] = res_data
@@ -334,7 +355,7 @@ class NetTestCommandControl(NetTestCommandGeneric):
 
 class NetTestCommandWait(NetTestCommandControl):
     def run(self):
-        bg_id = self._command["value"]
+        bg_id = self._command["proc_id"]
         bg_cmd = self._command_context.get_cmd(bg_id)
         bg_cmd.wait_for()
         result = bg_cmd.get_result()
@@ -345,7 +366,7 @@ class NetTestCommandWait(NetTestCommandControl):
 
 class NetTestCommandIntr(NetTestCommandControl):
     def run(self):
-        bg_id = self._command["value"]
+        bg_id = self._command["proc_id"]
         bg_cmd = self._command_context.get_cmd(bg_id)
         bg_cmd.interrupt()
         result = bg_cmd.get_result()
@@ -356,7 +377,7 @@ class NetTestCommandIntr(NetTestCommandControl):
 
 class NetTestCommandKill(NetTestCommandControl):
     def run(self):
-        bg_id = self._command["value"]
+        bg_id = self._command["proc_id"]
         bg_cmd = self._command_context.get_cmd(bg_id)
         bg_cmd.kill()
         result = bg_cmd.get_result()
@@ -377,8 +398,8 @@ def get_command_class(command_context, command, resource_table):
         cmd_cls = NetTestCommandIntr(command_context, command)
     elif cmd_type == "kill":
         cmd_cls = NetTestCommandKill(command_context, command)
-    elif cmd_type == "system_config":
-        cmd_cls = NetTestCommandSystemConfig(command)
+    elif cmd_type == "config":
+        cmd_cls = NetTestCommandConfig(command)
     else:
         logging.error("Unknown comamnd type \"%s\"" % cmd_type)
         raise Exception("Unknown command type \"%s\"" % cmd_type)
