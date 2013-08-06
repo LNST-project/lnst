@@ -36,8 +36,8 @@ from lnst.Slave.NmConfigDevice import is_nm_managed_by_name
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
-from lnst.Common.NetTestCommand import NetTestCommandSystemConfig
 from lnst.Common.Config import lnst_config
+from lnst.Common.NetTestCommand import NetTestCommandConfig
 
 DefaultRPCPort = 9999
 
@@ -210,15 +210,18 @@ class SlaveMethods:
 
     def _update_system_config(self, options, persistent):
         system_config = self._system_config
-        for option, values in options.iteritems():
+        for opt in options:
+            option = opt["name"]
+            prev = opt["previous_val"]
+            curr = opt["current_val"]
+
             if persistent:
                 if option in system_config:
                     del system_config[option]
             else:
                 if not option in system_config:
-                    initial_val = {"initial_val": values["previous_val"]}
-                    system_config[option] = initial_val
-                system_config[option]["current_val"] = values["current_val"]
+                    system_config[option] = {"initial_val": prev}
+                system_config[option]["current_val"] = curr
 
     def restore_system_config(self):
         logging.info("Restoring system configuration")
@@ -242,7 +245,7 @@ class SlaveMethods:
         if not cmd.forked():
             self._command_context.del_cmd(cmd)
 
-        if command["type"] == "system_config":
+        if command["type"] == "config":
             if res["passed"]:
                 self._update_system_config(res["res_data"]["options"],
                                            command["persistent"])
