@@ -14,68 +14,59 @@ rpazdera@redhat.com (Radek Pazdera)
 import logging
 import os
 import re
-from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Controller.RecipeParse import ParamsParse
 from lnst.Common.XmlParser import LnstParser
-from lnst.Common.XmlProcessing import XmlDomTreeInit
-from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
+from lnst.Common.XmlProcessing import XmlDomTreeInit, XmlProcessingError
+from lnst.Common.XmlProcessing import XmlData, XmlCollection
+
+class SlaveMachineError(XmlProcessingError):
+    pass
 
 class SlaveMachineParse(LnstParser):
-    _machine_id = None
-    _machine = None
-
-    def set_machine(self, machine_id, machine):
-        self._machine_id = machine_id
-        self._machine = machine
-
     def parse(self, node):
+        self._data = XmlData(node)
         scheme = {"params": self._params,
                   "interfaces": self._interfaces}
-        params = {"target": self._machine["params"]}
-        self._process_child_nodes(node, scheme, params)
-
-        self._machine["params"]["skip_cleanup"] = False
-        mandatory_params = ["hostname"]
-        for mandatory in mandatory_params:
-            if mandatory not in self._machine["params"]:
-                msg = "Missing required parameter '%s'" % mandatory
-                raise XmlProcessingError(msg, node)
+        self._process_child_nodes(node, scheme)
+        return self._data
 
     def _params(self, node, params):
+        if "params" in self._data:
+            msg = "Only a single <params> child allowed under <slavemachine>."
+            raise SlaveMachineError(msg, node)
+
         subparser = ParamsParse(self)
-        subparser.set_params_dict(params["target"])
-        subparser.parse(node)
+        self._data["params"] = subparser.parse(node)
 
     def _interfaces(self, node, params):
-        scheme = {"eth": self._eth}
+        if not "interfaces" in self._data:
+            self._data["interfaces"] = XmlCollection(node)
+        else:
+            msg = "Only a single <interfaces> child allowed under <slavemachine>."
+            raise SlaveMachineError(msg, node)
 
-        try:
-            self._process_child_nodes(node, scheme)
-        except XmlProcessingError as err:
-            msg = "Interface type other than 'eth' is not allowed here. " \
-                  "Other types must be configured in LNST recipes directly."
-            logging.error(msg)
-            raise
+        scheme = {"eth": self._eth}
+        self._process_child_nodes(node, scheme)
 
     def _eth(self, node, params):
-        machine = self._machine
-        iface_id = self._get_attribute(node, "id")
+        machine = self._data
 
-        iface = machine["interfaces"][iface_id] = {}
+        iface = XmlData(node)
+        iface["id"] = self._get_attribute(node, "id")
         iface["network"] = self._get_attribute(node, "network")
-        iface["params"] = {}
         iface["type"] = "eth"
 
         # parse interface parameters
-        scheme = {"params": self._params}
-        params = {"target": iface["params"]}
+        scheme = {"params": self._iface_params}
+        params = {"iface": iface}
         self._process_child_nodes(node, scheme, params)
 
-        if "hwaddr" in iface["params"]:
-            iface["hwaddr"] = normalize_hwaddr(iface["params"]["hwaddr"])
-        else:
-            msg = "Missing required parameter 'hwaddr'"
-            raise XmlProcessingError(msg, node)
+        machine["interfaces"].append(iface)
 
-        if "name" in iface["params"]:
-            iface["name"] = iface["params"]["name"]
+    def _iface_params(self, node, params):
+        if "params" in params["iface"]:
+            msg = "Only a single <params> child allowed under <interface>."
+            raise SlaveMachineError(msg, node)
+
+        subparser = ParamsParse(self)
+        params["iface"]["params"] = subparser.parse(node)

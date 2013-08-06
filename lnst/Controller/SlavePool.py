@@ -18,12 +18,14 @@ import os
 import re
 import copy
 from xml.dom import minidom
+from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import test_tcp_connection
-from lnst.Controller.SlaveMachineParse import SlaveMachineParse
 from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.Machine import Machine
 from lnst.Common.Config import lnst_config
+from lnst.Controller.SlaveMachineParse import SlaveMachineParse
+from lnst.Controller.SlaveMachineParse import SlaveMachineError
 
 class SlavePool:
     """
@@ -63,18 +65,19 @@ class SlavePool:
             parser.set_include_root(dirname)
             parser.disable_events()
 
-            machine = {"params": {}, "interfaces": {}}
             m_id = re.sub("\.[xX][mM][lL]$", "", basename)
-            parser.set_machine(m_id, machine)
 
             slavemachine = dom.getElementsByTagName("slavemachine")[0]
-
+            xml_data = XmlData(slavemachine)
+            parser.set_target(xml_data)
             parser.parse(slavemachine)
 
+            machine_spec = self._process_machine_xml_data(m_id, xml_data)
+
             if self._pool_checks:
-                hostname = machine["params"]["hostname"]
-                if "rpcport" in machine:
-                    port = machine["params"]["rpcport"]
+                hostname = machine_spec["params"]["hostname"]
+                if "rpcport" in machine_spec:
+                    port = machine_spec["params"]["rpcport"]
                 else:
                     port = lnst_config.get_option('environment', 'rpcport')
 
@@ -84,13 +87,73 @@ class SlavePool:
                     logging.warning(msg)
                     return
 
-                if 'libvirt_domain' in machine['params'] and \
+                if 'libvirt_domain' in machine_spec['params'] and \
                    not self._allow_virt:
                     msg = "libvird not running. Skipping machine '%s'." % m_id
                     logging.warning(msg)
 
             logging.info("Adding slave machine %s to slave pool." % m_id)
-            self._pool[m_id] = machine
+            self._pool[m_id] = machine_spec
+
+    def _process_machine_xml_data(self, m_id, machine_xml_data):
+        machine_spec = {"interfaces": {}, "params":{}}
+
+        # process parameters
+        if "params" in machine_xml_data:
+            for param in machine_xml_data["params"]:
+                name = str(param["name"])
+                value = str(param["value"])
+                machine_spec["params"][name] = value
+
+        mandatory_params = ["hostname"]
+        for p in mandatory_params:
+            if p not in machine_spec["params"]:
+                msg = "Mandatory parameter '%s' missing for machine %s." \
+                        % (p, m_id)
+                raise SlaveMachineError(msg, machine_xml_data["params"])
+
+        # process interfaces
+        if "interfaces" in machine_xml_data:
+            for iface in machine_xml_data["interfaces"]:
+                if_id = iface["id"]
+                iface_spec = self._process_iface_xml_data(m_id, iface)
+
+                if if_id not in machine_spec["interfaces"]:
+                    machine_spec["interfaces"][if_id] = iface_spec
+                else:
+                    msg = "Duplicate interface id '%s'." % if_id
+                    raise SlaveMachineError(msg, iface)
+        else:
+            if "libvirt_domain" not in machine_spec["params"]:
+                msg = "Machine '%s' has no testing interfaces. " \
+                      "This setup is supported only for virtual slaves." \
+                      % m_id
+                raise SlaveMachineError(msg, machine_xml_data)
+
+        return machine_spec
+
+    def _process_iface_xml_data(self, m_id, iface):
+        if_id = iface["id"]
+        iface_spec = {"params": {}}
+        iface_spec["network"] = iface["network"]
+
+        for param in iface["params"]:
+            name = str(param["name"])
+            value = str(param["value"])
+
+            if name == "hwaddr":
+                iface_spec["params"][name] = normalize_hwaddr(value)
+            else:
+                iface_spec["params"][name] = value
+
+        mandatory_params = ["hwaddr"]
+        for p in mandatory_params:
+            if p not in iface_spec["params"]:
+                msg = "Mandatory parameter '%s' missing for machine %s, " \
+                      "interface '%s'." % (p, m_id, if_id)
+                raise SlaveMachineError(msg, iface["params"])
+
+        return iface_spec
 
     def provision_machines(self, mreqs):
         """

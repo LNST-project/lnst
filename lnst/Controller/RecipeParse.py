@@ -20,6 +20,9 @@ from lnst.Common.XmlProcessing import XmlDomTreeInit, XmlData
 from lnst.Common.XmlProcessing import XmlProcessingError
 from lnst.Common.XmlParser import LnstParser
 
+class RecipeError(XmlProcessingError):
+    pass
+
 class RecipeParse(LnstParser):
     def __init__(self, recipe_filepath):
         super(RecipeParse, self).__init__()
@@ -338,7 +341,7 @@ class InterfaceParse(LnstParser):
 class ParamsParse(LnstParser):
     _params = None
 
-    def set_params_dict(self, target):
+    def set_target(self, target):
         self._params = target
 
     def parse(self, node):
@@ -353,7 +356,10 @@ class ParamsParse(LnstParser):
         else:
             value = self._get_text_content(node)
 
-        self._params[name] = value
+        param = XmlData(node)
+        param["name"] = name
+        param["value"] = value
+        self._params.append(param)
 
 class CommandSequenceParse(LnstParser):
     def parse(self, node):
