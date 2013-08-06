@@ -67,7 +67,7 @@ class NetTestResultSerializer:
         else:
             self._cur_recipe_el.setAttribute("result", "FAIL")
 
-    def add_command_sequence(self):
+    def add_task(self):
         cmd_seq_el = self._dom.createElement("command_sequence")
         self._cur_recipe_el.appendChild(cmd_seq_el)
         self._cur_cmd_seq_el = cmd_seq_el
@@ -135,8 +135,8 @@ class NetTestResultSerializer:
             self._format_ctl_wait_command(command, output_pairs)
         elif cmd_type == "exec":
             self._format_exec_command(command, output_pairs)
-        elif cmd_type == "system_config":
-            self._format_system_config(command, output_pairs)
+        elif cmd_type == "config":
+            self._format_config(command, output_pairs)
 
         result_node = command.getElementsByTagName("result")[0]
         cmd_res = result_node.getAttribute("result")
@@ -152,7 +152,7 @@ class NetTestResultSerializer:
         result_node = command.getElementsByTagName("result")[0]
         cmd_res = result_node.getAttribute("result")
 
-        cmd_val = command.getAttribute("value")
+        cmd_val = command.getAttribute("module")
         cmd_type = command.getAttribute("type")
         if command.hasAttribute("bg_id"):
             bg_id = " bg_id: %s" %  command.getAttribute("bg_id")
@@ -165,7 +165,7 @@ class NetTestResultSerializer:
         result_node = command.getElementsByTagName("result")[0]
         cmd_res = result_node.getAttribute("result")
 
-        cmd_val = command.getAttribute("value")
+        cmd_val = command.getAttribute("proc_id")
         cmd_type = command.getAttribute("type")
         if command.hasAttribute("bg_id"):
             bg_id = " bg_id: %s" %  command.getAttribute("bg_id")
@@ -181,18 +181,28 @@ class NetTestResultSerializer:
         self._format_wait_command(command, output_pairs)
 
     def _format_exec_command(self, command, output_pairs):
-        self._format_test_command(command, output_pairs)
+        result_node = command.getElementsByTagName("result")[0]
+        cmd_res = result_node.getAttribute("result")
+
+        cmd_val = command.getAttribute("command")
+        cmd_type = command.getAttribute("type")
+        if command.hasAttribute("bg_id"):
+            bg_id = " bg_id: %s" %  command.getAttribute("bg_id")
+        else:
+            bg_id = ""
+        cmd = 8*" "+"%-14s%s%s" %(cmd_type, cmd_val, bg_id)
+        output_pairs.append((cmd, cmd_res))
 
     def _format_ctl_wait_command(self, command, output_pairs):
         result_node = command.getElementsByTagName("result")[0]
         cmd_res = result_node.getAttribute("result")
 
-        cmd_val = command.getAttribute("value")
+        cmd_val = command.getAttribute("seconds")
         cmd_type = command.getAttribute("type")
         cmd = 8*" "+"%-14s%ss" %(cmd_type, cmd_val)
         output_pairs.append((cmd, cmd_res))
 
-    def _format_system_config(self, command, output_pairs):
+    def _format_config(self, command, output_pairs):
         result_node = command.getElementsByTagName("result")[0]
         cmd_res = result_node.getAttribute("result")
 
@@ -209,12 +219,14 @@ class NetTestResultSerializer:
             result_data_node = result_data_nodes[0]
             options_nodes = result_data_node.getElementsByTagName("options")
             for options_node in options_nodes:
-                for option in options_node.getElementsByTagName("option"):
+                for option in options_node.getElementsByTagName("options_item"):
                     previous_node = option.getElementsByTagName("previous_val")[0]
                     current_node = option.getElementsByTagName("current_val")[0]
+                    name_node = option.getElementsByTagName("name")[0]
                     previous_val = get_node_val(previous_node)
                     current_val = get_node_val(current_node)
-                    opt_left = 12*" "+"%s" % option.getAttribute("name")
+                    name = get_node_val(name_node)
+                    opt_left = 12*" "+"%s" % name
                     opt_right = "previous: %s current: %s" \
                                 % (previous_val, current_val)
                     output_pairs.append((opt_left, opt_right))
