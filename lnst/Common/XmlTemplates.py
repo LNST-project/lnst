@@ -28,15 +28,14 @@ class XmlTemplateError(Exception):
     pass
 
 class TemplateFunc(object):
-    _args = []
-    _machines = None
-
     def __init__(self, args, machines):
         self._check_args(args)
+        self._args = args
+
         self._machines = machines
 
     def __str__(self):
-        self._implementation(self)
+        return self._implementation()
 
     def _check_args(self, args):
         pass
@@ -44,11 +43,121 @@ class TemplateFunc(object):
     def _implementation(self):
         pass
 
+class IpFunc(TemplateFunc):
+    def _check_args(self, args):
+        if len(args) > 3:
+            msg = "Function ip() takes at most 3 arguments, %d passed" \
+                  % len(args)
+            raise XmlTemplateError(msg)
+        if len(args) < 2:
+            msg = "Function ip() must have at least 2 arguments, %d passed" \
+                  % len(args)
+            raise XmlTemplateError(msg)
+
+        if len(args) == 3:
+            try:
+                int(args[2])
+            except ValueError:
+                msg = "The third argument of ip() function must be an integer"
+                raise XmlTemplateError(msg)
+
+    def _implementation(self):
+        m_id = self._args[0]
+        if_id = self._args[1]
+        addr = 0
+        if len(self._args) == 3:
+            addr = self._args[2]
+
+        try:
+            machine = self._machines[m_id]
+        except KeyError:
+            msg = "First parameter of function ip() is invalid: " \
+                  "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+
+        try:
+            iface = machine.get_interface(if_id)
+        except MachineError:
+            msg = "Second parameter of function ip() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+
+        try:
+            return iface.get_address(int(addr))
+        except IndexError:
+            msg = "There is no address with index %s on machine %s, " \
+                  "interface %s." % (addr, m_id, if_id)
+            raise XmlTemplateError(msg)
+
+class DevnameFunc(TemplateFunc):
+    def _check_args(self, args):
+        if len(args) != 2:
+            msg = "Function devname() takes 2 arguments, %d passed." % len(args)
+            raise XmlTemplateError(msg)
+
+    def _implementation(self):
+        m_id = self._args[0]
+        if_id = self._args[1]
+
+        try:
+            machine = self._machines[m_id]
+        except KeyError:
+            msg = "First parameter of function devname() is invalid: " \
+                  "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+
+        try:
+            iface = machine.get_interface(if_id)
+        except MachineError:
+            msg = "Second parameter of function devname() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+
+        try:
+            return iface.get_devname()
+        except MachineError:
+            msg = "Devname not availablefor interface '%s' on machine '%s'." \
+                                                    % (m_id, if_id)
+            raise XmlTemplateError(msg)
+
+class HwaddrFunc(TemplateFunc):
+    def _check_args(self, args):
+        if len(args) != 2:
+            msg = "Function hwaddr() takes 2 arguments, %d passed." % len(args)
+            raise XmlTemplateError(msg)
+
+    def _implementation(self):
+        m_id = self._args[0]
+        if_id = self._args[1]
+
+        try:
+            machine = self._machines[m_id]
+        except KeyError:
+            msg = "First parameter of function hwaddr() is invalid: " \
+                  "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+
+        try:
+            iface = machine.get_interface(if_id)
+        except MachineError:
+            msg = "Second parameter of function hwaddr() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+
+        try:
+            return iface.get_hwaddr()
+        except MachineError:
+            msg = "Hwaddr not availablefor interface '%s' on machine '%s'." \
+                                                    % (m_id, if_id)
+            raise XmlTemplateError(msg)
+
 class XmlTemplates:
     """ This class serves as template processor """
 
     _alias_re = "\{\$([a-zA-Z0-9_]+)\}"
     _func_re  = "\{([a-zA-Z0-9_]+)\(([^\(\)]*)\)\}"
+
+    _func_map = {"ip": IpFunc, "hwaddr": HwaddrFunc, "devname": DevnameFunc}
 
     def __init__(self, definitions=None):
         if definitions:
@@ -166,11 +275,7 @@ class XmlTemplates:
         value = XmlTemplateString(node=node)
 
         for part in parts:
-            if type(part) is list:
-                # TODO construct the template function
-                pass
-            else:
-                value.add_part(part)
+            value.add_part(part)
 
         return value
 
@@ -203,9 +308,9 @@ class XmlTemplates:
             suffix = string[func_match.end(0)+1:]
 
             template = func_match.group(0)
-            result = self._process_func_template(template)
+            func = self._process_func_template(template)
 
-            return self._partition_string(prefix) + [template] + \
+            return self._partition_string(prefix) + [func] + \
                    self._partition_string(suffix)
 
         return [string]
@@ -221,128 +326,28 @@ class XmlTemplates:
         return result
 
     def _process_func_template(self, string):
-        result = None
-
         func_match = re.match(self._func_re, string)
         if func_match:
             func_name = func_match.group(1)
-            func_params = func_match.group(2)
+            func_args = func_match.group(2)
 
-            if func_params == None:
-                func_params = []
+            if func_args == None:
+                func_args = []
             else:
-                func_params = func_params.split(",")
+                func_args = func_args.split(",")
 
             param_values = []
-            for param in func_params:
+            for param in func_args:
                 param = param.strip()
                 if re.match(self._alias_re, param):
                     param = self._process_alias_template(param)
                 param_values.append(param)
 
-            result = self._call_preprocessor_func(func_name, param_values)
+            if func_name not in self._func_map:
+                msg = "Unknown template function '%s'." % func_name
+                raise XmlTemplateError(msg)
 
-        return result
-
-    def _call_preprocessor_func(self, name, params):
-        if name == "ip":
-            result = self._ip_func(params)
-        elif name == "hwaddr":
-            result = self._hwaddr_func(params)
-        elif name == "devname":
-            result = self._devname_func(params)
+            func = self._func_map[func_name](param_values, self._machines)
+            return func
         else:
-            raise XmlTemplateError("Unknown preprocessor function '%s'" % name)
-
-        return result
-
-    def _ip_func(self, params):
-        self._validate_func_params("ip", params, 2, 1)
-        machines = self._machines
-
-        m_id = params[0]
-        if_id = params[1]
-        ip_id = int(params[2]) if len(params) == 3 else 0
-
-        if m_id not in machines:
-            msg = "First parameter of function ip() is invalid: "\
-                    "Machine %s does not exist." % m_id
-            raise XmlTemplateError(msg)
-        machine = machines[m_id]
-
-        try:
-            iface = machine.get_interface(if_id)
-        except:
-            msg = "Second parameter of function ip() is invalid: "\
-                    "Interface %s does not exist." % if_id
-            raise XmlTemplateError(msg)
-
-        try:
-            addr = iface.get_address(ip_id)
-        except:
-            msg = "Third parameter of function ip() is invalid: "\
-                  "Address %s does not exist." % ip_id
-            raise XmlTemplateError(msg)
-
-        return addr.split('/')[0]
-
-    def _hwaddr_func(self, params):
-        self._validate_func_params("hwaddr", params, 2, 0)
-        machines = self._machines
-        m_id = params[0]
-        if_id = params[1]
-
-        if m_id not in machines:
-            msg = "First parameter of function hwaddr() is invalid: "\
-                    "Machine %s does not exist." % m_id
-            raise XmlTemplateError(msg)
-        machine = machines[m_id]
-
-        try:
-            iface = machine.get_interface(if_id)
-        except:
-            msg = "Second parameter of function ip() is invalid: "\
-                    "Interface %s does not exist." % if_id
-            raise XmlTemplateError(msg)
-
-        return iface.get_hwaddr()
-
-
-    def _devname_func(self, params):
-        self._validate_func_params("devname", params, 2, 0)
-        machines = self._machines
-        m_id = params[0]
-        if_id = params[1]
-
-        if m_id not in machines:
-            msg = "First parameter of function devname() is invalid: "\
-                    "Machine %s does not exist." % m_id
-            raise XmlTemplateError(msg)
-        machine = machines[m_id]
-
-        try:
-            iface = machine.get_interface(if_id)
-        except:
-            msg = "Second parameter of function ip() is invalid: "\
-                    "Interface %s does not exist." % if_id
-            raise XmlTemplateError(msg)
-
-        return iface.get_devname()
-
-    @staticmethod
-    def _validate_func_params(name, params, mandatory, optional):
-        num_params = len(params)
-        if num_params > (mandatory + optional) or num_params < mandatory:
-            if optional:
-                err = "Function %s takes between %d-%d arguments, %d passed" \
-                        % (name, mandatory, mandatory + optional, num_params)
-            else:
-                err = "Function %s takes %d arguments, %d passed" \
-                            % (name, mandatory, num_params)
-            raise XmlTemplateError(err)
-        for param in params[2:]:
-            try:
-                int(param)
-            except ValueError:
-                err = "Non-integer parameter passed to '%s'" % name
-                raise XmlTemplateError(err)
+            raise RuntimeError("The passed string is not a template function.")
