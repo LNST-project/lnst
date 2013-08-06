@@ -27,6 +27,23 @@ from lnst.Common.XmlProcessing import XmlTemplateString
 class XmlTemplateError(Exception):
     pass
 
+class TemplateFunc(object):
+    _args = []
+    _machines = None
+
+    def __init__(self, args, machines):
+        self._check_args(args)
+        self._machines = machines
+
+    def __str__(self):
+        self._implementation(self)
+
+    def _check_args(self, args):
+        pass
+
+    def _implementation(self):
+        pass
+
 class XmlTemplates:
     """ This class serves as template processor """
 
@@ -142,30 +159,56 @@ class XmlTemplates:
         for node in group:
             self.expand_dom(node)
 
-    def expand_string(self, string):
-        """ Expand templates in a string
+    def expand_string(self, string, node=None):
+        """ Process a string and expand it into a XmlTemplateString. """
 
-            This method will process and expand all templates
-            contained inside a string.
+        parts = self._partition_string(string)
+        value = XmlTemplateString(node=node)
+
+        for part in parts:
+            if type(part) is list:
+                # TODO construct the template function
+                pass
+            else:
+                value.add_part(part)
+
+        return value
+
+    def _partition_string(self, string):
+        """ Process templates in a string
+
+            This method will process and expand all templates contained
+            within a string. It handles both aliases and template
+            function.
+
+            The function returns an array of string partitions and
+            unresolved template functions for further processing.
         """
+
+        result = None
+
         while True:
             alias_match = re.search(self._alias_re, string)
-            func_match  = re.search(self._func_re, string)
-
-            result = None
 
             if alias_match:
                 template = alias_match.group(0)
                 result = self._process_alias_template(template)
-            elif func_match:
-                template = func_match.group(0)
-                result = self._process_func_template(template)
+                string = string.replace(template, result)
             else:
                 break
 
-            string = string.replace(template, result)
+        func_match  = re.search(self._func_re, string)
+        if func_match:
+            prefix = string[0:func_match.start(0)]
+            suffix = string[func_match.end(0)+1:]
 
-        return string
+            template = func_match.group(0)
+            result = self._process_func_template(template)
+
+            return self._partition_string(prefix) + [template] + \
+                   self._partition_string(suffix)
+
+        return [string]
 
     def _process_alias_template(self, string):
         result = None
