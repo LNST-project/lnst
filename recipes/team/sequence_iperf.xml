@@ -1,18 +1,18 @@
-<command_sequence>
-  <command type="ctl_wait" value="3" />
-  <command machine_id="2" type="test" value="Iperf" bg_id="1">
+<task>
+  <ctl_wait seconds="3"/>
+  <run bg_id="1" machine="2" module="Iperf">
     <options>
-      <option name="role" value="server" />
-      <option name="bind" value="{ip(2,testiface)}" />
+      <option name="role" value="server"/>
+      <option name="bind" value="{ip(2,testiface)}"/>
     </options>
-  </command>
-  <command type="ctl_wait" value="3" />
-  <command machine_id="1" type="test" value="Iperf">
+  </run>
+  <ctl_wait seconds="3"/>
+  <run machine="1" module="Iperf">
     <options>
-      <option name="role" value="client" />
+      <option name="role" value="client"/>
       <option name="duration" value="15"/>
-      <option name="iperf_server" value="{ip(2,testiface)}" />
+      <option name="iperf_server" value="{ip(2,testiface)}"/>
     </options>
-  </command>
-  <command type="kill" machine_id="2" value="1" />
-</command_sequence>
+  </run>
+  <kill bg_id="1" machine="2"/>
+</task>

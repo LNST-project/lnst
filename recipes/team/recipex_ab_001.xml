@@ -17,5 +17,5 @@
             <interfaces source="interfaces-simple_br.xml"/>
         </machine>
     </machines>
-    <command_sequence source="sequence_ping_simple.xml"/>
+    <task source="sequence_ping_simple.xml"/>
 </lnstrecipe>

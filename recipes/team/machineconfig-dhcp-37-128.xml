@@ -1,8 +1,8 @@
 <machineconfig>
   <info hostname="10.34.37.128"/>
   <netdevices>
-    <netdevice type="eth" phys_id="1" hwaddr="00:10:18:61:35:9b" network="testing_green"/>
-    <netdevice type="eth" phys_id="2" hwaddr="00:10:18:48:15:fa" network="testing_magenta"/>
-    <netdevice type="eth" phys_id="3" hwaddr="00:0e:0c:b3:09:4e" network="testing_blue"/>
+    <netdevice hwaddr="00:10:18:61:35:9b" network="testing_green" phys_id="1" type="eth"/>
+    <netdevice hwaddr="00:10:18:48:15:fa" network="testing_magenta" phys_id="2" type="eth"/>
+    <netdevice hwaddr="00:0e:0c:b3:09:4e" network="testing_blue" phys_id="3" type="eth"/>
   </netdevices>
 </machineconfig>

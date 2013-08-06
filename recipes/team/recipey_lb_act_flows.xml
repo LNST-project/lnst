@@ -15,5 +15,5 @@
             <interfaces source="interfaces-simple_br.xml"/>
         </machine>
     </machines>
-    <command_sequence source="sequence_pktgen_flows.xml"/>
+    <task source="sequence_pktgen_flows.xml"/>
 </lnstrecipe>

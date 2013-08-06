@@ -1,19 +1,19 @@
-<command_sequence>
-  <command type="ctl_wait" value="4"/>
-  <command machine_id="1" timeout="60" type="test" value="IcmpPing">
+<task>
+  <ctl_wait seconds="4"/>
+  <run machine="1" module="IcmpPing" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface)}"/>
       <option name="count" value="2000"/>
       <option name="interval" value="0.01"/>
       <option name="limit_rate" value="95"/>
     </options>
-  </command>
-  <command machine_id="1" timeout="60" type="test" value="Icmp6Ping">
+  </run>
+  <run machine="1" module="Icmp6Ping" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface,1)}"/>
       <option name="count" value="2000"/>
       <option name="interval" value="0.01"/>
       <option name="limit_rate" value="95"/>
     </options>
-  </command>
-</command_sequence>
+  </run>
+</task>

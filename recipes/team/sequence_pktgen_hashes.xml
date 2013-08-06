@@ -1,6 +1,6 @@
-<command_sequence>
-  <command type="ctl_wait" value="4"/>
-  <command machine_id="1" type="test" value="PktgenTx" timeout="200">
+<task>
+  <ctl_wait seconds="4"/>
+  <run machine="1" module="PktgenTx" timeout="200">
     <options>
       <option name="pktgen_option" value="count 10000"/>
       <option name="pktgen_option" value="clone_skb 0"/>
@@ -10,5 +10,5 @@
       <option name="pktgen_option" value="src_min {ip(1,testiface)}"/>
       <option name="netdev_name" value="{devname(1,testiface)}"/>
     </options>
-  </command>
-</command_sequence>
+  </run>
+</task>

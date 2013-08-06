@@ -1,6 +1,6 @@
-<command_sequence>
-  <command type="ctl_wait" value="4"/>
-  <command machine_id="1" type="test" value="PktgenTx" bg_id="1">
+<task>
+  <ctl_wait seconds="4"/>
+  <run bg_id="1" machine="1" module="PktgenTx">
     <options>
       <option name="pktgen_option" value="count 0"/>
       <option name="pktgen_option" value="clone_skb 0"/>
@@ -16,7 +16,7 @@
       <option name="pktgen_option" value="flowlen 20000"/>
       <option name="netdev_name" value="{devname(1,testiface)}"/>
     </options>
-  </command>
-  <command type="ctl_wait" value="400"/>
-  <command machine_id="1" type="intr" value="1"/>
-</command_sequence>
+  </run>
+  <ctl_wait seconds="400"/>
+  <intr bg_id="1" machine="1"/>
+</task>

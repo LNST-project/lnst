@@ -15,5 +15,5 @@
             <interfaces source="interfaces-br_queue_mapping.xml"/>
         </machine>
     </machines>
-    <command_sequence source="sequence_queue_mapping.xml"/>
+    <task source="sequence_queue_mapping.xml"/>
 </lnstrecipe>

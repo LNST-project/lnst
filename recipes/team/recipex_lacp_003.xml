@@ -15,5 +15,5 @@
             <interfaces source="interfaces-bond_lacp.xml"/>
         </machine>
     </machines>
-    <command_sequence source="sequence_pktgen_lacp.xml"/>
+    <task source="sequence_pktgen_lacp.xml"/>
 </lnstrecipe>

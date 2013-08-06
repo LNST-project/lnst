@@ -1,7 +1,7 @@
 <machineconfig>
   <info hostname="192.168.122.223"/>
   <netdevices>
-    <netdevice type="eth" phys_id="1" hwaddr="52:54:00:99:bb:27" network="testing"/>
-    <netdevice type="eth" phys_id="2" hwaddr="52:54:00:b7:cc:fb" network="testing"/>
+    <netdevice hwaddr="52:54:00:99:bb:27" network="testing" phys_id="1" type="eth"/>
+    <netdevice hwaddr="52:54:00:b7:cc:fb" network="testing" phys_id="2" type="eth"/>
   </netdevices>
 </machineconfig>

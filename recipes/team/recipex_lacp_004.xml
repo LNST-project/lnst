@@ -15,5 +15,5 @@
             <interfaces source="interfaces-bond_lacp.xml"/>
         </machine>
     </machines>
-    <command_sequence source="sequence_iperf.xml"/>
+    <task source="sequence_iperf.xml"/>
 </lnstrecipe>

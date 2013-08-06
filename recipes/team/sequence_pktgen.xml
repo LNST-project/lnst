@@ -1,13 +1,13 @@
-<command_sequence>
-  <command type="ctl_wait" value="4"/>
-  <command machine_id="1" type="test" value="PktCounter" bg_id="1">
+<task>
+  <ctl_wait seconds="4"/>
+  <run bg_id="1" machine="1" module="PktCounter">
     <options>
       <option name="input_netdev_name" value="{devname(1,testiface)}"/>
       <option name="proto" value="udp"/>
       <option name="dport" value="9"/>
     </options>
-  </command>
-  <command machine_id="2" type="test" value="PktgenTx" timeout="200">
+  </run>
+  <run machine="2" module="PktgenTx" timeout="200">
     <options>
       <option name="pktgen_option" value="dst {ip(1,testiface)}"/>
       <option name="pktgen_option" value="dst_mac 00:11:22:33:44:55"/>
@@ -16,6 +16,6 @@
       <option name="netdev_name" value="{devname(2,2)}"/>
       <option name="netdev_name" value="{devname(2,3)}"/>
     </options>
-  </command>
-  <command machine_id="1" type="intr" value="1"/>
-</command_sequence>
+  </run>
+  <intr bg_id="1" machine="1"/>
+</task>

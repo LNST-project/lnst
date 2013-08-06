@@ -23,12 +23,12 @@
         <alias name="nonexistent_ip" value="127.0.0.200"/>
     </define>
 
-    <command_sequence source="../multicast/cmd_sequences/max_groups.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/block_source.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/source_membership.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/membership.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/if.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/ttl.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/loop.xml"/>
-    <command_sequence source="../multicast/cmd_sequences/simple.xml"/>
+    <task source="../multicast/cmd_sequences/max_groups.xml"/>
+    <task source="../multicast/cmd_sequences/block_source.xml"/>
+    <task source="../multicast/cmd_sequences/source_membership.xml"/>
+    <task source="../multicast/cmd_sequences/membership.xml"/>
+    <task source="../multicast/cmd_sequences/if.xml"/>
+    <task source="../multicast/cmd_sequences/ttl.xml"/>
+    <task source="../multicast/cmd_sequences/loop.xml"/>
+    <task source="../multicast/cmd_sequences/simple.xml"/>
 </lnstrecipe>
