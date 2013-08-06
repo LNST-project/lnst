@@ -185,7 +185,7 @@ class LnstParser(XmlParser):
     def _process_node(self, node, handler, params):
         old_include_root = None
         if self._has_attribute(node, "source"):
-            source = self._get_attribute(node, "source")
+            source = str(self._get_attribute(node, "source"))
 
             source_rp = RecipePath(self._include_root, source)
 
@@ -255,13 +255,13 @@ class LnstParser(XmlParser):
 
     def _alias_handler(self, node, params):
         if self._has_attribute(node, "name"):
-            name = self._get_attribute(node, "name")
+            name = str(self._get_attribute(node, "name"))
         else:
             msg = "Alias tag must have the 'name' attribute"
             raise XmlProcessingError(msg, node)
 
         if self._has_attribute(node, "value"):
-            value = self._get_attribute(node, "value")
+            value = str(self._get_attribute(node, "value"))
         else:
             value = self._get_text_content(node)
 
