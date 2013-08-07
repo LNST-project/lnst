@@ -271,6 +271,10 @@ class TaskParse(LnstParser):
         if self._has_attribute(node, "label"):
             task["label"] = self._get_attribute(node, "label")
 
+        if self._has_attribute(node, "python"):
+            task["python"] = self._get_attribute(node, "python")
+            return task
+
         scheme = {"config": self._config,
                   "run": self._run,
                   "ctl_wait": self._ctl_wait,
