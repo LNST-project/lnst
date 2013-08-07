@@ -17,6 +17,7 @@ import os
 import re
 import pickle
 import tempfile
+import imp
 from time import sleep
 from xmlrpclib import Binary
 from pprint import pprint, pformat
@@ -33,6 +34,8 @@ from lnst.Controller.Machine import Machine, MachineError
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
+from lnst.Common.RecipePath import RecipePath
+import lnst.Controller.Task as Task
 
 class NetTestError(Exception):
     pass
@@ -240,8 +243,18 @@ class NetTestController:
         for task_data in self._recipe["tasks"]:
             task = {}
 
+            task["quit_on_fail"] = False
             if "quit_on_fail" in task_data:
                 task["quit_on_fail"] = bool_it(task_data["quit_on_fail"])
+
+            if "python" in task_data:
+                root = RecipePath(None, self._recipe_path).get_root()
+                path = "%s/%s" % (root, task_data["python"])
+
+                task["python"] = path
+                if not os.path.isfile(path):
+                    msg = "Task file '%s' not found." % path
+                    raise RecipeError(msg, task_data)
 
             task["commands"] = []
             for cmd_data in task_data["commands"]:
@@ -422,7 +435,11 @@ class NetTestController:
         for task in self._tasks:
             try:
                 self._res_serializer.add_task()
-                res = self._run_task(task)
+                if "python" in task:
+                    res = self._run_python_task(task)
+                else:
+                    res = self._run_task(task)
+
             except CommandException as exc:
                 logging.debug(exc)
                 overall_res = False
@@ -439,30 +456,26 @@ class NetTestController:
 
         return overall_res
 
+    def _run_python_task(self, task):
+        # Initialize the API handle
+        Task.ctl = Task.ControllerAPI(self, self._machines)
+
+        name = os.path.basename(task["python"]).split(".")[0]
+        module = imp.load_source(name, task["python"])
+        return module.ctl._result
+
     def _run_task(self, task):
         seq_passed = True
         for command in task["commands"]:
-            logging.info("Executing command: [%s]", str_command(command))
-
-            try:
-                cmd_res = self._run_command(command)
-            except Exception as exc:
-                cmd_res = {"passed": False, "err_msg": "Exception raised."}
-                raise exc
-            finally:
-                if self._res_serializer:
-                    self._res_serializer.add_cmd_result(command, cmd_res)
-            logging.debug("Result: %s", str(cmd_res))
-            if "res_data" in cmd_res:
-                res_data = pformat(cmd_res["res_data"])
-                logging.info("Result data: %s", (res_data))
+            cmd_res = self._run_command(command)
             if not cmd_res["passed"]:
-                logging.error("Command failed: [%s], Error message: \"%s\"",
-                              str_command(command), cmd_res["err_msg"])
                 seq_passed = False
+
         return seq_passed
 
     def _run_command(self, command):
+        logging.info("Executing command: [%s]", str_command(command))
+
         if "desc" in command:
             logging.info("Cmd description: %s", desc)
 
@@ -474,7 +487,23 @@ class NetTestController:
         machine_id = command["machine"]
         machine = self._machines[machine_id]
 
-        cmd_res = machine.run_command(command)
+        try:
+            cmd_res = machine.run_command(command)
+        except Exception as exc:
+            cmd_res = {"passed": False, "err_msg": "Exception raised."}
+            raise exc
+        finally:
+            if self._res_serializer:
+                self._res_serializer.add_cmd_result(command, cmd_res)
+
+        logging.debug("Result: %s", str(cmd_res))
+        if "res_data" in cmd_res:
+            res_data = pformat(cmd_res["res_data"])
+            logging.info("Result data: %s", (res_data))
+        if not cmd_res["passed"]:
+            logging.error("Command failed: [%s], Error message: \"%s\"",
+                          str_command(command), cmd_res["err_msg"])
+
         return cmd_res
 
     def _start_packet_capture(self):
