@@ -17,6 +17,7 @@ import re
 from ConfigParser import ConfigParser
 from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_ip_address, verify_mac_address
+from lnst.Common.Colours import get_preset_conf
 
 DefaultRPCPort = 9999
 
@@ -98,16 +99,15 @@ class Config():
 
     def colours_scheme(self):
         self.options['colours'] = dict()
-        for preset in ["default", "faded", "alert", "highlight",
-                       "pass", "fail", "error", "info", "debug", "warning",
-                       "log_header"]:
-            self.options['colours'][preset] = {\
-                    "value" : None, "additive" : False,
-                    "action" : self.optionColour, "name" : preset}
-
         self.options['colours']["disable_colours"] = {\
-                "value" : False, "additive" : False,
-                "action" : self.optionBool, "name" : "disable_colours"}
+                "value": False, "additive": False,
+                "action": self.optionBool, "name": "disable_colours"}
+
+        for preset in ["faded", "alert", "highlight", "pass", "fail", "error",
+                       "info", "debug", "warning", "log_header"]:
+            self.options['colours'][preset] = {\
+                    "value": get_preset_conf(preset), "additive": False,
+                    "action": self.optionColour, "name": preset}
 
     def get_config(self):
         return self.options

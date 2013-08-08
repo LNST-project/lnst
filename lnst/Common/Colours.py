@@ -14,7 +14,6 @@ import logging
 import os
 import re
 from lnst.Common.Utils import bool_it
-from lnst.Common.Config import lnst_config
 
 COLOURS = {
     "black": 30,
@@ -166,7 +165,11 @@ def decorate_with_preset(string, preset):
 def strip_colours(text):
    return re.sub("\033\[[0-9]+(;[0-9]+){0,2}m", "", text)
 
-def load_presets_from_config():
+def get_preset_conf(preset_name):
+    preset = PRESETS[preset_name]
+    return map(lambda s: "default" if s == None else str(s), preset)
+
+def load_presets_from_config(lnst_config):
     for preset_name in PRESETS:
         preset = lnst_config.get_option("colours", preset_name)
         if preset == None:

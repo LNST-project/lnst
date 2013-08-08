@@ -135,7 +135,7 @@ def main():
         elif opt in ("-m", "--no-colours"):
             coloured_output = False
 
-    load_presets_from_config()
+    load_presets_from_config(lnst_config)
 
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     log_ctl = LoggingCtl(debug,
