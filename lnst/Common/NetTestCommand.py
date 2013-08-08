@@ -172,8 +172,6 @@ class NetTestCommand:
             os.killpg(os.getpgid(self._pid), signal.SIGINT)
 
     def kill(self):
-        print self, dir(self)
-        print self._cmd_cls
         if os.path.exists("/proc/%d" % self._pid):
             if self._id:
                 logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
