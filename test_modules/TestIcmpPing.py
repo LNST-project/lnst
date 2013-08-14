@@ -25,6 +25,9 @@ class TestIcmpPing(TestGeneric):
         interval = self.get_opt("interval")
         if interval:
             cmd += " -i %s" % interval
+        iface = self.get_opt("iface")
+        if iface:
+            cmd += " -I %s" % iface
         return cmd
 
     def run(self):
