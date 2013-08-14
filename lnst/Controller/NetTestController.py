@@ -395,22 +395,27 @@ class NetTestController:
         self._prepare_network()
         pprint(self._recipe)
         self._cleanup_slaves()
-        return True
+        return {"passed": True}
 
     def match_setup(self):
         mreq = self._get_machine_requirements()
         self._prepare_provisioning(mreq)
 
-        return True
+        return {"passed": True}
 
     def config_only_recipe(self):
         self._prepare_network()
         self._cleanup_slaves(deconfigure=False)
-        return True
+        return {"passed": True}
 
     def run_recipe(self, packet_capture=False):
-        self._prepare_network()
-        self._prepare_tasks()
+        try:
+            self._prepare_network()
+            self._prepare_tasks()
+        except Exception as exc:
+            msg = "Exception raised during configuration."
+            logging.error(msg)
+            raise
 
         if packet_capture:
             self._start_packet_capture()
@@ -430,7 +435,7 @@ class NetTestController:
         return res
 
     def _run_recipe(self):
-        overall_res = True
+        overall_res = {"passed": True}
 
         for task in self._tasks:
             try:
@@ -442,7 +447,8 @@ class NetTestController:
 
             except CommandException as exc:
                 logging.debug(exc)
-                overall_res = False
+                overall_res["passed"] = False
+                overall_res["err_msg"] = "Command exception raised."
                 break
 
             for machine in self._machines.itervalues():
@@ -450,7 +456,8 @@ class NetTestController:
 
             # task failed, check if we should quit_on_fail
             if not res:
-                overall_res = False
+                overall_res["passed"] = False
+                overall_res["err_msg"] = "At least one command failed."
                 if task["quit_on_fail"]:
                     break
 

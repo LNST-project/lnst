@@ -67,13 +67,15 @@ def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
 
-    res = None
+    res = {}
     try:
         res = process_recipe(args, file_path, cleanup, res_serializer,
                              packet_capture, log_ctl, pool_checks)
     except Exception as err:
         log_exc_traceback()
         logging.error(err)
+        res["passed"] = False
+        res["err_msg"] = str(err)
 
     res_serializer.set_recipe_result(res)
 

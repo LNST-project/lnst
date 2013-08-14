@@ -62,10 +62,15 @@ class NetTestResultSerializer:
         self._cur_cmd_seq_el = None
 
     def set_recipe_result(self, result):
-        if result:
+        if result and result["passed"]:
             self._cur_recipe_el.setAttribute("result", "PASS")
         else:
             self._cur_recipe_el.setAttribute("result", "FAIL")
+            if "err_msg" in result:
+                err_el = self._dom.createElement("error_message")
+                err_text = self._dom.createTextNode(result["err_msg"])
+                err_el.appendChild(err_text)
+                self._cur_recipe_el.appendChild(err_el)
 
     def add_task(self):
         cmd_seq_el = self._dom.createElement("command_sequence")
@@ -108,6 +113,16 @@ class NetTestResultSerializer:
             recipe_name = recipe.getAttribute("name")
             recipe_res = recipe.getAttribute("result")
             output_pairs.append((recipe_name, recipe_res))
+
+            if recipe_res == "FAIL":
+                err_node = None
+                for child in recipe.childNodes:
+                    if child.nodeName == "error_message":
+                        err_node = child
+                        break
+                if err_node:
+                    text = get_node_val(err_node)
+                    output_pairs.append((4*" "+"error message: "+text, ""))
 
             seq_num = 1
             for cmd_seq in recipe.getElementsByTagName("command_sequence"):
