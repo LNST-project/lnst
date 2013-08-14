@@ -61,11 +61,14 @@ class SlaveMethods:
 
         self._resource_table = {}
 
+        self.ctl_clean_exit = True
+
     def hello(self, recipe_path):
         logging.info("Recieved a controller connection.")
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
+        self.ctl_clean_exit = False
 
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self._log_ctl.set_recipe(recipe_path, expand=date)
@@ -87,6 +90,7 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
+        self.ctl_clean_exit = True
         return "bye"
 
     def kill_cmds(self):
@@ -435,8 +439,9 @@ class NetTestSlave:
         while not self._finished:
             if self._server_handler.get_ctl_sock() == None:
                 self._log_ctl.cancel_connection()
-                if not self._start:
+                if not self._start and not self._methods.ctl_clean_exit:
                     self._methods.machine_cleanup()
+                    self._methods.ctl_clean_exit = True
                 try:
                     logging.info("Waiting for connection.")
                     self._server_handler.accept_connection()
