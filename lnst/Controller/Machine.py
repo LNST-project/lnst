@@ -375,7 +375,9 @@ class Interface(object):
         self._slaves[iface.get_id()] = iface
 
     def set_slave_option(self, slave_id, name, value):
-        self._slave_options[slave_id] = (name, value)
+        if slave_id not in self._slave_options:
+            self._slave_options[slave_id] = []
+        self._slave_options[slave_id].append((name, value))
 
     def add_address(self, addr):
         self._addresses.append(addr)
