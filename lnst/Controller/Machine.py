@@ -148,6 +148,10 @@ class Machine(object):
         if not self._configured:
             return
 
+        #connection to the slave was closed
+        if not self._msg_dispatcher.get_connection(self._id):
+            return
+
         self._rpc_call("kill_cmds")
 
         if deconfigure:

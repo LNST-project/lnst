@@ -612,13 +612,25 @@ class MessageDispatcher(ConnectionHandler):
     def wait_for_result(self, machine_id):
         wait = True
         while wait:
+            connected_slaves = self._connections.keys()
+
             messages = self.check_connections()
+
+            remaining_slaves = self._connections.keys()
+
             for msg in messages:
                 if msg[1]["type"] == "result" and msg[0] == machine_id:
                     wait = False
                     result = msg[1]["result"]
                 else:
                     self._process_message(msg)
+
+            if connected_slaves != remaining_slaves:
+                disconnected_slaves = set(connected_slaves) -\
+                                      set(remaining_slaves)
+                msg = "Slaves " + str(list(disconnected_slaves)) + \
+                      " disconnected from the controller."
+                raise NetTestError(msg)
 
         return result
 
