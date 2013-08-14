@@ -218,6 +218,7 @@ class NetTestCommandContext:
             self._dict[id].kill()
 
     def cleanup(self):
+        logging.debug("Cleaning up leftover processes.")
         self._kill_all_cmds()
         self._dict = {}
 

@@ -104,6 +104,7 @@ class NetConfig:
         device.deconfigure()
 
     def deconfigure_all(self):
+        logging.debug("Deconfiguring interfaces.")
         dev_order = self._get_dev_order()
         for dev_id in reversed(dev_order):
             self.deconfigure(dev_id)

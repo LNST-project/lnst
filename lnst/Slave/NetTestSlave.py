@@ -45,9 +45,9 @@ class SlaveMethods:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context, netconfig, log_ctl):
+    def __init__(self, command_context, log_ctl):
         self._packet_captures = {}
-        self._netconfig = netconfig
+        self._netconfig = NetConfig()
         self._command_context = command_context
         self._log_ctl = log_ctl
 
@@ -263,9 +263,11 @@ class SlaveMethods:
         return True
 
     def machine_cleanup(self):
-        NetConfigDeviceAllCleanup()
-        self._netconfig.cleanup()
+        logging.info("Performing machine cleanup.")
         self._command_context.cleanup()
+        self._netconfig.deconfigure_all()
+        self._netconfig.cleanup()
+        NetConfigDeviceAllCleanup()
         self._cache.del_old_entries()
         self.restore_system_config()
         return True
@@ -415,9 +417,7 @@ class NetTestSlave:
         die_when_parent_die()
 
         self._cmd_context = NetTestCommandContext()
-        self._netconfig = NetConfig()
-        self._methods = SlaveMethods(self._cmd_context, self._netconfig,
-                                     log_ctl)
+        self._methods = SlaveMethods(self._cmd_context, log_ctl)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
@@ -429,21 +429,20 @@ class NetTestSlave:
 
         self._log_ctl = log_ctl
 
+        self._start = True
+
     def run(self):
         while not self._finished:
             if self._server_handler.get_ctl_sock() == None:
                 self._log_ctl.cancel_connection()
-                logging.info("Waiting for connection, performing cleanup.")
-                logging.info("Cleaning up leftover commands.")
-                self._cmd_context.cleanup()
-                logging.info("Cleaning up configured interfaces.")
-                self._netconfig.deconfigure_all()
-                self._netconfig.cleanup()
+                if not self._start:
+                    self._methods.machine_cleanup()
                 try:
+                    logging.info("Waiting for connection.")
                     self._server_handler.accept_connection()
+                    self._start = False
                 except socket.error:
                     continue
-                self._cmd_context.cleanup()
                 self._log_ctl.set_connection(
                                             self._server_handler.get_ctl_sock())
 
@@ -452,11 +451,7 @@ class NetTestSlave:
             for msg in msgs:
                 self._process_msg(msg[1])
 
-        logging.info("Cleaning up leftover commands.")
-        self._cmd_context.cleanup()
-        logging.info("Cleaning up configured interfaces.")
-        self._netconfig.deconfigure_all()
-        self._netconfig.cleanup()
+        self._methods.machine_cleanup()
 
     def _process_msg(self, msg):
         if msg["type"] == "command":

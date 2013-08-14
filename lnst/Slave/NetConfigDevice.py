@@ -313,6 +313,7 @@ def NetConfigDeviceType(netdev, config):
         return type_class_mapping[netdev["type"]]
 
 def NetConfigDeviceAllCleanup():
+    logging.debug("Performing interface type cleanup.")
     if check_process_running("NetworkManager") and \
        lnst_config.get_option("environment", "use_nm"):
         for dev_type in nm_type_class_mapping:
