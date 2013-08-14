@@ -145,6 +145,9 @@ int main(int argc, char **argv)
     struct sigaction sa;
     struct sigaction sa2;
 
+    memset(&sa, 0, sizeof(sa));
+    memset(&sa2, 0, sizeof(sa2));
+
     sa.sa_handler = &terminate_connections;
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);

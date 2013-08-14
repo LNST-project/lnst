@@ -127,6 +127,8 @@ int main(int argc, char **argv)
     char *delimiter;
     struct sigaction sa;
 
+    memset(&sa, 0, sizeof(sa));
+
     sa.sa_handler = &terminate_connections;
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
