@@ -15,26 +15,57 @@ import os
 import re
 import socket
 import subprocess
+from resource import getpagesize
+from pyroute2.netlink import NetlinkSocket
+from pyroute2.netlink import NLM_F_REQUEST
+from pyroute2.netlink import NLM_F_DUMP
+from pyroute2.netlink import NLMSG_DONE
+from pyroute2.netlink import NLMSG_ERROR
+from pyroute2.netlink.generic import NETLINK_ROUTE
+from pyroute2.netlink.iproute import MarshalRtnl
+from pyroute2.netlink.iproute import RTM_GETLINK
+from pyroute2.netlink.iproute import RTM_NEWLINK
+from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
 
 def normalize_hwaddr(hwaddr):
     return hwaddr.upper().rstrip("\n")
 
 def scan_netdevs():
-    sys_dir = "/sys/class/net"
     scan = []
-    for root, dirs, files in os.walk(sys_dir):
-        if "lo" in dirs:
-            dirs.remove("lo")
-        for d in dirs:
-            dev_path = os.path.join(sys_dir, d)
-            addr_path = os.path.join(dev_path, "address")
-            if not os.path.isfile(addr_path):
+    nl_socket = NetlinkSocket(family=NETLINK_ROUTE)
+    msg = ifinfmsg()
+    msg["family"] = socket.AF_UNSPEC
+    msg["header"]["type"] = RTM_GETLINK
+    msg["header"]["flags"] = NLM_F_REQUEST | NLM_F_DUMP
+    msg["header"]["pid"] = os.getpid()
+    msg["header"]["sequence_number"] = 1
+    msg.encode()
+
+    nl_socket.sendto(msg.buf.getvalue(), (0,0))
+
+    finished = False
+    marshal = MarshalRtnl()
+    while not finished:
+        response = nl_socket.recv(getpagesize())
+        parts = marshal.parse(response)
+        for part in parts:
+            if part["header"]["type"] in [NLMSG_DONE, NLMSG_ERROR]:
+                finished = True
                 continue
-            handle = open(addr_path, "rb")
-            addr = handle.read()
-            handle.close()
-            addr = normalize_hwaddr(addr)
-            scan.append({"name": d, "hwaddr": addr})
+            if part["header"]["sequence_number"] != 1:
+                continue
+
+            if part["header"]["type"] == RTM_NEWLINK:
+                new_link = {}
+                for name, value in part["attrs"]:
+                    if name == "IFLA_IFNAME":
+                        new_link["name"] = value
+                    elif name == "IFLA_ADDRESS":
+                        new_link["hwaddr"] = normalize_hwaddr(value)
+                new_link["index"] = part["index"]
+                scan.append(new_link)
+
+    nl_socket.close()
     return scan
 
 def test_tcp_connection(host, port):
