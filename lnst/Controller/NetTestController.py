@@ -598,8 +598,11 @@ class MessageDispatcher(ConnectionHandler):
     def __init__(self, log_ctl):
         super(MessageDispatcher, self).__init__()
         self._log_ctl = log_ctl
+        self._machines = dict()
 
-    def add_slave(self, machine_id, connection):
+    def add_slave(self, machine, connection):
+        machine_id = machine.get_id()
+        self._machines[machine_id] = machine
         self.add_connection(machine_id, connection)
 
     def send_message(self, machine_id, data):
@@ -641,6 +644,9 @@ class MessageDispatcher(ConnectionHandler):
         elif message[1]["type"] == "result":
             msg = "Recieved result message from different slave %s" % message[0]
             logging.debug(msg)
+        elif message[1]["type"] == "if_update":
+            machine = self._machines[message[0]]
+            machine.interface_update(message[1])
         elif message[1]["type"] == "exception":
             msg = "Recieved an exception from slave: %s" % message[0]
             raise CommandException(msg)
@@ -655,3 +661,4 @@ class MessageDispatcher(ConnectionHandler):
     def disconnect_slave(self, machine_id):
         soc = self.get_connection(machine_id)
         self.remove_connection(soc)
+        del self._machines[machine_id]

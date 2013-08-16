@@ -70,6 +70,14 @@ class Machine(object):
         self._interfaces.append(iface)
         return iface
 
+    def interface_update(self, if_data):
+        for iface in self._interfaces:
+            try:
+                if iface.get_devname() == if_data["devname"]:
+                    iface.set_hwaddr(if_data["hwaddr"])
+            except:
+                pass
+
     #
     # Factory methods for constructing interfaces on this machine. The
     # types of interfaces are explained with the classes below.
@@ -116,7 +124,7 @@ class Machine(object):
 
         logging.info("Connecting to RPC on machine %s (%s)", m_id, hostname)
         connection = socket.create_connection((hostname, port))
-        self._msg_dispatcher.add_slave(self._id, connection)
+        self._msg_dispatcher.add_slave(self, connection)
 
         hello = self._rpc_call("hello", recipe_name)
         if hello != "hello":
