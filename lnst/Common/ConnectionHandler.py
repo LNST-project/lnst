@@ -15,6 +15,8 @@ import select
 import cPickle
 import socket
 from _multiprocessing import Connection
+from pyroute2.netlink import NetlinkSocket
+from pyroute2.netlink.iproute import MarshalRtnl
 
 def send_data(s, data):
     try:
@@ -33,7 +35,12 @@ def send_data(s, data):
     return True
 
 def recv_data(s):
-    if isinstance(s, socket.SocketType):
+    if isinstance(s, NetlinkSocket):
+        marshaller = MarshalRtnl()
+        msg = s.recv(16384)
+        decoded_msg = marshaller.parse(msg)
+        data = {"type": "netlink", "data": decoded_msg}
+    elif isinstance(s, socket.SocketType):
         length = ""
         while True:
             c = s.recv(1)
