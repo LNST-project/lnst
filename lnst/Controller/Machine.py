@@ -351,7 +351,7 @@ class Interface(object):
 
     def get_hwaddr(self):
         if not self._hwaddr:
-            msg = "Hardware address is not available for interface ''" \
+            msg = "Hardware address is not available for interface '%s'" \
                   % self.get_id()
             raise MachineError(msg)
         return self._hwaddr
@@ -361,7 +361,7 @@ class Interface(object):
 
     def get_devname(self):
         if not self._devname:
-            msg = "Device name is not available for interface ''" \
+            msg = "Device name is not available for interface '%s'" \
                   % self.get_id()
             raise MachineError(msg)
         return self._devname
@@ -371,7 +371,7 @@ class Interface(object):
 
     def get_network(self):
         if not self._network:
-            msg = "Network segment is not available for interface ''" \
+            msg = "Network segment is not available for interface '%s'" \
                   % self.get_id()
             raise MachineError(msg)
         return self._network
@@ -409,7 +409,7 @@ class Interface(object):
         phys_devs = self._machine._rpc_call("get_devices_by_hwaddr",
                                            self._hwaddr)
         if len(phys_devs) == 1:
-            pass
+            self.set_devname(phys_devs[0]["name"])
         elif len(phys_devs) < 1:
             msg = "Device %s not found on machine %s" \
                   % (self.get_id(), self._machine.get_id())
@@ -451,6 +451,7 @@ class Interface(object):
 
         self._machine._rpc_call("deconfigure_interface", self.get_id())
         self._configured = False
+        sleep(1)
 
 class StaticInterface(Interface):
     """ Static interface
