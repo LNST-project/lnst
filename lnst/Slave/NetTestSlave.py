@@ -38,6 +38,26 @@ from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
 from lnst.Common.NetTestCommand import NetTestCommandConfig
 
+#TODO this is temporary, until python-pyroute2 package is updated
+from pyroute2.netlink import NetlinkSocket
+from pyroute2.netlink.generic import NETLINK_ROUTE
+
+RTNLGRP_LINK = 0x1
+RTNLGRP_NEIGH = 0x4
+RTNLGRP_TC = 0x8
+RTNLGRP_IPV4_IFADDR = 0x10
+RTNLGRP_IPV4_ROUTE = 0x40
+RTNLGRP_IPV6_IFADDR = 0x100
+RTNLGRP_IPV6_ROUTE = 0x400
+
+RTNL_GROUPS = RTNLGRP_IPV4_IFADDR |\
+    RTNLGRP_IPV6_IFADDR |\
+    RTNLGRP_IPV4_ROUTE |\
+    RTNLGRP_IPV6_ROUTE |\
+    RTNLGRP_NEIGH |\
+    RTNLGRP_LINK |\
+    RTNLGRP_TC
+
 DefaultRPCPort = 9999
 
 class SlaveMethods:
@@ -433,6 +453,10 @@ class NetTestSlave:
 
         self._start = True
 
+        self._nl_socket = NetlinkSocket(family=NETLINK_ROUTE)
+        self._nl_socket.bind(RTNL_GROUPS)
+        self._server_handler.add_connection('netlink', self._nl_socket)
+
     def run(self):
         while not self._finished:
             if self._server_handler.get_ctl_sock() == None:
@@ -511,6 +535,19 @@ class NetTestSlave:
                     self._cmd_context.del_cmd(cmd)
                 else:
                     cmd.set_result(msg["result"])
+        elif msg["type"] == "netlink":
+            for sub_msg in msg["data"]:
+                if sub_msg["event"] == "RTM_NEWLINK":
+                    response = dict()
+                    response["type"] = "if_update"
+                    response["if_index"] = sub_msg["index"]
+                    msg_attrs = sub_msg["attrs"]
+                    for name, value in msg_attrs:
+                        if name == "IFLA_IFNAME":
+                            response["devname"] = value
+                        elif name == "IFLA_ADDRESS":
+                            response["hwaddr"] = value
+                    self._server_handler.send_data_to_ctl(response)
         else:
             raise Exception("Recieved unknown command")
 
