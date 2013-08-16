@@ -8,5 +8,5 @@
         </options>
     </run>
     <ctl_wait seconds="5"/>
-    <intr bg_id="1" expect="fail" machine="1" timeout="30"/>
+    <intr bg_id="1" expect="#icmp_result#" machine="1" timeout="30"/>
 </task>
