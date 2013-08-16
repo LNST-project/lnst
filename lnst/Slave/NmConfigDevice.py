@@ -581,7 +581,7 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
             managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
                                                                    config)
         else:
-            slave_id = get_slaves(netdev)[1]
+            slave_id = get_slaves(netdev)[0]
             netdev = config[slave_id]
             managed = is_nm_managed(netdev, config)
 
