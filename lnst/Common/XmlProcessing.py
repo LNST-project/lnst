@@ -12,8 +12,6 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import os
 import logging
-from xml.dom.minidom import parseString
-from xml import sax
 
 class XmlProcessingError(Exception):
     """ Exception thrown on parsing errors """
@@ -188,67 +186,3 @@ class XmlTemplateString(object):
 
     def add_part(self, part):
         self._parts.append(part)
-
-class XmlDomTreeInit:
-    """ Handles creation/initialization of DOM trees
-
-        It allows you to parse XML file or string into a DOM tree.
-        It also adds an extra parameter to each node of the tree
-        called `loc' which can be used to determine where exactly
-        was the element placed in the original source XML file.
-        This is useful for error reporting.
-    """
-
-    _sax = None
-    _filename = None
-    __orig_set_content_handler = None
-
-    def __init__(self):
-        self._init_sax()
-
-    def _init_sax(self):
-        parser = sax.make_parser()
-        self.__orig_set_content_handler = parser.setContentHandler
-        parser.setContentHandler = self.__set_content_handler
-        self._sax = parser
-
-    def __set_content_handler(self, dom_handler):
-        def start_element_ns(name, tag_name , attrs):
-            orig_start_cb(name, tag_name, attrs)
-            cur_elem = dom_handler.elementStack[-1]
-            loc = {"file": self._filename,
-                   "line": self._sax.getLineNumber(),
-                   "col": self._sax.getColumnNumber()}
-            cur_elem.loc = loc
-
-        orig_start_cb = dom_handler.startElementNS
-        dom_handler.startElementNS = start_element_ns
-        self.__orig_set_content_handler(dom_handler)
-
-    @staticmethod
-    def _load_file(filename):
-        handle = open(filename, "r")
-        data = handle.read()
-        handle.close()
-        return data
-
-    def parse_file(self, xml_filepath):
-        xml_text = self._load_file(xml_filepath)
-        filename = os.path.basename(xml_filepath)
-        return self.parse_string(xml_text, filename)
-
-    def parse_string(self, xml_text, filename="xml_string"):
-        self._filename = os.path.basename(filename)
-        try:
-            dom = parseString(xml_text, self._sax)
-        except sax.SAXParseException as err:
-            loc = {"file": self._filename,
-                   "line": err.getLineNumber(),
-                   "col": err.getColumnNumber()}
-            exc = XmlProcessingError(err.getMessage())
-            exc.set_loc(loc)
-            raise exc
-
-        loc = {"file": self._filename, "line": 0, "col": 0}
-        dom.loc = loc
-        return dom
