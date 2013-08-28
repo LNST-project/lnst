@@ -3,9 +3,9 @@
     <start>
         <element name="lnstrecipe">
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <ref name="machines"/>
 
@@ -18,29 +18,22 @@
 
     <define name="define">
         <element name="define">
-            <optional>
-                <attribute name="source"/>
-            </optional>
-            <zeroOrMore>
+            <oneOrMore>
                 <element name="alias">
                     <attribute name="name"/>
                     <attribute name="value"/>
                     <text/>
                 </element>
-            </zeroOrMore>
+            </oneOrMore>
         </element>
     </define>
 
     <define name="machines">
         <element name="machines">
-            <optional>
-                <attribute name="source"/>
-            </optional>
-
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <oneOrMore>
                     <ref name="machine"/>
@@ -56,10 +49,7 @@
             </optional>
 
             <optional>
-                <choice>
-                    <attribute name="source"/>
-                    <attribute name="python"/>
-                </choice>
+                <attribute name="python"/>
             </optional>
 
             <optional>
@@ -74,9 +64,9 @@
             </optional>
 
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <zeroOrMore>
                     <ref name="config"/>
@@ -103,23 +93,17 @@
     <define name="machine">
         <element name="machine">
             <attribute name="id"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
 
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <zeroOrMore>
                     <ref name="params"/>
                 </zeroOrMore>
 
                 <element name="interfaces">
-                    <optional>
-                        <attribute name="source"/>
-                    </optional>
                     <zeroOrMore>
                         <choice>
                             <ref name="eth"/>
@@ -139,13 +123,10 @@
         <element name="eth">
             <attribute name="id"/>
             <attribute name="network"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <zeroOrMore>
                     <ref name="params"/>
@@ -161,9 +142,6 @@
     <define name="bond">
         <element name="bond">
             <attribute name="id"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
             <ref name="softdevice"/>
         </element>
     </define>
@@ -171,9 +149,6 @@
     <define name="bridge">
         <element name="bridge">
             <attribute name="id"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
             <ref name="softdevice"/>
         </element>
     </define>
@@ -181,9 +156,6 @@
     <define name="vlan">
         <element name="vlan">
             <attribute name="id"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
             <ref name="softdevice"/>
         </element>
     </define>
@@ -191,9 +163,6 @@
     <define name="macvlan">
         <element name="macvlan">
             <attribute name="id"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
             <ref name="softdevice"/>
         </element>
     </define>
@@ -201,18 +170,15 @@
     <define name="team">
         <element name="team">
             <attribute name="id"/>
-            <optional>
-                <attribute name="source"/>
-            </optional>
             <ref name="softdevice"/>
         </element>
     </define>
 
     <define name="softdevice">
         <interleave>
-            <zeroOrMore>
+            <optional>
                 <ref name="define"/>
-            </zeroOrMore>
+            </optional>
 
             <optional>
                 <ref name="options"/>
@@ -220,28 +186,20 @@
 
             <optional>
                 <element name="slaves">
-                    <optional>
-                        <attribute name="source"/>
-                    </optional>
-
                     <interleave>
-                        <zeroOrMore>
+                        <optional>
                             <ref name="define"/>
-                        </zeroOrMore>
+                        </optional>
 
                         <zeroOrMore>
                             <element name="slave">
                                 <attribute name="id"/>
 
                                 <optional>
-                                    <attribute name="source"/>
-                                </optional>
-
-                                <optional>
                                     <interleave>
-                                        <zeroOrMore>
+                                        <optional>
                                             <ref name="define"/>
-                                        </zeroOrMore>
+                                        </optional>
 
                                         <zeroOrMore>
                                             <ref name="options"/>
@@ -263,20 +221,13 @@
 
     <define name="options">
         <element name="options">
-            <optional>
-                <attribute name="source"/>
-            </optional>
-
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <zeroOrMore>
                     <element name="option">
-                        <optional>
-                            <attribute name="source"/>
-                        </optional>
                         <attribute name="name"/>
                         <choice>
                             <attribute name="value"/>
@@ -290,20 +241,13 @@
 
     <define name="addresses">
         <element name="addresses">
-            <optional>
-                <attribute name="source"/>
-            </optional>
-
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <zeroOrMore>
                     <element name="address">
-                        <optional>
-                            <attribute name="source"/>
-                        </optional>
                         <attribute name="value"/>
                         <text/>
                     </element>
@@ -314,23 +258,18 @@
 
     <define name="params">
         <element name="params">
-            <optional>
-                <attribute name="source"/>
-            </optional>
-
             <interleave>
-                <zeroOrMore>
+                <optional>
                     <ref name="define"/>
-                </zeroOrMore>
+                </optional>
 
                 <zeroOrMore>
                     <element name="param">
-                        <optional>
-                            <attribute name="source"/>
-                        </optional>
                         <attribute name="name"/>
-                        <attribute name="value"/>
-                        <text/>
+                        <choice>
+                            <attribute name="value"/>
+                            <text/>
+                        </choice>
                     </element>
                 </zeroOrMore>
             </interleave>
@@ -371,10 +310,6 @@
             </optional>
 
             <optional>
-                <attribute name="source"/>
-            </optional>
-
-            <optional>
                 <ref name="options"/>
             </optional>
         </element>
@@ -405,10 +340,6 @@
 
             <optional>
                 <attribute name="desc"/>
-            </optional>
-
-            <optional>
-                <attribute name="source"/>
             </optional>
 
             <optional>
