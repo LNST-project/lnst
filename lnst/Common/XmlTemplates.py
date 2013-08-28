@@ -239,37 +239,63 @@ class XmlTemplates:
         err = "'%s' is not defined here" % name
         raise XmlTemplateError(err)
 
-    def expand_dom(self, node):
+    def process_aliases(self, element):
+        """ Expand aliases within an element and its children
+
+            This method will iterate through the element tree that is
+            passed and expand aliases in all the text content and
+            attributes.
         """
-        Traverse DOM tree from `node' down and expand any
-        templates along the way.
-        """
+        if element.text != None:
+            element.text = self.expand_aliases(element.text)
 
-        if node.nodeType == node.ELEMENT_NODE:
-            i = 0
-            num_attributes = node.attributes.length
-            while(i < num_attributes):
-                attr = node.attributes.item(i)
-                attr.value = self.expand_string(str(attr.value))
-                i += 1
-        elif node.nodeType == node.TEXT_NODE:
-            node.data = self.expand_string(str(node.data))
+        if element.tail != None:
+            element.tail = self.expand_aliases(element.tail)
 
-        for child in node.childNodes:
-            self.expand_dom(child)
+        for name, value in element.attrib.iteritems():
+            element.set(name, self.expand_aliases(value))
 
-    def expand_group(self, group):
-        """
-        Behaves exactly the same as the `expand' method, but it
-        operates on a group of DOM nodes stored within a list,
-        rather than a single node.
-        """
+        if element.tag == "define":
+            for alias in element.getchildren():
+                name = alias.attrib["name"]
+                value = alias.attrib["value"]
+                self.define_alias(name, value)
+            parent = element.getparent()
+            parent.remove(element)
+            return
 
-        for node in group:
-            self.expand_dom(node)
+        self.add_namespace_level()
 
-    def expand_string(self, string, node=None):
-        """ Process a string and expand it into a XmlTemplateString. """
+        for child in element.getchildren():
+            self.process_aliases(child)
+
+        self.drop_namespace_level()
+
+    def expand_aliases(self, string):
+        while True:
+            alias_match = re.search(self._alias_re, string)
+
+            if alias_match:
+                template = alias_match.group(0)
+                result = self._process_alias_template(template)
+                string = string.replace(template, result)
+            else:
+                break
+
+        return string
+
+    def _process_alias_template(self, string):
+        result = None
+
+        alias_match = re.match(self._alias_re, string)
+        if alias_match:
+            alias_name = alias_match.group(1)
+            result = self._find_definition(alias_name)
+
+        return result
+
+    def expand_functions(self, string, node=None):
+        """ Process a string and expand it into a XmlTemplateString """
 
         parts = self._partition_string(string)
         value = XmlTemplateString(node=node)
@@ -282,25 +308,14 @@ class XmlTemplates:
     def _partition_string(self, string):
         """ Process templates in a string
 
-            This method will process and expand all templates contained
-            within a string. It handles both aliases and template
-            function.
+            This method will process and expand all template functions
+            in a string.
 
             The function returns an array of string partitions and
             unresolved template functions for further processing.
         """
 
         result = None
-
-        while True:
-            alias_match = re.search(self._alias_re, string)
-
-            if alias_match:
-                template = alias_match.group(0)
-                result = self._process_alias_template(template)
-                string = string.replace(template, result)
-            else:
-                break
 
         func_match  = re.search(self._func_re, string)
         if func_match:
@@ -314,16 +329,6 @@ class XmlTemplates:
                    self._partition_string(suffix)
 
         return [string]
-
-    def _process_alias_template(self, string):
-        result = None
-
-        alias_match = re.match(self._alias_re, string)
-        if alias_match:
-            alias_name = alias_match.group(1)
-            result = self._find_definition(alias_name)
-
-        return result
 
     def _process_func_template(self, string):
         func_match = re.match(self._func_re, string)
@@ -350,4 +355,5 @@ class XmlTemplates:
             func = self._func_map[func_name](param_values, self._machines)
             return func
         else:
-            raise RuntimeError("The passed string is not a template function.")
+            msg = "The passed string is not a template function."
+            raise XmlTemplateError(msg)
