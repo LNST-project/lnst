@@ -1,0 +1,82 @@
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+    datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="slavemachine">
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <zeroOrMore>
+                    <ref name="params"/>
+                </zeroOrMore>
+
+                <zeroOrMore>
+                    <ref name="interfaces"/>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </start>
+
+    <define name="define">
+        <element name="define">
+            <oneOrMore>
+                <element name="alias">
+                    <attribute name="name"/>
+                    <attribute name="value"/>
+                    <text/>
+                </element>
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="params">
+        <element name="params">
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <zeroOrMore>
+                    <element name="param">
+                        <attribute name="name"/>
+                        <choice>
+                            <attribute name="value"/>
+                            <text/>
+                        </choice>
+                    </element>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="interfaces">
+        <element name="interfaces">
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <zeroOrMore>
+                    <ref name="eth"/>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="eth">
+        <element name="eth">
+            <attribute name="id"/>
+            <attribute name="network"/>
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <oneOrMore>
+                    <ref name="params"/>
+                </oneOrMore>
+            </interleave>
+        </element>
+    </define>
+</grammar>
