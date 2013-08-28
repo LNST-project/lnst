@@ -10,7 +10,7 @@
                 <ref name="machines"/>
 
                 <oneOrMore>
-                    <ref name="command_sequence"/>
+                    <ref name="task"/>
                 </oneOrMore>
             </interleave>
         </element>
@@ -49,10 +49,17 @@
         </element>
     </define>
 
-    <define name="command_sequence">
-        <element name="command_sequence">
+    <define name="task">
+        <element name="task">
             <optional>
-                <attribute name="source"/>
+                <attribute name="label"/>
+            </optional>
+
+            <optional>
+                <choice>
+                    <attribute name="source"/>
+                    <attribute name="python"/>
+                </choice>
             </optional>
 
             <optional>
@@ -60,6 +67,8 @@
                     <choice>
                         <value>yes</value>
                         <value>no</value>
+                        <value>true</value>
+                        <value>false</value>
                     </choice>
                 </attribute>
             </optional>
@@ -70,7 +79,22 @@
                 </zeroOrMore>
 
                 <zeroOrMore>
-                    <ref name="command"/>
+                    <ref name="config"/>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="run"/>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="wait"/>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="intr"/>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="kill"/>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="ctl_wait"/>
                 </zeroOrMore>
             </interleave>
         </element>
@@ -313,15 +337,42 @@
         </element>
     </define>
 
-    <define name="command">
-        <element name="command">
-            <choice>
-                <ref name="ctl_wait"/>
-                <ref name="exec"/>
-                <ref name="system_config"/>
-                <ref name="test"/>
-                <ref name="control_commands"/>
-            </choice>
+    <define name="config">
+        <element name="config">
+            <attribute name="machine"/>
+
+            <optional>
+                <attribute name="option"/>
+                <attribute name="value"/>
+            </optional>
+
+            <!-- Should config have timeout? -->
+            <optional>
+                <attribute name="timeout">
+                    <data type="integer"/>
+                </attribute>
+            </optional>
+
+            <optional>
+                <attribute name="persistent">
+                    <choice>
+                        <value>true</value>
+                        <value>false</value>
+                        <value>yes</value>
+                        <value>no</value>
+                        <value>1</value>
+                        <value>0</value>
+                    </choice>
+                </attribute>
+            </optional>
+
+            <optional>
+                <attribute name="desc"/>
+            </optional>
+
+            <optional>
+                <attribute name="source"/>
+            </optional>
 
             <optional>
                 <ref name="options"/>
@@ -329,187 +380,81 @@
         </element>
     </define>
 
-    <define name="ctl_wait">
-        <attribute name="type">
-            <value>ctl_wait</value>
-        </attribute>
+    <define name="run">
+        <element name="run">
+            <attribute name="machine"/>
 
-        <optional>
-            <attribute name="value">
-                <data type="integer"/>
-            </attribute>
-        </optional>
-    </define>
-
-    <define name="exec">
-        <attribute name="machine_id"/>
-
-        <attribute name="type">
-            <value>exec</value>
-        </attribute>
-
-        <optional>
-            <attribute name="bg_id"/>
-        </optional>
-
-        <optional>
-            <attribute name="value"/>
-        </optional>
-
-        <optional>
-            <attribute name="timeout">
-                <data type="integer"/>
-            </attribute>
-        </optional>
-
-        <optional>
-            <attribute name="option"/>
-        </optional>
-
-        <optional>
-            <attribute name="desc"/>
-        </optional>
-
-        <optional>
-            <attribute name="from"/>
-        </optional>
-
-        <optional>
-            <attribute name="source"/>
-        </optional>
-
-        <optional>
-            <attribute name="pass_result">
-                <choice>
-                    <value>true</value>
-                    <value>false</value>
-                </choice>
-            </attribute>
-        </optional>
-    </define>
-
-    <define name="system_config">
-        <attribute name="machine_id"/>
-
-        <attribute name="type">
-            <value>system_config</value>
-        </attribute>
-
-        <optional>
-            <attribute name="value"/>
-        </optional>
-
-        <optional>
-            <attribute name="timeout">
-                <data type="integer"/>
-            </attribute>
-        </optional>
-
-        <optional>
-            <attribute name="option"/>
-        </optional>
-
-        <optional>
-            <attribute name="persistent">
-                <choice>
-                    <value>true</value>
-                    <value>false</value>
-                </choice>
-            </attribute>
-        </optional>
-
-        <optional>
-            <attribute name="desc"/>
-        </optional>
-
-        <optional>
-            <attribute name="source"/>
-        </optional>
-    </define>
-
-    <define name="test">
-        <attribute name="machine_id"/>
-
-        <attribute name="type">
-            <value>test</value>
-        </attribute>
-
-        <optional>
-            <attribute name="bg_id"/>
-        </optional>
-
-        <optional>
-            <attribute name="value"/>
-        </optional>
-
-        <optional>
-            <attribute name="timeout">
-                <data type="integer"/>
-            </attribute>
-        </optional>
-
-        <optional>
-            <attribute name="option"/>
-        </optional>
-
-        <optional>
-            <attribute name="desc"/>
-        </optional>
-
-        <optional>
-            <attribute name="source"/>
-        </optional>
-
-        <optional>
-            <attribute name="pass_result">
-                <choice>
-                    <value>true</value>
-                    <value>false</value>
-                </choice>
-            </attribute>
-        </optional>
-    </define>
-
-    <define name="control_commands">
-        <attribute name="machine_id"/>
-
-        <attribute name="type">
             <choice>
-                <value>wait</value>
-                <value>intr</value>
-                <value>kill</value>
+                <attribute name="module"/>
+                <ref name="run_command"/>
             </choice>
-        </attribute>
 
-        <optional>
-            <attribute name="value"/>
-        </optional>
+            <optional>
+                <attribute name="bg_id"/>
+            </optional>
 
-        <optional>
-            <attribute name="timeout">
-                <data type="integer"/>
-            </attribute>
-        </optional>
+            <optional>
+                <attribute name="expect"/>
+            </optional>
 
-        <optional>
-            <attribute name="option"/>
-        </optional>
+            <optional>
+                <attribute name="timeout">
+                    <data type="integer"/>
+                </attribute>
+            </optional>
 
-        <optional>
-            <attribute name="desc"/>
-        </optional>
+            <optional>
+                <attribute name="desc"/>
+            </optional>
 
-        <optional>
-            <attribute name="source"/>
-        </optional>
+            <optional>
+                <attribute name="source"/>
+            </optional>
 
-        <optional>
-            <attribute name="pass_result">
-                <choice>
-                    <value>true</value>
-                    <value>false</value>
-                </choice>
-            </attribute>
-        </optional>
+            <optional>
+                <ref name="options"/>
+            </optional>
+        </element>
+    </define>
+
+    <define name="run_command">
+        <choice>
+            <attribute name="command"/>
+            <ref name="run_tool"/>
+        </choice>
+    </define>
+
+    <define name="run_tool">
+        <attribute name="command"/>
+        <attribute name="from"/>
+    </define>
+
+    <define name="wait">
+        <element name="wait">
+            <ref name="signal_command"/>
+        </element>
+    </define>
+
+    <define name="intr">
+        <element name="intr">
+            <ref name="signal_command"/>
+        </element>
+    </define>
+
+    <define name="kill">
+        <element name="kill">
+            <ref name="signal_command"/>
+        </element>
+    </define>
+
+    <define name="signal_command">
+        <attribute name="machine"/>
+        <attribute name="bg_id"/>
+    </define>
+
+    <define name="ctl_wait">
+        <element name="ctl_wait">
+            <attribute name="seconds"/>
+        </element>
     </define>
 </grammar>
