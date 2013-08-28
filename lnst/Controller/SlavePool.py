@@ -18,13 +18,12 @@ import os
 import re
 import copy
 from xml.dom import minidom
+from lnst.Common.Config import lnst_config
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import test_tcp_connection
-from lnst.Common.XmlProcessing import XmlDomTreeInit
 from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.Machine import Machine
-from lnst.Common.Config import lnst_config
-from lnst.Controller.SlaveMachineParse import SlaveMachineParse
+from lnst.Controller.SlaveMachineParse import SlaveMachineParser
 from lnst.Controller.SlaveMachineParse import SlaveMachineError
 
 class SlavePool:
@@ -56,20 +55,11 @@ class SlavePool:
 
     def add_file(self, filepath):
         if os.path.isfile(filepath) and re.search("\.xml$", filepath, re.I):
-            dom_init = XmlDomTreeInit()
-            dom = dom_init.parse_file(filepath)
-
             dirname, basename = os.path.split(filepath)
-
-            parser = SlaveMachineParse()
-            parser.set_include_root(dirname)
-            parser.disable_events()
-
             m_id = re.sub("\.[xX][mM][lL]$", "", basename)
 
-            slavemachine = dom.getElementsByTagName("slavemachine")[0]
-            xml_data = parser.parse(slavemachine)
-
+            parser = SlaveMachineParser(filepath)
+            xml_data = parser.parse()
             machine_spec = self._process_machine_xml_data(m_id, xml_data)
 
             if self._pool_checks:
