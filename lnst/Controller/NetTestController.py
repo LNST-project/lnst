@@ -28,7 +28,7 @@ from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running, bool_it
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
-from lnst.Controller.RecipeParse import RecipeParse, RecipeError
+from lnst.Controller.RecipeParser import RecipeParser, RecipeError
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.Machine import Machine, MachineError
 from lnst.Common.ConnectionHandler import send_data, recv_data
@@ -64,9 +64,9 @@ class NetTestController:
         mac_pool_range = lnst_config.get_option('environment', 'mac_pool_range')
         self._mac_pool = MacPool(mac_pool_range[0], mac_pool_range[1])
 
-        parser = RecipeParse(recipe_path)
+        parser = RecipeParser(recipe_path)
         parser.set_machines(self._machines)
-        self._recipe = parser.parse_recipe()
+        self._recipe = parser.parse()
 
         modules_dirs = lnst_config.get_option('environment', 'module_dirs')
         tools_dirs = lnst_config.get_option('environment', 'tool_dirs')
@@ -255,6 +255,7 @@ class NetTestController:
                 if not os.path.isfile(path):
                     msg = "Task file '%s' not found." % path
                     raise RecipeError(msg, task_data)
+                continue
 
             task["commands"] = []
             for cmd_data in task_data["commands"]:
