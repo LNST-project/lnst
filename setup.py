@@ -45,6 +45,7 @@ MAN_DIR = "/usr/share/man/man1/"
 
 CTL_MODULES_LOCATIONS = "/usr/share/lnst/test_modules/"
 CTL_TOOLS_LOCATIONS = "/usr/share/lnst/test_tools/"
+CTL_RESOURCE_DIR = "/usr/share/lnst/"
 CTL_LOGS_DIR = "~/.lnst/logs/"
 
 SLAVE_LOGS_DIR = "/var/log/lnst"
@@ -57,6 +58,7 @@ TEMPLATES_VALUES = {
 
 "ctl_modules_locations": CTL_MODULES_LOCATIONS,
 "ctl_tools_locations": CTL_TOOLS_LOCATIONS,
+"ctl_resource_dir": CTL_RESOURCE_DIR,
 "ctl_logs_dir": CTL_LOGS_DIR,
 
 "slave_logs_dir": SLAVE_LOGS_DIR,
@@ -143,9 +145,11 @@ MULTICAST_TEST_TOOLS = [
 
 MAN_PAGES = [(MAN_DIR, ["install/lnst-ctl.1.gz", "install/lnst-slave.1.gz"])]
 
-CONFIG = [("/etc/", ["install/lnst-ctl.conf", "install/lnst-slave.conf"])]
+CONFIG = [(CONF_DIR, ["install/lnst-ctl.conf", "install/lnst-slave.conf"])]
 
-DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES
+SCHEMAS = [(CTL_RESOURCE_DIR, ["schema-recipe.rng", "schema-sm.rng"])]
+
+DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES + SCHEMAS
 
 setup(name="lnst",
     version="git",

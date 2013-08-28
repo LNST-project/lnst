@@ -64,6 +64,11 @@ class Config():
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "log_dir"}
+        self.options['environment']['resource_dir'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "resource_dir"}
 
         self.colours_scheme()
 
