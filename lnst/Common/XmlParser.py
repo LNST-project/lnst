@@ -11,261 +11,78 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import os
+import sys
 import logging
-from xml.dom.minidom import parseString
-from xml import sax
+from lxml import etree
 from lnst.Common.XmlTemplates import XmlTemplates, XmlTemplateError
-from lnst.Common.RecipePath import RecipePath
-from lnst.Common.XmlProcessing import XmlProcessingError, XmlDomTreeInit
-from lnst.Common.XmlProcessing import XmlData
+from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 
 class XmlParser(object):
-    """ Parent class for XML processors
+    def __init__(self, schema_file, xml_path):
+        # locate the schema file
+        # try git path
+        dirname = os.path.dirname(sys.argv[0])
+        schema_path = os.path.join(dirname, schema_file)
+        if not os.path.exists(schema_path):
+            # try configuration
+            res_dir = lnst_config.get_option("environment", "resource_dir")
+            schema_path = os.path.join(res_dir, schema_file)
 
-        This class handles manipulation of XML DOM objects
-        that are used for processing XML files.
+        if not os.path.exists(schema_path):
+            raise Exception("The recipe schema file was not found. " + \
+                            "Your LNST installation is corrupt!")
 
-        The standard DOM objects are extended with position data
-        (file name, line number and column number) that can be
-        used in error reporting.
-    """
+        self._template_proc = XmlTemplates()
 
-    def _process_child_nodes(self, parent, scheme, params=None,
-                                    default_handler=None):
-        child_nodes = parent.childNodes
+        self._path = xml_path
+        relaxng_doc = etree.parse(schema_path)
+        self._schema = etree.RelaxNG(relaxng_doc)
 
-        if not params:
-            params = {}
-
-        for node in child_nodes:
-            if node.nodeType == node.COMMENT_NODE or \
-               node.nodeType == node.TEXT_NODE:
-                continue
-            elif node.nodeType == node.ELEMENT_NODE:
-                node_name = node.nodeName
-                if node_name in scheme:
-                    handler = scheme[node_name]
-                    self._process_node(node, handler, params)
-                elif default_handler:
-                    self._process_node(node, default_handler, params)
-                else:
-                    msg = "Unexpected '%s' tag under '%s'" % (node_name,
-                                                        parent.nodeName)
-                    raise XmlProcessingError(msg, node)
+    def parse(self):
+        try:
+            doc = etree.parse(self._path)
+            doc.xinclude()
+        except Exception as err:
+            # A workaround for cases when lxml (quite strangely)
+            # sets the filename to <string>.
+            if err.error_log[0].filename == "<string>":
+                filename = self._path
             else:
-                msg = "Only XML elements are allowed here!"
-                raise XmlProcessingError(msg, node)
+                filename = err.error_log[0].filename
+            loc = {"file": os.path.basename(filename),
+                   "line": err.error_log[0].line,
+                   "col": err.error_log[0].column}
+            exc = XmlProcessingError(err.error_log[0].message)
+            exc.set_loc(loc)
+            raise exc
 
-    def _process_node(self, node, handler, params):
-        handler(node, params)
+        root_tag = doc.getroot()
+        self._template_proc.process_aliases(root_tag)
 
-    @staticmethod
-    def _convert_string(node, string, conversion_cb):
-        if conversion_cb:
-            try:
-                converted = conversion_cb(string)
-            except ValueError as err:
-                raise XmlProcessingError("Conversion error: " + str(err), node)
-            return converted
+        try:
+            self._schema.assertValid(doc)
+        except:
+            err = self._schema.error_log[0]
+            loc = {"file": os.path.basename(err.filename),
+                   "line": err.line, "col": err.column}
+            exc = XmlProcessingError(err.message)
+            exc.set_loc(loc)
+            raise exc
 
-        return string
+        return self._process(root_tag)
 
-    def _has_attribute(self, node, attr_name):
-        return node.hasAttribute(attr_name)
-
-    def _get_attribute(self, node, attr_name, conversion_cb=None):
-        if not self._has_attribute(node, attr_name):
-            msg = "Expected attribute '%s' missing" % attr_name
-            raise XmlProcessingError(msg, node)
-        attr_val = str(node.getAttribute(attr_name))
-        return self._convert_string(node, attr_val, conversion_cb)
-
-    def _get_text_content(self, node, conversion_cb=None):
-        content = []
-        for child in node.childNodes:
-            if child.nodeType == child.TEXT_NODE:
-                content.append(child.nodeValue)
-
-        text = str(''.join(content).strip())
-        return self._convert_string(node, text, conversion_cb)
-
-    def _get_all_attributes(self, node):
-        res = {}
-        for i in range(0, node.attributes.length):
-            attr = node.attributes.item(i)
-            res[attr.name] = attr.value
-
-        return res
-
-class LnstParser(XmlParser):
-    """ Enhanced XmlParser
-
-        This class enhances XmlParser with advanced features that are
-        used in parsing LNST XML files. All (sub)parsers should
-        use this as their base class.
-    """
-
-    _data = None
-    _template_proc = None
-    _include_root = None
-    _events_enabled = None
-    _event_handlers = None
-
-    def __init__(self, parent=None):
-        super(LnstParser, self).__init__()
-
-        if parent:
-            self._data = parent._data
-            self._template_proc = parent._template_proc
-            self._include_root = parent._include_root
-            self._events_enabled = parent._events_enabled
-            self._event_handlers = parent._event_handlers
-        else:
-            self._data = None
-            self._template_proc = XmlTemplates()
-            self._include_root = os.getcwd()
-            self._events_enabled = True
-            self._event_handlers = {}
-
-    def set_target(self, data_dict):
-        self._data = data_dict
-
-    def get_data(self):
-        return self._data
+    def _process(self, root_tag):
+        pass
 
     def set_machines(self, machines):
         self._template_proc.set_machines(machines)
 
-    def set_definitions(self, defs):
-        self._template_proc.set_definitions(defs)
+    def _has_attribute(self, element, attr):
+        return attr in element.attrib
 
-    def set_include_root(self, include_root_path):
-        self._include_root = include_root_path
+    def _get_attribute(self, element, attr):
+        return self._template_proc.expand_functions(element.attrib[attr])
 
-    def enable_events(self):
-        self._events_enabled = True
-
-    def disable_events(self):
-        self._events_enabled = False
-
-    def register_event_handler(self, event_id, handler):
-        self._event_handlers[event_id] = handler
-
-    def _trigger_event(self, event_id, args):
-        if not self._events_enabled:
-            return
-
-        try:
-            handler = self._event_handlers[event_id]
-        except KeyError as err:
-            logging.warn("No handler found for %s event, ignoring", event_id)
-            return
-
-        handler(**args)
-
-    def _process_child_nodes(self, node, scheme, params=None,
-                                default_handler=None, new_ns_level=True):
-        scheme["define"] = self._define_handler
-
-        if not params:
-            params = {}
-
-        if new_ns_level:
-            self._template_proc.add_namespace_level()
-
-        parent = super(LnstParser, self)
-        result = parent._process_child_nodes(node, scheme, params,
-                                                default_handler)
-
-        if new_ns_level:
-            self._template_proc.drop_namespace_level()
-
-        return result
-
-    def _process_node(self, node, handler, params):
-        old_include_root = None
-        if self._has_attribute(node, "source"):
-            source = str(self._get_attribute(node, "source"))
-
-            source_rp = RecipePath(self._include_root, source)
-
-            old_include_root = self._include_root
-            self._include_root = source_rp.get_root()
-            xmlstr = source_rp.to_str()
-
-            dom_init = XmlDomTreeInit()
-            try:
-                dom = dom_init.parse_string(xmlstr,
-                                            filename=source_rp.abs_path())
-            except IOError as err:
-                msg = "Unable to resolve include: %s" % str(err)
-                raise XmlProcessingError(msg, node)
-
-            loaded_node = None
-            try:
-                loaded_node = dom.getElementsByTagName(node.nodeName)[0]
-            except Exception:
-                msg = ("No '%s' element present in included file '%s'."
-                                    % (node.nodeName, source_rp.abs_path()))
-                raise XmlProcessingError(msg, node)
-
-            old_attrs = self._get_all_attributes(node)
-
-            parent = node.parentNode
-            parent.replaceChild(loaded_node, node)
-            node = loaded_node
-
-            # copy all of the original attributes to the sourced node
-            for name, value in old_attrs.iteritems():
-                # do not overwrite sourced attributes
-                if not node.hasAttribute(name):
-                    node.setAttribute(name, value)
-
-        parent = super(LnstParser, self)
-        parent._process_node(node, handler, params)
-
-        if old_include_root:
-            self._include_root = old_include_root
-
-    def _get_attribute(self, node, attr_name, conversion_cb=None):
-        parent = super(LnstParser, self)
-        raw_attr_val = parent._get_attribute(node, attr_name)
-
-        try:
-            attr_val = self._template_proc.expand_string(raw_attr_val, node)
-        except XmlTemplateError as err:
-            raise XmlProcessingError(str(err), node)
-
-        return self._convert_string(node, attr_val, conversion_cb)
-
-    def _get_text_content(self, node, conversion_cb=None):
-        parent = super(LnstParser, self)
-        raw_content = parent._get_text_content(node)
-
-        try:
-            content = self._template_proc.expand_string(raw_content, node)
-        except XmlTemplateError as err:
-            raise XmlProcessingError(str(err), node)
-
-        return self._convert_string(node, content, conversion_cb)
-
-    def _define_handler(self, node, params):
-        scheme = {"alias": self._alias_handler}
-        self._process_child_nodes(node, scheme, new_ns_level=False)
-
-    def _alias_handler(self, node, params):
-        if self._has_attribute(node, "name"):
-            name = str(self._get_attribute(node, "name"))
-        else:
-            msg = "Alias tag must have the 'name' attribute"
-            raise XmlProcessingError(msg, node)
-
-        if self._has_attribute(node, "value"):
-            value = str(self._get_attribute(node, "value"))
-        else:
-            value = self._get_text_content(node)
-
-        try:
-            self._template_proc.define_alias(name, value)
-        except XmlTemplateError as err:
-            raise XmlProcessingError(str(err), node)
+    def _get_content(self, element):
+        text = etree.tostring(element, method="text")
+        return self._template_proc.expand_functions(text)
