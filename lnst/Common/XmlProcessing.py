@@ -24,18 +24,25 @@ class XmlProcessingError(Exception):
 
     def __init__(self, msg, obj=None):
         super(XmlProcessingError, self).__init__()
-
         self._msg = msg
 
         if obj and hasattr(obj, "loc"):
             self.set_loc(obj.loc)
 
-        #logging.error(self.__str__())
+        loc = {}
+        if obj:
+            if hasattr(obj, "base") and obj.base != None:
+                loc["file"] = os.path.basename(obj.base)
+                if hasattr(obj, "sourceline"):
+                    loc["line"] = obj.sourceline
+                self.set_loc(loc)
+
 
     def set_loc(self, loc):
         self._filename = loc["file"]
         self._line = loc["line"]
-        #self._col = loc["col"]
+        if "col" in loc:
+            self._col = loc["col"]
 
     def __str__(self):
         line = ""
@@ -82,8 +89,15 @@ class XmlDataIterator:
 class XmlCollection(list):
     def __init__(self, node=None):
         super(XmlCollection, self).__init__()
-        if node:
-            self.loc = node.loc
+        if node is not None:
+            if hasattr(node, "loc"):
+                self.loc = node.loc
+            elif hasattr(node, "base") and node.base != None:
+                loc = {}
+                loc["file"] = os.path.basename(node.base)
+                if hasattr(node, "sourceline"):
+                    loc["line"] = node.sourceline
+                self.loc = loc
 
     def __getitem__(self, key):
         value = super(XmlCollection, self).__getitem__(key)
@@ -99,8 +113,15 @@ class XmlCollection(list):
 class XmlData(dict):
     def __init__(self, node=None):
         super(XmlData, self).__init__()
-        if node:
-            self.loc = node.loc
+        if node is not None:
+            if hasattr(node, "loc"):
+                self.loc = node.loc
+            elif hasattr(node, "base") and node.base != None:
+                loc = {}
+                loc["file"] = os.path.basename(node.base)
+                if hasattr(node, "sourceline"):
+                    loc["line"] = node.sourceline
+                self.loc = loc
 
     def __getitem__(self, key):
         value = super(XmlData, self).__getitem__(key)
