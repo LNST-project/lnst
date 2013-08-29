@@ -23,8 +23,8 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import test_tcp_connection
 from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.Machine import Machine
-from lnst.Controller.SlaveMachineParse import SlaveMachineParser
-from lnst.Controller.SlaveMachineParse import SlaveMachineError
+from lnst.Controller.SlaveMachineParser import SlaveMachineParser
+from lnst.Controller.SlaveMachineParser import SlaveMachineError
 
 class SlavePool:
     """
