@@ -87,6 +87,7 @@ class TestPktgenTx(TestGeneric):
                     pg.set(pktgen_option)
             pgctl.set("start")
         except ExecCmdFail:
-            return self.set_fail("pktgen failed")
+            res_data = {"msg": "pktgen failed"}
+            return self.set_fail(res_data)
 
         return self.set_pass()

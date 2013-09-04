@@ -15,4 +15,5 @@ from lnst.Common.TestsCommon import TestGeneric
 
 class TestDummyFailing(TestGeneric):
     def run(self):
-        return self.set_fail("what else did you expect?")
+        res_data = {"msg": "what else did you expect?"}
+        return self.set_fail(res_data)

@@ -126,6 +126,7 @@ class TestMulticast(TestGeneric):
                 res[name] = value
                 logging.info("Test result: {0} = {1}".format(name, value))
                 if not self._evaluate_result(name, value):
-                    return self.set_fail("Conditions not met!", res)
+                    res["msg"] = "Conditions not met!"
+                    return self.set_fail(res)
 
         return self.set_pass(res)

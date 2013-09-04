@@ -165,4 +165,5 @@ class TestPacketAssert(TestGeneric):
         if self._evaluate_results():
             return self.set_pass(res)
 
-        return self.set_fail("PacketAssert failed!", res)
+        res["msg"] = "PacketAssert failed!"
+        return self.set_fail(res)

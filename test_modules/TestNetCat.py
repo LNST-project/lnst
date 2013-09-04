@@ -52,9 +52,11 @@ class TestNetCat(TestGeneric):
         try:
             td.read_until_output_matches("10 packets captured", timeout=5)
         except ShellProcess.ProcessTerminatedError:
-            return self.set_fail("tcpdump process died unexpectedly!")
+            res_data = {"msg": "tcpdump process died unexpectedly!"}
+            return self.set_fail(res_data)
         except ShellProcess.ProcessTimeoutError:
-            return self.set_fail("No stream detected!")
+            res_data = {"msg": "No stream detected!"}
+            return self.set_fail(res_data)
 
         td.kill()
 
