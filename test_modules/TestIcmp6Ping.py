@@ -38,8 +38,7 @@ class TestIcmp6Ping(TestGeneric):
         data_stdout = exec_cmd(cmd, die_on_err=False)[0]
 
         stat_pttr1 = r'(\d+) packets transmitted, (\d+) received'
-        stat_pttr2 = r' rtt min/avg/max/mdev = \
-            (\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+) ms'
+        stat_pttr2 = r'rtt min/avg/max/mdev = (\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+) ms'
 
         match = re.search(stat_pttr1, data_stdout)
         if not match:
