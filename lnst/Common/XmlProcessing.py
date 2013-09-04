@@ -24,16 +24,15 @@ class XmlProcessingError(Exception):
         super(XmlProcessingError, self).__init__()
         self._msg = msg
 
-        if obj and hasattr(obj, "loc"):
+        if obj is not None and hasattr(obj, "loc"):
             self.set_loc(obj.loc)
 
         loc = {}
-        if obj:
-            if hasattr(obj, "base") and obj.base != None:
-                loc["file"] = os.path.basename(obj.base)
-                if hasattr(obj, "sourceline"):
-                    loc["line"] = obj.sourceline
-                self.set_loc(loc)
+        if obj is not None and hasattr(obj, "base") and obj.base != None:
+            loc["file"] = os.path.basename(obj.base)
+            if hasattr(obj, "sourceline"):
+                loc["line"] = obj.sourceline
+            self.set_loc(loc)
 
 
     def set_loc(self, loc):
