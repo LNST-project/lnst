@@ -183,7 +183,7 @@ def main():
     if result_path:
         result_path = os.path.expanduser(result_path)
         handle = open(result_path, "w")
-        handle.write(str(res_serializer))
+        handle.write(res_serializer.get_result_xml())
         handle.close()
 
 if __name__ == "__main__":

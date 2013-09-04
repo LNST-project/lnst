@@ -495,6 +495,8 @@ class NetTestController:
                                                    command["seconds"]),
                        "msg": "",
                        "res_data": None}
+            if self._res_serializer:
+                self._res_serializer.add_cmd_result(command, cmd_res)
             return cmd_res
 
         machine_id = command["machine"]
