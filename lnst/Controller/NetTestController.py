@@ -35,6 +35,7 @@ from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
 from lnst.Common.RecipePath import RecipePath
+from lnst.Common.Colours import decorate_with_preset
 import lnst.Controller.Task as Task
 
 class NetTestError(Exception):
@@ -508,13 +509,17 @@ class NetTestController:
             if self._res_serializer:
                 self._res_serializer.add_cmd_result(command, cmd_res)
 
-        logging.debug("Result: %s", str(cmd_res))
-        if "res_data" in cmd_res:
-            res_data = pformat(cmd_res["res_data"])
-            logging.info("Result data: %s", (res_data))
-        if not cmd_res["passed"]:
-            logging.error("Command failed: [%s], Error message: \"%s\"",
-                          str_command(command), cmd_res["err_msg"])
+        if cmd_res["passed"]:
+            res_str = decorate_with_preset("PASS", "pass")
+        else:
+            res_str = decorate_with_preset("FAIL", "fail")
+        logging.info("Result: %s" % res_str)
+        if "report" in cmd_res and cmd_res["report"] != "":
+            logging.info("Result data:")
+            for line in cmd_res["report"].splitlines():
+                logging.info(4*" " + line)
+        if "msg" in cmd_res and cmd_res["msg"] != "":
+            logging.info("Status message from slave: \"%s\"" % cmd_res["msg"])
 
         return cmd_res
 
