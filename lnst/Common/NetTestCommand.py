@@ -17,6 +17,7 @@ import signal
 import imp
 import pickle, traceback
 import multiprocessing
+import re
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import recv_data, send_data
 
@@ -297,6 +298,7 @@ class NetTestCommandGeneric:
         return result
 
     def format_res_data(self, res_data, level=0):
+        self._check_res_data(res_data)
         formatted_data = ""
         if res_data:
             max_key_len = 0
@@ -313,6 +315,35 @@ class NetTestCommandGeneric:
                                       "\t" + str(value) + "\n"
 
         return formatted_data
+
+    def _check_res_data(self, res_data):
+        name_start_char = u":A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF"\
+                          u"\u0370-\u037D\u037F-\u1FFF\u200C-\u200D"\
+                          u"\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF"\
+                          u"\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
+        name_char = name_start_char + u"\-\.0-9\xB7\u0300-\u036F\u203F-\u2040"
+        name = u"[%s]([%s])*$" % (name_start_char, name_char)
+        char_data = u"[^<&]*"
+        if isinstance(res_data, dict):
+            for key in res_data:
+                if not re.match(name, key, re.UNICODE):
+                    msg = "'%s' can't be used as an xml element name!" % key
+                    raise CommandException(msg)
+                else:
+                    self._check_res_data(res_data[key])
+        elif isinstance(res_data, list):
+            for i in res_data:
+                self._check_res_data(i)
+        else:
+            try:
+                string = str(res_data)
+            except:
+                msg = "res_data can only contain dictionaries, lists or "\
+                      "stringable objects!"
+                raise CommandException(msg)
+            if not re.match(char_data, string, re.UNICODE):
+                msg = "'%s' can't be used as character data in xml!" % string
+                raise CommandException(msg)
 
     def _format_cmd_res_header(self):
         return "%-14s" % self._command["type"]
