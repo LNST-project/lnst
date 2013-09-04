@@ -88,6 +88,7 @@ class NetTestCommand:
         self._connection_pipe = None
         self._killed = False
         self._finished = False
+        self._control_cmd= None
         self._result = None
         self._log_ctl = log_ctl
 
@@ -163,17 +164,19 @@ class NetTestCommand:
     def join(self):
         self._process.join()
 
-    def wait_for(self):
+    def wait_for(self, cmd):
         logging.debug("Waiting for background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
         self._finished = True
+        self._control_cmd = cmd
 
-    def interrupt(self):
+    def interrupt(self, cmd):
         self._finished = True
         if os.path.exists("/proc/%d" % self._pid):
             logging.debug("Interrupting background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
             os.killpg(os.getpgid(self._pid), signal.SIGINT)
+        self._control_cmd = cmd
 
-    def kill(self):
+    def kill(self, cmd):
         if os.path.exists("/proc/%d" % self._pid):
             if self._id:
                 logging.debug("Killing background command with id \"%s\", pid \"%d\"" % (self._id, self._pid))
@@ -182,6 +185,7 @@ class NetTestCommand:
             self._killed = True
             os.killpg(os.getpgid(self._pid), signal.SIGKILL)
             self._process.join()
+            self._control_cmd = cmd
 
     def get_result(self):
         if self._killed:
@@ -194,6 +198,8 @@ class NetTestCommand:
         return result
 
     def set_result(self, result):
+        if self._control_cmd != None:
+            result["res_header"] = self._control_cmd._format_cmd_res_header()
         self._result = result
 
     def get_connection_pipe(self):
@@ -217,7 +223,7 @@ class NetTestCommandContext:
 
     def _kill_all_cmds(self):
         for id in self._dict:
-            self._dict[id].kill()
+            self._dict[id].kill(None)
 
     def cleanup(self):
         logging.debug("Cleaning up leftover processes.")
@@ -425,7 +431,7 @@ class NetTestCommandWait(NetTestCommandControl):
     def run(self):
         bg_id = self._command["proc_id"]
         bg_cmd = self._command_context.get_cmd(bg_id)
-        bg_cmd.wait_for()
+        bg_cmd.wait_for(self)
         result = bg_cmd.get_result()
         if result != None:
             bg_cmd.join()
@@ -437,7 +443,7 @@ class NetTestCommandIntr(NetTestCommandControl):
     def run(self):
         bg_id = self._command["proc_id"]
         bg_cmd = self._command_context.get_cmd(bg_id)
-        bg_cmd.interrupt()
+        bg_cmd.interrupt(self)
         result = bg_cmd.get_result()
         if result != None:
             bg_cmd.join()
@@ -449,7 +455,7 @@ class NetTestCommandKill(NetTestCommandControl):
     def run(self):
         bg_id = self._command["proc_id"]
         bg_cmd = self._command_context.get_cmd(bg_id)
-        bg_cmd.kill()
+        bg_cmd.kill(self)
         result = bg_cmd.get_result()
         if result != None:
             bg_cmd.join()

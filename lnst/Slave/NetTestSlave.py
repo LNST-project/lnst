@@ -281,7 +281,7 @@ class SlaveMethods:
 
     def kill_command(self, id):
         cmd = self._command_context.get_cmd(id)
-        cmd.kill()
+        cmd.kill(None)
         self._command_context.del_cmd(cmd)
         return True
 
@@ -530,11 +530,11 @@ class NetTestSlave:
                 cmd.join()
                 del msg["cmd_id"]
 
+                cmd.set_result(msg["result"])
                 if cmd.finished():
+                    msg["result"] = cmd.get_result()
                     self._server_handler.send_data_to_ctl(msg)
                     self._cmd_context.del_cmd(cmd)
-                else:
-                    cmd.set_result(msg["result"])
         elif msg["type"] == "netlink":
             for sub_msg in msg["data"]:
                 if sub_msg["event"] == "RTM_NEWLINK":
