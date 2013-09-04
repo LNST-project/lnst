@@ -126,7 +126,9 @@ class NetTestCommand:
         else:
             logging.debug("Running in background with"
                           " bg_id \"%s\" pid \"%d\"" % (self._id, self._pid))
-            return {"passed": True}
+            return {"passed": True,
+                    "res_header": self._cmd_cls._format_cmd_res_header(),
+                    "msg": "Running in background."}
 
     def _run(self):
         os.setpgrp()
@@ -184,8 +186,8 @@ class NetTestCommand:
     def get_result(self):
         if self._killed:
             result = {}
-            result["type"] = "result"
             result["passed"] = True
+            result["msg"] = "Command killed."
         else:
             result = self._result
 
@@ -251,9 +253,6 @@ class NetTestCommandGeneric:
     def run(self):
         pass
 
-    def set_result(self, result):
-        self._result = result
-
     def get_result(self):
         if not self._result:
             '''
@@ -263,15 +262,54 @@ class NetTestCommandGeneric:
             self.set_pass()
         return self._result
 
-    def set_fail(self, err_msg):
-        result = {"passed": False, "err_msg": err_msg}
-        self.set_result(result)
+    def set_fail(self, res_data=None):
+        res = False
+        msg = ""
+        if "expect" in self._command and self._command["expect"] == False:
+            res = True
+            msg = "Command failed, as was specified in the recipe."
+        result = {"passed": res,
+                  "res_data": res_data,
+                  "msg": msg,
+                  "report": self.format_res_data(res_data),
+                  "res_header": self._format_cmd_res_header()}
+        self._result = result
         return result
 
-    def set_pass(self):
-        result = {"passed": True}
-        self.set_result(result)
+    def set_pass(self, res_data=None):
+        res = True
+        msg = ""
+        if "expect" in self._command and self._command["expect"] == False:
+            res = False
+            msg = "Command expected to fail, but passed!"
+        result = {"passed": res,
+                  "res_data": res_data,
+                  "msg": msg,
+                  "report": self.format_res_data(res_data),
+                  "res_header": self._format_cmd_res_header()}
+        self._result = result
         return result
+
+    def format_res_data(self, res_data, level=0):
+        formatted_data = ""
+        if res_data:
+            max_key_len = 0
+            for key in res_data.keys():
+                if len(key) > max_key_len:
+                    max_key_len = len(key)
+            for key, value in res_data.iteritems():
+                if type(value) == dict:
+                    formatted_data += level*4*" " + str(key) + ":\n"
+                    formatted_data += self.format_res_data(value, level+1)
+                else:
+                    formatted_data += level*4*" " + str(key) + ":" + \
+                                      (max_key_len-len(key))*" " + \
+                                      "\t" + str(value) + "\n"
+
+        return formatted_data
+
+    def _format_cmd_res_header(self):
+        return "%-14s" % self._command["type"]
 
     def set_handle_intr(self):
         pass
@@ -304,6 +342,18 @@ class NetTestCommandExec(NetTestCommandGeneric):
                 self.set_pass()
             else:
                 self.set_fail("Command failed to execute")
+
+    def _format_cmd_res_header(self):
+        cmd_type = self._command["type"]
+        cmd_val = self._command["command"]
+
+        if "bg_id" in self._command:
+            bg_id = "bg_id: %s" % self._command["bg_id"]
+        else:
+            bg_id = ""
+
+        cmd = "%-14s%s%s" %(cmd_type, cmd_val, bg_id)
+        return cmd
 
 class NetTestCommandConfig(NetTestCommandGeneric):
     def _retrive_option(self, option):
@@ -343,14 +393,33 @@ class NetTestCommandConfig(NetTestCommandGeneric):
                                         "current_val": value,
                                         "previous_val": prev_val})
 
-        res = {"passed": True}
-        res["res_data"] = res_data
-        return res
+        self.set_pass(res_data)
+        return self.get_result()
+
+    def format_res_data(self, res_data, level=0):
+        formatted_data = ""
+        max_name_len = 0
+        for option in res_data["options"]:
+            if len(option["name"]) > max_name_len:
+                max_name_len = len(option["name"])
+        for option in res_data["options"]:
+            vals = "previous: %s current: %s" % (option["previous_val"],
+                                                 option["current_val"])
+            formatted_data += 4*level*" " + option["name"] +  \
+                              (max_name_len - len(option["name"]))*" " + \
+                              "\t" + vals + "\n"
+        return formatted_data
 
 class NetTestCommandControl(NetTestCommandGeneric):
     def __init__(self, command_context, command):
         self._command_context = command_context
         NetTestCommandGeneric.__init__(self, command)
+
+    def _format_cmd_res_header(self):
+        cmd_type = self._command["type"]
+        cmd_val = self._command["proc_id"]
+        cmd = "%-14s id: %s" % (cmd_type, cmd_val)
+        return cmd
 
 class NetTestCommandWait(NetTestCommandControl):
     def run(self):
@@ -361,6 +430,7 @@ class NetTestCommandWait(NetTestCommandControl):
         if result != None:
             bg_cmd.join()
             self._command_context.del_cmd(bg_cmd)
+            result["res_header"] = self._format_cmd_res_header()
         return result
 
 class NetTestCommandIntr(NetTestCommandControl):
@@ -372,6 +442,7 @@ class NetTestCommandIntr(NetTestCommandControl):
         if result != None:
             bg_cmd.join()
             self._command_context.del_cmd(bg_cmd)
+            result["res_header"] = self._format_cmd_res_header()
         return result
 
 class NetTestCommandKill(NetTestCommandControl):
@@ -383,6 +454,7 @@ class NetTestCommandKill(NetTestCommandControl):
         if result != None:
             bg_cmd.join()
             self._command_context.del_cmd(bg_cmd)
+            result["res_header"] = self._format_cmd_res_header()
         return result
 
 def get_command_class(command_context, command, resource_table):

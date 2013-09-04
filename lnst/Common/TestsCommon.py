@@ -84,22 +84,6 @@ class TestGeneric(NetTestCommandGeneric):
                 continue
             break
 
-    def set_fail(self, err_msg, res_data = None):
-        self._testLogger.error("FAILED - %s" % err_msg)
-        res = {"passed": False, "err_msg": err_msg}
-        if res_data:
-            res["res_data"] = res_data
-        self.set_result(res)
-        return res
-
-    def set_pass(self, res_data = None):
-        self._testLogger.debug("PASSED")
-        res = {"passed": True}
-        if res_data:
-            res["res_data"] = res_data
-        self.set_result(res)
-        return res
-
     def _get_val(self, value, opt_type, default):
         if opt_type == "addr":
             '''
@@ -154,3 +138,13 @@ class TestGeneric(NetTestCommandGeneric):
         This should be used to get mandatory multi options (array of values)
         '''
         return self.get_multi_opt(name, mandatory=True, opt_type=opt_type)
+
+    def _format_cmd_res_header(self):
+        cmd_val = self._command["module"]
+        cmd_type = self._command["type"]
+        if "bg_id" in self._command:
+            bg_id = " bg_id: %s" % self._command["bg_id"]
+        else:
+            bg_id = ""
+        cmd = "%-14s%s%s" %(cmd_type, cmd_val, bg_id)
+        return cmd

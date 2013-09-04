@@ -489,7 +489,11 @@ class NetTestController:
 
         if command["type"] == "ctl_wait":
             sleep(command["seconds"])
-            cmd_res = {"passed" : True}
+            cmd_res = {"passed": True,
+                       "res_header": "%-14s%ss" % ("ctl_wait",
+                                                   command["seconds"]),
+                       "msg": "",
+                       "res_data": None}
             return cmd_res
 
         machine_id = command["machine"]
