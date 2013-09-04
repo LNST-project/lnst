@@ -198,13 +198,6 @@ class Machine(object):
         signal.alarm(0)
         signal.signal(signal.SIGALRM, prev_handler)
 
-        # FIXME: This shouldn't be here!
-        if "expect" in command:
-            cmd_res["passed"] = cmd_res["passed"] == command["expect"]
-            if not cmd_res["passed"]:
-                msg = "The result differs from what was expected."
-                cmd_res["err_msg"] = msg
-
         return cmd_res
 
     def get_hostname(self):
