@@ -14,6 +14,7 @@ import logging
 import os
 import re
 import sys
+from lxml import etree
 from lnst.Common.Config import lnst_config
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import bool_it
@@ -157,6 +158,10 @@ class RecipeParser(XmlParser):
         if len(task_tag) > 0:
             task["commands"] = XmlCollection(task_tag)
             for cmd_tag in task_tag:
+                # Ignore comments
+                if cmd_tag.tag is etree.Comment:
+                    continue
+
                 if cmd_tag.tag == "run":
                     cmd = self._process_run_cmd(cmd_tag)
                 elif cmd_tag.tag == "config":
