@@ -126,7 +126,7 @@ class NetTestResultSerializer:
 
             seq_num = 1
             for cmd_seq in recipe.getElementsByTagName("command_sequence"):
-                command_sequence = 4*" "+"cmd_seq: %s" % seq_num
+                command_sequence = 4*" "+"task: %s" % seq_num
                 output_pairs.append((command_sequence, ""))
 
                 seq_num = seq_num + 1
