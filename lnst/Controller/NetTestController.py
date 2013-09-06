@@ -240,10 +240,9 @@ class NetTestController:
         iface.configure()
 
     def _prepare_tasks(self):
-        recipe = self._recipe
+        self._tasks = []
         for task_data in self._recipe["tasks"]:
             task = {}
-
             task["quit_on_fail"] = False
             if "quit_on_fail" in task_data:
                 task["quit_on_fail"] = bool_it(task_data["quit_on_fail"])
@@ -256,10 +255,13 @@ class NetTestController:
                 if not os.path.isfile(path):
                     msg = "Task file '%s' not found." % path
                     raise RecipeError(msg, task_data)
+
+                self._tasks.append(task)
                 continue
 
-            task["commands"] = []
-            for cmd_data in task_data["commands"]:
+            task["commands"] = task_data["commands"]
+            task["skeleton"] = []
+            for cmd_data in task["commands"]:
                 cmd = {"type": cmd_data["type"]}
 
                 if "machine" in cmd_data:
@@ -268,79 +270,96 @@ class NetTestController:
                         msg = "Invalid machine id '%s'." % cmd["machine"]
                         raise RecipeError(msg, cmd_data)
 
-                if "expect" in cmd_data:
-                    expect = cmd_data["expect"]
-                    if expect not in ["pass", "fail"]:
-                        msg = "Illegal expect attribute value."
-                        raise RecipeError(msg, cmd_data)
-                    cmd["expect"] = expect == "pass"
-
-                if cmd["type"] == "test":
-                    cmd["module"] = cmd_data["module"]
-
-                    cmd_opts = {}
-                    if "options" in cmd_data:
-                        for opt in cmd_data["options"]:
-                            name = opt["name"]
-                            val = opt["value"]
-
-                            if name not in cmd_opts:
-                                cmd_opts[name] = []
-
-                            cmd_opts[name].append({"value": val})
-                    cmd["options"] = cmd_opts
-                elif cmd["type"] == "exec":
-                    cmd["command"] = cmd_data["command"]
-
-                    if "from" in cmd_data:
-                        tool = cmd_data["from"]
-                        if tool in self._resource_table["tools"]:
-                            cmd["command"] = cmd_data["command"]
-                        else:
-                            msg = "Tool '%s' not found on the controller" % tool
-                            raise RecipeError(msg, cmd_data)
-                elif cmd["type"] in ["wait", "intr", "kill"]:
-                    # XXX The internal name (proc_id) is different, because
-                    # bg_id is already used by LNST in a different context
-                    cmd["proc_id"] = cmd_data["bg_id"]
-                elif cmd["type"] == "config":
-                    cmd["persistent"] = False
-                    if "persistent" in cmd_data:
-                        cmd["persistent"] = bool_it(cmd_data["persistent"])
-
-                    cmd["options"] = []
-                    for opt in cmd_data["options"]:
-                        name = opt["name"]
-                        value = opt["value"]
-                        cmd["options"].append({"name": name, "value": value})
-                elif cmd["type"] == "ctl_wait":
-                    cmd["seconds"] = int(cmd_data["seconds"])
-                else:
-                    msg = "Unknown command type '%s'" % cmd["type"]
-                    raise RecipeError(msg, cmd_data)
-
-
                 if cmd["type"] in ["test", "exec"]:
                     if "bg_id" in cmd_data:
                         cmd["bg_id"] = cmd_data["bg_id"]
+                elif cmd["type"] in ["wait", "intr", "kill"]:
+                    cmd["proc_id"] = cmd_data["bg_id"]
 
-                    if "timeout" in cmd_data:
-                        try:
-                            cmd["timeout"] = int(cmd_data["timeout"])
-                        except ValueError:
-                            msg = "Timeout value must be an integer."
-                            raise RecipeError(msg, cmd_data)
-
-                task["commands"].append(cmd)
+                task["skeleton"].append(cmd)
 
             if self._check_task(task):
                 raise RecipeError("Incorrect command sequence.", task_data)
+
             self._tasks.append(task)
+
+    def _prepare_command(self, cmd_data):
+        cmd = {"type": cmd_data["type"]}
+        if "machine" in cmd_data:
+            cmd["machine"] = cmd_data["machine"]
+            if cmd["machine"] not in self._machines:
+                msg = "Invalid machine id '%s'." % cmd["machine"]
+                raise RecipeError(msg, cmd_data)
+
+        if "expect" in cmd_data:
+            expect = cmd_data["expect"]
+            if expect not in ["pass", "fail"]:
+                msg = "Illegal expect attribute value."
+                raise RecipeError(msg, cmd_data)
+            cmd["expect"] = expect == "pass"
+
+        if cmd["type"] == "test":
+            cmd["module"] = cmd_data["module"]
+
+            cmd_opts = {}
+            if "options" in cmd_data:
+                for opt in cmd_data["options"]:
+                    name = opt["name"]
+                    val = opt["value"]
+
+                    if name not in cmd_opts:
+                        cmd_opts[name] = []
+
+                    cmd_opts[name].append({"value": val})
+            cmd["options"] = cmd_opts
+        elif cmd["type"] == "exec":
+            cmd["command"] = cmd_data["command"]
+
+            if "from" in cmd_data:
+                tool = cmd_data["from"]
+                if tool in self._resource_table["tools"]:
+                    cmd["command"] = cmd_data["command"]
+                else:
+                    msg = "Tool '%s' not found on the controller" % tool
+                    raise RecipeError(msg, cmd_data)
+        elif cmd["type"] in ["wait", "intr", "kill"]:
+            # XXX The internal name (proc_id) is different, because
+            # bg_id is already used by LNST in a different context
+            cmd["proc_id"] = cmd_data["bg_id"]
+        elif cmd["type"] == "config":
+            cmd["persistent"] = False
+            if "persistent" in cmd_data:
+                cmd["persistent"] = bool_it(cmd_data["persistent"])
+
+            cmd["options"] = []
+            for opt in cmd_data["options"]:
+                name = opt["name"]
+                value = opt["value"]
+                cmd["options"].append({"name": name, "value": value})
+        elif cmd["type"] == "ctl_wait":
+            cmd["seconds"] = int(cmd_data["seconds"])
+        else:
+            msg = "Unknown command type '%s'" % cmd["type"]
+            raise RecipeError(msg, cmd_data)
+
+
+        if cmd["type"] in ["test", "exec"]:
+            if "bg_id" in cmd_data:
+                cmd["bg_id"] = cmd_data["bg_id"]
+
+            if "timeout" in cmd_data:
+                try:
+                    cmd["timeout"] = int(cmd_data["timeout"])
+                except ValueError:
+                    msg = "Timeout value must be an integer."
+                    raise RecipeError(msg, cmd_data)
+
+        return cmd
 
     def _check_task(self, task):
         err = False
         bg_ids = {}
-        for i, command in enumerate(task["commands"]):
+        for i, command in enumerate(task["skeleton"]):
             if command["type"] == "ctl_wait":
                 continue
 
@@ -440,13 +459,9 @@ class NetTestController:
         overall_res = {"passed": True}
 
         for task in self._tasks:
+            self._res_serializer.add_task()
             try:
-                self._res_serializer.add_task()
-                if "python" in task:
-                    res = self._run_python_task(task)
-                else:
-                    res = self._run_task(task)
-
+                res = self._run_task(task)
             except CommandException as exc:
                 logging.debug(exc)
                 overall_res["passed"] = False
@@ -474,9 +489,13 @@ class NetTestController:
         return module.ctl._result
 
     def _run_task(self, task):
+        if "python" in task:
+            return self._run_python_task(task)
+
         seq_passed = True
-        for command in task["commands"]:
-            cmd_res = self._run_command(command)
+        for cmd_data in task["commands"]:
+            cmd = self._prepare_command(cmd_data)
+            cmd_res = self._run_command(cmd)
             if not cmd_res["passed"]:
                 seq_passed = False
 
@@ -506,7 +525,7 @@ class NetTestController:
             cmd_res = machine.run_command(command)
         except Exception as exc:
             cmd_res = {"passed": False, "err_msg": "Exception raised."}
-            raise exc
+            raise
         finally:
             if self._res_serializer:
                 self._res_serializer.add_cmd_result(command, cmd_res)
