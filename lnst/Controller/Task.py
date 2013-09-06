@@ -135,7 +135,7 @@ class MachineAPI(object):
                 self._bg_id_seq += 1
                 cmd["bg_id"] = bg_id = self._bg_id_seq
             elif arg == "expect":
-                if argval not in ["pass", "fail"]:
+                if str(argval) not in ["pass", "fail"]:
                     msg = "Unrecognised value of the expect attribute (%s)." \
                           % argval
                     raise TaskError(msg)
@@ -149,7 +149,7 @@ class MachineAPI(object):
                     raise TaskError(msg)
             elif arg == "tool":
                 if type(what) == str:
-                    cmd["from"] = argval
+                    cmd["from"] = str(argval)
                 else:
                     msg = "Argument 'tool' not valid when running modules."
                     raise TaskError(msg)
@@ -163,7 +163,7 @@ class MachineAPI(object):
             cmd["options"] = what._opts
         elif type(what) == str:
             cmd["type"] = "exec"
-            cmd["command"] = what
+            cmd["command"] = str(what)
         else:
             raise TaskError("Unable to run '%s'." % str(what))
 
@@ -181,7 +181,7 @@ class MachineAPI(object):
             :rtype: str
         """
         iface = self._m.get_interface(interface_id)
-        return iface.get_devname()
+        return Devname(iface)
 
     def get_hwaddr(self, interface_id):
         """
@@ -194,7 +194,7 @@ class MachineAPI(object):
             :rtype: str
         """
         iface = self._m.get_interface(interface_id)
-        return iface.get_hwaddr()
+        return Hwaddr(iface)
 
     def get_ip(self, interface_id, addr_number=0):
         """
@@ -210,7 +210,7 @@ class MachineAPI(object):
             :rtype: str
         """
         iface = self._m.get_interface(interface_id)
-        return iface.get_address(addr_number)
+        return IpAddr(iface, addr_number)
 
 class ModuleAPI(object):
     """ An API class representing a module. """
@@ -223,9 +223,9 @@ class ModuleAPI(object):
             self._opts[opt] = []
             if type(val) == list:
                 for v in val:
-                    self._opts[opt].append({"value": v})
+                    self._opts[opt].append({"value": str(v)})
             else:
-                self._opts[opt].append({"value": val})
+                self._opts[opt].append({"value": str(val)})
 
 class ProcessAPI(object):
     """ An API class representing either a running or finished process. """
@@ -283,3 +283,29 @@ class ProcessAPI(object):
                    "type": "kill",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)
+
+class ValueAPI(object):
+    def __init__(self, iface):
+        self._iface = iface
+
+    def _resolve(self):
+        pass
+
+    def __str__(self):
+        return str(self._resolve())
+
+class IpAddr(ValueAPI):
+    def __init__(self, iface, addr=0):
+        self._iface = iface
+        self._addr = addr
+
+    def _resolve(self):
+        return self._iface.get_address(self._addr)
+
+class Hwaddr(ValueAPI):
+    def _resolve(self):
+        return self._iface.get_hwaddr()
+
+class Devname(ValueAPI):
+    def _resolve(self):
+        return self._iface.get_devname()
