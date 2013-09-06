@@ -325,14 +325,20 @@ class SetupMapper:
                     if dev_info["network"] == net_name:
                         devs_in_net.append(dev_id)
 
+                net_in_use = False
                 for neighbour in net:
                     n_m_id = neighbour[0]
                     n_dev_id = neighbour[1]
                     if n_m_id != m_id:
+                        net_in_use = True
                         for dev_in_net in devs_in_net:
                             nc = (n_m_id, net_name, dev_in_net)
                             if not nc in topology[m_id]:
                                 topology[m_id].append(nc)
+
+                if not net_in_use:
+                    msg = "Network '%s' contains only one machine!" % net_name
+                    raise SlaveMachineError(msg)
 
         return topology
 
@@ -585,6 +591,11 @@ class SetupMapper:
 
         template_topology = self._get_topology(template_machines)
         pool_topology = self._get_topology(pool_machines)
+
+        for m, cons in template_topology.iteritems():
+            if len(cons) == 0:
+                msg = "Isolated machine in template topology: '%s'" % m
+                raise SlaveMachineError(msg)
 
         if self._map_setup(template_topology, pool_topology):
             machine_map = [(tm, pm, self._iface_map[tm]) \
