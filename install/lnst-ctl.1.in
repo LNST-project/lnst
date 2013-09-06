@@ -58,10 +58,10 @@ available at LNST wiki (link is listed on
 bellow).
 
 .I ACTION
-can be one from
+can be one of
 .BR "run",
 .BR "config_only" ", and"
-.BR "dump".
+.BR "match_setup".
 
 When it is set to
 .BR "run",
@@ -79,12 +79,12 @@ the configuration specified in a recipe file.
 
 At last, when the
 .I ACTION
-chosen is
-.BR "dump",
-the network will be configured as specified in the recipe.
+is set to
+.BR "match_setup",
 .B lnst-ctl
-will then dump contents of its internal data structures to the standard
-output. This feature can be used for debugging recipes or network setups.
+will only try to match the configuration in the recipe with its local
+pools and print the resulting match, in case it was successful or an
+appropriate error message, in case it was not.
 .SH CONFIGURATION
 .B lnst-ctl
 will look for configuration in the following locations:

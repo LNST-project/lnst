@@ -20,7 +20,6 @@ import tempfile
 import imp
 from time import sleep
 from xmlrpclib import Binary
-from pprint import pprint, pformat
 from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
@@ -410,13 +409,6 @@ class NetTestController:
         # remove dynamically created bridges
         for bridge in self._network_bridges.itervalues():
             bridge.cleanup()
-
-    # TODO: This should go away.
-    def dump_recipe(self):
-        self._prepare_network()
-        pprint(self._recipe)
-        self._cleanup_slaves()
-        return {"passed": True}
 
     def match_setup(self):
         mreq = self._get_machine_requirements()

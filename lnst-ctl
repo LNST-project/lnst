@@ -29,7 +29,7 @@ def usage():
     """
     print "Usage: %s [OPTION...] [RECIPE...] ACTION" % sys.argv[0]
     print ""
-    print "ACTION = [run | dump | config_only | match_setup]"
+    print "ACTION = [run | config_only | match_setup]"
     print ""
     print "OPTIONS"
     print "  -d, --debug                     emit debugging messages"
@@ -52,8 +52,6 @@ def process_recipe(action, file_path, cleanup, res_serializer,
                                    pool_checks=pool_checks)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
-    elif action == "dump":
-        return nettestctl.dump_recipe()
     elif action == "config_only":
         return nettestctl.config_only_recipe()
     elif action == "match_setup":
@@ -146,7 +144,7 @@ def main():
         usage()
 
     action = args.pop()
-    if not action in ['run', 'dump', 'config_only', 'match_setup']:
+    if not action in ['run', 'config_only', 'match_setup']:
         logging.error("Action '%s' not recognised" % action)
         usage()
 
