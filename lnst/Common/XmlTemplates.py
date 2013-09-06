@@ -320,7 +320,7 @@ class XmlTemplates:
         func_match  = re.search(self._func_re, string)
         if func_match:
             prefix = string[0:func_match.start(0)]
-            suffix = string[func_match.end(0)+1:]
+            suffix = string[func_match.end(0):]
 
             template = func_match.group(0)
             func = self._process_func_template(template)
