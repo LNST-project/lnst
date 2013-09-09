@@ -23,7 +23,10 @@ from lnst.Common.Colours import load_presets_from_config
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
 
-def usage():
+RETVAL_PASS = 0
+RETVAL_FAIL = 1
+RETVAL_ERR = 2
+def usage(retval=0):
     """
     Print usage of this app
     """
@@ -43,7 +46,7 @@ def usage():
     print "  -c, --cleanup                   perform config cleanup\n" \
           "                                  machines"
     print "  -x, --result=FILE               file to write xml_result"
-    sys.exit()
+    sys.exit(retval)
 
 def process_recipe(action, file_path, cleanup, res_serializer,
                    packet_capture, log_ctl, pool_checks):
@@ -62,6 +65,8 @@ def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
 
+    retval = RETVAL_PASS
+
     res = {}
     try:
         res = process_recipe(args, file_path, cleanup, res_serializer,
@@ -71,10 +76,15 @@ def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
         logging.error(err)
         res["passed"] = False
         res["err_msg"] = str(err)
+        retval = RETVAL_ERR
 
     res_serializer.set_recipe_result(res)
 
-    return ((file_path, res))
+    # The test failed, but don't override erro
+    if not res["passed"] and retval < RETVAL_FAIL:
+        retval = RETVAL_FAIL
+
+    return (file_path, res, retval)
 
 def main():
     """
@@ -89,8 +99,7 @@ def main():
         )
     except getopt.GetoptError as err:
         print str(err)
-        usage()
-        sys.exit()
+        usage(RETVAL_ERR)
 
     lnst_config.controller_init()
     dirname = os.path.dirname(sys.argv[0])
@@ -120,7 +129,7 @@ def main():
         if opt in ("-d", "--debug"):
             debug += 1
         elif opt in ("-h", "--help"):
-            usage()
+            usage(RETVAL_PASS)
         elif opt in ("-c", "--cleanup"):
             cleanup = True
         elif opt in ("-x", "--result"):
@@ -141,15 +150,16 @@ def main():
 
     if len(args) <= 0:
         logging.error("No action specified")
-        usage()
+        usage(RETVAL_ERR)
 
     action = args.pop()
     if not action in ['run', 'config_only', 'match_setup']:
         logging.error("Action '%s' not recognised" % action)
-        usage()
+        usage(RETVAL_ERR)
 
     summary = []
 
+    retval = RETVAL_PASS
     res_serializer = NetTestResultSerializer()
     for recipe_path in args:
         if os.path.isdir(recipe_path):
@@ -163,16 +173,19 @@ def main():
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
                     logging.info("Processing recipe file \"%s\"" % recipe_file)
-                    summary.append(get_recipe_result(action, recipe_file,
-                                                     cleanup,
-                                                     res_serializer,
-                                                     packet_capture,
-                                                     log_ctl, pool_checks))
+                    fp, res, rv = get_recipe_result(action, recipe_file,
+                                                    cleanup, res_serializer,
+                                                    packet_capture,
+                                                    log_ctl, pool_checks)
         else:
-            summary.append(get_recipe_result(action, recipe_path,
-                                             cleanup, res_serializer,
-                                             packet_capture,
-                                             log_ctl, pool_checks))
+            fp, res, rv = get_recipe_result(action, recipe_path,
+                                            cleanup, res_serializer,
+                                            packet_capture,
+                                            log_ctl, pool_checks)
+
+        summary.append((fp, res))
+        if rv > retval:
+            retval = rv
 
     log_ctl.set_recipe("", clean=False)
 
@@ -184,5 +197,7 @@ def main():
         handle.write(res_serializer.get_result_xml())
         handle.close()
 
+    return retval
+
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
