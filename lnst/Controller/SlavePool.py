@@ -371,7 +371,8 @@ class SetupMapper:
 
         # check machine properties
         for prop_name, prop_value in template_machine["params"].iteritems():
-            if pool_machine["params"][prop_name] != prop_value:
+            if prop_name not in pool_machine["params"] or\
+               pool_machine["params"][prop_name] != prop_value:
                 return False
 
         # check number of devices
@@ -660,7 +661,8 @@ class SetupMapper:
 
     def _machine_matches(self, tm, pm):
         for prop_name, prop_value in tm["params"].iteritems():
-            if pm["params"][prop_name] != prop_value:
+            if prop_name not in pm["params"] or\
+               pm["params"][prop_name] != prop_value:
                 return False
 
         return True
