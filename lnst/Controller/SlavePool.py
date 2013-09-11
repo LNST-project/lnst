@@ -608,13 +608,35 @@ class SetupMapper:
             mmap = self._format_map_dict(machine_map, network_map)
             mmap["virtual"] = False
             return mmap
-        elif self._map_setup_virt(template_machines, pool_machines):
-            machine_map = [(tm, pm, []) for tm, pm in self._machine_map]
-            mmap = self._format_map_dict(machine_map, [])
-            mmap["virtual"] = True
-            return mmap
         else:
-            return None
+            logging.info("Match failed for normal machines, falling back "\
+                         "to matching virtual machines.")
+
+            for m_id, m in template_machines.iteritems():
+                for if_id, interface in m["interfaces"].iteritems():
+                    if "params" in interface:
+                        for name, val in interface["params"].iteritems():
+                            if name != "hwaddr":
+                                msg = "Dynamically created interfaces "\
+                                      "only support the 'hwaddr' option. "\
+                                      "'%s=%s' found on machine '%s' "\
+                                      "interface '%s'" % (name, val,
+                                                          m_id, if_id)
+                                raise MapperError(msg)
+
+            #filter machine pool to only contain virtual machines
+            virt_pool_machines = {}
+            for m_id, m in pool_machines.iteritems():
+                if "params" in m and "libvirt_domain" in m["params"]:
+                    virt_pool_machines[m_id] = m
+
+            if self._map_setup_virt(template_machines, virt_pool_machines):
+                machine_map = [(tm, pm, []) for tm, pm in self._machine_map]
+                mmap = self._format_map_dict(machine_map, [])
+                mmap["virtual"] = True
+                return mmap
+            else:
+                return None
 
     def _map_setup(self, template_topology, pool_topology):
 
