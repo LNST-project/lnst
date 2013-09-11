@@ -254,6 +254,9 @@ class SlavePool:
 
         return machine
 
+class MapperError(Exception):
+    pass
+
 class SetupMapper:
     """
     This class can be used for matching machine setups against
@@ -338,7 +341,7 @@ class SetupMapper:
 
                 if not net_in_use:
                     msg = "Network '%s' contains only one machine!" % net_name
-                    raise SlaveMachineError(msg)
+                    raise MapperError(msg)
 
         return topology
 
@@ -596,7 +599,7 @@ class SetupMapper:
         for m, cons in template_topology.iteritems():
             if len(cons) == 0:
                 msg = "Isolated machine in template topology: '%s'" % m
-                raise SlaveMachineError(msg)
+                raise MapperError(msg)
 
         if self._map_setup(template_topology, pool_topology):
             machine_map = [(tm, pm, self._iface_map[tm]) \
