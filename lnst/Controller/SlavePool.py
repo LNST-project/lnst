@@ -692,24 +692,39 @@ class SetupMapper:
 
         return True
 
+    @staticmethod
+    def _get_machine_with_most_params(machines):
+        max_machine = None
+        max_len = 0
+        for m_id, m in machines.iteritems():
+            if len(m["params"]) >= max_len:
+                max_len = len(m["params"])
+                max_machine = m_id
+
+        return max_machine
+
     def _map_setup_virt(self, template_machines, pool_machines):
-        available = set()
-        matches = set()
-        for m_id in pool_machines.iterkeys():
-            available.add(m_id)
+        if len(template_machines) <= 0:
+            return True
 
-        for tm_id, tm in template_machines.iteritems():
-            match = None
-            for am_id in available:
-                if self._machine_matches(tm, pool_machines[am_id]):
-                    match = (tm_id, am_id)
-                    available.remove(am_id)
-                    break
+        machine_id = self._get_machine_with_most_params(template_machines)
+        machine = template_machines[machine_id]
 
-            if match:
-                matches.add(match)
-            else:
-                return False
+        for pm_id, pm in pool_machines.iteritems():
+            if not self._machine_matches(machine, pm):
+                continue
 
-        self._machine_map = list(matches)
-        return True
+            self._machine_map.add((machine_id, pm_id))
+
+            new_pool = copy.deepcopy(pool_machines)
+            del new_pool[pm_id]
+
+            new_template = copy.deepcopy(template_machines)
+            del new_template[machine_id]
+
+            if self._map_setup_virt(new_template, new_pool):
+                return True
+
+            self._machine_map.discard((machine, possible_match))
+
+        return False
