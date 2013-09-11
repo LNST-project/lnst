@@ -212,6 +212,23 @@ class MachineAPI(object):
         iface = self._m.get_interface(interface_id)
         return IpAddr(iface, addr_number)
 
+    def get_prefix(self, interface_id, addr_number=0):
+        """
+            Returns an IP address prefix (netmask)
+            of the interface.
+
+            :param interface_id: which interface
+            :type interface_id: string
+
+            :param interface_id: which address
+            :type interface_id: int
+
+            :return: netmask (e.g., 24).
+            :rtype: str
+        """
+        iface = self._m.get_interface(interface_id)
+        return Prefix(iface, addr_number)
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 
@@ -309,3 +326,11 @@ class Hwaddr(ValueAPI):
 class Devname(ValueAPI):
     def _resolve(self):
         return self._iface.get_devname()
+
+class Prefix(ValueAPI):
+    def __init__(self, iface, addr=0):
+        self._iface = iface
+        self._addr = addr
+
+    def _resolve(self):
+        return self._iface.get_prefix(self._addr)
