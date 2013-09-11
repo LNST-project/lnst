@@ -32,6 +32,9 @@ from lnst.Common.ConnectionHandler import ConnectionHandler
 class MachineError(Exception):
     pass
 
+class PrefixMissingError(Exception):
+    pass
+
 class Machine(object):
     """ Slave machine abstraction
 
@@ -384,7 +387,13 @@ class Interface(object):
         self._addresses.append(addr)
 
     def get_address(self, num):
-        return self._addresses[num]
+        return self._addresses[num].split('/')[0]
+
+    def get_prefix(self, num):
+        try:
+            return self._addresses[num].split('/')[1]
+        except IndexError:
+            raise PrefixMissingError
 
     def _get_config(self):
         config = {"hwaddr": self._hwaddr, "type": self._type,

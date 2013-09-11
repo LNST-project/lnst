@@ -120,6 +120,56 @@ class DevnameFunc(TemplateFunc):
                                                     % (m_id, if_id)
             raise XmlTemplateError(msg)
 
+class PrefixFunc(TemplateFunc):
+    def _check_args(self, args):
+        if len(args) > 3:
+            msg = "Function prefix() takes at most 3 arguments, %d passed" \
+                  % len(args)
+            raise XmlTemplateError(msg)
+        if len(args) < 2:
+            msg = "Function prefix() must have at least 2 arguments, %d " \
+                  "passed" % len(args)
+            raise XmlTemplateError(msg)
+
+        if len(args) == 3:
+            try:
+                int(args[2])
+            except ValueError:
+                msg = "The third argument of prefix() function must be an " \
+                      "integer"
+                raise XmlTemplateError(msg)
+
+    def _implementation(self):
+        m_id = self._args[0]
+        if_id = self._args[1]
+        addr = 0
+        if len(self._args) == 3:
+            addr = self._args[2]
+
+        try:
+            machine = self._machines[m_id]
+        except KeyError:
+            msg = "First parameter of function prefix() is invalid: " \
+                  "Machine %s does not exist." % m_id
+            raise XmlTemplateError(msg)
+
+        try:
+            iface = machine.get_interface(if_id)
+        except MachineError:
+            msg = "Second parameter of function prefix() is invalid: "\
+                    "Interface %s does not exist." % if_id
+            raise XmlTemplateError(msg)
+
+        try:
+            return iface.get_prefix(int(addr))
+        except IndexError:
+            msg = "There is no address with index %s on machine %s, " \
+                  "interface %s." % (addr, m_id, if_id)
+            raise XmlTemplateError(msg)
+        except PrefixMissingError:
+            msg = "Address with the index %s for the interface %s on machine" \
+                  "%s does not contain any prefix" % (addr, m_id, if_id)
+
 class HwaddrFunc(TemplateFunc):
     def _check_args(self, args):
         if len(args) != 2:
@@ -157,7 +207,8 @@ class XmlTemplates:
     _alias_re = "\{\$([a-zA-Z0-9_]+)\}"
     _func_re  = "\{([a-zA-Z0-9_]+)\(([^\(\)]*)\)\}"
 
-    _func_map = {"ip": IpFunc, "hwaddr": HwaddrFunc, "devname": DevnameFunc}
+    _func_map = {"ip": IpFunc, "hwaddr": HwaddrFunc, "devname": DevnameFunc, \
+                 "prefix": PrefixFunc }
 
     def __init__(self, definitions=None):
         if definitions:
