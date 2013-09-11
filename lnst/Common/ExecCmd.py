@@ -61,7 +61,7 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False):
         if data_stdout:
             log_output(logging.debug, "Stdout", data_stdout)
         if data_stderr:
-            log_output(logging.error, "Stderr", data_stderr)
+            log_output(logging.debug, "Stderr", data_stderr)
     if subp.returncode and die_on_err:
         err = ExecCmdFail(cmd, subp.returncode, data_stderr,report_stderr)
         logging.error(err)

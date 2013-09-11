@@ -378,7 +378,7 @@ class NetTestCommandExec(NetTestCommandGeneric):
                 logging.info("Command probably intentionally killed. Passing.")
                 self.set_pass()
             else:
-                self.set_fail("Command failed to execute")
+                self.set_fail()
 
     def _format_cmd_res_header(self):
         cmd_type = self._command["type"]
@@ -413,14 +413,17 @@ class NetTestCommandConfig(NetTestCommandGeneric):
                option_abspath[0:6] != "/proc/":
                 err = "Wrong config option %s. Only /proc or /sys paths are " \
                       "allowed." % option
-                self.set_fail(err)
+                res_data = {"msg": err}
+                self.set_fail(res_data)
                 return
 
             try:
                 prev_val = self._retrive_option(option)
                 self._set_option(option, value)
             except ExecCmdFail:
-                self.set_fail("Unable to set %s config option!" % option)
+                err = "Unable to set %s config option!" % option
+                res_data = {"msg": err}
+                self.set_fail(res_data)
                 return
 
             if "persistent" in self._command:
