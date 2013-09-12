@@ -24,15 +24,21 @@ class XmlProcessingError(Exception):
         super(XmlProcessingError, self).__init__()
         self._msg = msg
 
-        if obj is not None and hasattr(obj, "loc"):
-            self.set_loc(obj.loc)
-
-        loc = {}
-        if obj is not None and hasattr(obj, "base") and obj.base != None:
-            loc["file"] = os.path.basename(obj.base)
-            if hasattr(obj, "sourceline"):
-                loc["line"] = obj.sourceline
-            self.set_loc(loc)
+        if obj is not None:
+            if hasattr(obj, "loc"):
+                self.set_loc(obj.loc)
+            elif hasattr(obj, "attrib") and "__file" in obj.attrib:
+                loc = {}
+                loc["file"] = obj.attrib["__file"]
+                if hasattr(obj, "sourceline"):
+                    loc["line"] = obj.sourceline
+                self.set_loc(loc)
+            elif hasattr(obj, "base") and obj.base != None:
+                loc = {}
+                loc["file"] = os.path.basename(obj.base)
+                if hasattr(obj, "sourceline"):
+                    loc["line"] = obj.sourceline
+                self.set_loc(loc)
 
 
     def set_loc(self, loc):
@@ -89,6 +95,12 @@ class XmlCollection(list):
         if node is not None:
             if hasattr(node, "loc"):
                 self.loc = node.loc
+            elif "__file" in node.attrib:
+                loc = {}
+                loc["file"] = node.attrib["__file"]
+                if hasattr(node, "sourceline"):
+                    loc["line"] = node.sourceline
+                self.loc = loc
             elif hasattr(node, "base") and node.base != None:
                 loc = {}
                 loc["file"] = os.path.basename(node.base)
@@ -113,6 +125,12 @@ class XmlData(dict):
         if node is not None:
             if hasattr(node, "loc"):
                 self.loc = node.loc
+            elif "__file" in node.attrib:
+                loc = {}
+                loc["file"] = node.attrib["__file"]
+                if hasattr(node, "sourceline"):
+                    loc["line"] = node.sourceline
+                self.loc = loc
             elif hasattr(node, "base") and node.base != None:
                 loc = {}
                 loc["file"] = os.path.basename(node.base)

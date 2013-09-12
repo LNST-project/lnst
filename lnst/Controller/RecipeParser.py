@@ -34,13 +34,6 @@ class RecipeParser(XmlParser):
     def _process(self, lnst_recipe):
         recipe = XmlData(lnst_recipe)
 
-        # remove all comments from the document
-        comments = lnst_recipe.xpath('//comment()')
-        for c in comments:
-            p = c.getparent()
-            if p is not None:
-                p.remove(c)
-
         # machines
         machines_tag = lnst_recipe.find("machines")
         if machines_tag is not None:
