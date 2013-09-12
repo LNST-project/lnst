@@ -43,14 +43,13 @@ def usage(retval=0):
     print "  -m, --no-colours                disable coloured terminal output"
     print "  -o, --disable-pool-checks       don't check the availability of\n"\
           "                                  machines in the pool"
-    print "  -c, --cleanup                   perform config cleanup\n" \
-          "                                  machines"
+    print "  -c, --config=FILE               load additional config file\n"
     print "  -x, --result=FILE               file to write xml_result"
     sys.exit(retval)
 
-def process_recipe(action, file_path, cleanup, res_serializer,
+def process_recipe(action, file_path, res_serializer,
                    packet_capture, log_ctl, pool_checks):
-    nettestctl = NetTestController(file_path, log_ctl, cleanup=cleanup,
+    nettestctl = NetTestController(file_path, log_ctl,
                                    res_serializer=res_serializer,
                                    pool_checks=pool_checks)
     if action == "run":
@@ -60,7 +59,7 @@ def process_recipe(action, file_path, cleanup, res_serializer,
     elif action == "match_setup":
         return nettestctl.match_setup()
 
-def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
+def get_recipe_result(args, file_path, res_serializer, packet_capture,
                       log_ctl, pool_checks):
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
@@ -69,7 +68,7 @@ def get_recipe_result(args, file_path, cleanup, res_serializer, packet_capture,
 
     res = {}
     try:
-        res = process_recipe(args, file_path, cleanup, res_serializer,
+        res = process_recipe(args, file_path, res_serializer,
                              packet_capture, log_ctl, pool_checks)
     except Exception as err:
         log_exc_traceback()
@@ -93,8 +92,8 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:cx:pom",
-            ["debug", "help", "recipe=", "cleanup", "result=",
+            "dhr:c:x:pom",
+            ["debug", "help", "recipe=", "config", "result=",
              "packet-capture", "disable-pool-checks", "no-colours"]
         )
     except getopt.GetoptError as err:
@@ -120,18 +119,18 @@ def main():
 
     debug = 0
     recipe_path = None
-    cleanup = False
     result_path = None
+    config_path = None
     packet_capture = False
     pool_checks = True
-    coloured_output = not lnst_config.get_option("colours", "disable_colours")
+    coloured_output = True
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
         elif opt in ("-h", "--help"):
             usage(RETVAL_PASS)
-        elif opt in ("-c", "--cleanup"):
-            cleanup = True
+        elif opt in ("-c", "--config"):
+            config_path = arg
         elif opt in ("-x", "--result"):
             result_path = arg
         elif opt in ("-p", "--packet-capture"):
@@ -140,6 +139,18 @@ def main():
             pool_checks = False
         elif opt in ("-m", "--no-colours"):
             coloured_output = False
+
+    if config_path is not None:
+        if not os.path.isfile(config_path):
+            print "File '%s' doesn't exist!" % config_path
+            usage(RETVAL_ERR)
+        else:
+            print "Loading config file '%s'" % config_path
+            lnst_config.load_config(config_path)
+
+    if coloured_output:
+        coloured_output = not lnst_config.get_option("colours",
+                                                     "disable_colours")
 
     load_presets_from_config(lnst_config)
 
@@ -174,12 +185,12 @@ def main():
                 if re.match(r'^.*\.xml$', recipe_file):
                     logging.info("Processing recipe file \"%s\"" % recipe_file)
                     fp, res, rv = get_recipe_result(action, recipe_file,
-                                                    cleanup, res_serializer,
+                                                    res_serializer,
                                                     packet_capture,
                                                     log_ctl, pool_checks)
         else:
             fp, res, rv = get_recipe_result(action, recipe_path,
-                                            cleanup, res_serializer,
+                                            res_serializer,
                                             packet_capture,
                                             log_ctl, pool_checks)
 
