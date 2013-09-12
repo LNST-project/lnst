@@ -113,7 +113,7 @@ class Machine(object):
 
         return result
 
-    def configure(self, recipe_name, do_cleanup=False):
+    def configure(self, recipe_name):
         """ Prepare the machine
 
             Calling this method will initialize the rpc connection to the
@@ -134,9 +134,6 @@ class Machine(object):
             msg = "Unable to establish RPC connection " \
                   "to machine %s, handshake failed!" % hostname
             raise Machine(msg)
-
-        if do_cleanup:
-            self._rpc_call("machine_cleanup")
 
         for iface in self._interfaces:
             iface.initialize()

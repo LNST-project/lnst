@@ -83,11 +83,15 @@ class SlaveMethods:
         self.ctl_clean_exit = True
 
     def hello(self, recipe_path):
+        if not self.ctl_clean_exit:
+            self._methods.machine_cleanup()
+            self._methods.ctl_clean_exit = True
+
         logging.info("Recieved a controller connection.")
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
-        self.ctl_clean_exit = False
+        self._ctl_clean_exit = False
 
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self._log_ctl.set_recipe(recipe_path, expand=date)
@@ -451,8 +455,6 @@ class NetTestSlave:
 
         self._log_ctl = log_ctl
 
-        self._start = True
-
         self._nl_socket = NetlinkSocket(family=NETLINK_ROUTE)
         self._nl_socket.bind(RTNL_GROUPS)
         self._server_handler.add_connection('netlink', self._nl_socket)
@@ -461,13 +463,9 @@ class NetTestSlave:
         while not self._finished:
             if self._server_handler.get_ctl_sock() == None:
                 self._log_ctl.cancel_connection()
-                if not self._start and not self._methods.ctl_clean_exit:
-                    self._methods.machine_cleanup()
-                    self._methods.ctl_clean_exit = True
                 try:
                     logging.info("Waiting for connection.")
                     self._server_handler.accept_connection()
-                    self._start = False
                 except socket.error:
                     continue
                 self._log_ctl.set_connection(

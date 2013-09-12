@@ -44,9 +44,8 @@ def ignore_event(**kwarg):
     pass
 
 class NetTestController:
-    def __init__(self, recipe_path, log_ctl, cleanup=False,
+    def __init__(self, recipe_path, log_ctl,
                  res_serializer=None, pool_checks=True):
-        self._docleanup = cleanup
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
@@ -204,7 +203,7 @@ class NetTestController:
         machine.set_network_bridges(self._network_bridges)
 
         recipe_name = os.path.basename(self._recipe_path)
-        machine.configure(recipe_name, self._docleanup)
+        machine.configure(recipe_name)
         machine.sync_resources(self._resource_table)
 
     def _prepare_interface(self, m_id, iface_xml_data):
