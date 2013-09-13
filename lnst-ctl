@@ -32,7 +32,7 @@ def usage(retval=0):
     """
     print "Usage: %s [OPTION...] [RECIPE...] ACTION" % sys.argv[0]
     print ""
-    print "ACTION = [run | config_only | match_setup]"
+    print "ACTION = [ run | config_only | match_setup ]"
     print ""
     print "OPTIONS"
     print "  -d, --debug                     emit debugging messages"
@@ -45,13 +45,34 @@ def usage(retval=0):
           "                                  machines in the pool"
     print "  -c, --config=FILE               load additional config file\n"
     print "  -x, --result=FILE               file to write xml_result"
+    print "  -a, --define-alias name=value   define top-level alias"
+    print "  -A, --override-alias name=value define top-level alias that\n" \
+          "                                  will override any other\n"\
+          "                                  definitions in the recipe"
     sys.exit(retval)
 
+def store_alias(alias_def, aliases_dict):
+    try:
+        name, value = alias_def.split("=")
+    except:
+        msg = "The alias definition '%s' not supported. The proper" + \
+              " format is alias_name=alias_value."
+        raise Exception(msg)
+
+    if name in aliases_dict:
+        msg = "The same alias %s was defined multiple times through CLI."
+        logging.warning(msg)
+
+    aliases_dict[name] = value
+
 def process_recipe(action, file_path, res_serializer,
-                   packet_capture, log_ctl, pool_checks):
+                   packet_capture, log_ctl, pool_checks,
+                   defined_aliases, overriden_aliases):
     nettestctl = NetTestController(file_path, log_ctl,
                                    res_serializer=res_serializer,
-                                   pool_checks=pool_checks)
+                                   pool_checks=pool_checks,
+                                   defined_aliases=defined_aliases,
+                                   overriden_aliases=overriden_aliases)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "config_only":
@@ -60,7 +81,7 @@ def process_recipe(action, file_path, res_serializer,
         return nettestctl.match_setup()
 
 def get_recipe_result(args, file_path, res_serializer, packet_capture,
-                      log_ctl, pool_checks):
+                      log_ctl, pool_checks, defined_aliases, overriden_aliases):
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
 
@@ -69,7 +90,8 @@ def get_recipe_result(args, file_path, res_serializer, packet_capture,
     res = {}
     try:
         res = process_recipe(args, file_path, res_serializer,
-                             packet_capture, log_ctl, pool_checks)
+                             packet_capture, log_ctl, pool_checks,
+                             defined_aliases, overriden_aliases)
     except Exception as err:
         log_exc_traceback()
         logging.error(err)
@@ -92,9 +114,10 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:c:x:pom",
+            "dhr:c:x:poma:A:",
             ["debug", "help", "recipe=", "config", "result=",
-             "packet-capture", "disable-pool-checks", "no-colours"]
+             "packet-capture", "disable-pool-checks", "no-colours",
+             "define_alias", "override_alias"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -124,6 +147,8 @@ def main():
     packet_capture = False
     pool_checks = True
     coloured_output = True
+    defined_aliases = {}
+    overriden_aliases = {}
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -139,6 +164,10 @@ def main():
             pool_checks = False
         elif opt in ("-m", "--no-colours"):
             coloured_output = False
+        elif opt in ("-a", "--define-alias"):
+            store_alias(arg, defined_aliases)
+        elif opt in ("-A", "--override-alias"):
+            store_alias(arg, overriden_aliases)
 
     if config_path is not None:
         if not os.path.isfile(config_path):
@@ -187,12 +216,15 @@ def main():
                     fp, res, rv = get_recipe_result(action, recipe_file,
                                                     res_serializer,
                                                     packet_capture,
-                                                    log_ctl, pool_checks)
+                                                    log_ctl, pool_checks,
+                                                    defined_aliases,
+                                                    overriden_aliases)
         else:
             fp, res, rv = get_recipe_result(action, recipe_path,
                                             res_serializer,
                                             packet_capture,
-                                            log_ctl, pool_checks)
+                                            log_ctl, pool_checks,
+                                            defined_aliases, overriden_aliases)
 
         summary.append((fp, res))
         if rv > retval:

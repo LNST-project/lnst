@@ -250,6 +250,14 @@ class XmlTemplates:
         """
         self._machines = machines
 
+    def set_aliases(self, defined, overriden):
+        """ Set aliases defined or overriden from CLI """
+
+        for name, value in defined.iteritems():
+            self.define_alias(name, value)
+
+        self._overriden_aliases = overriden
+
     def define_alias(self, name, value, skip_reserved_check=False):
         """ Associate an alias name with some value
 
@@ -283,11 +291,14 @@ class XmlTemplates:
         self._definitions.pop()
 
     def _find_definition(self, name):
+        if name in self._overriden_aliases:
+            return self._overriden_aliases[name]
+
         for level in reversed(self._definitions):
             if name in level:
                 return level[name]
 
-        err = "'%s' is not defined here" % name
+        err = "Alias '%s' is not defined here" % name
         raise XmlTemplateError(err)
 
     def process_aliases(self, element):

@@ -102,6 +102,9 @@ class XmlParser(object):
     def set_machines(self, machines):
         self._template_proc.set_machines(machines)
 
+    def set_aliases(self, defined, overriden):
+        self._template_proc.set_aliases(defined, overriden)
+
     def _has_attribute(self, element, attr):
         return attr in element.attrib
 

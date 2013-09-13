@@ -45,7 +45,8 @@ def ignore_event(**kwarg):
 
 class NetTestController:
     def __init__(self, recipe_path, log_ctl,
-                 res_serializer=None, pool_checks=True):
+                 res_serializer=None, pool_checks=True,
+                 defined_aliases=None, overriden_aliases=None):
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
@@ -65,6 +66,7 @@ class NetTestController:
 
         parser = RecipeParser(recipe_path)
         parser.set_machines(self._machines)
+        parser.set_aliases(defined_aliases, overriden_aliases)
         self._recipe = parser.parse()
 
         modules_dirs = lnst_config.get_option('environment', 'module_dirs')
