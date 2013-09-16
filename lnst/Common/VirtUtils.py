@@ -211,6 +211,12 @@ class BridgeCtl(NetCtl):
         self._check_name(name)
         self._name = name
 
+    def get_name(self):
+        return self._name
+
+    def set_remove(self, remove):
+        self._remove = remove
+
     @staticmethod
     def _check_name(name):
         if len(name) > 16:

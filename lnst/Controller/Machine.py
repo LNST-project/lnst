@@ -213,6 +213,9 @@ class Machine(object):
         """
         return self._hostname
 
+    def get_libvirt_domain(self):
+        return self._libvirt_domain
+
     def get_id(self):
         """ Returns machine's id as defined in the recipe """
         return self._id

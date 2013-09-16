@@ -15,7 +15,7 @@ import logging
 import socket
 import os
 import re
-import pickle
+import cPickle
 import tempfile
 import imp
 from time import sleep
@@ -35,6 +35,7 @@ from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
 from lnst.Common.RecipePath import RecipePath
 from lnst.Common.Colours import decorate_with_preset
+from lnst.Common.NetUtils import test_tcp_connection
 import lnst.Controller.Task as Task
 
 class NetTestError(Exception):
@@ -52,6 +53,8 @@ class NetTestController:
         self._log_ctl = log_ctl
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
+
+        self._remove_virt_config()
 
         sp = SlavePool(lnst_config.get_option('environment', 'pool_dirs'),
                        check_process_running("libvirtd"), pool_checks)
@@ -408,8 +411,70 @@ class NetTestController:
                 self._log_ctl.remove_slave(machine_id)
 
         # remove dynamically created bridges
+        if deconfigure:
+            for bridge in self._network_bridges.itervalues():
+                bridge.cleanup()
+
+    def _save_virt_config(self):
+        #saves current virtual configuration to a file, after pickling it
+        config_data = dict()
+        machines = config_data["machines"] = {}
+        for m in self._machines.itervalues():
+            machine = machines[m.get_hostname()] = dict()
+
+            machine["libvirt_dom"] = m.get_libvirt_domain()
+            machine["interfaces"] = []
+
+            for i in m._interfaces:
+                hwaddr = i.get_hwaddr()
+
+                machine["interfaces"].append(hwaddr)
+
+        config_data["bridges"] = bridges = []
         for bridge in self._network_bridges.itervalues():
-            bridge.cleanup()
+            bridges.append(bridge.get_name())
+
+        with open("/tmp/.lnst_virt_conf", "wb") as f:
+            pickled_data = cPickle.dump(config_data, f)
+
+    def _remove_virt_config(self):
+        #removes previously saved virtual configuration
+        cfg = None
+        try:
+            with open("/tmp/.lnst_virt_conf", "rb") as f:
+                cfg = cPickle.load(f)
+        except:
+            return
+
+        if cfg:
+            logging.info("Cleaning ip leftover configuration from previous "\
+                         "virtualized config_only run.")
+            for hostname, machine in cfg["machines"].iteritems():
+                port = lnst_config.get_option("environment", "rpcport")
+                if test_tcp_connection(hostname, port):
+                    rpc_con = socket.create_connection((hostname, port))
+
+                    rpc_msg= {"type": "command",
+                              "method_name": "machine_cleanup",
+                              "args": []}
+
+                    logging.debug("Calling cleanup on slave '%s'" % hostname)
+                    send_data(rpc_con, rpc_msg)
+                    rpc_con.close()
+
+                libvirt_dom = machine["libvirt_dom"]
+                domain_ctl = VirtDomainCtl(libvirt_dom)
+                logging.info("Detaching dynamically created interfaces.")
+                for i in machine["interfaces"]:
+                    domain_ctl.detach_interface(i)
+
+            logging.info("Removing dynamically created bridges.")
+            for br in cfg["bridges"]:
+                br_ctl = BridgeCtl(br)
+                br_ctl.set_remove(True)
+                br_ctl.cleanup()
+
+            os.remove("/tmp/.lnst_virt_conf")
 
     def match_setup(self):
         mreq = self._get_machine_requirements()
@@ -425,6 +490,10 @@ class NetTestController:
             logging.error(msg)
             self._cleanup_slaves()
             raise
+
+        sp = self._slave_pool
+        if sp.is_setup_virtual():
+            self._save_virt_config()
 
         self._cleanup_slaves(deconfigure=False)
         return {"passed": True}
