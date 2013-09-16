@@ -418,7 +418,14 @@ class NetTestController:
         return {"passed": True}
 
     def config_only_recipe(self):
-        self._prepare_network()
+        try:
+            self._prepare_network()
+        except (KeyboardInterrupt, Exception) as exc:
+            msg = "Exception raised during configuration."
+            logging.error(msg)
+            self._cleanup_slaves()
+            raise
+
         self._cleanup_slaves(deconfigure=False)
         return {"passed": True}
 
@@ -426,9 +433,10 @@ class NetTestController:
         try:
             self._prepare_network()
             self._prepare_tasks()
-        except Exception as exc:
+        except (KeyboardInterrupt, Exception) as exc:
             msg = "Exception raised during configuration."
             logging.error(msg)
+            self._cleanup_slaves()
             raise
 
         if packet_capture:
