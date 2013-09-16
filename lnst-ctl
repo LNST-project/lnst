@@ -35,20 +35,18 @@ def usage(retval=0):
     print "ACTION = [ run | config_only | match_setup ]"
     print ""
     print "OPTIONS"
+    print "  -a, --define-alias name=value   define top-level alias"
+    print "  -A, --override-alias name=value define top-level alias that " \
+              "will override any other definitions in the recipe"
+    print "  -c, --config=FILE               load additional config file"
     print "  -d, --debug                     emit debugging messages"
-    print "  -p, --packet-capture            capture and log all ongoing\n" \
-          "                                  network communication during\n" \
-          "                                  the test"
     print "  -h, --help                      print this message"
     print "  -m, --no-colours                disable coloured terminal output"
-    print "  -o, --disable-pool-checks       don't check the availability of\n"\
-          "                                  machines in the pool"
-    print "  -c, --config=FILE               load additional config file\n"
+    print "  -o, --disable-pool-checks       don't check the availability of " \
+              "machines in the pool"
+    print "  -p, --packet-capture            capture and log all ongoing " \
+              "network communication during the test"
     print "  -x, --result=FILE               file to write xml_result"
-    print "  -a, --define-alias name=value   define top-level alias"
-    print "  -A, --override-alias name=value define top-level alias that\n" \
-          "                                  will override any other\n"\
-          "                                  definitions in the recipe"
     sys.exit(retval)
 
 def store_alias(alias_def, aliases_dict):
