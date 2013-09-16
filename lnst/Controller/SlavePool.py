@@ -725,6 +725,6 @@ class SetupMapper:
             if self._map_setup_virt(new_template, new_pool):
                 return True
 
-            self._machine_map.discard((machine, possible_match))
+            self._machine_map.discard((machine_id, pm_id))
 
         return False
