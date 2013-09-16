@@ -158,6 +158,11 @@ class Machine(object):
 
         #connection to the slave was closed
         if not self._msg_dispatcher.get_connection(self._id):
+            #we still need to remove virtual interfaces
+            if deconfigure:
+                for iface in reversed(self._interfaces):
+                    if isinstance(iface, VirtualInterface):
+                        iface.cleanup()
             return
 
         self._rpc_call("kill_cmds")
