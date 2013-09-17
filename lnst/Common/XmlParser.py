@@ -136,6 +136,8 @@ class XmlParser(object):
                     return node
 
                 parent.replace(e, node)
+            else:
+                self._expand_xinclude(e, base_url)
         return elem
 
     def _remove_comments(self, doc):
