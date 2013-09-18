@@ -147,7 +147,7 @@ class TestIperf(TestGeneric):
         elif role == "client":
             logging.debug("running as client ...")
             (rv, message) = self.run_client(cmd)
-            res_data = {"msg": mesage}
+            res_data = {"msg": message}
             if rv == False:
                 return self.set_fail(res_data)
 
