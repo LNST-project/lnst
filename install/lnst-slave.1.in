@@ -82,8 +82,9 @@ Project Homepage:      http://lnst-project.org/
 Online Documentation:  https://github.com/jpirko/lnst/wiki#learn
 .br
 Git Source Tree:       https://github.com/jpirko/lnst
+.br
+Mailing List:          <lnst-developers@lists.fedorahosted.org>
 
-Mailing List:    <lnst-developers@lists.fedorahosted.org>
 .SH AUTHORS
 \fBJiri Pirko\fR <jpirko@redhat.com>
 .br
