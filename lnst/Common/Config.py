@@ -154,6 +154,8 @@ class Config():
 
         config.pop('__name__', None)
         for opt in config:
+            if not config[opt]:
+                continue
             option = self._find_option_by_name(section, opt)
             if option != None:
                 if option[1]: #additive?
