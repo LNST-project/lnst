@@ -25,6 +25,7 @@ from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.Machine import Machine
 from lnst.Controller.SlaveMachineParser import SlaveMachineParser
 from lnst.Controller.SlaveMachineParser import SlaveMachineError
+from lnst.Common.Colours import decorate_with_preset
 
 class SlavePool:
     """
@@ -44,14 +45,38 @@ class SlavePool:
     def __init__(self, pool_dirs, allow_virtual=False, pool_checks=True):
         self._allow_virt = allow_virtual
         self._pool_checks = pool_checks
+        logging.info("Checking machine pool availability.")
         for pool_dir in pool_dirs:
             self.add_dir(pool_dir)
 
     def add_dir(self, pool_dir):
+        logging.info("Processing pool dir '%s'" % pool_dir)
         dentries = os.listdir(pool_dir)
 
+        res = []
         for dirent in dentries:
-            self.add_file("%s/%s" % (pool_dir, dirent))
+            res.append(self.add_file("%s/%s" % (pool_dir, dirent)))
+
+        max_len = 0
+        for m_id, _ in res:
+            if len(m_id) > max_len:
+                max_len = len(m_id)
+        for m_id, available in res:
+            if available:
+                machine_spec = self._pool[m_id]
+                if 'libvirt_domain' in machine_spec['params']:
+                    libvirt_msg = "   libvirt_domain: %s" %\
+                                        machine_spec['params']['libvirt_domain']
+                else:
+                    libvirt_msg = ""
+                msg = "%s%s [%s] %s" % (m_id, (max_len - len(m_id)) * " ",
+                                        decorate_with_preset("UP", "pass"),
+                                        libvirt_msg)
+            else:
+                msg = "%s%s [%s]" % (m_id, (max_len - len(m_id)) * " ",
+                                     decorate_with_preset("DOWN", "fail"))
+
+            logging.info(msg)
 
     def add_file(self, filepath):
         if os.path.isfile(filepath) and re.search("\.xml$", filepath, re.I):
@@ -63,25 +88,28 @@ class SlavePool:
             machine_spec = self._process_machine_xml_data(m_id, xml_data)
 
             if self._pool_checks:
+                available = False
+
                 hostname = machine_spec["params"]["hostname"]
                 if "rpcport" in machine_spec:
                     port = machine_spec["params"]["rpcport"]
                 else:
                     port = lnst_config.get_option('environment', 'rpcport')
 
-                logging.info("Querying slave machine %s." % m_id)
-                if not test_tcp_connection(hostname, port):
-                    msg = "Machine '%s' not responding. Skipping." % m_id
-                    logging.warning(msg)
-                    return
+                logging.debug("Querying machine '%s': %s:%s" %\
+                                                (m_id, hostname, port))
+                if test_tcp_connection(hostname, port):
+                    available = True
 
                 if 'libvirt_domain' in machine_spec['params'] and \
                    not self._allow_virt:
-                    msg = "libvird not running. Skipping machine '%s'." % m_id
-                    logging.warning(msg)
+                       logging.debug("libvirtd not running. Removing "\
+                                     "libvirt_domain from machine '%s'" % m_id)
+                       del machine_spec['params']['libvirt_domain']
 
-            logging.info("Adding slave machine %s to slave pool." % m_id)
-            self._pool[m_id] = machine_spec
+            if available:
+                self._pool[m_id] = machine_spec
+            return (m_id, available)
 
     def _process_machine_xml_data(self, m_id, machine_xml_data):
         machine_spec = {"interfaces": {}, "params":{}}
