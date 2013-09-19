@@ -135,6 +135,7 @@ class Config():
         exp_path = os.path.expanduser(path)
         abs_path = os.path.abspath(exp_path)
         parser = ConfigParser(dict_type=dict)
+        print "Loading config file '%s'" % abs_path
         parser.read(abs_path)
 
         sections = parser._sections

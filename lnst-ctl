@@ -172,7 +172,6 @@ def main():
             print "File '%s' doesn't exist!" % config_path
             usage(RETVAL_ERR)
         else:
-            print "Loading config file '%s'" % config_path
             lnst_config.load_config(config_path)
 
     if coloured_output:
