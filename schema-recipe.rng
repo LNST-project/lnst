@@ -21,8 +21,10 @@
             <oneOrMore>
                 <element name="alias">
                     <attribute name="name"/>
-                    <attribute name="value"/>
-                    <text/>
+                    <choice>
+                        <attribute name="value"/>
+                        <text/>
+                    </choice>
                 </element>
             </oneOrMore>
         </element>
@@ -248,8 +250,10 @@
 
                 <zeroOrMore>
                     <element name="address">
-                        <attribute name="value"/>
-                        <text/>
+                        <choice>
+                            <attribute name="value"/>
+                            <text/>
+                        </choice>
                     </element>
                 </zeroOrMore>
             </interleave>

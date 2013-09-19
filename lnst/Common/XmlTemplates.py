@@ -22,6 +22,7 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import re
+from lxml import etree
 from lnst.Common.XmlProcessing import XmlTemplateString
 
 class XmlTemplateError(Exception):
@@ -319,8 +320,11 @@ class XmlTemplates:
 
         if element.tag == "define":
             for alias in element.getchildren():
-                name = alias.attrib["name"]
-                value = alias.attrib["value"]
+                name = alias.attrib["name"].strip()
+                if "value" in alias.attrib:
+                    value = alias.attrib["value"].strip()
+                else:
+                    value = etree.tostring(element, method="text").strip()
                 self.define_alias(name, value)
             parent = element.getparent()
             parent.remove(element)

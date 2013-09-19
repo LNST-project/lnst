@@ -109,10 +109,11 @@ class XmlParser(object):
         return attr in element.attrib
 
     def _get_attribute(self, element, attr):
-        return self._template_proc.expand_functions(element.attrib[attr])
+        text = element.attrib[attr].strip()
+        return self._template_proc.expand_functions(text)
 
     def _get_content(self, element):
-        text = etree.tostring(element, method="text")
+        text = etree.tostring(element, method="text").strip()
         return self._template_proc.expand_functions(text)
 
     def _expand_xinclude(self, elem, base_url=""):
