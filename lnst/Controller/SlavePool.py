@@ -84,6 +84,17 @@ class SlavePool:
             xml_data = parser.parse()
             machine_spec = self._process_machine_xml_data(m_id, xml_data)
 
+            # Check if there isn't any machine with the same
+            # hostname or libvirt_domain already in the pool
+            for pm_id, m in self._pool.iteritems():
+                pm = m["params"]
+                rm = machine_spec["params"]
+                if pm["hostname"] == rm["hostname"] or \
+                   pm["libvirt_domain"] == rm["libvirt_domain"]:
+                    msg = "You have the same machine listed twice in " \
+                          "your pool ('%s' and '%s')." % (m_id, pm_id)
+                    raise SlaveMachineError(msg)
+
             if self._pool_checks:
                 available = False
 
