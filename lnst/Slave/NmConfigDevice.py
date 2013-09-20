@@ -391,9 +391,12 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
             self._nm_rm_connection(netdev["con_obj_path"])
             netdev["con_obj_path"] = ""
 
-        #NM doesn't know how to remove soft devices...
-        bond_masters = "/sys/class/net/bonding_masters"
-        exec_cmd('echo "-%s" > %s' % (netdev["name"], bond_masters))
+        #older versions of NM don't know how to remove soft devices...
+        try:
+            bond_masters = "/sys/class/net/bonding_masters"
+            exec_cmd('echo "-%s" > %s' % (netdev["name"], bond_masters))
+        except:
+            pass
 
     def _add_slaves(self):
         for slave in get_slaves(self._netdev):
@@ -501,9 +504,12 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
             self._nm_rm_connection(netdev["con_obj_path"])
             netdev["con_obj_path"] = ""
 
-        #NM doesn't know how to remove soft devices...
-        exec_cmd("ip link set %s down" % netdev["name"])
-        exec_cmd("brctl delbr %s " % netdev["name"])
+        #older versions of NM don't know how to remove soft devices...
+        try:
+            exec_cmd("ip link set %s down" % netdev["name"])
+            exec_cmd("brctl delbr %s " % netdev["name"])
+        except:
+            pass
 
     def _add_slave(self, slave):
         netdev = self._config[slave]
@@ -640,13 +646,16 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
             self._nm_rm_connection(netdev["con_obj_path"])
             netdev["con_obj_path"] = ""
 
-        #NM doesn't know how to remove soft devices...
+        #older versions of NM don't know how to remove soft devices...
         #and lnst will break when multiple devices with the same mac exist
-        dev_name = self._get_vlan_info()[0]
-        if self._check_ip_link_add():
-            exec_cmd("ip link del %s" % dev_name)
-        else:
-            exec_cmd("vconfig rem %s" % dev_name)
+        try:
+            dev_name = self._get_vlan_info()[0]
+            if self._check_ip_link_add():
+                exec_cmd("ip link del %s" % dev_name)
+            else:
+                exec_cmd("vconfig rem %s" % dev_name)
+        except:
+            pass
 
 class NmConfigDeviceTeam(NmConfigDeviceGeneric):
     #Not supported by NetworkManager yet
