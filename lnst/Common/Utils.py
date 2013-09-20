@@ -16,6 +16,7 @@ import os
 import hashlib
 import tempfile
 import subprocess
+import errno
 from lnst.Common.ExecCmd import exec_cmd
 
 def die_when_parent_die():
@@ -157,3 +158,12 @@ def check_process_running(process_name):
         return True
     except subprocess.CalledProcessError:
         return False
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise

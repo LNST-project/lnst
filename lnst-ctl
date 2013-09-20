@@ -20,6 +20,7 @@ import datetime
 from lnst.Common.Logs import LoggingCtl, log_exc_traceback
 from lnst.Common.Config import lnst_config
 from lnst.Common.Colours import load_presets_from_config
+from lnst.Common.Utils import mkdir_p
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
 
@@ -133,8 +134,10 @@ def main():
     if os.path.isfile(usr_cfg):
         lnst_config.load_config(usr_cfg)
     else:
-        if not os.path.isdir(os.path.dirname(usr_cfg)):
-            os.makedirs(os.path.dirname(usr_cfg))
+        usr_cfg_dir = os.path.dirname(usr_cfg)
+        pool_dir = usr_cfg_dir + "/pool"
+        mkdir_p(pool_dir)
+        lnst_config.set_option("environment", "pool_dirs", [pool_dir])
         with open(usr_cfg, 'w') as f:
             f.write(lnst_config.dump_config())
 

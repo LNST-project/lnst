@@ -29,42 +29,42 @@ class Config():
     _scheme = None
 
     def __init__(self):
-        self.options = dict()
+        self._options = dict()
 
     def controller_init(self):
-        self.options['environment'] = dict()
-        self.options['environment']['mac_pool_range'] = {\
+        self._options['environment'] = dict()
+        self._options['environment']['mac_pool_range'] = {\
                 "value" : ['52:54:01:00:00:01', '52:54:01:FF:FF:FF'],
                 "additive" : False,
                 "action" : self.optionMacRange,
                 "name" : "mac_pool_range"}
-        self.options['environment']['rpcport'] = {\
+        self._options['environment']['rpcport'] = {\
                 "value" : DefaultRPCPort,
                 "additive" : False,
                 "action" : self.optionPort,
                 "name" : "rpcport"}
-        self.options['environment']['pool_dirs'] = {\
+        self._options['environment']['pool_dirs'] = {\
                 "value" : [],
                 "additive" : True,
                 "action" : self.optionDirList,
                 "name" : "machine_pool_dirs"}
-        self.options['environment']['tool_dirs'] = {\
+        self._options['environment']['tool_dirs'] = {\
                 "value" : [],
                 "additive" : True,
                 "action" : self.optionDirList,
                 "name" : "test_tool_dirs"}
-        self.options['environment']['module_dirs'] = {\
+        self._options['environment']['module_dirs'] = {\
                 "value" : [],
                 "additive" : True,
                 "action" : self.optionDirList,
                 "name" : "test_module_dirs"}
-        self.options['environment']['log_dir'] = {\
+        self._options['environment']['log_dir'] = {\
                 "value" : os.path.abspath(os.path.join(
                     os.path.dirname(sys.argv[0]), './Logs')),
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "log_dir"}
-        self.options['environment']['resource_dir'] = {\
+        self._options['environment']['resource_dir'] = {\
                 "value" : "",
                 "additive" : False,
                 "action" : self.optionPath,
@@ -73,28 +73,28 @@ class Config():
         self.colours_scheme()
 
     def slave_init(self):
-        self.options['environment'] = dict()
-        self.options['environment']['log_dir'] = {\
+        self._options['environment'] = dict()
+        self._options['environment']['log_dir'] = {\
                 "value" : os.path.abspath(os.path.join(
                     os.path.dirname(sys.argv[0]), './Logs')),
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "log_dir"}
-        self.options['environment']['use_nm'] = {\
+        self._options['environment']['use_nm'] = {\
                 "value" : True,
                 "additive" : False,
                 "action" : self.optionBool,
                 "name" : "use_nm"}
 
-        self.options['cache'] = dict()
-        self.options['cache']['dir'] = {\
+        self._options['cache'] = dict()
+        self._options['cache']['dir'] = {\
                 "value" : os.path.abspath(os.path.join(
                     os.path.dirname(sys.argv[0]), './cache')),
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "cache_dir"}
 
-        self.options['cache']['expiration_period'] = {\
+        self._options['cache']['expiration_period'] = {\
                 "value" : 7*24*60*60, # 1 week
                 "additive" : False,
                 "action" : self.optionTimeval,
@@ -103,25 +103,25 @@ class Config():
         self.colours_scheme()
 
     def colours_scheme(self):
-        self.options['colours'] = dict()
-        self.options['colours']["disable_colours"] = {\
+        self._options['colours'] = dict()
+        self._options['colours']["disable_colours"] = {\
                 "value": False, "additive": False,
                 "action": self.optionBool, "name": "disable_colours"}
 
         for preset in ["faded", "alert", "highlight", "pass", "fail", "error",
                        "info", "debug", "warning", "log_header"]:
-            self.options['colours'][preset] = {\
+            self._options['colours'][preset] = {\
                     "value": get_preset_conf(preset), "additive": False,
                     "action": self.optionColour, "name": preset}
 
     def get_config(self):
-        return self.options
+        return self._options
 
     def get_section(self, section):
-        if section not in self.options:
+        if section not in self._options:
             msg = 'Unknow section: %s' % section
             raise ConfigError(msg)
-        return self.options[section]
+        return self._options[section]
 
     def get_option(self, section, option):
         sect = self.get_section(section)
@@ -129,6 +129,10 @@ class Config():
             msg = 'Unknown option: %s in section: %s' % (option, section)
             raise ConfigError(msg)
         return sect[option]["value"]
+
+    def set_option(self, section, option, value):
+        sect = self.get_section(section)
+        sect[option]["value"] = value
 
     def load_config(self, path):
         '''Parse and load the config file'''
@@ -144,14 +148,14 @@ class Config():
 
     def handleSections(self, sections, path):
         for section in sections:
-            if section in self.options:
+            if section in self._options:
                 self.handleOptions(section, sections[section], path)
             else:
                 msg = "Unknown section: %s" % section
                 raise ConfigError(msg)
 
     def handleOptions(self, section_name, config, cfg_path):
-        section = self.options[section_name]
+        section = self._options[section_name]
 
         config.pop('__name__', None)
         for opt in config:
@@ -262,18 +266,18 @@ class Config():
 
     def dump_config(self):
         string = ""
-        for section in self.options:
+        for section in self._options:
             string += "[%s]\n" % section
-            for option in self.options[section]:
+            for option in self._options[section]:
                 val = self.value_to_string(section, option)
-                opt_name = self.options[section][option]["name"]
+                opt_name = self._options[section][option]["name"]
                 string += "%s = %s\n" % (opt_name, val)
 
         return string
 
     def value_to_string(self, section, option):
         string = ""
-        value = self.options[section][option]["value"]
+        value = self._options[section][option]["value"]
 
         if type(value) == list:
             string = " ".join(value)
