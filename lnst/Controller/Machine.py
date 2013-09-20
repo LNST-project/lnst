@@ -158,24 +158,30 @@ class Machine(object):
 
         #connection to the slave was closed
         if not self._msg_dispatcher.get_connection(self._id):
-            #we still need to remove virtual interfaces
-            if deconfigure:
-                for iface in reversed(self._interfaces):
-                    if isinstance(iface, VirtualInterface):
-                        iface.cleanup()
             return
 
-        self._rpc_call("kill_cmds")
+        try:
+            self._rpc_call("kill_cmds")
 
-        if deconfigure:
+            if deconfigure:
+                for iface in reversed(self._interfaces):
+                    iface.deconfigure()
+                    iface.cleanup()
+
+            self._rpc_call("bye")
+        except:
+            #cleanup is only meaningful on dynamic interfaces, and should
+            #always be called when deconfiguration happens- especially
+            #when something on the slave breaks during deconfiguration
             for iface in reversed(self._interfaces):
-                iface.deconfigure()
+                if not isinstance(iface, VirtualInterface):
+                    continue
                 iface.cleanup()
+            raise
+        finally:
+            self._msg_dispatcher.disconnect_slave(self.get_id())
 
-        self._rpc_call("bye")
-        self._msg_dispatcher.disconnect_slave(self.get_id())
-
-        self._configured = False
+            self._configured = False
 
     def _timeout_handler(self, signum, frame):
         msg = "RPC connection to machine %s timed out" % self.get_id()
