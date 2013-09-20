@@ -54,6 +54,9 @@ class SlavePool:
         for dirent in dentries:
             res.append(self.add_file("%s/%s" % (pool_dir, dirent)))
 
+        if len(res) == 0:
+            logging.warn("No machines found in this directory")
+
         max_len = 0
         for m_id, _ in res:
             if len(m_id) > max_len:
