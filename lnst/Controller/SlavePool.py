@@ -32,19 +32,16 @@ class SlavePool:
     This class is responsible for managing test machines that
     are available at the controler and can be used for testing.
     """
-
-    _map = {}
-    _pool = {}
-
-    _machine_matches = []
-    _network_matches = []
-
-    _allow_virt = False
-    _pool_checks = True
-
     def __init__(self, pool_dirs, allow_virtual=False, pool_checks=True):
+        self._map = {}
+        self._pool = {}
+
+        self._machine_matches = []
+        self._network_matches = []
+
         self._allow_virt = allow_virtual
         self._pool_checks = pool_checks
+
         logging.info("Checking machine pool availability.")
         for pool_dir in pool_dirs:
             self.add_dir(pool_dir)
