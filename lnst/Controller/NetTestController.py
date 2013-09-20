@@ -426,7 +426,7 @@ class NetTestController:
             machine["interfaces"] = []
 
             for i in m._interfaces:
-                hwaddr = i.get_hwaddr()
+                hwaddr = i.get_orig_hwaddr()
 
                 machine["interfaces"].append(hwaddr)
 

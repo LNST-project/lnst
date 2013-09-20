@@ -484,6 +484,13 @@ class VirtualInterface(Interface):
     def __init__(self, machine, if_id, if_type):
         super(VirtualInterface, self).__init__(machine, if_id, if_type)
 
+    def get_orig_hwaddr(self):
+        if not self._orig_hwaddr:
+            msg = "Hardware address is not available for interface '%s'" \
+                  % self.get_id()
+            raise MachineError(msg)
+        return self._orig_hwaddr
+
     def initialize(self):
         domain_ctl = self._machine.get_domain_ctl()
 
@@ -513,6 +520,7 @@ class VirtualInterface(Interface):
         logging.info("Creating interface %s (%s) on machine %s",
                      self.get_id(), self._hwaddr, self._machine.get_id())
 
+        self._orig_hwaddr = self._hwaddr
         domain_ctl.attach_interface(self._hwaddr, br_name)
 
 
@@ -533,7 +541,7 @@ class VirtualInterface(Interface):
 
     def cleanup(self):
         domain_ctl = self._machine.get_domain_ctl()
-        domain_ctl.detach_interface(self._hwaddr)
+        domain_ctl.detach_interface(self._orig_hwaddr)
 
     def is_ready(self):
         ifaces = self._machine._rpc_call('get_devices_by_hwaddr', self._hwaddr)
