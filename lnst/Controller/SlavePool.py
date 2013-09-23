@@ -102,8 +102,8 @@ class SlavePool:
                 available = False
 
                 hostname = machine_spec["params"]["hostname"]
-                if "rpcport" in machine_spec:
-                    port = machine_spec["params"]["rpcport"]
+                if "rpc_port" in machine_spec["params"]:
+                    port = machine_spec["params"]["rpc_port"]
                 else:
                     port = lnst_config.get_option('environment', 'rpcport')
 
@@ -130,7 +130,11 @@ class SlavePool:
             for param in machine_xml_data["params"]:
                 name = str(param["name"])
                 value = str(param["value"])
-                machine_spec["params"][name] = value
+
+                if name == "rpc_port":
+                    machine_spec["params"][name] = int(value)
+                else:
+                    machine_spec["params"][name] = value
 
         mandatory_params = ["hostname"]
         for p in mandatory_params:
@@ -245,7 +249,11 @@ class SlavePool:
         if "libvirt_domain" in pm["params"]:
             libvirt_domain = pm["params"]["libvirt_domain"]
 
-        machine = Machine(tm_id, hostname, libvirt_domain)
+        rpcport = None
+        if "rpc_port" in pm["params"]:
+            rpcport = pm["params"]["rpc_port"]
+
+        machine = Machine(tm_id, hostname, libvirt_domain, rpcport)
 
         used = []
         if_map = self._map["machines"][tm_id]["interfaces"]

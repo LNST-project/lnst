@@ -21,6 +21,7 @@ import signal
 from time import sleep
 from xmlrpclib import Binary
 from pprint import pprint, pformat
+from lnst.Common.Config import lnst_config
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool, normalize_hwaddr
@@ -43,7 +44,7 @@ class Machine(object):
         deconfiguration, and running commands.
     """
 
-    def __init__(self, m_id, hostname=None, libvirt_domain=None):
+    def __init__(self, m_id, hostname=None, libvirt_domain=None, rpcport=None):
         self._id = m_id
         self._hostname = hostname
         self._connection = None
@@ -55,6 +56,11 @@ class Machine(object):
         self._libvirt_domain = libvirt_domain
         if libvirt_domain:
             self._domain_ctl = VirtDomainCtl(libvirt_domain)
+
+        if rpcport:
+            self._port = rpcport
+        else:
+            self._port = lnst_config.get_option('environment', 'rpcport')
 
         self._msg_dispatcher = None
         self._mac_pool = None
@@ -226,9 +232,8 @@ class Machine(object):
         """ Returns machine's id as defined in the recipe """
         return self._id
 
-    def set_rpc(self, dispatcher, port):
+    def set_rpc(self, dispatcher):
         self._msg_dispatcher = dispatcher
-        self._port = port
 
     def get_mac_pool(self):
         if self._mac_pool:
