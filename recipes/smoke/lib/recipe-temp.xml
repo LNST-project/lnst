@@ -1,16 +1,16 @@
-<lnstrecipe>
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
     <machines>
         <machine id="1">
             <define>
                 <alias name="testip" value="192.168.100.240/24"/>
             </define>
-            <interfaces source="#CONF1#"/>
+            #CONF1#
         </machine>
         <machine id="2">
             <define>
                 <alias name="testip" value="192.168.100.215/24"/>
             </define>
-            <interfaces source="#CONF2#"/>
+            #CONF2#
         </machine>
     </machines>
     #SEQUENCES#

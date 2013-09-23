@@ -45,48 +45,6 @@ def replace_variables(recipe, name1, name2, variables):
         recipe = recipe.replace("#%s#" % name, val)
     return recipe
 
-def handleNode(node):
-    if node.nodeType == node.ELEMENT_NODE:
-        if node.hasAttribute("source"):
-            src_file_name = node.getAttribute("source")
-            loaded_dom = xml.dom.minidom.parse(src_file_name)
-            loaded_node = None
-            try:
-                loaded_node = loaded_dom.getElementsByTagName(node.nodeName)[0]
-            except Exception:
-                msg = ("No '%s' element present in included file '%s'."
-                                    % (node.nodeName, src_file_name))
-                raise Exception(msg, node)
-
-            old_attrs = node.attributes
-
-            parent = node.parentNode
-            parent.replaceChild(loaded_node, node)
-            node = loaded_node
-
-            # copy all of the original attributes to the sourced node
-            for i in range(old_attrs.length):
-                attr = old_attrs.item(i)
-                # do not overwrite sourced attributes
-                if not node.hasAttribute(attr.name) and attr.name != "source":
-                    node.setAttribute(attr.name, attr.value)
-
-            handleNode(node)
-        else:
-            childNodes = list(node.childNodes)
-            for child in childNodes:
-                if child.nodeType == node.TEXT_NODE and child.data.isspace():
-                    node.removeChild(child)
-                else:
-                    handleNode(child)
-
-def expand_sources(recipe):
-    document = xml.dom.minidom.parseString(recipe)
-    for child in document.childNodes:
-        handleNode(child)
-    recipe = document.toprettyxml()
-    return recipe
-
 def main():
     DIR = "tests/"
     LIB = "../lib/"
@@ -104,7 +62,11 @@ def main():
         if not re.match("task-.*", seq):
             continue
         print "Found a task: %s%s" % (LIB, seq)
-        sequences += "\n    <task source=\"%s%s\"/>" % (LIB, seq)
+
+        task_f = open("%s/%s" % (LIB, seq), 'r')
+        task = task_f.read()
+
+        sequences += "\n%s" % task
 
     conf_files = [LIB+i for i in os.listdir(LIB) if re.match("conf-.*", i)]
     for conf in conf_files:
@@ -123,11 +85,16 @@ def main():
             recipe_name = "recipe-%s-%s.xml" % (name1, name2)
             print "Generating %s%s..." % (DIR, recipe_name),
 
-            recipe = template.replace("#CONF1#", machine1)\
-                             .replace("#CONF2#", machine2)\
-                             .replace("#SEQUENCES#", sequences)
+            m1_f = open(machine1, 'r')
+            m1 = m1_f.read()
 
-            recipe = expand_sources(recipe)
+            m2_f = open(machine2, 'r')
+            m2 = m2_f.read()
+
+
+            recipe = template.replace("#CONF1#", m1)\
+                             .replace("#CONF2#", m2)\
+                             .replace("#SEQUENCES#", sequences)
 
             recipe = replace_variables(recipe, name1, name2, variables)
 
