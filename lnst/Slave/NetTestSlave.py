@@ -489,7 +489,7 @@ class NetTestSlave:
                     type, value, tb = sys.exc_info()
                     exc_trace = ''.join(traceback.format_exception(type,
                                                                    value, tb))
-                    response = {"type": "exception", "Exception": exc_trace}
+                    response = {"type": "exception", "Exception": value}
 
                     self._server_handler.send_data_to_ctl(response)
                     return

@@ -755,7 +755,7 @@ class MessageDispatcher(ConnectionHandler):
             machine = self._machines[message[0]]
             machine.interface_update(message[1])
         elif message[1]["type"] == "exception":
-            msg = "Recieved an exception from slave: %s" % message[0]
+            msg = "Slave %s: %s" % (message[0], message[1]["Exception"])
             raise CommandException(msg)
         elif message[1]["type"] == "error":
             msg = "Recieved an error message from slave %s: %s" %\

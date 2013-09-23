@@ -76,7 +76,7 @@ class NetTestResultSerializer:
             if recipe["result"] == "FAIL" and \
                "err_msg" in recipe and recipe["err_msg"] != "":
                 err_msg = recipe["err_msg"]
-                output_pairs.append((4*" " + "error message:" + err_msg, ""))
+                output_pairs.append((4*" " + "error message: " + err_msg, ""))
 
             seq_num = 1
             for task in recipe["tasks"]:
