@@ -144,21 +144,18 @@ class NetTestCommand:
         result = {}
         try:
             self._cmd_cls.run()
-            res_data = self._cmd_cls.get_result()
-            result["type"] = "result"
-            result["cmd_id"] = self._id
-            result["result"] = res_data
         except KeyboardInterrupt:
-            res_data = self._cmd_cls.get_result()
-            result["type"] = "result"
-            result["cmd_id"] = self._id
-            result["result"] = res_data
+            pass
         except:
             type, value, tb = sys.exc_info()
-            result = {"type": "exception",
-                    "cmd_id": self._id,
-                    "Exception": ''.join(traceback.format_exception(type,
-                                                                    value, tb))}
+            data = {"Exception": "%s" % value}
+            self._cmd_cls.set_fail(data)
+        finally:
+            res_data = self._cmd_cls.get_result()
+            result["type"] = "result"
+            result["cmd_id"] = self._id
+            result["result"] = res_data
+
         send_data(self._write_pipe, result)
         self._write_pipe.close()
 
@@ -243,6 +240,7 @@ def NetTestCommandTest(command, resource_table):
     test_name = command["module"]
     if not test_name in resource_table["module"]:
         msg = "Test module '%s' not found" % test_name
+        raise Exception(msg)
 
     module_path = resource_table["module"][test_name]
     module_name = "Test%s" % test_name

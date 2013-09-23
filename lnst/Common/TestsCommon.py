@@ -105,7 +105,7 @@ class TestGeneric(NetTestCommandGeneric):
             option = self._command["options"][name]
         except KeyError:
             if mandatory:
-                raise TestOptionMissing
+                raise TestOptionMissing("Missing option '%s'!" % name)
             if multi:
                 return [default]
             else:

@@ -511,7 +511,7 @@ class NetTestSlave:
                                 % msg["cmd_id"])
             else:
                 logging.debug("Recieved an exception from foreground command")
-            logging.error(msg["Exception"])
+            logging.debug(msg["Exception"])
             cmd = self._cmd_context.get_cmd(msg["cmd_id"])
             cmd.join()
             self._cmd_context.del_cmd(cmd)

@@ -597,7 +597,11 @@ class NetTestController:
         try:
             cmd_res = machine.run_command(command)
         except Exception as exc:
-            cmd_res = {"passed": False, "err_msg": "Exception raised."}
+            cmd_res = {"passed": False,
+                       "res_data": {"Exception": str(exc)},
+                       "msg": "Exception raised.",
+                       "res_header": "EXCEPTION",
+                       "report": str(exc)}
             raise
         finally:
             if self._res_serializer:
