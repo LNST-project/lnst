@@ -187,13 +187,13 @@ class NetTestCommand:
 
     def get_result(self):
         if self._killed:
-            result = {}
+            self._cmd_cls.set_pass()
+            result = self._cmd_cls.get_result()
             result["passed"] = True
             result["msg"] = "Command killed."
-        else:
-            result = self._result
+            self._result = result
 
-        return result
+        return self._result
 
     def set_result(self, result):
         if self._control_cmd != None:

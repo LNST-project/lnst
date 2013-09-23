@@ -30,6 +30,8 @@ from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 
+DEFAULT_TIMEOUT = 60
+
 class MachineError(Exception):
     pass
 
@@ -202,15 +204,19 @@ class Machine(object):
             timeout = command["timeout"]
             logging.debug("Setting timeout to \"%d\"", timeout)
             signal.alarm(timeout)
+        else:
+            logging.debug("Setting default timeout (%ds)." % DEFAULT_TIMEOUT)
+            signal.alarm(DEFAULT_TIMEOUT)
 
         try:
             cmd_res = self._rpc_call("run_command", command)
         except MachineError as exc:
             if "bg_id" in command:
-                self._rpc_call("kill_command", command["bg_id"])
+                cmd_res = self._rpc_call("kill_command", command["bg_id"])
             else:
-                self._rpc_call("kill_command", None)
-            cmd_res = {"passed": False, "err_msg": str(exc)}
+                cmd_res = self._rpc_call("kill_command", None)
+            cmd_res["passed"] = False
+            cmd_res["msg"] = str(exc)
 
         signal.alarm(0)
         signal.signal(signal.SIGALRM, prev_handler)

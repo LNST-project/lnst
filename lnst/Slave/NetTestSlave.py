@@ -287,7 +287,7 @@ class SlaveMethods:
         cmd = self._command_context.get_cmd(id)
         cmd.kill(None)
         self._command_context.del_cmd(cmd)
-        return True
+        return cmd.get_result()
 
     def machine_cleanup(self):
         logging.info("Performing machine cleanup.")
