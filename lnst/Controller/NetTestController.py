@@ -167,9 +167,6 @@ class NetTestController:
     def _prepare_network(self):
         recipe = self._recipe
 
-        mreq = self._get_machine_requirements()
-        self._prepare_provisioning(mreq)
-
         machines = self._machines
         for m_id in machines.keys():
             self._prepare_machine(m_id)
@@ -179,7 +176,8 @@ class NetTestController:
             for iface_xml_data in machine_xml_data["interfaces"]:
                 self._prepare_interface(m_id, iface_xml_data)
 
-    def _prepare_provisioning(self, mreq):
+    def _prepare_provisioning(self):
+        mreq = self._get_machine_requirements()
         sp = self._slave_pool
         machines = self._machines
         if not sp.provision_machines(mreq, machines):
@@ -479,13 +477,13 @@ class NetTestController:
             os.remove("/tmp/.lnst_virt_conf")
 
     def match_setup(self):
-        mreq = self._get_machine_requirements()
-        self._prepare_provisioning(mreq)
+        self._prepare_provisioning()
 
         return {"passed": True}
 
     def config_only_recipe(self):
         try:
+            self._prepare_provisioning()
             self._prepare_network()
         except (KeyboardInterrupt, Exception) as exc:
             msg = "Exception raised during configuration."
@@ -502,8 +500,9 @@ class NetTestController:
 
     def run_recipe(self, packet_capture=False):
         try:
-            self._prepare_network()
+            self._prepare_provisioning()
             self._prepare_tasks()
+            self._prepare_network()
         except (KeyboardInterrupt, Exception) as exc:
             msg = "Exception raised during configuration."
             logging.error(msg)
