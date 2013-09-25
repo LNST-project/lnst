@@ -1,4 +1,4 @@
-<lnstrecipe>
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
     <machines>
         <define>
             <alias name="testip" value="192.168.111.1/24"/>
@@ -6,7 +6,7 @@
         </define>
         <machine id="1">
             <params/>
-            <interfaces source="interfaces-team_ab.xml"/>
+            <xi:include href="interfaces-team_ab.xml"/>
         </machine>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
@@ -14,8 +14,8 @@
         </define>
         <machine id="2">
             <params/>
-            <interfaces source="interfaces-simple_br.xml"/>
+            <xi:include href="interfaces-simple_br.xml"/>
         </machine>
     </machines>
-    <task source="sequence_ping_simple.xml"/>
+    <xi:include href="sequence_ping_simple.xml"/>
 </lnstrecipe>

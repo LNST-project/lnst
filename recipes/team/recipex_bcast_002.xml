@@ -1,18 +1,18 @@
-<lnstrecipe>
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
     <machines>
         <define>
             <alias name="testip" value="192.168.111.1/24"/>
             <alias name="testip6" value="fe01::1/64"/>
         </define>
         <machine id="1">
-            <interfaces source="interfaces-team_bcast.xml"/>
+            <xi:include href="interfaces-team_bcast.xml"/>
         </machine>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
             <alias name="testip6" value="fe01::2/64"/>
         </define>
         <machine id="2">
-            <interfaces source="interfaces-simple_br.xml"/>
+            <xi:include href="interfaces-simple_br.xml"/>
         </machine>
     </machines>
     <define>
@@ -23,12 +23,12 @@
         <alias name="nonexistent_ip" value="127.0.0.200"/>
     </define>
 
-    <task source="../multicast/cmd_sequences/max_groups.xml"/>
-    <task source="../multicast/cmd_sequences/block_source.xml"/>
-    <task source="../multicast/cmd_sequences/source_membership.xml"/>
-    <task source="../multicast/cmd_sequences/membership.xml"/>
-    <task source="../multicast/cmd_sequences/if.xml"/>
-    <task source="../multicast/cmd_sequences/ttl.xml"/>
-    <task source="../multicast/cmd_sequences/loop.xml"/>
-    <task source="../multicast/cmd_sequences/simple.xml"/>
+    <xi:include href="../multicast/cmd_sequences/max_groups.xml"/>
+    <xi:include href="../multicast/cmd_sequences/block_source.xml"/>
+    <xi:include href="../multicast/cmd_sequences/source_membership.xml"/>
+    <xi:include href="../multicast/cmd_sequences/membership.xml"/>
+    <xi:include href="../multicast/cmd_sequences/if.xml"/>
+    <xi:include href="../multicast/cmd_sequences/ttl.xml"/>
+    <xi:include href="../multicast/cmd_sequences/loop.xml"/>
+    <xi:include href="../multicast/cmd_sequences/simple.xml"/>
 </lnstrecipe>
