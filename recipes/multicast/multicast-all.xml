@@ -1,5 +1,5 @@
 <!-- Execute all tests for multicast -->
-<lnstrecipe>
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
     <machines>
         <machine id="1">
             <interfaces>
@@ -34,12 +34,12 @@
         <alias name="nonexistent_ip" value="127.0.0.200"/>
     </define>
 
-    <task source="cmd_sequences/max_groups.xml"/>
-    <task source="cmd_sequences/block_source.xml"/>
-    <task source="cmd_sequences/source_membership.xml"/>
-    <task source="cmd_sequences/membership.xml"/>
-    <task source="cmd_sequences/if.xml"/>
-    <task source="cmd_sequences/ttl.xml"/>
-    <task source="cmd_sequences/loop.xml"/>
-    <task source="cmd_sequences/simple.xml"/>
+    <xi:include href="cmd_sequences/max_groups.xml"/>
+    <xi:include href="cmd_sequences/block_source.xml"/>
+    <xi:include href="cmd_sequences/source_membership.xml"/>
+    <xi:include href="cmd_sequences/membership.xml"/>
+    <xi:include href="cmd_sequences/if.xml"/>
+    <xi:include href="cmd_sequences/ttl.xml"/>
+    <xi:include href="cmd_sequences/loop.xml"/>
+    <xi:include href="cmd_sequences/simple.xml"/>
 </lnstrecipe>
