@@ -98,15 +98,15 @@ SCRIPTS = ["lnst-ctl", "lnst-slave"]
 
 TEST_MODULES = [
     (CTL_MODULES_LOCATIONS,
-        ["test_modules/TestDummyFailing.py",
-         "test_modules/TestIcmp6Ping.py",
-         "test_modules/TestIcmpPing.py",
-         "test_modules/TestIperf.py",
-         "test_modules/TestMulticast.py",
-         "test_modules/TestNetCat.py",
-         "test_modules/TestPacketAssert.py",
-         "test_modules/TestPktCounter.py",
-         "test_modules/TestPktgenTx.py"]
+        ["test_modules/DummyFailing.py",
+         "test_modules/Icmp6Ping.py",
+         "test_modules/IcmpPing.py",
+         "test_modules/Iperf.py",
+         "test_modules/Multicast.py",
+         "test_modules/NetCat.py",
+         "test_modules/PacketAssert.py",
+         "test_modules/PktCounter.py",
+         "test_modules/PktgenTx.py"]
     )
 ]
 
