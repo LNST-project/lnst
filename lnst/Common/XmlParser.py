@@ -16,6 +16,7 @@ import sys
 import logging
 import copy
 from lxml import etree
+from lnst.Common.Config import lnst_config
 from lnst.Common.XmlTemplates import XmlTemplates, XmlTemplateError
 from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
 
