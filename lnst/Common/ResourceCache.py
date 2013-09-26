@@ -102,7 +102,7 @@ class ResourceCache(object):
         entry_path = "%s/%s" % (entry_dir, os.path.basename(filepath))
 
         if entry_type == "module":
-            filename = "Test%s.py" % entry_name
+            filename = "%s.py" % entry_name
             shutil.move(entry_path, "%s/%s" % (entry_dir, filename))
         elif entry_type == "tools":
             filename = entry_name

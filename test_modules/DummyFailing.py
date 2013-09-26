@@ -13,7 +13,7 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 from lnst.Common.TestsCommon import TestGeneric
 
-class TestDummyFailing(TestGeneric):
+class DummyFailing(TestGeneric):
     def run(self):
         res_data = {"msg": "what else did you expect?"}
         return self.set_fail(res_data)

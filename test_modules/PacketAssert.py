@@ -17,7 +17,7 @@ import re
 import signal
 from lnst.Common.TestsCommon import TestGeneric
 
-class TestPacketAssert(TestGeneric):
+class PacketAssert(TestGeneric):
     """ Assert for number of incomming/outgoing packets
         Capturing backend of this class is provided by
         tcpdump(8).

@@ -16,7 +16,7 @@ from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.NetTestCommand import CommandException
 from lnst.Common.ExecCmd import exec_cmd
 
-class TestMulticast(TestGeneric):
+class Multicast(TestGeneric):
     """ Wrapper for executing the multicast test tools in LNST
 
     Running this test executes specified test setup from

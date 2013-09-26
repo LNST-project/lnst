@@ -663,7 +663,7 @@ class NetTestController:
             for f in files:
                 test_path = os.path.abspath("%s/%s" % (dir_name, f))
                 if os.path.isfile(test_path):
-                    match = re.match("Test(.+)\.py$", f)
+                    match = re.match("(.+)\.py$", f)
                     if match:
                         test_name = match.group(1)
                         test_hash = md5sum(test_path)

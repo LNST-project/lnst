@@ -243,7 +243,7 @@ def NetTestCommandTest(command, resource_table):
         raise Exception(msg)
 
     module_path = resource_table["module"][test_name]
-    module_name = "Test%s" % test_name
+    module_name = test_name
 
     module = imp.load_source(module_name, module_path)
     test_class = getattr(module, module_name)

@@ -16,7 +16,7 @@ import logging
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ShellProcess import ShellProcess
 
-class TestNetCat(TestGeneric):
+class NetCat(TestGeneric):
     def _get_stream(self):
         return self.get_opt("stream", default="tcp")
 

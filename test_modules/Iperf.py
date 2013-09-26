@@ -14,7 +14,7 @@ from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ShellProcess import ShellProcess
 
-class TestIperf(TestGeneric):
+class Iperf(TestGeneric):
     def _compose_iperf_cmd(self, role):
         iperf_options = self.get_opt("iperf_opts")
         if iperf_options is None:

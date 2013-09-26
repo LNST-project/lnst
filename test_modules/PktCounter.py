@@ -38,7 +38,7 @@ def get_pkt_count(indev_name, dport, proto):
         return None
     return match.groups()[0]
 
-class TestPktCounter(TestGeneric):
+class PktCounter(TestGeneric):
     def run(self):
         indev_name = self.get_opt("input_netdev_name")
         dport = self.get_opt("dport")

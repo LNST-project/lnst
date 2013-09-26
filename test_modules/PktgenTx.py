@@ -61,7 +61,7 @@ def pktget_options_merge(pktgen_options, default_pktgen_options):
     res = res + opts
     return [" ".join(opt) for opt in res]
 
-class TestPktgenTx(TestGeneric):
+class PktgenTx(TestGeneric):
     def run(self):
         dev_names = self.get_multi_mopt("netdev_name")
         pktgen_options = self.get_multi_mopt("pktgen_option")
