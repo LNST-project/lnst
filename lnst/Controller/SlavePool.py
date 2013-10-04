@@ -92,9 +92,14 @@ class SlavePool:
             for pm_id, m in self._pool.iteritems():
                 pm = m["params"]
                 rm = machine_spec["params"]
-                if pm["hostname"] == rm["hostname"] or \
-                   pm["libvirt_domain"] == rm["libvirt_domain"]:
+                if pm["hostname"] == rm["hostname"]:
                     msg = "You have the same machine listed twice in " \
+                          "your pool ('%s' and '%s')." % (m_id, pm_id)
+                    raise SlaveMachineError(msg)
+
+                if "libvirt_domain" in rm and "libvirt_domain" in pm and \
+                   pm["libvirt_domain"] == rm["libvirt_domain"]:
+                    msg = "You have the same libvirt_domain listed twice in " \
                           "your pool ('%s' and '%s')." % (m_id, pm_id)
                     raise SlaveMachineError(msg)
 
