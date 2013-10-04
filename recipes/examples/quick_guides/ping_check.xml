@@ -4,27 +4,27 @@ This is a recipe from a quick guide that is available on LNST wiki page:
     https://fedorahosted.org/lnst/wiki/QuickGuides/QuickGuidePingCheck
 -->
 <lnstrecipe>
-    <machines>
-        <machine id="testmachine1">
+    <network>
+        <host id="testmachine1">
             <interfaces>
-                <eth id="testifc1" network="tnet">
+                <eth id="testifc1" label="tnet">
                     <addresses>
                         <address value="192.168.200.2/24"/>
                     </addresses>
                 </eth>
             </interfaces>
-        </machine>
+        </host>
 
-        <machine id="testmachine2">
+        <host id="testmachine2">
             <interfaces>
-                <eth id="testifc2" network="tnet">
+                <eth id="testifc2" label="tnet">
                     <addresses>
                         <address value="192.168.200.3/24"/>
                     </addresses>
                 </eth>
             </interfaces>
-        </machine>
-    </machines>
+        </host>
+    </network>
 
     <task>
         <run machine="testmachine1" module="IcmpPing">

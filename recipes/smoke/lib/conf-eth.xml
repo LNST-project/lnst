@@ -1,5 +1,5 @@
 <interfaces>
-    <eth id="testiface" network="net">
+    <eth id="testiface" label="net">
         <addresses>
             <address value="{$testip}"/>
         </addresses>

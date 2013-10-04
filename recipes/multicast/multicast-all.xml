@@ -1,30 +1,30 @@
 <!-- Execute all tests for multicast -->
 <lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
-    <machines>
-        <machine id="1">
+    <network>
+        <host id="1">
             <interfaces>
-                <eth id="testiface" network="tnet">
+                <eth id="testiface" label="tnet">
                     <addresses>
                         <address value="192.168.100.226/24"/>
                     </addresses>
                 </eth>
-                <eth id="2" network="tnet">
+                <eth id="2" label="tnet">
                     <addresses>
                         <address value="192.168.100.240/24"/>
                     </addresses>
                 </eth>
             </interfaces>
-        </machine>
-        <machine id="2">
+        </host>
+        <host id="2">
             <interfaces>
-                <eth id="testiface" network="tnet">
+                <eth id="testiface" label="tnet">
                     <addresses>
                         <address value="192.168.100.215/24"/>
                     </addresses>
                 </eth>
             </interfaces>
-        </machine>
-    </machines>
+        </host>
+    </network>
 
     <define>
         <alias name="multicast_group" value="239.1.2.3"/>

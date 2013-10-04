@@ -57,7 +57,7 @@ class SlaveMachineParser(XmlParser):
     def _process_interface(self, iface_tag):
         iface = XmlData(iface_tag)
         iface["id"] = self._get_attribute(iface_tag, "id")
-        iface["network"] = self._get_attribute(iface_tag, "network")
+        iface["network"] = self._get_attribute(iface_tag, "label")
         iface["type"] = "eth"
 
         # interface parameters

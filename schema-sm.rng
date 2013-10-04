@@ -67,7 +67,7 @@
     <define name="eth">
         <element name="eth">
             <attribute name="id"/>
-            <attribute name="network"/>
+            <attribute name="label"/>
             <interleave>
                 <optional>
                     <ref name="define"/>

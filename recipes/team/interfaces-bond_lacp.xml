@@ -1,7 +1,7 @@
 <interfaces>
-    <eth id="1" network="net1"/>
-    <eth id="2" network="net2"/>
-    <eth id="3" network="net3"/>
+    <eth id="1" label="net1"/>
+    <eth id="2" label="net2"/>
+    <eth id="3" label="net3"/>
     <bond id="testiface">
         <options>
             <option name="mode" value="4"/>

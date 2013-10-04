@@ -1,5 +1,5 @@
 <interfaces>
-    <eth id="if-1" network="net"/>
+    <eth id="if-1" label="net"/>
     <vlan id="testiface">
         <options>
             <option name="vlan_tci" value="10"/>

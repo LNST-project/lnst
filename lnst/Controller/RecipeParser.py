@@ -35,7 +35,7 @@ class RecipeParser(XmlParser):
         recipe = XmlData(lnst_recipe)
 
         # machines
-        machines_tag = lnst_recipe.find("machines")
+        machines_tag = lnst_recipe.find("network")
         if machines_tag is not None:
             machines = recipe["machines"] = XmlCollection(machines_tag)
             for machine_tag in machines_tag:
@@ -86,7 +86,7 @@ class RecipeParser(XmlParser):
         iface["type"] = iface_tag.tag
 
         if iface["type"] == "eth":
-            iface["network"] = self._get_attribute(iface_tag, "network")
+            iface["network"] = self._get_attribute(iface_tag, "label")
 
         # params
         params_tag = iface_tag.find("params")

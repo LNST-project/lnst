@@ -7,7 +7,7 @@
                     <ref name="define"/>
                 </optional>
 
-                <ref name="machines"/>
+                <ref name="network"/>
 
                 <oneOrMore>
                     <ref name="task"/>
@@ -30,15 +30,15 @@
         </element>
     </define>
 
-    <define name="machines">
-        <element name="machines">
+    <define name="network">
+        <element name="network">
             <interleave>
                 <optional>
                     <ref name="define"/>
                 </optional>
 
                 <oneOrMore>
-                    <ref name="machine"/>
+                    <ref name="host"/>
                 </oneOrMore>
             </interleave>
         </element>
@@ -92,8 +92,8 @@
         </element>
     </define>
 
-    <define name="machine">
-        <element name="machine">
+    <define name="host">
+        <element name="host">
             <attribute name="id"/>
 
             <interleave>
@@ -124,7 +124,7 @@
     <define name="eth">
         <element name="eth">
             <attribute name="id"/>
-            <attribute name="network"/>
+            <attribute name="label"/>
             <interleave>
                 <optional>
                     <ref name="define"/>

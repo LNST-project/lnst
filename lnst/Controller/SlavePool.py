@@ -387,7 +387,8 @@ class SetupMapper:
                                 topology[m_id].append(nc)
 
                 if not net_in_use:
-                    msg = "Network '%s' contains only one machine!" % net_name
+                    msg = "Network labeled '%s' contains only one machine!" %\
+                                                                    net_name
                     raise MapperError(msg)
 
         return topology

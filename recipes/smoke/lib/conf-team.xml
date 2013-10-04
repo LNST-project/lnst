@@ -1,6 +1,6 @@
 <interfaces>
-    <eth id="if-1" network="net"/>
-    <eth id="if-2" network="net"/>
+    <eth id="if-1" label="net"/>
+    <eth id="if-2" label="net"/>
     <team id="testiface">
         <options>
             <option name="teamd_config">

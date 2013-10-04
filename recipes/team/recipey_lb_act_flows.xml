@@ -1,19 +1,19 @@
 <lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
-    <machines>
+    <network>
         <define>
             <alias name="testip" value="192.168.111.1/24"/>
             <alias name="testip6" value="fe01::1/64"/>
         </define>
-        <machine id="1">
+        <host id="1">
             <xi:include href="interfaces-team_lb_act.xml"/>
-        </machine>
+        </host>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
             <alias name="testip6" value="fe01::2/64"/>
         </define>
-        <machine id="2">
+        <host id="2">
             <xi:include href="interfaces-simple_br.xml"/>
-        </machine>
-    </machines>
+        </host>
+    </network>
     <xi:include href="sequence_pktgen_flows.xml"/>
 </lnstrecipe>
