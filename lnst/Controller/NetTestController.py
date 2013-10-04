@@ -29,7 +29,7 @@ from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
 from lnst.Controller.RecipeParser import RecipeParser, RecipeError
 from lnst.Controller.SlavePool import SlavePool
-from lnst.Controller.Machine import Machine, MachineError
+from lnst.Controller.Machine import Machine, MachineError, VirtualInterface
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
@@ -426,9 +426,10 @@ class NetTestController:
             machine["interfaces"] = []
 
             for i in m._interfaces:
-                hwaddr = i.get_orig_hwaddr()
+                if isinstance(i, VirtualInterface):
+                    hwaddr = i.get_orig_hwaddr()
 
-                machine["interfaces"].append(hwaddr)
+                    machine["interfaces"].append(hwaddr)
 
         config_data["bridges"] = bridges = []
         for bridge in self._network_bridges.itervalues():
