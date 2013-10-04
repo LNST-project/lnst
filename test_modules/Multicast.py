@@ -115,7 +115,7 @@ class Multicast(TestGeneric):
 
         # line format matches name=value pairs with optional
         # double quotes around the value
-        line_format_r = r"([a-zA-Z0-9_ ]+)=\"?([a-zA-Z0-9_ ]*)\"?"
+        line_format_r = r"([a-zA-Z0-9_ \-.]+)=\"?([a-zA-Z0-9_ ]*)\"?"
 
         for line in data_stdout.split("\n"):
             match = re.search(line_format_r, line)
@@ -123,8 +123,10 @@ class Multicast(TestGeneric):
                 name  = match.group(1).strip()
                 value = match.group(2).strip()
 
-                res[name] = value
                 logging.info("Test result: {0} = {1}".format(name, value))
+
+                name = name.replace(' ', '_')
+                res[name] = value
                 if not self._evaluate_result(name, value):
                     res["msg"] = "Conditions not met!"
                     return self.set_fail(res)
