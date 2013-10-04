@@ -31,7 +31,7 @@ def usage(retval=0):
     """
     Print usage of this app
     """
-    print "Usage: %s [OPTION...] [RECIPE...] ACTION" % sys.argv[0]
+    print "Usage: %s [OPTIONS...] ACTION [RECIPES...]" % sys.argv[0]
     print ""
     print "ACTION = [ run | config_only | match_setup ]"
     print ""
@@ -192,7 +192,8 @@ def main():
         logging.error("No action specified")
         usage(RETVAL_ERR)
 
-    action = args.pop()
+    action = args[0]
+    recipes = args[1:]
     if not action in ['run', 'config_only', 'match_setup']:
         logging.error("Action '%s' not recognised" % action)
         usage(RETVAL_ERR)
@@ -201,7 +202,7 @@ def main():
 
     retval = RETVAL_PASS
     res_serializer = NetTestResultSerializer()
-    for recipe_path in args:
+    for recipe_path in recipes:
         if os.path.isdir(recipe_path):
             all_files = []
             for root, dirs, files in os.walk(recipe_path):

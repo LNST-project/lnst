@@ -12,7 +12,7 @@ lnst-ctl \- Linux Network Stack Test controller
 .SH SYNOPSIS
 .BR
 .B lnst-ctl
-[\fIOPTION\fR]... \fIRECIPE\fR... \fIACTION\fR
+[\fIOPTION\fR]... \fIACTION\fR \fIRECIPE\fR...
 .SH DESCRIPTION
 Linux Network Stack Test is a tool that supports development and execution
 of automated and portable network tests. For detailed description of the
