@@ -12,9 +12,9 @@
       <option name="pktgen_option" value="dst {ip(1,testiface)}"/>
       <option name="pktgen_option" value="dst_mac 00:11:22:33:44:55"/>
       <option name="pktgen_option" value="src_min {ip(2,testiface)}"/>
-      <option name="netdev_name" value="{devname(2,testiface)}"/>
       <option name="netdev_name" value="{devname(2,2)}"/>
       <option name="netdev_name" value="{devname(2,3)}"/>
+      <option name="netdev_name" value="{devname(2,testiface)}"/>
     </options>
   </run>
   <intr bg_id="1" machine="1"/>

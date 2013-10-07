@@ -6,7 +6,7 @@
       <option name="bind" value="{ip(2,testiface)}"/>
     </options>
   </run>
-  <ctl_wait seconds="3"/>
+  <ctl_wait seconds="5"/>
   <run machine="1" module="Iperf">
     <options>
       <option name="role" value="client"/>
