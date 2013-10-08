@@ -319,6 +319,7 @@ class NetTestController:
                 tool = cmd_data["from"]
                 if tool in self._resource_table["tools"]:
                     cmd["command"] = cmd_data["command"]
+                    cmd["from"] = cmd_data["from"]
                 else:
                     msg = "Tool '%s' not found on the controller" % tool
                     raise RecipeError(msg, cmd_data)
