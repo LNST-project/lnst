@@ -81,7 +81,7 @@ class XmlParser(object):
     def _parse(self, path):
         try:
             doc = etree.parse(path)
-        except Exception as err:
+        except etree.LxmlError as err:
             # A workaround for cases when lxml (quite strangely)
             # sets the filename to <string>.
             if err.error_log[0].filename == "<string>":
@@ -92,6 +92,13 @@ class XmlParser(object):
                    "line": err.error_log[0].line,
                    "col": err.error_log[0].column}
             exc = XmlProcessingError(err.error_log[0].message)
+            exc.set_loc(loc)
+            raise exc
+        except Exception as err:
+            loc = {"file": os.path.basename(self._path),
+                   "line": None,
+                   "col": None}
+            exc = XmlProcessingError(str(err))
             exc.set_loc(loc)
             raise exc
 
