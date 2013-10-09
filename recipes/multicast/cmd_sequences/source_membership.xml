@@ -7,7 +7,7 @@
      configured to forward igmp traffic through the bridge -->
 <task>
     <!-- IP_ADD/DROP_MEMBERSHIP sockopt conformance test -->
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="sockopt_source_membership"/>
             <option name="condition" value="status == 'pass'"/>
@@ -17,10 +17,10 @@
     <!-- This simple test case verifies that if one side leaves multicast group
        - in the middle of ongoing communication, no further packets are delivered
        - to the process. -->
-    <run command="sleep 1" machine="1"/>
-    <run command="sleep 1" machine="2"/>
+    <run command="sleep 1" host="1"/>
+    <run command="sleep 1" host="2"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -32,7 +32,7 @@
         </options>
     </run>
 
-    <run machine="2" module="Multicast" timeout="30">
+    <run host="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_source_membership"/>
             <option name="address" value="{$multicast_group}"/>
@@ -45,13 +45,13 @@
             <option name="condition" value="packets_received_after_drop == 0"/>
         </options>
     </run>
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 
     <!-- Nonexistent source -->
-    <run command="sleep 1" machine="1"/>
-    <run command="sleep 1" machine="2"/>
+    <run command="sleep 1" host="1"/>
+    <run command="sleep 1" host="2"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -63,7 +63,7 @@
         </options>
     </run>
 
-    <run machine="2" module="Multicast" timeout="30">
+    <run host="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_source_membership"/>
             <option name="address" value="{$multicast_group}"/>
@@ -76,6 +76,6 @@
             <option name="condition" value="packets_received_after_drop == 0"/>
         </options>
     </run>
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 
 </task>

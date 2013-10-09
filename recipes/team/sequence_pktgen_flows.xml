@@ -1,6 +1,6 @@
 <task>
   <ctl_wait seconds="4"/>
-  <run bg_id="1" machine="1" module="PktgenTx">
+  <run bg_id="1" host="1" module="PktgenTx">
     <options>
       <option name="pktgen_option" value="count 0"/>
       <option name="pktgen_option" value="clone_skb 0"/>
@@ -18,5 +18,5 @@
     </options>
   </run>
   <ctl_wait seconds="400"/>
-  <intr bg_id="1" machine="1"/>
+  <intr bg_id="1" host="1"/>
 </task>

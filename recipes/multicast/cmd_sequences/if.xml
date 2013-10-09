@@ -5,7 +5,7 @@
    - -->
 <task>
     <!-- IP_MULTICAST_IF sockopt conformance test -->
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="sockopt_if"/>
 
@@ -16,10 +16,10 @@
     </run>
 
     <!-- IP_MULTICAST_IF correct interfaces set -->
-    <run command="sleep 1" machine="1"/>
-    <run command="sleep 1" machine="2"/>
+    <run command="sleep 1" host="1"/>
+    <run command="sleep 1" host="2"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -31,7 +31,7 @@
         </options>
     </run>
 
-    <run machine="2" module="Multicast" timeout="30">
+    <run host="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -43,12 +43,12 @@
         </options>
     </run>
 
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 
     <!-- IP_MULTICAST_IF incorrect interfaces set -->
-    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" host="1"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -60,7 +60,7 @@
         </options>
     </run>
 
-    <run machine="2" module="Multicast" timeout="30">
+    <run host="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -72,5 +72,5 @@
         </options>
     </run>
 
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 </task>

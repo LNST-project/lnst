@@ -5,7 +5,7 @@
      configured to forward igmp traffic through the bridge -->
 <task>
     <!-- IP_BLOCK/UNBLOCK_SOURCE sockopt conformance test -->
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="sockopt_block_source"/>
             <option name="condition" value="status == 'pass'"/>
@@ -13,10 +13,10 @@
     </run>
 
     <!-- Block source in the middle of ongoing communication -->
-    <run command="sleep 1" machine="1"/>
-    <run command="sleep 1" machine="2"/>
+    <run command="sleep 1" host="1"/>
+    <run command="sleep 1" host="2"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="238.0.0.1"/>
@@ -28,7 +28,7 @@
         </options>
     </run>
 
-    <run machine="2" module="Multicast" timeout="30">
+    <run host="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_block_source"/>
             <option name="address" value="238.0.0.1"/>
@@ -41,13 +41,13 @@
             <option name="condition" value="packets_received_while_blocking == 0"/>
         </options>
     </run>
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 
     <!-- Nonexistent source -->
-    <run command="sleep 1" machine="1"/>
-    <run command="sleep 1" machine="2"/>
+    <run command="sleep 1" host="1"/>
+    <run command="sleep 1" host="2"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="238.0.0.1"/>
@@ -59,7 +59,7 @@
         </options>
     </run>
 
-    <run machine="2" module="Multicast" timeout="30">
+    <run host="2" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_block_source"/>
             <option name="address" value="238.0.0.1"/>
@@ -72,6 +72,6 @@
             <option name="condition" value="packets_received_while_blocking > 0"/>
         </options>
     </run>
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 
 </task>

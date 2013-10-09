@@ -27,7 +27,7 @@ This is a recipe from a quick guide that is available on LNST wiki page:
     </network>
 
     <task>
-        <run machine="testmachine1" module="IcmpPing">
+        <run host="testmachine1" module="IcmpPing">
             <options>
                 <option name="addr" value="{ip(testmachine2,testifc2)}"/>
                 <option name="count" value="3"/>

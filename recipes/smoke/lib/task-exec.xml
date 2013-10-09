@@ -1,5 +1,5 @@
 <task>
-    <run command="[ `ip -o link | grep {devname(1,testiface)} | wc -l` -gt 0 ]" machine="1" timeout="30"/>
+    <run command="[ `ip -o link | grep {devname(1,testiface)} | wc -l` -gt 0 ]" host="1" timeout="30"/>
     <!-- This does not yet work for non-eth devices -->
     <!--<command machine_id="1" timeout="30" type="exec"
              value="[ `ip -o link | grep {hwaddr(1,testiface)} | wc -l` -gt 0 ]"/>-->

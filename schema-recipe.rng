@@ -282,7 +282,7 @@
 
     <define name="config">
         <element name="config">
-            <attribute name="machine"/>
+            <attribute name="host"/>
 
             <optional>
                 <attribute name="option"/>
@@ -321,7 +321,7 @@
 
     <define name="run">
         <element name="run">
-            <attribute name="machine"/>
+            <attribute name="host"/>
 
             <choice>
                 <attribute name="module"/>
@@ -383,7 +383,7 @@
     </define>
 
     <define name="signal_command">
-        <attribute name="machine"/>
+        <attribute name="host"/>
         <attribute name="bg_id"/>
     </define>
 

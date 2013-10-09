@@ -2,7 +2,7 @@
 <!-- Requires: 1 host with one interface -->
 <task>
     <!-- With a specific interface -->
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="max_groups"/>
             <option name="interface" value="{ip(1,testiface)}"/>
@@ -11,8 +11,8 @@
     </run>
 
     <!-- Change default max_memberhsips -->
-    <config machine="1" option="/proc/sys/net/ipv4/igmp_max_memberships" value="5"/>
-    <run machine="1" module="Multicast" timeout="30">
+    <config host="1" option="/proc/sys/net/ipv4/igmp_max_memberships" value="5"/>
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="max_groups"/>
             <option name="interface" value="{ip(1,testiface)}"/>

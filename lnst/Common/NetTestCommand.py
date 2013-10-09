@@ -25,7 +25,7 @@ def str_command(command):
     attrs = ["type(%s)" % command["type"]]
     if command["type"] == "test":
         attrs.append("module(%s)" % command["module"])
-        attrs.append("machine(%s)" % command["machine"])
+        attrs.append("host(%s)" % command["machine"])
 
         if "bg_id" in command:
             attrs.append("bg_id(%s)" % command["bg_id"])

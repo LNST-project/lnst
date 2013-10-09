@@ -1,5 +1,5 @@
 <task>
-    <run bg_id="1" expect="#icmp_result#" machine="1" module="IcmpPing" timeout="30">
+    <run bg_id="1" expect="#icmp_result#" host="1" module="IcmpPing" timeout="30">
         <options>
             <option name="addr" value="{ip(2,testiface)}"/>
             <option name="count" value="40"/>
@@ -8,5 +8,5 @@
         </options>
     </run>
     <ctl_wait seconds="5"/>
-    <intr bg_id="1" machine="1"/>
+    <intr bg_id="1" host="1"/>
 </task>

@@ -1,18 +1,18 @@
 <task>
   <ctl_wait seconds="3"/>
-  <run bg_id="1" machine="2" module="Iperf">
+  <run bg_id="1" host="2" module="Iperf">
     <options>
       <option name="role" value="server"/>
       <option name="bind" value="{ip(2,testiface)}"/>
     </options>
   </run>
   <ctl_wait seconds="5"/>
-  <run machine="1" module="Iperf">
+  <run host="1" module="Iperf">
     <options>
       <option name="role" value="client"/>
       <option name="duration" value="15"/>
       <option name="iperf_server" value="{ip(2,testiface)}"/>
     </options>
   </run>
-  <kill bg_id="1" machine="2"/>
+  <kill bg_id="1" host="2"/>
 </task>

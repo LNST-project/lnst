@@ -1,6 +1,6 @@
 <task>
   <ctl_wait seconds="4"/>
-  <run machine="1" module="IcmpPing" timeout="60">
+  <run host="1" module="IcmpPing" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface)}"/>
       <option name="count" value="2000"/>
@@ -8,7 +8,7 @@
       <option name="limit_rate" value="95"/>
     </options>
   </run>
-  <run machine="1" module="Icmp6Ping" timeout="60">
+  <run host="1" module="Icmp6Ping" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface,1)}"/>
       <option name="count" value="2000"/>

@@ -2,7 +2,7 @@
 <!-- Requires: 1 hosts with at least two interfaces -->
 <task>
     <!-- IP_MULTICAST_LOOP sockopt conformance test -->
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="sockopt_loop"/>
             <option name="condition" value="status == 'pass'"/>
@@ -10,9 +10,9 @@
     </run>
 
     <!-- IP_MULTICAST_LOOP enabled -->
-    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" host="1"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -24,7 +24,7 @@
         </options>
     </run>
 
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -36,12 +36,12 @@
         </options>
     </run>
 
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 
     <!-- IP_MULTICAST_LOOP disabled -->
-    <run command="sleep 1" machine="1"/>
+    <run command="sleep 1" host="1"/>
 
-    <run bg_id="1" machine="1" module="Multicast" timeout="30">
+    <run bg_id="1" host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="send_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -53,7 +53,7 @@
         </options>
     </run>
 
-    <run machine="1" module="Multicast" timeout="30">
+    <run host="1" module="Multicast" timeout="30">
         <options>
             <option name="setup" value="recv_simple"/>
             <option name="address" value="{$multicast_group}"/>
@@ -65,5 +65,5 @@
         </options>
     </run>
 
-    <wait bg_id="1" machine="1"/>
+    <wait bg_id="1" host="1"/>
 </task>

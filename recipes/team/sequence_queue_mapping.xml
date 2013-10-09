@@ -1,10 +1,10 @@
 <task>
   <ctl_wait seconds="4"/>
-  <run command="tc qdisc add dev {devname(1,testiface)} handle 1 root multiq" machine="1"/>
-  <run command="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,0)} action skbedit queue_mapping 1" machine="1"/>
-  <run command="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,1)} action skbedit queue_mapping 2" machine="1"/>
-  <run command="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,2)} action skbedit queue_mapping 3" machine="1"/>
-  <run bg_id="1" machine="1" module="IcmpPing" timeout="60">
+  <run command="tc qdisc add dev {devname(1,testiface)} handle 1 root multiq" host="1"/>
+  <run command="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,0)} action skbedit queue_mapping 1" host="1"/>
+  <run command="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,1)} action skbedit queue_mapping 2" host="1"/>
+  <run command="tc filter add dev {devname(1,testiface)} protocol ip parent 1: prio 1 u32 match ip dst {ip(2,testiface,2)} action skbedit queue_mapping 3" host="1"/>
+  <run bg_id="1" host="1" module="IcmpPing" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface,0)}"/>
       <option name="count" value="100"/>
@@ -12,7 +12,7 @@
       <option name="limit_rate" value="95"/>
     </options>
   </run>
-  <run bg_id="2" machine="1" module="IcmpPing" timeout="60">
+  <run bg_id="2" host="1" module="IcmpPing" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface,1)}"/>
       <option name="count" value="100"/>
@@ -20,7 +20,7 @@
       <option name="limit_rate" value="95"/>
     </options>
   </run>
-  <run bg_id="3" machine="1" module="IcmpPing" timeout="60">
+  <run bg_id="3" host="1" module="IcmpPing" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface,2)}"/>
       <option name="count" value="100"/>
@@ -28,7 +28,7 @@
       <option name="limit_rate" value="95"/>
     </options>
   </run>
-  <run bg_id="4" machine="1" module="IcmpPing" timeout="60">
+  <run bg_id="4" host="1" module="IcmpPing" timeout="60">
     <options>
       <option name="addr" value="{ip(2,testiface,3)}"/>
       <option name="count" value="100"/>
@@ -36,8 +36,8 @@
       <option name="limit_rate" value="95"/>
     </options>
   </run>
-  <wait bg_id="1" machine="1"/>
-  <wait bg_id="2" machine="1"/>
-  <wait bg_id="3" machine="1"/>
-  <wait bg_id="4" machine="1"/>
+  <wait bg_id="1" host="1"/>
+  <wait bg_id="2" host="1"/>
+  <wait bg_id="3" host="1"/>
+  <wait bg_id="4" host="1"/>
 </task>

@@ -1,5 +1,5 @@
 <task>
-    <config machine="1">
+    <config host="1">
         <options>
             <option name="/proc/sys/net/ipv4/igmp_max_memberships" value="5"/>
             <option name="/proc/sys/net/ipv4/igmp_max_memberships" value="6"/>

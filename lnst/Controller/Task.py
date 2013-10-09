@@ -18,9 +18,9 @@ class TaskError(Exception): pass
 class ControllerAPI(object):
     """ An API class representing the controller. """
 
-    def __init__(self, ctl, machines):
+    def __init__(self, ctl, hosts):
         self._ctl = ctl
-        self._machines = machines
+        self._hosts = hosts
         self._result = True
 
     def _run_command(self, command):
@@ -34,28 +34,28 @@ class ControllerAPI(object):
         self._result = self._result and res["passed"]
         return res
 
-    def get_machine(self, machine_id):
+    def get_host(self, host_id):
         """
-            Get an API handle for the machine from the recipe spec with
+            Get an API handle for the host from the recipe spec with
             a specific id.
 
-            :param machine_id: id of the machine as defined in the recipe
-            :type machine_id: string
+            :param host_id: id of the host as defined in the recipe
+            :type host_id: string
 
-            :return: The machine handle.
-            :rtype: MachineAPI
+            :return: The host handle.
+            :rtype: HostAPI
 
-            :raises TaskError: If there is no machine with such id.
+            :raises TaskError: If there is no host with such id.
         """
-        if machine_id not in self._machines:
-            raise TaskError("Machine '%s' not found." % machine_id)
+        if host_id not in self._hosts:
+            raise TaskError("Host '%s' not found." % host_id)
 
-        machine = self._machines[machine_id]
-        return MachineAPI(self, machine_id, machine)
+        host = self._hosts[host_id]
+        return HostAPI(self, host_id, host)
 
     def get_module(self, name, **kwargs):
         """
-            Initialize a module to be run on a machine.
+            Initialize a module to be run on a host.
 
             :param name: name of the module
             :type name: string
@@ -78,19 +78,19 @@ class ControllerAPI(object):
         cmd = {"type": "ctl_wait", "seconds": int(seconds)}
         return self._ctl._run_command(cmd)
 
-class MachineAPI(object):
-    """ An API class representing a machine. """
+class HostAPI(object):
+    """ An API class representing a host machine. """
 
-    def __init__(self, ctl, machine_id, machine):
+    def __init__(self, ctl, host_id, host):
         self._ctl = ctl
-        self._id = machine_id
-        self._m = machine
+        self._id = host_id
+        self._m = host
 
         self._bg_id_seq = 0
 
     def config(self, option, value, persistent=False):
         """
-            Configure an option in /sys or /proc on the machine.
+            Configure an option in /sys or /proc on the host.
 
             :param option: A path within /sys or /proc.
             :type option: string
@@ -110,9 +110,9 @@ class MachineAPI(object):
 
     def run(self, what, **kwargs):
         """
-            Configure an option in /sys or /proc on the machine.
+            Configure an option in /sys or /proc on the host.
 
-            :param what: What should be run on the machine.
+            :param what: What should be run on the host.
             :type what: str or ModuleAPI
 
             :param bg: Run in background flag.
@@ -247,9 +247,9 @@ class ModuleAPI(object):
 class ProcessAPI(object):
     """ An API class representing either a running or finished process. """
 
-    def __init__(self, ctl, m_id, cmd_res, bg_id):
+    def __init__(self, ctl, h_id, cmd_res, bg_id):
         self._ctl = ctl
-        self._machine = m_id
+        self._host = h_id
         self._cmd_res = cmd_res
         self._bg_id = bg_id
 
@@ -274,7 +274,7 @@ class ProcessAPI(object):
     def wait(self):
         """ Blocking wait until the command returns. """
         if self._bg_id:
-            cmd = {"machine": self._machine,
+            cmd = {"machine": self._host,
                    "type": "wait",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)
@@ -282,7 +282,7 @@ class ProcessAPI(object):
     def intr(self):
         """ Interrupt the command. """
         if self._bg_id:
-            cmd = {"machine": self._machine,
+            cmd = {"machine": self._host,
                    "type": "intr",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)
@@ -296,7 +296,7 @@ class ProcessAPI(object):
             to keep the results, use 'intr' instead.
         """
         if self._bg_id:
-            cmd = {"machine": self._machine,
+            cmd = {"machine": self._host,
                    "type": "kill",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)

@@ -1,6 +1,6 @@
 <task>
   <ctl_wait seconds="4"/>
-  <run machine="1" module="PktgenTx" timeout="200">
+  <run host="1" module="PktgenTx" timeout="200">
     <options>
       <option name="pktgen_option" value="count 10000"/>
       <option name="pktgen_option" value="clone_skb 0"/>
