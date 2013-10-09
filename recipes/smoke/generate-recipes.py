@@ -31,7 +31,7 @@ def print_test_usage():
     print "   +-----------+                              +-----------+"
 
     print "\nYou can execute the set using the following command:"
-    print "    ./lnst-ctl -d recipes/smoke/tests/ run"
+    print "    ./lnst-ctl -d run recipes/smoke/tests/"
 
 def replace_variables(recipe, name1, name2, variables):
     vars = dict(variables.items("defaults"))
