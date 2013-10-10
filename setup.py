@@ -157,7 +157,7 @@ DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES + \
              SCHEMAS + BASH_COMP
 
 setup(name="lnst",
-    version="git",
+    version="1",
     description="Linux Network Stack Test",
     author="LNST Team",
     author_email="lnst-developers@lists.fedorahosted.org",
