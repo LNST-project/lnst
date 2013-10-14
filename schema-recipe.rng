@@ -65,30 +65,18 @@
                 </attribute>
             </optional>
 
-            <interleave>
-                <optional>
-                    <ref name="define"/>
-                </optional>
-
-                <zeroOrMore>
-                    <ref name="config"/>
-                </zeroOrMore>
-                <zeroOrMore>
+            <oneOrMore>
+                <choice>
                     <ref name="run"/>
-                </zeroOrMore>
-                <zeroOrMore>
+                    <ref name="config"/>
                     <ref name="wait"/>
-                </zeroOrMore>
-                <zeroOrMore>
                     <ref name="intr"/>
-                </zeroOrMore>
-                <zeroOrMore>
                     <ref name="kill"/>
-                </zeroOrMore>
-                <zeroOrMore>
                     <ref name="ctl_wait"/>
-                </zeroOrMore>
-            </interleave>
+
+                    <ref name="define"/>
+                </choice>
+            </oneOrMore>
         </element>
     </define>
 
