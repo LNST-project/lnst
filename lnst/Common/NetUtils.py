@@ -15,14 +15,11 @@ import os
 import re
 import socket
 import subprocess
-from resource import getpagesize
-from pyroute2.netlink import NetlinkSocket
+from pyroute2 import IPRSocket
 from pyroute2.netlink import NLM_F_REQUEST
 from pyroute2.netlink import NLM_F_DUMP
 from pyroute2.netlink import NLMSG_DONE
 from pyroute2.netlink import NLMSG_ERROR
-from pyroute2.netlink.generic import NETLINK_ROUTE
-from pyroute2.netlink.iproute import MarshalRtnl
 from pyroute2.netlink.iproute import RTM_GETLINK
 from pyroute2.netlink.iproute import RTM_NEWLINK
 from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
@@ -32,7 +29,7 @@ def normalize_hwaddr(hwaddr):
 
 def scan_netdevs():
     scan = []
-    nl_socket = NetlinkSocket(family=NETLINK_ROUTE)
+    nl_socket = IPRSocket()
     msg = ifinfmsg()
     msg["family"] = socket.AF_UNSPEC
     msg["header"]["type"] = RTM_GETLINK
@@ -44,10 +41,8 @@ def scan_netdevs():
     nl_socket.sendto(msg.buf.getvalue(), (0,0))
 
     finished = False
-    marshal = MarshalRtnl()
     while not finished:
-        response = nl_socket.recv(getpagesize())
-        parts = marshal.parse(response)
+        parts = nl_socket.get()
         for part in parts:
             if part["header"]["type"] in [NLMSG_DONE, NLMSG_ERROR]:
                 finished = True
