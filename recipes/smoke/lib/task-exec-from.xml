@@ -1,0 +1,12 @@
+<task>
+    <define>
+        <alias name="my_range" value="10000-10030"/>
+    </define>
+
+    <run bg_id="1" command="./tcp_listen -p {$my_range} -a {ip(2,testiface)} -d" from="tcp_conn" host="2"/>
+    <ctl_wait seconds="5"/>
+    <run bg_id="2" command="./tcp_connect -p {$my_range} -a {ip(2,testiface)} -d" from="tcp_conn" host="1"/>
+    <ctl_wait seconds="10"/>
+    <intr bg_id="2" host="1"/>
+    <intr bg_id="1" host="2"/>
+</task>
