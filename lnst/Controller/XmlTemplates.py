@@ -23,7 +23,7 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import re
 from lxml import etree
-from lnst.Common.XmlProcessing import XmlTemplateString
+from lnst.Controller.XmlProcessing import XmlTemplateString
 
 class XmlTemplateError(Exception):
     pass

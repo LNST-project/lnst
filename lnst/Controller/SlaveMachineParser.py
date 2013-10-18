@@ -15,8 +15,9 @@ import logging
 import os
 import re
 from lxml import etree
-from lnst.Common.XmlParser import XmlParser
-from lnst.Common.XmlProcessing import XmlProcessingError, XmlData, XmlCollection
+from lnst.Controller.XmlParser import XmlParser
+from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
+from lnst.Controller.XmlProcessing import XmlCollection
 
 class SlaveMachineError(XmlProcessingError):
     pass

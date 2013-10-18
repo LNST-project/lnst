@@ -17,8 +17,8 @@ import logging
 import copy
 from lxml import etree
 from lnst.Common.Config import lnst_config
-from lnst.Common.XmlTemplates import XmlTemplates, XmlTemplateError
-from lnst.Common.XmlProcessing import XmlProcessingError, XmlData
+from lnst.Controller.XmlTemplates import XmlTemplates, XmlTemplateError
+from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
 
 class XmlParser(object):
     XINCLUDE_RE = r"\{http\:\/\/www\.w3\.org\/[0-9]{4}\/XInclude\}include"
