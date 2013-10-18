@@ -23,7 +23,6 @@ from xmlrpclib import Binary
 from pprint import pprint, pformat
 from lnst.Common.Config import lnst_config
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool, normalize_hwaddr
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive

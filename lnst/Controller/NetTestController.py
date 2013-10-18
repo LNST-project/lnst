@@ -20,7 +20,6 @@ import tempfile
 import imp
 from time import sleep
 from xmlrpclib import Binary
-from lnst.Common.XmlRpc import ServerProxy, ServerException
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
