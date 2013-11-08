@@ -198,7 +198,7 @@ class NetTestController:
         machine = self._machines[m_id]
         address = socket.gethostbyname(machine.get_hostname())
 
-        self._log_ctl.add_slave(m_id, address)
+        self._log_ctl.add_slave(m_id)
         machine.set_rpc(self._msg_dispatcher)
         machine.set_mac_pool(self._mac_pool)
         machine.set_network_bridges(self._network_bridges)

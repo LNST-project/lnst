@@ -44,7 +44,7 @@ class MultilineFormatter(Formatter): # addr:17 level:7
 
     def _format_addr(self, record):
         if not "address" in record.__dict__:
-            addr = "(127.0.0.1)".rjust(17)
+            addr = "(localhost)".rjust(17)
         else:
             addr = record.address.rjust(17)
 
@@ -145,11 +145,11 @@ class LoggingCtl:
         logger.removeHandler(self.recipe_handlers[1])
         self.recipe_handlers = (None, None)
 
-    def add_slave(self, slave_id, name):
-        slave_log_path = os.path.join(self.recipe_log_path, name)
+    def add_slave(self, slave_id):
+        slave_log_path = os.path.join(self.recipe_log_path, slave_id)
         self._clean_folder(slave_log_path)
 
-        logger = logging.getLogger(name)
+        logger = logging.getLogger(slave_id)
         logger.setLevel(logging.DEBUG)
         logger.propagate = True
 
@@ -157,22 +157,21 @@ class LoggingCtl:
         logger.addHandler(slave_info)
         logger.addHandler(slave_debug)
 
-        self.slaves[slave_id] = (name, slave_info, slave_debug)
+        self.slaves[slave_id] = (slave_info, slave_debug)
 
     def remove_slave(self, slave_id):
-        logger = logging.getLogger(self.slaves[slave_id][0])
+        logger = logging.getLogger(slave_id)
         logger.propagate = False
 
+        logger.removeHandler(self.slaves[slave_id][0])
         logger.removeHandler(self.slaves[slave_id][1])
-        logger.removeHandler(self.slaves[slave_id][2])
 
         del self.slaves[slave_id]
 
     def add_client_log(self, slave_id, log_record):
-        name = self.slaves[slave_id][0]
-        logger = logging.getLogger(name)
+        logger = logging.getLogger(slave_id)
 
-        log_record['address'] = '(' + name + ')'
+        log_record['address'] = '(' + slave_id + ')'
         record = logging.makeLogRecord(log_record)
         logger.handle(record)
 
