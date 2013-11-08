@@ -383,11 +383,11 @@ class NetTestCommandExec(NetTestCommandGeneric):
         cmd_val = self._command["command"]
 
         if "bg_id" in self._command:
-            bg_id = "bg_id: %s" % self._command["bg_id"]
+            bg_id = " bg_id: %s" % self._command["bg_id"]
         else:
             bg_id = ""
 
-        cmd = "%-14s%s%s" %(cmd_type, cmd_val, bg_id)
+        cmd = "%-14s%s cmd: \"%s\"" %(cmd_type, bg_id, cmd_val)
         return cmd
 
 class NetTestCommandConfig(NetTestCommandGeneric):
