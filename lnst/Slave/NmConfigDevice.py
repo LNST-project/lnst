@@ -60,6 +60,18 @@ def _dev_exists(hwaddr):
         if dev["hwaddr"] == hwaddr:
             return True
 
+def get_nm_version():
+    if not check_process_running("NetworkManager") or\
+       not lnst_config.get_option("environment", "use_nm"):
+        return ""
+
+    bus = dbus.SystemBus()
+    nm_obj = bus.get_object(NM_BUS, OBJ_PRE)
+    nm_if = dbus.Interface(nm_obj, IF_PRE)
+
+    props = dbus.Interface(nm_obj, "org.freedesktop.DBus.Properties")
+    return props.Get(IF_PRE, "Version")
+
 class NmConfigDeviceGeneric(object):
     '''
     Generic class for device manipulation all type classes should
@@ -392,11 +404,12 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
             netdev["con_obj_path"] = ""
 
         #older versions of NM don't know how to remove soft devices...
-        try:
-            bond_masters = "/sys/class/net/bonding_masters"
-            exec_cmd('echo "-%s" > %s' % (netdev["name"], bond_masters))
-        except:
-            pass
+        if get_nm_version() < "0.9.9":
+            try:
+                bond_masters = "/sys/class/net/bonding_masters"
+                exec_cmd('echo "-%s" > %s' % (netdev["name"], bond_masters))
+            except:
+                pass
 
     def _add_slaves(self):
         for slave in get_slaves(self._netdev):
@@ -505,11 +518,12 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
             netdev["con_obj_path"] = ""
 
         #older versions of NM don't know how to remove soft devices...
-        try:
-            exec_cmd("ip link set %s down" % netdev["name"])
-            exec_cmd("brctl delbr %s " % netdev["name"])
-        except:
-            pass
+        if get_nm_version() < "0.9.9":
+            try:
+                exec_cmd("ip link set %s down" % netdev["name"])
+                exec_cmd("brctl delbr %s " % netdev["name"])
+            except:
+                pass
 
     def _add_slave(self, slave):
         netdev = self._config[slave]
@@ -648,14 +662,15 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
 
         #older versions of NM don't know how to remove soft devices...
         #and lnst will break when multiple devices with the same mac exist
-        try:
-            dev_name = self._get_vlan_info()[0]
-            if self._check_ip_link_add():
-                exec_cmd("ip link del %s" % dev_name)
-            else:
-                exec_cmd("vconfig rem %s" % dev_name)
-        except:
-            pass
+        if get_nm_version() < "0.9.9":
+            try:
+                dev_name = self._get_vlan_info()[0]
+                if self._check_ip_link_add():
+                    exec_cmd("ip link del %s" % dev_name)
+                else:
+                    exec_cmd("vconfig rem %s" % dev_name)
+            except:
+                pass
 
 class NmConfigDeviceTeam(NmConfigDeviceGeneric):
     #Not supported by NetworkManager yet
