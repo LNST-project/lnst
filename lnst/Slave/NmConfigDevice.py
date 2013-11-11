@@ -673,19 +673,113 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
                 pass
 
 class NmConfigDeviceTeam(NmConfigDeviceGeneric):
-    #Not supported by NetworkManager yet
     @classmethod
     def is_nm_managed(cls, netdev, config):
-        managed = False
+        if _dev_exists(netdev["hwaddr"]):
+            managed = super(NmConfigDeviceTeam, cls).is_nm_managed(netdev,
+                                                                   config)
+        else:
+            if get_nm_version() < "0.9.9":
+                managed = False
+            else:
+                slave_id = get_slaves(netdev)[0]
+                netdev = config[slave_id]
+                managed = is_nm_managed(netdev, config)
 
         for slave in get_slaves(netdev):
-            slave_netdev = config[slave]
-            if is_nm_managed(slave_netdev, config) != managed:
+            netdev = config[slave]
+            if is_nm_managed(netdev, config) != managed:
                 msg = "Mixing NM managed and not managed devices in a "\
                         "master-slave relationship is not allowed!"
                 raise Exception(msg)
 
         return managed
+
+    def up(self):
+        super(NmConfigDeviceTeam, self).up()
+
+        for slave in get_slaves(self._netdev):
+            netdev = self._config[slave]
+            self._nm_activate_connection(netdev)
+
+    def down(self):
+        for slave in get_slaves(self._netdev):
+            netdev = self._config[slave]
+            self._nm_deactivate_connection(netdev)
+
+        super(NmConfigDeviceTeam, self).down()
+
+    def _add_team(self):
+        netdev = self._netdev
+        netdev["master_uuid"] = str(uuid.uuid4())
+
+        s_team_con = dbus.Dictionary({
+            'type': 'team',
+            'autoconnect': dbus.Boolean(False),
+            'uuid': netdev["master_uuid"],
+            'id': netdev["name"]+"_con"})
+
+        teamd_config = get_option(self._netdev, "teamd_config")
+
+        s_team = dbus.Dictionary({
+            'interface-name': netdev["name"],
+            'config': teamd_config})
+
+        s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
+
+        connection = dbus.Dictionary({
+            'team': s_team,
+            'ipv4': s_ipv4,
+            'ipv6': s_ipv6,
+            'connection': s_team_con})
+
+        netdev["con_obj_path"] = self._nm_add_connection(connection)
+
+    def _rm_team(self):
+        netdev = self._netdev
+        if netdev["con_obj_path"] != "":
+            self._nm_rm_connection(netdev["con_obj_path"])
+            netdev["con_obj_path"] = ""
+
+    def _add_slaves(self):
+        for slave in get_slaves(self._netdev):
+            netdev = self._config[slave]
+            slave_name = netdev["name"]
+
+            hw_addr = self._convert_hwaddr(netdev)
+
+            s_eth = dbus.Dictionary({
+                'duplex': dbus.Array('full', 's'),
+                'mac-address': hw_addr})
+
+            s_slave_con = dbus.Dictionary({
+                'type': '802-3-ethernet',
+                'autoconnect': dbus.Boolean(False),
+                'uuid': str(uuid.uuid4()),
+                'id': 'slave_con',
+                'master': self._netdev["master_uuid"],
+                'slave-type': 'team'})
+
+            slave_con = dbus.Dictionary({
+                '802-3-ethernet': s_eth,
+                'connection': s_slave_con})
+
+            netdev["con_obj_path"] = self._nm_add_connection(slave_con)
+
+    def _rm_slaves(self):
+        for slave in get_slaves(self._netdev):
+            netdev = self._config[slave]
+            if netdev["con_obj_path"] != "":
+                self._nm_rm_connection(netdev["con_obj_path"])
+                netdev["con_obj_path"] = ""
+
+    def configure(self):
+        self._add_team()
+        self._add_slaves()
+
+    def deconfigure(self):
+        self._rm_slaves()
+        self._rm_team()
 
 type_class_mapping = {
     "eth": NmConfigDeviceEth,
