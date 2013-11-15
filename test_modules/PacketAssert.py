@@ -15,6 +15,9 @@ import logging
 import subprocess
 import re
 import signal
+import time
+import os
+import tempfile
 from lnst.Common.TestsCommon import TestGeneric
 
 class PacketAssert(TestGeneric):
@@ -25,6 +28,7 @@ class PacketAssert(TestGeneric):
 
     _cmd = ""
     _tcpdump = None
+    _tcpdump_capture_file = None
     _grep_filters = []
 
     _min_cond = 1
@@ -38,29 +42,10 @@ class PacketAssert(TestGeneric):
 
     def _interrupt_handler(self, signum, frame):
         """ Kill tcpdump when interrupted """
-        self._tcpdump.terminate()
-
-        tcpdump_output = self._tcpdump.stdout
-        while True:
-            try:
-                next_line = tcpdump_output.readline()
-            except IOError: # Interrupted system call
-                break
-
-            if next_line == "":
-                break
-
-            next_line = next_line.strip("\n")
-
-            if re.match("[0-9]+\:[0-9]+\:[0-9\.]+", next_line) and\
-                                                            self.line != "":
-                self._process_captured_line(self.line)
-                self.line = next_line
-            else:
-                self.line += next_line
-        if self.line != "":
-            self._process_captured_line(self.line)
-
+        try:
+            self._tcpdump.terminate()
+        except OSError:
+            raise Exception("Caught exception in interrupt handler")
 
     def _prepare_grep_filters(self):
         """ Parse `grep_for' test options """
@@ -96,8 +81,11 @@ class PacketAssert(TestGeneric):
     def _execute_tcpdump(self):
         """ Start tcpdump in the background """
         cmd = self._cmd
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+        tcpdump_file = tempfile.NamedTemporaryFile(delete=False)
+        self._tcpdump_capture_file = tcpdump_file.name
+
+        proc = subprocess.Popen(cmd, shell=True, stdout=tcpdump_file,
+                                    stderr=None)
         self._tcpdump = proc
 
     def _process_captured_line(self, line):
@@ -128,34 +116,32 @@ class PacketAssert(TestGeneric):
 
         logging.info("Capturing started")
 
-        self.line = ""
-        tcpdump_output = self._tcpdump.stdout
         while True:
             if self._tcpdump.poll() != None:
                 if self._tcpdump.returncode > 0:
                     raise Exception("tcpdump terminated with error")
                 else:
                     break
-
-            try:
-                next_line = tcpdump_output.readline()
-            except IOError: # Interrupted system call
-                continue
-
-            if next_line == "":
-                continue
-
-            next_line = next_line.strip("\n")
-
-            if re.match("[0-9]+\:[0-9]+\:[0-9\.]+", next_line) and\
-                                                            self.line != "":
-                self._process_captured_line(self.line)
-                self.line = next_line
             else:
-                self.line += next_line
+                time.sleep(1)
+                continue
 
-        if self.line != "":
-            self._process_captured_line(self.line)
+        # get and evalute the tcpdump's output
+        # empty string returned by readline() means the EOF has been reached
+        tcpdump_file = open(self._tcpdump_capture_file, 'r')
+        line = "\n"
+        while line != "":
+            try:
+                line = tcpdump_file.readline()
+            except (OSError, IOError):
+                logging.debug("Caught exception while reading tcpdump output")
+                break
+
+            line = line.strip("\n")
+            self._process_captured_line(line)
+
+        tcpdump_file.close()
+        os.remove(tcpdump_file.name)
 
         logging.info("Capturing finished. Received %d packets", self._num_recv)
         res = {"received": self._num_recv,
