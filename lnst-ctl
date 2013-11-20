@@ -106,6 +106,12 @@ def get_recipe_result(args, file_path, res_serializer, packet_capture,
 
     return (file_path, res, retval)
 
+def recipe_head_log_entry(filename)
+    head_str = "\nProcessing recipe file \"%s\"\n" % filename
+    logging.info("-" * len(head_str.strip())
+                 + head_str
+                 + "-" * len(head_str.strip()))
+
 def main():
     """
     Main function
@@ -213,7 +219,7 @@ def main():
             for f in all_files:
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
-                    logging.info("Processing recipe file \"%s\"" % recipe_file)
+                    recipe_head_log_entry(recipe_file)
                     fp, res, rv = get_recipe_result(action, recipe_file,
                                                     res_serializer,
                                                     packet_capture,
@@ -221,6 +227,7 @@ def main():
                                                     defined_aliases,
                                                     overriden_aliases)
         else:
+            recipe_head_log_entry(recipe_path)
             fp, res, rv = get_recipe_result(action, recipe_path,
                                             res_serializer,
                                             packet_capture,
