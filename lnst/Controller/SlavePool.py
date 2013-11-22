@@ -307,6 +307,8 @@ class SlavePool:
             iface.set_network(if_data["network"])
             if "hwaddr" in if_data["params"]:
                 iface.set_hwaddr(if_data["params"]["hwaddr"])
+            if "driver" in if_data["params"]:
+                iface.set_driver(if_data["params"]["driver"])
 
         return machine
 
@@ -673,10 +675,10 @@ class SetupMapper:
                 for if_id, interface in m["interfaces"].iteritems():
                     if "params" in interface:
                         for name, val in interface["params"].iteritems():
-                            if name != "hwaddr":
+                            if name not in ["hwaddr", "driver"]:
                                 msg = "Dynamically created interfaces "\
-                                      "only support the 'hwaddr' option. "\
-                                      "'%s=%s' found on machine '%s' "\
+                                      "only support the 'hwaddr' and 'driver' "\
+                                      "option. '%s=%s' found on machine '%s' "\
                                       "interface '%s'" % (name, val,
                                                           m_id, if_id)
                                 raise MapperError(msg)

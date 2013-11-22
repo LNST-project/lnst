@@ -499,6 +499,13 @@ class VirtualInterface(Interface):
     """
     def __init__(self, machine, if_id, if_type):
         super(VirtualInterface, self).__init__(machine, if_id, if_type)
+        self._driver = "rtl8139"
+
+    def set_driver(self, driver):
+        self._driver = driver
+
+    def get_driver(self):
+        return self._driver
 
     def get_orig_hwaddr(self):
         if not self._orig_hwaddr:
@@ -537,7 +544,7 @@ class VirtualInterface(Interface):
                      self.get_id(), self._hwaddr, self._machine.get_id())
 
         self._orig_hwaddr = self._hwaddr
-        domain_ctl.attach_interface(self._hwaddr, net_name)
+        domain_ctl.attach_interface(self._hwaddr, net_name, self._driver)
 
 
         # The sleep here is necessary, because udev sometimes renames the
