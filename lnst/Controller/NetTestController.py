@@ -21,7 +21,7 @@ import imp
 from time import sleep
 from xmlrpclib import Binary
 from lnst.Common.NetUtils import MacPool
-from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
+from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running, bool_it
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
@@ -467,13 +467,18 @@ class NetTestController:
                 domain_ctl = VirtDomainCtl(libvirt_dom)
                 logging.info("Detaching dynamically created interfaces.")
                 for i in machine["interfaces"]:
-                    domain_ctl.detach_interface(i)
+                    try:
+                        domain_ctl.detach_interface(i)
+                    except:
+                        pass
 
             logging.info("Removing dynamically created bridges.")
             for br in cfg["bridges"]:
-                br_ctl = BridgeCtl(br)
-                br_ctl.set_remove(True)
-                br_ctl.cleanup()
+                try:
+                    net_ctl = VirtNetCtl(br)
+                    net_ctl.cleanup()
+                except:
+                    pass
 
             os.remove("/tmp/.lnst_virt_conf")
 

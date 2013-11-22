@@ -24,7 +24,7 @@ from pprint import pprint, pformat
 from lnst.Common.Config import lnst_config
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.NetUtils import MacPool, normalize_hwaddr
-from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl, BridgeCtl
+from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
@@ -526,18 +526,18 @@ class VirtualInterface(Interface):
 
         bridges = self._machine.get_network_bridges()
         if self._network in bridges:
-            brctl = bridges[self._network]
+            net_ctl = bridges[self._network]
         else:
-            bridges[self._network] = brctl = BridgeCtl()
+            bridges[self._network] = net_ctl = VirtNetCtl()
+            net_ctl.init()
 
-        br_name = brctl.get_name()
-        brctl.init()
+        net_name = net_ctl.get_name()
 
         logging.info("Creating interface %s (%s) on machine %s",
                      self.get_id(), self._hwaddr, self._machine.get_id())
 
         self._orig_hwaddr = self._hwaddr
-        domain_ctl.attach_interface(self._hwaddr, br_name)
+        domain_ctl.attach_interface(self._hwaddr, net_name)
 
 
         # The sleep here is necessary, because udev sometimes renames the

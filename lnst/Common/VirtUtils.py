@@ -11,15 +11,16 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import os
-import re
-import copy
-import time
 import logging
-from tempfile import NamedTemporaryFile
-from xml.dom import minidom
+import libvirt
+from libvirt import libvirtError
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.NetUtils import normalize_hwaddr, scan_netdevs
+
+#this is a global object because opening the connection to libvirt in every
+#object instance that uses it sometimes fails - the libvirt server probably
+#can't handle that many connections at a time
+_libvirt_conn = libvirt.open()
 
 class VirtUtilsError(Exception):
     pass
@@ -54,36 +55,71 @@ def _virsh(cmd):
     except ExecCmdFail as err:
         raise VirtUtilsError("virsh error: %s" % err)
 
-# TODO: This class should use the python bindings to libvirt,
-# not the virsh CLI interface
 class VirtDomainCtl:
     _name = None
+    _net_device_template = """
+    <interface type='network'>
+        <mac address='{0}'/>
+        <source network='{1}'/>
+        <model type='{2}'/>
+    </interface>
+    """
+    _net_device_bare_template = """
+    <interface>
+        <mac address='{0}'/>
+    </interface>
+    """
 
     def __init__(self, domain_name):
         self._name = domain_name
+        self._created_interfaces = {}
+
+        try:
+            self._domain = _libvirt_conn.lookupByName(domain_name)
+        except:
+            raise VirtUtilsError("Domain '%s' doesn't exist!" % domain_name)
 
     def start(self):
-        _virsh("start %s" % self._name)
+        self._domain.create()
 
     def stop(self):
-        _virsh("destroy %s" % self._name)
+        self._domain.destroy()
 
     def restart(self):
-        _virsh("reboot %s" % self._name)
+        self._domain.reboot()
 
-    def attach_interface(self, hwaddr, net_name, net_type="bridge"):
-        _virsh("attach-interface %s %s %s --mac %s" % \
-                            (self._name, net_type, net_name, hwaddr))
-        self.ifup(hwaddr)
+    def attach_interface(self, hw_addr, net_name, driver="rtl8139"):
+        try:
+            device_xml = self._net_device_template.format(hw_addr,
+                                                          net_name,
+                                                          driver)
+            self._domain.attachDevice(device_xml)
+            logging.debug("libvirt device with hwaddr '%s' attached" % hw_addr)
+            self._created_interfaces[hw_addr] = device_xml
+            return True
+        except libvirtError as e:
+            raise VirtUtilsError(str(e))
 
-    def detach_interface(self, hwaddr, net_type="bridge"):
-        _virsh("detach-interface %s %s %s" % (self._name, net_type, hwaddr))
+    def detach_interface(self, hw_addr):
+        if hw_addr in self._created_interfaces:
+            device_xml = self._created_interfaces[hw_addr]
+        else:
+            device_xml = self._net_device_bare_template.format(hw_addr)
 
-    def ifup(self, hwaddr):
-        _virsh("domif-setlink %s %s up" % (self._name, hwaddr))
+        try:
+            self._domain.detachDevice(device_xml)
+            logging.debug("libvirt device with hwaddr '%s' detached" % hw_addr)
+            return True
+        except libvirtError as e:
+            raise VirtUtilsError(str(e))
 
-    def ifdown(self, hwaddr):
-        _virsh("domif-setlink %s %s down" % (self._name, hwaddr))
+    @classmethod
+    def domain_exist(cls, domain_name):
+        try:
+            _libvirt_conn.lookupByName(domain_name)
+            return True
+        except:
+            return False
 
 class NetCtl(object):
     _name = None
@@ -101,105 +137,54 @@ class NetCtl(object):
         pass
 
 class VirtNetCtl(NetCtl):
-    _addr = None
-    _mask = None
+    _network_template = """
+    <network ipv6='yes'>
+        <name>{0}</name>
+        <bridge name='virbr_{0}' stp='off' delay='0' />
+        <domain name='{0}'/>
+    </network>
+    """
 
-    _dhcp_from = None
-    _dhcp_to = None
-    _static_mappings = []
-    _lease_file = None
+    def __init__(self, name=None):
+        if not name:
+            name = self._generate_name()
+        self._name = name
 
-    def setup_dhcp_server(self, addr, mask, range_start, range_end,
-                                    static_map=None):
-        self._addr = addr
-        self._mask = mask
-        self._dhcp_from = range_start
-        self._dhcp_to = range_end
-        self._lease_file = "/var/lib/libvirt/dnsmasq/%s.leases" % self._name
-        if static_map:
-            self._static_mappings = static_map
+    def _generate_name(self):
+        devs = _libvirt_conn.listNetworks()
 
-    def get_dhcp_mapping(self, hwaddr, timeout=30):
-        wait = timeout
+        index = 0
         while True:
-            addr = self._get_map(hwaddr)
-            if addr or not wait:
-                break
-
-            time.sleep(1)
-            wait -= 1
-
-        return addr
-
-    def _get_map(self, hwaddr):
-
-        try:
-            leases_file = open(self._lease_file, "r")
-        except IOError as err:
-            raise VirtUtilsError("Unable to resolve IP mapping (%s)" % err)
-
-        addr = None
-        normalized_hwaddr = normalize_hwaddr(hwaddr)
-        for entry in leases_file:
-            match = re.match(r"\d+\s+([0-9a-f:]+)\s+([0-9\.]+)", entry)
-            if match:
-                entry_hwaddr = normalize_hwaddr(match.group(1))
-                entry_addr = match.group(2)
-                if entry_hwaddr == normalized_hwaddr:
-                    addr = entry_addr
-                    break
-
-        leases_file.close()
-        return addr
-
+            name = "lnst_net%d" % index
+            index += 1
+            if name not in devs:
+                return name
 
     def init(self):
-        tmp_file = NamedTemporaryFile(delete=False)
-        doc = self._get_net_xml_dom()
-
-        doc.writexml(tmp_file)
-        tmp_file.close()
-
-        _virsh("net-create %s" % tmp_file.name)
-        os.unlink(tmp_file.name)
+        try:
+            network_xml = self._network_template.format(self._name)
+            _libvirt_conn.networkCreateXML(network_xml)
+            logging.debug("libvirt network '%s' created" % self._name)
+            return True
+        except libvirtError as e:
+            raise VirtUtilsError(str(e))
 
     def cleanup(self):
-        _virsh("net-destroy %s" % self._name)
-        exec_cmd("rm -f %s" % self._lease_file)
+        try:
+            network = _libvirt_conn.networkLookupByName(self._name)
+            network.destroy()
+            logging.debug("libvirt network '%s' destroyed" % self._name)
+            return True
+        except libvirtError as e:
+            raise VirtUtilsError(str(e))
 
-    def _get_net_xml_dom(self):
-        doc = minidom.Document()
-
-        net = doc.createElement("network")
-        doc.appendChild(net)
-
-        name = doc.createElement("name")
-        name_text = doc.createTextNode(self._name)
-        name.appendChild(name_text)
-        net.appendChild(name)
-
-        if self._addr:
-            ip = doc.createElement("ip")
-            ip.setAttribute("address", self._addr)
-            ip.setAttribute("netmask", self._mask)
-            net.appendChild(ip)
-
-            dhcp = doc.createElement("dhcp")
-            ip.appendChild(dhcp)
-
-            dhcp_range = doc.createElement("range")
-            dhcp_range.setAttribute("start", self._dhcp_from)
-            dhcp_range.setAttribute("end", self._dhcp_to)
-            dhcp.appendChild(dhcp_range)
-
-            for mapping in self._static_mappings:
-                hwaddr, addr = mapping
-                host = doc.createElement("host")
-                host.setAttribute("mac", hwaddr)
-                host.setAttribute("ip", addr)
-                dhcp.appendChild(host)
-
-        return doc
+    @classmethod
+    def network_exist(cls, net_name):
+        try:
+            _libvirt_conn.networkLookupByName(net_name)
+            return True
+        except:
+            return False
 
 class BridgeCtl(NetCtl):
     _remove = False
