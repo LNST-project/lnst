@@ -289,7 +289,11 @@ class SlavePool:
         hostname = pm["params"]["hostname"]
         libvirt_domain = pm["params"]["libvirt_domain"]
 
-        machine = Machine(tm_id, hostname, libvirt_domain)
+        rpcport = None
+        if "rpc_port" in pm["params"]:
+            rpcport = pm["params"]["rpc_port"]
+
+        machine = Machine(tm_id, hostname, libvirt_domain, rpcport)
 
         # make all the existing unused
         for if_id, if_data in pm["interfaces"].iteritems():
