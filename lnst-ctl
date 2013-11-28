@@ -106,7 +106,7 @@ def get_recipe_result(args, file_path, res_serializer, packet_capture,
 
     return (file_path, res, retval)
 
-def recipe_head_log_entry(filename)
+def recipe_head_log_entry(filename):
     head_str = "\nProcessing recipe file \"%s\"\n" % filename
     logging.info("-" * len(head_str.strip())
                  + head_str
