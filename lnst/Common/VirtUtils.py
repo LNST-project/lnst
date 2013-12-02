@@ -20,7 +20,7 @@ from lnst.Common.NetUtils import normalize_hwaddr, scan_netdevs
 #this is a global object because opening the connection to libvirt in every
 #object instance that uses it sometimes fails - the libvirt server probably
 #can't handle that many connections at a time
-_libvirt_conn = libvirt.open()
+_libvirt_conn = libvirt.open(None)
 
 class VirtUtilsError(Exception):
     pass
