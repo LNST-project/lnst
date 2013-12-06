@@ -1,21 +1,33 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #include <errno.h>
 #include <signal.h>
+#include <semaphore.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
+#define IPCKEY 5678
 
 int connection_handlers[1024];
 int handlers_count;
+int *connection_count;
 
 int debug_on = 0;
 int cont = 0;
+int *term_flag;
+
+sem_t *mutex;
 
 int usage()
 {
@@ -26,7 +38,7 @@ int usage()
 #define MSG_MAX 256
 char msg[MSG_MAX];
 
-int debug(char* msg)
+void debug(char* msg)
 {
     if (debug_on)
     {
@@ -36,24 +48,14 @@ int debug(char* msg)
 
 void terminate_connections(int p)
 {
-    int cc;
-
     debug("signalled");
-    for (cc=0; cc < handlers_count; cc++)
-    {
-        snprintf(msg, MSG_MAX, "killing process %i", connection_handlers[cc]);
-        debug(msg);
-        kill(connection_handlers[cc], SIGKILL);
-    }
+    *term_flag = 1;
 }
 
 int handle_connections(char* host, int port)
 {
     int conn_sock;
-    int remote_sock;
     struct sockaddr_in my_addr;
-    struct sockaddr remote;
-    int end_loop = 0;
     char data[] = "abcdefghijklmnopqrstuvwxyz0123456789";
     char buf[21*10*strlen(data)+1];
 
@@ -83,6 +85,10 @@ int handle_connections(char* host, int port)
             return 1;
         }
 
+        sem_wait(mutex);
+        *connection_count += 1;
+        sem_post(mutex);
+
         int bursts = 5*(random() % 10) + 1;
         int b;
         int sum = 0;
@@ -98,7 +104,11 @@ int handle_connections(char* host, int port)
                 strncpy(buf + (j*strlen(data)), data, strlen(data));
             }
 
-            int wr_rc = write(conn_sock, buf, parts * strlen(data));
+            if (write(conn_sock, buf, parts * strlen(data)) == -1)
+            {
+                perror("failed to send data");
+                return 1;
+            }
             usleep(100*(random()%100));
         }
 
@@ -108,7 +118,7 @@ int handle_connections(char* host, int port)
         debug(msg);
 
         close(conn_sock);
-    } while (cont);
+    } while (cont && (*term_flag) == 0);
 
     return 0;
 }
@@ -126,7 +136,40 @@ int main(int argc, char **argv)
     int opt;
     char *delimiter;
     struct sigaction sa;
+    int shm;
 
+    term_flag = mmap(NULL, sizeof *term_flag, PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *term_flag = 0;
+
+    connection_count = mmap(NULL, sizeof *connection_count, PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *connection_count = 0;
+
+    /* counter synchronization stuff - semaphore and shared memory */
+    if ((shm = shm_open("myshm", O_RDWR | O_CREAT, S_IRWXU))  < 0) {
+        perror("shm_open");
+        exit(1);
+    }
+
+    if ( ftruncate(shm, sizeof(sem_t)) < 0 ) {
+        perror("ftruncate");
+        exit(1);
+    }
+
+    /* place shared mutex into shared memory */
+    if ((mutex = (sem_t*) mmap(NULL, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm, 0)) == MAP_FAILED) {
+        perror("mmap");
+        exit(1);
+    }
+
+    if( sem_init(mutex,1,1) < 0)
+    {
+        perror("semaphore initilization");
+        exit(0);
+    }
+
+    /* signal handling */
     memset(&sa, 0, sizeof(sa));
 
     sa.sa_handler = &terminate_connections;
@@ -199,6 +242,8 @@ int main(int argc, char **argv)
     }
 
     debug("tcp_connect finished");
+
+    printf("made %i connections\n", *connection_count);
 
     return 0;
 }

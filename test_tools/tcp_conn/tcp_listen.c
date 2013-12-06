@@ -1,21 +1,33 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #include <errno.h>
 #include <signal.h>
+#include <semaphore.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#define IPCKEY 5678
 
 int listener_count;
 int listeners[1024];
+int *connection_count;
 
-int connection_count;
 int debug_on = 0;
 int cont = 0;
+int *term_flag;
+
+sem_t *mutex;
 
 int usage()
 {
@@ -23,7 +35,7 @@ int usage()
     return 0;
 }
 
-int debug(char* msg)
+void debug(char* msg)
 {
     if (debug_on)
     {
@@ -36,21 +48,8 @@ char msg[MSG_MAX];
 
 void terminate_connections(int p)
 {
-    int l;
-
     debug("signal received, killing servers");
-    for (l=0; l < listener_count; l++)
-    {
-        snprintf(msg, MSG_MAX, "killing process %i", listeners[l]);
-        debug(msg);
-        kill(listeners[l], SIGKILL);
-    }
-}
-
-void connection_counter(int p)
-{
-    debug("increase counter");
-    connection_count += 1;
+    *term_flag = 1;
 }
 
 int handle_connections(char* host, int port)
@@ -78,6 +77,13 @@ int handle_connections(char* host, int port)
     if ((listen_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
         perror("fail on socket creation");
+        return 1;
+    }
+
+    int on = 1;
+    if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &on, sizeof(on)) == -1)
+    {
+        perror("fail on setsockopt");
         return 1;
     }
 
@@ -109,6 +115,11 @@ int handle_connections(char* host, int port)
             return 1;
         }
 
+        sem_wait(mutex);
+        *connection_count += 1;
+        sem_post(mutex);
+
+
         inet_ntop(AF_INET, &ra, host_address_str, 255);
         snprintf(msg, MSG_MAX, "accepted connection from host %s port %i", host_address_str, port);
         debug(msg);
@@ -122,8 +133,7 @@ int handle_connections(char* host, int port)
         snprintf(msg, MSG_MAX, "connection closed, read %d bytes (%i)", sum, port);
         debug(msg);
         close(remote_sock);
-        kill(getppid(), SIGUSR1);
-    } while (cont);
+    } while (cont && (*term_flag) == 0);
 
     close(listen_sock);
 
@@ -144,16 +154,46 @@ int main(int argc, char **argv)
     char *delimiter;
     struct sigaction sa;
     struct sigaction sa2;
+    int shm;
 
+    term_flag = mmap(NULL, sizeof *term_flag, PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *term_flag = 0;
+
+    connection_count = mmap(NULL, sizeof *connection_count, PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *connection_count = 0;
+
+    /* counter synchronization stuff - semaphore and shared memory */
+    if ((shm = shm_open("myshm", O_RDWR | O_CREAT, S_IRWXU))  < 0) {
+        perror("shm_open");
+        exit(1);
+    }
+
+    if ( ftruncate(shm, sizeof(sem_t)) < 0 ) {
+        perror("ftruncate");
+        exit(1);
+    }
+
+    /* place shared mutex into shared memory */
+    if ((mutex = (sem_t*) mmap(NULL, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, shm, 0)) == MAP_FAILED) {
+        perror("mmap");
+        exit(1);
+    }
+
+    if( sem_init(mutex,1,1) < 0)
+    {
+        perror("semaphore initilization");
+        exit(0);
+    }
+
+    /* signal handling */
     memset(&sa, 0, sizeof(sa));
     memset(&sa2, 0, sizeof(sa2));
 
     sa.sa_handler = &terminate_connections;
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
-
-    sa2.sa_handler = &connection_counter;
-    sigaction(SIGUSR1, &sa2, NULL);
 
     /* collect program args */
     while ((opt = getopt(argc, argv, "p:a:dc")) != -1) {
@@ -216,7 +256,6 @@ int main(int argc, char **argv)
     int i;
     for (i=0; i < listener_count; i++)
     {
-        int rc = -1;
         while (wait(&child_status) == -1  && errno == EINTR)
         {
             ;
@@ -226,7 +265,7 @@ int main(int argc, char **argv)
 
     debug("tcp_listener finished");
 
-    printf("handled %i connections\n", connection_count);
+    printf("handled %i connections\n", *connection_count);
 
     return 0;
 }
