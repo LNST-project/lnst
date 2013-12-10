@@ -31,7 +31,7 @@ sem_t *mutex;
 
 int usage()
 {
-    printf("./tcp_connect -p [port_range] -a [ipaddr]\n");
+    printf("./tcp_connect -p [port_range] -a [ipaddr] [-d] [-c] [-6]\n");
     return 0;
 }
 
@@ -52,34 +52,61 @@ void terminate_connections(int p)
     *term_flag = 1;
 }
 
-int handle_connections(char* host, int port)
+int handle_connections(char* host, int port, int ipv6)
 {
     int conn_sock;
     struct sockaddr_in my_addr;
+    struct sockaddr_in6 my_addr6;
     char data[] = "abcdefghijklmnopqrstuvwxyz0123456789";
     char buf[21*10*strlen(data)+1];
+    int family;
 
     snprintf(msg, MSG_MAX, "Starting connection on %s port %i", host, port);
     debug(msg);
 
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(port);
-    if (inet_aton(host, &(my_addr.sin_addr)) == 0)
+    if (ipv6)
     {
-        printf("failed on inet_aton()\n");
-        return 1;
+        family = my_addr6.sin6_family = AF_INET6;
+        my_addr6.sin6_port = htons(port);
+        if (inet_pton(AF_INET6, host, &my_addr6.sin6_addr) != 1) {
+            perror("fail on inet_pton");
+            return 1;
+        }
+    }
+    else
+    {
+        family = my_addr.sin_family = AF_INET;
+        my_addr.sin_port = htons(port);
+        if (inet_aton(host, &(my_addr.sin_addr)) == 0)
+        {
+            printf("failed on inet_aton()\n");
+            return 1;
+        }
     }
 
     do
     {
-        conn_sock = socket(AF_INET, SOCK_STREAM, 0);
+        conn_sock = socket(family, SOCK_STREAM, 0);
         if (conn_sock == -1)
         {
             perror("fail on socket()");
             return 1;
         }
 
-        if (connect(conn_sock, (struct sockaddr*) &my_addr, sizeof(struct sockaddr_in)) == -1)
+        struct sockaddr* sa;
+        socklen_t sa_len;
+        if (ipv6)
+        {
+            sa = (struct sockaddr*) &my_addr6;
+            sa_len = sizeof(struct sockaddr_in6);
+        }
+        else
+        {
+            sa = (struct sockaddr*) &my_addr;
+            sa_len = sizeof(struct sockaddr_in);
+        }
+
+        if (connect(conn_sock, sa, sa_len) == -1)
         {
             perror("fail on connect");
             return 1;
@@ -137,6 +164,7 @@ int main(int argc, char **argv)
     char *delimiter;
     struct sigaction sa;
     int shm;
+    int ipv6 = 0;
 
     term_flag = mmap(NULL, sizeof *term_flag, PROT_READ | PROT_WRITE,
                     MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -179,7 +207,7 @@ int main(int argc, char **argv)
     handlers_count = 0;
 
     /* collect program args */
-    while ((opt = getopt(argc, argv, "p:a:dc")) != -1) {
+    while ((opt = getopt(argc, argv, "p:a:dc6")) != -1) {
         switch (opt) {
         case 'p':
             strncpy(port_str, optarg, 256);
@@ -188,6 +216,7 @@ int main(int argc, char **argv)
             if (delimiter == NULL)
             {
                 usage();
+                return 1;
             }
             strncpy(str_port_start, port_str, delimiter - port_str);
             str_port_start[delimiter - port_str] = '\0';
@@ -204,6 +233,9 @@ int main(int argc, char **argv)
             break;
         case 'c':
             cont = 1;
+            break;
+        case '6':
+            ipv6 = 1;
             break;
         }
     }
@@ -227,7 +259,7 @@ int main(int argc, char **argv)
             sa.sa_handler = SIG_DFL;
             sigaction(SIGTERM, &sa, NULL);
             sigaction(SIGINT, &sa, NULL);
-            handle_connections(host_str, p);
+            handle_connections(host_str, p, ipv6);
             return 0;
         }
     }

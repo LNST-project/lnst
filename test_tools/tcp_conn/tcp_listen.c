@@ -31,7 +31,7 @@ sem_t *mutex;
 
 int usage()
 {
-    printf("./tcp_listen -p [port_range] -a [ipaddr]\n");
+    printf("./tcp_listen -p [port_range] -a [ipaddr] [-d] [-c] [-6]\n");
     return 0;
 }
 
@@ -52,42 +52,77 @@ void terminate_connections(int p)
     *term_flag = 1;
 }
 
-int handle_connections(char* host, int port)
+int handle_connections(char* host, int port, int ipv6)
 {
     int listen_sock;
     struct sockaddr_in my_addr;
+    struct sockaddr_in6 my_addr6;
     socklen_t my_addr_size = sizeof(my_addr);
+    socklen_t my_addr6_size = sizeof(my_addr6);
     int remote_sock;
     struct sockaddr_in remote;
+    struct sockaddr_in6 remote6;
     socklen_t remote_size = sizeof(remote);
+    socklen_t remote6_size = sizeof(remote6);
     char data[256];
+    int family;
 
     snprintf(msg, MSG_MAX, "Starting listener on %s port %i", host, port);
     debug(msg);
 
-    bzero(&my_addr, my_addr_size);
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(port);
-    if (inet_aton(host, &(my_addr.sin_addr)) == 0)
+    if (ipv6)
     {
-        printf("failed on inet_aton()\n");
-        return 1;
+        family = AF_INET6;
+        bzero(&my_addr6, my_addr6_size);
+        my_addr6.sin6_family = family;
+        my_addr6.sin6_port = htons(port);
+        if (inet_pton(AF_INET6, host, &(my_addr6.sin6_addr)) != 1)
+        {
+            printf("failed on inet_pton()\n");
+            return 1;
+        }
+    }
+    else
+    {
+        family = AF_INET;
+        bzero(&my_addr, my_addr_size);
+        my_addr.sin_family = family;
+        my_addr.sin_port = htons(port);
+        if (inet_aton(host, &(my_addr.sin_addr)) == 0)
+        {
+            printf("failed on inet_aton()\n");
+            return 1;
+        }
     }
 
-    if ((listen_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    if ((listen_sock = socket(family, SOCK_STREAM, 0)) == -1)
     {
         perror("fail on socket creation");
         return 1;
     }
 
     int on = 1;
-    if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &on, sizeof(on)) == -1)
+    if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &on,
+                      sizeof(on)) == -1)
     {
         perror("fail on setsockopt");
         return 1;
     }
 
-    if (bind(listen_sock, (struct sockaddr*) &my_addr, sizeof(struct sockaddr_in)))
+    struct sockaddr* sa;
+    socklen_t sa_len;
+    if (ipv6)
+    {
+        sa = (struct sockaddr*) &my_addr6;
+        sa_len = my_addr6_size;
+    }
+    else
+    {
+        sa = (struct sockaddr*) &my_addr;
+        sa_len = my_addr_size;
+    }
+
+    if (bind(listen_sock, sa, sa_len))
     {
         perror("fail on bind");
         return 1;
@@ -102,12 +137,27 @@ int handle_connections(char* host, int port)
     do
     {
         struct in_addr ra = remote.sin_addr;
+        struct in6_addr ra6 = remote6.sin6_addr;
         char host_address_str[256];
         ssize_t read_rc;
+        struct sockaddr* r_sockaddr;
+        socklen_t* r_sockaddr_size;
+
+        if (ipv6)
+        {
+            bzero(&remote6, remote6_size);
+            r_sockaddr = (struct sockaddr*) &remote6;
+            r_sockaddr_size = &remote6_size;
+        }
+        else
+        {
+            bzero(&remote, remote_size);
+            r_sockaddr = (struct sockaddr*) &remote;
+            r_sockaddr_size = &remote_size;
+        }
 
         /* handle single connection */
-        bzero(&remote, remote_size);
-        remote_sock = accept(listen_sock, (struct sockaddr*) &remote, &remote_size);
+        remote_sock = accept(listen_sock, r_sockaddr, r_sockaddr_size);
         if (remote_sock == -1)
         {
             perror("failure on accept");
@@ -119,8 +169,11 @@ int handle_connections(char* host, int port)
         *connection_count += 1;
         sem_post(mutex);
 
+        if (ipv6)
+            inet_ntop(AF_INET6, &ra6, host_address_str, 255);
+        else
+            inet_ntop(AF_INET, &ra, host_address_str, 255);
 
-        inet_ntop(AF_INET, &ra, host_address_str, 255);
         snprintf(msg, MSG_MAX, "accepted connection from host %s port %i", host_address_str, port);
         debug(msg);
 
@@ -155,6 +208,7 @@ int main(int argc, char **argv)
     struct sigaction sa;
     struct sigaction sa2;
     int shm;
+    int ipv6 = 0;
 
     term_flag = mmap(NULL, sizeof *term_flag, PROT_READ | PROT_WRITE,
                     MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -196,7 +250,7 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sa, NULL);
 
     /* collect program args */
-    while ((opt = getopt(argc, argv, "p:a:dc")) != -1) {
+    while ((opt = getopt(argc, argv, "p:a:dc6")) != -1) {
         switch (opt) {
         case 'p':
             strncpy(port_str, optarg, 256);
@@ -205,6 +259,7 @@ int main(int argc, char **argv)
             if (delimiter == NULL)
             {
                 usage();
+                return 1;
             }
             strncpy(str_port_start, port_str, delimiter - port_str);
             str_port_start[delimiter - port_str] = '\0';
@@ -221,6 +276,10 @@ int main(int argc, char **argv)
             break;
         case 'c':
             cont = 1;
+            break;
+        case '6':
+            ipv6 = 1;
+            break;
         }
     }
 
@@ -246,7 +305,7 @@ int main(int argc, char **argv)
             sigaction(SIGINT, &sa, NULL);
 
             /* run the main processing loop */
-            handle_connections(host_str, p);
+            handle_connections(host_str, p, ipv6);
             return 0;
         }
     }
