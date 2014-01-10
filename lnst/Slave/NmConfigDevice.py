@@ -457,7 +457,7 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
     @classmethod
     def is_nm_managed(cls, netdev, config):
         if _dev_exists(netdev["hwaddr"]):
-            managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
+            managed = super(NmConfigDeviceBridge, cls).is_nm_managed(netdev,
                                                                    config)
         else:
             slave_id = get_slaves(netdev)[1]
@@ -598,7 +598,7 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
     @classmethod
     def is_nm_managed(cls, netdev, config):
         if _dev_exists(netdev["hwaddr"]):
-            managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
+            managed = super(NmConfigDeviceVlan, cls).is_nm_managed(netdev,
                                                                    config)
         else:
             slave_id = get_slaves(netdev)[0]
