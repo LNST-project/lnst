@@ -750,8 +750,6 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
 
             teamd_port_config = get_slave_option(self._netdev,
                                                  slave, "teamd_port_config")
-            if teamd_port_config == None:
-                teamd_port_config = ""
 
             s_eth = dbus.Dictionary({
                 'duplex': dbus.Array('full', 's'),
@@ -765,13 +763,14 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
                 'master': self._netdev["master_uuid"],
                 'slave-type': 'team'})
 
-            s_port_cfg = dbus.Dictionary({
-                'config': teamd_port_config})
-
             slave_con = dbus.Dictionary({
                 '802-3-ethernet': s_eth,
-                'connection': s_slave_con,
-                'team-port': s_port_cfg})
+                'connection': s_slave_con})
+
+            if teamd_port_config != None:
+                s_port_cfg = dbus.Dictionary({
+                    'config': teamd_port_config})
+                slave_con['team-port'] = s_port_cfg
 
             netdev["con_obj_path"] = self._nm_add_connection(slave_con)
 
