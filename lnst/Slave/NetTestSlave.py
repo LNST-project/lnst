@@ -392,6 +392,18 @@ class ServerHandler(object):
 
     def get_messages(self):
         messages = self._connection_handler.check_connections()
+
+        #push ctl messages to the end of message queue, this ensures that
+        #update messages are handled first
+        ctl_msgs = []
+        non_ctl_msgs = []
+        for msg in messages:
+            if msg[0] == self._c_socket[1]:
+                ctl_msgs.append(msg)
+            else:
+                non_ctl_msgs.append(msg)
+        messages = non_ctl_msgs + ctl_msgs
+
         addr = self._c_socket[1]
         if self._connection_handler.get_connection(addr) == None:
             logging.info("Lost controller connection.")
