@@ -76,22 +76,33 @@ class ConnectionHandler(object):
         except select.error:
             return []
         for f in rl:
-            try:
-                data = recv_data(f)
+            f_ready = True
+            while f_ready:
+                try:
+                    data = recv_data(f)
 
-                if data == "":
+                    if data == "":
+                        f.close()
+                        self.remove_connection(f)
+                        f_ready = False
+                    else:
+                        id = self.get_connection_id(f)
+                        requests.append((id, data))
+
+                        #poll the file descriptor if there is another message
+                        rll, _, _ = select.select([f], [], [], 0)
+                        if rll == []:
+                            f_ready = False
+
+                except socket.error:
+                    f_ready = False
                     f.close()
                     self.remove_connection(f)
-                else:
-                    id = self.get_connection_id(f)
-                    requests.append((id, data))
+                except EOFError:
+                    f_ready = False
+                    f.close()
+                    self.remove_connection(f)
 
-            except socket.error:
-                f.close()
-                self.remove_connection(f)
-            except EOFError:
-                f.close()
-                self.remove_connection(f)
         return requests
 
     def get_connection(self, id):
