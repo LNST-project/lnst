@@ -61,12 +61,12 @@ class SlaveMethods:
 
         self._resource_table = {}
 
-        self.ctl_clean_exit = True
+        self._ctl_clean_exit = True
 
     def hello(self, recipe_path):
-        if not self.ctl_clean_exit:
-            self._methods.machine_cleanup()
-            self._methods.ctl_clean_exit = True
+        if not self._ctl_clean_exit:
+            self.machine_cleanup()
+            self._ctl_clean_exit = True
 
         logging.info("Recieved a controller connection.")
         self.clear_resource_table()
@@ -94,7 +94,7 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
-        self.ctl_clean_exit = True
+        self._ctl_clean_exit = True
         return "bye"
 
     def kill_cmds(self):
