@@ -87,12 +87,17 @@ class NmConfigDeviceGeneric(object):
     _wait_for = None
 
 
-    def __init__(self, netdev, config):
-        self._netdev = netdev
-        self._config = config
+    def __init__(self, dev_config, if_manager):
+        self._dev_config = dev_config
+        self._if_manager = if_manager
         self._bus = dbus.SystemBus()
         self._nm_obj = self._bus.get_object(NM_BUS, OBJ_PRE)
         self._nm_if = dbus.Interface(self._nm_obj, IF_PRE)
+
+        self._connection = None
+        self._connection_added = False
+        self._con_obj_path = None
+        self._acon_obj_path = None
 
     def configure(self):
         pass
@@ -100,19 +105,27 @@ class NmConfigDeviceGeneric(object):
     def deconfigure(self):
         pass
 
-    def slave_add(self, slaveid):
+    def slave_add(self, slave_id):
         pass
 
-    def slave_del(self, slaveid):
+    def slave_del(self, slave_id):
         pass
 
     def up(self):
-        netdev = self._netdev
-        self._nm_activate_connection(netdev)
+        if not self._connection_added:
+            self._nm_add_connection()
+        if self._connection_added:
+            #NM would automatically activate the master connection, however
+            #we want to have the record of which active connection that is
+            if self._dev_config["master"] != None:
+                master_id = self._dev_config["master"]
+                master_dev = self._if_manager.get_mapped_device(master_id)
+                master_dev.up()
+            self._nm_activate_connection()
 
     def down(self):
-        netdev = self._netdev
-        self._nm_deactivate_connection(netdev)
+        if self._connection_added:
+            self._nm_deactivate_connection()
 
     @classmethod
     def type_init(self):
@@ -123,8 +136,8 @@ class NmConfigDeviceGeneric(object):
         pass
 
     @classmethod
-    def is_nm_managed(cls, netdev, config):
-        return is_nm_managed_by_name(netdev["name"])
+    def is_nm_managed(cls, dev_config, if_manager):
+        return is_nm_managed_by_name(dev_config["name"])
 
     def _wait_for_state(self, new_state, old_state, reason):
         self._device_state = new_state
@@ -137,9 +150,9 @@ class NmConfigDeviceGeneric(object):
                 break
             time.sleep(1)
 
-    def _convert_hwaddr(self, netdev):
-        if "hwaddr" in netdev:
-            hwaddr = netdev["hwaddr"]
+    def _convert_hwaddr(self, dev_config):
+        if "hwaddr" in dev_config:
+            hwaddr = dev_config["hwaddr"]
         else:
             return None
 
@@ -191,79 +204,116 @@ class NmConfigDeviceGeneric(object):
 
         return (s_ipv4, s_ipv6)
 
-    def _nm_add_connection(self, connection):
-        bus = self._bus
-        settings_obj = bus.get_object(NM_BUS, OBJ_PRE + "/Settings")
-        settings_if = dbus.Interface(settings_obj, IF_PRE + ".Settings")
-        con_obj_path = settings_if.AddConnection(connection)
-        logging.debug("Added NM connection: %s" % con_obj_path)
-        return con_obj_path
+    def _nm_add_connection(self):
+        #NM will succesfully add this connection but is unable to activate it...
+        if self._connection["ipv4"]["method"] == "disabled" and\
+           self._connection["ipv6"]["method"] == "ignore" and\
+           "master" not in self._connection["connection"] and\
+           self._connection["connection"]["type"] == "802-3-ethernet":
+               return
 
-    def _nm_rm_connection(self, con_obj_path):
-        bus = self._bus
-        con_obj = bus.get_object(NM_BUS, con_obj_path)
-        con_if = dbus.Interface(con_obj, IF_PRE + ".Settings.Connection")
-        con_if.Delete()
-        logging.debug("Removed NM connection: %s" % con_obj_path)
+        if not self._connection_added:
+            bus = self._bus
+            settings_obj = bus.get_object(NM_BUS, OBJ_PRE + "/Settings")
+            settings_if = dbus.Interface(settings_obj, IF_PRE + ".Settings")
+            self._con_obj_path = settings_if.AddConnection(self._connection)
+            self._connection_added = True
+            logging.debug("Added NM connection: %s" % self._con_obj_path)
 
-    def _nm_activate_connection(self, netdev):
-        if "acon_obj_path" in netdev and netdev["acon_obj_path"] != "" or\
-           "con_obj_path" not in netdev:
+    def _nm_rm_connection(self):
+        if self._connection_added:
+            bus = self._bus
+            con_obj = bus.get_object(NM_BUS, self._con_obj_path)
+            con_if = dbus.Interface(con_obj, IF_PRE + ".Settings.Connection")
+            con_if.Delete()
+            logging.debug("Removed NM connection: %s" % self._con_obj_path)
+            self._connection_added = False
+            self._con_obj_path = None
+
+    def _nm_update_connection(self):
+        if self._connection_added:
+            bus = self._bus
+            con_obj = bus.get_object(NM_BUS, self._con_obj_path)
+            con_if = dbus.Interface(con_obj, IF_PRE + ".Settings.Connection")
+            con_if.Update(self._connection)
+            logging.debug("Updated NM connection: %s" % self._con_obj_path)
+
+    def _nm_activate_connection(self):
+        config = self._dev_config
+        if self._acon_obj_path != None or\
+           self._con_obj_path == None:
             return
         else:
             logging.info("Activating connection on interface %s"
-                                                    % netdev["name"])
+                                                    % config["name"])
             bus = self._bus
             nm_if = self._nm_if
 
             try:
-                device_obj_path = nm_if.GetDeviceByIpIface(netdev["name"])
+                device_obj_path = nm_if.GetDeviceByIpIface(config["name"])
             except:
                 device_obj_path = "/"
 
-            netdev["acon_obj_path"] = nm_if.ActivateConnection(
-                                                netdev["con_obj_path"],
+            self._acon_obj_path = nm_if.ActivateConnection(
+                                                self._con_obj_path,
                                                 device_obj_path, "/")
 
             logging.debug("Device object path: %s" % device_obj_path)
-            logging.debug("Connection object path: %s" % netdev["con_obj_path"])
+            logging.debug("Connection object path: %s" % self._con_obj_path)
             logging.debug("Active connection object path: %s"
-                                                % netdev["acon_obj_path"])
+                                                % self._acon_obj_path)
 
-            act_con = bus.get_object(NM_BUS, netdev["acon_obj_path"])
+            act_con = bus.get_object(NM_BUS, self._acon_obj_path)
             act_con_props = dbus.Interface(act_con,
                                            "org.freedesktop.DBus.Properties")
             self._poll_loop(act_con_props.Get,
                             _ACON_ACTIVATED,
                             IF_PRE + ".Connection.Active", "State")
 
-    def _nm_deactivate_connection(self, netdev):
-        if "acon_obj_path" not in netdev or netdev["acon_obj_path"] == "":
+    def _nm_deactivate_connection(self):
+        config = self._dev_config
+        if self._acon_obj_path == None:
             return
         else:
             logging.info("Deactivating connection on device %s"
-                                                    % netdev["name"])
+                                                    % config["name"])
             logging.debug("Active connection object path: %s"
-                                                    % netdev["acon_obj_path"])
-            self._nm_if.DeactivateConnection(netdev["acon_obj_path"])
-            netdev["acon_obj_path"] = ""
+                                                    % self._acon_obj_path)
+            self._nm_if.DeactivateConnection(self._acon_obj_path)
+            self._acon_obj_path = None
+
+    def nm_enslave(self, slave_type, master_uuid, slave_conf):
+        self._connection["connection"]["slave_type"] = slave_type
+        self._connection["connection"]["master"] = master_uuid
+        self._connection.update(slave_conf)
+
+        self._nm_update_connection()
+
+    def nm_free(self):
+        if "slave_type" in self._connection["connection"]:
+            del self._connection["connection"]["slave_type"]
+        if "master" in self._connection["connection"]:
+            del self._connection["connection"]["master"]
+
+        self._nm_update_connection()
 
 class NmConfigDeviceEth(NmConfigDeviceGeneric):
     @classmethod
-    def is_nm_managed(cls, netdev, config):
-        managed = super(NmConfigDeviceEth, cls).is_nm_managed(netdev, config)
-        if _dev_exists(netdev["hwaddr"]):
+    def is_nm_managed(cls, dev_config, if_manager):
+        managed = super(NmConfigDeviceEth, cls).is_nm_managed(dev_config,
+                                                              if_manager)
+        if _dev_exists(dev_config["hwaddr"]):
             return managed
         else:
             return False
 
     def up(self):
-        netdev = self._netdev
+        config = self._dev_config
 
         bus = self._bus
         nm_if = self._nm_if
 
-        device_obj_path = nm_if.GetDeviceByIpIface(netdev["name"])
+        device_obj_path = nm_if.GetDeviceByIpIface(config["name"])
 
         dev = bus.get_object(NM_BUS, device_obj_path)
         dev_props = dbus.Interface(dev, "org.freedesktop.DBus.Properties")
@@ -271,26 +321,25 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
         state = dev_props.Get(IF_PRE + ".Device", "State")
         if state == _DEV_UNAVAILABLE:
             logging.info("Resetting interface so NM manages it.")
-            exec_cmd("ip link set %s down" % netdev["name"])
-            exec_cmd("ip link set %s up" % netdev["name"])
+            exec_cmd("ip link set %s down" % config["name"])
+            exec_cmd("ip link set %s up" % config["name"])
 
             self._poll_loop(dev_props.Get,
                             _DEV_DISCONNECTED,
                             IF_PRE + ".Device", "State")
+        else:
+            exec_cmd("ip link set %s up" % config["name"])
 
         super(NmConfigDeviceEth, self).up()
 
     def configure(self):
-        netdev = self._netdev
-        exec_cmd("ethtool -A %s rx off tx off" % netdev["name"], die_on_err=False, log_outputs=False)
+        config = self._dev_config
+        exec_cmd("ethtool -A %s rx off tx off" % config["name"],
+                 die_on_err=False, log_outputs=False)
 
-        hw_addr = self._convert_hwaddr(netdev)
+        hw_addr = self._convert_hwaddr(config)
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
-
-        #TODO is this correct?? NM sets ipv4 to automatic if both are disabled
-        if s_ipv4["method"] == "disabled" and s_ipv6["method"] == "ignore":
-            return
+        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
 
         s_eth = dbus.Dictionary({'mac-address': hw_addr}, signature='sv')
         s_con = dbus.Dictionary({
@@ -305,31 +354,31 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
             'ipv4': s_ipv4,
             'ipv6': s_ipv6}, signature='sa{sv}')
 
-        netdev["con_obj_path"] = self._nm_add_connection(connection)
+        self._connection = connection
+        self._nm_add_connection()
 
     def deconfigure(self):
-        netdev = self._netdev
-        if "con_obj_path" in netdev and netdev["con_obj_path"] != "":
-            self._nm_rm_connection(netdev["con_obj_path"])
-            netdev["con_obj_path"] = ""
+        if self._con_obj_path != None:
+            self._nm_rm_connection()
 
 class NmConfigDeviceBond(NmConfigDeviceGeneric):
     _modulename = "bonding"
     _moduleparams = "max_bonds=0"
 
     @classmethod
-    def is_nm_managed(cls, netdev, config):
-        if _dev_exists(netdev["hwaddr"]):
-            managed = super(NmConfigDeviceBond, cls).is_nm_managed(netdev,
-                                                                   config)
+    def is_nm_managed(cls, dev_config, if_manager):
+        if _dev_exists(dev_config["hwaddr"]):
+            managed = super(NmConfigDeviceBond, cls).is_nm_managed(dev_config,
+                                                                   if_manager)
         else:
-            slave_id = get_slaves(netdev)[1]
-            netdev = config[slave_id]
-            managed = is_nm_managed(netdev, config)
+            slave_dev = if_manager.get_mapped_device(get_slaves(dev_config)[0])
+            slave_config = slave_dev.get_conf_dict()
+            managed = is_nm_managed(slave_config, if_manager)
 
-        for slave in get_slaves(netdev):
-            netdev = config[slave]
-            if is_nm_managed(netdev, config) != managed:
+        for slave_id in get_slaves(dev_config):
+            slave_dev = if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_conf_dict()
+            if is_nm_managed(slave_config, if_manager) != managed:
                 msg = "Mixing NM managed and not managed devices in a "\
                         "master-slave relationship is not allowed!"
                 raise Exception(msg)
@@ -339,28 +388,25 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
     def up(self):
         super(NmConfigDeviceBond, self).up()
 
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            self._nm_activate_connection(netdev)
-
     def down(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            self._nm_deactivate_connection(netdev)
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_dev.down()
 
         super(NmConfigDeviceBond, self).down()
 
     def _setup_options(self):
-        if not "options" in self._netdev:
+        if not "options" in self._dev_config:
             return dbus.Dictionary({}, signature="ss")
         options = {}
-        for option, value in self._netdev["options"]:
+        for option, value in self._dev_config["options"]:
             if option == "primary":
                 '''
                 "primary" option is not direct value but it's
                 index of netdevice. So take the appropriate name from config
                 '''
-                value = self._config[int(value)]["name"]
+                slave_dev = self._if_manager.get_mapped_device(int(value))
+                value = slave_dev.get_name()
             options[option] = value
         if options:
             return dbus.Dictionary(options, signature="ss")
@@ -368,26 +414,26 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
             return None
 
     def _add_bond(self):
-        netdev = self._netdev
-        netdev["master_uuid"] = str(uuid.uuid4())
+        config = self._dev_config
+        config["master_uuid"] = str(uuid.uuid4())
 
         s_bond_con = dbus.Dictionary({
             'type': 'bond',
             'autoconnect': dbus.Boolean(False),
-            'uuid': netdev["master_uuid"],
-            'id': netdev["name"]+"_con"})
+            'uuid': config["master_uuid"],
+            'id': config["name"]+"_con"})
 
         options = self._setup_options()
 
         if options:
             s_bond = dbus.Dictionary({
-                'interface-name': netdev["name"],
+                'interface-name': config["name"],
                 'options': options})
         else:
             s_bond = dbus.Dictionary({
-                'interface-name': netdev["name"]})
+                'interface-name': config["name"]})
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
+        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
 
         connection = dbus.Dictionary({
             'bond': s_bond,
@@ -395,53 +441,32 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
             'ipv6': s_ipv6,
             'connection': s_bond_con})
 
-        netdev["con_obj_path"] = self._nm_add_connection(connection)
+        self._connection = connection
+        self._nm_add_connection()
 
     def _rm_bond(self):
-        netdev = self._netdev
-        if netdev["con_obj_path"] != "":
-            self._nm_rm_connection(netdev["con_obj_path"])
-            netdev["con_obj_path"] = ""
+        if self._con_obj_path != None:
+            self._nm_rm_connection()
 
         #older versions of NM don't know how to remove soft devices...
         if get_nm_version() < "0.9.9":
             try:
                 bond_masters = "/sys/class/net/bonding_masters"
-                exec_cmd('echo "-%s" > %s' % (netdev["name"], bond_masters))
+                exec_cmd('echo "-%s" > %s' % (config["name"], bond_masters))
             except:
                 pass
 
     def _add_slaves(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            slave_name = netdev["name"]
-
-            hw_addr = self._convert_hwaddr(netdev)
-
-            s_eth = dbus.Dictionary({
-                'duplex': dbus.Array('full', 's'),
-                'mac-address': hw_addr})
-
-            s_slave_con = dbus.Dictionary({
-                'type': '802-3-ethernet',
-                'autoconnect': dbus.Boolean(False),
-                'uuid': str(uuid.uuid4()),
-                'id': 'slave_con',
-                'master': self._netdev["master_uuid"],
-                'slave-type': 'bond'})
-
-            slave_con = dbus.Dictionary({
-                '802-3-ethernet': s_eth,
-                'connection': s_slave_con})
-
-            netdev["con_obj_path"] = self._nm_add_connection(slave_con)
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_configuration()
+            slave_config.nm_enslave("bond", self._dev_config["master_uuid"], {})
 
     def _rm_slaves(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            if netdev["con_obj_path"] != "":
-                self._nm_rm_connection(netdev["con_obj_path"])
-                netdev["con_obj_path"] = ""
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_configuration()
+            slave_config.nm_free()
 
     def configure(self):
         self._add_bond()
@@ -455,18 +480,19 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
     _modulename = "bridge"
 
     @classmethod
-    def is_nm_managed(cls, netdev, config):
-        if _dev_exists(netdev["hwaddr"]):
-            managed = super(NmConfigDeviceBridge, cls).is_nm_managed(netdev,
-                                                                   config)
+    def is_nm_managed(cls, dev_config, if_manager):
+        if _dev_exists(dev_config["hwaddr"]):
+            managed = super(NmConfigDeviceBridge, cls).is_nm_managed(dev_config,
+                                                                     if_manager)
         else:
-            slave_id = get_slaves(netdev)[1]
-            netdev = config[slave_id]
-            managed = is_nm_managed(netdev, config)
+            slave_dev = if_manager.get_mapped_device(get_slaves(dev_config)[0])
+            slave_config = slave_dev.get_conf_dict()
+            managed = is_nm_managed(slave_config, if_manager)
 
-        for slave in get_slaves(netdev):
-            netdev = config[slave]
-            if is_nm_managed(netdev, config) != managed:
+        for slave_id in get_slaves(dev_config):
+            slave_dev = if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_conf_dict()
+            if is_nm_managed(slave_config, if_manager) != managed:
                 msg = "Mixing NM managed and not managed devices in a "\
                         "master-slave relationship is not allowed!"
                 raise Exception(msg)
@@ -476,32 +502,28 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
     def up(self):
         super(NmConfigDeviceBridge, self).up()
 
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            self._nm_activate_connection(netdev)
-
     def down(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            self._nm_deactivate_connection(netdev)
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_dev.down()
 
         super(NmConfigDeviceBridge, self).down()
 
     def _add_bridge(self):
-        netdev = self._netdev
-        netdev["master_uuid"] = str(uuid.uuid4())
+        config = self._dev_config
+        config["master_uuid"] = str(uuid.uuid4())
 
         s_bridge_con = dbus.Dictionary({
             'type': 'bridge',
             'autoconnect': dbus.Boolean(False),
-            'uuid': netdev["master_uuid"],
-            'id': netdev["name"]+"_con"})
+            'uuid': config["master_uuid"],
+            'id': config["name"]+"_con"})
 
         s_bridge = dbus.Dictionary({
-            'interface-name': netdev["name"],
+            'interface-name': config["name"],
             'stp': dbus.Boolean(False)})
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
+        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
 
         connection = dbus.Dictionary({
             'bridge': s_bridge,
@@ -509,59 +531,38 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
             'ipv6': s_ipv6,
             'connection': s_bridge_con})
 
-        netdev["con_obj_path"] = self._nm_add_connection(connection)
+        self._connection = connection
+        self._nm_add_connection()
 
     def _rm_bridge(self):
-        netdev = self._netdev
-        if netdev["con_obj_path"] != "":
-            self._nm_rm_connection(netdev["con_obj_path"])
-            netdev["con_obj_path"] = ""
+        if self._con_obj_path != None:
+            self._nm_rm_connection()
 
         #older versions of NM don't know how to remove soft devices...
         if get_nm_version() < "0.9.9":
             try:
-                exec_cmd("ip link set %s down" % netdev["name"])
-                exec_cmd("brctl delbr %s " % netdev["name"])
+                exec_cmd("ip link set %s down" % config["name"])
+                exec_cmd("brctl delbr %s " % config["name"])
             except:
                 pass
 
-    def _add_slave(self, slave):
-        netdev = self._config[slave]
-        slave_name = netdev["name"]
+    def _add_slave(self, slave_id):
+        slave_dev = self._if_manager.get_mapped_device(slave_id)
+        slave_config = slave_dev.get_configuration()
+        slave_config.nm_enslave("bridge", self._dev_config["master_uuid"], {})
 
-        hw_addr = self._convert_hwaddr(netdev)
-
-        s_eth = dbus.Dictionary({
-            'duplex': dbus.Array('full', 's'),
-            'mac-address': hw_addr})
-
-        s_slave_con = dbus.Dictionary({
-            'type': '802-3-ethernet',
-            'autoconnect': dbus.Boolean(False),
-            'uuid': str(uuid.uuid4()),
-            'id': 'slave_con',
-            'master': self._netdev["master_uuid"],
-            'slave-type': 'bridge'})
-
-        slave_con = dbus.Dictionary({
-            '802-3-ethernet': s_eth,
-            'connection': s_slave_con})
-
-        netdev["con_obj_path"] = self._nm_add_connection(slave_con)
-
-    def _rm_slave(self, slave):
-        netdev = self._config[slave]
-        if netdev["con_obj_path"] != "":
-            self._nm_rm_connection(netdev["con_obj_path"])
-            netdev["con_obj_path"] = ""
+    def _rm_slave(self, slave_id):
+        slave_dev = self._if_manager.get_mapped_device(slave_id)
+        slave_config = slave_dev.get_configuration()
+        slave_config.nm_free()
 
     def _add_slaves(self):
-        for slaveid in get_slaves(self._netdev):
-            self._add_slave(slaveid)
+        for slave_id in get_slaves(self._dev_config):
+            self._add_slave(slave_id)
 
     def _rm_slaves(self):
-        for slaveid in get_slaves(self._netdev):
-            self._rm_slave(slaveid)
+        for slave_id in get_slaves(self._dev_config):
+            self._rm_slave(slave_id)
 
     def configure(self):
         self._add_bridge()
@@ -571,21 +572,22 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
         self._rm_slaves()
         self._rm_bridge()
 
-    def slave_add(self, slaveid):
-        self._add_slave(slaveid)
+    def slave_add(self, slave_id):
+        self._add_slave(slave_id)
 
-    def slave_del(self, slaveid):
-        self._rm_slave(slaveid)
+    def slave_del(self, slave_id):
+        self._rm_slave(slave_id)
 
 class NmConfigDeviceMacvlan(NmConfigDeviceGeneric):
     #Not supported by NetworkManager yet
     @classmethod
-    def is_nm_managed(cls, netdev, config):
+    def is_nm_managed(cls, dev_config, if_manager):
         managed = False
 
-        for slave in get_slaves(netdev):
-            slave_netdev = config[slave]
-            if is_nm_managed(slave_netdev, config) != managed:
+        for slave_id in get_slaves(dev_config):
+            slave_dev = if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_conf_dict()
+            if is_nm_managed(slave_config, if_manager) != managed:
                 msg = "Mixing NM managed and not managed devices in a "\
                         "master-slave relationship is not allowed!"
                 raise Exception(msg)
@@ -596,18 +598,19 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
     _modulename = "8021q"
 
     @classmethod
-    def is_nm_managed(cls, netdev, config):
-        if _dev_exists(netdev["hwaddr"]):
-            managed = super(NmConfigDeviceVlan, cls).is_nm_managed(netdev,
-                                                                   config)
+    def is_nm_managed(cls, dev_config, if_manager):
+        if _dev_exists(dev_config["hwaddr"]):
+            managed = super(NmConfigDeviceVlan, cls).is_nm_managed(dev_config,
+                                                                   if_manager)
         else:
-            slave_id = get_slaves(netdev)[0]
-            netdev = config[slave_id]
-            managed = is_nm_managed(netdev, config)
+            slave_dev = if_manager.get_mapped_device(get_slaves(dev_config)[0])
+            slave_config = slave_dev.get_conf_dict()
+            managed = is_nm_managed(slave_config, if_manager)
 
-        for slave in get_slaves(netdev):
-            slave_netdev = config[slave]
-            if is_nm_managed(slave_netdev, config) != managed:
+        for slave_id in get_slaves(dev_config):
+            slave_dev = if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_conf_dict()
+            if is_nm_managed(slave_config, if_manager) != managed:
                 msg = "Mixing NM managed and not managed devices in a "\
                         "master-slave relationship is not allowed!"
                 raise Exception(msg)
@@ -623,14 +626,16 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
         return False
 
     def _get_vlan_info(self):
-        netdev = self._netdev;
-        realdev_index = get_slaves(netdev)[0]
-        realdev = self._config[realdev_index]["name"]
-        dev_name = netdev["name"]
-        vlan_tci = int(get_option(netdev, "vlan_tci"))
-        return dev_name, realdev, vlan_tci
+        config = self._dev_config;
+        realdev = self._if_manager.get_mapped_device(get_slaves(config)[0])
+        realdev_name = realdev.get_name()
+        dev_name = config["name"]
+        vlan_tci = int(get_option(config, "vlan_tci"))
+        return dev_name, realdev_name, vlan_tci
 
     def configure(self):
+        config = self._dev_config
+
         dev_name, realdev, vlan_tci = self._get_vlan_info()
 
         s_vlan_con = dbus.Dictionary({
@@ -644,7 +649,7 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
             'parent': realdev,
             'id': dbus.UInt32(vlan_tci)}, signature="sv")
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(self._netdev["addresses"])
+        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
 
         connection = dbus.Dictionary({
             'vlan': s_vlan,
@@ -652,13 +657,12 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
             'ipv6': s_ipv6,
             'connection': s_vlan_con})
 
-        self._netdev["con_obj_path"] = self._nm_add_connection(connection)
+        self._connection = connection
+        self._nm_add_connection()
 
     def deconfigure(self):
-        netdev = self._netdev
-        if "con_obj_path" in netdev and netdev["con_obj_path"] != "":
-            self._nm_rm_connection(netdev["con_obj_path"])
-            netdev["con_obj_path"] = ""
+        if self._con_obj_path != None:
+            self._nm_rm_connection()
 
         #older versions of NM don't know how to remove soft devices...
         #and lnst will break when multiple devices with the same mac exist
@@ -672,23 +676,31 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
             except:
                 pass
 
+    def up(self):
+        realdev_id = get_slaves(self._dev_config)[0]
+        realdev = self._if_manager.get_mapped_device(realdev_id)
+        realdev.up()
+
+        super(NmConfigDeviceVlan, self).up()
+
 class NmConfigDeviceTeam(NmConfigDeviceGeneric):
     @classmethod
-    def is_nm_managed(cls, netdev, config):
-        if _dev_exists(netdev["hwaddr"]):
-            managed = super(NmConfigDeviceTeam, cls).is_nm_managed(netdev,
-                                                                   config)
+    def is_nm_managed(cls, dev_config, if_manager):
+        if _dev_exists(dev_config["hwaddr"]):
+            managed = super(NmConfigDeviceTeam, cls).is_nm_managed(dev_config,
+                                                                   if_manager)
         else:
             if get_nm_version() < "0.9.9":
                 managed = False
             else:
-                slave_id = get_slaves(netdev)[0]
-                netdev = config[slave_id]
-                managed = is_nm_managed(netdev, config)
+                slave_dev = if_manager.get_mapped_device(get_slaves(dev_config)[0])
+                slave_config = slave_dev.get_conf_dict()
+                managed = is_nm_managed(slave_config, if_manager)
 
-        for slave in get_slaves(netdev):
-            netdev = config[slave]
-            if is_nm_managed(netdev, config) != managed:
+        for slave_id in get_slaves(dev_config):
+            slave_dev = if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_conf_dict()
+            if is_nm_managed(slave_config, if_manager) != managed:
                 msg = "Mixing NM managed and not managed devices in a "\
                         "master-slave relationship is not allowed!"
                 raise Exception(msg)
@@ -698,34 +710,30 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
     def up(self):
         super(NmConfigDeviceTeam, self).up()
 
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            self._nm_activate_connection(netdev)
-
     def down(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            self._nm_deactivate_connection(netdev)
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_dev.down()
 
         super(NmConfigDeviceTeam, self).down()
 
     def _add_team(self):
-        netdev = self._netdev
-        netdev["master_uuid"] = str(uuid.uuid4())
+        config = self._dev_config
+        config["master_uuid"] = str(uuid.uuid4())
 
         s_team_con = dbus.Dictionary({
             'type': 'team',
             'autoconnect': dbus.Boolean(False),
-            'uuid': netdev["master_uuid"],
-            'id': netdev["name"]+"_con"})
+            'uuid': config["master_uuid"],
+            'id': config["name"]+"_con"})
 
-        teamd_config = get_option(self._netdev, "teamd_config")
+        teamd_config = get_option(config, "teamd_config")
 
         s_team = dbus.Dictionary({
-            'interface-name': netdev["name"],
+            'interface-name': config["name"],
             'config': teamd_config})
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(netdev["addresses"])
+        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
 
         connection = dbus.Dictionary({
             'team': s_team,
@@ -733,53 +741,37 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
             'ipv6': s_ipv6,
             'connection': s_team_con})
 
-        netdev["con_obj_path"] = self._nm_add_connection(connection)
+        self._connection = connection
+        self._nm_add_connection()
 
     def _rm_team(self):
-        netdev = self._netdev
-        if netdev["con_obj_path"] != "":
-            self._nm_rm_connection(netdev["con_obj_path"])
-            netdev["con_obj_path"] = ""
+        if self._con_obj_path != None:
+            self._nm_rm_connection()
 
     def _add_slaves(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            slave_name = netdev["name"]
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_configuration()
 
-            hw_addr = self._convert_hwaddr(netdev)
+            teamd_port_config = get_slave_option(self._dev_config,
+                                                 slave_id,
+                                                 "teamd_port_config")
 
-            teamd_port_config = get_slave_option(self._netdev,
-                                                 slave, "teamd_port_config")
-
-            s_eth = dbus.Dictionary({
-                'duplex': dbus.Array('full', 's'),
-                'mac-address': hw_addr})
-
-            s_slave_con = dbus.Dictionary({
-                'type': '802-3-ethernet',
-                'autoconnect': dbus.Boolean(False),
-                'uuid': str(uuid.uuid4()),
-                'id': 'slave_con',
-                'master': self._netdev["master_uuid"],
-                'slave-type': 'team'})
-
-            slave_con = dbus.Dictionary({
-                '802-3-ethernet': s_eth,
-                'connection': s_slave_con})
+            slave_con = dbus.Dictionary()
 
             if teamd_port_config != None:
                 s_port_cfg = dbus.Dictionary({
                     'config': teamd_port_config})
                 slave_con['team-port'] = s_port_cfg
 
-            netdev["con_obj_path"] = self._nm_add_connection(slave_con)
+            slave_config.nm_enslave("team", self._dev_config["master_uuid"],
+                                    slave_con)
 
     def _rm_slaves(self):
-        for slave in get_slaves(self._netdev):
-            netdev = self._config[slave]
-            if netdev["con_obj_path"] != "":
-                self._nm_rm_connection(netdev["con_obj_path"])
-                netdev["con_obj_path"] = ""
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_configuration()
+            slave_config.nm_free()
 
     def configure(self):
         self._add_team()
@@ -798,5 +790,6 @@ type_class_mapping = {
     "team": NmConfigDeviceTeam
 }
 
-def is_nm_managed(netdev, config):
-    return type_class_mapping[netdev["type"]].is_nm_managed(netdev, config)
+def is_nm_managed(dev_config, if_manager):
+    return type_class_mapping[dev_config["type"]].is_nm_managed(dev_config,
+                                                                if_manager)
