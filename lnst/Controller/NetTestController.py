@@ -175,6 +175,12 @@ class NetTestController:
             for iface_xml_data in machine_xml_data["interfaces"]:
                 self._prepare_interface(m_id, iface_xml_data)
 
+            ifaces = machines[m_id].get_ordered_interfaces()
+            for iface in ifaces:
+                iface.configure()
+            for iface in ifaces:
+                iface.up()
+
     def _prepare_provisioning(self):
         mreq = self._get_machine_requirements()
         sp = self._slave_pool
@@ -235,8 +241,6 @@ class NetTestController:
         if "options" in iface_xml_data:
             for opt in iface_xml_data["options"]:
                 iface.set_option(opt["name"], opt["value"])
-
-        iface.configure()
 
     def _prepare_tasks(self):
         self._tasks = []

@@ -112,6 +112,29 @@ class Machine(object):
         msg = "Interface '%s' not found on machine '%s'" % (if_id, self._id)
         raise MachineError(msg)
 
+    def get_ordered_interfaces(self):
+        ordered_list = list(self._interfaces)
+        change = True
+        while change:
+            change = False
+            swap = False
+            ind1 = 0
+            ind2 = 0
+            for i in ordered_list:
+                master = i.get_master()
+                if master != None:
+                    ind1 = ordered_list.index(i)
+                    ind2 = ordered_list.index(master)
+                    if ind1 > ind2:
+                        swap = True
+                        break
+            if swap:
+                change = True
+                tmp = ordered_list[ind1]
+                ordered_list[ind1] = ordered_list[ind2]
+                ordered_list[ind2] = tmp
+        return ordered_list
+
     def _rpc_call(self, method_name, *args):
         data = {"type": "command", "method_name": method_name, "args": args}
 
@@ -167,12 +190,15 @@ class Machine(object):
         if not self._msg_dispatcher.get_connection(self._id):
             return
 
+        ordered_ifaces = self.get_ordered_interfaces()
         try:
             self._rpc_call("kill_cmds")
 
             if deconfigure:
-                for iface in reversed(self._interfaces):
+                ordered_ifaces.reverse()
+                for iface in ordered_ifaces:
                     iface.deconfigure()
+                for iface in ordered_ifaces:
                     iface.cleanup()
 
             self._rpc_call("bye")
@@ -180,7 +206,7 @@ class Machine(object):
             #cleanup is only meaningful on dynamic interfaces, and should
             #always be called when deconfiguration happens- especially
             #when something on the slave breaks during deconfiguration
-            for iface in reversed(self._interfaces):
+            for iface in ordered_ifaces:
                 if not isinstance(iface, VirtualInterface):
                     continue
                 iface.cleanup()
@@ -360,6 +386,8 @@ class Interface(object):
         self._addresses = []
         self._options = []
 
+        self._master = None
+
     def get_id(self):
         return self._id
 
@@ -396,8 +424,19 @@ class Interface(object):
     def set_option(self, name, value):
         self._options.append((name, value))
 
+    def set_master(self, master):
+        if self._master != None:
+            msg = "Interface %s already has a master." % self._master.get_id()
+            raise MachineError(msg)
+        else:
+            self._master = master
+
+    def get_master(self):
+        return self._master
+
     def add_slave(self, iface):
         self._slaves[iface.get_id()] = iface
+        iface.set_master(self)
 
     def set_slave_option(self, slave_id, name, value):
         if slave_id not in self._slave_options:
@@ -420,7 +459,11 @@ class Interface(object):
         config = {"hwaddr": self._hwaddr, "type": self._type,
                   "addresses": self._addresses, "slaves": self._slaves.keys(),
                   "options": self._options,
-                  "slave_options": self._slave_options}
+                  "slave_options": self._slave_options,
+                  "master": None}
+
+        if self._master != None:
+            config["master"] = self._master.get_id()
 
         return config
 
