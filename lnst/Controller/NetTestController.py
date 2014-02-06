@@ -448,7 +448,7 @@ class NetTestController:
             return
 
         if cfg:
-            logging.info("Cleaning ip leftover configuration from previous "\
+            logging.info("Cleaning up leftover configuration from previous "\
                          "virtualized config_only run.")
             for hostname, machine in cfg["machines"].iteritems():
                 port = lnst_config.get_option("environment", "rpcport")
