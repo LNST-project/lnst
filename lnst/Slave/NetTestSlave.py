@@ -37,7 +37,7 @@ from lnst.Common.ConnectionHandler import recv_data, send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
 from lnst.Common.NetTestCommand import NetTestCommandConfig
-from pyroute2 import IPRSocket
+from lnst.Slave.InterfaceManager import InterfaceManager
 
 DefaultRPCPort = 9999
 
@@ -45,9 +45,9 @@ class SlaveMethods:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context, log_ctl):
+    def __init__(self, command_context, log_ctl, if_manager):
         self._packet_captures = {}
-        self._netconfig = NetConfig()
+        self._if_manager = if_manager
         self._command_context = command_context
         self._log_ctl = log_ctl
 
@@ -94,6 +94,7 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
+        self._if_manager.clear_if_mapping()
         self._ctl_clean_exit = True
         return "bye"
 
@@ -102,18 +103,20 @@ class SlaveMethods:
         self._command_context.cleanup()
         return "Commands killed"
 
-    def get_devices_by_hwaddr(self, hwaddr):
-        name_scan = scan_netdevs()
-        netdevs = []
+    def map_if_by_hwaddr(self, if_id, hwaddr):
+        devices = self._if_manager.get_devices()
 
-        for entry in name_scan:
-            if entry["hwaddr"] == normalize_hwaddr(hwaddr):
-                netdevs.append(entry)
+        entry = None
+        for dev in devices:
+            if dev.get_hwaddr() == hwaddr:
+                entry = {"name": dev.get_name(),
+                         "hwaddr": dev.get_hwaddr()}
+                self._if_manager.map_if(if_id, dev.get_if_index())
 
-        return netdevs
+        return entry
 
     def get_devices_by_devname(self, devname):
-        name_scan = scan_netdevs()
+        name_scan = self._if_manager.get_devices()
         netdevs = []
 
         for entry in name_scan:
@@ -122,90 +125,76 @@ class SlaveMethods:
 
         return netdevs
 
-    def set_device_down(self, hwaddr):
-        devs = self.get_devices_by_hwaddr(hwaddr)
+    def get_devices_by_hwaddr(self, hwaddr):
+        devices = self._if_manager.get_devices()
+        matched = []
+        for dev in devices:
+            if dev.get_hwaddr() == hwaddr:
+                entry = {"name": dev.get_name(),
+                         "hwaddr": dev.get_hwaddr()}
+                matched.append(entry)
 
-        for dev in devs:
-            if is_nm_managed_by_name(dev["name"]):
-                bus = dbus.SystemBus()
-                nm_obj = bus.get_object("org.freedesktop.NetworkManager",
-                                        "/org/freedesktop/NetworkManager")
-                nm_if = dbus.Interface(nm_obj, "org.freedesktop.NetworkManager")
-                dev_obj_path = nm_if.GetDeviceByIpIface(dev["name"])
-                dev_obj = bus.get_object("org.freedesktop.NetworkManager",
-                                         dev_obj_path)
-                dev_props = dbus.Interface(dev_obj,
-                                        "org.freedesktop.DBus.Properties")
-                if dev_props.Get("org.freedesktop.NetworkManager.Device",
-                                 "ActiveConnection") != "/":
-                    dev_if = dbus.Interface(dev_obj,
-                                        "org.freedesktop.NetworkManager.Device")
-                    logging.debug("Disconnecting device %s: %s" %
-                                            (dev["name"], dev_obj_path))
-                    dev_if.Disconnect()
-            else:
-                exec_cmd("ip link set %s down" % dev["name"])
+        return matched
 
+    def set_device_up(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        dev.up()
         return True
 
-    def get_interface_info(self, if_id):
-        if_config = self._netconfig.get_interface_config(if_id)
-        info = {}
+    def set_device_down(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        dev.down()
+        return True
 
-        if "name" in if_config and if_config["name"] != None:
-            info["name"] = if_config["name"]
-        else:
-            devs = self.get_devices_by_hwaddr(if_config["hwaddr"])
-            info["name"] = devs[0]["name"]
-
-        if "hwaddr" in if_config and if_config["hwaddr"] != None:
-            info["hwaddr"] = if_config["hwaddr"]
-        else:
-            devs = self.get_devices_by_devname(if_config["name"])
-            info["hwaddr"] = devs[0]["hwaddr"]
-
-        return info
+    def set_unmapped_device_down(self, hwaddr):
+        dev = self._if_manager.get_device_by_hwaddr(hwaddr)
+        dev.down()
+        return True
 
     def configure_interface(self, if_id, config):
-        self._netconfig.add_interface_config(if_id, config)
-        self._netconfig.configure(if_id)
+        device = self._if_manager.get_mapped_device(if_id)
+        device.set_configuration(config)
+        device.configure()
         return True
+
+    def create_soft_interface(self, if_id, config):
+        return self._if_manager.create_device_from_config(if_id, config)
 
     def deconfigure_interface(self, if_id):
-        self._netconfig.deconfigure(if_id)
-        self._netconfig.remove_interface_config(if_id)
+        device = self._if_manager.get_mapped_device(if_id)
+        device.clear_configuration()
         return True
 
-    def netconfig_dump(self):
-        return self._netconfig.dump_config().items()
-
     def start_packet_capture(self, filt):
-        netconfig = self._netconfig.dump_config()
-
         files = {}
-        for dev_id, dev_spec in netconfig.iteritems():
+        for if_id, dev in self._if_manager.get_mapped_devices().iteritems():
+            dev_name = dev.get_name()
+
             df_handle = NamedTemporaryFile(delete=False)
             dump_file = df_handle.name
             df_handle.close()
 
-            files[dev_id] = dump_file
+            files[if_id] = dump_file
 
             pcap = PacketCapture()
-            pcap.set_interface(dev_spec["name"])
+            pcap.set_interface(dev_name)
             pcap.set_output_file(dump_file)
             pcap.set_filter(filt)
             pcap.start()
 
-            self._packet_captures[dev_id] = pcap
+            self._packet_captures[if_id] = pcap
 
         self._capture_files = files
         return files
 
     def stop_packet_capture(self):
-        netconfig = self._netconfig.dump_config()
-        for dev_id in netconfig.keys():
-            pcap = self._packet_captures[dev_id]
+        if self._packet_captures == None:
+            return True
+
+        for if_index, pcap in self._packet_captures.iteritems():
             pcap.stop()
+
+        self._packet_captures.clear()
 
         return True
 
@@ -273,8 +262,8 @@ class SlaveMethods:
     def machine_cleanup(self):
         logging.info("Performing machine cleanup.")
         self._command_context.cleanup()
-        self._netconfig.deconfigure_all()
-        self._netconfig.cleanup()
+        self._if_manager.deconfigure_all()
+        self._if_manager.clear_if_mapping()
         self._cache.del_old_entries()
         self.restore_system_config()
         return True
@@ -436,21 +425,21 @@ class NetTestSlave:
         die_when_parent_die()
 
         self._cmd_context = NetTestCommandContext()
-        self._methods = SlaveMethods(self._cmd_context, log_ctl)
+        self._if_manager = InterfaceManager()
+        self._methods = SlaveMethods(self._cmd_context, log_ctl,
+                                     self._if_manager)
+        self._server_handler = ServerHandler(("", port))
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
         self.register_die_signal(signal.SIGTERM)
 
-        self._server_handler = ServerHandler(("", port))
-
         self._finished = False
 
         self._log_ctl = log_ctl
 
-        self._nl_socket = IPRSocket()
-        self._nl_socket.bind()
-        self._server_handler.add_connection('netlink', self._nl_socket)
+        self._server_handler.add_connection('netlink',
+                                            self._if_manager.get_nl_socket())
 
     def run(self):
         while not self._finished:
@@ -527,18 +516,7 @@ class NetTestSlave:
                     self._server_handler.send_data_to_ctl(msg)
                     self._cmd_context.del_cmd(cmd)
         elif msg["type"] == "netlink":
-            for sub_msg in msg["data"]:
-                if sub_msg["event"] == "RTM_NEWLINK":
-                    response = dict()
-                    response["type"] = "if_update"
-                    response["if_index"] = sub_msg["index"]
-                    msg_attrs = sub_msg["attrs"]
-                    for name, value in msg_attrs:
-                        if name == "IFLA_IFNAME":
-                            response["devname"] = value
-                        elif name == "IFLA_ADDRESS":
-                            response["hwaddr"] = value
-                    self._server_handler.send_data_to_ctl(response)
+            self._if_manager.handle_netlink_msgs(msg["data"])
         else:
             raise Exception("Recieved unknown command")
 
