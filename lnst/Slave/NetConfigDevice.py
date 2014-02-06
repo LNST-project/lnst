@@ -23,7 +23,7 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.Config import lnst_config
 
 
-class NetConfigDeviceGeneric:
+class NetConfigDeviceGeneric(object):
     '''
     Generic class for device manipulation all type classes should
     extend this one.
@@ -33,9 +33,10 @@ class NetConfigDeviceGeneric:
     _moduleparams = ""
     _cleanupcmd = ""
 
-    def __init__(self, netdev, config):
-        self._netdev = netdev
-        self._config = config
+    def __init__(self, dev_config, if_manager):
+        self._dev_config = dev_config
+        self._if_manager = if_manager
+        self.type_init()
 
     def configure(self):
         pass
@@ -43,25 +44,25 @@ class NetConfigDeviceGeneric:
     def deconfigure(self):
         pass
 
-    def slave_add(self, slaveid):
+    def slave_add(self, slave_id):
         pass
 
-    def slave_del(self, slaveid):
+    def slave_del(self, slave_id):
         pass
 
     def up(self):
-        netdev = self._netdev
-        if "addresses" in netdev:
-            for address in netdev["addresses"]:
-                exec_cmd("ip addr add %s dev %s" % (address, netdev["name"]))
-        exec_cmd("ip link set %s up" % netdev["name"])
+        config = self._dev_config
+        if "addresses" in config:
+            for address in config["addresses"]:
+                exec_cmd("ip addr add %s dev %s" % (address, config["name"]))
+        exec_cmd("ip link set %s up" % config["name"])
 
     def down(self):
-        netdev = self._netdev
-        if "addresses" in netdev:
-            for address in netdev["addresses"]:
-                exec_cmd("ip addr del %s dev %s" % (address, netdev["name"]))
-        exec_cmd("ip link set %s down" % netdev["name"])
+        config = self._dev_config
+        if "addresses" in config:
+            for address in config["addresses"]:
+                exec_cmd("ip addr del %s dev %s" % (address, config["name"]))
+        exec_cmd("ip link set %s down" % config["name"])
 
     @classmethod
     def type_init(self):
@@ -75,9 +76,9 @@ class NetConfigDeviceGeneric:
 
 class NetConfigDeviceEth(NetConfigDeviceGeneric):
     def configure(self):
-        netdev = self._netdev
-        exec_cmd("ip addr flush %s" % netdev["name"])
-        exec_cmd("ethtool -A %s rx off tx off" % netdev["name"], die_on_err=False, log_outputs=False)
+        config = self._dev_config
+        exec_cmd("ip addr flush %s" % config["name"])
+        exec_cmd("ethtool -A %s rx off tx off" % config["name"], die_on_err=False, log_outputs=False)
 
 class NetConfigDeviceBond(NetConfigDeviceGeneric):
     _modulename = "bonding"
@@ -85,33 +86,35 @@ class NetConfigDeviceBond(NetConfigDeviceGeneric):
 
     def _add_rm_bond(self, mark):
         bond_masters = "/sys/class/net/bonding_masters"
-        exec_cmd('echo "%s%s" > %s' % (mark, self._netdev["name"],
+        exec_cmd('echo "%s%s" > %s' % (mark, self._dev_config["name"],
                                        bond_masters))
 
     def _get_bond_dir(self):
-        return "/sys/class/net/%s/bonding" % self._netdev["name"]
+        return "/sys/class/net/%s/bonding" % self._dev_config["name"]
 
     def _setup_options(self):
-        if not "options" in self._netdev:
+        if not "options" in self._dev_config:
             return
-        options = self._netdev["options"]
+        options = self._dev_config["options"]
         for option, value in options:
             if option == "primary":
                 '''
                 "primary" option is not direct value but it's
                 index of netdevice. So take the appropriate name from config
                 '''
-                value = self._config[int(value)]["name"]
+                slave_dev = self._if_manager.get_mapped_device(int(value))
+                value = slave_dev.get_name()
             exec_cmd('echo "%s" > %s/%s' % (value,
                                             self._get_bond_dir(),
                                             option))
 
     def _add_rm_slaves(self, mark):
-        for slave in get_slaves(self._netdev):
-            slavenetdev = self._config[slave]
-            slave_name = slavenetdev["name"]
+        for slave_id in get_slaves(self._dev_config):
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_conf = slave_dev.get_conf_dict()
+            slave_name = slave_dev.get_name()
             if (mark == "+"):
-                NetConfigDevice(slavenetdev, self._config).down()
+                slave_dev.down()
             exec_cmd('echo "%s%s" > %s/slaves' % (mark, slave_name,
                                                   self._get_bond_dir()))
 
@@ -128,16 +131,16 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
     _modulename = "bridge"
 
     def _add_rm_bridge(self, prefix):
-        exec_cmd("brctl %sbr %s " % (prefix, self._netdev["name"]))
+        exec_cmd("brctl %sbr %s " % (prefix, self._dev_conf["name"]))
 
-    def _add_rm_port(self, prefix, slaveid):
-        port_name = self._config[slaveid]["name"]
-        exec_cmd("brctl %sif %s %s" % (prefix, self._netdev["name"],
+    def _add_rm_port(self, prefix, slave_if_index):
+        port_name = self._if_manager.get_mapped_device(slave_id).get_name()
+        exec_cmd("brctl %sif %s %s" % (prefix, self._dev_conf["name"],
                                        port_name))
 
     def _add_rm_ports(self, prefix):
-        for slaveid in get_slaves(self._netdev):
-            self._add_rm_port(prefix, slaveid)
+        for slave_id in get_slaves(self._dev_conf):
+            self._add_rm_port(prefix, slave_id)
 
     def configure(self):
         self._add_rm_bridge("add")
@@ -147,31 +150,31 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
         self._add_rm_ports("del")
         self._add_rm_bridge("del")
 
-    def slave_add(self, slaveid):
-        self._add_rm_port("add", slaveid)
+    def slave_add(self, slave_id):
+        self._add_rm_port("add", slave_id)
 
-    def slave_del(self, slaveid):
-        self._add_rm_port("del", slaveid)
+    def slave_del(self, slave_id):
+        self._add_rm_port("del", slave_id)
 
 class NetConfigDeviceMacvlan(NetConfigDeviceGeneric):
     _modulename = "macvlan"
 
     def configure(self):
-        netdev = self._netdev;
-        realdev_index = netdev["slaves"][0]
-        realdev = self._config[realdev_index]["name"]
-        dev_name = netdev["name"]
+        config = self._dev_config;
+        realdev_id = config["slaves"][0]
+        realdev_name = self._if_manager.get_mapped_device(realdev_id).get_name()
+        dev_name = config["name"]
 
-        if "hwaddr" in netdev:
-            hwaddr = " address %s" % netdev["hwaddr"]
+        if "hwaddr" in config:
+            hwaddr = " address %s" % config["hwaddr"]
         else:
             hwaddr = ""
 
         exec_cmd("ip link add link %s %s%s type macvlan"
-                                    % (realdev, dev_name, hwaddr))
+                                    % (realdev_name, dev_name, hwaddr))
 
     def deconfigure(self):
-        dev_name = self._netdev["name"]
+        dev_name = self._dev_config["name"]
         exec_cmd("ip link del %s" % dev_name)
 
 class NetConfigDeviceVlan(NetConfigDeviceGeneric):
@@ -186,24 +189,24 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
         return False
 
     def _get_vlan_info(self):
-        netdev = self._netdev;
-        realdev_index = get_slaves(netdev)[0]
-        realdev = self._config[realdev_index]["name"]
-        dev_name = netdev["name"]
-        vlan_tci = int(get_option(netdev, "vlan_tci"))
-        return dev_name, realdev, vlan_tci
+        config = self._dev_config;
+        realdev_id = get_slaves(config)[0]
+        realdev_name = self._if_manager.get_mapped_device(realdev_id).get_name()
+        dev_name = config["name"]
+        vlan_tci = int(get_option(config, "vlan_tci"))
+        return dev_name, realdev_name, vlan_tci
 
     def configure(self):
-        dev_name, realdev, vlan_tci = self._get_vlan_info()
+        dev_name, realdev_name, vlan_tci = self._get_vlan_info()
         if self._check_ip_link_add():
             exec_cmd("ip link add link %s %s type vlan id %d"
-                                    % (realdev, dev_name, vlan_tci))
+                                    % (realdev_name, dev_name, vlan_tci))
         else:
-            if not re.match(r'^%s.%d$' % (realdev, vlan_tci), dev_name):
+            if not re.match(r'^%s.%d$' % (realdev_name, vlan_tci), dev_name):
                 logging.error("Since using old vlan manipulation interface, "
                           "devname \"%s\" cannot be used" % dev_name)
                 raise Exception("Bad vlan device name")
-            exec_cmd("vconfig add %s %d" % (realdev, vlan_tci))
+            exec_cmd("vconfig add %s %d" % (realdev_name, vlan_tci))
 
     def deconfigure(self):
         dev_name = self._get_vlan_info()[0]
@@ -211,6 +214,13 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
             exec_cmd("ip link del %s" % dev_name)
         else:
             exec_cmd("vconfig rem %s" % dev_name)
+
+    def up(self):
+        parent_id = get_slaves(self._dev_config)[0]
+        parent_dev = self._if_manager.get_mapped_device(parent_id)
+        exec_cmd("ip link set %s up" % parent_dev.get_name())
+
+        super(NetConfigDeviceVlan, self).up()
 
 def prepare_json_str(json_str):
     if not json_str:
@@ -225,60 +235,62 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     _cleanupcmd = "killall -q teamd"
 
     def _should_enable_dbus(self):
-        dbus_disabled = get_option(self._netdev, "dbus_disabled")
+        dbus_disabled = get_option(self._dev_config, "dbus_disabled")
         if not dbus_disabled or bool_it(dbus_disabled):
             return True
         return False
 
     def _ports_down(self):
-        for slave_id in get_slaves(self._netdev):
-            port_netdev = self._config[slave_id]
-            NetConfigDevice(port_netdev, self._config).down()
+        for slave_id in get_slaves(self._dev_config):
+            port_dev = self._if_manager.get_mapped_device(slave_id)
+            port_dev.down()
 
     def _ports_up(self):
-        for slave_id in get_slaves(self._netdev):
-            port_netdev = self._config[slave_id]
-            NetConfigDevice(port_netdev, self._config).up()
+        for slave_id in get_slaves(self._dev_config):
+            port_dev = self._if_manager.get_mapped_device(slave_id)
+            port_dev.up()
 
     def configure(self):
         self._ports_down()
 
-        teamd_config = get_option(self._netdev, "teamd_config")
+        teamd_config = get_option(self._dev_config, "teamd_config")
         teamd_config = prepare_json_str(teamd_config)
 
-        dev_name = self._netdev["name"]
+        dev_name = self._dev_config["name"]
 
         dbus_option = " -D" if self._should_enable_dbus() else ""
         exec_cmd("teamd -r -d -c \"%s\" -t %s %s" % (teamd_config, dev_name, dbus_option))
 
-        for slave_id in get_slaves(self._netdev):
+        for slave_id in get_slaves(self._dev_config):
             self.slave_add(slave_id)
         self._ports_up()
 
     def deconfigure(self):
-        for slave_id in get_slaves(self._netdev):
+        for slave_id in get_slaves(self._dev_config):
             self.slave_del(slave_id)
 
-        dev_name = self._netdev["name"]
+        dev_name = self._dev_config["name"]
 
         exec_cmd("teamd -k -t %s" % dev_name)
 
-    def slave_add(self, slaveid):
-        dev_name = self._netdev["name"]
-        port_netdev = self._config[slaveid]
-        port_name = port_netdev["name"]
-        teamd_port_config = get_slave_option(self._netdev,
-                                             slaveid, "teamd_port_config")
+    def slave_add(self, slave_id):
+        dev_name = self._dev_config["name"]
+        port_dev = self._if_manager.get_mapped_device(slave_id)
+        port_name = port_dev.get_name()
+        teamd_port_config = get_slave_option(self._dev_config,
+                                             slave_id,
+                                             "teamd_port_config")
         dbus_option = "-D" if self._should_enable_dbus() else ""
         if teamd_port_config:
             teamd_port_config = prepare_json_str(teamd_port_config)
             exec_cmd("teamdctl %s %s port config update %s \"%s\"" % (dbus_option, dev_name, port_name, teamd_port_config))
-        NetConfigDevice(port_netdev, self._config).down()
+        port_dev.down()
         exec_cmd("teamdctl %s %s port add %s" % (dbus_option, dev_name, port_name))
 
-    def slave_del(self, slaveid):
-        dev_name = self._netdev["name"]
-        port_name = self._config[slaveid]["name"]
+    def slave_del(self, slave_id):
+        dev_name = self._dev_config["name"]
+        port_dev = self._if_manager.get_mapped_device(slave_id)
+        port_name = port_dev.get_name()
         dbus_option = "-D" if self._should_enable_dbus() else ""
         exec_cmd("teamdctl %s %s port remove %s" % (dbus_option, dev_name, port_name))
 
@@ -291,14 +303,14 @@ type_class_mapping = {
     "team": NetConfigDeviceTeam
 }
 
-def NetConfigDevice(netdev, config):
+def NetConfigDevice(dev_config, if_manager):
     '''
     Class dispatcher
     '''
-    if is_nm_managed(netdev, config):
-        return nm_type_class_mapping[netdev["type"]](netdev, config)
+    if is_nm_managed(dev_config, if_manager):
+        return nm_type_class_mapping[dev_config["type"]](dev_config, if_manager)
     else:
-        return type_class_mapping[netdev["type"]](netdev, config)
+        return type_class_mapping[dev_config["type"]](dev_config, if_manager)
 
 def NetConfigDeviceType(netdev, config):
     '''
