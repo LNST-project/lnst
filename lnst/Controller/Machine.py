@@ -421,25 +421,24 @@ class Interface(object):
                   "addresses": self._addresses, "slaves": self._slaves.keys(),
                   "options": self._options,
                   "slave_options": self._slave_options}
-        if self._type == "eth":
-            config["phys_id"] = self.get_id()
+
         return config
 
+    def up(self):
+        self._machine._rpc_call("set_device_up", self._id)
+
     def down(self):
-        self._machine._rpc_call("set_device_down", self._hwaddr)
+        self._machine._rpc_call("set_device_down", self._id)
 
     def initialize(self):
-        phys_devs = self._machine._rpc_call("get_devices_by_hwaddr",
-                                           self._hwaddr)
-        if len(phys_devs) == 1:
-            self.set_devname(phys_devs[0]["name"])
-        elif len(phys_devs) < 1:
+        phys_dev = self._machine._rpc_call("map_if_by_hwaddr",
+                                           self._id, self._hwaddr)
+
+        if phys_dev != None:
+            self.set_devname(phys_dev["name"])
+        else:
             msg = "Device %s not found on machine %s" \
                   % (self.get_id(), self._machine.get_id())
-            raise MachineError(msg)
-        elif len(phys_devs) > 1:
-            msg = "Multiple interfaces with same address %s on machine %s" \
-                  % (self._hwaddr, self._machine.get_id())
             raise MachineError(msg)
 
         self.down()
@@ -461,20 +460,12 @@ class Interface(object):
                                self._get_config())
         self._configured = True
 
-        if_info = self._machine._rpc_call("get_interface_info", self.get_id())
-        if "name" in if_info:
-            self.set_devname(if_info["name"])
-
-        if "hwaddr" in if_info:
-            self.set_hwaddr(if_info["hwaddr"])
-
     def deconfigure(self):
         if not self._configured:
             return
 
         self._machine._rpc_call("deconfigure_interface", self.get_id())
         self._configured = False
-        sleep(1)
 
 class StaticInterface(Interface):
     """ Static interface
@@ -583,6 +574,22 @@ class SoftInterface(Interface):
     def initialize(self):
         pass
 
+    def configure(self):
+        if self._configured:
+            msg = "Unable to configure interface %s on machine %s. " \
+                  "It has been configured already." % (self.get_id(),
+                  self._machine.get_id())
+            raise MachineError(msg)
+
+        logging.info("Configuring interface %s on machine %s", self.get_id(),
+                     self._machine.get_id())
+
+        dev_name = self._machine._rpc_call("create_soft_interface", self._id,
+                                           self._get_config())
+        self.set_devname(dev_name)
+        self._configured = True
+
+
 class UnusedInterface(Interface):
     """ Unused interface for this test
 
@@ -599,10 +606,16 @@ class UnusedInterface(Interface):
         super(UnusedInterface, self).__init__(machine, if_id, if_type)
 
     def initialize(self):
-        self.down()
+        self._machine._rpc_call('set_unmapped_device_down', self._hwaddr)
 
     def configure(self):
         pass
 
     def deconfigure(self):
+        pass
+
+    def up(self):
+        pass
+
+    def down(self):
         pass
