@@ -52,12 +52,13 @@ def scan_netdevs():
 
             if part["header"]["type"] == RTM_NEWLINK:
                 new_link = {}
-                for name, value in part["attrs"]:
-                    if name == "IFLA_IFNAME":
-                        new_link["name"] = value
-                    elif name == "IFLA_ADDRESS":
-                        new_link["hwaddr"] = normalize_hwaddr(value)
+                new_link["netlink_msg"] = part
                 new_link["index"] = part["index"]
+                new_link["name"] = part.get_attr("IFLA_IFNAME")
+
+                hwaddr = part.get_attr("IFLA_ADDRESS")
+                new_link["hwaddr"] = normalize_hwaddr(hwaddr)
+
                 scan.append(new_link)
 
     nl_socket.close()
