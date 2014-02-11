@@ -558,8 +558,9 @@ class VirtualInterface(Interface):
                 msg = "Device with hwaddr %s already exists" % self._hwaddr
                 raise MachineError(msg)
         else:
+            mac_pool = self._machine.get_mac_pool()
             while True:
-                self._hwaddr = self._machine.get_mac_pool().get_addr()
+                self._hwaddr = normalize_hwaddr(mac_pool.get_addr())
                 query = self._machine._rpc_call('get_devices_by_hwaddr',
                                                self._hwaddr)
                 if not len(query):
