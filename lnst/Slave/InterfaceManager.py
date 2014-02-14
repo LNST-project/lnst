@@ -175,6 +175,7 @@ class Device(object):
         self._conf_dict = None
         self._ip = None
         self._state = None
+        self._master = None
 
         self._if_manager = if_manager
 
@@ -184,12 +185,14 @@ class Device(object):
         self._name = nl_msg.get_attr("IFLA_IFNAME")
         self._state = nl_msg.get_attr("IFLA_OPERSTATE")
         self._ip = None #TODO
+        self._master = nl_msg.get_attr("IFLA_MASTER")
 
     def update_netlink(self, nl_msg):
         if self._if_index == nl_msg['index']:
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
             self._name = nl_msg.get_attr("IFLA_IFNAME")
             self._ip = None #TODO
+            self._master = nl_msg.get_attr("IFLA_MASTER")
             #send update msg
 
     def get_if_index(self):
@@ -221,6 +224,10 @@ class Device(object):
         return self._conf
 
     def clear_configuration(self):
+        if self._master != None:
+            master_dev = self._if_manager.get_device(self._master)
+            master_dev.clear_configuration()
+
         if self._conf != None:
             self.down()
             self.deconfigure()
@@ -233,6 +240,10 @@ class Device(object):
             self._configured = True
 
     def deconfigure(self):
+        if self._master != None:
+            master_dev = self._if_manager.get_device(self._master)
+            master_dev.deconfigure()
+
         if self._conf != None and self._configured:
             self._conf.deconfigure()
             self._configured = False
