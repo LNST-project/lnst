@@ -33,7 +33,7 @@ class InterfaceManager(object):
         self._nl_socket = IPRSocket()
         self._nl_socket.bind()
 
-        self._rescan_devices()
+        self.rescan_devices()
 
     def map_if(self, if_id, if_index):
         if if_id in self._id_mapping:
@@ -50,7 +50,8 @@ class InterfaceManager(object):
     def get_nl_socket(self):
         return self._nl_socket
 
-    def _rescan_devices(self):
+    def rescan_devices(self):
+        self._devices = {}
         devs = scan_netdevs()
         for dev in devs:
             if dev['index'] not in self._devices:

@@ -69,6 +69,8 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
 
+        self._if_manager.rescan_devices()
+
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self._log_ctl.set_recipe(recipe_path, expand=date)
         sleep(1)
