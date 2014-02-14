@@ -61,18 +61,13 @@ class SlaveMethods:
 
         self._resource_table = {}
 
-        self._ctl_clean_exit = True
-
     def hello(self, recipe_path):
-        if not self._ctl_clean_exit:
-            self.machine_cleanup()
-            self._ctl_clean_exit = True
+        self.machine_cleanup()
 
         logging.info("Recieved a controller connection.")
         self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
-        self._ctl_clean_exit = False
 
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self._log_ctl.set_recipe(recipe_path, expand=date)
@@ -94,8 +89,6 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
-        self._if_manager.clear_if_mapping()
-        self._ctl_clean_exit = True
         return "bye"
 
     def kill_cmds(self):
@@ -263,6 +256,7 @@ class SlaveMethods:
         self._if_manager.clear_if_mapping()
         self._cache.del_old_entries()
         self.restore_system_config()
+        self._remove_capture_files()
         return True
 
     def clear_resource_table(self):
