@@ -474,14 +474,18 @@ class Interface(object):
         self._machine._rpc_call("set_device_down", self._id)
 
     def initialize(self):
-        phys_dev = self._machine._rpc_call("map_if_by_hwaddr",
-                                           self._id, self._hwaddr)
+        phys_devs = self._machine._rpc_call("map_if_by_hwaddr",
+                                            self._id, self._hwaddr)
 
-        if phys_dev != None:
-            self.set_devname(phys_dev["name"])
-        else:
+        if len(phys_devs) == 1:
+            self.set_devname(phys_devs[0]["name"])
+        elif len(phys_devs) < 1:
             msg = "Device %s not found on machine %s" \
                   % (self.get_id(), self._machine.get_id())
+            raise MachineError(msg)
+        elif len(phys_devs) > 1:
+            msg = "More than one device with hwaddr %s found on machine %s" \
+                  % (self._hwaddr, self._machine.get_id())
             raise MachineError(msg)
 
         self.down()

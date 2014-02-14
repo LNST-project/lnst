@@ -104,16 +104,13 @@ class SlaveMethods:
         return "Commands killed"
 
     def map_if_by_hwaddr(self, if_id, hwaddr):
-        devices = self._if_manager.get_devices()
+        devices = self.get_devices_by_hwaddr(hwaddr)
 
-        entry = None
-        for dev in devices:
-            if dev.get_hwaddr() == hwaddr:
-                entry = {"name": dev.get_name(),
-                         "hwaddr": dev.get_hwaddr()}
-                self._if_manager.map_if(if_id, dev.get_if_index())
+        if len(devices) == 1:
+            dev = self._if_manager.get_device_by_hwaddr(hwaddr)
+            self._if_manager.map_if(if_id, dev.get_if_index())
 
-        return entry
+        return devices
 
     def get_devices_by_devname(self, devname):
         name_scan = self._if_manager.get_devices()
