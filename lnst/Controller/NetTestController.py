@@ -465,6 +465,10 @@ class NetTestController:
 
                     logging.debug("Calling cleanup on slave '%s'" % hostname)
                     send_data(rpc_con, rpc_msg)
+                    while True:
+                        msg = recv_data(rpc_con)
+                        if msg['type'] == 'result':
+                            break
                     rpc_con.close()
 
                 libvirt_dom = machine["libvirt_dom"]
