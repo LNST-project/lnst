@@ -30,7 +30,6 @@ from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ResourceCache import ResourceCache
 from lnst.Common.NetTestCommand import NetTestCommandContext
 from lnst.Common.NetTestCommand import CommandException, NetTestCommand
-from lnst.Slave.NetConfig import NetConfig
 from lnst.Slave.NmConfigDevice import is_nm_managed_by_name
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
