@@ -311,22 +311,3 @@ def NetConfigDevice(dev_config, if_manager):
         return nm_type_class_mapping[dev_config["type"]](dev_config, if_manager)
     else:
         return type_class_mapping[dev_config["type"]](dev_config, if_manager)
-
-def NetConfigDeviceType(netdev, config):
-    '''
-    Class dispatcher for classmethods
-    '''
-    if is_nm_managed(netdev, config):
-        return nm_type_class_mapping[netdev["type"]]
-    else:
-        return type_class_mapping[netdev["type"]]
-
-def NetConfigDeviceAllCleanup():
-    logging.debug("Performing interface type cleanup.")
-    if check_process_running("NetworkManager") and \
-       lnst_config.get_option("environment", "use_nm"):
-        for dev_type in nm_type_class_mapping:
-            nm_type_class_mapping[dev_type].type_cleanup()
-    else:
-        for dev_type in type_class_mapping:
-            type_class_mapping[dev_type].type_cleanup()
