@@ -131,15 +131,15 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
     _modulename = "bridge"
 
     def _add_rm_bridge(self, prefix):
-        exec_cmd("brctl %sbr %s " % (prefix, self._dev_conf["name"]))
+        exec_cmd("brctl %sbr %s " % (prefix, self._dev_config["name"]))
 
-    def _add_rm_port(self, prefix, slave_if_index):
+    def _add_rm_port(self, prefix, slave_id):
         port_name = self._if_manager.get_mapped_device(slave_id).get_name()
-        exec_cmd("brctl %sif %s %s" % (prefix, self._dev_conf["name"],
+        exec_cmd("brctl %sif %s %s" % (prefix, self._dev_config["name"],
                                        port_name))
 
     def _add_rm_ports(self, prefix):
-        for slave_id in get_slaves(self._dev_conf):
+        for slave_id in get_slaves(self._dev_config):
             self._add_rm_port(prefix, slave_id)
 
     def configure(self):
