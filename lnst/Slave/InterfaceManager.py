@@ -227,7 +227,8 @@ class Device(object):
     def clear_configuration(self):
         if self._master != None:
             master_dev = self._if_manager.get_device(self._master)
-            master_dev.clear_configuration()
+            if master_dev != None:
+                master_dev.clear_configuration()
 
         if self._conf != None:
             self.down()
@@ -243,7 +244,8 @@ class Device(object):
     def deconfigure(self):
         if self._master != None:
             master_dev = self._if_manager.get_device(self._master)
-            master_dev.deconfigure()
+            if master_dev != None:
+                master_dev.deconfigure()
 
         if self._conf != None and self._configured:
             self._conf.deconfigure()
