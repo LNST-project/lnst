@@ -31,7 +31,7 @@ from lnst.Common.ConnectionHandler import ConnectionHandler
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
-    from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
+    from lnst.Controller.VirtUtils import VirtNetCtl, VirtDomainCtl
 
 DEFAULT_TIMEOUT = 60
 
