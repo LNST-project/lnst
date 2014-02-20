@@ -24,10 +24,14 @@ from pprint import pprint, pformat
 from lnst.Common.Config import lnst_config
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.NetUtils import MacPool, normalize_hwaddr
-from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
+from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+
+# conditional support for libvirt
+if check_process_running("libvirtd"):
+    from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
 
 DEFAULT_TIMEOUT = 60
 

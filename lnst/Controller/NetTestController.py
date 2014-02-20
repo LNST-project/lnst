@@ -21,7 +21,6 @@ import imp
 from time import sleep
 from xmlrpclib import Binary
 from lnst.Common.NetUtils import MacPool
-from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running, bool_it
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
@@ -36,6 +35,10 @@ from lnst.Common.RecipePath import RecipePath
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Common.NetUtils import test_tcp_connection
 import lnst.Controller.Task as Task
+
+# conditional support for libvirt
+if check_process_running("libvirtd"):
+    from lnst.Common.VirtUtils import VirtNetCtl, VirtDomainCtl
 
 class NetTestError(Exception):
     pass
