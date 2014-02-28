@@ -56,7 +56,7 @@ class NetTestController:
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
 
-        self._remove_saved_machine_config()
+        self.remove_saved_machine_config()
 
         sp = SlavePool(lnst_config.get_option('environment', 'pool_dirs'),
                        check_process_running("libvirtd"), pool_checks)
@@ -446,7 +446,8 @@ class NetTestController:
         with open("/tmp/.lnst_machine_conf", "wb") as f:
             pickled_data = cPickle.dump(config_data, f)
 
-    def _remove_saved_machine_config(self):
+    @classmethod
+    def remove_saved_machine_config(cls):
         #removes previously saved configuration
         cfg = None
         try:

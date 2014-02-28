@@ -33,7 +33,7 @@ def usage(retval=0):
     """
     print "Usage: %s [OPTIONS...] ACTION [RECIPES...]" % sys.argv[0]
     print ""
-    print "ACTION = [ run | config_only | match_setup ]"
+    print "ACTION = [ run | config_only | deconfigure | match_setup ]"
     print ""
     print "OPTIONS"
     print "  -a, --define-alias name=value   define top-level alias"
@@ -200,9 +200,12 @@ def main():
 
     action = args[0]
     recipes = args[1:]
-    if not action in ['run', 'config_only', 'match_setup']:
+    if not action in ['run', 'config_only', 'deconfigure', 'match_setup']:
         logging.error("Action '%s' not recognised" % action)
         usage(RETVAL_ERR)
+    if action == 'deconfigure':
+        NetTestController.remove_saved_machine_config()
+        return 0
 
     summary = []
 
