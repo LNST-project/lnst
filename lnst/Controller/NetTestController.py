@@ -56,7 +56,7 @@ class NetTestController:
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
 
-        self._remove_virt_config()
+        self._remove_saved_machine_config()
 
         sp = SlavePool(lnst_config.get_option('environment', 'pool_dirs'),
                        check_process_running("libvirtd"), pool_checks)
@@ -422,14 +422,15 @@ class NetTestController:
             for bridge in self._network_bridges.itervalues():
                 bridge.cleanup()
 
-    def _save_virt_config(self):
+    def _save_machine_config(self):
         #saves current virtual configuration to a file, after pickling it
         config_data = dict()
         machines = config_data["machines"] = {}
         for m in self._machines.itervalues():
             machine = machines[m.get_hostname()] = dict()
 
-            machine["libvirt_dom"] = m.get_libvirt_domain()
+            if m.get_libvirt_domain() != None:
+                machine["libvirt_dom"] = m.get_libvirt_domain()
             machine["interfaces"] = []
 
             for i in m._interfaces:
@@ -442,21 +443,22 @@ class NetTestController:
         for bridge in self._network_bridges.itervalues():
             bridges.append(bridge.get_name())
 
-        with open("/tmp/.lnst_virt_conf", "wb") as f:
+        with open("/tmp/.lnst_machine_conf", "wb") as f:
             pickled_data = cPickle.dump(config_data, f)
 
-    def _remove_virt_config(self):
-        #removes previously saved virtual configuration
+    def _remove_saved_machine_config(self):
+        #removes previously saved configuration
         cfg = None
         try:
-            with open("/tmp/.lnst_virt_conf", "rb") as f:
+            with open("/tmp/.lnst_machine_conf", "rb") as f:
                 cfg = cPickle.load(f)
         except:
+            logging.info("No previous configuration found.")
             return
 
         if cfg:
             logging.info("Cleaning up leftover configuration from previous "\
-                         "virtualized config_only run.")
+                         "config_only run.")
             for hostname, machine in cfg["machines"].iteritems():
                 port = lnst_config.get_option("environment", "rpcport")
                 if test_tcp_connection(hostname, port):
@@ -474,14 +476,15 @@ class NetTestController:
                             break
                     rpc_con.close()
 
-                libvirt_dom = machine["libvirt_dom"]
-                domain_ctl = VirtDomainCtl(libvirt_dom)
-                logging.info("Detaching dynamically created interfaces.")
-                for i in machine["interfaces"]:
-                    try:
-                        domain_ctl.detach_interface(i)
-                    except:
-                        pass
+                if "libvirt_dom" in "machine":
+                    libvirt_dom = machine["libvirt_dom"]
+                    domain_ctl = VirtDomainCtl(libvirt_dom)
+                    logging.info("Detaching dynamically created interfaces.")
+                    for i in machine["interfaces"]:
+                        try:
+                            domain_ctl.detach_interface(i)
+                        except:
+                            pass
 
             logging.info("Removing dynamically created bridges.")
             for br in cfg["bridges"]:
@@ -491,7 +494,7 @@ class NetTestController:
                 except:
                     pass
 
-            os.remove("/tmp/.lnst_virt_conf")
+            os.remove("/tmp/.lnst_machine_conf")
 
     def match_setup(self):
         self._prepare_provisioning()
@@ -509,8 +512,7 @@ class NetTestController:
             raise
 
         sp = self._slave_pool
-        if sp.is_setup_virtual():
-            self._save_virt_config()
+        self._save_machine_config()
 
         self._cleanup_slaves(deconfigure=False)
         return {"passed": True}
