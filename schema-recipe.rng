@@ -45,13 +45,29 @@
     </define>
 
     <define name="task">
+        <choice>
+            <element name="task">
+                <attribute name="python"/>
+
+                <optional>
+                    <attribute name="quit_on_fail">
+                        <choice>
+                            <value>yes</value>
+                            <value>no</value>
+                            <value>true</value>
+                            <value>false</value>
+                        </choice>
+                    </attribute>
+                </optional>
+            </element>
+            <ref name="xml_task"/>
+        </choice>
+    </define>
+
+    <define name="xml_task">
         <element name="task">
             <optional>
                 <attribute name="label"/>
-            </optional>
-
-            <optional>
-                <attribute name="python"/>
             </optional>
 
             <optional>
