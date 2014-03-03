@@ -161,7 +161,7 @@ class XmlParser(object):
 
         elem.attrib["__file"] = filename
         for e in elem:
-            self._init_loc(e, os.path.basename(filename))
+            self._init_loc(e, filename)
 
         return elem
 
