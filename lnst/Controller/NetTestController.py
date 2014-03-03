@@ -49,12 +49,14 @@ def ignore_event(**kwarg):
 class NetTestController:
     def __init__(self, recipe_path, log_ctl,
                  res_serializer=None, pool_checks=True,
-                 defined_aliases=None, overriden_aliases=None):
+                 defined_aliases=None, overriden_aliases=None,
+                 reduce_sync=False):
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
+        self._reduce_sync = reduce_sync
 
         self.remove_saved_machine_config()
 
@@ -220,8 +222,11 @@ class NetTestController:
         if resource_sync:
             for task in self._recipe['tasks']:
                 if 'commands' not in task:
-                    sync_table = res_table
-                    break
+                    if not self._reduce_sync:
+                        sync_table = res_table
+                        break
+                    else:
+                        continue
                 for cmd in task['commands']:
                     if 'machine' not in cmd or cmd['machine'] != m_id:
                         continue

@@ -48,6 +48,8 @@ def usage(retval=0):
     print "  -p, --packet-capture            capture and log all ongoing " \
               "network communication during the test"
     print "  -x, --result=FILE               file to write xml_result"
+    print "  -r, --reduce-sync               reduces resource synchronization "\
+              "for python tasks, see documentation"
     sys.exit(retval)
 
 def store_alias(alias_def, aliases_dict):
@@ -66,12 +68,13 @@ def store_alias(alias_def, aliases_dict):
 
 def process_recipe(action, file_path, res_serializer,
                    packet_capture, log_ctl, pool_checks,
-                   defined_aliases, overriden_aliases):
+                   defined_aliases, overriden_aliases, reduce_sync):
     nettestctl = NetTestController(file_path, log_ctl,
                                    res_serializer=res_serializer,
                                    pool_checks=pool_checks,
                                    defined_aliases=defined_aliases,
-                                   overriden_aliases=overriden_aliases)
+                                   overriden_aliases=overriden_aliases,
+                                   reduce_sync=reduce_sync)
     if action == "run":
         return nettestctl.run_recipe(packet_capture)
     elif action == "config_only":
@@ -79,8 +82,9 @@ def process_recipe(action, file_path, res_serializer,
     elif action == "match_setup":
         return nettestctl.match_setup()
 
-def get_recipe_result(args, file_path, res_serializer, packet_capture,
-                      log_ctl, pool_checks, defined_aliases, overriden_aliases):
+def get_recipe_result(args, file_path, res_serializer, packet_capture, log_ctl,
+                      pool_checks, defined_aliases, overriden_aliases,
+                      reduce_sync):
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
 
@@ -90,7 +94,7 @@ def get_recipe_result(args, file_path, res_serializer, packet_capture,
     try:
         res = process_recipe(args, file_path, res_serializer,
                              packet_capture, log_ctl, pool_checks,
-                             defined_aliases, overriden_aliases)
+                             defined_aliases, overriden_aliases, reduce_sync)
     except Exception as err:
         log_exc_traceback()
         logging.error(err)
@@ -119,10 +123,10 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhr:c:x:poma:A:",
-            ["debug", "help", "recipe=", "config", "result=",
+            "dhrc:x:poma:A:",
+            ["debug", "help", "config", "result=",
              "packet-capture", "disable-pool-checks", "no-colours",
-             "define_alias", "override_alias"]
+             "define_alias", "override_alias", "reduce-sync"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -156,6 +160,7 @@ def main():
     coloured_output = True
     defined_aliases = {}
     overriden_aliases = {}
+    reduce_sync = False
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -175,6 +180,8 @@ def main():
             store_alias(arg, defined_aliases)
         elif opt in ("-A", "--override-alias"):
             store_alias(arg, overriden_aliases)
+        elif opt in ("-r", "--reduce-sync"):
+            reduce_sync = True
 
     if config_path is not None:
         if not os.path.isfile(config_path):
@@ -228,14 +235,16 @@ def main():
                                                     packet_capture,
                                                     log_ctl, pool_checks,
                                                     defined_aliases,
-                                                    overriden_aliases)
+                                                    overriden_aliases,
+                                                    reduce_sync)
         else:
             recipe_head_log_entry(recipe_path)
             fp, res, rv = get_recipe_result(action, recipe_path,
                                             res_serializer,
                                             packet_capture,
                                             log_ctl, pool_checks,
-                                            defined_aliases, overriden_aliases)
+                                            defined_aliases, overriden_aliases,
+                                            reduce_sync)
 
         summary.append((fp, res))
         if rv > retval:
