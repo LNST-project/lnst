@@ -59,6 +59,14 @@
                         </choice>
                     </attribute>
                 </optional>
+
+                <optional>
+                    <attribute name="module_dir"/>
+                </optional>
+
+                <optional>
+                    <attribute name="tools_dir"/>
+                </optional>
             </element>
             <ref name="xml_task"/>
         </choice>
@@ -79,6 +87,14 @@
                         <value>false</value>
                     </choice>
                 </attribute>
+            </optional>
+
+            <optional>
+                <attribute name="module_dir"/>
+            </optional>
+
+            <optional>
+                <attribute name="tools_dir"/>
             </optional>
 
             <oneOrMore>

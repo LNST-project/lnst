@@ -152,6 +152,22 @@ class RecipeParser(XmlParser):
         if self._has_attribute(task_tag, "quit_on_fail"):
             task["quit_on_fail"] = self._get_attribute(task_tag, "quit_on_fail")
 
+        if self._has_attribute(task_tag, "module_dir"):
+            base_dir = os.path.dirname(task_tag.attrib["__file"])
+            dir_path = str(self._get_attribute(task_tag, "module_dir"))
+            exp_path = os.path.expanduser(dir_path)
+            abs_path = os.path.join(base_dir, exp_path)
+            norm_path = os.path.normpath(abs_path)
+            task["module_dir"] = norm_path
+
+        if self._has_attribute(task_tag, "tools_dir"):
+            base_dir = os.path.dirname(task_tag.attrib["__file"])
+            dir_path = str(self._get_attribute(task_tag, "tools_dir"))
+            exp_path = os.path.expanduser(dir_path)
+            abs_path = os.path.join(base_dir, exp_path)
+            norm_path = os.path.normpath(abs_path)
+            task["tools_dir"] = norm_path
+
         if self._has_attribute(task_tag, "python"):
             task["python"] = self._get_attribute(task_tag, "python")
             return task
