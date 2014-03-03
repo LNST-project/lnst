@@ -166,12 +166,12 @@ class NetTestController:
 
         return mreq
 
-    def _prepare_network(self):
+    def _prepare_network(self, resource_sync=True):
         recipe = self._recipe
 
         machines = self._machines
         for m_id in machines.keys():
-            self._prepare_machine(m_id)
+            self._prepare_machine(m_id, resource_sync)
 
         for machine_xml_data in recipe["machines"]:
             m_id = machine_xml_data["id"]
@@ -203,7 +203,7 @@ class NetTestController:
             provisioner = sp.get_provisioner_id(m_id)
             logging.info("  machine %s uses %s" % (m_id, provisioner))
 
-    def _prepare_machine(self, m_id):
+    def _prepare_machine(self, m_id, resource_sync=True):
         machine = self._machines[m_id]
         address = socket.gethostbyname(machine.get_hostname())
 
@@ -214,7 +214,11 @@ class NetTestController:
 
         recipe_name = os.path.basename(self._recipe_path)
         machine.configure(recipe_name)
-        machine.sync_resources(self._resource_table)
+
+        sync_table = {}
+        if resource_sync:
+            sync_table = self._resource_table
+        machine.sync_resources(sync_table)
 
     def _prepare_interface(self, m_id, iface_xml_data):
         machine = self._machines[m_id]
@@ -505,7 +509,7 @@ class NetTestController:
     def config_only_recipe(self):
         try:
             self._prepare_provisioning()
-            self._prepare_network()
+            self._prepare_network(resource_sync=False)
         except (KeyboardInterrupt, Exception) as exc:
             msg = "Exception raised during configuration."
             logging.error(msg)
