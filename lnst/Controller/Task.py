@@ -229,6 +229,27 @@ class HostAPI(object):
         iface = self._m.get_interface(interface_id)
         return Prefix(iface, addr_number)
 
+    def sync_resources(self, modules=[], tools=[]):
+        res_table = self._ctl._ctl._resource_table
+        sync_table = {'module': {}, 'tools': {}}
+        for mod in modules:
+            if mod in res_table['module']:
+                sync_table['module'][mod] = res_table['module'][mod]
+            else:
+                msg = "Module '%s' not found on the controller"\
+                        % mod
+                raise TaskError(msg, cmd)
+
+        for tool in tools:
+            if tool in res_table['tools']:
+                sync_table['tools'][tool] = res_table['tools'][tool]
+            else:
+                msg = "Tool '%s' not found on the controller"\
+                        % tool
+                raise TaskError(msg, cmd)
+
+        self._m.sync_resources(sync_table)
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 
