@@ -18,6 +18,7 @@ import re
 import cPickle
 import tempfile
 import imp
+import copy
 from time import sleep
 from xmlrpclib import Binary
 from lnst.Common.NetUtils import MacPool
@@ -217,10 +218,17 @@ class NetTestController:
         recipe_name = os.path.basename(self._recipe_path)
         machine.configure(recipe_name)
 
-        res_table = self._resource_table
         sync_table = {'module': {}, 'tools': {}}
         if resource_sync:
             for task in self._recipe['tasks']:
+                res_table = copy.deepcopy(self._resource_table)
+                if 'module_dir' in task:
+                    modules = self._load_test_modules([task['module_dir']])
+                    res_table['module'].update(modules)
+                if 'tools_dir' in task:
+                    tools = self._load_test_tools([task['tools_dir']])
+                    res_table['tools'].update(tools)
+
                 if 'commands' not in task:
                     if not self._reduce_sync:
                         sync_table = res_table
@@ -283,6 +291,12 @@ class NetTestController:
             task["quit_on_fail"] = False
             if "quit_on_fail" in task_data:
                 task["quit_on_fail"] = bool_it(task_data["quit_on_fail"])
+
+            if "module_dir" in task_data:
+                task["module_dir"] = task_data["module_dir"]
+
+            if "tools_dir" in task_data:
+                task["tools_dir"] = task_data["tools_dir"]
 
             if "python" in task_data:
                 root = RecipePath(None, self._recipe_path).get_root()
@@ -597,11 +611,24 @@ class NetTestController:
         return overall_res
 
     def _run_python_task(self, task):
+        #backup of resource table
+        res_table_bkp = copy.deepcopy(self._resource_table)
+        if 'module_dir' in task:
+            modules = self._load_test_modules([task['module_dir']])
+            self._resource_table['module'].update(modules)
+        if 'tools_dir' in task:
+            tools = self._load_test_tools([task['tools_dir']])
+            self._resource_table['tools'].update(tools)
+
         # Initialize the API handle
         Task.ctl = Task.ControllerAPI(self, self._machines)
 
         name = os.path.basename(task["python"]).split(".")[0]
         module = imp.load_source(name, task["python"])
+
+        #restore resource table
+        self._resource_table = res_table_bkp
+
         return module.ctl._result
 
     def _run_task(self, task):
