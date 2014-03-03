@@ -58,7 +58,7 @@ class SlaveMethods:
         self._cache = ResourceCache(lnst_config.get_option("cache", "dir"),
                         lnst_config.get_option("cache", "expiration_period"))
 
-        self._resource_table = {}
+        self._resource_table = {'module': {}, 'tools': {}}
 
     def hello(self, recipe_path):
         self.machine_cleanup()
@@ -261,7 +261,7 @@ class SlaveMethods:
         return True
 
     def clear_resource_table(self):
-        self._resource_table = {}
+        self._resource_table = {'module': {}, 'tools': {}}
         return True
 
     def has_resource(self, res_hash):
