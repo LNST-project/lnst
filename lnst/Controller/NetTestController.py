@@ -215,9 +215,31 @@ class NetTestController:
         recipe_name = os.path.basename(self._recipe_path)
         machine.configure(recipe_name)
 
-        sync_table = {}
+        res_table = self._resource_table
+        sync_table = {'module': {}, 'tools': {}}
         if resource_sync:
-            sync_table = self._resource_table
+            for task in self._recipe['tasks']:
+                if 'commands' not in task:
+                    sync_table = res_table
+                    break
+                for cmd in task['commands']:
+                    if 'machine' not in cmd or cmd['machine'] != m_id:
+                        continue
+                    if cmd['type'] == 'test':
+                        mod = cmd['module']
+                        if mod in res_table['module']:
+                            sync_table['module'][mod] = res_table['module'][mod]
+                        else:
+                            msg = "Module '%s' not found on the controller"\
+                                    % mod
+                            raise RecipeError(msg, cmd)
+                    if cmd['type'] == 'exec' and 'from' in cmd:
+                        tool = cmd['from']
+                        if tool in res_table['tools']:
+                            sync_table['tools'][tool] = res_table['tools'][tool]
+                        else:
+                            msg = "Tool '%s' not found on the controller" % tool
+                            raise RecipeError(msg, cmd)
         machine.sync_resources(sync_table)
 
     def _prepare_interface(self, m_id, iface_xml_data):
@@ -326,13 +348,7 @@ class NetTestController:
             cmd["command"] = cmd_data["command"]
 
             if "from" in cmd_data:
-                tool = cmd_data["from"]
-                if tool in self._resource_table["tools"]:
-                    cmd["command"] = cmd_data["command"]
-                    cmd["from"] = cmd_data["from"]
-                else:
-                    msg = "Tool '%s' not found on the controller" % tool
-                    raise RecipeError(msg, cmd_data)
+                cmd["from"] = cmd_data["from"]
         elif cmd["type"] in ["wait", "intr", "kill"]:
             # XXX The internal name (proc_id) is different, because
             # bg_id is already used by LNST in a different context
