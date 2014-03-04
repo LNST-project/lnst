@@ -52,6 +52,12 @@ during the test.
 .BI "\-x, \-\-result" =file
 Write results in XML format to the specified
 .IR file .
+.TP
+.B "\-r, \-\-reduce-sync"
+Disable synchronization of module and tool resources to slave machines,
+when python tasks are used in the recipe. Instead the user can manually
+synchronize resources from the python task itself. This option has no effect if
+the recipe only contains xml tasks.
 .PP
 .I RECIPE
 can be either a LNST recipe file or a directory containing recipe files.
@@ -64,7 +70,8 @@ bellow).
 .I ACTION
 can be one of
 .BR "run",
-.BR "config_only" ", and"
+.BR "config_only",
+.BR "deconfigure" ", and"
 .BR "match_setup".
 
 When it is set to
@@ -80,6 +87,12 @@ are prepared and properly configured. No tests will be executed and the
 cleanup phase is omitted as well. This mode of operation is useful if you
 want to perform some specific actions or tests outside of LNST using
 the configuration specified in a recipe file.
+
+In case of
+.BR "deconfigure",
+the configuration from a previous config_only run will be removed, including
+dynamically created devices on virtual machines. There is no need to specify a
+recipe for this action.
 
 At last, when the
 .I ACTION
