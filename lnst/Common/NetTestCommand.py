@@ -411,18 +411,16 @@ class NetTestCommandConfig(NetTestCommandGeneric):
                option_abspath[0:6] != "/proc/":
                 err = "Wrong config option %s. Only /proc or /sys paths are " \
                       "allowed." % option
-                res_data = {"msg": err}
-                self.set_fail(res_data)
-                return
+                res_data["err_msg"] = err
+                return self.set_fail(res_data)
 
             try:
                 prev_val = self._retrive_option(option)
                 self._set_option(option, value)
             except ExecCmdFail:
                 err = "Unable to set %s config option!" % option
-                res_data = {"msg": err}
-                self.set_fail(res_data)
-                return
+                res_data["err_msg"] = err
+                return self.set_fail(res_data)
 
             if "persistent" in self._command:
                 res_data["persistent"] = self._command["persistent"]

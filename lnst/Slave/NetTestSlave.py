@@ -239,7 +239,7 @@ class SlaveMethods:
                                            command["persistent"])
             else:
                 err = "Error occured while setting system "\
-                      "configuration (%s)" % res["err_msg"]
+                      "configuration (%s)" % res["res_data"]["err_msg"]
                 logging.error(err)
 
         return res
