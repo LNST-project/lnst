@@ -84,17 +84,30 @@ class NetTestResultSerializer:
 
                 seq_num += 1
 
+                m_id_max = 0
                 for cmd, cmd_res in task:
-                    self._format_command(cmd, cmd_res, output_pairs)
+                    if "machine" in cmd and\
+                        len(cmd["machine"]) > m_id_max:
+                            m_id_max = len(cmd["machine"])
+                for cmd, cmd_res in task:
+                    self._format_command(cmd, cmd_res, output_pairs, m_id_max)
 
         self._print_pairs(output_pairs)
 
-    def _format_command(self, command, cmd_res, output_pairs):
+    def _format_command(self, command, cmd_res, output_pairs, m_id_max):
         if cmd_res["passed"]:
             res = "PASS"
         else:
             res = "FAIL"
-        output_pairs.append((8*" " + cmd_res["res_header"], res))
+
+        if "machine" in command:
+            m_id = "host %s: " % command["machine"]
+            m_id += " " * (m_id_max - len(command["machine"]))
+        else:
+            #len("ctl") == 3; len("host ") == 5; 5-3 = 2
+            m_id = "ctl: " + " " * (m_id_max + 2)
+
+        output_pairs.append((8*" " + m_id + cmd_res["res_header"], res))
 
         if "msg" in cmd_res and cmd_res["msg"] != "":
             output_pairs.append((12*" " + "message: " + cmd_res["msg"], ""))

@@ -344,7 +344,7 @@ class NetTestCommandGeneric:
                 raise CommandException(msg)
 
     def _format_cmd_res_header(self):
-        return "%-14s" % self._command["type"]
+        return "%-9s" % self._command["type"]
 
     def set_handle_intr(self):
         pass
@@ -383,11 +383,11 @@ class NetTestCommandExec(NetTestCommandGeneric):
         cmd_val = self._command["command"]
 
         if "bg_id" in self._command:
-            bg_id = " bg_id: %s" % self._command["bg_id"]
+            bg_id = "bg_id: %s " % self._command["bg_id"]
         else:
             bg_id = ""
 
-        cmd = "%-14s%s cmd: \"%s\"" %(cmd_type, bg_id, cmd_val)
+        cmd = "%-9s%scmd: \"%s\"" %(cmd_type, bg_id, cmd_val)
         return cmd
 
 class NetTestCommandConfig(NetTestCommandGeneric):
@@ -454,7 +454,7 @@ class NetTestCommandControl(NetTestCommandGeneric):
     def _format_cmd_res_header(self):
         cmd_type = self._command["type"]
         cmd_val = self._command["proc_id"]
-        cmd = "%-14s id: %s" % (cmd_type, cmd_val)
+        cmd = "%-9sid: %s" % (cmd_type, cmd_val)
         return cmd
 
 class NetTestCommandWait(NetTestCommandControl):

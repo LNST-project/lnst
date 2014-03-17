@@ -146,5 +146,5 @@ class TestGeneric(NetTestCommandGeneric):
             bg_id = " bg_id: %s" % self._command["bg_id"]
         else:
             bg_id = ""
-        cmd = "%-14s%s%s" %(cmd_type, cmd_val, bg_id)
+        cmd = "%-9s%s%s" %(cmd_type, cmd_val, bg_id)
         return cmd
