@@ -85,12 +85,13 @@ class Machine(object):
         return iface
 
     def interface_update(self, if_data):
-        for iface in self._interfaces:
-            try:
-                if iface.get_devname() == if_data["devname"]:
-                    iface.set_hwaddr(if_data["hwaddr"])
-            except:
-                pass
+        try:
+            iface = self.get_interface(if_data["if_id"])
+        except:
+            iface = None
+        if iface:
+            iface.set_hwaddr(if_data["hwaddr"])
+            iface.set_devname(if_data["devname"])
 
     #
     # Factory methods for constructing interfaces on this machine. The

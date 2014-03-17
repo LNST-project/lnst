@@ -26,7 +26,7 @@ class IfMgrError(Exception):
     pass
 
 class InterfaceManager(object):
-    def __init__(self):
+    def __init__(self, server_handler):
         self._devices = {}
         self._id_mapping = {} #id from the ctl to device
 
@@ -34,6 +34,8 @@ class InterfaceManager(object):
         self._nl_socket.bind()
 
         self.rescan_devices()
+
+        self._server_handler = server_handler
 
     def map_if(self, if_id, if_index):
         if if_id in self._id_mapping:
@@ -67,7 +69,14 @@ class InterfaceManager(object):
     def _handle_netlink_msg(self, msg):
         if msg['header']['type'] == RTM_NEWLINK:
             if msg['index'] in self._devices:
-                self._devices[msg['index']].update_netlink(msg)
+                update_msg = self._devices[msg['index']].update_netlink(msg)
+                if update_msg != None:
+                    for if_id, dev in self._id_mapping.iteritems():
+                        if dev.get_if_index() == msg['index']:
+                            update_msg["if_id"] = if_id
+                            break
+                    if "if_id" in update_msg:
+                        self._server_handler.send_data_to_ctl(update_msg)
             else:
                 dev = None
                 for d in self._id_mapping.values():
@@ -194,7 +203,12 @@ class Device(object):
             self._name = nl_msg.get_attr("IFLA_IFNAME")
             self._ip = None #TODO
             self._master = nl_msg.get_attr("IFLA_MASTER")
-            #send update msg
+
+            #return an update message that will be sent to the controller
+            return {"type": "if_update",
+                    "devname": self._name,
+                    "hwaddr": self._hwaddr}
+        return None
 
     def get_if_index(self):
         return self._if_index

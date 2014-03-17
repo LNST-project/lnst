@@ -417,10 +417,10 @@ class NetTestSlave:
         die_when_parent_die()
 
         self._cmd_context = NetTestCommandContext()
-        self._if_manager = InterfaceManager()
+        self._server_handler = ServerHandler(("", port))
+        self._if_manager = InterfaceManager(self._server_handler)
         self._methods = SlaveMethods(self._cmd_context, log_ctl,
                                      self._if_manager)
-        self._server_handler = ServerHandler(("", port))
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
