@@ -29,15 +29,21 @@ def process_template(template_path, values):
         raise Exception("Not a template!")
 
     file_path = re.sub(template_name_re, "", template_path)
-    with open(template_path, "r") as t, open(file_path, "w") as f:
-        template = t.read()
-        for var, value in values.iteritems():
-            template = template.replace("@%s@" % var, value)
-        f.write(template)
+    t = open(template_path, "r")
+    f = open(file_path, "w")
+    template = t.read()
+    for var, value in values.iteritems():
+        template = template.replace("@%s@" % var, value)
+    f.write(template)
+    f.close()
+    t.close()
 
 def gzip_file(path):
-    with open(path, "rb") as src, gzip.open(path + ".gz", "wb") as dst:
-        dst.writelines(src)
+    src = open(path, "rb")
+    dst = gzip.open(path + ".gz", "wb")
+    dst.writelines(src)
+    dst.close()
+    src.close()
 
 # Various paths
 CONF_DIR = "/etc/"
