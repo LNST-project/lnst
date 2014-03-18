@@ -78,6 +78,18 @@ class ControllerAPI(object):
         cmd = {"type": "ctl_wait", "seconds": int(seconds)}
         return self._ctl._run_command(cmd)
 
+    def get_alias(self, alias):
+        """
+            Get the value of user defined alias.
+
+            :param alias: name of user defined alias
+            :type alias: string
+
+            :return: value of a user defined alias
+            :rtype: string
+        """
+        return self._ctl._get_alias(alias)
+
 class HostAPI(object):
     """ An API class representing a host machine. """
 
