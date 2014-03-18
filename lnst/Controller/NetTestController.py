@@ -58,6 +58,7 @@ class NetTestController:
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
         self._reduce_sync = reduce_sync
+        self._parser = RecipeParser(recipe_path)
 
         self.remove_saved_machine_config()
 
@@ -72,10 +73,9 @@ class NetTestController:
         mac_pool_range = lnst_config.get_option('environment', 'mac_pool_range')
         self._mac_pool = MacPool(mac_pool_range[0], mac_pool_range[1])
 
-        parser = RecipeParser(recipe_path)
-        parser.set_machines(self._machines)
-        parser.set_aliases(defined_aliases, overriden_aliases)
-        self._recipe = parser.parse()
+        self._parser.set_machines(self._machines)
+        self._parser.set_aliases(defined_aliases, overriden_aliases)
+        self._recipe = self._parser.parse()
 
         modules_dirs = lnst_config.get_option('environment', 'module_dirs')
         tools_dirs = lnst_config.get_option('environment', 'tool_dirs')
@@ -771,6 +771,10 @@ class NetTestController:
                     packages[pkg_name] = {"path": pkg_path,
                                            "hash": pkg_hash}
         return packages
+
+    def _get_alias(self, alias):
+        templates = self._parser._template_proc
+        return templates._find_definition(alias)
 
 class MessageDispatcher(ConnectionHandler):
     def __init__(self, log_ctl):
