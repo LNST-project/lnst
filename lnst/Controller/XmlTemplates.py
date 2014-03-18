@@ -336,7 +336,10 @@ class XmlTemplates:
         for child in element.getchildren():
             self.process_aliases(child)
 
-        self.drop_namespace_level()
+        # do not drop alias definitions when at top-level so that python
+        # tasks are able to access them
+        if element.tag != "lnstrecipe":
+            self.drop_namespace_level()
 
     def expand_aliases(self, string):
         while True:
