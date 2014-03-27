@@ -50,7 +50,7 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False):
     cmd = cmd.rstrip(" ")
     logging.debug("Executing: \"%s\"" % cmd)
     subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE, close_fds=True)
     (data_stdout, data_stderr) = subp.communicate()
 
     '''
