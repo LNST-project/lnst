@@ -35,10 +35,9 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
+from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.NetTestCommand import NetTestCommandConfig
 from lnst.Slave.InterfaceManager import InterfaceManager
-
-DefaultRPCPort = 9999
 
 class SlaveMethods:
     '''
