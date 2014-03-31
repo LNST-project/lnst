@@ -284,6 +284,9 @@ class NetTestController:
             for opt in iface_xml_data["options"]:
                 iface.set_option(opt["name"], opt["value"])
 
+        if "ovs_conf" in iface_xml_data:
+            iface.set_ovs_conf(iface_xml_data["ovs_conf"])
+
     def _prepare_tasks(self):
         self._tasks = []
         for task_data in self._recipe["tasks"]:

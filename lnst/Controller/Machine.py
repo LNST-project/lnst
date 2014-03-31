@@ -393,6 +393,8 @@ class Interface(object):
 
         self._master = None
 
+        self._ovs_conf = None
+
     def get_id(self):
         return self._id
 
@@ -454,6 +456,12 @@ class Interface(object):
     def get_address(self, num):
         return self._addresses[num].split('/')[0]
 
+    def set_ovs_conf(self, ovs_conf):
+        self._ovs_conf = ovs_conf
+
+    def get_ovs_conf(self):
+        return self._ovs_conf
+
     def get_prefix(self, num):
         try:
             return self._addresses[num].split('/')[1]
@@ -465,7 +473,7 @@ class Interface(object):
                   "addresses": self._addresses, "slaves": self._slaves.keys(),
                   "options": self._options,
                   "slave_options": self._slave_options,
-                  "master": None}
+                  "master": None, "ovs_conf": self._ovs_conf}
 
         if self._master != None:
             config["master"] = self._master.get_id()
