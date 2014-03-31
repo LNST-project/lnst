@@ -86,9 +86,6 @@ class RecipeParser(XmlParser):
         iface["id"] = self._get_attribute(iface_tag, "id")
         iface["type"] = iface_tag.tag
 
-        if iface["type"] == "eth":
-            iface["network"] = self._get_attribute(iface_tag, "label")
-
         # params
         params_tag = iface_tag.find("params")
         params = self._process_params(params_tag)
@@ -106,8 +103,9 @@ class RecipeParser(XmlParser):
                     addr = self._get_content(addr_tag)
                 iface["addresses"].append(addr)
 
-
-        if iface["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
+        if iface["type"] == "eth":
+            iface["network"] = self._get_attribute(iface_tag, "label")
+        elif iface["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
             # slaves
             slaves_tag = iface_tag.find("slaves")
             if slaves_tag is not None and len(slaves_tag) > 0:
@@ -129,6 +127,77 @@ class RecipeParser(XmlParser):
             opts = self._proces_options(opts_tag)
             if len(opts) > 0:
                 iface["options"] = opts
+        elif iface["type"] == "ovs_bridge":
+            slaves_tag = iface_tag.find("slaves")
+            iface["slaves"] = XmlCollection(slaves_tag)
+            ovsb_slaves = []
+
+            iface["ovs_conf"] = XmlData(slaves_tag)
+            for slave_tag in slaves_tag:
+                slave = XmlData(slave_tag)
+                slave["id"] = str(self._get_attribute(slave_tag, "id"))
+                ovsb_slaves.append(slave["id"])
+
+                iface["slaves"].append(slave)
+
+            vlan_elems = iface_tag.findall("vlan")
+            if len(vlan_elems) > 0:
+                vlans = iface["ovs_conf"]["vlans"] = XmlData(slaves_tag)
+            for vlan in vlan_elems:
+                vlan_tag = str(self._get_attribute(vlan, "tag"))
+                if vlan_tag in vlans:
+                    msg = "VLAN '%s' already defined for "\
+                          "this ovs_bridge." % vlan_tag
+                    raise RecipeError(msg, vlan)
+
+                vlans[vlan_tag] = XmlData(vlan)
+                vlans[vlan_tag]["slaves"] = XmlCollection(vlan)
+                vlan_slaves = vlans[vlan_tag]["slaves"]
+
+                slaves_tag = vlan.find("slaves")
+                for slave_tag in slaves_tag:
+                    slave_id = str(self._get_attribute(slave_tag, "id"))
+                    if slave_id not in ovsb_slaves:
+                        msg = "No port with id '%s' defined for "\
+                              "this ovs_bridge." % slave_id
+                        raise RecipeError(msg, slave_tag)
+
+                    if slave_id in vlan_slaves:
+                        msg = "Port '%s' already a member of vlan %s"\
+                              % (slave_id, vlan_tag)
+                        raise RecipeError(msg, slave_tag)
+                    else:
+                        vlan_slaves.append(slave_id)
+
+            bonded_slaves = {}
+            bond_elems = iface_tag.findall("bond")
+            if len(bond_elems) > 0:
+                bonds = iface["ovs_conf"]["bonds"] = XmlData(slaves_tag)
+            for bond_tag in bond_elems:
+                bond_id = str(self._get_attribute(bond_tag, "id"))
+                if bond_id in bonds:
+                    msg = "Bond with id '%s' already defined for "\
+                          "this ovs_bridge." % bond_id
+                    raise RecipeError(msg, bond_tag)
+                bonds[bond_id] = XmlData(bond_tag)
+                bond_slaves = bonds[bond_id]["slaves"] = XmlCollection(bond_tag)
+
+                slaves_tag = bond_tag.find("slaves")
+                for slave_tag in slaves_tag:
+                    slave_id = str(self._get_attribute(slave_tag, "id"))
+                    if slave_id not in ovsb_slaves:
+                        msg = "No port with id '%s' defined for "\
+                              "this ovs_bridge." % slave_id
+                        raise RecipeError(msg, slave_tag)
+
+                    if slave_id in bonded_slaves:
+                        msg = "Port with id '%s' already in bond with id '%s'"\
+                              % (slave_id, bonded_slaves[slave_id])
+                        raise RecipeError(msg, slave_tag)
+                    else:
+                        bonded_slaves[slave_id] = bond_id
+
+                    bond_slaves.append(slave_id)
 
         return iface
 
