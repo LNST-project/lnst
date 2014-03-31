@@ -294,13 +294,97 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         dbus_option = "-D" if self._should_enable_dbus() else ""
         exec_cmd("teamdctl %s %s port remove %s" % (dbus_option, dev_name, port_name))
 
+class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
+    _modulename = "openvswitch"
+    _moduleload = True
+
+    @classmethod
+    def type_init(self):
+        super(NetConfigDeviceOvsBridge, self).type_init()
+        exec_cmd("mkdir -p /var/run/openvswitch/")
+        exec_cmd("ovsdb-server --detach --pidfile "\
+                              "--remote=punix:/var/run/openvswitch/db.sock",
+                              die_on_err=False)
+        exec_cmd("ovs-vswitchd --detach --pidfile", die_on_err=False)
+
+    def _add_ports(self):
+        slaves = self._dev_config["slaves"]
+        vlans = self._dev_config["ovs_conf"]["vlans"]
+
+        br_name = self._dev_config["name"]
+
+        for slave_id in slaves:
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_name = slave_dev.get_name()
+
+            vlan_tags = []
+            for tag, vlan in vlans.iteritems():
+                if slave_id in vlan["slaves"]:
+                    vlan_tags.append(tag)
+            if len(vlan_tags) == 0:
+                tags = ""
+            elif len(vlan_tags) == 1:
+                tags = " tag=%s" % vlan_tags[0]
+            elif len(vlan_tags) > 1:
+                tags = " trunks=" + ",".join(vlan_tags)
+            exec_cmd("ovs-vsctl add-port %s %s%s" % (br_name, slave_name, tags))
+
+    def _del_ports(self):
+        slaves = self._dev_config["slaves"]
+
+        br_name = self._dev_config["name"]
+
+        for slave_id in slaves:
+            slave_dev = self._if_manager.get_mapped_device(slave_id)
+            slave_name = slave_dev.get_name()
+
+            exec_cmd("ovs-vsctl del-port %s %s" % (br_name, slave_name))
+
+    def _add_bonds(self):
+        br_name = self._dev_config["name"]
+
+        bonds = self._dev_config["ovs_conf"]["bonds"]
+        for bond_id, bond in bonds.iteritems():
+            ifaces = ""
+            for slave in bond["slaves"]:
+                ifaces += " %s" % slave
+            exec_cmd("ovs-vsctl add-bond %s %s %s" % (br_name, bond_id, ifaces))
+
+    def _del_bonds(self):
+        br_name = self._dev_config["name"]
+
+        bonds = self._dev_config["ovs_conf"]["bonds"]
+        for bond_id, bond in bonds.iteritems():
+            exec_cmd("ovs-vsctl del-port %s %s" % (br_name, bond_id))
+
+    def configure(self):
+        dev_cfg = self._dev_config
+
+        br_name = dev_cfg["name"]
+        exec_cmd("ovs-vsctl add-br %s" % br_name)
+
+        self._add_ports()
+
+        self._add_bonds()
+
+    def deconfigure(self):
+        dev_cfg = self._dev_config
+
+        self._del_bonds()
+
+        self._del_ports()
+
+        br_name = dev_cfg["name"]
+        exec_cmd("ovs-vsctl del-br %s" % br_name)
+
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
     "bond": NetConfigDeviceBond,
     "bridge": NetConfigDeviceBridge,
     "macvlan": NetConfigDeviceMacvlan,
     "vlan": NetConfigDeviceVlan,
-    "team": NetConfigDeviceTeam
+    "team": NetConfigDeviceTeam,
+    "ovs_bridge": NetConfigDeviceOvsBridge
 }
 
 def NetConfigDevice(dev_config, if_manager):

@@ -781,13 +781,30 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
         self._rm_slaves()
         self._rm_team()
 
+class NmConfigDeviceOvsBridge(NmConfigDeviceGeneric):
+    #Not supported by NetworkManager
+    @classmethod
+    def is_nm_managed(cls, dev_config, if_manager):
+        managed = False
+
+        for slave_id in get_slaves(dev_config):
+            slave_dev = if_manager.get_mapped_device(slave_id)
+            slave_config = slave_dev.get_conf_dict()
+            if is_nm_managed(slave_config, if_manager) != managed:
+                msg = "Mixing NM managed and not managed devices in a "\
+                        "master-slave relationship is not allowed!"
+                raise Exception(msg)
+
+        return managed
+
 type_class_mapping = {
     "eth": NmConfigDeviceEth,
     "bond": NmConfigDeviceBond,
     "bridge": NmConfigDeviceBridge,
     "macvlan": NmConfigDeviceMacvlan,
     "vlan": NmConfigDeviceVlan,
-    "team": NmConfigDeviceTeam
+    "team": NmConfigDeviceTeam,
+    "ovs_bridge": NmConfigDeviceOvsBridge
 }
 
 def is_nm_managed(dev_config, if_manager):
