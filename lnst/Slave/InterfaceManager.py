@@ -162,7 +162,7 @@ class InterfaceManager(object):
                     return dev.get_name()
         elif dev_type == "bond":
             return self._assign_name_generic("t_bond")
-        elif dev_type == "bridge":
+        elif dev_type == "bridge" or dev_type == "ovs_bridge":
             return self._assign_name_generic("t_br")
         elif dev_type == "macvlan":
             return self._assign_name_generic("t_macvlan")
