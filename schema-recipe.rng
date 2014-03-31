@@ -134,6 +134,7 @@
                             <ref name="vlan"/>
                             <ref name="macvlan"/>
                             <ref name="team"/>
+                            <ref name="ovs_bridge"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -172,6 +173,83 @@
         <element name="bridge">
             <attribute name="id"/>
             <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="ovs_bridge">
+        <element name="ovs_bridge">
+            <attribute name="id"/>
+
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <element name="slaves">
+                    <interleave>
+                        <optional>
+                            <ref name="define"/>
+                        </optional>
+
+                        <oneOrMore>
+                            <element name="slave">
+                                <attribute name="id"/>
+                            </element>
+                        </oneOrMore>
+                    </interleave>
+                </element>
+
+                <zeroOrMore>
+                    <element name="bond">
+                        <attribute name="id"/>
+
+                        <interleave>
+                            <optional>
+                                <ref name="define"/>
+                            </optional>
+
+                            <element name="slaves">
+                                <interleave>
+                                    <optional>
+                                        <ref name="define"/>
+                                    </optional>
+
+                                    <oneOrMore>
+                                        <element name="slave">
+                                            <attribute name="id"/>
+                                        </element>
+                                    </oneOrMore>
+                                </interleave>
+                            </element>
+                        </interleave>
+                    </element>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <element name="vlan">
+                        <attribute name="tag"/>
+
+                        <interleave>
+                            <optional>
+                                <ref name="define"/>
+                            </optional>
+
+                            <element name="slaves">
+                                <interleave>
+                                    <optional>
+                                        <ref name="define"/>
+                                    </optional>
+
+                                    <oneOrMore>
+                                        <element name="slave">
+                                            <attribute name="id"/>
+                                        </element>
+                                    </oneOrMore>
+                                </interleave>
+                            </element>
+                        </interleave>
+                    </element>
+                </zeroOrMore>
+            </interleave>
         </element>
     </define>
 
