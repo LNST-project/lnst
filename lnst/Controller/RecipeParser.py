@@ -141,8 +141,7 @@ class RecipeParser(XmlParser):
                 iface["slaves"].append(slave)
 
             vlan_elems = iface_tag.findall("vlan")
-            if len(vlan_elems) > 0:
-                vlans = iface["ovs_conf"]["vlans"] = XmlData(slaves_tag)
+            vlans = iface["ovs_conf"]["vlans"] = XmlData(slaves_tag)
             for vlan in vlan_elems:
                 vlan_tag = str(self._get_attribute(vlan, "tag"))
                 if vlan_tag in vlans:
@@ -171,8 +170,7 @@ class RecipeParser(XmlParser):
 
             bonded_slaves = {}
             bond_elems = iface_tag.findall("bond")
-            if len(bond_elems) > 0:
-                bonds = iface["ovs_conf"]["bonds"] = XmlData(slaves_tag)
+            bonds = iface["ovs_conf"]["bonds"] = XmlData(slaves_tag)
             for bond_tag in bond_elems:
                 bond_id = str(self._get_attribute(bond_tag, "id"))
                 if bond_id in bonds:
