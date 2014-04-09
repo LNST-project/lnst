@@ -204,6 +204,9 @@ class Device(object):
             self._ip = None #TODO
             self._master = nl_msg.get_attr("IFLA_MASTER")
 
+            if self._conf_dict:
+                self._conf_dict["name"] = self._name
+
             #return an update message that will be sent to the controller
             return {"type": "if_update",
                     "devname": self._name,
