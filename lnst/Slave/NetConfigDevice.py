@@ -61,7 +61,8 @@ class NetConfigDeviceGeneric(object):
         config = self._dev_config
         if "addresses" in config:
             for address in config["addresses"]:
-                exec_cmd("ip addr del %s dev %s" % (address, config["name"]))
+                exec_cmd("ip addr del %s dev %s" % (address, config["name"]),
+                         die_on_err=False)
         exec_cmd("ip link set %s down" % config["name"])
 
     @classmethod
