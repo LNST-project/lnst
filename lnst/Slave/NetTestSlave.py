@@ -347,6 +347,7 @@ class ServerHandler(object):
         self._connection_handler = ConnectionHandler()
         try:
             self._s_socket = socket.socket()
+            self._s_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._s_socket.bind(addr)
             self._s_socket.listen(1)
         except socket.error as e:
