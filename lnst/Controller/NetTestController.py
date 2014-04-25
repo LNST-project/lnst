@@ -519,7 +519,7 @@ class NetTestController:
                             break
                     rpc_con.close()
 
-                if "libvirt_dom" in "machine":
+                if "libvirt_dom" in machine:
                     libvirt_dom = machine["libvirt_dom"]
                     domain_ctl = VirtDomainCtl(libvirt_dom)
                     logging.info("Detaching dynamically created interfaces.")
