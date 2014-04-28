@@ -186,6 +186,7 @@ class Device(object):
         self._ip = None
         self._state = None
         self._master = None
+        self._parent = None
 
         self._if_manager = if_manager
 
@@ -203,6 +204,15 @@ class Device(object):
             self._name = nl_msg.get_attr("IFLA_IFNAME")
             self._ip = None #TODO
             self._master = nl_msg.get_attr("IFLA_MASTER")
+            link = nl_msg.get_attr("IFLA_LINK")
+            if link != None:
+                # IFLA_LINK is an index of device that's closer to physical
+                # interface in the stack, e.g. index of eth0 for eth0.100
+                # so to properly deconfigure the stack we have to save
+                # parent index in the child device; this is the opposite
+                # to IFLA_MASTER
+                link_dev = self._if_manager.get_device(link)
+                link_dev.set_parent(self._if_index)
 
             if self._conf_dict:
                 self._conf_dict["name"] = self._name
@@ -242,10 +252,11 @@ class Device(object):
         return self._conf
 
     def clear_configuration(self):
-        if self._master != None:
-            master_dev = self._if_manager.get_device(self._master)
-            if master_dev != None:
-                master_dev.clear_configuration()
+        if self._master or self._parent:
+            super_id = self._master if self._master else self._parent
+            super_dev = self._if_manager.get_device(super_id)
+            if super_dev:
+                super_dev.clear_configuration()
 
         if self._conf != None:
             self.down()
@@ -253,16 +264,20 @@ class Device(object):
             self._conf = None
             self._conf_dict = None
 
+    def set_parent(self, if_index):
+        self._parent = if_index
+
     def configure(self):
         if self._conf != None and not self._configured:
             self._conf.configure()
             self._configured = True
 
     def deconfigure(self):
-        if self._master != None:
-            master_dev = self._if_manager.get_device(self._master)
-            if master_dev != None:
-                master_dev.deconfigure()
+        if self._master or self._parent:
+            super_id = self._master if self._master else self._parent
+            super_dev = self._if_manager.get_device(super_id)
+            if super_dev:
+                super_dev.deconfigure()
 
         if self._conf != None and self._configured:
             self._conf.deconfigure()
