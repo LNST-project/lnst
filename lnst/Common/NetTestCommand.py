@@ -25,7 +25,7 @@ def str_command(command):
     attrs = ["type(%s)" % command["type"]]
     if command["type"] == "test":
         attrs.append("module(%s)" % command["module"])
-        attrs.append("host(%s)" % command["machine"])
+        attrs.append("host(%s)" % command["host"])
 
         if "bg_id" in command:
             attrs.append("bg_id(%s)" % command["bg_id"])
@@ -33,7 +33,7 @@ def str_command(command):
             attrs.append("timeout(%s)" % command["timeout"])
     elif command["type"] == "exec":
         attrs.append("command(%s)" % command["command"])
-        attrs.append("machine(%s)" % command["machine"])
+        attrs.append("host(%s)" % command["host"])
 
         if "from" in command:
             attrs.append("from(%s)" % command["from"])
@@ -42,10 +42,10 @@ def str_command(command):
         if "timeout" in command:
             attrs.append("timeout(%s)" % command["timeout"])
     elif command["type"] in ["wait", "intr", "kill"]:
-        attrs.append("machine(%s)" % command["machine"])
+        attrs.append("host(%s)" % command["host"])
         attrs.append("bg_id(%s)" % command["proc_id"])
     elif command["type"] == "config":
-        attrs.append("machine(%s)" % command["machine"])
+        attrs.append("host(%s)" % command["host"])
 
         if "option" in command:
             attrs.append("option(%s)" % command["option"])

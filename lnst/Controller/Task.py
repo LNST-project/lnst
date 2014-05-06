@@ -114,7 +114,7 @@ class HostAPI(object):
             :return: Command result.
             :rtype: dict
         """
-        cmd = {"machine": str(self._id), "type": "config"}
+        cmd = {"host": str(self._id), "type": "config"}
         cmd["options"] = [{"name": option, "value": value}]
         cmd["persistent"] = persistent
 
@@ -139,7 +139,7 @@ class HostAPI(object):
             :return: A handle for process.
             :rtype: ProcessAPI
         """
-        cmd = {"machine": str(self._id)}
+        cmd = {"host": str(self._id)}
         bg_id = None
 
         for arg, argval in kwargs.iteritems():
@@ -307,7 +307,7 @@ class ProcessAPI(object):
     def wait(self):
         """ Blocking wait until the command returns. """
         if self._bg_id:
-            cmd = {"machine": self._host,
+            cmd = {"host": self._host,
                    "type": "wait",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)
@@ -315,7 +315,7 @@ class ProcessAPI(object):
     def intr(self):
         """ Interrupt the command. """
         if self._bg_id:
-            cmd = {"machine": self._host,
+            cmd = {"host": self._host,
                    "type": "intr",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)
@@ -329,7 +329,7 @@ class ProcessAPI(object):
             to keep the results, use 'intr' instead.
         """
         if self._bg_id:
-            cmd = {"machine": self._host,
+            cmd = {"host": self._host,
                    "type": "kill",
                    "proc_id": self._bg_id}
             self._res = self._ctl._run_command(cmd)

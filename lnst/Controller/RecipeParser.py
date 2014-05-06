@@ -260,7 +260,7 @@ class RecipeParser(XmlParser):
 
     def _process_run_cmd(self, cmd_tag):
         cmd = XmlData(cmd_tag)
-        cmd["machine"] = self._get_attribute(cmd_tag, "host")
+        cmd["host"] = self._get_attribute(cmd_tag, "host")
 
         has_module = self._has_attribute(cmd_tag, "module")
         has_command = self._has_attribute(cmd_tag, "command")
@@ -300,7 +300,7 @@ class RecipeParser(XmlParser):
     def _process_config_cmd(self, cmd_tag):
         cmd = XmlData(cmd_tag)
         cmd["type"] = "config"
-        cmd["machine"] = self._get_attribute(cmd_tag, "host")
+        cmd["host"] = self._get_attribute(cmd_tag, "host")
 
         if self._has_attribute(cmd_tag, "persistent"):
             cmd["persistent"] = self._get_attribute(cmd_tag, "persistent")
@@ -335,6 +335,6 @@ class RecipeParser(XmlParser):
     def _process_signal_cmd(self, cmd_tag):
         cmd = XmlData(cmd_tag)
         cmd["type"] = cmd_tag.tag
-        cmd["machine"] = self._get_attribute(cmd_tag, "host")
+        cmd["host"] = self._get_attribute(cmd_tag, "host")
         cmd["bg_id"] = self._get_attribute(cmd_tag, "bg_id")
         return cmd

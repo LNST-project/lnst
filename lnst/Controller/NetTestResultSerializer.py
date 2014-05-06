@@ -86,9 +86,9 @@ class NetTestResultSerializer:
 
                 m_id_max = 0
                 for cmd, cmd_res in task:
-                    if "machine" in cmd and\
-                        len(cmd["machine"]) > m_id_max:
-                            m_id_max = len(cmd["machine"])
+                    if "host" in cmd and\
+                        len(cmd["host"]) > m_id_max:
+                            m_id_max = len(cmd["host"])
                 for cmd, cmd_res in task:
                     self._format_command(cmd, cmd_res, output_pairs, m_id_max)
 
@@ -100,9 +100,9 @@ class NetTestResultSerializer:
         else:
             res = "FAIL"
 
-        if "machine" in command:
-            m_id = "host %s: " % command["machine"]
-            m_id += " " * (m_id_max - len(command["machine"]))
+        if "host" in command:
+            m_id = "host %s: " % command["host"]
+            m_id += " " * (m_id_max - len(command["host"]))
         else:
             #len("ctl") == 3; len("host ") == 5; 5-3 = 2
             m_id = "ctl: " + " " * (m_id_max + 2)
@@ -174,7 +174,7 @@ class NetTestResultSerializer:
                 recipe_el.appendChild(err_el)
 
             for task in recipe["tasks"]:
-                cmd_seq_el = doc.createElement("command_sequence")
+                cmd_seq_el = doc.createElement("task")
                 recipe_el.appendChild(cmd_seq_el)
 
                 for cmd, cmd_res in task:

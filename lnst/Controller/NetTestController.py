@@ -105,8 +105,8 @@ class NetTestController:
         # There must be some machines specified in the recipe
         if "machines" not in recipe or \
           ("machines" in recipe and len(recipe["machines"]) == 0):
-            msg = "No machines specified in the recipe. At least two " \
-                  "machines are required to perform a network test."
+            msg = "No hosts specified in the recipe. At least two " \
+                  "hosts are required to perform a network test."
             raise RecipeError(msg, recipe)
 
         # machine requirements
@@ -122,7 +122,7 @@ class NetTestController:
             if "params" in machine:
                 for p in machine["params"]:
                     if p["name"] in params:
-                        msg = "Parameter '%s' of machine %s was specified " \
+                        msg = "Parameter '%s' of host %s was specified " \
                               "multiple times. Overriding the previous value." \
                               % (p["name"], m_id)
                         logging.warn(RecipeError(msg, p))
@@ -133,14 +133,14 @@ class NetTestController:
             # Each machine must have at least one interface
             if "interfaces" not in machine or \
               ("interfaces" in machine and len(machine["interfaces"]) == 0):
-                msg = "Machine '%s' has no interfaces specified." % m_id
+                msg = "Hot '%s' has no interfaces specified." % m_id
                 raise RecipeError(msg, machine)
 
             ifaces = {}
             for iface in machine["interfaces"]:
                 if_id = iface["id"]
                 if if_id in ifaces:
-                    msg = "Interface with id='%s' already exists on machine " \
+                    msg = "Interface with id='%s' already exists on host " \
                           "'%s'." % (if_id, m_id)
 
                 iface_type = iface["type"]
@@ -152,7 +152,7 @@ class NetTestController:
                     for i in iface["params"]:
                         if i["name"] in iface_params:
                             msg = "Parameter '%s' of interface %s of " \
-                                  "machine %s was defined multiple times. " \
+                                  "host %s was defined multiple times. " \
                                   "Overriding the previous value." \
                                   % (i["name"], if_id, m_id)
                             logging.warn(RecipeError(msg, p))
@@ -197,14 +197,14 @@ class NetTestController:
 
         if sp.is_setup_virtual() and os.geteuid() != 0:
             msg = "Provisioning this setup requires additional configuration "\
-                  "of the virtual machines in the pool. LNST needs root "\
+                  "of the virtual hosts in the pool. LNST needs root "\
                   "priviledges so it can connect to qemu."
             raise NetTestError(msg)
 
         logging.info("Provisioning initialized")
         for m_id in machines.keys():
             provisioner = sp.get_provisioner_id(m_id)
-            logging.info("  machine %s uses %s" % (m_id, provisioner))
+            logging.info("  host %s uses %s" % (m_id, provisioner))
 
     def _prepare_machine(self, m_id, resource_sync=True):
         machine = self._machines[m_id]
@@ -236,7 +236,7 @@ class NetTestController:
                     else:
                         continue
                 for cmd in task['commands']:
-                    if 'machine' not in cmd or cmd['machine'] != m_id:
+                    if 'host' not in cmd or cmd['host'] != m_id:
                         continue
                     if cmd['type'] == 'test':
                         mod = cmd['module']
@@ -318,10 +318,10 @@ class NetTestController:
             for cmd_data in task["commands"]:
                 cmd = {"type": cmd_data["type"]}
 
-                if "machine" in cmd_data:
-                    cmd["machine"] = cmd_data["machine"]
-                    if cmd["machine"] not in self._machines:
-                        msg = "Invalid machine id '%s'." % cmd["machine"]
+                if "host" in cmd_data:
+                    cmd["host"] = cmd_data["host"]
+                    if cmd["host"] not in self._machines:
+                        msg = "Invalid host id '%s'." % cmd["host"]
                         raise RecipeError(msg, cmd_data)
 
                 if cmd["type"] in ["test", "exec"]:
@@ -339,10 +339,10 @@ class NetTestController:
 
     def _prepare_command(self, cmd_data):
         cmd = {"type": cmd_data["type"]}
-        if "machine" in cmd_data:
-            cmd["machine"] = cmd_data["machine"]
-            if cmd["machine"] not in self._machines:
-                msg = "Invalid machine id '%s'." % cmd["machine"]
+        if "host" in cmd_data:
+            cmd["host"] = cmd_data["host"]
+            if cmd["host"] not in self._machines:
+                msg = "Invalid host id '%s'." % cmd["host"]
                 raise RecipeError(msg, cmd_data)
 
         if "expect" in cmd_data:
@@ -412,7 +412,7 @@ class NetTestController:
             if command["type"] == "ctl_wait":
                 continue
 
-            machine_id = command["machine"]
+            machine_id = command["host"]
             if not machine_id in bg_ids:
                 bg_ids[machine_id] = set()
 
@@ -423,7 +423,7 @@ class NetTestController:
                     bg_ids[machine_id].remove(bg_id)
                 else:
                     logging.error("Found command \"%s\" for bg_id \"%s\" on "
-                              "machine \"%s\" which was not previously "
+                              "host \"%s\" which was not previously "
                               "defined", cmd_type, bg_id, machine_id)
                     err = True
 
@@ -432,14 +432,14 @@ class NetTestController:
                 if not bg_id in bg_ids[machine_id]:
                     bg_ids[machine_id].add(bg_id)
                 else:
-                    logging.error("Command \"%d\" uses bg_id \"%s\" on machine "
+                    logging.error("Command \"%d\" uses bg_id \"%s\" on host"
                               "\"%s\" which is already used",
                                             i, bg_id, machine_id)
                     err = True
 
         for machine_id in bg_ids:
             for bg_id in bg_ids[machine_id]:
-                logging.error("bg_id \"%s\" on machine \"%s\" has no kill/wait "
+                logging.error("bg_id \"%s\" on host \"%s\" has no kill/wait "
                           "command to it", bg_id, machine_id)
                 err = True
 
@@ -664,7 +664,7 @@ class NetTestController:
                 self._res_serializer.add_cmd_result(command, cmd_res)
             return cmd_res
 
-        machine_id = command["machine"]
+        machine_id = command["host"]
         machine = self._machines[machine_id]
 
         try:
