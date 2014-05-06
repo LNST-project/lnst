@@ -20,16 +20,20 @@ from lnst.Common.Config import lnst_config
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):
         for key in obj:
-            if upper_name == "options":
-                new_el = dom.createElement("option")
-                new_el.setAttribute("name", key)
-            else:
-                new_el = dom.createElement(key)
+            new_el = dom.createElement(key)
+            if isinstance(obj[key], dict):
+                new_el.setAttribute("type", "dict")
+            elif isinstance(obj[key], list):
+                new_el.setAttribute("type", "list")
             el.appendChild(new_el)
             serialize_obj(obj[key], dom, new_el, upper_name=key)
     elif isinstance(obj, list):
         for one in obj:
             new_el = dom.createElement("%s_item" % upper_name)
+            if isinstance(one, dict):
+                new_el.setAttribute("type", "dict")
+            elif isinstance(one, list):
+                new_el.setAttribute("type", "list")
             el.appendChild(new_el)
             serialize_obj(one, dom, new_el)
     else:
