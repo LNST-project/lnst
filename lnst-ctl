@@ -48,6 +48,8 @@ def usage(retval=0):
     print "  -p, --packet-capture            capture and log all ongoing " \
               "network communication during the test"
     print "  -x, --result=FILE               file to write xml_result"
+    print "  -s, --xslt-url=URL              URL to a XSLT document that the "\
+              "result xml will reference, only usefull when -x is used as well"
     print "  -r, --reduce-sync               reduces resource synchronization "\
               "for python tasks, see documentation"
     sys.exit(retval)
@@ -123,10 +125,10 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhrc:x:poma:A:",
+            "dhrc:x:s:poma:A:",
             ["debug", "help", "config", "result=",
              "packet-capture", "disable-pool-checks", "no-colours",
-             "define_alias", "override_alias", "reduce-sync"]
+             "define_alias", "override_alias", "reduce-sync", "xslt-url"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -154,6 +156,7 @@ def main():
     debug = 0
     recipe_path = None
     result_path = None
+    xslt_url = None
     config_path = None
     packet_capture = False
     pool_checks = True
@@ -182,6 +185,8 @@ def main():
             store_alias(arg, overriden_aliases)
         elif opt in ("-r", "--reduce-sync"):
             reduce_sync = True
+        elif opt in ("-s", "--xslt-url"):
+            xslt_url = arg
 
     if config_path is not None:
         if not os.path.isfile(config_path):
@@ -189,6 +194,9 @@ def main():
             usage(RETVAL_ERR)
         else:
             lnst_config.load_config(config_path)
+
+    if xslt_url != None:
+        lnst_config.set_option("environment", "xslt_url", xslt_url)
 
     if coloured_output:
         coloured_output = not lnst_config.get_option("colours",

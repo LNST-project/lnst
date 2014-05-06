@@ -69,6 +69,12 @@ class Config():
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "resource_dir"}
+        self._options['environment']['xslt_url'] = {
+                "value" : "./result_xslt/xml_to_html.xsl",
+                "additive" : False,
+                "action" : self.optionPlain,
+                "name" : "xslt_url"
+                }
 
         self.colours_scheme()
 
@@ -263,6 +269,9 @@ class Config():
 
     def optionBool(self, option, cfg_path):
         return bool_it(option)
+    
+    def optionPlain(self, option, cfg_path):
+        return option
 
     def dump_config(self):
         string = ""
