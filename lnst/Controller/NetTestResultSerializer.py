@@ -15,6 +15,7 @@ import logging
 from xml.dom.minidom import getDOMImplementation
 from lnst.Common.NetTestCommand import str_command
 from lnst.Common.Colours import decorate_string, decorate_with_preset
+from lnst.Common.Config import lnst_config
 
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):
@@ -157,7 +158,12 @@ class NetTestResultSerializer:
     def get_result_xml(self):
         impl = getDOMImplementation()
         doc = impl.createDocument(None, "results", None)
+
+        xslt_url = lnst_config.get_option("environment", "xslt_url")
+        proc_inst = doc.createProcessingInstruction('xml-stylesheet',
+                                        'type="text/xsl" href="'+xslt_url+'"')
         top_el = doc.documentElement
+        doc.insertBefore(proc_inst, top_el)
 
         for recipe in self._results:
             recipe_el = doc.createElement("recipe")
