@@ -126,7 +126,7 @@ class Machine(object):
             ind1 = 0
             ind2 = 0
             for i in ordered_list:
-                master = i.get_master()
+                master = i.get_primary_master()
                 if master != None:
                     ind1 = ordered_list.index(i)
                     ind2 = ordered_list.index(master)
@@ -391,7 +391,7 @@ class Interface(object):
         self._addresses = []
         self._options = []
 
-        self._master = None
+        self._master = {"primary": None, "other": []}
 
         self._ovs_conf = None
 
@@ -431,19 +431,26 @@ class Interface(object):
     def set_option(self, name, value):
         self._options.append((name, value))
 
-    def set_master(self, master):
-        if self._master != None:
-            msg = "Interface %s already has a master." % self._master.get_id()
+    def add_master(self, master, primary=True):
+        if primary and self._master["primary"] != None:
+            msg = "Interface %s already has a primary master."\
+                    % self._master.get_id()
             raise MachineError(msg)
         else:
-            self._master = master
+            if primary:
+                self._master["primary"] = master
+            else:
+                self._master["other"].append(master)
 
-    def get_master(self):
-        return self._master
+    def get_primary_master(self):
+        return self._master["primary"]
 
     def add_slave(self, iface):
         self._slaves[iface.get_id()] = iface
-        iface.set_master(self)
+        if self._type in ["vlan"]:
+            iface.add_master(self, primary=False)
+        else:
+            iface.add_master(self)
 
     def set_slave_option(self, slave_id, name, value):
         if slave_id not in self._slave_options:
@@ -473,10 +480,14 @@ class Interface(object):
                   "addresses": self._addresses, "slaves": self._slaves.keys(),
                   "options": self._options,
                   "slave_options": self._slave_options,
-                  "master": None, "ovs_conf": self._ovs_conf}
+                  "master": None, "other_masters": [],
+                  "ovs_conf": self._ovs_conf}
 
-        if self._master != None:
-            config["master"] = self._master.get_id()
+        if self._master["primary"] != None:
+            config["master"] = self._master["primary"].get_id()
+
+        for m in self._master["other"]:
+            config["other_masters"].append(m.get_id())
 
         return config
 
