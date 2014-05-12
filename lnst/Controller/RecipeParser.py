@@ -105,7 +105,7 @@ class RecipeParser(XmlParser):
 
         if iface["type"] == "eth":
             iface["network"] = self._get_attribute(iface_tag, "label")
-        elif iface["type"] in ["bond", "bridge", "vlan", "macvlan", "team"]:
+        elif iface["type"] in ["bond", "bridge", "macvlan", "team"]:
             # slaves
             slaves_tag = iface_tag.find("slaves")
             if slaves_tag is not None and len(slaves_tag) > 0:
@@ -121,6 +121,27 @@ class RecipeParser(XmlParser):
                         slave["options"] = opts
 
                     iface["slaves"].append(slave)
+
+            # interface options
+            opts_tag = iface_tag.find("options")
+            opts = self._proces_options(opts_tag)
+            if len(opts) > 0:
+                iface["options"] = opts
+        elif iface["type"] in ["vlan"]:
+            # real_dev of the VLAN interface
+            slaves_tag = iface_tag.find("slaves")
+            if slaves_tag is None or len(slaves_tag) != 1:
+                msg = "VLAN '%s' need exactly one slave definition."\
+                        % iface["id"]
+                raise RecipeError(msg, vlan)
+
+            iface["slaves"] = XmlCollection(slaves_tag)
+
+            slave_tag = slaves_tag[0]
+            slave = XmlData(slave_tag)
+            slave["id"] = self._get_attribute(slave_tag, "id")
+
+            iface["slaves"].append(slave)
 
             # interface options
             opts_tag = iface_tag.find("options")
