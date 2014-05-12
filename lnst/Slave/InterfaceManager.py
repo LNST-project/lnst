@@ -176,6 +176,7 @@ class InterfaceManager(object):
 
 class Device(object):
     def __init__(self, if_manager):
+        self._initialized = False
         self._configured = False
 
         self._if_index = None
@@ -198,6 +199,8 @@ class Device(object):
         self._ip = None #TODO
         self._master = nl_msg.get_attr("IFLA_MASTER")
 
+        self._initialized = True
+
     def update_netlink(self, nl_msg):
         if self._if_index == nl_msg['index']:
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
@@ -216,6 +219,8 @@ class Device(object):
 
             if self._conf_dict:
                 self._conf_dict["name"] = self._name
+
+            self._initialized = True
 
             #return an update message that will be sent to the controller
             return {"type": "if_update",
@@ -247,6 +252,9 @@ class Device(object):
             conf["name"] = self._name
         self._conf_dict = conf
         self._conf = NetConfigDevice(conf, self._if_manager)
+
+        if not self._initialized:
+            self._name = conf["name"]
 
     def get_configuration(self):
         return self._conf
