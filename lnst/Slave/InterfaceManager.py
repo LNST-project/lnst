@@ -91,6 +91,7 @@ class InterfaceManager(object):
                 self._devices[msg['index']] = dev
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
+                self._devices[msg['index']].del_link()
                 del self._devices[msg['index']]
         else:
             return
@@ -186,8 +187,8 @@ class Device(object):
         self._conf_dict = None
         self._ip = None
         self._state = None
-        self._master = None
-        self._parent = None
+        self._master = {"primary": None, "other": []}
+        self._slaves = []
 
         self._if_manager = if_manager
 
@@ -197,7 +198,7 @@ class Device(object):
         self._name = nl_msg.get_attr("IFLA_IFNAME")
         self._state = nl_msg.get_attr("IFLA_OPERSTATE")
         self._ip = None #TODO
-        self._master = nl_msg.get_attr("IFLA_MASTER")
+        self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
 
         self._initialized = True
 
@@ -206,7 +207,8 @@ class Device(object):
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
             self._name = nl_msg.get_attr("IFLA_IFNAME")
             self._ip = None #TODO
-            self._master = nl_msg.get_attr("IFLA_MASTER")
+            self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
+
             link = nl_msg.get_attr("IFLA_LINK")
             if link != None:
                 # IFLA_LINK is an index of device that's closer to physical
@@ -215,7 +217,12 @@ class Device(object):
                 # parent index in the child device; this is the opposite
                 # to IFLA_MASTER
                 link_dev = self._if_manager.get_device(link)
-                link_dev.set_parent(self._if_index)
+                if link_dev != None:
+                    link_dev.set_master(self._if_index, primary=False)
+                # This reference shouldn't change - you can't change the realdev
+                # of a vlan, you need to create a new vlan. Therefore the
+                # the following add_slave shouldn't be a problem.
+                self.add_slave(link)
 
             if self._conf_dict:
                 self._conf_dict["name"] = self._name
@@ -227,6 +234,23 @@ class Device(object):
                     "devname": self._name,
                     "hwaddr": self._hwaddr}
         return None
+
+    def del_link(self):
+        if self._master["primary"]:
+            primary_id = self._master["primary"]
+            primary_dev = self._if_manager.get_device(primary_id)
+            if primary_dev:
+                primary_dev.del_slave(self._if_index)
+
+        for m_id in self._master["other"]:
+            m_dev = self._if_manager.get_device(m_id)
+            if m_dev:
+                m_dev.del_slave(self._if_index)
+
+        for dev_id in self._slaves:
+            dev = self._if_manager.get_device(dev_id)
+            if dev != None:
+                dev.del_master(self._if_index)
 
     def get_if_index(self):
         return self._if_index
@@ -260,11 +284,16 @@ class Device(object):
         return self._conf
 
     def clear_configuration(self):
-        if self._master or self._parent:
-            super_id = self._master if self._master else self._parent
-            super_dev = self._if_manager.get_device(super_id)
-            if super_dev:
-                super_dev.clear_configuration()
+        if self._master["primary"]:
+            primary_id = self._master["primary"]
+            primary_dev = self._if_manager.get_device(primary_id)
+            if primary_dev:
+                primary_dev.clear_configuration()
+
+        for m_id in self._master["other"]:
+            m_dev = self._if_manager.get_device(m_id)
+            if m_dev:
+                m_dev.clear_configuration()
 
         if self._conf != None:
             self.down()
@@ -272,8 +301,36 @@ class Device(object):
             self._conf = None
             self._conf_dict = None
 
-    def set_parent(self, if_index):
-        self._parent = if_index
+    def set_master(self, if_index, primary=True):
+        if primary:
+            prev_master_id = self._master["primary"]
+            if prev_master_id != None and if_index != prev_master_id:
+                prev_master_dev = self._if_manager.get_device(prev_master_id)
+                if prev_master_dev != None:
+                    prev_master_dev.del_slave(self._if_index)
+
+            self._master["primary"] = if_index
+            if self._master["primary"] != None:
+                master_id = self._master["primary"]
+                master_dev = self._if_manager.get_device(master_id)
+                if master_dev != None:
+                    master_dev.add_slave(self._if_index)
+        elif if_index not in self._master["other"]:
+            self._master["other"].append(if_index)
+
+    def del_master(self, if_index):
+        if self._master["primary"] == if_index:
+            self._master["primary"] = None
+        elif if_index in self._master["other"]:
+            self._master["other"].remove(if_index)
+
+    def add_slave(self, if_index):
+        if if_index not in self._slaves:
+            self._slaves.append(if_index)
+
+    def del_slave(self, if_index):
+        if if_index in self._slaves:
+            self._slaves.remove(if_index)
 
     def configure(self):
         if self._conf != None and not self._configured:
@@ -281,11 +338,16 @@ class Device(object):
             self._configured = True
 
     def deconfigure(self):
-        if self._master or self._parent:
-            super_id = self._master if self._master else self._parent
-            super_dev = self._if_manager.get_device(super_id)
-            if super_dev:
-                super_dev.deconfigure()
+        if self._master["primary"]:
+            primary_id = self._master["primary"]
+            primary_dev = self._if_manager.get_device(primary_id)
+            if primary_dev:
+                primary_dev.deconfigure()
+
+        for m_id in self._master["other"]:
+            m_dev = self._if_manager.get_device(m_id)
+            if m_dev:
+                m_dev.deconfigure()
 
         if self._conf != None and self._configured:
             self._conf.deconfigure()
