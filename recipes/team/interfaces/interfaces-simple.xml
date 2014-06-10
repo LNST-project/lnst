@@ -2,6 +2,7 @@
     <eth id="testiface" label="net1">
         <addresses>
              <address value="{$testip}"/>
+             <address value="{$testip6}"/>
         </addresses>
     </eth>
     <eth id="2" label="net2"/>

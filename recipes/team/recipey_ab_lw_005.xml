@@ -5,15 +5,15 @@
             <alias name="testip6" value="fe01::1/64"/>
         </define>
         <host id="1">
-            <xi:include href="interfaces-team_ab_lw_005.xml"/>
+            <xi:include href="interfaces/interfaces-team_ab_lw_005.xml"/>
         </host>
         <define>
             <alias name="testip" value="192.168.111.2/24"/>
             <alias name="testip6" value="fe01::2/64"/>
         </define>
         <host id="2">
-            <xi:include href="interfaces-simple_br.xml"/>
+            <xi:include href="interfaces/interfaces-simple_br.xml"/>
         </host>
     </network>
-    <xi:include href="sequence_ping_simple.xml"/>
+    <xi:include href="tasks/sequence_ping_simple.xml"/>
 </lnstrecipe>
