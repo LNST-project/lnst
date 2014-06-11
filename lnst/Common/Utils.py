@@ -17,6 +17,8 @@ import hashlib
 import tempfile
 import subprocess
 import errno
+import ast
+from _ast import Call, Attribute
 from lnst.Common.ExecCmd import exec_cmd
 
 def die_when_parent_die():
@@ -167,3 +169,24 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+def get_module_tools(module_path):
+    tools = []
+
+    f = open(module_path)
+
+    asttree = ast.parse(f.read())
+
+    for node in ast.walk(asttree):
+        if isinstance (node, Call):
+            fn = getattr(node, 'func')
+            if isinstance(fn, Attribute):
+                val = getattr(fn, 'value')
+                if ('self' == getattr(val, 'id')):
+                    if ( 'exec_from' == getattr(fn, 'attr')):
+                        tool = getattr((getattr(node, 'args')[0]), 's')
+                        tools.append(tool)
+
+    f.close()
+
+    return tools

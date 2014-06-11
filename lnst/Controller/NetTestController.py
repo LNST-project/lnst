@@ -23,7 +23,7 @@ from time import sleep
 from xmlrpclib import Binary
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
-from lnst.Common.Utils import check_process_running, bool_it
+from lnst.Common.Utils import check_process_running, bool_it, get_module_tools
 from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
 from lnst.Controller.RecipeParser import RecipeParser, RecipeError
@@ -242,6 +242,15 @@ class NetTestController:
                         mod = cmd['module']
                         if mod in res_table['module']:
                             sync_table['module'][mod] = res_table['module'][mod]
+                            # check if test module uses some test tools
+                            mod_path = res_table['module'][mod]["path"]
+                            mod_tools = get_module_tools(mod_path)
+                            for t in mod_tools:
+                                 if t in sync_table['tools']:
+                                     continue
+                                 logging.debug("Adding '%s' tool as dependency\
+                                     of %s test module" % (t, mod))
+                                 sync_table['tools'][t] = res_table['tools'][t]
                         else:
                             msg = "Module '%s' not found on the controller"\
                                     % mod
