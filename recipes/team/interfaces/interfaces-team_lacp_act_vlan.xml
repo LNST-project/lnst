@@ -1,0 +1,49 @@
+<interfaces>
+    <eth id="1" label="net1"/>
+    <eth id="2" label="net1"/>
+    <eth id="3" label="net1"/>
+    <team id="team">
+        <options>
+            <!--"hwaddr": "00:11:22:33:44:55",-->
+            <option name="teamd_config">
+                {
+                    "runner": {
+                        "name": "lacp",
+                        "active": true,
+                        "fast_rate": true,
+                        "tx_hash": ["eth", "ipv4", "ipv6"],
+                        "tx_balancer": {
+                            "name": "basic"
+                        }
+                    },
+                    "link_watch": {"name": "ethtool"}
+                }
+            </option>
+        </options>
+        <slaves>
+            <slave id="1">
+                <options>
+                    <option name="teamd_port_config">
+                        {
+                            "prio": -10
+                        }
+                    </option>
+                </options>
+            </slave>
+            <slave id="2"/>
+            <slave id="3"/>
+        </slaves>
+    </team>
+    <vlan id="testiface">
+        <options>
+            <option name="vlan_tci" value="100"/>
+        </options>
+        <addresses>
+             <address value="{$testip}"/>
+             <address value="{$testip6}"/>
+        </addresses>
+        <slaves>
+            <slave id="team"/>
+        </slaves>
+    </vlan>
+</interfaces>
