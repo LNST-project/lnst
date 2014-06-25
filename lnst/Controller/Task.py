@@ -53,7 +53,7 @@ class ControllerAPI(object):
         host = self._hosts[host_id]
         return HostAPI(self, host_id, host)
 
-    def get_module(self, name, **kwargs):
+    def get_module(self, name, options={}):
         """
             Initialize a module to be run on a host.
 
@@ -63,7 +63,7 @@ class ControllerAPI(object):
             :return: The module handle.
             :rtype: ModuleAPI
         """
-        return ModuleAPI(name, kwargs)
+        return ModuleAPI(name, options)
 
     def wait(self, seconds):
         """
