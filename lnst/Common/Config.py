@@ -70,7 +70,7 @@ class Config():
                 "action" : self.optionPath,
                 "name" : "resource_dir"}
         self._options['environment']['xslt_url'] = {
-                "value" : "./result_xslt/xml_to_html.xsl",
+                "value" : "http://www.lnst-project.org/files/result_xslt/xml_to_html.xsl",
                 "additive" : False,
                 "action" : self.optionPlain,
                 "name" : "xslt_url"
