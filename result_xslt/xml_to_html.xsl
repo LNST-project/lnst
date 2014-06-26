@@ -4,7 +4,7 @@
     <xsl:template match="/">
         <html>
             <body>
-                <link rel="stylesheet" type="text/css" href="http://www.lnst-project.org/files/result_xslt/xml_to_html.xsl"/>
+                <link rel="stylesheet" type="text/css" href="http://www.lnst-project.org/files/result_xslt/xml_to_html.css"/>
                 <script type="text/javascript" src="http://www.lnst-project.org/files/result_xslt/xml_to_html.js"/>
                 <h2>LNST results</h2>
                 <xsl:apply-templates select="results/recipe"/>
