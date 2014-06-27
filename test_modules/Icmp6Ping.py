@@ -64,7 +64,7 @@ class Icmp6Ping(TestGeneric):
             res_data["rtt_max"] = tmax
 
         if rate < limit_rate :
-            res_data["msg"] = "rate is lower that limit"
+            res_data["msg"] = "rate is lower than limit"
             return self.set_fail(res_data)
 
         return self.set_pass(res_data)
