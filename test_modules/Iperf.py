@@ -56,7 +56,7 @@ class Iperf(TestGeneric):
                 rate_val *= 1000
             elif rate_units == 'M':
                 rate_val *= 1000*1000
-            elif rate_val == 'G':
+            elif rate_units == 'G':
                 rate_val *= 1000*1000*1000
 
             # divide by k or M or G if present
