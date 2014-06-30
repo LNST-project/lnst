@@ -165,6 +165,8 @@ class HostAPI(object):
                 else:
                     msg = "Argument 'tool' not valid when running modules."
                     raise TaskError(msg)
+            elif arg == "desc":
+                cmd["desc"] = argval
             else:
                 msg = "Argument '%s' not recognised by the run() method." % arg
                 raise TaskError(msg)
