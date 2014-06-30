@@ -660,7 +660,7 @@ class NetTestController:
         logging.info("Executing command: [%s]", str_command(command))
 
         if "desc" in command:
-            logging.info("Cmd description: %s", desc)
+            logging.info("Cmd description: %s", command["desc"])
 
         if command["type"] == "ctl_wait":
             sleep(command["seconds"])
