@@ -48,6 +48,7 @@ def usage(retval=0):
     print "  -p, --packet-capture            capture and log all ongoing " \
               "network communication during the test"
     print "  -x, --result=FILE               file to write xml_result"
+    print "  -t, --html=FILE                 generate a formatted result html"
     print "  -s, --xslt-url=URL              URL to a XSLT document that the "\
               "result xml will reference, only usefull when -x is used as well"
     print "  -r, --reduce-sync               reduces resource synchronization "\
@@ -125,10 +126,11 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhrc:x:s:poma:A:",
+            "dhrc:x:t:s:poma:A:",
             ["debug", "help", "config", "result=",
              "packet-capture", "disable-pool-checks", "no-colours",
-             "define_alias", "override_alias", "reduce-sync", "xslt-url"]
+             "define_alias", "override_alias", "reduce-sync", "xslt-url",
+             "html"]
         )
     except getopt.GetoptError as err:
         print str(err)
@@ -156,6 +158,7 @@ def main():
     debug = 0
     recipe_path = None
     result_path = None
+    html_result_path = None
     xslt_url = None
     config_path = None
     packet_capture = False
@@ -173,6 +176,8 @@ def main():
             config_path = arg
         elif opt in ("-x", "--result"):
             result_path = arg
+        elif opt in ("-t", "--html"):
+            html_result_path = arg
         elif opt in ("-p", "--packet-capture"):
             packet_capture = True
         elif opt in ("-o", "--disable-pool-checks"):
@@ -266,6 +271,11 @@ def main():
         result_path = os.path.expanduser(result_path)
         handle = open(result_path, "w")
         handle.write(res_serializer.get_result_xml())
+        handle.close()
+    if html_result_path:
+        html_result_path = os.path.expanduser(html_result_path)
+        handle = open(html_result_path, "w")
+        handle.write(res_serializer.get_result_html())
         handle.close()
 
     return retval
