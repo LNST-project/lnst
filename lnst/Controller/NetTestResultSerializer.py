@@ -165,11 +165,7 @@ class NetTestResultSerializer:
         impl = getDOMImplementation()
         doc = impl.createDocument(None, "results", None)
 
-        xslt_url = lnst_config.get_option("environment", "xslt_url")
-        proc_inst = doc.createProcessingInstruction('xml-stylesheet',
-                                        'type="text/xsl" href="'+xslt_url+'"')
         top_el = doc.documentElement
-        doc.insertBefore(proc_inst, top_el)
 
         for recipe in self._results:
             recipe_el = doc.createElement("recipe")
