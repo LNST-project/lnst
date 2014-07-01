@@ -3,9 +3,13 @@
     <xsl:output method="html" indent="yes"/>
     <xsl:template match="/">
         <html>
-            <body>
+            <head>
+                <title>LNST results</title>
+                <meta charset="utf-8"/>
                 <link rel="stylesheet" type="text/css" href="http://www.lnst-project.org/files/result_xslt/xml_to_html.css"/>
-                <script type="text/javascript" src="http://www.lnst-project.org/files/result_xslt/xml_to_html.js"/>
+                <script type="text/javascript" src="http://www.lnst-project.org/files/result_xslt/xml_to_html.js"></script>
+            </head>
+            <body>
                 <h2>LNST results</h2>
                 <xsl:apply-templates select="results/recipe"/>
             </body>
@@ -275,7 +279,7 @@
 
     <xsl:template match="result_data">
         <table class="result_data">
-            <th>Result Data:</th>
+            <tr><th>Result Data:</th></tr>
             <xsl:for-each select="*">
                 <xsl:call-template name="res_data_dict_item"/>
             </xsl:for-each>
