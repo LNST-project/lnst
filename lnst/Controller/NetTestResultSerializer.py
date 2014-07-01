@@ -16,6 +16,8 @@ from xml.dom.minidom import getDOMImplementation
 from lnst.Common.NetTestCommand import str_command
 from lnst.Common.Colours import decorate_string, decorate_with_preset
 from lnst.Common.Config import lnst_config
+from lxml import etree
+from lxml import html as lxml_h
 
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):
@@ -159,7 +161,7 @@ class NetTestResultSerializer:
             logging.info(" %s " % output)
         logging.info("="*(full_length))
 
-    def get_result_xml(self):
+    def _generate_xml(self):
         impl = getDOMImplementation()
         doc = impl.createDocument(None, "results", None)
 
@@ -215,4 +217,21 @@ class NetTestResultSerializer:
                         res_data_el = doc.createElement("result_data")
                         serialize_obj(cmd_res["res_data"], doc, res_data_el)
                         command_el.appendChild(res_data_el)
+        return doc
+
+    def get_result_xml(self):
+        doc = self._generate_xml()
         return doc.toprettyxml()
+
+    def get_result_html(self):
+        xml = self._generate_xml().toprettyxml()
+        etree_xml = etree.fromstring(xml)
+
+        xslt_url = lnst_config.get_option("environment", "xslt_url")
+        xslt = etree.parse(xslt_url)
+        transform = etree.XSLT(xslt)
+
+        transformed_xml = transform(etree_xml)
+        html = lxml_h.fromstring(etree.tostring(transformed_xml))
+        return lxml_h.tostring(html, pretty_print=True,
+                               doctype="<!DOCTYPE html>")
