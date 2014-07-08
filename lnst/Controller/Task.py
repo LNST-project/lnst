@@ -252,7 +252,7 @@ class HostAPI(object):
             else:
                 msg = "Module '%s' not found on the controller"\
                         % mod
-                raise TaskError(msg, cmd)
+                raise TaskError(msg)
 
         for tool in tools:
             if tool in res_table['tools']:
@@ -260,7 +260,7 @@ class HostAPI(object):
             else:
                 msg = "Tool '%s' not found on the controller"\
                         % tool
-                raise TaskError(msg, cmd)
+                raise TaskError(msg)
 
         self._m.sync_resources(sync_table)
 
