@@ -26,7 +26,7 @@ from lnst.Common.PacketCapture import PacketCapture
 from lnst.Common.Utils import die_when_parent_die
 from lnst.Common.NetUtils import scan_netdevs, test_tcp_connection
 from lnst.Common.NetUtils import normalize_hwaddr
-from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ResourceCache import ResourceCache
 from lnst.Common.NetTestCommand import NetTestCommandContext
 from lnst.Common.NetTestCommand import CommandException, NetTestCommand
