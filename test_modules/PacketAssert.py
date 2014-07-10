@@ -36,17 +36,6 @@ class PacketAssert(TestGeneric):
 
     _num_recv = 0
 
-    def _set_interrupt_handler(self):
-        signal.signal(signal.SIGINT, self._interrupt_handler)
-        signal.signal(signal.SIGTERM, self._interrupt_handler)
-
-    def _interrupt_handler(self, signum, frame):
-        """ Kill tcpdump when interrupted """
-        try:
-            self._tcpdump.terminate()
-        except OSError:
-            raise Exception("Caught exception in interrupt handler")
-
     def _prepare_grep_filters(self):
         """ Parse `grep_for' test options """
         filters = self.get_multi_opt("grep_for")
@@ -107,8 +96,6 @@ class PacketAssert(TestGeneric):
         return False
 
     def run(self):
-        self._set_interrupt_handler()
-
         self._prepare_grep_filters()
         self._prepare_conditions()
         self._compose_cmd()
