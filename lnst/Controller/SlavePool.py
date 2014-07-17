@@ -400,9 +400,10 @@ class SetupMapper:
                                 topology[m_id].append(nc)
 
                 if not net_in_use:
-                    msg = "Network labeled '%s' contains only one machine!" %\
-                                                                    net_name
-                    raise MapperError(msg)
+                    for dev_in_net in devs_in_net:
+                        nc = (None, net_name, dev_in_net)
+                        if not nc in topology[m_id]:
+                            topology[m_id].append(nc)
 
         return topology
 
@@ -429,6 +430,11 @@ class SetupMapper:
         :return: True/False indicating the validity of this match
         :rtype: Bool
         """
+
+        if template_id == None and pool_id == None:
+            return True
+        if template_id == None or pool_id == None:
+            return False
 
         template_machine = self._template_machines[template_id]
         pool_machine = self._pool_machines[pool_id]
@@ -507,7 +513,7 @@ class SetupMapper:
     @staticmethod
     def _get_node_with_most_neighbours(topology):
         max_machine = None
-        max_len = 0
+        max_len = -1
         for machine, nc_list in topology.iteritems():
             if len(nc_list) > max_len:
                 max_machine = machine
@@ -604,7 +610,8 @@ class SetupMapper:
         return (i, m, n)
 
     def _save_nc_match(self, nc_match):
-        self._machine_map |= set(nc_match[1])
+        if nc_match[1] != [(None, None)]:
+            self._machine_map |= set(nc_match[1])
         self._network_map |= set(nc_match[2])
 
     def _revert_nc_match(self, nc_match):
@@ -656,11 +663,6 @@ class SetupMapper:
 
         template_topology = self._get_topology(template_machines)
         pool_topology = self._get_topology(pool_machines)
-
-        for m, cons in template_topology.iteritems():
-            if len(cons) == 0:
-                msg = "Isolated machine in template topology: '%s'" % m
-                raise MapperError(msg)
 
         if self._map_setup(template_topology, pool_topology):
             machine_map = [(tm, pm, self._iface_map[tm]) \
