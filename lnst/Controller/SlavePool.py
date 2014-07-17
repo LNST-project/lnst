@@ -52,7 +52,9 @@ class SlavePool:
 
         res = []
         for dirent in dentries:
-            res.append(self.add_file("%s/%s" % (pool_dir, dirent)))
+            m_info = self.add_file("%s/%s" % (pool_dir, dirent))
+            if m_info != None:
+                res.append(m_info)
 
         if len(res) == 0:
             logging.warn("No machines found in this directory")
