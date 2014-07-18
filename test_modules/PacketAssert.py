@@ -125,7 +125,8 @@ class PacketAssert(TestGeneric):
                 break
 
             line = line.strip("\n")
-            self._process_captured_line(line)
+            if len(line) != 0:
+                self._process_captured_line(line)
 
         tcpdump_file.close()
         os.remove(tcpdump_file.name)
