@@ -312,10 +312,10 @@ class NetTestController:
 
             if "python" in task_data:
                 root = RecipePath(None, self._recipe_path).get_root()
-                path = "%s/%s" % (root, task_data["python"])
+                path = RecipePath(root, task_data["python"])
 
                 task["python"] = path
-                if not os.path.isfile(path):
+                if not path.exists():
                     msg = "Task file '%s' not found." % path
                     raise RecipeError(msg, task_data)
 
@@ -635,8 +635,9 @@ class NetTestController:
         # Initialize the API handle
         Task.ctl = Task.ControllerAPI(self, self._machines)
 
-        name = os.path.basename(task["python"]).split(".")[0]
-        module = imp.load_source(name, task["python"])
+        task_path = task["python"]
+        name = os.path.basename(task_path.abs_path()).split(".")[0]
+        module = imp.load_source(name, task_path.resolve())
 
         #restore resource table
         self._resource_table = res_table_bkp
