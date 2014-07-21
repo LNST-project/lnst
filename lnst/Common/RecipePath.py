@@ -13,6 +13,7 @@ jtluka@redhat.com (Jan Tluka)
 import os
 from urlparse import urljoin
 from urllib2 import urlopen
+from tempfile import NamedTemporaryFile
 
 def get_recipepath_class(root, path):
     if root == None:
@@ -44,6 +45,12 @@ class RecipePath:
     def to_str(self):
         return self._recipepath_class.to_str()
 
+    def exists(self):
+        return self._recipepath_class.exists()
+
+    def resolve(self):
+        return self._recipepath_class.resolve()
+
 class RecipePathGeneric:
     def __init__(self, root, path):
         self._root = root
@@ -57,6 +64,12 @@ class RecipePathGeneric:
         pass
 
     def to_str(self):
+        pass
+
+    def exists(self):
+        pass
+
+    def resolve(self):
         pass
 
 class FileRecipePath(RecipePathGeneric):
@@ -85,7 +98,14 @@ class FileRecipePath(RecipePathGeneric):
     def get_root(self):
         return os.path.dirname(self.abs_path())
 
+    def exists(self):
+        return os.path.isfile(self.abs_path())
+
+    def resolve(self):
+        return self.abs_path()
+
 class HttpRecipePath(RecipePathGeneric):
+    _file = None
     def _get_url(self):
         url = self.abs_path()
 
@@ -113,3 +133,23 @@ class HttpRecipePath(RecipePathGeneric):
     def get_root(self):
         url = self.abs_path()
         return url.rpartition('/')[0]
+
+    def exists(self):
+        url = self.abs_path()
+        try:
+            f = urlopen(url)
+        except HTTPError:
+            return False
+
+        f.close()
+        return True
+
+    def resolve(self):
+        if self._file:
+            return self._file.name
+
+        self._file = NamedTemporaryFile(suffix='.py',delete=True)
+        self._file.write(self.to_str())
+        self._file.flush()
+
+        return self._file.name
