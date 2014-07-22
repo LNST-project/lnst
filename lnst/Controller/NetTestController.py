@@ -721,9 +721,7 @@ class NetTestController:
         logging_root = os.path.abspath(logging_root)
         logging.info("Retrieving capture files from slaves")
         for machine_id, machine in self._machines.iteritems():
-            hostname = machine.get_hostname()
-
-            slave_logging_dir = os.path.join(logging_root, hostname + "/")
+            slave_logging_dir = os.path.join(logging_root, machine_id + "/")
             try:
                 os.mkdir(slave_logging_dir)
             except OSError as err:
