@@ -103,7 +103,7 @@ class NetConfigDeviceBond(NetConfigDeviceGeneric):
                 "primary" option is not direct value but it's
                 index of netdevice. So take the appropriate name from config
                 '''
-                slave_dev = self._if_manager.get_mapped_device(int(value))
+                slave_dev = self._if_manager.get_mapped_device(value)
                 value = slave_dev.get_name()
             exec_cmd('echo "%s" > %s/%s' % (value,
                                             self._get_bond_dir(),
