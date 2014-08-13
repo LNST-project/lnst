@@ -14,6 +14,8 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import re
 import sys
+from platform import release
+from distutils.version import LooseVersion
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Common.Utils import kmod_in_use, bool_it
@@ -86,9 +88,16 @@ class NetConfigDeviceBond(NetConfigDeviceGeneric):
     _moduleparams = "max_bonds=0"
 
     def _add_rm_bond(self, mark):
-        bond_masters = "/sys/class/net/bonding_masters"
-        exec_cmd('echo "%s%s" > %s' % (mark, self._dev_config["name"],
-                                       bond_masters))
+        #3.10 works on rhel7, I didn't test which oldest version works...
+        if LooseVersion(release()) > LooseVersion('3.10'):
+            if mark == "+":
+                exec_cmd('ip link add %s type bond' % self._dev_config["name"])
+            elif mark == "-":
+                exec_cmd('ip link del %s' % self._dev_config["name"])
+        else:
+            bond_masters = "/sys/class/net/bonding_masters"
+            exec_cmd('echo "%s%s" > %s' % (mark, self._dev_config["name"],
+                                           bond_masters))
 
     def _get_bond_dir(self):
         return "/sys/class/net/%s/bonding" % self._dev_config["name"]
@@ -114,10 +123,20 @@ class NetConfigDeviceBond(NetConfigDeviceGeneric):
             slave_dev = self._if_manager.get_mapped_device(slave_id)
             slave_conf = slave_dev.get_conf_dict()
             slave_name = slave_dev.get_name()
-            if (mark == "+"):
+            bond_name = self._dev_config["name"]
+            if mark == "+":
                 slave_dev.down()
-            exec_cmd('echo "%s%s" > %s/slaves' % (mark, slave_name,
-                                                  self._get_bond_dir()))
+
+            #3.10 works on rhel7, I didn't test which oldest version works...
+            if LooseVersion(release()) > LooseVersion('3.10'):
+                if mark == "+":
+                    exec_cmd('ip link set %s master %s' % (slave_name,
+                                                           bond_name))
+                elif mark == "-":
+                    exec_cmd('ip link set %s nomaster' % (slave_name))
+            else:
+                exec_cmd('echo "%s%s" > %s/slaves' % (mark, slave_name,
+                                                      self._get_bond_dir()))
 
     def configure(self):
         self._add_rm_bond("+")
