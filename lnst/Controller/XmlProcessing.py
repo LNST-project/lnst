@@ -140,7 +140,8 @@ class XmlData(dict):
 
     def __getitem__(self, key):
         value = super(XmlData, self).__getitem__(key)
-        if type(value) == XmlData or type(value) == XmlCollection:
+        if type(value) == XmlData or type(value) == XmlCollection\
+           or value == None:
             return value
 
         return str(value)
