@@ -50,6 +50,13 @@ class InterfaceManager(object):
     def clear_if_mapping(self):
         self._id_mapping = {}
 
+    def reconnect_netlink(self):
+        if self._nl_socket != None:
+            self._nl_socket.close()
+            self._nl_socket = None
+        self._nl_socket = IPRSocket()
+        self._nl_socket.bind()
+
     def get_nl_socket(self):
         return self._nl_socket
 
@@ -93,8 +100,10 @@ class InterfaceManager(object):
                 self._devices[msg['index']] = dev
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
-                self._devices[msg['index']].del_link()
-                del self._devices[msg['index']]
+                dev = self._devices[msg['index']]
+                if dev.get_netns() != None:
+                    dev.del_link()
+                    del self._devices[msg['index']]
         else:
             return
 
@@ -199,6 +208,7 @@ class Device(object):
         self._state = None
         self._master = {"primary": None, "other": []}
         self._slaves = []
+        self._netns = None
 
         self._if_manager = if_manager
 
@@ -209,6 +219,7 @@ class Device(object):
         self._state = nl_msg.get_attr("IFLA_OPERSTATE")
         self._ip = None #TODO
         self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
+        self._netns = None
 
         self._initialized = True
 
@@ -216,8 +227,10 @@ class Device(object):
         if self._if_index == nl_msg['index']:
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
             self._name = nl_msg.get_attr("IFLA_IFNAME")
+            self._state = nl_msg.get_attr("IFLA_OPERSTATE")
             self._ip = None #TODO
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
+            self._netns = None
 
             link = nl_msg.get_attr("IFLA_LINK")
             if link != None:
@@ -374,3 +387,10 @@ class Device(object):
             self._conf.down()
         else:
             exec_cmd("ip link set %s down" % self._name)
+
+    def set_netns(self, netns):
+        self._netns = netns
+        return
+
+    def get_netns(self):
+        return self._netns

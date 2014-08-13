@@ -18,6 +18,8 @@ import sys, traceback
 import datetime
 import socket
 import dbus
+import ctypes
+import multiprocessing
 from time import sleep
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
@@ -43,11 +45,14 @@ class SlaveMethods:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context, log_ctl, if_manager):
+    def __init__(self, command_context, log_ctl, if_manager, net_namespaces,
+                 server_handler):
         self._packet_captures = {}
         self._if_manager = if_manager
         self._command_context = command_context
         self._log_ctl = log_ctl
+        self._net_namespaces = net_namespaces
+        self._server_handler = server_handler
 
         self._capture_files = {}
         self._copy_targets = {}
@@ -92,6 +97,10 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
+
+        for netns in self._net_namespaces.keys():
+            self.del_namespace(netns)
+        self._net_namespaces = {}
         return "bye"
 
     def kill_cmds(self):
@@ -161,6 +170,8 @@ class SlaveMethods:
     def start_packet_capture(self, filt):
         files = {}
         for if_id, dev in self._if_manager.get_mapped_devices().iteritems():
+            if dev.get_netns() != None:
+                continue
             dev_name = dev.get_name()
 
             df_handle = NamedTemporaryFile(delete=False)
@@ -256,6 +267,11 @@ class SlaveMethods:
         logging.info("Performing machine cleanup.")
         self._command_context.cleanup()
         self._if_manager.deconfigure_all()
+
+        for netns in self._net_namespaces.keys():
+            self.del_namespace(netns)
+        self._net_namespaces = {}
+
         self._if_manager.clear_if_mapping()
         self._cache.del_old_entries()
         self.restore_system_config()
@@ -371,9 +387,83 @@ class SlaveMethods:
         lnst_config.set_option("environment", "use_nm", self._bkp_nm_opt_val)
         return val
 
+    def add_namespace(self, netns):
+        if netns in self._net_namespaces:
+            logging.debug("Network namespace %s already exists." % netns)
+        else:
+            logging.debug("Creating network namespace %s." % netns)
+            read_pipe, write_pipe = multiprocessing.Pipe()
+            pid = os.fork()
+            if pid != 0:
+                self._net_namespaces[netns] = {"pid": pid,
+                                               "pipe": read_pipe}
+                self._server_handler.add_netns(netns, read_pipe)
+                return None
+            elif pid == 0:
+                #create new network namespace
+                libc_name = ctypes.util.find_library("c")
+                CLONE_NEWNET = 0x40000000 #from sched.h
+                libc = ctypes.CDLL(libc_name)
+                libc.unshare(CLONE_NEWNET)
+
+                #set ctl socket to pipe to main netns
+                self._server_handler.close_s_sock()
+                self._server_handler.close_c_sock()
+                self._server_handler.clear_connections()
+                self._server_handler.clear_netns_connections()
+
+                self._if_manager.reconnect_netlink()
+                self._server_handler.add_connection('netlink',
+                                            self._if_manager.get_nl_socket())
+
+                self._server_handler.set_netns(netns)
+                self._server_handler.set_ctl_sock((write_pipe, "root_netns"))
+
+                self._log_ctl.disable_logging()
+                self._log_ctl.set_connection(write_pipe)
+
+                self._if_manager.rescan_devices()
+                logging.debug("Created network namespace %s" % netns)
+                return True
+            else:
+                raise Exception("Fork failed!")
+
+    def del_namespace(self, netns):
+        if netns not in self._net_namespaces:
+            logging.debug("Network namespace %s doesn't exist." % netns)
+            return False
+        else:
+            netns_pid = self._net_namespaces[netns]["pid"]
+            os.kill(netns_pid, signal.SIGTERM)
+            os.waitpid(netns_pid, 0)
+            logging.debug("Network namespace %s removed." % netns)
+
+            self._net_namespaces[netns]["pipe"].close()
+            self._server_handler.del_netns(netns)
+            del self._net_namespaces[netns]
+            return True
+
+    def set_if_netns(self, if_id, netns):
+        netns_pid = self._net_namespaces[netns]["pid"]
+
+        device = self._if_manager.get_mapped_device(if_id)
+        dev_name = device.get_name()
+        device.set_netns(netns)
+
+        exec_cmd("ip link set %s netns %d" % (dev_name, netns_pid))
+        return True
+
+    def return_if_netns(self, if_id):
+        device = self._if_manager.get_mapped_device(if_id)
+        dev_name = device.get_name()
+        ppid = os.getppid()
+        exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
+        return True
+
 class ServerHandler(object):
     def __init__(self, addr):
         self._connection_handler = ConnectionHandler()
+        self._netns_con_handler = ConnectionHandler()
         try:
             self._s_socket = socket.socket()
             self._s_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -384,6 +474,7 @@ class ServerHandler(object):
             exit(1)
 
         self._c_socket = None
+        self._netns = None
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
@@ -400,8 +491,26 @@ class ServerHandler(object):
         else:
             return None
 
+    def set_ctl_sock(self, sock):
+        if self._c_socket != None:
+            self._c_socket.close()
+            self._c_socket = None
+        self._c_socket = sock
+        self._connection_handler.add_connection(self._c_socket[1],
+                                                self._c_socket[0])
+
+    def close_s_sock(self):
+        self._s_socket.close()
+        self._s_socket = None
+
+    def close_c_sock(self):
+        self._c_socket[0].close()
+        self._connection_handler.remove_connection(self._c_socket[0])
+        self._c_socket = None
+
     def get_messages(self):
         messages = self._connection_handler.check_connections()
+        messages += self._netns_con_handler.check_connections()
 
         #push ctl messages to the end of message queue, this ensures that
         #update messages are handled first
@@ -422,9 +531,20 @@ class ServerHandler(object):
 
     def send_data_to_ctl(self, data):
         if self._c_socket != None:
+            if self._netns != None:
+                data = {"type": "from_netns",
+                        "netns": self._netns,
+                        "data": data}
             return send_data(self._c_socket[0], data)
         else:
             return False
+
+    def send_data_to_netns(self, netns, data):
+        netns_con = self._netns_con_handler.get_connection(netns)
+        if netns_con == None:
+            raise Exception("No such namespace!")
+        else:
+            return send_data(netns_con, data)
 
     def add_connection(self, id, connection):
         self._connection_handler.add_connection(id, connection)
@@ -441,6 +561,19 @@ class ServerHandler(object):
             self.remove_connection(key)
             self.add_connection(key, connection)
 
+    def set_netns(self, netns):
+        self._netns = netns
+
+    def add_netns(self, netns, connection):
+        self._netns_con_handler.add_connection(netns, connection)
+
+    def del_netns(self, netns):
+        connection = self._netns_con_handler.get_connection(netns)
+        self._netns_con_handler.remove_connection(connection)
+
+    def clear_netns_connections(self):
+        self._netns_con_handler.clear_connections()
+
 class NetTestSlave:
     def __init__(self, log_ctl, port = DefaultRPCPort):
         die_when_parent_die()
@@ -448,8 +581,12 @@ class NetTestSlave:
         self._cmd_context = NetTestCommandContext()
         self._server_handler = ServerHandler(("", port))
         self._if_manager = InterfaceManager(self._server_handler)
+
+        self._net_namespaces = {}
+
         self._methods = SlaveMethods(self._cmd_context, log_ctl,
-                                     self._if_manager)
+                                     self._if_manager, self._net_namespaces,
+                                     self._server_handler)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
@@ -538,6 +675,11 @@ class NetTestSlave:
                     self._cmd_context.del_cmd(cmd)
         elif msg["type"] == "netlink":
             self._if_manager.handle_netlink_msgs(msg["data"])
+        elif msg["type"] == "from_netns":
+            self._server_handler.send_data_to_ctl(msg["data"])
+        elif msg["type"] == "to_netns":
+            netns = msg["netns"]
+            self._server_handler.send_data_to_netns(netns, msg["data"])
         else:
             raise Exception("Recieved unknown command")
 
