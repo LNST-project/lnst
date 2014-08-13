@@ -72,7 +72,7 @@ class ConnectionHandler(object):
     def check_connections(self):
         requests = []
         try:
-            rl, wl, xl = select.select(self._connections.values(), [], [])
+            rl, wl, xl = select.select(self._connections.values(), [], [], 0)
         except select.error:
             return []
         for f in rl:
