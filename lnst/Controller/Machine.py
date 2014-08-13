@@ -365,6 +365,15 @@ class Machine(object):
 
                 self._rpc_call("map_resource", res["hash"], res_type, res_name)
 
+    def enable_nm(self):
+        return self._rpc_call("enable_nm")
+
+    def disable_nm(self):
+        return self._rpc_call("disable_nm")
+
+    def restore_nm_option(self):
+        return self._rpc_call("restore_nm_option")
+
     def __str__(self):
         return "[Machine hostname(%s) libvirt_domain(%s) interfaces(%d)]" % \
                (self._hostname, self._libvirt_domain, len(self._interfaces))

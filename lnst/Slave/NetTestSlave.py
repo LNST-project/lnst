@@ -59,8 +59,11 @@ class SlaveMethods:
 
         self._resource_table = {'module': {}, 'tools': {}}
 
+        self._bkp_nm_opt_val = lnst_config.get_option("environment", "use_nm")
+
     def hello(self, recipe_path):
         self.machine_cleanup()
+        self.restore_nm_option()
 
         logging.info("Recieved a controller connection.")
         self.clear_resource_table()
@@ -341,6 +344,32 @@ class SlaveMethods:
         for file_handle in self._copy_sources.itervalues():
             file_handle.close()
         self._copy_sources = {}
+
+    def enable_nm(self):
+        logging.warning("====================================================")
+        logging.warning("Enabling use of NetworkManager on controller request")
+        logging.warning("====================================================")
+        val = lnst_config.get_option("environment", "use_nm")
+        lnst_config.set_option("environment", "use_nm", True)
+        return val
+
+    def disable_nm(self):
+        logging.warning("=====================================================")
+        logging.warning("Disabling use of NetworkManager on controller request")
+        logging.warning("=====================================================")
+        val = lnst_config.get_option("environment", "use_nm")
+        lnst_config.set_option("environment", "use_nm", False)
+        return val
+
+    def restore_nm_option(self):
+        val = lnst_config.get_option("environment", "use_nm")
+        if val == self._bkp_nm_opt_val:
+            return val
+        logging.warning("=========================================")
+        logging.warning("Restoring use_nm option to original value")
+        logging.warning("=========================================")
+        lnst_config.set_option("environment", "use_nm", self._bkp_nm_opt_val)
+        return val
 
 class ServerHandler(object):
     def __init__(self, addr):
