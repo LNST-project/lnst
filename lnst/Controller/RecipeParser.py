@@ -86,6 +86,10 @@ class RecipeParser(XmlParser):
         iface["id"] = self._get_attribute(iface_tag, "id")
         iface["type"] = iface_tag.tag
 
+        iface["netns"] = None
+        if self._has_attribute(iface_tag, "netns"):
+            iface["netns"] = self._get_attribute(iface_tag, "netns")
+
         # params
         params_tag = iface_tag.find("params")
         params = self._process_params(params_tag)
@@ -283,6 +287,10 @@ class RecipeParser(XmlParser):
         cmd = XmlData(cmd_tag)
         cmd["host"] = self._get_attribute(cmd_tag, "host")
 
+        cmd["netns"] = None
+        if self._has_attribute(cmd_tag, "netns"):
+            cmd["netns"] = self._get_attribute(cmd_tag, "netns")
+
         has_module = self._has_attribute(cmd_tag, "module")
         has_command = self._has_attribute(cmd_tag, "command")
         has_from = self._has_attribute(cmd_tag, "from")
@@ -322,6 +330,10 @@ class RecipeParser(XmlParser):
         cmd = XmlData(cmd_tag)
         cmd["type"] = "config"
         cmd["host"] = self._get_attribute(cmd_tag, "host")
+
+        cmd["netns"] = None
+        if self._has_attribute(cmd_tag, "netns"):
+            cmd["netns"] = self._get_attribute(cmd_tag, "netns")
 
         if self._has_attribute(cmd_tag, "persistent"):
             cmd["persistent"] = self._get_attribute(cmd_tag, "persistent")
