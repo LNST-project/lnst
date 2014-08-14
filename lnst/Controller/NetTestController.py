@@ -178,10 +178,21 @@ class NetTestController:
 
         for machine_xml_data in recipe["machines"]:
             m_id = machine_xml_data["id"]
+            m = machines[m_id]
+            namespaces = set()
             for iface_xml_data in machine_xml_data["interfaces"]:
                 self._prepare_interface(m_id, iface_xml_data)
 
-            ifaces = machines[m_id].get_ordered_interfaces()
+                if iface_xml_data["netns"] != None:
+                    namespaces.add(iface_xml_data["netns"])
+
+            if len(namespaces) > 0:
+                m.disable_nm()
+
+            ifaces = m.get_ordered_interfaces()
+            for netns in namespaces:
+                m.add_netns(netns)
+
             for iface in ifaces:
                 iface.configure()
             for iface in ifaces:
@@ -296,6 +307,9 @@ class NetTestController:
         if "ovs_conf" in iface_xml_data:
             iface.set_ovs_conf(iface_xml_data["ovs_conf"])
 
+        if iface_xml_data["netns"] != None:
+            iface.set_netns(iface_xml_data["netns"])
+
     def _prepare_tasks(self):
         self._tasks = []
         for task_data in self._recipe["tasks"]:
@@ -353,6 +367,9 @@ class NetTestController:
             if cmd["host"] not in self._machines:
                 msg = "Invalid host id '%s'." % cmd["host"]
                 raise RecipeError(msg, cmd_data)
+
+        if "netns" in cmd_data:
+            cmd["netns"] = cmd_data["netns"]
 
         if "expect" in cmd_data:
             expect = cmd_data["expect"]

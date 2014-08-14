@@ -27,8 +27,9 @@ class IfMgrError(Exception):
 
 class InterfaceManager(object):
     def __init__(self, server_handler):
-        self._devices = {}
-        self._id_mapping = {} #id from the ctl to device
+        self._devices = {} #if_index to device
+        self._id_mapping = {} #id from the ctl to if_index
+        self._tmp_mapping = {} #id from the ctl to newly created device
 
         self._nl_socket = IPRSocket()
         self._nl_socket.bind()
@@ -43,11 +44,18 @@ class InterfaceManager(object):
         elif if_index not in self._devices:
             raise IfMgrError("No interface with index %s found." % if_index)
 
-        self._id_mapping[if_id] = self._devices[if_index]
+        self._id_mapping[if_id] = if_index
         return
 
     def clear_if_mapping(self):
         self._id_mapping = {}
+
+    def reconnect_netlink(self):
+        if self._nl_socket != None:
+            self._nl_socket.close()
+            self._nl_socket = None
+        self._nl_socket = IPRSocket()
+        self._nl_socket.bind()
 
     def get_nl_socket(self):
         return self._nl_socket
@@ -71,39 +79,50 @@ class InterfaceManager(object):
             if msg['index'] in self._devices:
                 update_msg = self._devices[msg['index']].update_netlink(msg)
                 if update_msg != None:
-                    for if_id, dev in self._id_mapping.iteritems():
-                        if dev.get_if_index() == msg['index']:
+                    for if_id, if_index in self._id_mapping.iteritems():
+                        if if_index == msg['index']:
                             update_msg["if_id"] = if_id
                             break
                     if "if_id" in update_msg:
                         self._server_handler.send_data_to_ctl(update_msg)
             else:
                 dev = None
-                for d in self._id_mapping.values():
+                for if_id, d in self._tmp_mapping.items():
                     d_cfg = d.get_conf_dict()
-                    if d.get_if_index() == None and\
-                       d_cfg["name"] == msg.get_attr("IFLA_IFNAME"):
-                            dev = d
-                            break
+                    if d_cfg["name"] == msg.get_attr("IFLA_IFNAME"):
+                        dev = d
+                        self._id_mapping[if_id] = msg['index']
+                        del self._tmp_mapping[if_id]
+                        break
                 if dev == None:
                     dev = Device(self)
                 dev.init_netlink(msg)
                 self._devices[msg['index']] = dev
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
-                self._devices[msg['index']].del_link()
-                del self._devices[msg['index']]
+                dev = self._devices[msg['index']]
+                if dev.get_netns() != None:
+                    dev.del_link()
+                    del self._devices[msg['index']]
         else:
             return
 
     def get_mapped_device(self, if_id):
         if if_id in self._id_mapping:
-            return self._id_mapping[if_id]
+            if_index = self._id_mapping[if_id]
+            return self._devices[if_index]
+        elif if_id in self._tmp_mapping:
+            return self._tmp_mapping[if_id]
         else:
             raise IfMgrError("No device with id %s mapped." % if_id)
 
     def get_mapped_devices(self):
-        return self._id_mapping
+        ret = {}
+        for if_id, if_index in self._id_mapping.iteritems():
+            ret[if_id] = self._devices[if_index]
+        for if_id, dev in self._tmp_mapping:
+            ret[if_id] = self._tmp_mapping[if_id]
+        return ret
 
     def get_device(self, if_index):
         if if_index in self._devices:
@@ -134,7 +153,7 @@ class InterfaceManager(object):
         device.set_configuration(config)
         device.configure()
 
-        self._id_mapping[if_id] = device
+        self._tmp_mapping[if_id] = device
         return config["name"]
 
     def _is_name_used(self, name):
@@ -189,6 +208,7 @@ class Device(object):
         self._state = None
         self._master = {"primary": None, "other": []}
         self._slaves = []
+        self._netns = None
 
         self._if_manager = if_manager
 
@@ -199,6 +219,7 @@ class Device(object):
         self._state = nl_msg.get_attr("IFLA_OPERSTATE")
         self._ip = None #TODO
         self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
+        self._netns = None
 
         self._initialized = True
 
@@ -206,8 +227,10 @@ class Device(object):
         if self._if_index == nl_msg['index']:
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
             self._name = nl_msg.get_attr("IFLA_IFNAME")
+            self._state = nl_msg.get_attr("IFLA_OPERSTATE")
             self._ip = None #TODO
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
+            self._netns = None
 
             link = nl_msg.get_attr("IFLA_LINK")
             if link != None:
@@ -364,3 +387,10 @@ class Device(object):
             self._conf.down()
         else:
             exec_cmd("ip link set %s down" % self._name)
+
+    def set_netns(self, netns):
+        self._netns = netns
+        return
+
+    def get_netns(self):
+        return self._netns

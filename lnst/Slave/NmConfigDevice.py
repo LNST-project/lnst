@@ -137,6 +137,8 @@ class NmConfigDeviceGeneric(object):
 
     @classmethod
     def is_nm_managed(cls, dev_config, if_manager):
+        if dev_config["netns"] != None:
+            return False
         return is_nm_managed_by_name(dev_config["name"])
 
     def _wait_for_state(self, new_state, old_state, reason):
@@ -808,5 +810,9 @@ type_class_mapping = {
 }
 
 def is_nm_managed(dev_config, if_manager):
-    return type_class_mapping[dev_config["type"]].is_nm_managed(dev_config,
-                                                                if_manager)
+    if lnst_config.get_option("environment", "use_nm") and\
+       check_process_running("NetworkManager"):
+        return type_class_mapping[dev_config["type"]].is_nm_managed(dev_config,
+                                                                    if_manager)
+    else:
+        return False
