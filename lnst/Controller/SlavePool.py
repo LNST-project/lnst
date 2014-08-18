@@ -124,6 +124,8 @@ class SlavePool:
                        logging.debug("libvirtd not running. Removing "\
                                      "libvirt_domain from machine '%s'" % m_id)
                        del machine_spec['params']['libvirt_domain']
+            else:
+                available = True
 
             if available:
                 self._pool[m_id] = machine_spec
