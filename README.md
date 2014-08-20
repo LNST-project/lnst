@@ -21,8 +21,9 @@ su
 * Jiri Pirko <jpirko@redhat.com>
 * Jiri Zupka <jzupka@redhat.com>
 * Jan Tluka <jtluka@redhat.com>
-* Radek Pazdera <rpazdera@redhat.com>
+* Radek Pazdera <radek@pazdera.co.uk>
 * Ondrej Lichtner <olichtne@redhat.com>
+* Jiri Prochazka <jprochaz@redhat.com>
 
 
 ## Internet Resources
