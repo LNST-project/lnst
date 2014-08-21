@@ -46,13 +46,14 @@ class SlaveMethods:
     Exported xmlrpc methods
     '''
     def __init__(self, command_context, log_ctl, if_manager, net_namespaces,
-                 server_handler):
+                 server_handler, slave_server):
         self._packet_captures = {}
         self._if_manager = if_manager
         self._command_context = command_context
         self._log_ctl = log_ctl
         self._net_namespaces = net_namespaces
         self._server_handler = server_handler
+        self._slave_server = slave_server
 
         self._capture_files = {}
         self._copy_targets = {}
@@ -541,6 +542,14 @@ class ServerHandler(object):
             self._c_socket = None
         return messages
 
+    def get_messages_from_con(self, con_id):
+        if self._connection_handler.get_connection(con_id) != None:
+            return self._connection_handler.check_connections_by_id([con_id])
+        elif self._netns_con_handler.get_connection(con_id) != None:
+            return self._netns_con_handler.check_connections_by_id([con_id])
+        else:
+            raise Exception("Unknown connection id '%s'." % con_id)
+
     def send_data_to_ctl(self, data):
         if self._c_socket != None:
             if self._netns != None:
@@ -598,7 +607,7 @@ class NetTestSlave:
 
         self._methods = SlaveMethods(self._cmd_context, log_ctl,
                                      self._if_manager, self._net_namespaces,
-                                     self._server_handler)
+                                     self._server_handler, self)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
@@ -629,6 +638,20 @@ class NetTestSlave:
                 self._process_msg(msg[1])
 
         self._methods.machine_cleanup()
+
+    def wait_for_result(self, id):
+        result = None
+        while result == None:
+            msgs = self._server_handler.get_messages_from_con(id)
+            for msg in msgs:
+                if msg[1]["type"] == "result":
+                    result = msg[1]
+                elif msg[1]["type"] == "from_netns" and\
+                     msg[1]["data"]["type"] == "result":
+                    result = msg[1]["data"]
+                else:
+                    self._process_msg(msg[1])
+        return result
 
     def _process_msg(self, msg):
         if msg["type"] == "command":
