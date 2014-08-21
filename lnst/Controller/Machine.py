@@ -621,8 +621,7 @@ class Interface(object):
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns,
                                          "deconfigure_interface", self.get_id())
-            self._machine._rpc_call_to_netns(self._netns,
-                                         "return_if_netns", self.get_id())
+            self._machine._rpc_call_to("return_if_netns", self.get_id())
         else:
             self._machine._rpc_call("deconfigure_interface", self.get_id())
         self._configured = False

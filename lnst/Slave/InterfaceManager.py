@@ -101,7 +101,7 @@ class InterfaceManager(object):
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
                 dev = self._devices[msg['index']]
-                if dev.get_netns() != None:
+                if dev.get_netns() == None and dev.get_conf_dict() == None:
                     dev.del_link()
                     del self._devices[msg['index']]
         else:
@@ -230,7 +230,6 @@ class Device(object):
             self._state = nl_msg.get_attr("IFLA_OPERSTATE")
             self._ip = None #TODO
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
-            self._netns = None
 
             link = nl_msg.get_attr("IFLA_LINK")
             if link != None:

@@ -468,10 +468,22 @@ class SlaveMethods:
 
     def return_if_netns(self, if_id):
         device = self._if_manager.get_mapped_device(if_id)
-        dev_name = device.get_name()
-        ppid = os.getppid()
-        exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
-        return True
+        if device.get_netns() == None:
+            dev_name = device.get_name()
+            ppid = os.getppid()
+            exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
+            return True
+        else:
+            netns = device.get_netns()
+            msg = {"type": "command", "method_name": "return_if_netns",
+                   "args": [if_id]}
+            self._server_handler.send_data_to_netns(netns, msg)
+            result = self._slave_server.wait_for_result(netns)
+            if result["result"] != True:
+                raise Exception("Return from netns failed.")
+
+            device.set_netns(None)
+            return True
 
 class ServerHandler(object):
     def __init__(self, addr):
