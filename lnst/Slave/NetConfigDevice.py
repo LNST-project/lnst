@@ -50,6 +50,12 @@ class NetConfigDeviceGeneric(object):
     def slave_del(self, slave_id):
         pass
 
+    def create(self):
+        pass
+
+    def destroy(self):
+        pass
+
     def up(self):
         config = self._dev_config
         if "addresses" in config:
@@ -120,14 +126,18 @@ class NetConfigDeviceBond(NetConfigDeviceGeneric):
             exec_cmd('echo "%s%s" > %s/slaves' % (mark, slave_name,
                                                   self._get_bond_dir()))
 
-    def configure(self):
+    def create(self):
         self._add_rm_bond("+")
+
+    def destroy(self):
+        self._add_rm_bond("-")
+
+    def configure(self):
         self._setup_options()
         self._add_rm_slaves("+")
 
     def deconfigure(self):
         self._add_rm_slaves("-")
-        self._add_rm_bond("-")
 
 class NetConfigDeviceBridge(NetConfigDeviceGeneric):
     _modulename = "bridge"
@@ -144,13 +154,17 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
         for slave_id in get_slaves(self._dev_config):
             self._add_rm_port(prefix, slave_id)
 
-    def configure(self):
+    def create(self):
         self._add_rm_bridge("add")
+
+    def destroy(self):
+        self._add_rm_bridge("del")
+
+    def configure(self):
         self._add_rm_ports("add")
 
     def deconfigure(self):
         self._add_rm_ports("del")
-        self._add_rm_bridge("del")
 
     def slave_add(self, slave_id):
         self._add_rm_port("add", slave_id)
@@ -161,7 +175,7 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
 class NetConfigDeviceMacvlan(NetConfigDeviceGeneric):
     _modulename = "macvlan"
 
-    def configure(self):
+    def create(self):
         config = self._dev_config;
         realdev_id = config["slaves"][0]
         realdev_name = self._if_manager.get_mapped_device(realdev_id).get_name()
@@ -175,7 +189,7 @@ class NetConfigDeviceMacvlan(NetConfigDeviceGeneric):
         exec_cmd("ip link add link %s %s%s type macvlan"
                                     % (realdev_name, dev_name, hwaddr))
 
-    def deconfigure(self):
+    def destroy(self):
         dev_name = self._dev_config["name"]
         exec_cmd("ip link del %s" % dev_name)
 
@@ -198,7 +212,7 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
         vlan_tci = int(get_option(config, "vlan_tci"))
         return dev_name, realdev_name, vlan_tci
 
-    def configure(self):
+    def create(self):
         dev_name, realdev_name, vlan_tci = self._get_vlan_info()
         if self._check_ip_link_add():
             exec_cmd("ip link add link %s %s type vlan id %d"
@@ -210,7 +224,7 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
                 raise Exception("Bad vlan device name")
             exec_cmd("vconfig add %s %d" % (realdev_name, vlan_tci))
 
-    def deconfigure(self):
+    def destroy(self):
         dev_name = self._get_vlan_info()[0]
         if self._check_ip_link_add():
             exec_cmd("ip link del %s" % dev_name)
@@ -252,9 +266,7 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
             port_dev = self._if_manager.get_mapped_device(slave_id)
             port_dev.up()
 
-    def configure(self):
-        self._ports_down()
-
+    def create(self):
         teamd_config = get_option(self._dev_config, "teamd_config")
         teamd_config = prepare_json_str(teamd_config)
 
@@ -263,6 +275,13 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         dbus_option = " -D" if self._should_enable_dbus() else ""
         exec_cmd("teamd -r -d -c \"%s\" -t %s %s" % (teamd_config, dev_name, dbus_option))
 
+    def destroy(self):
+        dev_name = self._dev_config["name"]
+        exec_cmd("teamd -k -t %s" % dev_name)
+
+    def configure(self):
+        self._ports_down()
+
         for slave_id in get_slaves(self._dev_config):
             self.slave_add(slave_id)
         self._ports_up()
@@ -270,10 +289,6 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
     def deconfigure(self):
         for slave_id in get_slaves(self._dev_config):
             self.slave_del(slave_id)
-
-        dev_name = self._dev_config["name"]
-
-        exec_cmd("teamd -k -t %s" % dev_name)
 
     def slave_add(self, slave_id):
         dev_name = self._dev_config["name"]
@@ -359,25 +374,26 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
         for bond_id, bond in bonds.iteritems():
             exec_cmd("ovs-vsctl del-port %s %s" % (br_name, bond_id))
 
-    def configure(self):
+    def create(self):
         dev_cfg = self._dev_config
-
         br_name = dev_cfg["name"]
         exec_cmd("ovs-vsctl add-br %s" % br_name)
 
+    def destroy(self):
+        dev_cfg = self._dev_config
+        br_name = dev_cfg["name"]
+        exec_cmd("ovs-vsctl del-br %s" % br_name)
+
+    def configure(self):
         self._add_ports()
 
         self._add_bonds()
 
     def deconfigure(self):
-        dev_cfg = self._dev_config
-
         self._del_bonds()
 
         self._del_ports()
 
-        br_name = dev_cfg["name"]
-        exec_cmd("ovs-vsctl del-br %s" % br_name)
 
 type_class_mapping = {
     "eth": NetConfigDeviceEth,

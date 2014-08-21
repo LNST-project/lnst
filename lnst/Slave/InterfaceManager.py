@@ -151,7 +151,7 @@ class InterfaceManager(object):
 
         device = Device(self)
         device.set_configuration(config)
-        device.configure()
+        device.create()
 
         self._tmp_mapping[if_id] = device
         return config["name"]
@@ -198,6 +198,7 @@ class Device(object):
     def __init__(self, if_manager):
         self._initialized = False
         self._configured = False
+        self._created = False
 
         self._if_index = None
         self._hwaddr = None
@@ -320,6 +321,7 @@ class Device(object):
         if self._conf != None:
             self.down()
             self.deconfigure()
+            self.destroy()
             self._conf = None
             self._conf_dict = None
 
@@ -353,6 +355,20 @@ class Device(object):
     def del_slave(self, if_index):
         if if_index in self._slaves:
             self._slaves.remove(if_index)
+
+    def create(self):
+        if self._conf != None and not self._created:
+            self._conf.create()
+            self._created = True
+            return True
+        return False
+
+    def destroy(self):
+        if self._conf != None and self._created:
+            self._conf.destroy()
+            self._created = False
+            return True
+        return False
 
     def configure(self):
         if self._conf != None and not self._configured:

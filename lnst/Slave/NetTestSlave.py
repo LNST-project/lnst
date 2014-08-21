@@ -161,7 +161,10 @@ class SlaveMethods:
         return True
 
     def create_soft_interface(self, if_id, config):
-        return self._if_manager.create_device_from_config(if_id, config)
+        dev_name = self._if_manager.create_device_from_config(if_id, config)
+        dev = self._if_manager.get_mapped_device(if_id)
+        dev.configure()
+        return dev_name
 
     def deconfigure_interface(self, if_id):
         device = self._if_manager.get_mapped_device(if_id)

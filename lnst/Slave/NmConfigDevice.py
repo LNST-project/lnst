@@ -105,6 +105,12 @@ class NmConfigDeviceGeneric(object):
     def deconfigure(self):
         pass
 
+    def create(self):
+        pass
+
+    def destroy(self):
+        pass
+
     def slave_add(self, slave_id):
         pass
 
