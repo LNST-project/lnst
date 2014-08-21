@@ -156,6 +156,24 @@ class InterfaceManager(object):
         self._tmp_mapping[if_id] = device
         return config["name"]
 
+    def create_device_pair(self, if_id1, config1, if_id2, config2):
+        name1, name2 = self.assign_name(config1)
+        config1["name"] = name1
+        config2["name"] = name2
+        config1["peer_name"] = name2
+        config2["peer_name"] = name1
+
+        device1 = Device(self)
+        device2 = Device(self)
+
+        device1.set_configuration(config1)
+        device2.set_configuration(config2)
+        device1.create()
+
+        self._tmp_mapping[if_id1] = device1
+        self._tmp_mapping[if_id2] = device2
+        return name1, name2
+
     def _is_name_used(self, name):
         for device in self._devices.itervalues():
             if name == device.get_name():
@@ -167,6 +185,16 @@ class InterfaceManager(object):
         while (self._is_name_used(prefix + str(index))):
             index += 1
         return prefix + str(index)
+
+    def _assign_name_pair(self, prefix):
+        index1 = 0
+        index2 = 0
+        while (self._is_name_used(prefix + str(index1))):
+            index1 += 1
+        index2 = index1 + 1
+        while (self._is_name_used(prefix + str(index2))):
+            index2 += 1
+        return prefix + str(index1), prefix + str(index2)
 
     def assign_name(self, config):
         if "name" in config:
@@ -193,6 +221,10 @@ class InterfaceManager(object):
             vlan_tci = get_option(config, "vlan_tci")
             prefix = "%s.%s_" % (netdev_name, vlan_tci)
             return self._assign_name_generic(prefix)
+        elif dev_type == "veth":
+            return self._assign_name_pair("veth")
+        else:
+            return self._assign_name_generic("dev")
 
 class Device(object):
     def __init__(self, if_manager):
@@ -305,6 +337,10 @@ class Device(object):
 
     def get_configuration(self):
         return self._conf
+
+    def del_configuration(self):
+        self._conf = None
+        self._conf_dict = None
 
     def clear_configuration(self):
         if self._master["primary"]:
