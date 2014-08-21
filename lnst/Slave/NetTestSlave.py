@@ -402,9 +402,21 @@ class SlaveMethods:
             elif pid == 0:
                 #create new network namespace
                 libc_name = ctypes.util.find_library("c")
-                CLONE_NEWNET = 0x40000000 #from sched.h
+                #from sched.h
+                CLONE_NEWNET = 0x40000000
+                CLONE_NEWNS = 0x00020000
+                #based on ipnetns.c from the iproute2 project
+                MNT_DETACH = 0x00000002
+                MS_SLAVE = 1<<19
+                MS_REC = 16384
+
                 libc = ctypes.CDLL(libc_name)
                 libc.unshare(CLONE_NEWNET)
+                #based on ipnetns.c from the iproute2 project
+                libc.unshare(CLONE_NEWNS)
+                libc.mount("", "/", "none", MS_SLAVE | MS_REC, 0)
+                libc.umount2("/sys", MNT_DETACH)
+                libc.mount(netns, "/sys", "sysfs", 0, 0)
 
                 #set ctl socket to pipe to main netns
                 self._server_handler.close_s_sock()
