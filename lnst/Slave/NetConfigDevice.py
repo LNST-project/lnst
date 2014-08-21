@@ -394,6 +394,25 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
 
         self._del_ports()
 
+class NetConfigDeviceVEth(NetConfigDeviceGeneric):
+    _modulename = ""
+    _moduleload = False
+
+    def create(self):
+        conf = self._dev_config
+        exec_cmd("ip link add %s type veth peer name %s" % (conf["name"],
+                                                            conf["peer_name"]))
+
+    def destroy(self):
+        conf = self._dev_config
+        exec_cmd("ip link del %s" % conf["name"])
+
+    def configure(self):
+        #no configuration options supported at the moment
+        return True
+
+    def deconfigure(self):
+        return True
 
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
@@ -402,7 +421,8 @@ type_class_mapping = {
     "macvlan": NetConfigDeviceMacvlan,
     "vlan": NetConfigDeviceVlan,
     "team": NetConfigDeviceTeam,
-    "ovs_bridge": NetConfigDeviceOvsBridge
+    "ovs_bridge": NetConfigDeviceOvsBridge,
+    "veth": NetConfigDeviceVEth
 }
 
 def NetConfigDevice(dev_config, if_manager):
