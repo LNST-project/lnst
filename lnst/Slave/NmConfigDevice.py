@@ -105,6 +105,12 @@ class NmConfigDeviceGeneric(object):
     def deconfigure(self):
         pass
 
+    def create(self):
+        pass
+
+    def destroy(self):
+        pass
+
     def slave_add(self, slave_id):
         pass
 
@@ -799,6 +805,12 @@ class NmConfigDeviceOvsBridge(NmConfigDeviceGeneric):
 
         return managed
 
+class NmConfigDeviceVEth(NmConfigDeviceGeneric):
+    #Not supported by NetworkManager
+    @classmethod
+    def is_nm_managed(cls, dev_config, if_manager):
+        return False
+
 type_class_mapping = {
     "eth": NmConfigDeviceEth,
     "bond": NmConfigDeviceBond,
@@ -806,7 +818,8 @@ type_class_mapping = {
     "macvlan": NmConfigDeviceMacvlan,
     "vlan": NmConfigDeviceVlan,
     "team": NmConfigDeviceTeam,
-    "ovs_bridge": NmConfigDeviceOvsBridge
+    "ovs_bridge": NmConfigDeviceOvsBridge,
+    "veth": NmConfigDeviceVEth
 }
 
 def is_nm_managed(dev_config, if_manager):

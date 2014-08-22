@@ -458,6 +458,7 @@ class Interface(object):
         self._ovs_conf = None
 
         self._netns = None
+        self._peer = None
 
     def get_id(self):
         return self._id
@@ -539,6 +540,12 @@ class Interface(object):
     def get_netns(self):
         return self._netns
 
+    def set_peer(self, peer):
+        self._peer = peer
+
+    def get_peer(self):
+        return self._peer
+
     def get_prefix(self, num):
         try:
             return self._addresses[num].split('/')[1]
@@ -551,7 +558,8 @@ class Interface(object):
                   "options": self._options,
                   "slave_options": self._slave_options,
                   "master": None, "other_masters": [],
-                  "ovs_conf": self._ovs_conf, "netns": self._netns}
+                  "ovs_conf": self._ovs_conf, "netns": self._netns,
+                  "peer": self._peer}
 
         if self._master["primary"] != None:
             config["master"] = self._master["primary"].get_id()
@@ -621,8 +629,7 @@ class Interface(object):
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns,
                                          "deconfigure_interface", self.get_id())
-            self._machine._rpc_call_to_netns(self._netns,
-                                         "return_if_netns", self.get_id())
+            self._machine._rpc_call_to("return_if_netns", self.get_id())
         else:
             self._machine._rpc_call("deconfigure_interface", self.get_id())
         self._configured = False
@@ -737,13 +744,22 @@ class SoftInterface(Interface):
 
     def configure(self):
         if self._configured:
-            msg = "Unable to configure interface %s on machine %s. " \
-                  "It has been configured already." % (self.get_id(),
-                  self._machine.get_id())
-            raise MachineError(msg)
+            return
 
         logging.info("Configuring interface %s on machine %s", self.get_id(),
                      self._machine.get_id())
+
+        if self._type == "veth":
+            peer_if = self._machine.get_interface(self._peer)
+            peer_config = peer_if._get_config()
+            dev_name, peer_name = self._machine._rpc_call("create_if_pair",
+                                                self._id, self._get_config(),
+                                                self._peer, peer_config)
+            self.set_devname(dev_name)
+            peer_if.set_devname(peer_name)
+            self._configured = True
+            peer_if._configured = True
+            return
 
         if self._netns != None:
             dev_name = self._machine._rpc_call_to_netns(self._netns,
@@ -756,6 +772,15 @@ class SoftInterface(Interface):
 
     def deconfigure(self):
         if not self._configured:
+            return
+
+        if self._type == "veth":
+            peer_if = self._machine.get_interface(self._peer)
+
+            self._machine._rpc_call("deconfigure_if_pair", self._id, self._peer)
+
+            self._configured = False
+            peer_if._configured = False
             return
 
         if self._netns != None:

@@ -70,9 +70,15 @@ class ConnectionHandler(object):
         self._connections = {}
 
     def check_connections(self):
+        return self.check_connections_by_id(self._connections.keys())
+
+    def check_connections_by_id(self, connection_ids):
+        connections = []
+        for con_id in connection_ids:
+            connections.append(self._connections[con_id])
         requests = []
         try:
-            rl, wl, xl = select.select(self._connections.values(), [], [], 0)
+            rl, wl, xl = select.select(connections, [], [], 0)
         except select.error:
             return []
         for f in rl:

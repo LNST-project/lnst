@@ -66,7 +66,7 @@ class RecipeParser(XmlParser):
             machine["interfaces"] = XmlCollection(interfaces_tag)
             for interface_tag in interfaces_tag:
                 interface = self._process_interface(interface_tag)
-                machine["interfaces"].append(interface)
+                machine["interfaces"].extend(interface)
 
         return machine
 
@@ -83,8 +83,18 @@ class RecipeParser(XmlParser):
 
     def _process_interface(self, iface_tag):
         iface = XmlData(iface_tag)
-        iface["id"] = self._get_attribute(iface_tag, "id")
         iface["type"] = iface_tag.tag
+
+        if iface["type"] == "veth_pair":
+            iface = self._process_interface(iface_tag[0])[0]
+            iface2 = self._process_interface(iface_tag[1])[0]
+
+            iface["peer"] = iface2["id"]
+            iface2["peer"] = iface["id"]
+
+            return [iface, iface2]
+
+        iface["id"] = self._get_attribute(iface_tag, "id")
 
         iface["netns"] = None
         if self._has_attribute(iface_tag, "netns"):
@@ -222,7 +232,7 @@ class RecipeParser(XmlParser):
 
                     bond_slaves.append(slave_id)
 
-        return iface
+        return [iface]
 
     def _proces_options(self, opts_tag):
         options = XmlCollection(opts_tag)

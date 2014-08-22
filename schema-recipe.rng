@@ -135,6 +135,7 @@
                             <ref name="macvlan"/>
                             <ref name="team"/>
                             <ref name="ovs_bridge"/>
+                            <ref name="veth_pair"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -326,6 +327,41 @@
                 <ref name="addresses"/>
             </optional>
         </interleave>
+    </define>
+
+    <define name="veth_pair">
+        <element name="veth_pair">
+            <optional>
+                <ref name="define"/>
+            </optional>
+            <ref name="veth"/>
+            <optional>
+                <ref name="define"/>
+            </optional>
+            <ref name="veth"/>
+        </element>
+    </define>
+
+    <define name="veth">
+        <element name="veth">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="netns"/>
+            </optional>
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <zeroOrMore>
+                    <ref name="options"/>
+                </zeroOrMore>
+
+                <optional>
+                    <ref name="addresses"/>
+                </optional>
+            </interleave>
+        </element>
     </define>
 
     <define name="options">

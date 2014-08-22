@@ -310,6 +310,9 @@ class NetTestController:
         if iface_xml_data["netns"] != None:
             iface.set_netns(iface_xml_data["netns"])
 
+        if "peer" in iface_xml_data:
+            iface.set_peer(iface_xml_data["peer"])
+
     def _prepare_tasks(self):
         self._tasks = []
         for task_data in self._recipe["tasks"]:

@@ -101,7 +101,7 @@ class InterfaceManager(object):
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
                 dev = self._devices[msg['index']]
-                if dev.get_netns() != None:
+                if dev.get_netns() == None and dev.get_conf_dict() == None:
                     dev.del_link()
                     del self._devices[msg['index']]
         else:
@@ -151,10 +151,28 @@ class InterfaceManager(object):
 
         device = Device(self)
         device.set_configuration(config)
-        device.configure()
+        device.create()
 
         self._tmp_mapping[if_id] = device
         return config["name"]
+
+    def create_device_pair(self, if_id1, config1, if_id2, config2):
+        name1, name2 = self.assign_name(config1)
+        config1["name"] = name1
+        config2["name"] = name2
+        config1["peer_name"] = name2
+        config2["peer_name"] = name1
+
+        device1 = Device(self)
+        device2 = Device(self)
+
+        device1.set_configuration(config1)
+        device2.set_configuration(config2)
+        device1.create()
+
+        self._tmp_mapping[if_id1] = device1
+        self._tmp_mapping[if_id2] = device2
+        return name1, name2
 
     def _is_name_used(self, name):
         for device in self._devices.itervalues():
@@ -167,6 +185,16 @@ class InterfaceManager(object):
         while (self._is_name_used(prefix + str(index))):
             index += 1
         return prefix + str(index)
+
+    def _assign_name_pair(self, prefix):
+        index1 = 0
+        index2 = 0
+        while (self._is_name_used(prefix + str(index1))):
+            index1 += 1
+        index2 = index1 + 1
+        while (self._is_name_used(prefix + str(index2))):
+            index2 += 1
+        return prefix + str(index1), prefix + str(index2)
 
     def assign_name(self, config):
         if "name" in config:
@@ -193,11 +221,16 @@ class InterfaceManager(object):
             vlan_tci = get_option(config, "vlan_tci")
             prefix = "%s.%s_" % (netdev_name, vlan_tci)
             return self._assign_name_generic(prefix)
+        elif dev_type == "veth":
+            return self._assign_name_pair("veth")
+        else:
+            return self._assign_name_generic("dev")
 
 class Device(object):
     def __init__(self, if_manager):
         self._initialized = False
         self._configured = False
+        self._created = False
 
         self._if_index = None
         self._hwaddr = None
@@ -230,7 +263,6 @@ class Device(object):
             self._state = nl_msg.get_attr("IFLA_OPERSTATE")
             self._ip = None #TODO
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
-            self._netns = None
 
             link = nl_msg.get_attr("IFLA_LINK")
             if link != None:
@@ -306,6 +338,10 @@ class Device(object):
     def get_configuration(self):
         return self._conf
 
+    def del_configuration(self):
+        self._conf = None
+        self._conf_dict = None
+
     def clear_configuration(self):
         if self._master["primary"]:
             primary_id = self._master["primary"]
@@ -321,6 +357,7 @@ class Device(object):
         if self._conf != None:
             self.down()
             self.deconfigure()
+            self.destroy()
             self._conf = None
             self._conf_dict = None
 
@@ -354,6 +391,20 @@ class Device(object):
     def del_slave(self, if_index):
         if if_index in self._slaves:
             self._slaves.remove(if_index)
+
+    def create(self):
+        if self._conf != None and not self._created:
+            self._conf.create()
+            self._created = True
+            return True
+        return False
+
+    def destroy(self):
+        if self._conf != None and self._created:
+            self._conf.destroy()
+            self._created = False
+            return True
+        return False
 
     def configure(self):
         if self._conf != None and not self._configured:

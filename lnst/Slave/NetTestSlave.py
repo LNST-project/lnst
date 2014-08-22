@@ -46,13 +46,14 @@ class SlaveMethods:
     Exported xmlrpc methods
     '''
     def __init__(self, command_context, log_ctl, if_manager, net_namespaces,
-                 server_handler):
+                 server_handler, slave_server):
         self._packet_captures = {}
         self._if_manager = if_manager
         self._command_context = command_context
         self._log_ctl = log_ctl
         self._net_namespaces = net_namespaces
         self._server_handler = server_handler
+        self._slave_server = slave_server
 
         self._capture_files = {}
         self._copy_targets = {}
@@ -160,7 +161,99 @@ class SlaveMethods:
         return True
 
     def create_soft_interface(self, if_id, config):
-        return self._if_manager.create_device_from_config(if_id, config)
+        dev_name = self._if_manager.create_device_from_config(if_id, config)
+        dev = self._if_manager.get_mapped_device(if_id)
+        dev.configure()
+        return dev_name
+
+    def create_if_pair(self, if_id1, config1, if_id2, config2):
+        dev_names = self._if_manager.create_device_pair(if_id1, config1,
+                                                        if_id2, config2)
+        dev1 = self._if_manager.get_mapped_device(if_id1)
+        dev2 = self._if_manager.get_mapped_device(if_id2)
+
+        while dev1.get_if_index() == None and dev2.get_if_index() == None:
+            msgs = self._server_handler.get_messages_from_con('netlink')
+            for msg in msgs:
+                self._if_manager.handle_netlink_msgs(msg[1]["data"])
+
+        if config1["netns"] != None:
+            hwaddr = dev1.get_hwaddr()
+            self.set_if_netns(if_id1, config1["netns"])
+
+            msg = {"type": "command", "method_name": "map_if_by_hwaddr",
+                   "args": [if_id1, hwaddr]}
+            self._server_handler.send_data_to_netns(config1["netns"], msg)
+            result = self._slave_server.wait_for_result(config1["netns"])
+            if len(result["result"]) != 1:
+                raise Exception("Mapping failed.")
+
+            msg = {"type": "command", "method_name": "configure_interface",
+                   "args": [if_id1, config1]}
+            self._server_handler.send_data_to_netns(config1["netns"], msg)
+            result = self._slave_server.wait_for_result(config1["netns"])
+            if result["result"] != True:
+                raise Exception("Configuration failed.")
+        else:
+            dev1.configure()
+        if config2["netns"] != None:
+            hwaddr = dev2.get_hwaddr()
+            self.set_if_netns(if_id2, config2["netns"])
+
+            msg = {"type": "command", "method_name": "map_if_by_hwaddr",
+                   "args": [if_id2, hwaddr]}
+            self._server_handler.send_data_to_netns(config2["netns"], msg)
+            result = self._slave_server.wait_for_result(config2["netns"])
+            if len(result["result"]) != 1:
+                raise Exception("Mapping failed.")
+
+            msg = {"type": "command", "method_name": "configure_interface",
+                   "args": [if_id2, config2]}
+            self._server_handler.send_data_to_netns(config2["netns"], msg)
+            result = self._slave_server.wait_for_result(config2["netns"])
+            if result["result"] != True:
+                raise Exception("Configuration failed.")
+        else:
+            dev2.configure()
+        return dev_names
+
+    def deconfigure_if_pair(self, if_id1, if_id2):
+        dev1 = self._if_manager.get_mapped_device(if_id1)
+        dev2 = self._if_manager.get_mapped_device(if_id2)
+
+        if dev1.get_netns() == None:
+            dev1.deconfigure()
+        else:
+            netns = dev1.get_netns()
+
+            msg = {"type": "command", "method_name": "deconfigure_interface",
+                   "args": [if_id1]}
+            self._server_handler.send_data_to_netns(netns, msg)
+            result = self._slave_server.wait_for_result(netns)
+            if result["result"] != True:
+                raise Exception("Deconfiguration failed.")
+
+            self.return_if_netns(if_id1)
+
+        if dev2.get_netns() == None:
+            dev2.deconfigure()
+        else:
+            netns = dev2.get_netns()
+
+            msg = {"type": "command", "method_name": "deconfigure_interface",
+                   "args": [if_id2]}
+            self._server_handler.send_data_to_netns(netns, msg)
+            result = self._slave_server.wait_for_result(netns)
+            if result["result"] != True:
+                raise Exception("Deconfiguration failed.")
+
+            self.return_if_netns(if_id2)
+
+        dev1.destroy()
+        dev2.destroy()
+        dev1.del_configuration()
+        dev2.del_configuration()
+        return True
 
     def deconfigure_interface(self, if_id):
         device = self._if_manager.get_mapped_device(if_id)
@@ -402,9 +495,21 @@ class SlaveMethods:
             elif pid == 0:
                 #create new network namespace
                 libc_name = ctypes.util.find_library("c")
-                CLONE_NEWNET = 0x40000000 #from sched.h
+                #from sched.h
+                CLONE_NEWNET = 0x40000000
+                CLONE_NEWNS = 0x00020000
+                #based on ipnetns.c from the iproute2 project
+                MNT_DETACH = 0x00000002
+                MS_SLAVE = 1<<19
+                MS_REC = 16384
+
                 libc = ctypes.CDLL(libc_name)
                 libc.unshare(CLONE_NEWNET)
+                #based on ipnetns.c from the iproute2 project
+                libc.unshare(CLONE_NEWNS)
+                libc.mount("", "/", "none", MS_SLAVE | MS_REC, 0)
+                libc.umount2("/sys", MNT_DETACH)
+                libc.mount(netns, "/sys", "sysfs", 0, 0)
 
                 #set ctl socket to pipe to main netns
                 self._server_handler.close_s_sock()
@@ -455,10 +560,22 @@ class SlaveMethods:
 
     def return_if_netns(self, if_id):
         device = self._if_manager.get_mapped_device(if_id)
-        dev_name = device.get_name()
-        ppid = os.getppid()
-        exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
-        return True
+        if device.get_netns() == None:
+            dev_name = device.get_name()
+            ppid = os.getppid()
+            exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
+            return True
+        else:
+            netns = device.get_netns()
+            msg = {"type": "command", "method_name": "return_if_netns",
+                   "args": [if_id]}
+            self._server_handler.send_data_to_netns(netns, msg)
+            result = self._slave_server.wait_for_result(netns)
+            if result["result"] != True:
+                raise Exception("Return from netns failed.")
+
+            device.set_netns(None)
+            return True
 
 class ServerHandler(object):
     def __init__(self, addr):
@@ -529,6 +646,14 @@ class ServerHandler(object):
             self._c_socket = None
         return messages
 
+    def get_messages_from_con(self, con_id):
+        if self._connection_handler.get_connection(con_id) != None:
+            return self._connection_handler.check_connections_by_id([con_id])
+        elif self._netns_con_handler.get_connection(con_id) != None:
+            return self._netns_con_handler.check_connections_by_id([con_id])
+        else:
+            raise Exception("Unknown connection id '%s'." % con_id)
+
     def send_data_to_ctl(self, data):
         if self._c_socket != None:
             if self._netns != None:
@@ -586,7 +711,7 @@ class NetTestSlave:
 
         self._methods = SlaveMethods(self._cmd_context, log_ctl,
                                      self._if_manager, self._net_namespaces,
-                                     self._server_handler)
+                                     self._server_handler, self)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
@@ -617,6 +742,20 @@ class NetTestSlave:
                 self._process_msg(msg[1])
 
         self._methods.machine_cleanup()
+
+    def wait_for_result(self, id):
+        result = None
+        while result == None:
+            msgs = self._server_handler.get_messages_from_con(id)
+            for msg in msgs:
+                if msg[1]["type"] == "result":
+                    result = msg[1]
+                elif msg[1]["type"] == "from_netns" and\
+                     msg[1]["data"]["type"] == "result":
+                    result = msg[1]["data"]
+                else:
+                    self._process_msg(msg[1])
+        return result
 
     def _process_msg(self, msg):
         if msg["type"] == "command":
