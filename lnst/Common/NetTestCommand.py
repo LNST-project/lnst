@@ -18,6 +18,7 @@ import imp
 import pickle, traceback
 import multiprocessing
 import re
+from time import time
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import recv_data, send_data
 
@@ -94,6 +95,7 @@ class NetTestCommand:
         self._control_cmd= None
         self._result = None
         self._log_ctl = log_ctl
+        self._start_time = None
 
         if "bg_id" not in self._command:
             self._id = None
@@ -110,6 +112,7 @@ class NetTestCommand:
         return self._finished
 
     def run(self):
+        self._start_time = time()
         if isinstance(self._cmd_cls, NetTestCommandControl) or \
            isinstance(self._cmd_cls, NetTestCommandConfig):
             return self._cmd_cls.run()
