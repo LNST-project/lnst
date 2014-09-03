@@ -401,8 +401,9 @@ class NetTestController:
             if "from" in cmd_data:
                 cmd["from"] = cmd_data["from"]
         elif cmd["type"] in ["wait", "intr", "kill"]:
-            # XXX The internal name (proc_id) is different, because
-            # bg_id is already used by LNST in a different context
+            # 'proc_id' is used to store bg_id for wait/kill/intr
+            # 'bg_id' is used for test/exec
+            # this is used to distinguish between the two in NetTestSlave code
             cmd["proc_id"] = cmd_data["bg_id"]
         elif cmd["type"] == "config":
             cmd["persistent"] = False
