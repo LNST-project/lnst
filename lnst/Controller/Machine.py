@@ -28,12 +28,11 @@ from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
     from lnst.Controller.VirtUtils import VirtNetCtl, VirtDomainCtl
-
-DEFAULT_TIMEOUT = 60
 
 class MachineError(Exception):
     pass
@@ -245,13 +244,25 @@ class Machine(object):
 
         prev_handler = signal.signal(signal.SIGALRM, self._timeout_handler)
 
-        if "timeout" in command:
-            timeout = command["timeout"]
-            logging.debug("Setting timeout to \"%d\"", timeout)
-            signal.alarm(timeout)
+        if command["type"] == "wait":
+            logging.debug("Get remaining time of bg process with bg_id == %s"
+                              % command["proc_id"])
+            remaining_time = self._rpc_call("get_remaining_time", command["proc_id"])
+            logging.debug("Setting timeout to %d", remaining_time)
+            if remaining_time > 0:
+                signal.alarm(remaining_time)
+            else:
+                # 2 seconds is enough time to do wait via RPC and collect
+                # the result
+                signal.alarm(2)
         else:
-            logging.debug("Setting default timeout (%ds)." % DEFAULT_TIMEOUT)
-            signal.alarm(DEFAULT_TIMEOUT)
+            if "timeout" in command:
+                timeout = command["timeout"]
+                logging.debug("Setting timeout to \"%d\"", timeout)
+                signal.alarm(timeout)
+            else:
+                logging.debug("Setting default timeout (%ds)." % DEFAULT_TIMEOUT)
+                signal.alarm(DEFAULT_TIMEOUT)
 
         try:
             if 'netns' in command and command['netns'] != None:
@@ -260,8 +271,8 @@ class Machine(object):
             else:
                 cmd_res = self._rpc_call("run_command", command)
         except MachineError as exc:
-            if "bg_id" in command:
-                cmd_res = self._rpc_call("kill_command", command["bg_id"])
+            if "proc_id" in command:
+                cmd_res = self._rpc_call("kill_command", command["proc_id"])
             else:
                 cmd_res = self._rpc_call("kill_command", None)
             cmd_res["passed"] = False

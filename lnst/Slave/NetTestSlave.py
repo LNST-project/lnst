@@ -20,7 +20,7 @@ import socket
 import dbus
 import ctypes
 import multiprocessing
-from time import sleep
+from time import sleep, time
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
 from lnst.Common.Logs import log_exc_traceback
@@ -32,6 +32,7 @@ from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ResourceCache import ResourceCache
 from lnst.Common.NetTestCommand import NetTestCommandContext
 from lnst.Common.NetTestCommand import CommandException, NetTestCommand
+from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Slave.NmConfigDevice import is_nm_managed_by_name
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import recv_data, send_data
@@ -329,6 +330,22 @@ class SlaveMethods:
 
         self._system_config = {}
         return True
+
+    def get_remaining_time(self, bg_id):
+        cmd = self._command_context.get_cmd(bg_id)
+        if "timeout" in cmd._command:
+            cmd_timeout = cmd._command["timeout"]
+        else:
+            cmd_timeout = DEFAULT_TIMEOUT
+
+        start_time = cmd._start_time
+        current_time = time()
+
+        remaining = cmd_timeout - (current_time - start_time)
+        if remaining < 0:
+            remaining = 0
+
+        return int(remaining)
 
     def run_command(self, command):
         cmd = NetTestCommand(self._command_context, command,
