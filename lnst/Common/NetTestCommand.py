@@ -21,6 +21,8 @@ import re
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import recv_data, send_data
 
+DEFAULT_TIMEOUT = 60
+
 def str_command(command):
     attrs = ["type(%s)" % command["type"]]
     if command["type"] == "test":

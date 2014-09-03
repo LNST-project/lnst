@@ -28,12 +28,11 @@ from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
     from lnst.Controller.VirtUtils import VirtNetCtl, VirtDomainCtl
-
-DEFAULT_TIMEOUT = 60
 
 class MachineError(Exception):
     pass
