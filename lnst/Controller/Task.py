@@ -295,7 +295,7 @@ class ProcessAPI(object):
             :return: True if the command passed.
             :rtype: bool
         """
-        return self.cmd_res["passed"]
+        return self._cmd_res["passed"]
 
     def get_result(self):
         """
@@ -304,7 +304,7 @@ class ProcessAPI(object):
             :return: Command result data.
             :rtype: dict
         """
-        return self.cmd_res
+        return self._cmd_res
 
     def wait(self):
         """ Blocking wait until the command returns. """
