@@ -24,11 +24,12 @@ def log_exc_traceback():
 
 class MultilineFormatter(Formatter): # addr:17 level:7
     _ADDR_WIDTH  = 17
+    _NETNS_WIDTH = 8
     _LEVEL_WIDTH = 7
     _coloured    = False
 
     def __init__(self, coloured=False):
-        fmt = "%(asctime)s  %(address)s  %(levelname)s: %(message)s"
+        fmt = "%(asctime)s %(address)s %(netns)s %(levelname)s: %(message)s"
         datefmt = "%Y-%m-%d %H:%M:%S"
         self.linefmt = "    "
         self._coloured = coloured
@@ -44,12 +45,12 @@ class MultilineFormatter(Formatter): # addr:17 level:7
 
     def _format_addr(self, record):
         if not "address" in record.__dict__:
-            addr = "(localhost)".rjust(17)
+            addr = "(localhost)"
         else:
-            addr = record.address.rjust(17)
+            addr = "(" + record.address + ")"
 
-        just  = " " * (self._ADDR_WIDTH - len(addr))
-        return just + self._decorate_value(addr, "log_header")
+        addr = addr.rjust(self._ADDR_WIDTH)
+        return self._decorate_value(addr, "log_header")
 
     def _format_level(self, record):
         level = record.levelname
@@ -65,6 +66,12 @@ class MultilineFormatter(Formatter): # addr:17 level:7
 
         values["address"] = self._format_addr(record)
         values["levelname"] = self._format_level(record)
+
+        try:
+            values["netns"] = record.__dict__["origin_name"]
+        except:
+            values["netns"] = "-"
+        values["netns"] = values["netns"].rjust(self._NETNS_WIDTH)
 
         msg = ""
         level = record.levelname
@@ -95,6 +102,8 @@ class LoggingCtl:
     transmit_handler = None
 
     def __init__(self, debug=False, log_dir=None, log_subdir="", colours=True):
+        self._origin_name = None
+
         if log_dir != None:
             self.log_folder = os.path.abspath(os.path.join(log_dir, log_subdir))
         else:
@@ -171,7 +180,7 @@ class LoggingCtl:
     def add_client_log(self, slave_id, log_record):
         logger = logging.getLogger(slave_id)
 
-        log_record['address'] = '(' + slave_id + ')'
+        log_record['address'] = slave_id
         record = logging.makeLogRecord(log_record)
         logger.handle(record)
 
@@ -179,6 +188,8 @@ class LoggingCtl:
         if self.transmit_handler != None:
             self.cancel_connection()
         self.transmit_handler = TransmitHandler(target)
+
+        self.transmit_handler.set_origin_name(self._origin_name)
 
         logger = logging.getLogger()
         logger.addHandler(self.transmit_handler)
@@ -224,3 +235,8 @@ class LoggingCtl:
 
     def get_recipe_log_path(self):
         return self.recipe_log_path
+
+    def set_origin_name(self, name):
+        self._origin_name = name
+        if self.transmit_handler != None:
+            self.transmit_handler.set_origin_name(name)

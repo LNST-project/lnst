@@ -66,12 +66,18 @@ class TransmitHandler(logging.Handler):
     def __init__(self, target):
         logging.Handler.__init__(self)
         self.target = target
+        self._origin_name = None
+
+    def set_origin_name(self, name):
+        self._origin_name = name
 
     def emit(self, record):
         r = dict(record.__dict__)
         r['msg'] = record.getMessage()
         r['args'] = None
         r['exc_info'] = None
+        if self._origin_name != None:
+            r['origin_name'] = self._origin_name
 
         data = {"type": "log", "record": r}
 

@@ -542,6 +542,7 @@ class SlaveMethods:
                 self._server_handler.set_ctl_sock((write_pipe, "root_netns"))
 
                 self._log_ctl.disable_logging()
+                self._log_ctl.set_origin_name(netns)
                 self._log_ctl.set_connection(write_pipe)
 
                 self._if_manager.rescan_devices()
