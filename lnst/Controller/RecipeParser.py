@@ -163,7 +163,7 @@ class RecipeParser(XmlParser):
             if slaves_tag is None or len(slaves_tag) != 1:
                 msg = "VLAN '%s' need exactly one slave definition."\
                         % iface["id"]
-                raise RecipeError(msg, vlan)
+                raise RecipeError(msg, iface_tag)
 
             iface["slaves"] = XmlCollection(slaves_tag)
 
