@@ -283,7 +283,10 @@ class NetTestController:
         try:
             iface = machine.get_interface(if_id)
         except MachineError:
-            iface = machine.new_soft_interface(if_id, if_type)
+            if if_type == 'lo':
+                iface = machine.new_loopback_interface(if_id)
+            else:
+                iface = machine.new_soft_interface(if_id, if_type)
 
         if "slaves" in iface_xml_data:
             for slave in iface_xml_data["slaves"]:

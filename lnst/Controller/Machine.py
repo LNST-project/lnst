@@ -109,6 +109,9 @@ class Machine(object):
     def new_soft_interface(self, if_id, if_type):
         return self._add_interface(if_id, if_type, SoftInterface)
 
+    def new_loopback_interface(self, if_id):
+        return self._add_interface(if_id, 'lo', LoopbackInterface)
+
     def get_interface(self, if_id):
         for iface in self._interfaces:
             if iface.get_id != None and if_id == iface.get_id():
@@ -656,6 +659,71 @@ class StaticInterface(Interface):
     """
     def __init__(self, machine, if_id, if_type):
         super(StaticInterface, self).__init__(machine, if_id, if_type)
+
+class LoopbackInterface(Interface):
+    """ Static interface
+
+        This class represents interfaces that are present on the
+        machine. LNST will only use them for testing without performing
+        any special actions.
+
+        This type is suitable for physical interfaces.
+    """
+    def __init__(self, machine, if_id, if_type):
+        super(LoopbackInterface, self).__init__(machine, if_id, if_type)
+
+    def initialize(self):
+        pass
+
+    def configure(self):
+        self._hwaddr = '00:00:00:00:00:00'
+        if self._netns:
+            phys_devs = self._machine._rpc_call_to_netns(self._netns,
+                                    "map_if_by_hwaddr", self._id, self._hwaddr)
+        else:
+            phys_devs = self._machine._rpc_call("map_if_by_hwaddr",
+                                                self._id, self._hwaddr)
+
+        if len(phys_devs) == 1:
+            self.set_devname(phys_devs[0]["name"])
+        elif len(phys_devs) < 1:
+            msg = "Device %s not found on machine %s" \
+                  % (self.get_id(), self._machine.get_id())
+            raise MachineError(msg)
+        elif len(phys_devs) > 1:
+            msg = "More than one device with hwaddr %s found on machine %s" \
+                  % (self._hwaddr, self._machine.get_id())
+            raise MachineError(msg)
+
+        self.down()
+
+        if self._configured:
+            msg = "Unable to configure interface %s on machine %s. " \
+                  "It has been configured already." % (self.get_id(),
+                  self._machine.get_id())
+            raise MachineError(msg)
+
+        logging.info("Configuring interface %s on machine %s", self.get_id(),
+                     self._machine.get_id())
+
+        if self._netns != None:
+            self._machine._rpc_call_to_netns(self._netns, "configure_interface",
+                                             self.get_id(), self._get_config())
+        else:
+            self._machine._rpc_call("configure_interface", self.get_id(),
+                                    self._get_config())
+        self._configured = True
+
+    def deconfigure(self):
+        if not self._configured:
+            return
+
+        if self._netns != None:
+            self._machine._rpc_call_to_netns(self._netns,
+                                         "deconfigure_interface", self.get_id())
+        else:
+            self._machine._rpc_call("deconfigure_interface", self.get_id())
+        self._configured = False
 
 class VirtualInterface(Interface):
     """ Dynamically created interface

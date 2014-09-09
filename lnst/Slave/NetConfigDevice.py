@@ -87,6 +87,10 @@ class NetConfigDeviceEth(NetConfigDeviceGeneric):
         exec_cmd("ip addr flush %s" % config["name"])
         exec_cmd("ethtool -A %s rx off tx off" % config["name"], die_on_err=False, log_outputs=False)
 
+class NetConfigDeviceLoopback(NetConfigDeviceGeneric):
+    def configure(self):
+        config = self._dev_config
+
 class NetConfigDeviceBond(NetConfigDeviceGeneric):
     _modulename = "bonding"
     _moduleparams = "max_bonds=0"
@@ -459,7 +463,8 @@ type_class_mapping = {
     "team": NetConfigDeviceTeam,
     "ovs_bridge": NetConfigDeviceOvsBridge,
     "veth": NetConfigDeviceVEth,
-    "vti": NetConfigDeviceVti
+    "vti": NetConfigDeviceVti,
+    "lo": NetConfigDeviceLoopback
 }
 
 def NetConfigDevice(dev_config, if_manager):

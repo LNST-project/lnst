@@ -64,9 +64,20 @@ class RecipeParser(XmlParser):
         interfaces_tag = machine_tag.find("interfaces")
         if interfaces_tag is not None and len(interfaces_tag) > 0:
             machine["interfaces"] = XmlCollection(interfaces_tag)
+
+            lo_netns = []
             for interface_tag in interfaces_tag:
-                interface = self._process_interface(interface_tag)
-                machine["interfaces"].extend(interface)
+                interfaces = self._process_interface(interface_tag)
+
+                for interface in interfaces:
+                    if interface['type'] != 'lo':
+                        continue
+                    elif interface['netns'] in lo_netns:
+                        msg = "Only one loopback device per netns is allowed."
+                        raise RecipeError(msg, interface_tag)
+                    else:
+                        lo_netns.append(interface['netns'])
+                machine["interfaces"].extend(interfaces)
 
         return machine
 
