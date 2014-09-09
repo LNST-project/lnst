@@ -258,7 +258,13 @@ class Machine(object):
         if command["type"] == "wait":
             logging.debug("Get remaining time of bg process with bg_id == %s"
                               % command["proc_id"])
-            remaining_time = self._rpc_call("get_remaining_time", command["proc_id"])
+            if command["netns"] != None:
+                remaining_time = self._rpc_call_to_netns(command["netns"],
+                                                         "get_remaining_time",
+                                                         command["proc_id"])
+            else:
+                remaining_time = self._rpc_call("get_remaining_time",
+                                                command["proc_id"])
             logging.debug("Setting timeout to %d", remaining_time)
             if remaining_time > 0:
                 signal.alarm(remaining_time)
