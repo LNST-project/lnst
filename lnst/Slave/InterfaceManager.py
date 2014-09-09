@@ -223,6 +223,8 @@ class InterfaceManager(object):
             return self._assign_name_generic(prefix)
         elif dev_type == "veth":
             return self._assign_name_pair("veth")
+        elif dev_type == "vti":
+            return self._assign_name_generic("vti")
         else:
             return self._assign_name_generic("dev")
 

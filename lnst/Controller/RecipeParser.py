@@ -141,6 +141,11 @@ class RecipeParser(XmlParser):
             opts = self._proces_options(opts_tag)
             if len(opts) > 0:
                 iface["options"] = opts
+        elif iface["type"] in ["vti"]:
+            # interface options
+            opts_tag = iface_tag.find("options")
+            opts = self._proces_options(opts_tag)
+            iface["options"] = opts
         elif iface["type"] in ["vlan"]:
             # real_dev of the VLAN interface
             slaves_tag = iface_tag.find("slaves")

@@ -136,6 +136,7 @@
                             <ref name="team"/>
                             <ref name="ovs_bridge"/>
                             <ref name="veth_pair"/>
+                            <ref name="vti"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -360,6 +361,24 @@
                 <optional>
                     <ref name="addresses"/>
                 </optional>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="vti">
+        <element name="vti">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="netns"/>
+            </optional>
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <zeroOrMore>
+                    <ref name="options"/>
+                </zeroOrMore>
             </interleave>
         </element>
     </define>

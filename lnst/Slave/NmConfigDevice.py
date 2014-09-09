@@ -811,6 +811,12 @@ class NmConfigDeviceVEth(NmConfigDeviceGeneric):
     def is_nm_managed(cls, dev_config, if_manager):
         return False
 
+class NmConfigDeviceVti(NmConfigDeviceGeneric):
+    #Not supported by NetworkManager
+    @classmethod
+    def is_nm_managed(cls, dev_config, if_manager):
+        return False
+
 type_class_mapping = {
     "eth": NmConfigDeviceEth,
     "bond": NmConfigDeviceBond,
@@ -819,7 +825,8 @@ type_class_mapping = {
     "vlan": NmConfigDeviceVlan,
     "team": NmConfigDeviceTeam,
     "ovs_bridge": NmConfigDeviceOvsBridge,
-    "veth": NmConfigDeviceVEth
+    "veth": NmConfigDeviceVEth,
+   "vti": NmConfigDeviceVti
 }
 
 def is_nm_managed(dev_config, if_manager):
