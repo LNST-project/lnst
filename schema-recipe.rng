@@ -578,10 +578,6 @@
     <define name="signal_command">
         <attribute name="host"/>
         <attribute name="bg_id"/>
-
-        <optional>
-            <attribute name="netns"/>
-        </optional>
     </define>
 
     <define name="ctl_wait">

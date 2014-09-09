@@ -71,6 +71,7 @@ class Machine(object):
 
         self._interfaces = []
         self._namespaces = []
+        self._bg_cmds = {}
 
     def _add_interface(self, if_id, if_type, cls):
         if if_id != None:
@@ -246,6 +247,13 @@ class Machine(object):
         """ Run a command on the machine """
 
         prev_handler = signal.signal(signal.SIGALRM, self._timeout_handler)
+
+        if 'bg_id' in command:
+            self._bg_cmds[command['bg_id']] = command
+        if command["type"] in ["wait", "intr", "kill"]:
+            bg_cmd = self._bg_cmds[command["proc_id"]]
+            if bg_cmd["netns"] != None:
+                command["netns"] = bg_cmd["netns"]
 
         if command["type"] == "wait":
             logging.debug("Get remaining time of bg process with bg_id == %s"

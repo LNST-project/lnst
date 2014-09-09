@@ -396,4 +396,5 @@ class RecipeParser(XmlParser):
         cmd["type"] = cmd_tag.tag
         cmd["host"] = self._get_attribute(cmd_tag, "host")
         cmd["bg_id"] = self._get_attribute(cmd_tag, "bg_id")
+        cmd["netns"] = None
         return cmd
