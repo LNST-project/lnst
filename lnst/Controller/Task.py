@@ -100,7 +100,7 @@ class HostAPI(object):
 
         self._bg_id_seq = 0
 
-    def config(self, option, value, persistent=False):
+    def config(self, option, value, persistent=False, netns=None):
         """
             Configure an option in /sys or /proc on the host.
 
@@ -110,6 +110,8 @@ class HostAPI(object):
             :type value: string
             :param persistent: A flag.
             :type persistent: bool
+            :param netns: LNST created namespace to configure.
+            :type netns: string
 
             :return: Command result.
             :rtype: dict
@@ -141,6 +143,7 @@ class HostAPI(object):
         """
         cmd = {"host": str(self._id)}
         bg_id = None
+        cmd["netns"] = None
 
         for arg, argval in kwargs.iteritems():
             if arg == "bg" and argval == True:
@@ -167,6 +170,8 @@ class HostAPI(object):
                     raise TaskError(msg)
             elif arg == "desc":
                 cmd["desc"] = argval
+            elif arg == "netns":
+                cmd["netns"] = argval
             else:
                 msg = "Argument '%s' not recognised by the run() method." % arg
                 raise TaskError(msg)
@@ -182,7 +187,7 @@ class HostAPI(object):
             raise TaskError("Unable to run '%s'." % str(what))
 
         cmd_res = self._ctl._run_command(cmd)
-        return ProcessAPI(self._ctl, self._id, cmd_res, bg_id)
+        return ProcessAPI(self._ctl, self._id, cmd_res, bg_id, cmd["netns"])
 
     def get_devname(self, interface_id):
         """
@@ -282,11 +287,12 @@ class ModuleAPI(object):
 class ProcessAPI(object):
     """ An API class representing either a running or finished process. """
 
-    def __init__(self, ctl, h_id, cmd_res, bg_id):
+    def __init__(self, ctl, h_id, cmd_res, bg_id, netns):
         self._ctl = ctl
         self._host = h_id
         self._cmd_res = cmd_res
         self._bg_id = bg_id
+        self._netns = netns
 
     def passed(self):
         """
@@ -311,7 +317,8 @@ class ProcessAPI(object):
         if self._bg_id:
             cmd = {"host": self._host,
                    "type": "wait",
-                   "proc_id": self._bg_id}
+                   "proc_id": self._bg_id,
+                   "netns": self._netns}
             self._res = self._ctl._run_command(cmd)
 
     def intr(self):
@@ -319,7 +326,8 @@ class ProcessAPI(object):
         if self._bg_id:
             cmd = {"host": self._host,
                    "type": "intr",
-                   "proc_id": self._bg_id}
+                   "proc_id": self._bg_id,
+                   "netns": self._netns}
             self._res = self._ctl._run_command(cmd)
 
     def kill(self):
@@ -333,7 +341,8 @@ class ProcessAPI(object):
         if self._bg_id:
             cmd = {"host": self._host,
                    "type": "kill",
-                   "proc_id": self._bg_id}
+                   "proc_id": self._bg_id,
+                   "netns": self._netns}
             self._res = self._ctl._run_command(cmd)
 
 class ValueAPI(object):
