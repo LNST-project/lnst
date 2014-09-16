@@ -28,6 +28,9 @@ class IcmpPing(TestGeneric):
         iface = self.get_opt("iface")
         if iface:
             cmd += " -I %s" % iface
+        size = self.get_opt("size")
+        if size:
+            cmd += " -s %s" % size
         return cmd
 
     def run(self):
