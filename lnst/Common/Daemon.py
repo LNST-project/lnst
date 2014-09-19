@@ -64,9 +64,31 @@ class Daemon:
             pid = os.fork()
             if pid > 0:
                 sys.exit(0)
+        except OSError as e:
+            logging.error("fork failed: %d (%s)\n" % (e.errno, e.strerror))
+            sys.exit(1)
+
+        os.setsid()
+
+        # do the second fork
+        try:
+            pid = os.fork()
+            if pid > 0:
+               sys.exit(0)
             pid = os.getpid()
             self._write_pid(pid)
             logging.info("deamonized with pid %d" % pid)
         except OSError as e:
             logging.error("fork failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
+
+        # redirect the file descs
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        si = file("/dev/null", 'r')
+        so = file("/dev/null", 'a+')
+        se = file("/dev/null", 'a+', 0)
+        os.dup2(si.fileno(), sys.stdin.fileno())
+        os.dup2(so.fileno(), sys.stdout.fileno())
+        os.dup2(se.fileno(), sys.stderr.fileno())
