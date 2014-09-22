@@ -90,6 +90,7 @@ def get_recipe_result(args, file_path, res_serializer, packet_capture, log_ctl,
                       reduce_sync):
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
+    recipe_head_log_entry(file_path)
 
     retval = RETVAL_PASS
 
@@ -242,7 +243,6 @@ def main():
             for f in all_files:
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
-                    recipe_head_log_entry(recipe_file)
                     fp, res, rv = get_recipe_result(action, recipe_file,
                                                     res_serializer,
                                                     packet_capture,
@@ -251,7 +251,6 @@ def main():
                                                     overriden_aliases,
                                                     reduce_sync)
         else:
-            recipe_head_log_entry(recipe_path)
             fp, res, rv = get_recipe_result(action, recipe_path,
                                             res_serializer,
                                             packet_capture,
