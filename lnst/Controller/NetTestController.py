@@ -19,6 +19,7 @@ import cPickle
 import tempfile
 import imp
 import copy
+import sys
 from time import sleep
 from xmlrpclib import Binary
 from lnst.Common.NetUtils import MacPool
@@ -661,7 +662,9 @@ class NetTestController:
 
         task_path = task["python"]
         name = os.path.basename(task_path.abs_path()).split(".")[0]
+        sys.path.append(os.path.dirname(task_path.resolve()))
         module = imp.load_source(name, task_path.resolve())
+        sys.path.remove(os.path.dirname(task_path.resolve()))
 
         #restore resource table
         self._resource_table = res_table_bkp
