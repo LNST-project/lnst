@@ -119,6 +119,15 @@ class SlaveMethods:
 
         return devices
 
+    def get_devices(self):
+        self._if_manager.rescan_devices()
+        devices = self._if_manager.get_devices()
+        result = {}
+        for device in devices:
+            if device._ifi_type == 1 and device._state == 'DOWN':
+                result[device._if_index] = {'name' : device._name, 'hwaddr' : device._hwaddr}
+        return result
+
     def get_devices_by_devname(self, devname):
         name_scan = self._if_manager.get_devices()
         netdevs = []

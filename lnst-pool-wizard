@@ -1,0 +1,66 @@
+#! /usr/bin/env python
+"""
+Machine pool wizard
+
+Copyright 2014 Red Hat, Inc.
+Licensed under the GNU General Public License, version 2 as
+published by the Free Software Foundation; see COPYING for details.
+"""
+
+__author__ = """
+jprochaz@redhat.com (Jiri Prochazka)
+"""
+from lnst.Controller.Wizard import Wizard
+import sys
+import getopt
+
+RETVAL_PASS = 0
+RETVAL_ERR = 1
+
+def help(retval = 0):
+    print "Usage:\n"\
+          " lnst-pool-wizard [mode] [hostname[:port]]\n"\
+          "\n"\
+          "Modes:\n"\
+          " -h, --help                display this help text and exit\n"\
+          " -i, --interactive         start wizard in interactive mode (this "\
+                                      "is default mode)\n"\
+          " -n, --noninteractive      start wizard in noninteractive mode\n"\
+          "Examples:\n"\
+          " lnst-pool-wizard --interactive\n"\
+          " lnst-pool-wizard --noninteractive 192.168.122.2\n"\
+          " lnst-pool-wizard -n 192.168.122.2:8888 192.168.122.3:9999 192.168.122.4\n"
+    sys.exit(retval)
+
+
+def main():
+    try:
+        opts, args = getopt.getopt(
+        sys.argv[1:],
+        "hin",
+        ["help", "interactive", "noninteractive"]
+        )
+    except getopt.GetoptError as err:
+        print str(err)
+        help(RETVAL_ERR)
+    wizard = Wizard()
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            help()
+        elif opt in ("-i", "--interactive"):
+            wizard.interactive()
+            sys.exit(RETVAL_PASS)
+        elif opt in ("-n", "--noninteractive"):
+            if not args:
+                print "No hostname entered!"
+                return RETVAL_ERR
+            wizard.noninteractive(args)
+            sys.exit(RETVAL_PASS)
+        else:
+            help(RET_ERR)
+    wizard.interactive()
+    sys.exit(RETVAL_PASS)
+
+
+if __name__ == "__main__":
+    main()
