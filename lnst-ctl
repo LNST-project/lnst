@@ -232,6 +232,9 @@ def main():
 
     retval = RETVAL_PASS
     res_serializer = NetTestResultSerializer()
+    if recipes == []:
+        logging.error("No recipe specified!")
+        usage(RETVAL_ERR)
     for recipe_path in recipes:
         if os.path.isdir(recipe_path):
             all_files = []
