@@ -223,6 +223,7 @@ class Machine(object):
 
                 self.del_namespaces()
 
+            self.restore_nm_option()
             self._rpc_call("bye")
         except:
             #cleanup is only meaningful on dynamic interfaces, and should
@@ -234,7 +235,6 @@ class Machine(object):
                 iface.cleanup()
             raise
         finally:
-            self.restore_nm_option()
             self._msg_dispatcher.disconnect_slave(self.get_id())
 
             self._configured = False
@@ -629,7 +629,7 @@ class Interface(object):
         self.down()
 
     def cleanup(self):
-        pass
+        self._machine._rpc_call("unmap_if", self._id)
 
     def configure(self):
         if self._configured:
@@ -657,7 +657,8 @@ class Interface(object):
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns,
                                          "deconfigure_interface", self.get_id())
-            self._machine._rpc_call_to("return_if_netns", self.get_id())
+            self._machine._rpc_call_to_netns(self._netns,
+                                         "return_if_netns", self.get_id())
         else:
             self._machine._rpc_call("deconfigure_interface", self.get_id())
         self._configured = False
@@ -687,6 +688,9 @@ class LoopbackInterface(Interface):
         super(LoopbackInterface, self).__init__(machine, if_id, if_type)
 
     def initialize(self):
+        pass
+
+    def cleanup(self):
         pass
 
     def configure(self):
@@ -735,8 +739,11 @@ class LoopbackInterface(Interface):
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns,
                                          "deconfigure_interface", self.get_id())
+            self._machine._rpc_call_to_netns(self._netns,
+                                         "unmap_if", self.get_id())
         else:
             self._machine._rpc_call("deconfigure_interface", self.get_id())
+            self._machine._rpc_call("unmap_if", self.get_id())
         self._configured = False
 
 class VirtualInterface(Interface):
@@ -815,6 +822,7 @@ class VirtualInterface(Interface):
         super(VirtualInterface, self).initialize()
 
     def cleanup(self):
+        self._machine._rpc_call("unmap_if", self._id)
         domain_ctl = self._machine.get_domain_ctl()
         domain_ctl.detach_interface(self._orig_hwaddr)
 
@@ -833,6 +841,9 @@ class SoftInterface(Interface):
         super(SoftInterface, self).__init__(machine, if_id, if_type)
 
     def initialize(self):
+        pass
+
+    def cleanup(self):
         pass
 
     def configure(self):
@@ -879,8 +890,11 @@ class SoftInterface(Interface):
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns,
                                          "deconfigure_interface", self.get_id())
+            self._machine._rpc_call_to_netns(self._netns,
+                                         "unmap_if", self.get_id())
         else:
             self._machine._rpc_call("deconfigure_interface", self.get_id())
+            self._machine._rpc_call("unmap_if", self.get_id())
         self._configured = False
 
 class UnusedInterface(Interface):
