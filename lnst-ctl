@@ -49,8 +49,9 @@ def usage(retval=0):
               "network communication during the test"
     print "  -r, --reduce-sync               reduces resource synchronization "\
               "for python tasks, see documentation"
-    print "  -s, --xslt-url=URL              URL to a XSLT document that the "\
-              "result xml will reference, only usefull when -x is used as well"
+    print "  -s, --xslt-url=URL              URL to a XSLT document that will "\
+              "be used when transforming the xml result file, only useful "\
+              "when -t is used as well"
     print "  -t, --html=FILE                 generate a formatted result html"
     print "  -x, --result=FILE               file to write xml_result"
     sys.exit(retval)
