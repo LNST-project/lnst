@@ -36,9 +36,9 @@ def usage(retval=0):
     print "ACTION = [ run | config_only | deconfigure | match_setup ]"
     print ""
     print "OPTIONS"
-    print "  -a, --define-alias name=value   define top-level alias"
     print "  -A, --override-alias name=value define top-level alias that " \
               "will override any other definitions in the recipe"
+    print "  -a, --define-alias name=value   define top-level alias"
     print "  -c, --config=FILE               load additional config file"
     print "  -d, --debug                     emit debugging messages"
     print "  -h, --help                      print this message"
@@ -47,12 +47,12 @@ def usage(retval=0):
               "machines in the pool"
     print "  -p, --packet-capture            capture and log all ongoing " \
               "network communication during the test"
-    print "  -x, --result=FILE               file to write xml_result"
-    print "  -t, --html=FILE                 generate a formatted result html"
-    print "  -s, --xslt-url=URL              URL to a XSLT document that the "\
-              "result xml will reference, only usefull when -x is used as well"
     print "  -r, --reduce-sync               reduces resource synchronization "\
               "for python tasks, see documentation"
+    print "  -s, --xslt-url=URL              URL to a XSLT document that the "\
+              "result xml will reference, only usefull when -x is used as well"
+    print "  -t, --html=FILE                 generate a formatted result html"
+    print "  -x, --result=FILE               file to write xml_result"
     sys.exit(retval)
 
 def store_alias(alias_def, aliases_dict):
@@ -127,11 +127,21 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "dhrc:x:t:s:poma:A:",
-            ["debug", "help", "config", "result=",
-             "packet-capture", "disable-pool-checks", "no-colours",
-             "define_alias", "override_alias", "reduce-sync", "xslt-url",
-             "html"]
+            "A:a:c:dhmoprs:t:x:",
+            [
+             "override_alias",
+             "define_alias",
+             "config",
+             "debug",
+             "help",
+             "no-colours",
+             "disable-pool-checks",
+             "packet-capture",
+             "reduce-sync",
+             "xslt-url",
+             "html"
+             "result=",
+            ]
         )
     except getopt.GetoptError as err:
         print str(err)
