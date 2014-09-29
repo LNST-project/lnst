@@ -110,7 +110,7 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
     if not res["passed"] and retval < RETVAL_FAIL:
         retval = RETVAL_FAIL
 
-    return (file_path, res, retval)
+    return retval
 
 def recipe_head_log_entry(filename):
     head_str = "\nProcessing recipe file \"%s\"\n" % filename
@@ -237,13 +237,11 @@ def main():
         NetTestController.remove_saved_machine_config()
         return 0
 
-    summary = []
-
-    retval = RETVAL_PASS
-    res_serializer = NetTestResultSerializer()
     if recipes == []:
         logging.error("No recipe specified!")
         usage(RETVAL_ERR)
+
+    recipe_files = []
     for recipe_path in recipes:
         if os.path.isdir(recipe_path):
             all_files = []
@@ -255,21 +253,17 @@ def main():
             for f in all_files:
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
-                    fp, res, rv = get_recipe_result(action, recipe_file,
-                                                    log_ctl, res_serializer,
-                                                    pool_checks, packet_capture,
-                                                    defined_aliases,
-                                                    overriden_aliases,
-                                                    reduce_sync)
+                    recipe_files.append(recipe_file)
         else:
-            fp, res, rv = get_recipe_result(action, recipe_path,
-                                            log_ctl, res_serializer,
-                                            pool_checks, packet_capture,
-                                            defined_aliases,
-                                            overriden_aliases,
-                                            reduce_sync)
+            recipe_files.append(recipe_path)
 
-        summary.append((fp, res))
+    retval = RETVAL_PASS
+    res_serializer = NetTestResultSerializer()
+    for recipe_file in recipe_files:
+        rv = get_recipe_result(action, recipe_file, log_ctl, res_serializer,
+                               pool_checks, packet_capture,
+                               defined_aliases, overriden_aliases,
+                               reduce_sync)
         if rv > retval:
             retval = rv
 
