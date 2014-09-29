@@ -69,17 +69,7 @@ def store_alias(alias_def, aliases_dict):
 
     aliases_dict[name] = value
 
-def process_recipe(action, file_path, log_ctl, res_serializer,
-                   pool_checks, packet_capture,
-                   defined_aliases, overriden_aliases,
-                   reduce_sync):
-    nettestctl = NetTestController(file_path, log_ctl,
-                                   res_serializer=res_serializer,
-                                   pool_checks=pool_checks,
-                                   packet_capture=packet_capture,
-                                   defined_aliases=defined_aliases,
-                                   overriden_aliases=overriden_aliases,
-                                   reduce_sync=reduce_sync)
+def exec_action(action, nettestctl):
     if action == "run":
         return nettestctl.run_recipe()
     elif action == "config_only":
@@ -97,12 +87,16 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
 
     retval = RETVAL_PASS
 
+    nettestctl = NetTestController(file_path, log_ctl,
+                                   res_serializer=res_serializer,
+                                   pool_checks=pool_checks,
+                                   packet_capture=packet_capture,
+                                   defined_aliases=defined_aliases,
+                                   overriden_aliases=overriden_aliases,
+                                   reduce_sync=reduce_sync)
     res = {}
     try:
-        res = process_recipe(action, file_path, log_ctl, res_serializer,
-                             pool_checks, packet_capture,
-                             defined_aliases, overriden_aliases,
-                             reduce_sync):
+        res = exec_action(action, nettestctl)
     except Exception as err:
         log_exc_traceback()
         logging.error(err)
