@@ -69,9 +69,10 @@ def store_alias(alias_def, aliases_dict):
 
     aliases_dict[name] = value
 
-def process_recipe(action, file_path, res_serializer,
-                   packet_capture, log_ctl, pool_checks,
-                   defined_aliases, overriden_aliases, reduce_sync):
+def process_recipe(action, file_path, log_ctl, res_serializer,
+                   pool_checks, packet_capture,
+                   defined_aliases, overriden_aliases,
+                   reduce_sync):
     nettestctl = NetTestController(file_path, log_ctl,
                                    res_serializer=res_serializer,
                                    pool_checks=pool_checks,
@@ -85,8 +86,9 @@ def process_recipe(action, file_path, res_serializer,
     elif action == "match_setup":
         return nettestctl.match_setup()
 
-def get_recipe_result(args, file_path, res_serializer, packet_capture, log_ctl,
-                      pool_checks, defined_aliases, overriden_aliases,
+def get_recipe_result(action, file_path, log_ctl, res_serializer,
+                      pool_checks, packet_capture,
+                      defined_aliases, overriden_aliases,
                       reduce_sync):
     res_serializer.add_recipe(file_path)
     log_ctl.set_recipe(file_path)
@@ -96,9 +98,10 @@ def get_recipe_result(args, file_path, res_serializer, packet_capture, log_ctl,
 
     res = {}
     try:
-        res = process_recipe(args, file_path, res_serializer,
-                             packet_capture, log_ctl, pool_checks,
-                             defined_aliases, overriden_aliases, reduce_sync)
+        res = process_recipe(action, file_path, log_ctl, res_serializer,
+                             pool_checks, packet_capture,
+                             defined_aliases, overriden_aliases,
+                             reduce_sync):
     except Exception as err:
         log_exc_traceback()
         logging.error(err)
@@ -259,18 +262,17 @@ def main():
                 recipe_file = os.path.join(recipe_path, f)
                 if re.match(r'^.*\.xml$', recipe_file):
                     fp, res, rv = get_recipe_result(action, recipe_file,
-                                                    res_serializer,
-                                                    packet_capture,
-                                                    log_ctl, pool_checks,
+                                                    log_ctl, res_serializer,
+                                                    pool_checks, packet_capture,
                                                     defined_aliases,
                                                     overriden_aliases,
                                                     reduce_sync)
         else:
             fp, res, rv = get_recipe_result(action, recipe_path,
-                                            res_serializer,
-                                            packet_capture,
-                                            log_ctl, pool_checks,
-                                            defined_aliases, overriden_aliases,
+                                            log_ctl, res_serializer,
+                                            pool_checks, packet_capture,
+                                            defined_aliases,
+                                            overriden_aliases,
                                             reduce_sync)
 
         summary.append((fp, res))
