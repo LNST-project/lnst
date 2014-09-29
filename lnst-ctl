@@ -76,11 +76,12 @@ def process_recipe(action, file_path, log_ctl, res_serializer,
     nettestctl = NetTestController(file_path, log_ctl,
                                    res_serializer=res_serializer,
                                    pool_checks=pool_checks,
+                                   packet_capture=packet_capture,
                                    defined_aliases=defined_aliases,
                                    overriden_aliases=overriden_aliases,
                                    reduce_sync=reduce_sync)
     if action == "run":
-        return nettestctl.run_recipe(packet_capture)
+        return nettestctl.run_recipe()
     elif action == "config_only":
         return nettestctl.config_only_recipe()
     elif action == "match_setup":

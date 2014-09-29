@@ -51,6 +51,7 @@ def ignore_event(**kwarg):
 class NetTestController:
     def __init__(self, recipe_path, log_ctl,
                  res_serializer=None, pool_checks=True,
+                 packet_capture=False,
                  defined_aliases=None, overriden_aliases=None,
                  reduce_sync=False):
         self._res_serializer = res_serializer
@@ -58,6 +59,7 @@ class NetTestController:
         self._log_ctl = log_ctl
         self._recipe_path = recipe_path
         self._msg_dispatcher = MessageDispatcher(log_ctl)
+        self._packet_capture = packet_capture
         self._reduce_sync = reduce_sync
         self._parser = RecipeParser(recipe_path)
 
@@ -593,7 +595,7 @@ class NetTestController:
         self._cleanup_slaves(deconfigure=False)
         return {"passed": True}
 
-    def run_recipe(self, packet_capture=False):
+    def run_recipe(self):
         try:
             self._prepare_provisioning()
             self._prepare_tasks()
@@ -604,7 +606,7 @@ class NetTestController:
             self._cleanup_slaves()
             raise
 
-        if packet_capture:
+        if self._packet_capture:
             self._start_packet_capture()
 
         err = None
@@ -614,7 +616,7 @@ class NetTestController:
             logging.error("Recipe execution terminated by unexpected exception")
             raise
         finally:
-            if packet_capture:
+            if self._packet_capture:
                 self._stop_packet_capture()
                 self._gather_capture_files()
             self._cleanup_slaves()
