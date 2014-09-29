@@ -588,7 +588,6 @@ class NetTestController:
             self._cleanup_slaves()
             raise
 
-        sp = self._slave_pool
         self._save_machine_config()
 
         self._cleanup_slaves(deconfigure=False)
