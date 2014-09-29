@@ -47,6 +47,9 @@ class InterfaceManager(object):
         self._id_mapping[if_id] = if_index
         return
 
+    def unmap_if(self, if_id):
+        del self._id_mapping[if_id]
+
     def clear_if_mapping(self):
         self._id_mapping = {}
 

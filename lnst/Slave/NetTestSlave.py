@@ -119,6 +119,10 @@ class SlaveMethods:
 
         return devices
 
+    def unmap_if(self, if_id):
+        self._if_manager.unmap_if(if_id)
+        return True
+
     def get_devices(self):
         self._if_manager.rescan_devices()
         devices = self._if_manager.get_devices()
@@ -191,13 +195,6 @@ class SlaveMethods:
             hwaddr = dev1.get_hwaddr()
             self.set_if_netns(if_id1, config1["netns"])
 
-            msg = {"type": "command", "method_name": "map_if_by_hwaddr",
-                   "args": [if_id1, hwaddr]}
-            self._server_handler.send_data_to_netns(config1["netns"], msg)
-            result = self._slave_server.wait_for_result(config1["netns"])
-            if len(result["result"]) != 1:
-                raise Exception("Mapping failed.")
-
             msg = {"type": "command", "method_name": "configure_interface",
                    "args": [if_id1, config1]}
             self._server_handler.send_data_to_netns(config1["netns"], msg)
@@ -209,13 +206,6 @@ class SlaveMethods:
         if config2["netns"] != None:
             hwaddr = dev2.get_hwaddr()
             self.set_if_netns(if_id2, config2["netns"])
-
-            msg = {"type": "command", "method_name": "map_if_by_hwaddr",
-                   "args": [if_id2, hwaddr]}
-            self._server_handler.send_data_to_netns(config2["netns"], msg)
-            result = self._slave_server.wait_for_result(config2["netns"])
-            if len(result["result"]) != 1:
-                raise Exception("Mapping failed.")
 
             msg = {"type": "command", "method_name": "configure_interface",
                    "args": [if_id2, config2]}
@@ -544,6 +534,7 @@ class SlaveMethods:
                 self._server_handler.clear_netns_connections()
 
                 self._if_manager.reconnect_netlink()
+                self._if_manager.clear_if_mapping()
                 self._server_handler.add_connection('netlink',
                                             self._if_manager.get_nl_socket())
 
@@ -581,9 +572,14 @@ class SlaveMethods:
         device = self._if_manager.get_mapped_device(if_id)
         dev_name = device.get_name()
         device.set_netns(netns)
+        hwaddr = device.get_hwaddr()
 
         exec_cmd("ip link set %s netns %d" % (dev_name, netns_pid))
-        return True
+        msg = {"type": "command", "method_name": "map_if_by_hwaddr",
+               "args": [if_id, hwaddr]}
+        self._server_handler.send_data_to_netns(netns, msg)
+        result = self._slave_server.wait_for_result(netns)
+        return result
 
     def return_if_netns(self, if_id):
         device = self._if_manager.get_mapped_device(if_id)
@@ -591,6 +587,7 @@ class SlaveMethods:
             dev_name = device.get_name()
             ppid = os.getppid()
             exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
+            self._if_manager.unmap_if(if_id)
             return True
         else:
             netns = device.get_netns()
