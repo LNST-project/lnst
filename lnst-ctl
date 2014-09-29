@@ -172,7 +172,6 @@ def main():
             f.write(lnst_config.dump_config())
 
     debug = 0
-    recipe_path = None
     result_path = None
     html_result_path = None
     xslt_url = None
