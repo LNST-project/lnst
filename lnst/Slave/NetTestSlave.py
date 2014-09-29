@@ -371,6 +371,17 @@ class SlaveMethods:
     def machine_cleanup(self):
         logging.info("Performing machine cleanup.")
         self._command_context.cleanup()
+
+        devs = self._if_manager.get_mapped_devices()
+        for if_id, dev in devs.iteritems():
+            peer = dev.get_peer()
+            if peer == None:
+                dev.clear_configuration()
+            else:
+                peer_if_index = peer.get_if_index()
+                peer_id = self._if_manager.get_id_by_if_index(peer_if_index)
+                self.deconfigure_if_pair(if_id, peer_id)
+
         self._if_manager.deconfigure_all()
 
         for netns in self._net_namespaces.keys():

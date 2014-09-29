@@ -53,6 +53,12 @@ class InterfaceManager(object):
     def clear_if_mapping(self):
         self._id_mapping = {}
 
+    def get_id_by_if_index(self, if_index):
+        for if_id, index in self._id_mapping.iteritems():
+            if if_index == index:
+                return if_id
+        return None
+
     def reconnect_netlink(self):
         if self._nl_socket != None:
             self._nl_socket.close()
@@ -173,6 +179,9 @@ class InterfaceManager(object):
         device2.set_configuration(config2)
         device1.create()
 
+        device1.set_peer(device2)
+        device2.set_peer(device1)
+
         self._tmp_mapping[if_id1] = device1
         self._tmp_mapping[if_id2] = device2
         return name1, name2
@@ -248,6 +257,7 @@ class Device(object):
         self._master = {"primary": None, "other": []}
         self._slaves = []
         self._netns = None
+        self._peer = None
 
         self._if_manager = if_manager
 
@@ -331,6 +341,12 @@ class Device(object):
 
     def get_conf_dict(self):
         return self._conf_dict
+
+    def set_peer(self, dev):
+        self._peer = dev
+
+    def get_peer(self):
+        return self._peer
 
     def set_configuration(self, conf):
         self.clear_configuration()
