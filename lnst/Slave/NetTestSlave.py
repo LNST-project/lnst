@@ -99,10 +99,6 @@ class SlaveMethods:
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
-
-        for netns in self._net_namespaces.keys():
-            self.del_namespace(netns)
-        self._net_namespaces = {}
         return "bye"
 
     def kill_cmds(self):
