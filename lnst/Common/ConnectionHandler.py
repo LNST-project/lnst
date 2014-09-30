@@ -67,18 +67,22 @@ def recv_data(s):
 
 class ConnectionHandler(object):
     def __init__(self):
-        self._connections = {}
+        self._connections = []
+        self._connection_mapping = {}
 
     def check_connections(self):
-        return self.check_connections_by_id(self._connections.keys())
+        return self._check_connections(self._connections)
 
     def check_connections_by_id(self, connection_ids):
         connections = []
         for con_id in connection_ids:
-            connections.append(self._connections[con_id])
+            connections.append(self._connection_mapping[con_id])
+        return self._check_connections(connections)
+
+    def _check_connections(self, connections):
         requests = []
         try:
-            rl, wl, xl = select.select(connections, [], [], 0)
+            rl, wl, xl = select.select(connections, [], [])
         except select.error:
             return []
         for f in rl:
@@ -112,27 +116,34 @@ class ConnectionHandler(object):
         return requests
 
     def get_connection(self, id):
-        if id in self._connections:
-            return self._connections[id]
+        if id in self._connection_mapping:
+            return self._connection_mapping[id]
         else:
             return None
 
     def get_connection_id(self, connection):
-        for id in self._connections:
-            if self._connections[id] == connection:
+        for id in self._connection_mapping:
+            if self._connection_mapping[id] == connection:
                 return id
         return None
 
     def add_connection(self, id, connection):
-        if id not in self._connections:
-            self._connections[id] = connection
+        if id not in self._connection_mapping:
+            self._connections.append(connection)
+            self._connection_mapping[id] = connection
 
     def remove_connection(self, connection):
-        d = {}
-        for key, value in self._connections.iteritems():
-            if value != connection:
-                d[key] = value
-        self._connections = d
+        if connection in self._connections:
+            id = self.get_connection_id(connection)
+            self._connections.remove(connection)
+            del self._connection_mapping[id]
+
+    def remove_connection_by_id(self, id):
+        if id in self._connection_mapping:
+            connection = self._connection_mapping[id]
+            self._connections.remove(connection)
+            del self._connection_mapping[id]
 
     def clear_connections(self):
-        self._connections = {}
+        self._connections = []
+        self._connection_mapping = {}
