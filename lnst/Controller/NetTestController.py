@@ -836,11 +836,11 @@ class MessageDispatcher(ConnectionHandler):
     def wait_for_result(self, machine_id):
         wait = True
         while wait:
-            connected_slaves = self._connections.keys()
+            connected_slaves = self._connection_mapping.keys()
 
             messages = self.check_connections()
 
-            remaining_slaves = self._connections.keys()
+            remaining_slaves = self._connection_mapping.keys()
 
             for msg in messages:
                 if msg[1]["type"] == "result" and msg[0] == machine_id:
