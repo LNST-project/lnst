@@ -608,10 +608,10 @@ class SlaveMethods:
             device.set_netns(None)
             return True
 
-class ServerHandler(object):
+class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
-        self._connection_handler = ConnectionHandler()
-        self._netns_con_handler = ConnectionHandler()
+        super(ServerHandler, self).__init__()
+        self._netns_con_mapping = {}
         try:
             self._s_socket = socket.socket()
             self._s_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -621,16 +621,15 @@ class ServerHandler(object):
             logging.error(e[1])
             exit(1)
 
-        self._c_socket = None
         self._netns = None
+        self._c_socket = None
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
         self._c_socket = (self._c_socket, addr[0])
         logging.info("Recieved connection from %s" % self._c_socket[1])
 
-        self._connection_handler.add_connection(self._c_socket[1],
-                                                self._c_socket[0])
+        self.add_connection(self._c_socket[1], self._c_socket[0])
         return self._c_socket
 
     def get_ctl_sock(self):
@@ -644,8 +643,7 @@ class ServerHandler(object):
             self._c_socket.close()
             self._c_socket = None
         self._c_socket = sock
-        self._connection_handler.add_connection(self._c_socket[1],
-                                                self._c_socket[0])
+        self.add_connection(self._c_socket[1], self._c_socket[0])
 
     def close_s_sock(self):
         self._s_socket.close()
@@ -653,12 +651,11 @@ class ServerHandler(object):
 
     def close_c_sock(self):
         self._c_socket[0].close()
-        self._connection_handler.remove_connection(self._c_socket[0])
+        self.remove_connection(self._c_socket[0])
         self._c_socket = None
 
     def get_messages(self):
-        messages = self._connection_handler.check_connections()
-        messages += self._netns_con_handler.check_connections()
+        messages = self.check_connections()
 
         #push ctl messages to the end of message queue, this ensures that
         #update messages are handled first
@@ -672,18 +669,19 @@ class ServerHandler(object):
         messages = non_ctl_msgs + ctl_msgs
 
         addr = self._c_socket[1]
-        if self._connection_handler.get_connection(addr) == None:
+        if self.get_connection(addr) == None:
             logging.info("Lost controller connection.")
             self._c_socket = None
         return messages
 
     def get_messages_from_con(self, con_id):
-        if self._connection_handler.get_connection(con_id) != None:
-            return self._connection_handler.check_connections_by_id([con_id])
-        elif self._netns_con_handler.get_connection(con_id) != None:
-            return self._netns_con_handler.check_connections_by_id([con_id])
+        if con_id in self._connection_mapping:
+            connection = self._connection_mapping[con_id]
+        elif con_id in self._netns_con_mapping:
+            connection = self._netns_con_mapping[con_id]
         else:
             raise Exception("Unknown connection id '%s'." % con_id)
+        return self._check_connections([connection])
 
     def send_data_to_ctl(self, data):
         if self._c_socket != None:
@@ -696,39 +694,38 @@ class ServerHandler(object):
             return False
 
     def send_data_to_netns(self, netns, data):
-        netns_con = self._netns_con_handler.get_connection(netns)
-        if netns_con == None:
+        if netns not in self._netns_con_mapping:
             raise Exception("No such namespace!")
         else:
+            netns_con = self._netns_con_mapping[netns]
             return send_data(netns_con, data)
 
-    def add_connection(self, id, connection):
-        self._connection_handler.add_connection(id, connection)
-
-    def remove_connection(self, key):
-        connection = self._connection_handler.get_connection(key)
-        self._connection_handler.remove_connection(connection)
-
     def clear_connections(self):
-        self._connection_handler.clear_connections()
+        super(ServerHandler, self).clear_connections()
+        self._netns_con_mapping = {}
 
     def update_connections(self, connections):
         for key, connection in connections.iteritems():
-            self.remove_connection(key)
+            self.remove_connection_by_id(key)
             self.add_connection(key, connection)
 
     def set_netns(self, netns):
         self._netns = netns
 
     def add_netns(self, netns, connection):
-        self._netns_con_handler.add_connection(netns, connection)
+        self._connections.append(connection)
+        self._netns_con_mapping[netns] = connection
 
     def del_netns(self, netns):
-        connection = self._netns_con_handler.get_connection(netns)
-        self._netns_con_handler.remove_connection(connection)
+        if netns in self._netns_con_mapping:
+            connection = self._netns_con_mapping[netns]
+            self._connections.remove(connection)
+            del self._netns_con_mapping[netns]
 
     def clear_netns_connections(self):
-        self._netns_con_handler.clear_connections()
+        for netns, con in self._netns_con_mapping:
+            self._connections.remove(con)
+        self._netns_con_mapping = {}
 
 class NetTestSlave:
     def __init__(self, log_ctl, port = DefaultRPCPort):
