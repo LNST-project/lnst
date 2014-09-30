@@ -882,6 +882,8 @@ class SoftInterface(Interface):
             peer_if = self._machine.get_interface(self._peer)
 
             self._machine._rpc_call("deconfigure_if_pair", self._id, self._peer)
+            self._machine._rpc_call("unmap_if", self._id)
+            self._machine._rpc_call("unmap_if", self._peer)
 
             self._configured = False
             peer_if._configured = False
