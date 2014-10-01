@@ -28,6 +28,10 @@ class Icmp6Ping(TestGeneric):
         if interval:
             cmd += " -i %s" % interval
 
+        size = self.get_opt("size")
+        if size:
+            cmd += " -s %s" % size
+
         return cmd
 
     def run(self):
