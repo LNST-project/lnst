@@ -254,7 +254,7 @@ def NetTestCommandTest(command, resource_table):
     test_class = getattr(module, module_name)
     return test_class(command)
 
-class NetTestCommandGeneric:
+class NetTestCommandGeneric(object):
     def __init__(self, command):
         self._command = command
         self._result = None
@@ -374,13 +374,21 @@ class NetTestCommandGeneric:
         return exec_cmd("cd \"%s\" && %s" % (tools_path, cmd), *args, **kwargs)
 
 class NetTestCommandExec(NetTestCommandGeneric):
+    def __init__(self, command):
+        super(NetTestCommandExec, self).__init__(command)
+        self._save_output = "save_output" in command
+
     def run(self):
         try:
             if "from" in self._command:
-                self.exec_from(self._command["from"], self._command["command"])
+                stdout, stderr = self.exec_from(self._command["from"],
+                                                self._command["command"])
             else:
-                self.exec_cmd(self._command["command"])
-            self.set_pass()
+                stdout, stderr = self.exec_cmd(self._command["command"])
+            res_data = None
+            if self._save_output:
+                res_data = { "stdout": stdout, "stderr": stderr }
+            self.set_pass(res_data)
         except ExecCmdFail:
             if "bg_id" in self._command:
                 logging.info("Command probably intentionally killed. Passing.")
