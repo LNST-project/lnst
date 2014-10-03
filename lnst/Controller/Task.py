@@ -172,6 +172,8 @@ class HostAPI(object):
                 cmd["desc"] = argval
             elif arg == "netns":
                 cmd["netns"] = argval
+            elif arg == "save_output":
+                cmd["save_output"] = argval
             else:
                 msg = "Argument '%s' not recognised by the run() method." % arg
                 raise TaskError(msg)
