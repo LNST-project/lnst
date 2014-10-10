@@ -928,3 +928,6 @@ class UnusedInterface(Interface):
 
     def down(self):
         pass
+
+    def cleanup(self):
+        pass
