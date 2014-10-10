@@ -13,6 +13,7 @@ jpirko@redhat.com (Jiri Pirko)
 
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+from lnst.Controller.NetTestController import NetTestError
 
 class MessageDispatcherLite(ConnectionHandler):
     def __init__(self):
