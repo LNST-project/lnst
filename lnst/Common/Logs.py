@@ -102,6 +102,16 @@ class LoggingCtl:
     transmit_handler = None
 
     def __init__(self, debug=False, log_dir=None, log_subdir="", colours=True):
+        #clear any previously set handlers
+        logger = logging.getLogger('')
+        for i in list(logger.handlers):
+            logger.removeHandler(i)
+        for key, logger in logging.Logger.manager.loggerDict.iteritems():
+            if type(logger) != type(logging.Logger):
+                continue
+            for i in list(logger.handlers):
+                logger.removeHandler(i)
+
         self._origin_name = None
 
         if log_dir != None:
