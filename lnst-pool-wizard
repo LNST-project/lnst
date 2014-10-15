@@ -57,7 +57,7 @@ def main():
             wizard.noninteractive(args)
             sys.exit(RETVAL_PASS)
         else:
-            help(RET_ERR)
+            help(RETVAL_ERR)
     wizard.interactive()
     sys.exit(RETVAL_PASS)
 
