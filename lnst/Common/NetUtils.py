@@ -20,8 +20,12 @@ from pyroute2.netlink import NLM_F_REQUEST
 from pyroute2.netlink import NLM_F_DUMP
 from pyroute2.netlink import NLMSG_DONE
 from pyroute2.netlink import NLMSG_ERROR
-from pyroute2.netlink.iproute import RTM_GETLINK
-from pyroute2.netlink.iproute import RTM_NEWLINK
+try:
+    from pyroute2.netlink.iproute import RTM_GETLINK
+    from pyroute2.netlink.iproute import RTM_NEWLINK
+except ImportError:
+    from pyroute2.iproute import RTM_GETLINK
+    from pyroute2.iproute import RTM_NEWLINK
 from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
 
 def normalize_hwaddr(hwaddr):

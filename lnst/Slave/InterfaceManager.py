@@ -19,8 +19,12 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
 from pyroute2 import IPRSocket
-from pyroute2.netlink.iproute import RTM_NEWLINK
-from pyroute2.netlink.iproute import RTM_DELLINK
+try:
+    from pyroute2.netlink.iproute import RTM_NEWLINK
+    from pyroute2.netlink.iproute import RTM_DELLINK
+except ImportError:
+    from pyroute2.iproute import RTM_NEWLINK
+    from pyroute2.iproute import RTM_DELLINK
 
 class IfMgrError(Exception):
     pass
