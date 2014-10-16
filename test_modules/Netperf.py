@@ -23,6 +23,7 @@ class Netperf(TestGeneric):
             netperf_server = self.get_mopt("netperf_server", opt_type="addr")
             duration = self.get_opt("duration")
             port = self.get_opt("port")
+            testname = self.get_opt("testname")
             cmd = "netperf -H %s" % netperf_server
             if port is not None:
                 """
@@ -34,6 +35,16 @@ class Netperf(TestGeneric):
                 test will last this duration
                 """
                 cmd += " -l %s" % duration
+            if testname is not None:
+                """
+                test that will be performed
+                """
+                if testname != "TCP_STREAM" and testname != "UDP_STREAM":
+                    logging.warning("Only TCP_STREAM and UDP_STREAM tests are "\
+                    "now officialy supported by LNST. You can use other tests,"\
+                    " but test result may not be correct.")
+                cmd += " -t %s" % testname
+
             if netperf_opts is not None:
                 """
                 custom options for netperf
@@ -64,7 +75,12 @@ class Netperf(TestGeneric):
     def _parse_output(self, threshold, output):
         # pattern for throughput output
         pattern2 = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
-        r2 = re.search(pattern2, output.lower())
+        # pattern for udp throughput output
+        pattern3 = "\d+\s+\d+\s+\d+\.\d+\s+\d+\s+\d+\s+(\d+(\.\d+){0,1})"
+        if self.get_opt("testname") == "UDP_STREAM":
+            r2 = re.search(pattern3, output.lower())
+        else:
+            r2 = re.search(pattern2, output.lower())
         if r2 is None:
             """
             throughput was not found, end test with failure
