@@ -53,11 +53,16 @@ class NetTestResultSerializer:
     def __init__(self):
         self._results = []
 
-    def add_recipe(self, name):
+    def add_recipe(self, name, match_num):
         recipe_result = {"name": name,
                          "result": "FAIL",
-                         "tasks": []}
+                         "tasks": [],
+                         "pool_match": {},
+                         "match_num": match_num}
         self._results.append(recipe_result)
+
+    def set_recipe_pool_match(self, match):
+        self._results[-1]["pool_match"] = match
 
     def set_recipe_result(self, result):
         if result and result["passed"]:
@@ -78,7 +83,21 @@ class NetTestResultSerializer:
         output_pairs = []
 
         for recipe in self._results:
-            output_pairs.append((recipe["name"], recipe["result"]))
+            recipe_head = "%s match: %d" % (recipe["name"], recipe["match_num"])
+            output_pairs.append((recipe_head, recipe["result"]))
+
+            output_pairs.append((4*" " + "Pool match description:", ""))
+            match = recipe["pool_match"]
+            if "virtual" in match and match["virtual"]:
+                output_pairs.append((4*" " + "Setup is using virtual machines.",
+                                     ""))
+            for m_id, m in match["machines"].iteritems():
+                output_pairs.append((4*" " + "host \"%s\" uses \"%s\"" %\
+                                    (m_id, m["target"]), ""))
+                for if_id, pool_id in m["interfaces"].iteritems():
+                    output_pairs.append((6*" " + "interface \"%s\" "\
+                                                "matched to \"%s\"" %\
+                                                (if_id, pool_id), ""))
 
             if recipe["result"] == "FAIL" and \
                "err_msg" in recipe and recipe["err_msg"] != "":

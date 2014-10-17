@@ -22,6 +22,7 @@ from lnst.Common.Config import lnst_config
 from lnst.Common.Colours import load_presets_from_config
 from lnst.Common.Utils import mkdir_p
 from lnst.Controller.NetTestController import NetTestController, NetTestError
+from lnst.Controller.NetTestController import NoMatchError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
 
 RETVAL_PASS = 0
@@ -53,6 +54,8 @@ def usage(retval=0):
               "be used when transforming the xml result file, only useful "\
               "when -t is used as well"
     print "  -t, --html=FILE                 generate a formatted result html"
+    print "  -u, --multi-match               run each recipe with every "\
+              "pool match possible"
     print "  -x, --result=FILE               file to write xml_result"
     sys.exit(retval)
 
@@ -81,11 +84,7 @@ def exec_action(action, nettestctl):
 def get_recipe_result(action, file_path, log_ctl, res_serializer,
                       pool_checks, packet_capture,
                       defined_aliases, overriden_aliases,
-                      reduce_sync):
-    res_serializer.add_recipe(file_path)
-    log_ctl.set_recipe(file_path)
-    recipe_head_log_entry(file_path)
-
+                      reduce_sync, multi_match):
     retval = RETVAL_PASS
 
     nettestctl = NetTestController(file_path, log_ctl,
@@ -95,26 +94,53 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                                    defined_aliases=defined_aliases,
                                    overriden_aliases=overriden_aliases,
                                    reduce_sync=reduce_sync)
-    res = {}
-    try:
-        res = exec_action(action, nettestctl)
-    except Exception as err:
-        log_exc_traceback()
-        logging.error(err)
-        res["passed"] = False
-        res["err_msg"] = str(err)
-        retval = RETVAL_ERR
+    matches = 1
+    no_match = False
+    while True:
+        res = {}
+        try:
+            nettestctl.provision_machines()
+            log_ctl.set_recipe(file_path, expand="match_%d" % matches)
+            recipe_head_log_entry(file_path, matches)
+            nettestctl.print_match_description()
+            res_serializer.add_recipe(file_path, matches)
+            res = exec_action(action, nettestctl)
+        except NoMatchError as err:
+            no_match = True
+            if matches == 1:
+                res["passed"] = False
+                retval = RETVAL_ERR
+                raise err
+            else:
+                log_ctl.unset_recipe()
+                logging.warning("Match %d not possible." % matches)
+        except Exception as err:
+            no_match = True
+            log_exc_traceback()
+            logging.error(err)
+            res["passed"] = False
+            res["err_msg"] = str(err)
+            retval = RETVAL_ERR
 
-    res_serializer.set_recipe_result(res)
+        if no_match and matches > 1:
+            break
 
-    # The test failed, but don't override erro
-    if not res["passed"] and retval < RETVAL_FAIL:
-        retval = RETVAL_FAIL
+        res_serializer.set_recipe_pool_match(nettestctl.get_pool_match())
+        res_serializer.set_recipe_result(res)
+
+        # The test failed, but don't override erro
+        if not res["passed"] and retval < RETVAL_FAIL:
+            retval = RETVAL_FAIL
+
+        if not multi_match or no_match:
+            break
+        matches += 1
 
     return retval
 
-def recipe_head_log_entry(filename):
-    head_str = "\nProcessing recipe file \"%s\"\n" % filename
+def recipe_head_log_entry(filename, match_num=1):
+    head_str = "\nTrying recipe file \"%s\" match %d\n" % (filename,
+                                                           match_num)
     logging.info("-" * len(head_str.strip())
                  + head_str
                  + "-" * len(head_str.strip()))
@@ -126,7 +152,7 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "A:a:c:dhmoprs:t:x:",
+            "A:a:c:dhmoprs:t:ux:",
             [
              "override_alias",
              "define_alias",
@@ -138,7 +164,8 @@ def main():
              "packet-capture",
              "reduce-sync",
              "xslt-url",
-             "html"
+             "html",
+             "multi-match",
              "result=",
             ]
         )
@@ -178,6 +205,7 @@ def main():
     defined_aliases = {}
     overriden_aliases = {}
     reduce_sync = False
+    multi_match = False
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -203,6 +231,8 @@ def main():
             reduce_sync = True
         elif opt in ("-s", "--xslt-url"):
             xslt_url = arg
+        elif opt in ("-u", "--multi-match"):
+            multi_match = True
 
     if config_path is not None:
         if not os.path.isfile(config_path):
@@ -264,7 +294,7 @@ def main():
         rv = get_recipe_result(action, recipe_file, log_ctl, res_serializer,
                                pool_checks, packet_capture,
                                defined_aliases, overriden_aliases,
-                               reduce_sync)
+                               reduce_sync, multi_match)
         if rv > retval:
             retval = rv
 
