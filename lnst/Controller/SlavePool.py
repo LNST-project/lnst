@@ -45,9 +45,14 @@ class SlavePool:
         self._allow_virt &= check_process_running("libvirtd")
         self._pool_checks = pool_checks
 
+        self._mapper = SetupMapper()
+        self._mreqs = None
+
         logging.info("Checking machine pool availability.")
         for pool_dir in pool_dirs:
             self.add_dir(pool_dir)
+
+        self._mapper.set_pool(self._pool)
 
     def add_dir(self, pool_dir):
         logging.info("Processing pool dir '%s'" % pool_dir)
@@ -198,7 +203,12 @@ class SlavePool:
 
         return iface_spec
 
-    def provision_machines(self, mreqs, machines):
+    def set_machine_requirements(self, mreqs):
+        self._mreqs = mreqs
+        self._mapper.set_requirements(mreqs)
+        self._mapper.reset_match_state()
+
+    def provision_machines(self, machines):
         """
         This method will try to map a dictionary of machines'
         requirements to a pool of machines that is available to
@@ -211,13 +221,27 @@ class SlavePool:
         :rtype: dict
         """
 
-        mapper = SetupMapper()
-        self._map = mapper.map_setup(mreqs, self._pool)
 
-        if self._map == None:
+        mapper = self._mapper
+        res = mapper.match()
+
+        if not res and not mapper.get_virtual() and self._allow_virt:
+            logging.info("Match failed for normal machines, falling back "\
+                         "to matching virtual machines.")
+            mapper.set_virtual(self._allow_virt)
+            mapper.reset_match_state()
+            res = mapper.match()
+
+        if res:
+            self._map = mapper.get_mapping()
+        else:
+            self._map = {}
+
+        if self._map == {}:
             return False
 
         if self._map["virtual"]:
+            mreqs = self._mreqs
             for m_id in self._map["machines"]:
                 machines[m_id] = self._prepare_virtual_slave(m_id, mreqs[m_id])
         else:
@@ -229,18 +253,8 @@ class SlavePool:
     def is_setup_virtual(self):
         return self._map["virtual"]
 
-    def get_provisioner_id(self, m_id):
-        try:
-            return self._get_machine_mapping(m_id)
-        except KeyError:
-            return None
-
-    def get_provisioner(self, m_id):
-        try:
-            p_id = self._get_machine_mapping(m_id)
-            return self._pool[p_id]
-        except KeyError:
-            return None
+    def get_match(self):
+        return self._map
 
     def _get_machine_mapping(self, m_id):
         return self._map["machines"][m_id]["target"]
@@ -322,477 +336,231 @@ class SlavePool:
 class MapperError(Exception):
     pass
 
-class SetupMapper:
-    """
-    This class can be used for matching machine setups against
-    a pool of interconnected machines. SetupMapper will search
-    through the pool for suitable matches of the requested
-    setup and return the mapping between the two.
+class SetupMapper(object):
+    def __init__(self):
+        self._pool = {}
+        self._mreqs = {}
+        self._unmatched_req_machines = []
+        self._matched_pool_machines = []
+        self._machine_stack = []
+        self._net_label_mapping = {}
+        self._virtual_matching = False
 
-    Here we explain some terminology that is used consistently
-    through the whole class:
+    def set_requirements(self, mreqs):
+        self._mreqs = mreqs
 
-        nc = neighbour connection; a 3-tuple that describes connection
-             to an adjacent machine with the information which interface
-             is used.
+    def set_pool(self, pool):
+        self._pool = pool
 
-             (neighbour_id, network_id, iface_id)
+    def set_virtual(self, virt_value):
+        self._virtual_matching = virt_value
 
-        nc_list = list of neighbour connections; it is a building block
-                  of a topology
+        for m_id, m in self._mreqs.iteritems():
+            for if_id, interface in m["interfaces"].iteritems():
+                if "params" in interface:
+                    for name, val in interface["params"].iteritems():
+                        if name not in ["hwaddr", "driver"]:
+                            msg = "Dynamically created interfaces "\
+                                  "only support the 'hwaddr' and 'driver' "\
+                                  "option. '%s=%s' found on machine '%s' "\
+                                  "interface '%s'" % (name, val,
+                                                      m_id, if_id)
+                            raise MapperError(msg)
 
-        topology = dictionary of nc_lists; it is an analogy to a adjacency
-                   list -- represenation of a graph. It is modified so it's
-                   able to represent non-graph structures such as our
-                   topology
+    def get_virtual(self):
+        return self._virtual_matching
 
-        match = a correspondence between a machine, interface or a network
-                from template and from a pool. It's a 2-tuple.
+    def reset_match_state(self):
+        self._net_label_mapping = {}
+        self._machine_stack = []
+        self._unmatched_req_machines = self._mreqs.keys()
 
-                (template_machine, pool_machine)
-                (template_machines_iface, pool_machines_iface)
-                (template_network, pool_network)
-    """
-
-    _machine_map = None
-    _iface_map = None
-    _network_map = None
-
-    _template_machines = None
-    _pool_machines = None
-
-    @staticmethod
-    def _get_topology(machine_desc):
-        """
-        This function will generate an adjacenty list from machine
-        configuration dictionary. It can handle both machines and
-        templates.
-
-        :param machine_desc: dictionary of machines in the topology
-        :type machines_configs: dict
-
-        :return: Topology - neighbour connection list (adjacency list-like
-            data structure
-        :rtype: dict
-        """
-
-        networks = {}
-        for m_id, m_config in machine_desc.iteritems():
-            for dev_id, dev_info in m_config["interfaces"].iteritems():
-                net = dev_info["network"]
-                if not net in networks:
-                    networks[net] = []
-                networks[net].append((m_id, dev_id))
-
-        topology = {}
-        for m_id, m_config in machine_desc.iteritems():
-            topology[m_id] = []
-            for net_name, net in networks.iteritems():
-                devs_in_net = []
-                for dev_id, dev_info in m_config["interfaces"].iteritems():
-                    if dev_info["network"] == net_name:
-                        devs_in_net.append(dev_id)
-
-                net_in_use = False
-                for neighbour in net:
-                    n_m_id = neighbour[0]
-                    n_dev_id = neighbour[1]
-                    if n_m_id != m_id:
-                        net_in_use = True
-                        for dev_in_net in devs_in_net:
-                            nc = (n_m_id, net_name, dev_in_net)
-                            if not nc in topology[m_id]:
-                                topology[m_id].append(nc)
-
-                if not net_in_use:
-                    for dev_in_net in devs_in_net:
-                        nc = (None, net_name, dev_in_net)
-                        if not nc in topology[m_id]:
-                            topology[m_id].append(nc)
-
-        return topology
-
-    @staticmethod
-    def _is_match_valid(template_id, pool_id, matches):
-        for match in matches:
-            if (match[0] == template_id and match[1] != pool_id) or \
-               (match[0] != template_id and match[1] == pool_id):
-                return False
-
-        return True
-
-    def _is_machine_match_valid(self, template_id, pool_id):
-        """
-        Method for checking validity of a proposed match between
-        two machines.
-
-        :param template_id: machine id in template setup
-        :type template_id: string
-
-        :param pool_id: machine id in pool setup
-        :type pool_id: string
-
-        :return: True/False indicating the validity of this match
-        :rtype: Bool
-        """
-
-        if template_id == None and pool_id == None:
-            return True
-        if template_id == None or pool_id == None:
-            return False
-
-        template_machine = self._template_machines[template_id]
-        pool_machine = self._pool_machines[pool_id]
-
-        # check machine properties
-        for prop_name, prop_value in template_machine["params"].iteritems():
-            if prop_name not in pool_machine["params"] or\
-               pool_machine["params"][prop_name] != prop_value:
-                return False
-
-        # check number of devices
-        tm_ndevs = len(template_machine["interfaces"])
-        pm_ndevs = len(pool_machine["interfaces"])
-        if tm_ndevs > pm_ndevs:
-            return False
-
-        return self._is_match_valid(template_id, pool_id,
-                                    self._machine_map)
-
-    def _is_network_match_valid(self, template_id, pool_id):
-        """
-        Method for checking validity of a proposed match between
-        two network names.
-
-        :param template_id: network id in template setup
-        :type template_id: string
-
-        :param pool_id: network id in pool setup
-        :type pool_id: string
-
-        :return: True/False indicating the validity of this match
-        :rtype: Bool
-        """
-
-        return self._is_match_valid(template_id, pool_id,
-                                    self._network_map)
-
-    def _is_if_match_valid(self, tm_id, t_if_id, pm_id, pm_if_id):
-        """
-        Check if matching of one interface on another is valid.
-        This functions checks the parameters of those two interfaces,
-        such as type, mac address etc.
-
-        :param tm_id: template machine id
-        :type tm_id: string
-
-        :param tm_if_id: template machine's interface id
-        :type tm_if_id: string
-
-        :param pm_id: pool machine id
-        :type tm_id: string
-
-        :param pm_if_id: pool machine's interface id
-        :type pm_if_id: string
-
-        :return: True/False indicating the validity of this match
-        :rtype: Bool
-        """
-
-        t_if = self._template_machines[tm_id]["interfaces"][t_if_id]
-        p_if = self._pool_machines[pm_id]["interfaces"][pm_if_id]
-
-
-        for prop_name, prop_value in t_if["params"].iteritems():
-            if p_if["params"][prop_name] != prop_value:
-                return False
-
-        properties = ["type"]
-        for prop_name, prop_value in t_if.iteritems():
-            if prop_name in properties:
-                if p_if[prop_name] != prop_value:
-                    return False
-
-        return True
-
-    @staticmethod
-    def _get_node_with_most_neighbours(topology):
-        max_machine = None
-        max_len = -1
-        for machine, nc_list in topology.iteritems():
-            if len(nc_list) > max_len:
-                max_machine = machine
-                max_len = len(nc_list)
-
-        return max_machine
-
-    def _get_possible_matches(self, machine, pool_topology):
-        possible_matches = set(pool_topology.keys())
-        impossible_matches = set()
-
-        for match in self._machine_map:
-            if match[0] == machine and not match[1] in impossible_matches:
-                # in case the machine has already been matched,
-                # return the corresponding match as an only option
-                return set([match[1]])
+        self._unmatched_pool_machines = []
+        for p_id, p_machine in self._pool.iteritems():
+            if self._virtual_matching:
+                if "libvirt_domain" in p_machine["params"]:
+                    self._unmatched_pool_machines.append(p_id)
             else:
-                # in case the machine has been matched to a different
-                # one in pool, remove it from possible matches
-                impossible_matches.add(match[1])
+                self._unmatched_pool_machines.append(p_id)
 
-        return possible_matches - impossible_matches
+        if self._pool is not None or self._mreqs is not None:
+            self._push_machine_stack()
 
-    def _get_nc_matches(self, tm_id, tm_nc_list, pm_id, pm_nc_list):
-        """
-        Return all possible ways of matching list of neighbours of a template
-        machine on another list of neighbours of a pool machine. This function
-        also keeps in mind what matches already exist and avoids conflicts.
+    def match(self):
+        while len(self._machine_stack)>0:
+            stack_top = self._machine_stack[-1]
+            if self._virtual_matching and stack_top["virt_matched"]:
+                if stack_top["current_match"] != None:
+                    cur_match = stack_top["current_match"]
+                    self._unmatched_pool_machines.append(cur_match)
+                    stack_top["current_match"] = None
+                stack_top["virt_matched"] = False
 
-        :param tm_nc_list: short for template machine neighbour connection list
-        :type tm_nc_list: list
-
-        :param pm_nc_list: short for pool machine neighbour connection list
-        :type pm_nc_list: list
-
-        :return: List of all possible mapping updates that are result of a
-            successful matching between the machine's neighbour connections.
-        :rtype: list
-        """
-
-        mmap = self._machine_map
-        nmap = self._network_map
-        mapping_update = []
-
-        t_neigh, t_net, t_if = tm_nc_list[0]
-
-        # recursion stop condition
-        if len(tm_nc_list) == 1:
-            for nc in pm_nc_list:
-                p_neigh, p_net, p_if = nc
-                if self._is_machine_match_valid(t_neigh, p_neigh) and \
-                   self._is_network_match_valid(t_net, p_net) and \
-                   self._is_if_match_valid(tm_id, t_if, pm_id, p_if):
-                    mapping = self._get_mapping_update(tm_nc_list[0], nc)
-                    mapping_update.append(mapping)
-
-            return mapping_update
-
-        for nc in pm_nc_list:
-            p_neigh, p_net, p_if = nc
-            if self._is_machine_match_valid(t_neigh, p_neigh) and \
-               self._is_network_match_valid(t_net, p_net) and \
-               self._is_if_match_valid(tm_id, t_if, pm_id, p_if):
-                recently_added = self._get_mapping_update(tm_nc_list[0], nc)
-                self._save_nc_match(recently_added)
-
-                new_pm_nc_list = copy.deepcopy(pm_nc_list)
-                new_pm_nc_list.remove(nc)
-
-                possible_matches = self._get_nc_matches(tm_id, tm_nc_list[1:],
-                                                        pm_id, new_pm_nc_list)
-                self._revert_nc_match(recently_added)
-                for possible_match in possible_matches:
-                    mapping = (recently_added[0] + possible_match[0],
-                               recently_added[1] + possible_match[1],
-                               recently_added[2] + possible_match[2])
-                    mapping_update.append(mapping)
-
-        return mapping_update
-
-    def _get_mapping_update(self, template_nc, pool_nc):
-        i = [(template_nc[2], pool_nc[2])]
-
-        m = []
-        m_match = (template_nc[0], pool_nc[0])
-        if not m_match in self._machine_map:
-            m.append(m_match)
-
-        n = []
-        n_match = (template_nc[1], pool_nc[1])
-        if not n_match in self._network_map:
-            n.append(n_match)
-
-        return (i, m, n)
-
-    def _save_nc_match(self, nc_match):
-        if nc_match[1] != [(None, None)]:
-            self._machine_map |= set(nc_match[1])
-        self._network_map |= set(nc_match[2])
-
-    def _revert_nc_match(self, nc_match):
-        self._machine_map -= set(nc_match[1])
-        self._network_map -= set(nc_match[2])
-
-    def _format_map_dict(self, machine_map, network_map):
-        map_dict = {}
-
-        map_dict["machines"] = {}
-        for match in machine_map:
-            if_map = {}
-            for if_match in match[2]:
-                if_map[if_match[0]] = if_match[1]
-            map_dict["machines"][match[0]] = {"target": match[1],
-                                              "interfaces": if_map}
-
-        map_dict["networks"] = {}
-        for match in network_map:
-            map_dict["networks"][match[0]] = match[1]
-
-        return map_dict
-
-    def map_setup(self, template_machines, pool_machines):
-        """
-        Attempt to match template topology to pool topology.
-
-        :param template_topology: dictionary of machine templates to be matched
-            against the pool
-        :type template_topology: dict
-
-        :param pool_topology: dictionary o machine structures that will be used
-            as a pool of available machines
-        :type pool_topology: dict
-
-        :return: 2-tuple (machine_map, network_map). Machine map is a list of
-            3-tuples (template_machine_id, pool_machine_id, iface_map),
-            both iface_map and network_map are list of mappings between
-            matched equivalents in template and pool.
-        :rtype: tuple containing machine and network mappings
-        """
-
-        self._machine_map = set()
-        self._iface_map = {}
-        self._network_map = set()
-
-        self._template_machines = template_machines
-        self._pool_machines = pool_machines
-
-        template_topology = self._get_topology(template_machines)
-        pool_topology = self._get_topology(pool_machines)
-
-        if self._map_setup(template_topology, pool_topology):
-            machine_map = [(tm, pm, self._iface_map[tm]) \
-                            for tm, pm in self._machine_map]
-            network_map = list(self._network_map)
-            mmap = self._format_map_dict(machine_map, network_map)
-            mmap["virtual"] = False
-            return mmap
-        else:
-            logging.info("Match failed for normal machines, falling back "\
-                         "to matching virtual machines.")
-
-            for m_id, m in template_machines.iteritems():
-                for if_id, interface in m["interfaces"].iteritems():
-                    if "params" in interface:
-                        for name, val in interface["params"].iteritems():
-                            if name not in ["hwaddr", "driver"]:
-                                msg = "Dynamically created interfaces "\
-                                      "only support the 'hwaddr' and 'driver' "\
-                                      "option. '%s=%s' found on machine '%s' "\
-                                      "interface '%s'" % (name, val,
-                                                          m_id, if_id)
-                                raise MapperError(msg)
-
-            #filter machine pool to only contain virtual machines
-            virt_pool_machines = {}
-            for m_id, m in pool_machines.iteritems():
-                if "params" in m and "libvirt_domain" in m["params"]:
-                    virt_pool_machines[m_id] = m
-
-            if self._map_setup_virt(template_machines, virt_pool_machines):
-                machine_map = [(tm, pm, []) for tm, pm in self._machine_map]
-                mmap = self._format_map_dict(machine_map, [])
-                mmap["virtual"] = True
-                return mmap
-            else:
-                return None
-
-    def _map_setup(self, template_topology, pool_topology):
-
-        if len(template_topology) <= 0:
-            return True
-
-        mmap = self._machine_map
-        nmap = self._network_map
-
-        # by choosing to match the biggest nodes in the topology first,
-        # we optimize the amount of time it takes to find out that the
-        # topology cannot be matched (in most cases)
-        machine = self._get_node_with_most_neighbours(template_topology)
-
-        possible_matches = self._get_possible_matches(machine, pool_topology)
-        for possible_match in possible_matches:
-            if not self._is_match_valid(machine, possible_match, mmap):
-                continue
-
-            mmap.add((machine, possible_match))
-
-            template_nc_list = template_topology[machine]
-            pool_nc_list = pool_topology[possible_match]
-
-            nc_matches = self._get_nc_matches(machine, template_nc_list,
-                                                possible_match, pool_nc_list)
-            for nc_match in nc_matches:
-                self._save_nc_match(nc_match)
-                self._iface_map[machine] = nc_match[0]
-
-                new_pool = copy.deepcopy(pool_topology)
-                del new_pool[possible_match]
-
-                new_template = copy.deepcopy(template_topology)
-                del new_template[machine]
-
-                if not self._map_setup(new_template, new_pool):
-                    self._revert_nc_match(nc_match)
-                    del self._iface_map[machine]
+            if self._if_match():
+                if len(self._unmatched_req_machines) > 0:
+                    self._push_machine_stack()
                     continue
                 else:
                     return True
+            else:
+                #unmap the pool machine
+                if stack_top["current_match"] != None:
+                    cur_match = stack_top["current_match"]
+                    self._unmatched_pool_machines.append(cur_match)
+                stack_top["current_match"] = None
 
-            mmap.discard((machine, possible_match))
+                mreq_m_id = stack_top["m_id"]
+                while len(stack_top["remaining_matches"]) > 0:
+                    pool_m_id = stack_top["remaining_matches"].pop()
+                    if self._check_machine_compatibility(mreq_m_id, pool_m_id):
+                        #map compatible pool machine
+                        stack_top["current_match"] = pool_m_id
+                        pool_ifs = self._pool[pool_m_id]["interfaces"].keys()
+                        stack_top["unmatched_pool_ifs"] = list(pool_ifs)
 
+                        self._unmatched_pool_machines.remove(pool_m_id)
+                        break
+
+                if stack_top["current_match"] != None:
+                    #clear if mapping
+                    stack_top["if_stack"] = []
+                    #next iteration will match the interfaces
+                    if not self._virtual_matching:
+                        self._push_if_stack()
+                    continue
+                else:
+                    self._pop_machine_stack()
+                    continue
         return False
 
-    def _machine_matches(self, tm, pm):
-        for prop_name, prop_value in tm["params"].iteritems():
-            if prop_name not in pm["params"] or\
-               pm["params"][prop_name] != prop_value:
+    def _if_match(self):
+        m_stack_top = self._machine_stack[-1]
+        if_stack = m_stack_top["if_stack"]
+
+        if self._virtual_matching:
+            if m_stack_top["current_match"] != None:
+                m_stack_top["virt_matched"] = True
+                return True
+            else:
                 return False
 
+        while len(if_stack) > 0:
+            stack_top = if_stack[-1]
+
+            req_m = self._mreqs[m_stack_top["m_id"]]
+            pool_m = self._pool[m_stack_top["current_match"]]
+            req_if = req_m["interfaces"][stack_top["if_id"]]
+            req_net_label = req_if["network"]
+
+            if stack_top["current_match"] != None:
+                cur_match = stack_top["current_match"]
+                m_stack_top["unmatched_pool_ifs"].append(cur_match)
+                pool_if = pool_m["interfaces"][cur_match]
+                pool_net_label = pool_if["network"]
+                net_label_mapping = self._net_label_mapping[req_net_label]
+                if net_label_mapping == (pool_net_label, m_stack_top["m_id"],
+                                         stack_top["if_id"]):
+                    del self._net_label_mapping[req_net_label]
+            stack_top["current_match"] = None
+
+            while len(stack_top["remaining_matches"]) > 0:
+                pool_if_id = stack_top["remaining_matches"].pop()
+                pool_if = pool_m["interfaces"][pool_if_id]
+                if self._check_interface_compatibility(req_if, pool_if):
+                    #map compatible interfaces
+                    stack_top["current_match"] = pool_if_id
+                    if req_net_label not in self._net_label_mapping:
+                        self._net_label_mapping[req_net_label] =\
+                                                   (pool_if["network"],
+                                                   m_stack_top["m_id"],
+                                                   stack_top["if_id"])
+                    m_stack_top["unmatched_pool_ifs"].remove(pool_if_id)
+                    break
+
+            if stack_top["current_match"] != None:
+                if len(m_stack_top["unmatched_ifs"]) > 0:
+                    self._push_if_stack()
+                    continue
+                else:
+                    return True
+            else:
+                self._pop_if_stack()
+                continue
+        return False
+
+    def _push_machine_stack(self):
+        machine_match = {}
+        machine_match["m_id"] = self._unmatched_req_machines.pop()
+        machine_match["current_match"] = None
+        machine_match["remaining_matches"] = list(self._unmatched_pool_machines)
+        machine_match["if_stack"] = []
+
+        machine = self._mreqs[machine_match["m_id"]]
+        machine_match["unmatched_ifs"] = machine["interfaces"].keys()
+        machine_match["unmatched_pool_ifs"] = []
+
+        if self._virtual_matching:
+            machine_match["virt_matched"] = False
+
+        self._machine_stack.append(machine_match)
+
+    def _pop_machine_stack(self):
+        stack_top = self._machine_stack.pop()
+        self._unmatched_req_machines.append(stack_top["m_id"])
+
+    def _push_if_stack(self):
+        m_stack_top = self._machine_stack[-1]
+        if_match = {}
+        if_match["if_id"] = m_stack_top["unmatched_ifs"].pop()
+        if_match["current_match"] = None
+        if_match["remaining_matches"] = list(m_stack_top["unmatched_pool_ifs"])
+
+        m_stack_top["if_stack"].append(if_match)
+
+    def _pop_if_stack(self):
+        m_stack_top = self._machine_stack[-1]
+        if_stack_top = m_stack_top["if_stack"].pop()
+        m_stack_top["unmatched_ifs"].append(if_stack_top["if_id"])
+
+    def _check_machine_compatibility(self, req_id, pool_id):
+        req_machine = self._mreqs[req_id]
+        pool_machine = self._pool[pool_id]
+        for param, value in req_machine["params"]:
+            if param in pool_machine["params"] and\
+               value != pool_machine["params"][param]:
+                return False
         return True
 
-    @staticmethod
-    def _get_machine_with_most_params(machines):
-        max_machine = None
-        max_len = 0
-        for m_id, m in machines.iteritems():
-            if len(m["params"]) >= max_len:
-                max_len = len(m["params"])
-                max_machine = m_id
+    def _check_interface_compatibility(self, req_if, pool_if):
+        label_mapping = self._net_label_mapping
+        for req_label, mapping in label_mapping.iteritems():
+            if req_label == req_if["network"] and\
+               mapping[0] != pool_if["network"]:
+                return False
+            if mapping[0] == pool_if["network"] and\
+               req_label != req_if["network"]:
+                return False
+        for param, value in req_if["params"]:
+            if param in pool_if["params"] and\
+               value != pool_if["params"][param]:
+                return False
+        return True
 
-        return max_machine
+    def get_mapping(self):
+        mapping = {"machines": {}, "networks": {}, "virtual": False}
 
-    def _map_setup_virt(self, template_machines, pool_machines):
-        if len(template_machines) <= 0:
-            return True
+        for req_label, label_map in self._net_label_mapping.iteritems():
+            mapping["networks"][req_label] = label_map[0]
 
-        machine_id = self._get_machine_with_most_params(template_machines)
-        machine = template_machines[machine_id]
+        for machine in self._machine_stack:
+            m_map = mapping["machines"][machine["m_id"]] = {}
+            m_map["target"] = machine["current_match"]
+            interfaces = m_map["interfaces"] = {}
+            if_stack = machine["if_stack"]
+            for interface in if_stack:
+                interfaces[interface["if_id"]] = interface["current_match"]
 
-        for pm_id, pm in pool_machines.iteritems():
-            if not self._machine_matches(machine, pm):
-                continue
 
-            self._machine_map.add((machine_id, pm_id))
-
-            new_pool = copy.deepcopy(pool_machines)
-            del new_pool[pm_id]
-
-            new_template = copy.deepcopy(template_machines)
-            del new_template[machine_id]
-
-            if self._map_setup_virt(new_template, new_pool):
-                return True
-
-            self._machine_map.discard((machine_id, pm_id))
-
-        return False
+        if self._virtual_matching:
+            mapping["virtual"] = True
+        return mapping
