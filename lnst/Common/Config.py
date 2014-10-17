@@ -75,6 +75,12 @@ class Config():
                 "action" : self.optionPlain,
                 "name" : "xslt_url"
                 }
+        self._options['environment']['allow_virtual'] = {
+                "value" : False,
+                "additive" : False,
+                "action" : self.optionBool,
+                "name" : "allow_virtual"
+                }
 
         self.colours_scheme()
 

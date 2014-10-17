@@ -66,7 +66,7 @@ class NetTestController:
         self.remove_saved_machine_config()
 
         sp = SlavePool(lnst_config.get_option('environment', 'pool_dirs'),
-                       check_process_running("libvirtd"), pool_checks)
+                       pool_checks)
         self._slave_pool = sp
 
         self._machines = {}

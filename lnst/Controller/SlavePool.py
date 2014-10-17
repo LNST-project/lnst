@@ -26,20 +26,23 @@ from lnst.Controller.Machine import Machine
 from lnst.Controller.SlaveMachineParser import SlaveMachineParser
 from lnst.Controller.SlaveMachineParser import SlaveMachineError
 from lnst.Common.Colours import decorate_with_preset
+from lnst.Common.Utils import check_process_running
 
 class SlavePool:
     """
     This class is responsible for managing test machines that
     are available at the controler and can be used for testing.
     """
-    def __init__(self, pool_dirs, allow_virtual=False, pool_checks=True):
+    def __init__(self, pool_dirs, pool_checks=True):
         self._map = {}
         self._pool = {}
 
         self._machine_matches = []
         self._network_matches = []
 
-        self._allow_virt = allow_virtual
+        self._allow_virt = lnst_config.get_option("environment",
+                                                  "allow_virtual")
+        self._allow_virt &= check_process_running("libvirtd")
         self._pool_checks = pool_checks
 
         logging.info("Checking machine pool availability.")

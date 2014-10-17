@@ -50,3 +50,8 @@ resource_dir = @ctl_resource_dir@
 # specified in this option. The option accepts one directory path that will
 # be created if it doesn't exist. You cannot use the operator += here.
 log_dir = @ctl_logs_dir@
+
+# The 'allow_virtual' option enables/disables the use of virtual machines with
+# dynamic interface configuration. This feature is mostly used by LNST
+# developers when testing new features.
+allow_virtual = False
