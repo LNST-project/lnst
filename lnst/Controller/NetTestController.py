@@ -45,6 +45,9 @@ if check_process_running("libvirtd"):
 class NetTestError(Exception):
     pass
 
+class NoMatchError(NetTestError):
+    pass
+
 def ignore_event(**kwarg):
     pass
 
@@ -79,6 +82,9 @@ class NetTestController:
         self._parser.set_machines(self._machines)
         self._parser.set_aliases(defined_aliases, overriden_aliases)
         self._recipe = self._parser.parse()
+
+        mreq = self._get_machine_requirements()
+        sp.set_machine_requirements(mreq)
 
         modules_dirs = lnst_config.get_option('environment', 'module_dirs')
         tools_dirs = lnst_config.get_option('environment', 'tool_dirs')
@@ -201,13 +207,12 @@ class NetTestController:
             for iface in ifaces:
                 iface.up()
 
-    def _prepare_provisioning(self):
-        mreq = self._get_machine_requirements()
+    def provision_machines(self):
         sp = self._slave_pool
         machines = self._machines
-        if not sp.provision_machines(mreq, machines):
+        if not sp.provision_machines(machines):
             msg = "This setup cannot be provisioned with the current pool."
-            raise NetTestError(msg)
+            raise NoMatchError(msg)
 
         if sp.is_setup_virtual() and os.geteuid() != 0:
             msg = "Provisioning this setup requires additional configuration "\
@@ -215,10 +220,20 @@ class NetTestController:
                   "priviledges so it can connect to qemu."
             raise NetTestError(msg)
 
-        logging.info("Provisioning initialized")
-        for m_id in machines.keys():
-            provisioner = sp.get_provisioner_id(m_id)
-            logging.info("  host %s uses %s" % (m_id, provisioner))
+    def print_match_description(self):
+        sp = self._slave_pool
+        match = sp.get_match()
+        logging.info("Pool match description:")
+        if sp.is_setup_virtual():
+            logging.info("  Setup is using virtual machines.")
+        for m_id, m in match["machines"].iteritems():
+            logging.info("  host \"%s\" uses \"%s\"" % (m_id, m["target"]))
+            for if_id, pool_id in m["interfaces"].iteritems():
+                logging.info("    interface \"%s\" matched to \"%s\"" %\
+                                            (if_id, pool_id))
+
+    def get_pool_match(self):
+        return self._slave_pool.get_match()
 
     def _prepare_machine(self, m_id, resource_sync=True):
         machine = self._machines[m_id]
@@ -497,10 +512,14 @@ class NetTestController:
                 #clean-up slave logger
                 self._log_ctl.remove_slave(machine_id)
 
+        for m_id in list(self._machines.keys()):
+            del self._machines[m_id]
+
         # remove dynamically created bridges
         if deconfigure:
             for bridge in self._network_bridges.itervalues():
                 bridge.cleanup()
+            self._network_bridges = {}
 
     def _save_machine_config(self):
         #saves current virtual configuration to a file, after pickling it
@@ -578,13 +597,10 @@ class NetTestController:
             os.remove("/tmp/.lnst_machine_conf")
 
     def match_setup(self):
-        self._prepare_provisioning()
-
         return {"passed": True}
 
     def config_only_recipe(self):
         try:
-            self._prepare_provisioning()
             self._prepare_network(resource_sync=False)
         except (KeyboardInterrupt, Exception) as exc:
             msg = "Exception raised during configuration."
@@ -599,7 +615,6 @@ class NetTestController:
 
     def run_recipe(self):
         try:
-            self._prepare_provisioning()
             self._prepare_tasks()
             self._prepare_network()
         except (KeyboardInterrupt, Exception) as exc:
