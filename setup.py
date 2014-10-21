@@ -111,6 +111,7 @@ TEST_MODULES = [
          "test_modules/Iperf.py",
          "test_modules/Multicast.py",
          "test_modules/NetCat.py",
+         "test_modules/Netperf.py",
          "test_modules/PacketAssert.py",
          "test_modules/PktCounter.py",
          "test_modules/PktgenTx.py"]
