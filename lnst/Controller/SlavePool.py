@@ -525,7 +525,7 @@ class SetupMapper(object):
     def _check_machine_compatibility(self, req_id, pool_id):
         req_machine = self._mreqs[req_id]
         pool_machine = self._pool[pool_id]
-        for param, value in req_machine["params"]:
+        for param, value in req_machine["params"].iteritems():
             if param in pool_machine["params"] and\
                value != pool_machine["params"][param]:
                 return False
