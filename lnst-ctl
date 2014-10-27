@@ -98,29 +98,40 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
     no_match = False
     while True:
         res = {}
-        try:
-            nettestctl.provision_machines()
-            log_ctl.set_recipe(file_path, expand="match_%d" % matches)
-            recipe_head_log_entry(file_path, matches)
-            nettestctl.print_match_description()
-            res_serializer.add_recipe(file_path, matches)
-            res = exec_action(action, nettestctl)
-        except NoMatchError as err:
-            no_match = True
-            if matches == 1:
+        if matches == 1:
+            try:
+                log_ctl.set_recipe(file_path, expand="match_%d" % matches)
+                recipe_head_log_entry(file_path, matches)
+                res_serializer.add_recipe(file_path, matches)
+                nettestctl.provision_machines()
+                nettestctl.print_match_description()
+                res = exec_action(action, nettestctl)
+            except Exception as err:
+                no_match = True
+                log_exc_traceback()
+                logging.error(err)
                 res["passed"] = False
+                res["err_msg"] = str(err)
                 retval = RETVAL_ERR
-                raise err
-            else:
+        elif matches > 1:
+            try:
+                nettestctl.provision_machines()
+                log_ctl.set_recipe(file_path, expand="match_%d" % matches)
+                recipe_head_log_entry(file_path, matches)
+                res_serializer.add_recipe(file_path, matches)
+                nettestctl.print_match_description()
+                res = exec_action(action, nettestctl)
+            except NoMatchError as err:
+                no_match = True
                 log_ctl.unset_recipe()
                 logging.warning("Match %d not possible." % matches)
-        except Exception as err:
-            no_match = True
-            log_exc_traceback()
-            logging.error(err)
-            res["passed"] = False
-            res["err_msg"] = str(err)
-            retval = RETVAL_ERR
+            except Exception as err:
+                no_match = True
+                log_exc_traceback()
+                logging.error(err)
+                res["passed"] = False
+                res["err_msg"] = str(err)
+                retval = RETVAL_ERR
 
         if no_match and matches > 1:
             break
