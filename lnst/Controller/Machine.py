@@ -121,6 +121,9 @@ class Machine(object):
         msg = "Interface '%s' not found on machine '%s'" % (if_id, self._id)
         raise MachineError(msg)
 
+    def get_interfaces(self):
+        return self._interfaces
+
     def get_ordered_interfaces(self):
         ordered_list = list(self._interfaces)
         change = True
@@ -555,6 +558,12 @@ class Interface(object):
 
     def get_address(self, num):
         return self._addresses[num].split('/')[0]
+
+    def get_addresses(self):
+        addrs = []
+        for addr in self._addresses:
+            addrs.append(tuple(addr.split('/')))
+        return addrs
 
     def set_ovs_conf(self, ovs_conf):
         self._ovs_conf = ovs_conf
