@@ -271,15 +271,11 @@ class SlavePool:
 
         hostname = pm["params"]["hostname"]
 
-        libvirt_domain = None
-        if "libvirt_domain" in pm["params"]:
-            libvirt_domain = pm["params"]["libvirt_domain"]
-
         rpcport = None
         if "rpc_port" in pm["params"]:
             rpcport = pm["params"]["rpc_port"]
 
-        machine = Machine(tm_id, hostname, libvirt_domain, rpcport)
+        machine = Machine(tm_id, hostname, None, rpcport)
 
         used = []
         if_map = self._map["machines"][tm_id]["interfaces"]
@@ -287,19 +283,19 @@ class SlavePool:
             used.append(p_if)
             if_data = pm["interfaces"][p_if]
 
-            for t_net, p_net in self._map["networks"].iteritems():
-                if pm["interfaces"][p_if]["network"] == p_net:
-                    break
-
             iface = machine.new_static_interface(t_if, "eth")
             iface.set_hwaddr(if_data["params"]["hwaddr"])
-            iface.set_network(t_net)
+
+            for t_net, p_net in self._map["networks"].iteritems():
+                if pm["interfaces"][p_if]["network"] == p_net:
+                    iface.set_network(t_net)
+                    break
 
         for if_id, if_data in pm["interfaces"].iteritems():
             if if_id not in used:
                 iface = machine.new_unused_interface("eth")
                 iface.set_hwaddr(if_data["params"]["hwaddr"])
-                iface.set_network(t_net)
+                iface.set_network(None)
 
         return machine
 
@@ -320,7 +316,7 @@ class SlavePool:
         for if_id, if_data in pm["interfaces"].iteritems():
             iface = machine.new_unused_interface("eth")
             iface.set_hwaddr(if_data["params"]["hwaddr"])
-            iface.set_network(if_data["network"])
+            iface.set_network(None)
 
         # add all the other devices
         for if_id, if_data in tm["interfaces"].iteritems():
