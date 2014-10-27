@@ -20,8 +20,11 @@ class ControllerAPI(object):
 
     def __init__(self, ctl, hosts):
         self._ctl = ctl
-        self._hosts = hosts
         self._result = True
+
+        self._hosts = {}
+        for host_id, host in hosts.iteritems():
+            self._hosts[host_id] = HostAPI(self, host_id, host)
 
     def _run_command(self, command):
         """
@@ -50,8 +53,10 @@ class ControllerAPI(object):
         if host_id not in self._hosts:
             raise TaskError("Host '%s' not found." % host_id)
 
-        host = self._hosts[host_id]
-        return HostAPI(self, host_id, host)
+        return self._hosts[host_id]
+
+    def get_hosts(self):
+        return self._hosts
 
     def get_module(self, name, options={}):
         """
@@ -97,6 +102,12 @@ class HostAPI(object):
         self._ctl = ctl
         self._id = host_id
         self._m = host
+
+        self._interfaces = {}
+        for i in self._m.get_interfaces():
+            if i.get_id() is None:
+                continue
+            self._interfaces[i.get_id()] = InterfaceAPI(i)
 
         self._bg_id_seq = 0
 
@@ -191,6 +202,12 @@ class HostAPI(object):
         cmd_res = self._ctl._run_command(cmd)
         return ProcessAPI(self._ctl, self._id, cmd_res, bg_id, cmd["netns"])
 
+    def get_interfaces(self):
+        return self._interfaces
+
+    def get_interface(self, interface_id):
+        return self._interfaces[interface_id]
+
     def get_devname(self, interface_id):
         """
             Returns devname of the interface.
@@ -201,8 +218,8 @@ class HostAPI(object):
             :return: Device name (e.g., eth0).
             :rtype: str
         """
-        iface = self._m.get_interface(interface_id)
-        return Devname(iface)
+        iface = self._interfaces[interface_id]
+        return iface.get_devname()
 
     def get_hwaddr(self, interface_id):
         """
@@ -214,8 +231,8 @@ class HostAPI(object):
             :return: HW address (e.g., 00:11:22:33:44:55:FF).
             :rtype: str
         """
-        iface = self._m.get_interface(interface_id)
-        return Hwaddr(iface)
+        iface = self._interfaces[interface_id]
+        return iface.get_hwaddr()
 
     def get_ip(self, interface_id, addr_number=0):
         """
@@ -230,8 +247,8 @@ class HostAPI(object):
             :return: IP address (e.g., 192.168.1.10).
             :rtype: str
         """
-        iface = self._m.get_interface(interface_id)
-        return IpAddr(iface, addr_number)
+        iface = self._interfaces[interface_id]
+        return iface.get_ip_addr(addr_number)
 
     def get_prefix(self, interface_id, addr_number=0):
         """
@@ -247,8 +264,8 @@ class HostAPI(object):
             :return: netmask (e.g., 24).
             :rtype: str
         """
-        iface = self._m.get_interface(interface_id)
-        return Prefix(iface, addr_number)
+        iface = self._interfaces[interface_id]
+        return iface.get_ip_prefix(addr_number)
 
     def sync_resources(self, modules=[], tools=[]):
         res_table = self._ctl._ctl._resource_table
@@ -271,12 +288,50 @@ class HostAPI(object):
 
         self._m.sync_resources(sync_table)
 
+class InterfaceAPI(object):
+    def __init__(self, interface):
+        self._if = interface
+
+    def get_id(self):
+        return self._if.get_id()
+
+    def get_network(self):
+        return self._if.get_network()
+
+    def get_devname(self):
+        return VolatileValue(self._if.get_devname)
+
+    def get_hwaddr(self):
+        return VolatileValue(self._if.get_hwaddr)
+
+    def get_ip_addr(self, ip_index):
+        return VolatileValue(self._if.get_address, ip_index)
+
+    def get_ip_addrs(self):
+        return VolatileValue(self._if.get_addresses)
+
+    def get_ip_prefix(self, ip_index):
+        return VolatileValue(self._if.get_prefix, ip_index)
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 
-    def __init__(self, module_name, options):
+    def __init__(self, module_name, options={}):
         self._name = module_name
 
+        self._opts = {}
+        for opt, val in options.iteritems():
+            self._opts[opt] = []
+            if type(val) == list:
+                for v in val:
+                    self._opts[opt].append({"value": str(v)})
+            else:
+                self._opts[opt].append({"value": str(val)})
+
+    def get_options(self):
+        return self._opts
+
+    def set_options(self, options):
         self._opts = {}
         for opt, val in options.iteritems():
             self._opts[opt] = []
@@ -347,36 +402,14 @@ class ProcessAPI(object):
                    "netns": self._netns}
             self._res = self._ctl._run_command(cmd)
 
-class ValueAPI(object):
-    def __init__(self, iface):
-        self._iface = iface
+class VolatileValue(object):
+    def __init__(self, func, *args, **kwargs):
+        self._func = func
+        self._args = args
+        self._kwargs = kwargs
 
-    def _resolve(self):
-        pass
+    def get_val(self):
+        return self._func(*self._args, **self._kwargs)
 
     def __str__(self):
-        return str(self._resolve())
-
-class IpAddr(ValueAPI):
-    def __init__(self, iface, addr=0):
-        self._iface = iface
-        self._addr = addr
-
-    def _resolve(self):
-        return self._iface.get_address(self._addr)
-
-class Hwaddr(ValueAPI):
-    def _resolve(self):
-        return self._iface.get_hwaddr()
-
-class Devname(ValueAPI):
-    def _resolve(self):
-        return self._iface.get_devname()
-
-class Prefix(ValueAPI):
-    def __init__(self, iface, addr=0):
-        self._iface = iface
-        self._addr = addr
-
-    def _resolve(self):
-        return self._iface.get_prefix(self._addr)
+        return str(self.get_val())
