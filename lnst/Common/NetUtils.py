@@ -29,7 +29,10 @@ except ImportError:
 from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
 
 def normalize_hwaddr(hwaddr):
-    return hwaddr.upper().rstrip("\n")
+    try:
+        return hwaddr.upper().rstrip("\n")
+    except:
+        return ""
 
 def scan_netdevs():
     scan = []
