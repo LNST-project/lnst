@@ -87,6 +87,13 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                       reduce_sync, multi_match):
     retval = RETVAL_PASS
 
+    matches = 1
+    no_match = False
+
+    log_ctl.set_recipe(file_path, expand="match_%d" % matches)
+    recipe_head_log_entry(file_path, matches)
+    res_serializer.add_recipe(file_path, matches)
+
     nettestctl = NetTestController(file_path, log_ctl,
                                    res_serializer=res_serializer,
                                    pool_checks=pool_checks,
@@ -94,15 +101,10 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                                    defined_aliases=defined_aliases,
                                    overriden_aliases=overriden_aliases,
                                    reduce_sync=reduce_sync)
-    matches = 1
-    no_match = False
     while True:
         res = {}
         if matches == 1:
             try:
-                log_ctl.set_recipe(file_path, expand="match_%d" % matches)
-                recipe_head_log_entry(file_path, matches)
-                res_serializer.add_recipe(file_path, matches)
                 nettestctl.provision_machines()
                 nettestctl.print_match_description()
                 res = exec_action(action, nettestctl)
