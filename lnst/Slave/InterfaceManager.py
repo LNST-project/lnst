@@ -133,7 +133,7 @@ class InterfaceManager(object):
         ret = {}
         for if_id, if_index in self._id_mapping.iteritems():
             ret[if_id] = self._devices[if_index]
-        for if_id, dev in self._tmp_mapping:
+        for if_id in self._tmp_mapping:
             ret[if_id] = self._tmp_mapping[if_id]
         return ret
 
