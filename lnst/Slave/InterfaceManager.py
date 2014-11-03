@@ -194,6 +194,9 @@ class InterfaceManager(object):
         for device in self._devices.itervalues():
             if name == device.get_name():
                 return True
+        for device in self._tmp_mapping.itervalues():
+            if name == device.get_name():
+                return True
         return False
 
     def _assign_name_generic(self, prefix):
