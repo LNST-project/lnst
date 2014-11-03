@@ -129,8 +129,9 @@ class SlavePool:
 
                 if 'libvirt_domain' in machine_spec['params'] and \
                    not self._allow_virt:
-                       logging.debug("libvirtd not running. Removing "\
-                                     "libvirt_domain from machine '%s'" % m_id)
+                       logging.debug("libvirtd not running or allow_virtual "\
+                                     "disabled. Removing libvirt_domain from "\
+                                     "machine '%s'" % m_id)
                        del machine_spec['params']['libvirt_domain']
             else:
                 available = True
