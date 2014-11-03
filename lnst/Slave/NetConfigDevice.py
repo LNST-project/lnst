@@ -107,6 +107,13 @@ class NetConfigDeviceBond(NetConfigDeviceGeneric):
         if not "options" in self._dev_config:
             return
         options = self._dev_config["options"]
+
+        #Make sure that the device is down before configuring options
+        #this is a temporary workaround for NM setting the device IFF_UP on
+        #creation, which means that there is still a race condition here.
+        #Related to RH bgz #1114685
+        exec_cmd('ip link set %s down' % self._dev_config["name"])
+
         for option, value in options:
             if option == "primary":
                 '''
