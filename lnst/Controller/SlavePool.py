@@ -523,7 +523,7 @@ class SetupMapper(object):
         req_machine = self._mreqs[req_id]
         pool_machine = self._pool[pool_id]
         for param, value in req_machine["params"].iteritems():
-            if param in pool_machine["params"] and\
+            if param not in pool_machine["params"] or\
                value != pool_machine["params"][param]:
                 return False
         return True
