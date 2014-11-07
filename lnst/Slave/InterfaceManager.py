@@ -52,7 +52,12 @@ class InterfaceManager(object):
         return
 
     def unmap_if(self, if_id):
-        del self._id_mapping[if_id]
+        if if_id in self._id_mapping:
+            del self._id_mapping[if_id]
+        elif if_id in self._tmp_mapping:
+            del self._tmp_mapping[if_id]
+        else:
+            pass
 
     def clear_if_mapping(self):
         self._id_mapping = {}
