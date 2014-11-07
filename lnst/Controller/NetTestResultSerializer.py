@@ -12,6 +12,7 @@ jpirko@redhat.com (Jiri Pirko)
 """
 
 import logging
+import datetime
 from xml.dom.minidom import getDOMImplementation
 from lnst.Common.NetTestCommand import str_command
 from lnst.Common.Colours import decorate_string, decorate_with_preset
@@ -52,6 +53,7 @@ def get_node_val(node):
 class NetTestResultSerializer:
     def __init__(self):
         self._results = []
+        self._start_time = datetime.datetime.now()
 
     def add_recipe(self, name, match_num):
         recipe_result = {"name": name,
@@ -122,6 +124,15 @@ class NetTestResultSerializer:
                     self._format_command(cmd, cmd_res, output_pairs, m_id_max)
 
         self._print_pairs(output_pairs)
+
+        current_time = datetime.datetime.now()
+        dif_time = current_time - self._start_time
+        days = dif_time.days
+        hours = dif_time.seconds/3600
+        minutes = dif_time.seconds/60 - hours*60
+        seconds = dif_time.seconds - minutes*60
+        logging.info("Total test time: %d days, %d hours, %d minutes, "\
+                     "%d seconds" % (days, hours, minutes, seconds))
 
     def _format_command(self, command, cmd_res, output_pairs, m_id_max):
         if cmd_res["passed"]:
