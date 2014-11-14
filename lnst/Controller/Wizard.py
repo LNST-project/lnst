@@ -33,12 +33,14 @@ class Wizard:
         named by user. User can choose which interfaces should be added to the
         .xml file.
         """
+
+        pool_dir = raw_input("Enter path to pool directory "\
+                             "(default: ~/.lnst/pool): ")
+        if pool_dir != "":
+            self._pool_dir = os.path.expanduser(pool_dir)
+            print "Pool directory set to %s" % self._pool_dir
+
         while True:
-            pool_dir = raw_input("Enter path to pool directory "\
-                                 "(default: ~/.lnst/pool): ")
-            if pool_dir != "":
-                self._pool_dir = os.path.expanduser(pool_dir)
-                print "Pool directory set to %s" % self._pool_dir
             while True:
                 hostname = raw_input("Enter hostname: ")
                 try:
