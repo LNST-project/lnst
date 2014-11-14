@@ -204,8 +204,34 @@ class NetTestResultSerializer:
             recipe_el = doc.createElement("recipe")
             recipe_el.setAttribute("name", recipe["name"])
             recipe_el.setAttribute("result", recipe["result"])
+            recipe_el.setAttribute("match_num", str(recipe["match_num"]))
 
             top_el.appendChild(recipe_el)
+
+            match = recipe["pool_match"]
+            if match != {}:
+                match_el = doc.createElement("pool_match")
+
+                if "virtual" in match and match["virtual"]:
+                    match_el.setAttribute("virtual", "true")
+                else:
+                    match_el.setAttribute("virtual", "false")
+
+                for m_id, m in match["machines"].iteritems():
+                    m_el = doc.createElement("m_match")
+                    m_el.setAttribute("host_id", str(m_id))
+                    m_el.setAttribute("pool_id", str(m["target"]))
+
+                    for if_id, pool_id in m["interfaces"].iteritems():
+                        if_el = doc.createElement("if_match")
+                        if_el.setAttribute("if_id", str(if_id))
+                        if_el.setAttribute("pool_if_id", str(pool_id))
+                        m_el.appendChild(if_el)
+
+                    match_el.appendChild(m_el)
+
+
+                recipe_el.appendChild(match_el)
 
             if recipe["result"] == "FAIL" and \
                "err_msg" in recipe and recipe["err_msg"] != "":
