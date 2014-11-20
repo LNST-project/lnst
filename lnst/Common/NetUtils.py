@@ -10,7 +10,6 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import logging
 import os
 import re
 import socket
@@ -28,11 +27,13 @@ except ImportError:
     from pyroute2.iproute import RTM_NEWLINK
 from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
 
+
 def normalize_hwaddr(hwaddr):
     try:
         return hwaddr.upper().rstrip("\n")
     except:
         return ""
+
 
 def scan_netdevs():
     scan = []
@@ -45,7 +46,7 @@ def scan_netdevs():
     msg["header"]["sequence_number"] = 1
     msg.encode()
 
-    nl_socket.sendto(msg.buf.getvalue(), (0,0))
+    nl_socket.sendto(msg.buf.getvalue(), (0, 0))
 
     finished = False
     while not finished:
@@ -71,6 +72,7 @@ def scan_netdevs():
     nl_socket.close()
     return scan
 
+
 def test_tcp_connection(host, port):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -79,6 +81,7 @@ def test_tcp_connection(host, port):
         return True
     except:
         return False
+
 
 def verify_ip_address(addr):
     if len(addr.split('.')) != 4:
@@ -89,11 +92,13 @@ def verify_ip_address(addr):
     except:
         return False
 
+
 def verify_mac_address(addr):
     if re.match("^[0-9a-f]{2}([:][0-9a-f]{2}){5}$", addr, re.I):
         return True
     else:
         return False
+
 
 def get_corespond_local_ip(query_ip):
     """
@@ -107,10 +112,11 @@ def get_corespond_local_ip(query_ip):
                           shell=True, stdout=subprocess.PIPE,
                           stderr=subprocess.STDOUT)
     ip = ip.communicate()[0]
-    ip = re.search(r"src ([0-9.]*)",ip)
+    ip = re.search(r"src ([0-9.]*)", ip)
     if ip is None:
         return ip
     return ip.group(1)
+
 
 class AddressPool:
     def __init__(self, start, end):
@@ -141,6 +147,7 @@ class AddressPool:
 
         return addr_str
 
+
 class MacPool(AddressPool):
     def _addr_to_byte_string(self, addr):
         if not verify_mac_address(addr):
@@ -152,6 +159,7 @@ class MacPool(AddressPool):
 
     def _byte_string_to_addr(self, byte_string):
         return ':'.join(map(lambda x: "%02x" % x, byte_string))
+
 
 class IpPool(AddressPool):
     def _addr_to_byte_string(self, addr):
