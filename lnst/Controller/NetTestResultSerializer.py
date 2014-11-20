@@ -18,7 +18,6 @@ from lnst.Common.NetTestCommand import str_command
 from lnst.Common.Colours import decorate_string, decorate_with_preset
 from lnst.Common.Config import lnst_config
 from lxml import etree
-from lxml import html as lxml_h
 
 def serialize_obj(obj, dom, el, upper_name="unnamed"):
     if isinstance(obj, dict):
@@ -279,14 +278,13 @@ class NetTestResultSerializer:
         return doc.toprettyxml()
 
     def get_result_html(self):
+        xslt_url = lnst_config.get_option("environment", "xslt_url")
+        xslt = etree.parse(xslt_url)
+
         xml = self._generate_xml().toprettyxml()
         etree_xml = etree.fromstring(xml)
 
-        xslt_url = lnst_config.get_option("environment", "xslt_url")
-        xslt = etree.parse(xslt_url)
         transform = etree.XSLT(xslt)
 
         transformed_xml = transform(etree_xml)
-        html = lxml_h.fromstring(etree.tostring(transformed_xml))
-        return lxml_h.tostring(html, pretty_print=True,
-                               doctype="<!DOCTYPE html>")
+        return "<!DOCTYPE html>\n" + str(transformed_xml)
