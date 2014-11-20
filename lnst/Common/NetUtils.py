@@ -10,22 +10,10 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import os
 import re
 import socket
 import subprocess
-from pyroute2 import IPRSocket
-from pyroute2.netlink import NLM_F_REQUEST
-from pyroute2.netlink import NLM_F_DUMP
-from pyroute2.netlink import NLMSG_DONE
-from pyroute2.netlink import NLMSG_ERROR
-try:
-    from pyroute2.netlink.iproute import RTM_GETLINK
-    from pyroute2.netlink.iproute import RTM_NEWLINK
-except ImportError:
-    from pyroute2.iproute import RTM_GETLINK
-    from pyroute2.iproute import RTM_NEWLINK
-from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
+from pyroute2 import IPRoute
 
 
 def normalize_hwaddr(hwaddr):
@@ -37,39 +25,31 @@ def normalize_hwaddr(hwaddr):
 
 def scan_netdevs():
     scan = []
-    nl_socket = IPRSocket()
-    msg = ifinfmsg()
-    msg["family"] = socket.AF_UNSPEC
-    msg["header"]["type"] = RTM_GETLINK
-    msg["header"]["flags"] = NLM_F_REQUEST | NLM_F_DUMP
-    msg["header"]["pid"] = os.getpid()
-    msg["header"]["sequence_number"] = 1
-    msg.encode()
+    ipr = IPRoute()
 
-    nl_socket.sendto(msg.buf.getvalue(), (0, 0))
-
-    finished = False
-    while not finished:
-        parts = nl_socket.get()
-        for part in parts:
-            if part["header"]["type"] in [NLMSG_DONE, NLMSG_ERROR]:
-                finished = True
-                continue
-            if part["header"]["sequence_number"] != 1:
-                continue
-
-            if part["header"]["type"] == RTM_NEWLINK:
-                new_link = {}
-                new_link["netlink_msg"] = part
-                new_link["index"] = part["index"]
-                new_link["name"] = part.get_attr("IFLA_IFNAME")
-
-                hwaddr = part.get_attr("IFLA_ADDRESS")
-                new_link["hwaddr"] = normalize_hwaddr(hwaddr)
-
-                scan.append(new_link)
-
-    nl_socket.close()
+    try:
+        for part in ipr.get_links():
+            new_link = {}
+            new_link["netlink_msg"] = part
+            new_link["index"] = part["index"]
+            new_link["name"] = part.get_attr("IFLA_IFNAME")
+            #
+            # FIXME:
+            #
+            # nlmsg.get_attr() returns None if there is no
+            # such attribute in the NLA chain; if hwaddr is None,
+            # normalize_hwaddr(hwaddr) will raise AttributeError(),
+            # since None has no upper(). The issue is that the
+            # AttributeError() will be a bit unrelated to the
+            # root cause, and since that it will be confusing.
+            #
+            hwaddr = part.get_attr("IFLA_ADDRESS")
+            new_link["hwaddr"] = normalize_hwaddr(hwaddr)
+            scan.append(new_link)
+    except:
+        raise
+    finally:
+        ipr.close()
     return scan
 
 
