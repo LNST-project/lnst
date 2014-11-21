@@ -1,21 +1,46 @@
 window.toggleResultData = function (event, task_id, bg_id) {
     switch_display = function(elem){
-        if (elem.style.display == 'none')
+        if (elem.style.display == 'none'){
             elem.style.display = '';
-        else
+        }else{
             elem.style.display = 'none';
+        }
     }
 
-    row = event.target.parentNode;
-    result_row_i = row.rowIndex + 1;
-    result_row = row.parentNode.rows[result_row_i];
-    switch_display(result_row);
+    cell = event.target.parentNode;
+    row = cell.parentNode;
+    result_cell_i = cell.cellIndex + 2;
+    result_cell = row.cells[result_cell_i];
+    switch_display(result_cell);
 
     if (task_id !== undefined && bg_id !== undefined){
-        rows = row.parentNode.childNodes;
+        rows = row.parentNode.rows;
         for (i = 0; i < rows.length; ++i){
-            if (rows[i].id == ("task_id="+task_id+"bg_id="+bg_id))
-                rows[i].style.display = result_row.style.display;
+            if (rows[i].name == ("task_id="+task_id+"bg_id="+bg_id)){
+                switch_display(rows[i].cells[2]);
+            }
+        }
+    }
+}
+
+window.highlightResultData = function (event, task_id, bg_id) {
+    switch_background = function(elem){
+        if (elem.style.background == ''){
+            elem.style.background = 'lightblue';
+        }else{
+            elem.style.background = '';
+        }
+    }
+
+    cell = event.target.parentNode;
+    row = cell.parentNode;
+
+    if (task_id !== undefined && bg_id !== undefined){
+        rows = row.parentNode.rows;
+        for (i = 0; i < rows.length; ++i){
+            if (rows[i].getAttribute("name") == ("task_id="+task_id+"bg_id="+bg_id)){
+                switch_background(rows[i]);
+            }
         }
     }
 }

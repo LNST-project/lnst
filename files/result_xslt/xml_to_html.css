@@ -1,3 +1,11 @@
+table{
+    border-collapse: collapse;
+}
+
+table.lnst_results {
+    border: 1px solid black;
+}
+
 table.lnst_results td {
     padding: 0px 10px 0px 10px;
 }
@@ -14,10 +22,44 @@ table.result_data td{
     vertical-align: top;
 }
 
+tr.tr_top{
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+
+tr.tr_bottom{
+    border-bottom: 1px solid black;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+
 td.result_pass{
     background-color: lime;
 }
 
 td.result_fail{
     background-color: red;
+}
+
+tr.task_header{
+    background-color: gray;
+}
+
+td.button{
+    vertical-align: top;
+}
+
+.match_description, .match_description th, .match_description td{
+    border: 1px solid black;
+    text-align: center;
+    border-collapse: collapse;
+    padding: 5px 10px 5px 10px;
+}
+
+.if_match_description{
+    border: 1px solid black;
+    text-align: center;
+    border-collapse: collapse;
+    padding: 0px 10px 0px 10px;
 }
