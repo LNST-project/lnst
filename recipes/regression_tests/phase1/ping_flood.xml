@@ -1,0 +1,23 @@
+<lnstrecipe>
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="testiface" label="testnet">
+                    <addresses>
+                        <address>192.168.100.10/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="testiface" label="testnet">
+                    <addresses>
+                        <address>192.168.100.11/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+    <task python="simple_ping.py"/>
+</lnstrecipe>

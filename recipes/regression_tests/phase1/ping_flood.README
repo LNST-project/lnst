@@ -1,0 +1,38 @@
+Topology:
+                                  +--------+
+                                  |        |
+           +----------------------+ switch +----------------------+
+           |                      |        |                      |
+           |                      +--------+                      |
+           |                                                      |
+           |                                                      |
+           |                                                      |
+           |                                                      |
+        +--+-+                                                  +-+--+
++-------|eth1|-------+                                  +-------|eth1|-------+
+|       +----+       |                                  |       +----+       |
+|                    |                                  |                    |
+|                    |                                  |                    |
+|                    |                                  |                    |
+|                    |                                  |                    |
+|       host1        |                                  |       host2        |
+|                    |                                  |                    |
+|                    |                                  |                    |
+|                    |                                  |                    |
+|                    |                                  |                    |
+|                    |                                  |                    |
++--------------------+                                  +--------------------+
+
+
+Number of hosts: 2
+Host #1 description:
+    One ethernet device
+Host #2 description:
+    One ethernet device
+Test name:
+    simple_ping.py
+Test description:
+    Ping:
+      + count: 100
+      + interval: 0.2s
+      + from host1 to host2

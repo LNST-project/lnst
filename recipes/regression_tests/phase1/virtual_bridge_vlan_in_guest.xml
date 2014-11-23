@@ -1,0 +1,53 @@
+<lnstrecipe>
+    <network>
+        <host id="host1">
+            <interfaces>
+                <eth id="nic" label="to_switch" />
+                <eth id="tap" label="to_guest" />
+                <bridge id="br">
+                    <slaves>
+                        <slave id="tap" />
+                        <slave id="nic" />
+                    </slaves>
+                    <addresses>
+                        <address>192.168.10.1/24</address>
+                    </addresses>
+                </bridge>
+            </interfaces>
+        </host>
+        <host id="guest1">
+            <interfaces>
+                <eth id="guestnic" label="to_guest" />
+                <vlan id="vlan10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="guestnic" />
+                    </slaves>
+                    <addresses>
+                        <address>192.168.10.10/24</address>
+                    </addresses>
+                </vlan>
+            </interfaces>
+        </host>
+        <host id="host2">
+            <interfaces>
+                <eth id="nic" label="to_switch" />
+                <vlan id="vlan10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="nic" />
+                    </slaves>
+                    <addresses>
+                        <address>192.168.10.11/24</address>
+                    </addresses>
+                </vlan>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="virtual_bridge_vlan_in_guest.py" />
+</lnstrecipe>

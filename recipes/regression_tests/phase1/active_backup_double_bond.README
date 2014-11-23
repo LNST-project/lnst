@@ -1,0 +1,51 @@
+Topology:
+
+                                switch
+                               +------+
+                               |      |
+                               |      |
+           +-------------------+      +-------------------+
+           |                   |      |                   |
+           |                   |      |                   |
+           |                   +------+                   |
+           |                                              |
+           |                                              |
+           |                                              |
+           |                                              |
+           |                                              |
+      +----+---+                                     +----+---+
+      |  BOND  |                                     |  BOND  |
+      +---++---+                                     +---++---+
+          ||                                             ||
+       +--++--+                                       +--++--+
+       |      |                                       |      |
+    +--+-+  +-+--+                                 +--+-+  +-+--+
++---|eth1|--|eth2|---+                         +---|eth1|--|eth2|---+
+|   +----+  +----+   |                         |   +----+  +----+   |
+|                    |                         |                    |
+|                    |                         |                    |
+|       host1        |                         |       host2        |
+|                    |                         |                    |
+|                    |                         |                    |
+|                    |                         |                    |
++--------------------+                         +--------------------+
+
+Number of hosts: 2
+Host #1 description:
+    Two ethernet devices, in active-backup bond mode
+Host #2 description:
+    Two ethernet devices, in active-backup bond mode
+Test name:
+    bonding_test.py
+Test description:
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + from both sides
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + from both sides
+    Offloads:
+      + TSO, GRO, GSO
+      + tested both on/off variants

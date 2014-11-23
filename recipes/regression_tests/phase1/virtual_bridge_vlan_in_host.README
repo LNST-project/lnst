@@ -1,0 +1,52 @@
+Topology:
+
+                           +----------+
+                           |          |            VLAN10
+         +-----------------+  switch  +-----------------+
+         |                 |          |                 |
+         |                 +----------+                 |
+         |                                              |
+       +-+-+                                            |
++------|nic|------+                                   +-+-+
+|      +-+-+      |                            +------|nic|------+
+| VLAN10 |        |                            |      +---+      |
+|   +----+        |                            |                 |
+|   |             |                            |                 |
+| +-+-+           |                            |                 |
+| |br0|           |                            |      host2      |
+| +-+-+    host1  |                            |                 |
+|   |             |                            |                 |
+| +-+-+           |                            |                 |
++-|tap|-----------+                            |                 |
+  +-+-+                                        +-----------------+
+    |
+    |
+    |
+  +-+-+
++-|nic|--+
+| +---+  |
+| guest1 |
+|        |
++--------+
+
+Number of hosts: 3
+Host #1 description:
+    One ethernet device with one VLAN subinterface
+    One tap device
+    One bridge device, bridging VLAN and tap devices
+    Host for guest1 virtual machine
+Host #2 description:
+    One ethernet device with one VLAN subinterface
+Guest #1 description:
+    One ethernet device
+Test name:
+    virtual_bridge_vlan_in_guest.py
+Test description:
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between guest1's NIC and host2's VLAN10
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + between guest1's NIC and host2's VLAN10

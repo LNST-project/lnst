@@ -1,0 +1,54 @@
+Topology:
+
+                                switch
+       VLAN10                  +------+                  VLAN10
+       +-------------------+   |      |   +-------------------+
+       |   VLAN20          |   |      |   |          VLAN20   |
+       |   +-------------------+      +-------------------+   |
+       |   |   VLAN30      |   |      |   |      VLAN30   |   |
+       |   |   +-----------+   |      |   +-----------+   |   |
+       |   |   |               +------+               |   |   |
+       |   |   |                                      |   |   |
+       +-------+                                      +-------+
+           |                                              |
+           |                                              |
+           |                                              |
+      +----+---+                                     +----+---+
+      |  BOND  |                                     |  BOND  |
+      +---++---+                                     +---++---+
+          ||                                             ||
+       +--++--+                                       +--++--+
+       |      |                                       |      |
+    +--+-+  +-+--+                                 +--+-+  +-+--+
++---|eth1|--|eth2|---+                         +---|eth1|--|eth2|---+
+|   +----+  +----+   |                         |   +----+  +----+   |
+|                    |                         |                    |
+|                    |                         |                    |
+|       host1        |                         |       host2        |
+|                    |                         |                    |
+|                    |                         |                    |
+|                    |                         |                    |
++--------------------+                         +--------------------+
+
+Number of hosts: 2
+Host #1 decsription:
+    Two ethernet devices, in round-robin bond mode
+    3 VLANs on bond interface
+Host #2 description:
+    Two ethernet devices, in round-robin bond mode
+    3 VLANs on bond interface
+Test name:
+    3_vlans.py
+Test description:
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between interfaces in the same VLAN (these should pass)
+      + between interfaces in different VLANs (these should fail)
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + between interfaces in the same VLAN
+    Offloads:
+      + TSO, GRO, GSO
+      + tested both on/off variants

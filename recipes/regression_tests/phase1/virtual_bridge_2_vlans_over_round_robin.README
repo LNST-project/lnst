@@ -1,0 +1,76 @@
+Topology:
+
+                                    switch
+                                  +--------+
+                                  |        |
+        +-------------------------+        +--------------------------+
+        |                         |        |                          |
+        |         +---------------+        +----------------+         |
+        |         |               |        |                |         |
+        |         |               +--------+                |         |
+        |         |                                         |         |
+        |         |                                         |         |
+     +--+-+    +--+-+                                     +-+--+    +-+--+
++----+eth1+----+eth2+----+                           +----+eth1+----+eth2+----+
+|    +-+--+    +--+-+    |                           |    +-+--+    +--+-+    |
+|      +--++  ++--+      |                           |      +--++  ++--+      |
+|          |  |          |                           |          |  |          |
+|          |  |          |                           |          |  |          |
+|        +-+--+-+        |                           |        +-+--+-+        |
+|        | bond |        |                           |        | bond |        |
+| VLAN10 +-+--+-+ VLAN20 |                           | VLAN10 +-+--+-+ VLAN20 |
+|    +---+-+  +-+---+    |                           |    +---+-+  +-+---+    |
+|    |              |    |                           |    |              |    |
+|  +-+-+          +-+-+  |                           |  +-+-+          +-+-+  |
+|  |br0|  host1   |br1|  |                           |  |br0|  host2   |br1|  |
+|  +-+-+          +-+-+  |                           |  +-+-+          +-+-+  |
+|    |              |    |                           |    |              |    |
+|    |              |    |                           |    |              |    |
+|    |              |    |                           |    |              |    |
+|  +-+-+          +-+-+  |                           |  +-+-+          +-+-+  |
++--+tap+----------+tap+--+                           +--+tap+----------+tap+--+
+   +-+-+          +-+-+                                 +-+-+          +-+-+
+     |              |                                     |              |
+   +-+-+          +-+-+                                 +-+-+          +-+-+
++--+eth+--+    +--+eth+--+                           +--+eth+--+    +--+eth+--+
+|  +---+  |    |  +---+  |                           |  +---+  |    |  +---+  |
+|         |    |         |                           |         |    |         |
+| guest1  |    | guest2  |                           | guest3  |    | guest4  |
+|         |    |         |                           |         |    |         |
+|         |    |         |                           |         |    |         |
++---------+    +---------+                           +---------+    +---------+
+
+Number of hosts: 4
+Host #1 description:
+    Two ethernet devices
+    Two tap devices
+    One bond in round-robin mode, bonding ethernet devices
+    Two VLANs over bond device
+    Two bridge devices, bridging VLAN and tap devices
+    Host for guest1 and guest2 virtual machines
+Host #2 description:
+    Two ethernet devices
+    Two tap devices
+    One bond in round-robin mode, bonding ethernet devices
+    Two VLANs over bond device
+    Two bridge devices, bridging VLAN and tap devices
+    Host for guest3 and guest4 virtual machines
+Guest #1 description:
+    One ethernet device
+Guest #2 description:
+    One ethernet device
+Guest #3 description:
+    One ethernet device
+Guest #4 description:
+    One ethernet device
+Test name:
+    virtual_bridge_2_vlans_over_bond.py
+Test description:
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between guests in same VLANs
+    Netperf:
+      + duration: 5
+      + TCP_STREAM and UDP_STREAM
+      + between guests in same VLANs

@@ -1,0 +1,96 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <interfaces>
+                <eth id="eth1" label="tnet" />
+                <eth id="eth2" label="tnet" />
+                <bond id="test_bond">
+                    <options>
+                        <option name="mode" value="active-backup" />
+                        <option name="miimon" value="100" />
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                        <slave id="eth2" />
+                    </slaves>
+                    <addresses>
+                        <address value="1.2.3.4/24" />
+                    </addresses>
+                </bond>
+                <vlan id="vlan10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="test_bond" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.10.1/24" />
+                    </addresses>
+                </vlan>
+                <vlan id="vlan20">
+                    <options>
+                        <option name="vlan_tci" value="20" />
+                    </options>
+                    <slaves>
+                        <slave id="test_bond" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.20.1/24" />
+                    </addresses>
+                </vlan>
+                <vlan id="vlan30">
+                    <options>
+                        <option name="vlan_tci" value="30" />
+                    </options>
+                    <slaves>
+                        <slave id="test_bond" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.30.1/24" />
+                    </addresses>
+                </vlan>
+            </interfaces>
+        </host>
+        <host id="testmachine2">
+            <interfaces>
+                <eth id="eth1" label="tnet" />
+                <vlan id="vlan10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.10.2/24" />
+                    </addresses>
+                </vlan>
+                <vlan id="vlan20">
+                    <options>
+                        <option name="vlan_tci" value="20" />
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.20.2/24" />
+                    </addresses>
+                </vlan>
+                <vlan id="vlan30">
+                    <options>
+                        <option name="vlan_tci" value="30" />
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.30.2/24" />
+                    </addresses>
+                </vlan>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="3_vlans.py" />
+</lnstrecipe>

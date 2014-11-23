@@ -1,0 +1,45 @@
+Topology:
+
+                             switch
+    VLAN10                  +------+                  VLAN10
+    +-------------------+   |      |   +-------------------+
+    |   VLAN20          |   |      |   |          VLAN20   |
+    |   +-------------------+      +-------------------+   |
+    |   |   VLAN30      |   |      |   |      VLAN30   |   |
+    |   |   +-----------+   |      |   +-----------+   |   |
+    |   |   |               +------+               |   |   |
+    |   |   |                                      |   |   |
+    +-------+                                      +-------+
+        |                                              |
+     +--+--+                                        +--+--+
++----| eth |----+                              +----| eth |----+
+|    +-----+    |                              |    +-----+    |
+|               |                              |               |
+|               |                              |               |
+|     host1     |                              |     host2     |
+|               |                              |               |
+|               |                              |               |
+|               |                              |               |
++---------------+                              +---------------+
+
+
+Number of hosts: 2
+Host #1 description:
+    One ethernet device with 3 VLAN subinterfaces
+Host #2 description:
+    One ethernet device with 3 VLAN subinterfaces
+Test name:
+    3_vlans.py
+Test description (3_vlans.py):
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between interfaces in the same VLAN (these should pass)
+      + between interfaces in different VLANs (these should fail)
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + between interfaces in the same VLAN
+    Offloads:
+      + TSO, GRO, GSO
+      + tested both on/off variants

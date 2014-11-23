@@ -1,0 +1,44 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <interfaces>
+                <eth id="eth1" label="tnet" />
+                <eth id="eth2" label="tnet" />
+                <bond id="test_if">
+                    <options>
+                        <option name="mode" value="balance-rr" />
+                        <option name="miimon" value="100" />
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                        <slave id="eth2" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.0.1/24" />
+                    </addresses>
+                </bond>
+            </interfaces>
+        </host>
+        <host id="testmachine2">
+            <interfaces>
+                <eth id="eth1" label="tnet" />
+                <eth id="eth2" label="tnet" />
+                <bond id="test_if">
+                    <options>
+                        <option name="mode" value="balance-rr" />
+                        <option name="miimon" value="100" />
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                        <slave id="eth2" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.0.2/24" />
+                    </addresses>
+                </bond>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="bonding_test.py" />
+</lnstrecipe>
