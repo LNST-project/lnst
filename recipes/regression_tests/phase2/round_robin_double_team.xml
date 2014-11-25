@@ -1,0 +1,58 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <interfaces>
+                <eth id="eth1" label="tnet" />
+                <eth id="eth2" label="tnet" />
+                <eth id="eth3" label="tnet" />
+                <team id="test_if">
+                    <options>
+                        <option name="teamd_config">
+                            {
+                                "hwaddr" : "10:22:33:44:55:66",
+                                "runner" : {"name" : "roundrobin"}
+                            }
+                        </option>
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                        <slave id="eth2" />
+                        <slave id="eth3" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.0.1/24" />
+                    </addresses>
+                </team>
+            </interfaces>
+        </host>
+        <host id="testmachine2">
+            <interfaces>
+                <eth id="eth1" label="tnet" />
+                <eth id="eth2" label="tnet" />
+                <eth id="eth3" label="tnet" />
+                <team id="test_if">
+                    <options>
+                        <option name="teamd_config">
+                            {
+                                "hwaddr" : "00:11:22:33:44:55",
+                                "runner" : {"name" : "roundrobin"}
+                            }
+                        </option>
+                    </options>
+                    <slaves>
+                        <slave id="eth1" />
+                        <slave id="eth2" />
+                        <slave id="eth3" />
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.0.2/24" />
+                    </addresses>
+                </team>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="team_test.py" />
+</lnstrecipe>
+
+
