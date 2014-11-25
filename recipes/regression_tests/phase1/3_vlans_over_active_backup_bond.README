@@ -31,14 +31,14 @@ Topology:
 +--------------------+                         +--------------------+
 
 Number of hosts: 2
-Host #1 decsription:
-    Two ethernet devices, in round-robin bond mode
+Host #1 description:
+    Two ethernet devices, in active-backup bond mode
     3 VLANs on bond interface
 Host #2 description:
-    Two ethernet devices, in round-robin bond mode
+    Two ethernet devices, in active-backup bond mode
     3 VLANs on bond interface
 Test name:
-    3_vlans.py
+    3_vlans_over_bond.py
 Test description:
     Ping:
       + count: 100

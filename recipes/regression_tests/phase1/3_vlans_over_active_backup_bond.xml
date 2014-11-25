@@ -6,7 +6,7 @@
                 <eth id="eth2" label="tnet" />
                 <bond id="test_bond">
                     <options>
-                        <option name="mode" value="balance-rr" />
+                        <option name="mode" value="active-backup" />
                         <option name="miimon" value="100" />
                     </options>
                     <slaves>
@@ -92,5 +92,5 @@
         </host>
     </network>
 
-    <task python="3_vlans.py" />
+    <task python="3_vlans_over_bond.py" />
 </lnstrecipe>
