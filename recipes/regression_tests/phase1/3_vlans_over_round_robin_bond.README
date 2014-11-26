@@ -13,15 +13,15 @@ Topology:
            |                                              |
            |                                              |
            |                                              |
-      +----+---+                                     +----+---+
-      |  BOND  |                                     |  BOND  |
-      +---++---+                                     +---++---+
-          ||                                             ||
-       +--++--+                                       +--++--+
-       |      |                                       |      |
-    +--+-+  +-+--+                                 +--+-+  +-+--+
-+---|eth1|--|eth2|---+                         +---|eth1|--|eth2|---+
-|   +----+  +----+   |                         |   +----+  +----+   |
+      +----+---+                                          |
+      |  BOND  |                                          |
+      +---++---+                                          |
+          ||                                              |
+       +--++--+                                           |
+       |      |                                           |
+    +--+-+  +-+--+                                     +--+-+
++---|eth1|--|eth2|---+                         +-------|eth1|-------+
+|   +----+  +----+   |                         |       +----+       |
 |                    |                         |                    |
 |                    |                         |                    |
 |       host1        |                         |       host2        |
@@ -35,8 +35,8 @@ Host #1 decsription:
     Two ethernet devices, in round-robin bond mode
     3 VLANs on bond interface
 Host #2 description:
-    Two ethernet devices, in round-robin bond mode
-    3 VLANs on bond interface
+    One ethernet device
+    3 VLANs on the ethernet interface
 Test name:
     3_vlans_over_bond.py
 Test description:
