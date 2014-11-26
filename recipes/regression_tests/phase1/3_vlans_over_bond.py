@@ -63,8 +63,6 @@ for vlan1 in vlans:
                                                     offload, state))
                     m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
                                                     offload, state))
-                    m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth2"),
-                                                    offload, state))
 
                     # Ping test
                     m1.run(ping_mod)
@@ -86,8 +84,6 @@ for vlan1 in vlans:
                     m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth2"),
                                                     offload, state))
                     m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
-                                                    offload, state))
-                    m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth2"),
                                                     offload, state))
 
                     # Ping test
