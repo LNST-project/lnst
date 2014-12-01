@@ -1,0 +1,115 @@
+<lnstrecipe>
+    <network>
+        <host id="host1">
+            <interfaces>
+                <eth id="nic1" label="to_switch" />
+                <eth id="nic2" label="to_switch" />
+                <eth id="tap1" label="to_guest1" />
+                <eth id="tap2" label="to_guest2" />
+                <ovs_bridge id="bridge">
+                    <slaves>
+                        <slave id="nic1"/>
+                        <slave id="nic2"/>
+                        <slave id="tap1"/>
+                        <slave id="tap2"/>
+                    </slaves>
+                    <vlan tag="10">
+                        <slaves>
+                            <slave id="tap1"/>
+                        </slaves>
+                    </vlan>
+                    <vlan tag="20">
+                        <slaves>
+                            <slave id="tap2"/>
+                        </slaves>
+                    </vlan>
+                    <bond id="bond">
+                        <slaves>
+                            <slave id="nic1"/>
+                            <slave id="nic2"/>
+                        </slaves>
+                        <options>
+                            <option name="bond_mode" value="active-backup" />
+                            <option name="other_config:bond-miimon-interval" value="100" />
+                        </options>
+                    </bond>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="guest1">
+            <interfaces>
+                <eth id="guestnic" label="to_guest1">
+                    <addresses>
+                        <address>192.168.10.100/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="guest2">
+            <interfaces>
+                <eth id="guestnic" label="to_guest2">
+                    <addresses>
+                        <address>192.168.20.100/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+        <host id="host2">
+            <interfaces>
+                <eth id="nic1" label="to_switch"/>
+                <eth id="nic2" label="to_switch"/>
+                <eth id="tap1" label="to_guest3"/>
+                <eth id="tap2" label="to_guest4"/>
+                <ovs_bridge id="bridge">
+                    <slaves>
+                        <slave id="nic1"/>
+                        <slave id="nic2"/>
+                        <slave id="tap1"/>
+                        <slave id="tap2"/>
+                    </slaves>
+                    <vlan tag="10">
+                        <slaves>
+                            <slave id="tap1"/>
+                        </slaves>
+                    </vlan>
+                    <vlan tag="20">
+                        <slaves>
+                            <slave id="tap2"/>
+                        </slaves>
+                    </vlan>
+                    <bond id="bond">
+                        <slaves>
+                            <slave id="nic1"/>
+                            <slave id="nic2"/>
+                        </slaves>
+                        <options>
+                            <option name="bond_mode" value="active-backup" />
+                            <option name="other_config:bond-miimon-interval" value="100" />
+                        </options>
+                    </bond>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="guest3">
+            <interfaces>
+                <eth id="guestnic" label="to_guest3">
+                    <addresses>
+                        <address>192.168.10.101/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="guest4">
+            <interfaces>
+                <eth id="guestnic" label="to_guest4">
+                    <addresses>
+                        <address>192.168.20.101/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="virtual_ovs_bridge_2_vlans_over_active_backup_bond.py" />
+</lnstrecipe>

@@ -1,0 +1,77 @@
+Topology:
+
+                                    switch
+                                  +--------+
+                                  |        |
+        +-------------------------+        +--------------------------+
+        |                         |        |                          |
+        |         +---------------+        +----------------+         |
+        |         |               |        |                |         |
+        |         |               +--------+                |         |
+        |         |                                         |         |
+        |         |                                         |         |
+     +--+-+    +--+-+                                     +--+-+    +--+-+
++----+eth1+----+eth2+----+                           +----+eth1+----+eth2+----+
+|    +-+--+    +--+-+    |                           |    +-+--+    +--+-+    |
+|      |          |      |                           |      |          |      |
+|      |          |      |                           |      |          |      |
+|      |          |      |                           |      |          |      |
+| +----+----------+----+ |                           | +----+----------+----+ |
+| |    +---bond---+    | |                           | |    +---bond---+    | |
+| |                    | |                           | |                    | |
+| |     ovs_bridge     | |                           | |     ovs_bridge     | |
+| |                    | |                           | |                    | |
+| | vlan10      vlan20 | |                           | | vlan10      vlan20 | |
+| +--+--------------+--+ |                           | +--+--------------+--+ |
+|    |    host1     |    |                           |    |    host2     |    |
+|    |              |    |                           |    |              |    |
+|    |              |    |                           |    |              |    |
+|  +-+-+          +-+-+  |                           |  +-+-+          +-+-+  |
++--+tap+----------+tap+--+                           +--+tap+----------+tap+--+
+   +-+-+          +-+-+                                 +-+-+          +-+-+
+     |              |                                     |              |
+   +-+-+          +-+-+                                 +-+-+          +-+-+
++--+eth+--+    +--+eth+--+                           +--+eth+--+    +--+eth+--+
+|  +---+  |    |  +---+  |                           |  +---+  |    |  +---+  |
+|         |    |         |                           |         |    |         |
+| guest1  |    | guest2  |                           | guest3  |    | guest4  |
+|         |    |         |                           |         |    |         |
+|         |    |         |                           |         |    |         |
++---------+    +---------+                           +---------+    +---------+
+
+Number of hosts: 6
+Host #1 description:
+    Two ethernet devices
+    Two tap devices
+    One Open vSwitch bridge that connects the ethernet devices into a bond and
+    uses the tap devices as access ports for vlans 10 and 20.
+    Host for guest1 and guest2 virtual machines
+Host #2 description:
+    Two ethernet devices
+    Two tap devices
+    One Open vSwitch bridge that connects the ethernet devices into a bond and
+    uses the tap devices as access ports for vlans 10 and 20.
+    Host for guest3 and guest4 virtual machines
+Guest #1 description:
+    One ethernet device
+Guest #2 description:
+    One ethernet device
+Guest #3 description:
+    One ethernet device
+Guest #4 description:
+    One ethernet device
+Test name:
+    virtual_ovs_bridge_2_vlans_over_bond.py
+Test description:
+    Set offload:
+      + gso, gro, tso
+      + guest ethernet devices
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between guests in same VLANs (should pass)
+      + between guests in different VLANs (should fail)
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + between guests in same VLANs

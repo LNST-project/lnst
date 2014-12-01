@@ -1,0 +1,55 @@
+Topology:
+
+                           +----------+
+                           |          |            VLAN10
+         +-----------------+  switch  +-----------------+
+         |                 |          |                 |
+         |                 +----------+                 |
+         |                                              |
+       +-+-+                                            |
++------|nic|------+                                   +-+-+
+|      +-+-+      |                            +------|nic|------+
+|        |        |                            |      +---+      |
+|   +----+        |                            |                 |
+|   |             |                            |                 |
+| +-+---------+   |                            |                 |
+| | ovs_bridge|   |                            |      host2      |
+| +-+---------+   |                            |                 |
+|   |  host1      |                            |                 |
+| +-+-+           |                            |                 |
++-|tap|-----------+                            |                 |
+  +-+-+                                        +-----------------+
+    |
+    |VLAN10
+    |
+  +-+-+
++-|nic|--+
+| +---+  |
+| guest1 |
+|        |
++--------+
+
+Number of hosts: 3
+Host #1 description:
+    One ethernet device
+    One tap device
+    One Open vSwitch bridge device, bridging ethernet and tap devices
+    Host for guest1 virtual machine
+Host #2 description:
+    One ethernet device with one VLAN subinterface
+Guest #1 description:
+    One ethernet device with one VLAN subinterface
+Test name:
+    virtual_ovs_bridge_vlan_in_guest.py
+Test description:
+    Set device offload parameters:
+      + gso, gro, tso
+      + Guest#1 and Host#2 ethernet devices
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between guest1's VLAN10 and host2's VLAN10
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + between guest1's VLAN10 and host2's VLAN10
