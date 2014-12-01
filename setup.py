@@ -20,6 +20,7 @@ rpazdera@redhat.com (Radek Pazdera)
 import sys
 import re
 import gzip
+import os
 from time import gmtime, strftime
 from distutils.core import setup
 
@@ -103,6 +104,12 @@ project website <https://fedorahosted.org/lnst>.
 PACKAGES = ["lnst", "lnst.Common", "lnst.Controller", "lnst.Slave"]
 SCRIPTS = ["lnst-ctl", "lnst-slave"]
 
+RECIPE_FILES = []
+for dirpath, dirnames, files in os.walk("recipes/"):
+    if len(files) > 0:
+        RECIPE_FILES.append((CTL_RESOURCE_DIR + dirpath + "/",
+                             [dirpath + "/" + f for f in files]))
+
 TEST_MODULES = [
     (CTL_MODULES_LOCATIONS,
         ["test_modules/DummyFailing.py",
@@ -161,7 +168,7 @@ BASH_COMP = [(BASH_COMP_DIR, ["install/lnst-ctl.bash",
 SCHEMAS = [(CTL_RESOURCE_DIR, ["schema-recipe.rng", "schema-sm.rng"])]
 
 DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES + \
-             SCHEMAS + BASH_COMP
+             SCHEMAS + BASH_COMP + RECIPE_FILES
 
 setup(name="lnst",
     version="5",
