@@ -217,6 +217,10 @@
                                 <ref name="define"/>
                             </optional>
 
+                            <optional>
+                            <ref name="options"/>
+                            </optional>
+
                             <element name="slaves">
                                 <interleave>
                                     <optional>

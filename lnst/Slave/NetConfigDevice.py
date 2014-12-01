@@ -341,7 +341,14 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
 
         br_name = self._dev_config["name"]
 
+        bond_ports = []
+        for bond in self._dev_config["ovs_conf"]["bonds"].itervalues():
+            for slave_id in bond["slaves"]:
+                bond_ports.append(slave_id)
+
         for slave_id in slaves:
+            if slave_id in bond_ports:
+                continue
             slave_dev = self._if_manager.get_mapped_device(slave_id)
             slave_name = slave_dev.get_name()
 
@@ -362,7 +369,14 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
 
         br_name = self._dev_config["name"]
 
+        bond_ports = []
+        for bond in self._dev_config["ovs_conf"]["bonds"].itervalues():
+            for slave_id in bond["slaves"]:
+                bond_ports.append(slave_id)
+
         for slave_id in slaves:
+            if slave_id in bond_ports:
+                continue
             slave_dev = self._if_manager.get_mapped_device(slave_id)
             slave_name = slave_dev.get_name()
 
@@ -374,9 +388,15 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
         bonds = self._dev_config["ovs_conf"]["bonds"]
         for bond_id, bond in bonds.iteritems():
             ifaces = ""
-            for slave in bond["slaves"]:
-                ifaces += " %s" % slave
-            exec_cmd("ovs-vsctl add-bond %s %s %s" % (br_name, bond_id, ifaces))
+            for slave_id in bond["slaves"]:
+                slave_dev = self._if_manager.get_mapped_device(slave_id)
+                slave_name = slave_dev.get_name()
+                ifaces += " %s" % slave_name
+            opts = ""
+            for option in bond["options"]:
+                opts += " %s=%s" % (option["name"], option["value"])
+            exec_cmd("ovs-vsctl add-bond %s %s %s %s" % (br_name, bond_id,
+                                                         ifaces, opts))
 
     def _del_bonds(self):
         br_name = self._dev_config["name"]

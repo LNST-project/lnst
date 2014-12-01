@@ -248,6 +248,11 @@ class RecipeParser(XmlParser):
 
                     bond_slaves.append(slave_id)
 
+                opts_tag = bond_tag.find("options")
+                opts = self._proces_options(opts_tag)
+                if len(opts) > 0:
+                    bonds[bond_id]["options"] = opts
+
         return [iface]
 
     def _proces_options(self, opts_tag):
