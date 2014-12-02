@@ -375,8 +375,13 @@ class Machine(object):
             else:
                 self._rpc_call_to_netns(netns, "stop_packet_capture")
 
-    def copy_file_to_machine(self, local_path, remote_path=None):
-        remote_path = self._rpc_call("start_copy_to", remote_path)
+    def copy_file_to_machine(self, local_path, remote_path=None, netns=None):
+        if netns:
+            remote_path = self._rpc_call_to_netns(netns, "start_copy_to",
+                              remote_path)
+        else:
+            remote_path = self._rpc_call("start_copy_to", remote_path)
+
         f = open(local_path, "rb")
 
         while True:
@@ -384,9 +389,17 @@ class Machine(object):
             if len(data) == 0:
                 break
 
-            self._rpc_call("copy_part_to", remote_path, Binary(data))
+            if netns:
+                self._rpc_call_to_netns(netns, "copy_part_to", remote_path,
+                    Binary(data))
+            else:
+                self._rpc_call("copy_part_to", remote_path, Binary(data))
 
-        self._rpc_call("finish_copy_to", remote_path)
+        if netns:
+            self._rpc_call_to_netns(netns, "finish_copy_to", remote_path)
+        else:
+            self._rpc_call("finish_copy_to", remote_path)
+
         return remote_path
 
     def copy_file_from_machine(self, remote_path, local_path):
@@ -431,10 +444,20 @@ class Machine(object):
                     self._rpc_call("add_resource_to_cache", res["hash"],
                                   remote_path, res_name, res["path"], res_type)
 
+                    for ns in self._namespaces:
+                        remote_path = self.copy_file_to_machine(local_path,
+                                          netns=ns)
+                        self._rpc_call_to_netns(ns, "add_resource_to_cache",
+                            res["hash"], remote_path, res_name, res["path"],
+                            res_type)
+
                     if res_type == "tools":
                         os.unlink(archive_path)
 
                 self._rpc_call("map_resource", res["hash"], res_type, res_name)
+                for ns in self._namespaces:
+                    self._rpc_call_to_netns(ns, "map_resource", res["hash"],
+                        res_type, res_name)
 
     def enable_nm(self):
         return self._rpc_call("enable_nm")
