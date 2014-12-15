@@ -1,0 +1,4 @@
+Configuration updates (hwaddr) in python tasks
+
+The purpose of this test is to verify that the configuration updates
+propagate correctly from the slaves back to controller.

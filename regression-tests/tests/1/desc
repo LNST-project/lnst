@@ -1,0 +1,4 @@
+Basic sanity ping test
+
+This test just executes a ping between two arbitrary machines with a
+single plain ethernet interface.

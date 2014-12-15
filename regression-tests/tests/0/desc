@@ -1,0 +1,6 @@
+Run lnst-ctl without any parameters
+
+A test for Issue #6. The lnst-ctl script failed in case it was run with
+no arguments at all.
+
+https://github.com/jpirko/lnst/issues/6

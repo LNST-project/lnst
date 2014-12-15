@@ -1,0 +1,26 @@
+<lnstrecipe>
+    <network>
+        <host id="1">
+            <interfaces>
+                <eth label="tnet" id="testiface">
+                    <addresses>
+                        <address value="192.168.100.10/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="2">
+            <interfaces>
+                <eth label="tnet" id="testiface">
+                    <addresses>
+                        <address value="192.168.100.11/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run command="eecho weeee" host="1"/>
+    </task>
+</lnstrecipe>

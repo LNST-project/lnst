@@ -1,0 +1,3 @@
+devname updates not reflected in {Net,Nm}DeviceConfig classes
+
+https://github.com/jpirko/lnst/issues/65

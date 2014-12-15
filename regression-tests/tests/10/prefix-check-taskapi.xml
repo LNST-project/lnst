@@ -1,0 +1,33 @@
+<lnstrecipe>
+	<network>
+		<host id="client">
+		<interfaces>
+				<eth id="nic1" label="inet">
+					<addresses>
+						<address value="192.168.200.3/24"/>
+					</addresses>
+				</eth>
+				<eth id="nic2" label="inet">
+					<addresses>
+						<address value="192.168.202.3/16"/>
+					</addresses>
+				</eth>
+			</interfaces>
+		</host>
+		<host id="lb">
+			<interfaces>
+				<eth id="nic1" label="inet">
+					<addresses>
+						<address value="192.168.200.4/24"/>
+					</addresses>
+				</eth>
+				<eth id="nic2" label="inet">
+					<addresses>
+						<address value="192.168.202.4/16"/>
+					</addresses>
+				</eth>
+			</interfaces>
+		</host>
+	</network>
+	<task python="./prefix-check.py"/>
+</lnstrecipe>

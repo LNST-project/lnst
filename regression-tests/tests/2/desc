@@ -1,0 +1,5 @@
+RecipeParser: Lots of comments in a XML
+
+There was a problem with comments at some places in the recipe XML.
+This recipe should cover all the possibilities and make sure they are
+properly ignored.

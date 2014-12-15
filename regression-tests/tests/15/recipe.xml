@@ -1,0 +1,33 @@
+<lnstrecipe>
+	<network>
+		<host id="slave1">
+			<params/>
+			<interfaces>
+				<eth id="1" label="A">
+					<addresses>
+						<address value="192.168.101.1/24"/>
+					</addresses>
+				</eth>
+			</interfaces>
+		</host>
+
+		<host id="slave2">
+			<params/>
+			<interfaces>
+				<eth id="1" label="A">
+					<addresses>
+						<address value="192.168.101.2/24"/>
+					</addresses>
+				</eth>
+			</interfaces>
+		</host>
+
+	</network>
+
+	<task>
+		<run host="slave1" command="ip link set {devname(slave1, 1)} down"/>
+		<run host="slave1" command="ip link set {devname(slave1, 1)} name xyz"/>
+		<run host="slave1" command="ip link set {devname(slave1, 1)} up"/>
+		<run host="slave1" command="ip a show dev xyz"/>
+	</task>
+</lnstrecipe>

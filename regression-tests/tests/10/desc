@@ -1,0 +1,4 @@
+Check the prefix template function
+
+Check that the prefix function works correctly from the recipe and also from
+a python program using Task API.

@@ -1,0 +1,41 @@
+<lnstrecipe>
+    <define>
+        <alias name="alias1" value="value1"/>
+    </define>
+    <network>
+        <define>
+            <alias name="m1_addr" value="192.168.111.1/24"/>
+        </define>
+        <host id="m1">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address>{$m1_addr}</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+        <define>
+            <alias name="m2_addr" value="192.168.111.2/24"/>
+        </define>
+        <host id="m2">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="{$m1_addr}"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <define>
+            <alias name="foo" value="bar"/>
+        </define>
+    </network>
+
+    <define>
+        <alias name="alias2" value="value2"/>
+    </define>
+
+    <task python="taskapi-alias-namespace-check.py"/>
+</lnstrecipe>

@@ -1,0 +1,4 @@
+Check corner case in matching algorithm
+
+This test checks that controller fails if it runs a recipe with just one
+machine specified. The controller should fail.

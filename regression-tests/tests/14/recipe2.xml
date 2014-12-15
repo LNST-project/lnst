@@ -1,0 +1,79 @@
+<lnstrecipe>
+	<network>
+		<host id="slave1">
+			<params/>
+			<interfaces>
+				<eth id="1" label="A"/>
+				<vlan id="vlan1">
+					<options>
+						<option name="vlan_tci" value="1"/>
+					</options>
+					<addresses>
+						<address value="192.168.100.1/24"/>
+					</addresses>
+					<slaves>
+						<slave id="1"/>
+					</slaves>
+				</vlan>
+				<vlan id="vlan2">
+					<options>
+						<option name="vlan_tci" value="2"/>
+					</options>
+					<addresses>
+						<address value="192.168.101.2/24"/>
+					</addresses>
+					<slaves>
+						<slave id="1"/>
+					</slaves>
+				</vlan>
+			</interfaces>
+		</host>
+
+		<host id="slave2">
+			<params/>
+			<interfaces>
+				<eth id="2" label="A"/>
+				<vlan id="vlan1">
+					<options>
+						<option name="vlan_tci" value="1"/>
+					</options>
+					<addresses>
+						<address value="192.168.100.3/24"/>
+					</addresses>
+					<slaves>
+						<slave id="2"/>
+					</slaves>
+				</vlan>
+				<vlan id="vlan2">
+					<options>
+						<option name="vlan_tci" value="2"/>
+					</options>
+					<addresses>
+						<address value="192.168.101.4/24"/>
+					</addresses>
+					<slaves>
+						<slave id="2"/>
+					</slaves>
+				</vlan>
+			</interfaces>
+		</host>
+
+	</network>
+
+	<task>
+		<run host="slave1" module="IcmpPing">
+			<options>
+				<option name="addr" value="{ip(slave2, vlan1)}"/>
+				<option name="count" value="3"/>
+				<option name="iface" value="{devname(slave1, vlan1)}"/>
+			</options>
+		</run>
+		<run host="slave1" module="IcmpPing">
+			<options>
+				<option name="addr" value="{ip(slave2, vlan2)}"/>
+				<option name="count" value="3"/>
+				<option name="iface" value="{devname(slave1, vlan2)}"/>
+			</options>
+		</run>
+	</task>
+</lnstrecipe>

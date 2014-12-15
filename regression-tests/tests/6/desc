@@ -1,0 +1,4 @@
+Dynamic hwaddr updates
+
+This test case can verify whether the dynamic configuration updates are
+propagated to the controller properly.

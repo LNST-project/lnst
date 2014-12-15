@@ -1,0 +1,43 @@
+<lnstrecipe>
+    <define>
+        <alias name="one" value="192.168.100.10/24"/>
+        <alias name="two" value="192.168.100.11/24"/>
+    </define>
+    <network>
+        <host id="1">
+            <interfaces>
+                <eth label="tnet" id="testiface">
+                    <addresses>
+                        <address value="{$one}"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="2">
+            <interfaces>
+                <eth label="tnet" id="testiface">
+                    <addresses>
+                        <address value="{$two}"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <define>
+        <alias name="one" value="one"/>
+        <alias name="two" value="two"/>
+    </define>
+
+    <task>
+        <run command="echo 1_{$one}_{$two}" host="1"/>
+        <define>
+            <alias name="one" value="eno"/>
+            <alias name="two" value="owt"/>
+        </define>
+        <run command="echo 2_{$one}_{$two}" host="1"/>
+    </task>
+    <task>
+        <run command="echo 3_{$one}_{$two}" host="1"/>
+    </task>
+</lnstrecipe>
