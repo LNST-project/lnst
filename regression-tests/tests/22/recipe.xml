@@ -1,0 +1,26 @@
+<lnstrecipe>
+    <network>
+        <host id="tm1">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="192.168.131.201/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="tm2">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="192.168.131.202/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+		<run host="tm1" command="ip a"/>
+    </task>
+</lnstrecipe>

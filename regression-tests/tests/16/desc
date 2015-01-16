@@ -1,0 +1,3 @@
+address tag should accept value in the tag contents or the 'value' attribute
+
+https://github.com/jpirko/lnst/issues/31

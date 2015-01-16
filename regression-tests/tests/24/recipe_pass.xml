@@ -1,0 +1,33 @@
+<lnstrecipe>
+    <network>
+        <host id="tm1">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="192.168.131.201/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="tm2">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="192.168.131.202/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run host="tm1" module="IcmpPing" bg_id="test" timeout="30">
+            <options>
+                <option name="addr" value="{ip(tm2, nic1)}"/>
+                <option name="count" value="10"/>
+                <option name="interval" value="1"/>
+            </options>
+        </run>
+        <wait host="tm1" bg_id="test"/>
+    </task>
+</lnstrecipe>

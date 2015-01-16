@@ -1,0 +1,37 @@
+<lnstrecipe>
+    <network>
+        <host id="slave1">
+            <interfaces>
+                <eth id="testifc1" label="A">
+                    <addresses>
+                        <address>fd00::1/64</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+        <host id="slave2">
+            <interfaces>
+                <eth id="testifc3" label="A">
+                    <addresses>
+                        <address value="fd00::2/64"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+    </network>
+
+    <task>
+        <ctl_wait seconds="5"/>
+        <config host="slave1" option="/proc/sys/net/ipv4/igmp_max_memberships" value="5"/>
+        <run host="slave1" module="Icmp6Ping">
+            <options>
+                <option name="addr" value="{ip(slave2,testifc3)}"/>
+                <option name="count" value="20"/>
+                <option name="interval" value="0"/>
+            </options>
+        </run>
+    </task>
+
+</lnstrecipe>

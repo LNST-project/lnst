@@ -1,0 +1,17 @@
+<lnstrecipe>
+    <network>
+        <host id="tm1">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="192.168.131.201/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run host="tm1" command="ethtool -i {ip(tm1,nic2)}"/>
+    </task>
+</lnstrecipe>

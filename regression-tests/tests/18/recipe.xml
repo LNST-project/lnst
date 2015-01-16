@@ -1,0 +1,26 @@
+<lnstrecipe>
+    <network>
+        <host id="slave1">
+            <interfaces>
+                <eth id="testiface" label="A">
+                    <addresses>
+                        <address value="fd00::1/64"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+        <host id="slave2">
+            <interfaces>
+                <eth id="testiface" label="A">
+                    <addresses>
+                        <address value="fd00::2/64"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+    </network>
+
+    <task/>
+</lnstrecipe>

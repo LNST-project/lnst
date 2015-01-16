@@ -1,0 +1,42 @@
+<lnstrecipe>
+    <network>
+        <host id="tm1">
+            <interfaces>
+                <eth id="nic1" label="testnet"/>
+                <veth_pair>
+                    <veth id="veth1"/>
+                    <veth id="veth2" netns="test_ns">
+                        <addresses>
+                            <address value="192.168.131.201/24"/>
+                        </addresses>
+                    </veth>
+                </veth_pair>
+                <bridge id="br">
+                    <slaves>
+                        <slave id="nic1"/>
+                        <slave id="veth1"/>
+                    </slaves>
+                </bridge>
+            </interfaces>
+        </host>
+        <host id="tm2">
+            <interfaces>
+                <eth id="nic1" label="testnet">
+                    <addresses>
+                        <address value="192.168.131.202/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run host="tm1" module="IcmpPing" netns="test_ns">
+            <options>
+                <option name="addr" value="{ip(tm2, nic1)}"/>
+                <option name="count" value="40"/>
+                <option name="interval" value="0"/>
+            </options>
+        </run>
+    </task>
+</lnstrecipe>

@@ -1,0 +1,3 @@
+Unknown options to a test module result in a stack trace
+
+https://github.com/jpirko/lnst/issues/38

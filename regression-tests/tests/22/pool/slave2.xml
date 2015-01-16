@@ -1,0 +1,6 @@
+<slavemachine>
+    <params>
+        <param name="hostname" value="example.com"/>
+        <param name="libvirt_domain" value="example"/>
+    </params>
+</slavemachine>
