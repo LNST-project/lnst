@@ -1,9 +1,6 @@
 <lnstrecipe>
 	<network>
 		<host id="client">
-            <params>
-                <param name="os" value="rhel7"/>
-            </params>
 			<interfaces>
 				<eth id="nic1" label="inet">
 					<addresses>
@@ -16,7 +13,7 @@
 	<task>
 		<run module="IcmpPing" host="client">
 			<options>
-				<option name="addr" value="{ip(lb,nic1)}"/>
+				<option name="addr" value="{ip(client,nic1)}"/>
 				<option name="count" value="40"/>
 			</options>
 		</run>

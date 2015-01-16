@@ -2,3 +2,7 @@ Check corner case in matching algorithm
 
 This test checks that controller fails if it runs a recipe with just one
 machine specified. The controller should fail.
+
+UPDATE:
+This is now supported in new lnst versions, the controller therefore shoudln't
+fail. Changing the recipe.xml and run.sh to reflect this.

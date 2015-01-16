@@ -7,6 +7,6 @@ init_test
 lnst-ctl -d run recipe.xml
 rv=$?
 
-assert_status "error" "$rv"
+assert_status "pass" "$rv"
 
 end_test
