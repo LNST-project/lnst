@@ -41,23 +41,27 @@ function print_separator
 
 function usage
 {
-    echo "Usage: $0 [-r revision] [-l logdir] [-t list_of_tests] [-g url] [-n]"
+    echo "Usage: $0 [-r revision] [-l logdir] [-t list_of_tests] [-u url] [-n]"
     echo "    -r revision       Test a specific git branch/rev/tag"
+    echo "                      Note: ignored when -s is used"
     echo "    -l logdir         Save test results to a directory"
     echo "    -t list_of_tests  Run only these tests"
     echo "                      Example: -t 0,1,2 will run tests 0, 1, and 2"
     echo "    -n                Disable use of NetworkManager on slavemachines"
     echo "                      Note: enabled by default"
-    echo "    -g url            URL pointing to LNST git repository that should be cloned"
+    echo "    -u url            URL pointing to LNST repository that should be used"
+    echo "                      Note: git clone and checkout by default"
+    echo "    -s                use rsync instead of git"
     exit 0
 }
 
 # ---
 
 #default repository url
-git_url="../"
+url="../"
+use_git=true
 
-while getopts "hlr:t:g:n" OPTION
+while getopts "hlr:t:g:ns" OPTION
 do
     case $OPTION in
         h)  usage ;;
@@ -67,7 +71,8 @@ do
         r)  rev="$OPTARG";;
         t)  tests="`tr "," " " <<<"$OPTARG"`" ;;
         n)  nm_off="yes";;
-        g)  git_url="$OPTARG";;
+        g)  url="$OPTARG";;
+        s)  use_git=false;;
         \?) exit 1;;
     esac
 done
@@ -89,17 +94,23 @@ echo "$$" >.lock
 
 # Clone the repo
 repo=`mktemp -d`
-git clone $git_url $repo
-
-# Checkout the appropriate revision/tag
-if [ ! -z "$rev" ]; then
-    pushd . >/dev/null
-    cd $repo
-    git checkout "$rev"
-    popd >/dev/null
+if $use_git ; then
+    git clone $url $repo
 else
-    log "Revision not specified, using HEAD."
-    rev="HEAD"
+    rsync -r $url $repo
+fi
+
+if $use_git ; then
+    # Checkout the appropriate revision/tag
+    if [ ! -z "$rev" ]; then
+        pushd . >/dev/null
+        cd $repo
+        git checkout "$rev"
+        popd >/dev/null
+    else
+        log "Revision not specified, using HEAD."
+        rev="HEAD"
+    fi
 fi
 
 # Load the proper config
@@ -150,7 +161,7 @@ print_separator
 
 # In case the list of test names to run was omitted, run all of them
 if [ -z "$tests" ]; then
-    tests="`ls -1 tests/ | grep -v '\.sh$'`"
+    tests="`command ls -1 tests/ | grep -v '\.sh$' | sort -n`"
 fi
 
 for test_name in $tests; do
@@ -208,14 +219,17 @@ print_separator
 sleep 1
 
 # Cleanup
-while read line; do
-    hostname=`awk '{print $1}' <<<"$line"`
-    pid=`awk '{print $2}' <<<"$line"`
-    remote_repo=`awk '{print $3}' <<<"$line"`
+if [ $slave_status ]; then
+    while read line; do
+        hostname=`awk '{print $1}' <<<"$line"`
+        pid=`awk '{print $2}' <<<"$line"`
+        remote_repo=`awk '{print $3}' <<<"$line"`
 
-    kill $pid
-    ssh -n "root@$hostname" "rm -r $remote_repo"
-done <<< "$slave_status"
+        echo "kill $pid"
+        kill $pid
+        ssh -n "root@$hostname" "rm -r $remote_repo"
+    done <<< "$slave_status"
+fi
 
 rm -rf $repo
 
