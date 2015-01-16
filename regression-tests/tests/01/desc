@@ -1,6 +1,0 @@
-Check matching algorithm corner case
-
-Check that the controller fails in cas there's a machine in the recipe that has
-an interface connected to some network and there's no other connection from
-other machines to this network, a.k.a broken-connection. The controller should
-fail with an error.
