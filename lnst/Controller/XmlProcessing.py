@@ -67,7 +67,7 @@ class XmlProcessingError(Exception):
         if self._line or self._col:
             loc = "%s%s:" % (line, col)
 
-        return "%s:%s %s" % (filename, loc, self._msg)
+        return "Parser error: %s:%s %s" % (filename, loc, self._msg)
 
 class XmlDataIterator:
     def __init__(self, iterator):

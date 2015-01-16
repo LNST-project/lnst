@@ -24,6 +24,7 @@ from lnst.Common.Utils import mkdir_p
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestController import NoMatchError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
+from lnst.Controller.XmlProcessing import XmlProcessingError
 
 RETVAL_PASS = 0
 RETVAL_FAIL = 1
@@ -94,13 +95,24 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
     recipe_head_log_entry(file_path, matches)
     res_serializer.add_recipe(file_path, matches)
 
-    nettestctl = NetTestController(file_path, log_ctl,
-                                   res_serializer=res_serializer,
-                                   pool_checks=pool_checks,
-                                   packet_capture=packet_capture,
-                                   defined_aliases=defined_aliases,
-                                   overriden_aliases=overriden_aliases,
-                                   reduce_sync=reduce_sync)
+    res = {}
+    try:
+        nettestctl = NetTestController(file_path, log_ctl,
+                                       res_serializer=res_serializer,
+                                       pool_checks=pool_checks,
+                                       packet_capture=packet_capture,
+                                       defined_aliases=defined_aliases,
+                                       overriden_aliases=overriden_aliases,
+                                       reduce_sync=reduce_sync)
+    except XmlProcessingError as err:
+        log_exc_traceback()
+        logging.error(err)
+        res["passed"] = False
+        res["err_msg"] = str(err)
+        retval = RETVAL_ERR
+        res_serializer.set_recipe_result(res)
+        return retval
+
     while True:
         res = {}
         if matches == 1:
