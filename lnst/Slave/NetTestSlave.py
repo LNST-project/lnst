@@ -516,6 +516,7 @@ class SlaveMethods:
                 self._server_handler.add_netns(netns, read_pipe)
                 return None
             elif pid == 0:
+                self._slave_server.set_netns_sighandlers()
                 #create new network namespace
                 libc_name = ctypes.util.find_library("c")
                 #from sched.h
@@ -564,7 +565,7 @@ class SlaveMethods:
             return False
         else:
             netns_pid = self._net_namespaces[netns]["pid"]
-            os.kill(netns_pid, signal.SIGTERM)
+            os.kill(netns_pid, signal.SIGUSR1)
             os.waitpid(netns_pid, 0)
             logging.debug("Network namespace %s removed." % netns)
 
@@ -859,3 +860,13 @@ class NetTestSlave:
     def _signal_die_handler(self, signum, frame):
         logging.info("Caught signal %d -> dying" % signum)
         self._finished = True
+
+    def _parent_resend_signal_handler(self, signum, frame):
+        logging.info("Caught signal %d -> resending to parent" % signum)
+        os.kill(os.getppid(), signum)
+
+    def set_netns_sighandlers(self):
+        signal.signal(signal.SIGHUP, self._parent_resend_signal_handler)
+        signal.signal(signal.SIGINT, self._parent_resend_signal_handler)
+        signal.signal(signal.SIGTERM, self._parent_resend_signal_handler)
+        signal.signal(signal.SIGUSR1, self._signal_die_handler)
