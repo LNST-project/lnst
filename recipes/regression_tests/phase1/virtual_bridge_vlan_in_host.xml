@@ -1,4 +1,7 @@
 <lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+    </define>
     <network>
         <host id="host1">
             <interfaces>
@@ -28,6 +31,7 @@
                 <eth id="guestnic" label="to_guest">
                     <addresses>
                         <address>192.168.10.10/24</address>
+                        <address>2002::10:10/112</address>
                     </addresses>
                 </eth>
             </interfaces>
@@ -44,6 +48,7 @@
                     </slaves>
                     <addresses>
                         <address>192.168.10.11/24</address>
+                        <address>2002::10:11/112</address>
                     </addresses>
                 </vlan>
             </interfaces>

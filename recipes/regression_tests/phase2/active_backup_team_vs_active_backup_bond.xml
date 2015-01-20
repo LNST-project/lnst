@@ -21,6 +21,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.0.1/24" />
+                        <address value="2002::1/112" />
                     </addresses>
                 </team>
             </interfaces>
@@ -42,6 +43,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.0.2/24" />
+                        <address value="2002::2/112" />
                     </addresses>
                 </bond>
             </interfaces>

@@ -1,10 +1,14 @@
 <lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+    </define>
     <network>
         <host id="machine1">
             <interfaces>
                 <eth id="testiface" label="testnet">
                     <addresses>
-                        <address>192.168.100.10/24</address>
+                        <address>192.168.101.10/24</address>
+                        <address>2002::1/112</address>
                     </addresses>
                 </eth>
             </interfaces>
@@ -13,7 +17,8 @@
             <interfaces>
                 <eth id="testiface" label="testnet">
                     <addresses>
-                        <address>192.168.100.11/24</address>
+                        <address>192.168.101.11/24</address>
+                        <address>2002::2/112</address>
                     </addresses>
                 </eth>
             </interfaces>
