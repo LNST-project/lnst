@@ -291,15 +291,22 @@ class NmConfigDeviceGeneric(object):
             self._acon_obj_path = None
 
     def nm_enslave(self, slave_type, master_uuid, slave_conf):
-        self._connection["connection"]["slave_type"] = slave_type
+        if get_nm_version() < "1.0.0":
+            self._connection["connection"]["slave_type"] = slave_type
+        else:
+            self._connection["connection"]["slave-type"] = slave_type
         self._connection["connection"]["master"] = master_uuid
         self._connection.update(slave_conf)
 
         self._nm_update_connection()
 
     def nm_free(self):
-        if "slave_type" in self._connection["connection"]:
-            del self._connection["connection"]["slave_type"]
+        if get_nm_version() < "1.0.0":
+            if "slave_type" in self._connection["connection"]:
+                del self._connection["connection"]["slave_type"]
+        else:
+            if "slave-type" in self._connection["connection"]:
+                del self._connection["connection"]["slave-type"]
         if "master" in self._connection["connection"]:
             del self._connection["connection"]["master"]
 
