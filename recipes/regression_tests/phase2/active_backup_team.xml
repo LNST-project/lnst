@@ -1,4 +1,7 @@
 <lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+    </define>
     <network>
         <host id="testmachine1">
             <interfaces>
