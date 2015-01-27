@@ -73,24 +73,14 @@ class Netperf(TestGeneric):
         return cmd
 
     def _parse_output(self, threshold, output):
-        # pattern for throughput output
-        pattern2 = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
+        # pattern for tcp throughput output
+        pattern_tcp = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
         # pattern for udp throughput output
-        pattern3 = "\d+\s+\d+\s+\d+\.\d+\s+\d+\s+\d+\s+(\d+(\.\d+){0,1})"
+        pattern_udp = "\d+\s+\d+\s+\d+\.\d+\s+\d+\s+\d+\s+(\d+(\.\d+){0,1})"
         if self.get_opt("testname") == "UDP_STREAM":
-            r2 = re.search(pattern3, output.lower())
+            r2 = re.search(pattern_udp, output.lower())
         else:
-            r2 = re.search(pattern2, output.lower())
-        if r2 is None:
-            """
-            throughput was not found, end test with failure
-            """
-            logging.info("Could not get performance throughput! Are you sure "\
-                         "netperf is installed on both machines and machines "\
-                         "are mutually accessible?")
-            return (False, "Could not get performance throughput! Are you "\
-                           "sure netperf is installed on both machines and "\
-                           "machines are mutually accessible?")
+            r2 = re.search(pattern_tcp, output.lower())
         if threshold is not None:
             # pattern for threshold
             # group(1) ... threshold value
@@ -149,11 +139,18 @@ class Netperf(TestGeneric):
         logging.debug("running as client...")
         client = ShellProcess(cmd)
         try:
-            client.wait()
+            rv = client.wait()
         except OSError as e:
             if e.errno == errno.EINTR:
                 client.kill()
         output = client.read_nonblocking()
+        if rv != 0:
+            logging.info("Could not get performance throughput! Are you sure "\
+                         "netperf is installed on both machines and machines "\
+                         "are mutually accessible?")
+            return (False, "Could not get performance throughput! Are you "\
+                           "sure netperf is installed on both machines and "\
+                           "machines are mutually accessible?")
         return self._parse_output(self.get_opt("threshold"), output)
 
     def run(self):
