@@ -30,6 +30,8 @@
             <options>
                 <option name="role" value="client"/>
                 <option name="netperf_server" value="{ip(testmachine2, testifc2)}"/>
+                <option name="testname" value="SCTP_RR" />
+                <option name="threshold" value="0 Trans./sec" />
             </options>
         </run>
 

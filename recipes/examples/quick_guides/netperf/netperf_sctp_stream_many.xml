@@ -1,0 +1,41 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <interfaces>
+                <eth label="tnet" id="testifc1">
+                    <addresses>
+                        <address value="192.168.200.2/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="testmachine2">
+            <interfaces>
+                <eth label="tnet" id="testifc2">
+                    <addresses>
+                        <address value="192.168.200.3/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+    <task>
+        <run module="Netperf" host="testmachine2" bg_id="server">
+            <options>
+                <option name="role" value="server"/>
+                <option name="bind" value="{ip(testmachine2, testifc2)}"/>
+          </options>
+        </run>
+        <run module="Netperf" host="testmachine1">
+            <options>
+                <option name="role" value="client"/>
+                <option name="netperf_server" value="{ip(testmachine2, testifc2)}"/>
+                <option name="testname" value="SCTP_STREAM_MANY" />
+                <option name="threshold" value="0 Mbits/sec" />
+            </options>
+        </run>
+
+        <kill host="testmachine2" bg_id="server"/>
+
+    </task>
+</lnstrecipe>
