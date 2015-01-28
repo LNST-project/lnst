@@ -43,7 +43,7 @@ def main():
         opts = getopt.getopt(
             sys.argv[1:],
             "dhei:p:m",
-            ["debug", "help", "daemonize", "pidfile", "port", "no-colours"]
+            ["debug", "help", "daemonize", "pidfile=", "port=", "no-colours"]
         )[0]
     except getopt.GetoptError as err:
         print str(err)
