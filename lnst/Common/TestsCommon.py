@@ -15,6 +15,7 @@ import logging
 import sys
 import os
 import signal
+import time
 from lnst.Common.NetTestCommand import NetTestCommandGeneric
 
 class testLogger(logging.Logger):
@@ -56,12 +57,7 @@ class TestOptionMissing(Exception):
 class TestGeneric(NetTestCommandGeneric):
     def __init__(self, command):
         self._testLogger = logging.getLogger("root.testLogger")
-        self._read_pipe, self._write_pipe = os.pipe()
         NetTestCommandGeneric.__init__(self, command)
-
-    def __del__(self):
-        os.close(self._read_pipe)
-        os.close(self._write_pipe)
 
     def set_handle_intr(self):
         """
@@ -71,18 +67,17 @@ class TestGeneric(NetTestCommandGeneric):
         signal.signal(signal.SIGINT, self._signal_intr_handler)
 
     def _signal_intr_handler(self, signum, frame):
-        os.write(self._write_pipe, "a")
+        raise KeyboardInterrupt()
 
     def wait_on_interrupt(self):
         '''
         Should be used by test implementation for waiting on SIGINT
         '''
-        while True:
-            try:
-                os.read(self._read_pipe, 1)
-            except OSError:
-                continue
-            break
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
 
     def _get_val(self, value, opt_type, default):
         if opt_type == "addr":

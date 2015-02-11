@@ -1,0 +1,12 @@
+proper signal handling for bg processes in net namespaces
+
+When running a background process in a new network namespace signal handlers
+were inherited from the namespace process lnst-slave which caused issues when
+calling the interrupt command on the background process.
+
+This test uses two recipes - one for run command and one for run test module.
+It also uses a custom IcmpPing test module that runs the ping twice this way we
+can test that the whole background process is interrupted, not just the
+currently running ping process.
+
+https://github.com/jpirko/lnst/issues/99

@@ -1,0 +1,49 @@
+<lnstrecipe>
+    <network>
+        <host id="tm1">
+            <interfaces>
+                <eth id="phy1" label="net1"/>
+                <veth_pair>
+                    <veth id="in" netns="in">
+                        <addresses>
+                            <address value="192.168.0.3/24"/>
+                        </addresses>
+                    </veth>
+                    <veth id="out"/>
+                </veth_pair>
+                <bridge id="br">
+                    <slaves>
+                        <slave id="out"/>
+                        <slave id="phy1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.0.1/24"/>
+                    </addresses>
+                </bridge>
+            </interfaces>
+        </host>
+        <host id="tm2">
+            <interfaces>
+                <eth id="phy1" label="net1">
+                    <addresses>
+                        <address value="192.168.0.10/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+    <task>
+        <run command="ping -c 4 {ip(tm2,phy1)}" host="tm1" netns="in"/>
+        <run host="tm1" module="IcmpPing" bg_id="on_bg" netns="in">
+            <options>
+                <option name="addr" value="{ip(tm2,phy1)}"/>
+                <option name="interval" value="1"/>
+            </options>
+        </run>
+        <ctl_wait seconds="2"/>
+        <run command="pstree -p" host="tm1" netns="in"/>
+        <ctl_wait seconds="2"/>
+        <intr host="tm1" bg_id="on_bg"/>
+    </task>
+</lnstrecipe>
+

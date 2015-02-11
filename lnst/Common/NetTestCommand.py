@@ -137,8 +137,14 @@ class NetTestCommand:
                     "res_header": self._cmd_cls._format_cmd_res_header(),
                     "msg": "Running in background."}
 
+    def _sig_handler(self, signum, frame):
+        raise KeyboardInterrupt()
+
     def _run(self):
         os.setpgrp()
+        signal.signal(signal.SIGHUP, self._sig_handler)
+        signal.signal(signal.SIGINT, self._sig_handler)
+        signal.signal(signal.SIGTERM, self._sig_handler)
         self._cmd_cls.set_handle_intr()
 
         self._connection_pipe = self._write_pipe
@@ -149,7 +155,7 @@ class NetTestCommand:
         result = {}
         try:
             self._cmd_cls.run()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, SystemExit):
             pass
         except:
             type, value, tb = sys.exc_info()
