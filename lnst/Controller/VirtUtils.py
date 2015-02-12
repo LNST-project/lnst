@@ -88,7 +88,7 @@ class VirtDomainCtl:
     def restart(self):
         self._domain.reboot()
 
-    def attach_interface(self, hw_addr, net_name, driver="rtl8139"):
+    def attach_interface(self, hw_addr, net_name, driver="virtio"):
         try:
             device_xml = self._net_device_template.format(hw_addr,
                                                           net_name,

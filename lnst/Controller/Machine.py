@@ -789,7 +789,7 @@ class VirtualInterface(Interface):
     """
     def __init__(self, machine, if_id, if_type):
         super(VirtualInterface, self).__init__(machine, if_id, if_type)
-        self._driver = "rtl8139"
+        self._driver = "virtio"
 
     def set_driver(self, driver):
         self._driver = driver
