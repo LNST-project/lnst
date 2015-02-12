@@ -182,6 +182,8 @@ def get_module_tools(module_path):
             fn = getattr(node, 'func')
             if isinstance(fn, Attribute):
                 val = getattr(fn, 'value')
+                if not isinstance(val, ast.Name):
+                    continue
                 if ('self' == getattr(val, 'id')):
                     if ( 'exec_from' == getattr(fn, 'attr')):
                         tool = getattr((getattr(node, 'args')[0]), 's')
