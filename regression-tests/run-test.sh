@@ -56,6 +56,15 @@ function usage
     exit 0
 }
 
+function get_pool_dirs
+{
+    if [ "$use_user_conf" = "true" ]; then
+        command lnst-ctl --dump-config | grep 'machine_pool_dirs' | cut -d = -f2
+    else
+        command lnst-ctl -c $repo/lnst-ctl.conf --dump-config | grep 'machine_pool_dirs' | cut -d = -f2
+    fi
+}
+
 # ---
 
 #default repository url
@@ -121,38 +130,42 @@ fi
 #cp -r env ~/.lnst
 cp -r env/* $repo/
 
+pool_dirs=`PATH="$repo:$PATH" get_pool_dirs`
+
 # Scan the pool and prepare the machines in it
-for machine in `ls -1 env/pool/`; do
-    hostname=`get_hostname env/pool/$machine`
+for pool_dir in "$pool_dirs"; do
+    for machine in `ls -1 $pool_dir`; do
+        hostname=`get_hostname $pool_dir/$machine`
 
-    # In case this script was killed and there are any slave processes
-    # left hanging on the machine.
-    ssh "root@$hostname" 'for p in `pgrep lnst-slave`; do kill -9 $p; done'
+        # In case this script was killed and there are any slave processes
+        # left hanging on the machine.
+        ssh "root@$hostname" 'for p in `pgrep lnst-slave`; do kill -9 $p; done'
 
-    # Create a temporary dir for the git tree to be tested
-    remote_repo=`ssh "root@$hostname" "mktemp -d"`
+        # Create a temporary dir for the git tree to be tested
+        remote_repo=`ssh "root@$hostname" "mktemp -d"`
 
-    # Transfer the repo to the machine
-    rsync -r --exclude "Logs" --exclude ".git" "$repo/" \
-          "root@$hostname:$remote_repo"
+        # Transfer the repo to the machine
+        rsync -r --exclude "Logs" --exclude ".git" "$repo/" \
+            "root@$hostname:$remote_repo"
 
-    if [ ! -z $nm_off ]; then
-        ssh "root@$hostname" "cd $remote_repo && echo \"use_nm = false\" >> lnst-slave.conf"
-    fi
+        if [ ! -z $nm_off ]; then
+            ssh "root@$hostname" "cd $remote_repo && echo \"use_nm = false\" >> lnst-slave.conf"
+        fi
 
-    # Start the slave process
-    ssh -n -t -t "root@$hostname" "cd $remote_repo && ./lnst-slave" >/dev/null \
-        2>/dev/null &
-    pid=$!
+        # Start the slave process
+        ssh -n -t -t "root@$hostname" "cd $remote_repo && ./lnst-slave" >/dev/null \
+            2>/dev/null &
+        pid=$!
 
-    # Save the status (hostname, pid of the ssh session, repo path)
-    # so we can cleanup things properly after the tests.
-    if [ -z "$slave_status" ]; then
-        slave_status="$hostname $pid $remote_repo"
-    else
-        slave_status="$hostname $pid $remote_repo
-                      $slave_status"
-    fi
+        # Save the status (hostname, pid of the ssh session, repo path)
+        # so we can cleanup things properly after the tests.
+        if [ -z "$slave_status" ]; then
+            slave_status="$hostname $pid $remote_repo"
+        else
+            slave_status="$hostname $pid $remote_repo
+            $slave_status"
+        fi
+    done
 done
 
 sleep 1
