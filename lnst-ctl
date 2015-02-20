@@ -226,7 +226,6 @@ def main():
     result_path = None
     html_result_path = None
     xslt_url = None
-    config_path = None
     packet_capture = False
     pool_checks = True
     coloured_output = True
@@ -241,7 +240,11 @@ def main():
         elif opt in ("-h", "--help"):
             usage(RETVAL_PASS)
         elif opt in ("-c", "--config"):
-            config_path = arg
+            if not os.path.isfile(arg):
+                print "File '%s' doesn't exist!" % arg
+                usage(RETVAL_ERR)
+            else:
+                lnst_config.load_config(arg)
         elif opt in ("-x", "--result"):
             result_path = arg
         elif opt in ("-t", "--html"):
@@ -265,12 +268,6 @@ def main():
         elif opt in ("--dump-config"):
             dump_config = True
 
-    if config_path is not None:
-        if not os.path.isfile(config_path):
-            print "File '%s' doesn't exist!" % config_path
-            usage(RETVAL_ERR)
-        else:
-            lnst_config.load_config(config_path)
 
     if xslt_url != None:
         lnst_config.set_option("environment", "xslt_url", xslt_url)
