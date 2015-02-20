@@ -219,7 +219,7 @@ print_separator
 sleep 1
 
 # Cleanup
-if [ $slave_status ]; then
+if [ -n "$slave_status" ]; then
     while read line; do
         hostname=`awk '{print $1}' <<<"$line"`
         pid=`awk '{print $2}' <<<"$line"`
