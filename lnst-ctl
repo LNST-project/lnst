@@ -43,6 +43,8 @@ def usage(retval=0):
     print "  -a, --define-alias name=value   define top-level alias"
     print "  -c, --config=FILE               load additional config file"
     print "  -d, --debug                     emit debugging messages"
+    print "      --dump-config               dumps the join of all loaded " \
+              "configuration files on stdout and exits"
     print "  -h, --help                      print this message"
     print "  -m, --no-colours                disable coloured terminal output"
     print "  -o, --disable-pool-checks       don't check the availability of " \
@@ -183,6 +185,7 @@ def main():
              "define_alias=",
              "config=",
              "debug",
+             "dump-config",
              "help",
              "no-colours",
              "disable-pool-checks",
@@ -231,6 +234,7 @@ def main():
     overriden_aliases = {}
     reduce_sync = False
     multi_match = False
+    dump_config = False
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -258,6 +262,8 @@ def main():
             xslt_url = arg
         elif opt in ("-u", "--multi-match"):
             multi_match = True
+        elif opt in ("--dump-config"):
+            dump_config = True
 
     if config_path is not None:
         if not os.path.isfile(config_path):
@@ -268,6 +274,10 @@ def main():
 
     if xslt_url != None:
         lnst_config.set_option("environment", "xslt_url", xslt_url)
+
+    if dump_config:
+        print lnst_config.dump_config()
+        return RETVAL_PASS
 
     if coloured_output:
         coloured_output = not lnst_config.get_option("colours",
