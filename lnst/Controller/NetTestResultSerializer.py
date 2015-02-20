@@ -129,7 +129,7 @@ class NetTestResultSerializer:
         days = dif_time.days
         hours = dif_time.seconds/3600
         minutes = dif_time.seconds/60 - hours*60
-        seconds = dif_time.seconds - minutes*60
+        seconds = dif_time.seconds - hours*3600 - minutes*60
         logging.info("Total test time: %d days, %d hours, %d minutes, "\
                      "%d seconds" % (days, hours, minutes, seconds))
 
