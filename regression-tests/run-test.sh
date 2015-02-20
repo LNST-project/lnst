@@ -41,7 +41,7 @@ function print_separator
 
 function usage
 {
-    echo "Usage: $0 [-r revision] [-l logdir] [-t list_of_tests] [-u url] [-n]"
+    echo "Usage: $0 [-c] [-r revision] [-l logdir] [-t list_of_tests] [-u url] [-n]"
     echo "    -r revision       Test a specific git branch/rev/tag"
     echo "                      Note: ignored when -s is used"
     echo "    -l logdir         Save test results to a directory"
@@ -52,6 +52,7 @@ function usage
     echo "    -u url            URL pointing to LNST repository that should be used"
     echo "                      Note: git clone and checkout by default"
     echo "    -s                use rsync instead of git"
+    echo "    -c                use user configuration"
     exit 0
 }
 
@@ -60,10 +61,12 @@ function usage
 #default repository url
 url="../"
 use_git=true
+export use_user_conf="false"
 
-while getopts "hlr:t:g:ns" OPTION
+while getopts "chlr:t:g:ns" OPTION
 do
     case $OPTION in
+        c)  use_user_conf="true" ;;
         h)  usage ;;
         l)  log_dir_name="results-`date "+%Y-%m-%d-%I-%M-%S"`"
             mkdir -p $log_dir_name
@@ -93,7 +96,7 @@ fi
 echo "$$" >.lock
 
 # Clone the repo
-repo=`mktemp -d`
+export repo=`mktemp -d`
 if $use_git ; then
     git clone $url $repo
 else
