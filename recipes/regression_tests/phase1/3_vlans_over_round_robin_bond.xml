@@ -29,7 +29,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.10.1/24" />
-                        <address value="2002::10:1/112" />
+                        <address value="2002::10:1/64" />
                     </addresses>
                 </vlan>
                 <vlan id="vlan20">
@@ -41,7 +41,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.20.1/24" />
-                        <address value="2002::20:1/112" />
+                        <address value="2002::20:1/64" />
                     </addresses>
                 </vlan>
                 <vlan id="vlan30">
@@ -53,7 +53,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.30.1/24" />
-                        <address value="2002::30:1/112" />
+                        <address value="2002::30:1/64" />
                     </addresses>
                 </vlan>
             </interfaces>
@@ -70,7 +70,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.10.2/24" />
-                        <address value="2002::10:2/112" />
+                        <address value="2002::10:2/64" />
                     </addresses>
                 </vlan>
                 <vlan id="vlan20">
@@ -82,7 +82,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.20.2/24" />
-                        <address value="2002::20:2/112" />
+                        <address value="2002::20:2/64" />
                     </addresses>
                 </vlan>
                 <vlan id="vlan30">
@@ -94,7 +94,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.30.2/24" />
-                        <address value="2002::30:2/112" />
+                        <address value="2002::30:2/64" />
                     </addresses>
                 </vlan>
             </interfaces>

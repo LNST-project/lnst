@@ -18,7 +18,7 @@
                     </slaves>
                     <addresses>
                         <address value="192.168.0.1/24" />
-                        <address value="2002::1/112"/>
+                        <address value="2002::1/64"/>
                     </addresses>
                 </bond>
             </interfaces>
@@ -28,7 +28,7 @@
                 <eth id="test_if" label="tnet">
                     <addresses>
                         <address value="192.168.0.2/24" />
-                        <address value="2002::2/112"/>
+                        <address value="2002::2/64"/>
                     </addresses>
                 </eth>
             </interfaces>
