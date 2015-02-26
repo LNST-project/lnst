@@ -122,11 +122,23 @@ void test_setsockopt(char* test_name, int optname, void *optval,
 	printf("%s=pass\n", test_name);
 }
 
+/* In some cases setsockopt and getsockopt can work with different data
+ * structures, e.g. setsockopt() can use 'struct ip_mreqn' for setting
+ * the source ip address and getsockopt() always returns 'struct in_addr'.
+ * This function is provided to deal with such situation.
+ */
+void test_sockopt_value_ext(char* test_name, int optname,
+							 void *optval, socklen_t optlen,
+							 void *expval, socklen_t explen)
+{
+	test_setsockopt(test_name, optname, optval, optlen);
+	test_getsockopt(test_name, optname, expval, explen);
+}
+
 void test_sockopt_value(char* test_name, int optname,
 						void *optval, socklen_t optlen)
 {
-	test_setsockopt(test_name, optname, optval, optlen);
-	test_getsockopt(test_name, optname, optval, optlen);
+	test_sockopt_value_ext(test_name, optname, optval, optlen, optval, optlen);
 }
 
 void test_setsockopt_error(char* test_name, int optname, void *optval,

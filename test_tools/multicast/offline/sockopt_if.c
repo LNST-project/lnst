@@ -39,14 +39,16 @@ void test_if()
 	struct ip_mreqn mreqn;
 	mreqn.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
 	mreqn.imr_address.s_addr = INADDR_ANY;
+	address.s_addr = INADDR_ANY;
 	mreqn.imr_ifindex = 0;
 
-	test_sockopt_value("IP_MULTICAST_IF set to INADDR_ANY",
-				IP_MULTICAST_IF, &mreqn, sizeof(mreqn));
+	test_sockopt_value_ext("IP_MULTICAST_IF set to INADDR_ANY mreqn",
+				IP_MULTICAST_IF, &mreqn, sizeof(mreqn), &address, size);
 
 	mreqn.imr_address.s_addr = inet_addr("127.0.0.1");
-	test_sockopt_value("IP_MULTICAST_IF set to 127.0.0.1",
-				IP_MULTICAST_IF, &mreqn, sizeof(mreqn));
+	address.s_addr = inet_addr("127.0.0.1");
+	test_sockopt_value_ext("IP_MULTICAST_IF set to 127.0.0.1 mreqn",
+				IP_MULTICAST_IF, &mreqn, sizeof(mreqn), &address, size);
 
 
 	/* Errors */
