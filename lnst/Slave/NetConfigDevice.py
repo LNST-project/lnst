@@ -192,10 +192,10 @@ class NetConfigDeviceMacvlan(NetConfigDeviceGeneric):
         realdev_name = self._if_manager.get_mapped_device(realdev_id).get_name()
         dev_name = config["name"]
 
-        if "hwaddr" in config:
-            hwaddr = " address %s" % config["hwaddr"]
-        else:
-            hwaddr = ""
+        hwaddr = ""
+        for opt, value in config["options"]:
+            if opt == "hwaddr":
+                hwaddr = " address %s" % value
 
         exec_cmd("ip link add link %s %s%s type macvlan"
                                     % (realdev_name, dev_name, hwaddr))
