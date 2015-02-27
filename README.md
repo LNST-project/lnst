@@ -36,7 +36,7 @@ su
 
 ## License
 
-**Copyright (C) 2011-2013 Red Hat, Inc.**
+**Copyright (C) 2011-2015 Red Hat, Inc.**
 
 LNST is distributed under GNU General Public License version 2. See the file
 "COPYING" in the source distribution for information on terms & conditions
