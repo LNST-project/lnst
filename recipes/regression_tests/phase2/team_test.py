@@ -30,7 +30,7 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
                            options={
                                "addr" : m2.get_ip("test_if", 1),
                                "count" : 100,
-                               "iface" : m1.get_devname("test_if"),
+                               "iface" : m1.get_ip("test_if"),
                                "interval" : 0.1
                            })
 

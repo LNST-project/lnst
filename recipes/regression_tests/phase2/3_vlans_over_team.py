@@ -33,7 +33,7 @@ for vlan1 in vlans:
                                    options={
                                        "addr" : m2.get_ip(vlan2, 1),
                                        "count" : 100,
-                                       "iface" : m1.get_devname(vlan1),
+                                       "iface" : m1.get_ip(vlan1),
                                        "interval" : 0.1
                                    })
 
