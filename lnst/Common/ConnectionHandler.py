@@ -15,7 +15,7 @@ import select
 import cPickle
 import socket
 from _multiprocessing import Connection
-from pyroute2 import IPRSocket
+from pyroute2.netlink.rtnl import IPRSocket
 
 def send_data(s, data):
     try:
