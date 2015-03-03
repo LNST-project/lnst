@@ -137,15 +137,11 @@ class NetTestCommand:
                     "res_header": self._cmd_cls._format_cmd_res_header(),
                     "msg": "Running in background."}
 
-    def _sig_handler(self, signum, frame):
-        raise KeyboardInterrupt()
-
     def _run(self):
         os.setpgrp()
-        signal.signal(signal.SIGHUP, self._sig_handler)
-        signal.signal(signal.SIGINT, self._sig_handler)
-        signal.signal(signal.SIGTERM, self._sig_handler)
-        self._cmd_cls.set_handle_intr()
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
         self._connection_pipe = self._write_pipe
 
@@ -361,9 +357,6 @@ class NetTestCommandGeneric(object):
             netns = ""
 
         return "%-9s" % (self._command["type"] + netns)
-
-    def set_handle_intr(self):
-        pass
 
     def set_resource_table(self, res_table):
         self._resource_table = res_table

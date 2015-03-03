@@ -59,25 +59,19 @@ class TestGeneric(NetTestCommandGeneric):
         self._testLogger = logging.getLogger("root.testLogger")
         NetTestCommandGeneric.__init__(self, command)
 
-    def set_handle_intr(self):
-        """
-        Call this if you need this class to handle SIGINT. For backgroud
-        process purposes.
-        """
-        signal.signal(signal.SIGINT, self._signal_intr_handler)
-
-    def _signal_intr_handler(self, signum, frame):
-        raise KeyboardInterrupt()
-
     def wait_on_interrupt(self):
         '''
         Should be used by test implementation for waiting on SIGINT
         '''
         try:
+            handler = signal.getsignal(signal.SIGINT)
+            signal.signal(signal.SIGINT, signal.default_int_handler)
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
+        finally:
+            signal.signal(signal.SIGINT, handler)
 
     def _get_val(self, value, opt_type, default):
         if opt_type == "addr":

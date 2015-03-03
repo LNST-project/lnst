@@ -33,17 +33,21 @@
         </host>
     </network>
     <task>
-        <run command="ping -c 4 {ip(tm2,phy1)}" host="tm1" netns="in"/>
-        <run host="tm1" module="IcmpPing" bg_id="on_bg" netns="in">
+        <run module="PktCounter" host="tm1" netns="in" bg_id="ctr">
             <options>
-                <option name="addr" value="{ip(tm2,phy1)}"/>
-                <option name="interval" value="1"/>
+                <option name="input_netdev_name" value="{devname(tm1,in)}"/>
             </options>
         </run>
-        <ctl_wait seconds="2"/>
-        <run command="pstree -p" host="tm1" netns="in"/>
-        <ctl_wait seconds="2"/>
-        <intr host="tm1" bg_id="on_bg"/>
+        <run module="PktgenTx" host="tm2">
+            <options>
+                <option name="netdev_name" value="{devname(tm2,phy1)}"/>
+                <option name="pktgen_option" value="dst {ip(tm1, in)}"/>
+                <option name="pktgen_option" value="dst_mac {hwaddr(tm1,in)}"/>
+                <option name="pktgen_option" value="count 1000"/>
+            </options>
+        </run>
+        <ctl_wait seconds="5"/>
+        <intr host="tm1" bg_id="ctr"/>
     </task>
 </lnstrecipe>
 
