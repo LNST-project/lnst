@@ -94,7 +94,7 @@ class VirtDomainCtl:
                                                           net_name,
                                                           driver)
             self._domain.attachDevice(device_xml)
-            logging.debug("libvirt device with hwaddr '%s'"
+            logging.debug("libvirt device with hwaddr '%s' "
                           "driver '%s' attached" % (hw_addr, driver))
             self._created_interfaces[hw_addr] = device_xml
             return True
