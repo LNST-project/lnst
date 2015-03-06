@@ -1,0 +1,7 @@
+always call interface deconfiguration if configuration was called
+
+Interface deconfiguration should always be called if configuration was called,
+even if the configuration itself failed. This ensures that all internal data
+structures are cleaned up.
+
+https://github.com/jpirko/lnst/issues/106

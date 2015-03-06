@@ -669,6 +669,8 @@ class Interface(object):
                   "It has been configured already." % (self.get_id(),
                   self._machine.get_id())
             raise MachineError(msg)
+        else:
+            self._configured = True
 
         logging.info("Configuring interface %s on machine %s", self.get_id(),
                      self._machine.get_id())
@@ -680,7 +682,6 @@ class Interface(object):
         else:
             self._machine._rpc_call("configure_interface", self.get_id(),
                                     self._get_config())
-        self._configured = True
 
     def deconfigure(self):
         if not self._configured:
@@ -881,6 +882,8 @@ class SoftInterface(Interface):
     def configure(self):
         if self._configured:
             return
+        else:
+            self._configured = True
 
         logging.info("Configuring interface %s on machine %s", self.get_id(),
                      self._machine.get_id())
@@ -904,7 +907,6 @@ class SoftInterface(Interface):
             dev_name = self._machine._rpc_call("create_soft_interface",
                                                self._id, self._get_config())
         self.set_devname(dev_name)
-        self._configured = True
 
     def deconfigure(self):
         if not self._configured:
