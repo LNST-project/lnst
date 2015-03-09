@@ -137,11 +137,14 @@ class NetTestCommand:
                     "res_header": self._cmd_cls._format_cmd_res_header(),
                     "msg": "Running in background."}
 
+    def _sig_ign(self, signum, frame):
+        pass
+
     def _run(self):
         os.setpgrp()
-        signal.signal(signal.SIGHUP, signal.SIG_IGN)
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGHUP, self._sig_ign)
+        signal.signal(signal.SIGINT, self._sig_ign)
+        signal.signal(signal.SIGTERM, self._sig_ign)
 
         self._connection_pipe = self._write_pipe
 

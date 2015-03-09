@@ -1,0 +1,28 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <interfaces>
+                <eth id="test_if" label="tnet">
+                    <addresses>
+                        <address value="192.168.0.1/24" />
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="testmachine2">
+            <interfaces>
+                <eth id="test_if" label="tnet">
+                    <addresses>
+                        <address value="192.168.0.2/24" />
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run command="sleep 120" host="testmachine1" bg_id="1" timeout="125"/>
+        <ctl_wait seconds="5"/>
+        <intr host="testmachine1" bg_id="1"/>
+    </task>
+</lnstrecipe>
