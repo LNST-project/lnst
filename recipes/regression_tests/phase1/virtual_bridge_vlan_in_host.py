@@ -32,7 +32,7 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
                            options={
                                "addr" : h2.get_ip("vlan10", 1),
                                "count" : 100,
-                               "iface" : g1.get_ip("guestnic"),
+                               "iface" : g1.get_ip("guestnic", 1),
                                "interval" : 0.1
                            })
 

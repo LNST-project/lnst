@@ -19,7 +19,7 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
                               "addr": hostB.get_ip("testiface", 1),
                               "count": 100,
                               "interval": 0.2,
-                              "iface" : hostA.get_ip("testiface"),
+                              "iface" : hostA.get_ip("testiface", 1),
                               "limit_rate": 90})
 
 if ctl.get_alias('ipv') == 'ipv6':
