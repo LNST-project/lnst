@@ -1,0 +1,32 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <params/>
+            <interfaces>
+                <eth id="phy1" label="testnet">
+                    <addresses>
+                        <address>192.168.100.2/24</address>
+                        <address>fe01::1/64</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="testmachine2">
+            <params/>
+            <interfaces>
+                <eth id="phy1" label="testnet">
+                    <addresses>
+                        <address>192.168.100.3/24</address>
+                        <address>fe01::2/64</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run command="sleep 10" host="testmachine1" bg_id="1" timeout="15"/>
+        <ctl_wait seconds="2"/>
+        <intr host="testmachine1" bg_id="1"/>
+    </task>
+</lnstrecipe>

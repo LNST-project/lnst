@@ -1,0 +1,10 @@
+Check timeout handling for commands run in background and foreground.
+
+1. put a command on bg and intr() it before desired timeout
+2. put a command on bg and intr() it after desired timeout
+3. put a command on bg and immediately wait for it's completion before timeout
+4. put a command on bg and immediately wait for it's completion after timeout
+5. put a command on bg and wait for it not earlier after it's completed
+6. put a command on fg and set timeout longer than expected completion
+7. put a command on fg and set timeout shorter than expected completion
+
