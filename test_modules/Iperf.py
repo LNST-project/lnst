@@ -90,7 +90,7 @@ class Iperf(TestGeneric):
             logging.info("Iperf connection failed!")
             return (False, "Iperf connection failed!")
 
-        m = re.search("\[[^0-9]*[0-9]*\]\s*0.0-\s*\d*\.\d sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output, re.IGNORECASE)
+        m = re.search("\[[^0-9]*[0-9]*\]\s*0.0+-\s*\d*\.\d+\s*sec\s*\d*(\.\d*){0,1}\s*[ kGMT]Bytes\s*(\d*(\.\d*){0,1}\s*[ kGMT]bits\/sec)", output, re.IGNORECASE)
         if m is None:
             logging.info("Could not get performance throughput!")
             return (False, "Could not get performance throughput!")
