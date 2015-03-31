@@ -260,15 +260,14 @@ class XmlTemplates:
 
         self._overriden_aliases = overriden
 
-    def define_alias(self, name, value, skip_reserved_check=False):
+    def define_alias(self, name, value):
         """ Associate an alias name with some value
 
         The value can be of an atomic type or an array. The
         definition is added to the current namespace level.
         """
 
-        if not name in self._reserved_aliases \
-           or skip_reserved_check == True:
+        if not name in self._reserved_aliases:
             self._definitions[-1][name] = value
         else:
             raise XmlTemplateError("Alias name '%s' is reserved" % name)
