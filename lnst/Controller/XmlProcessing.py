@@ -119,6 +119,21 @@ class XmlCollection(list):
         it = super(XmlCollection, self).__iter__()
         return XmlDataIterator(it)
 
+    def to_list(self):
+        new_list = list()
+        for value in self:
+            if isinstance(value, XmlData):
+                new_val = value.to_dict()
+            elif isinstance(value, XmlCollection):
+                new_val = value.to_list()
+            elif isinstance(value, XmlTemplateString):
+                new_val = str(value)
+            else:
+                new_val = value
+            new_list.append(new_val)
+
+        return new_list
+
 class XmlData(dict):
     def __init__(self, node=None):
         super(XmlData, self).__init__()
@@ -161,6 +176,21 @@ class XmlData(dict):
     def itervalues(self):
         it = super(XmlData, self).itervalues()
         return XmlDataIterator(it)
+
+    def to_dict(self):
+        new_dict = dict()
+        for key, value in self.iteritems():
+            if isinstance(value, XmlData):
+                new_val = value.to_dict()
+            elif isinstance(value, XmlCollection):
+                new_val = value.to_list()
+            elif isinstance(value, XmlTemplateString):
+                new_val = str(value)
+            else:
+                new_val = value
+            new_dict[key] = new_val
+
+        return new_dict
 
 class XmlTemplateString(object):
     def __init__(self, param=None, node=None):

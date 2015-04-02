@@ -326,7 +326,7 @@ class NetTestController:
                 iface.set_option(opt["name"], opt["value"])
 
         if "ovs_conf" in iface_xml_data:
-            iface.set_ovs_conf(iface_xml_data["ovs_conf"])
+            iface.set_ovs_conf(iface_xml_data["ovs_conf"].to_dict())
 
         if iface_xml_data["netns"] != None:
             iface.set_netns(iface_xml_data["netns"])
