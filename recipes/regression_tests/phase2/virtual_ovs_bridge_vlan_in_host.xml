@@ -23,6 +23,9 @@
         <host id="guest1">
             <interfaces>
                 <eth id="guestnic" label="to_guest">
+                    <params>
+                        <param name="driver" value="virtio"/>
+                    </params>
                     <addresses>
                         <address>192.168.10.10/24</address>
                         <address>2002::10:10/64</address>
@@ -33,9 +36,6 @@
         <host id="host2">
             <interfaces>
                 <eth id="nic" label="to_switch">
-                    <params>
-                        <param name="driver" value="virtio"/>
-                    </params>
                 </eth>
                 <vlan id="vlan10">
                     <options>
