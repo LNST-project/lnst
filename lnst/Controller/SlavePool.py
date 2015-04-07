@@ -595,7 +595,7 @@ class SetupMapper(object):
                req_label != req_if["network"]:
                 return False
         for param, value in req_if["params"].iteritems():
-            if param in pool_if["params"] and\
+            if param not in pool_if["params"] or\
                value != pool_if["params"][param]:
                 return False
         return True
