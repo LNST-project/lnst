@@ -163,10 +163,10 @@ for offload in offloads:
             g1.run(ping_mod_bad, expect="fail")
             g3.run(ping_mod_bad2, expect="fail")
 
-            server_proc = g1.run(netperf_srv, bg=True, timeout=125)
+            server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
-            g3.run(netperf_cli_tcp, timeout=65)
-            g3.run(netperf_cli_udp, timeout=65)
+            g3.run(netperf_cli_tcp, timeout=70)
+            g3.run(netperf_cli_udp, timeout=70)
             server_proc.intr()
         elif ipv == 'ipv6':
             g1.run(ping_mod6)
@@ -174,10 +174,10 @@ for offload in offloads:
             g1.run(ping_mod6_bad, expect="fail")
             g3.run(ping_mod6_bad2, expect="fail")
 
-            server_proc = g1.run(netperf_srv6, bg=True, timeout=125)
+            server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            g3.run(netperf_cli_tcp6, timeout=65)
-            g3.run(netperf_cli_udp6, timeout=65)
+            g3.run(netperf_cli_tcp6, timeout=70)
+            g3.run(netperf_cli_udp6, timeout=70)
             server_proc.intr()
         else:
             # IPv4
@@ -186,10 +186,10 @@ for offload in offloads:
             g1.run(ping_mod_bad, expect="fail")
             g3.run(ping_mod_bad2, expect="fail")
 
-            server_proc = g1.run(netperf_srv, bg=True, timeout=125)
+            server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
-            g3.run(netperf_cli_tcp, timeout=65)
-            g3.run(netperf_cli_udp, timeout=65)
+            g3.run(netperf_cli_tcp, timeout=70)
+            g3.run(netperf_cli_udp, timeout=70)
             server_proc.intr()
             # IPv6
             g1.run(ping_mod6)
@@ -197,8 +197,8 @@ for offload in offloads:
             g1.run(ping_mod6_bad, expect="fail")
             g3.run(ping_mod6_bad2, expect="fail")
 
-            server_proc = g1.run(netperf_srv6, bg=True, timeout=125)
+            server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            g3.run(netperf_cli_tcp6, timeout=65)
-            g3.run(netperf_cli_udp6, timeout=65)
+            g3.run(netperf_cli_tcp6, timeout=70)
+            g3.run(netperf_cli_udp6, timeout=70)
             server_proc.intr()

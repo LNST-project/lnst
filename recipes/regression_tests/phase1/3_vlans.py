@@ -111,8 +111,8 @@ for vlan1 in vlans:
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv, bg=True)
                         ctl.wait(2)
-                        m2.run(netperf_cli_tcp, timeout=65)
-                        m2.run(netperf_cli_udp, timeout=65)
+                        m2.run(netperf_cli_tcp, timeout=70)
+                        m2.run(netperf_cli_udp, timeout=70)
                         srv_proc.intr()
                     elif ipv == 'ipv6':
                         # Ping test
@@ -121,8 +121,8 @@ for vlan1 in vlans:
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv6, bg=True)
                         ctl.wait(2)
-                        m2.run(netperf_cli_tcp6, timeout=65)
-                        m2.run(netperf_cli_udp6, timeout=65)
+                        m2.run(netperf_cli_tcp6, timeout=70)
+                        m2.run(netperf_cli_udp6, timeout=70)
                         srv_proc.intr()
                     else:
                         # Ping tests
@@ -132,15 +132,15 @@ for vlan1 in vlans:
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv, bg=True)
                         ctl.wait(2)
-                        m2.run(netperf_cli_tcp, timeout=65)
-                        m2.run(netperf_cli_udp, timeout=65)
+                        m2.run(netperf_cli_tcp, timeout=70)
+                        m2.run(netperf_cli_udp, timeout=70)
                         srv_proc.intr()
 
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv6, bg=True)
                         ctl.wait(2)
-                        m2.run(netperf_cli_tcp6, timeout=65)
-                        m2.run(netperf_cli_udp6, timeout=65)
+                        m2.run(netperf_cli_tcp6, timeout=70)
+                        m2.run(netperf_cli_udp6, timeout=70)
                         srv_proc.intr()
 
             # These tests should fail
