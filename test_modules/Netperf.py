@@ -80,8 +80,8 @@ class Netperf(TestGeneric):
         testname = self.get_opt("testname")
         if testname == "UDP_STREAM":
             # pattern for UDP_STREAM throughput output
-            # decimal decimal float decimal decimal (float)
-            pattern_udp_stream = "\d+\s+\d+\s+\d+\.\d+\s+\d+\s+\d+\s+(\d+(\.\d+){0,1})"
+            # decimal float decimal (float)
+            pattern_udp_stream = "\d+\s+\d+\.\d+\s+\d+\s+(\d+(\.\d+){0,1})\n"
             r2 = re.search(pattern_udp_stream, output.lower())
         elif testname == "TCP_STREAM":
             # pattern for TCP_STREAM throughput output
