@@ -146,6 +146,14 @@ ping_mod6_bad2 = ctl.get_module("Icmp6Ping",
 
 for offload in offloads:
     for state in ["on", "off"]:
+        h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic1"),
+                                        offload, state))
+        h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic2"),
+                                        offload, state))
+        h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic1"),
+                                        offload, state))
+        h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic2"),
+                                        offload, state))
         g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
                                         offload, state))
         g2.run("ethtool -K %s %s %s" % (g2.get_devname("guestnic"),

@@ -95,6 +95,8 @@ for offload in offloads:
     for state in ["on", "off"]:
             g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
                                             offload, state))
+            h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic"),
+                                            offload, state))
             h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic"),
                                             offload, state))
             if ipv == 'ipv4':
