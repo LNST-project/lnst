@@ -10,6 +10,11 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
+from lnst.Controller.PerfRepo import PerfRepoRESTAPI
+from lnst.Controller.PerfRepo import PerfRepoTestExecution
+from lnst.Controller.PerfRepo import PerfRepoValue
+from lnst.Common.Utils import dot_to_dict, dict_to_dot, list_to_dot
+
 # The handle to be imported from each task
 ctl = None
 
@@ -21,6 +26,8 @@ class ControllerAPI(object):
     def __init__(self, ctl, hosts):
         self._ctl = ctl
         self._result = True
+
+        self._perf_repo_api = PerfRepoAPI()
 
         self._hosts = {}
         for host_id, host in hosts.iteritems():
@@ -94,6 +101,32 @@ class ControllerAPI(object):
             :rtype: string
         """
         return self._ctl._get_alias(alias)
+
+    def connect_PerfRepo(self, hostname, username, password):
+        if not self._perf_repo_api.connected():
+            self._perf_repo_api.connect(hostname, username, password)
+        return self._perf_repo_api
+
+    def get_configuration(self):
+        return self._ctl._recipe["machines"]
+
+    def get_mapping(self):
+        match = self._ctl.get_pool_match()
+        mapping = []
+        for m_id, m in match["machines"].iteritems():
+            machine = {}
+            machine["id"] = m_id
+            machine["pool_id"] = m["target"]
+            machine["hostname"] = m["hostname"]
+            machine["interface"] = []
+            for i_id, i in m["interfaces"].iteritems():
+                interface = {}
+                interface["id"] = i_id
+                interface["pool_id"] = i["target"]
+                interface["hwaddr"] = i["hwaddr"]
+                machine["interface"].append(interface)
+            mapping.append(machine)
+        return mapping
 
 class HostAPI(object):
     """ An API class representing a host machine. """
@@ -413,3 +446,97 @@ class VolatileValue(object):
 
     def __str__(self):
         return str(self.get_val())
+
+class PerfRepoAPI(object):
+    def __init__(self):
+        self._rest_api = None
+
+    def connected(self):
+        return self._rest_api is not None
+
+    def connect(self, hostname, username, password):
+        self._rest_api = PerfRepoRESTAPI(hostname, username, password)
+
+    def new_result(self, testUid, name):
+        result = PerfRepoResult(testUid, name)
+        return result
+
+    def save_result(self, result):
+        if not isinstance(result, PerfRepoResult):
+            raise TaskError("Parameter result must be an instance "\
+                            "of PerfRepoResult")
+        elif self._rest_api is None:
+            raise TaskError("Not connected to PerfRepo.")
+        else:
+            self._rest_api.testExecution_create(result.get_testExecution())
+
+    def get_baseline(self, report_id):
+        report = self._rest_api.report_get_by_id(report_id)
+        return report.get_baseline()
+
+    def compare_to_baseline(self, result, report_id, metric_name):
+        baseline = self.get_baseline(report_id)
+        baseline_exec_id = baseline["execId"]
+        baseline_testExec = self._rest_api.testExecution_get(baseline_exec_id)
+        result_testExec = result.get_testExecution()
+
+        return self.compare_testExecutions(result_testExec,
+                                           baseline_testExec,
+                                           metric_name)
+
+    def compare_testExecutions(self, first, second, metric_name):
+        first_value = first.get_value(metric_name)
+        first_min = first.get_value(metric_name + "_min")
+        first_max = first.get_value(metric_name + "_max")
+
+        second_value = second.get_value(metric_name)
+        second_min = second.get_value(metric_name + "_min")
+        second_max = second.get_value(metric_name + "_max")
+
+        comp = second_value.get_comparator()
+        print second_min.get_result(),  first_max.get_result()
+        if comp == "HB":
+            if second_min.get_result() > first_max.get_result():
+                return False
+            return True
+        elif comp == "LB":
+            if first_min.get_result() > second_max.get_result():
+                return False
+            return True
+        else:
+            return False
+        return False
+
+class PerfRepoResult(object):
+    def __init__(self, testUid, name):
+        self._testExecution = PerfRepoTestExecution()
+        self._testExecution.set_testUid(testUid)
+        self._testExecution.set_name(name)
+        self.set_configuration(ctl.get_configuration())
+        self.set_mapping(ctl.get_mapping())
+
+    def add_value(self, val_name, value):
+        perf_value = PerfRepoValue()
+        perf_value.set_metricName(val_name)
+        perf_value.set_result(value)
+
+        self._testExecution.add_value(perf_value)
+
+    def set_configuration(self, configuration=None):
+        if configuration is None:
+            configuration = ctl.get_configuration()
+        for pair in list_to_dot(configuration, "configuration.", "machine"):
+            self._testExecution.add_parameter(pair[0], pair[1])
+
+    def set_mapping(self, mapping=None):
+        if mapping is None:
+            mapping = ctl.get_mapping()
+        for pair in list_to_dot(mapping, "mapping.", "machine"):
+            self._testExecution.add_parameter(pair[0], pair[1])
+
+    def set_tags(self, tags):
+        for tag in tags:
+            self._testExecution.add_tag(tag)
+
+    def get_testExecution(self):
+        return self._testExecution
