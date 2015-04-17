@@ -275,7 +275,7 @@ class Config():
 
     def optionBool(self, option, cfg_path):
         return bool_it(option)
-    
+
     def optionPlain(self, option, cfg_path):
         return option
 
