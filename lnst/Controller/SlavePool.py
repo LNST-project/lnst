@@ -313,14 +313,15 @@ class SlavePool:
         used = []
         if_map = self._map["machines"][tm_id]["interfaces"]
         for t_if, p_if in if_map.iteritems():
-            used.append(p_if)
-            if_data = pm["interfaces"][p_if]
+            pool_id = p_if["target"]
+            used.append(pool_id)
+            if_data = pm["interfaces"][pool_id]
 
             iface = machine.new_static_interface(t_if, "eth")
             iface.set_hwaddr(if_data["params"]["hwaddr"])
 
             for t_net, p_net in self._map["networks"].iteritems():
-                if pm["interfaces"][p_if]["network"] == p_net:
+                if pm["interfaces"][pool_id]["network"] == p_net:
                     iface.set_network(t_net)
                     break
 
@@ -609,11 +610,19 @@ class SetupMapper(object):
 
         for machine in self._machine_stack:
             m_map = mapping["machines"][machine["m_id"]] = {}
+
             m_map["target"] = machine["current_match"]
+
+            hostname = self._pool[m_map["target"]]["params"]["hostname"]
+            m_map["hostname"] = hostname
+
             interfaces = m_map["interfaces"] = {}
             if_stack = machine["if_stack"]
             for interface in if_stack:
-                interfaces[interface["if_id"]] = interface["current_match"]
+                i = interfaces[interface["if_id"]] = {}
+                i["target"] = interface["current_match"]
+                pool_if = self._pool[m_map["target"]]["interfaces"][i["target"]]
+                i["hwaddr"] = pool_if["params"]["hwaddr"]
 
 
         if self._virtual_matching:
