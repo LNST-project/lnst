@@ -98,7 +98,8 @@ class NetTestResultSerializer:
                 for m_id, m in match["machines"].iteritems():
                     output_pairs.append((4*" " + "host \"%s\" uses \"%s\"" %\
                                         (m_id, m["target"]), ""))
-                    for if_id, pool_id in m["interfaces"].iteritems():
+                    for if_id, pool_if in m["interfaces"].iteritems():
+                        pool_id = pool_if["target"]
                         output_pairs.append((6*" " + "interface \"%s\" "\
                                                     "matched to \"%s\"" %\
                                                     (if_id, pool_id), ""))

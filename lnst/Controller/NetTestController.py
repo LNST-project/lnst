@@ -228,7 +228,8 @@ class NetTestController:
             logging.info("  Setup is using virtual machines.")
         for m_id, m in match["machines"].iteritems():
             logging.info("  host \"%s\" uses \"%s\"" % (m_id, m["target"]))
-            for if_id, pool_id in m["interfaces"].iteritems():
+            for if_id, match in m["interfaces"].iteritems():
+                pool_id = match["target"]
                 logging.info("    interface \"%s\" matched to \"%s\"" %\
                                             (if_id, pool_id))
 
