@@ -17,7 +17,11 @@
         </host>
         <host id="guest1">
             <interfaces>
-                <eth id="guestnic" label="to_guest" />
+                <eth id="guestnic" label="to_guest">
+                    <params>
+                        <param name="driver" value="virtio" />
+                    </params>
+                </eth>
                 <vlan id="vlan10">
                     <options>
                         <option name="vlan_tci" value="10" />
