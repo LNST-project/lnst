@@ -61,11 +61,6 @@
         <host id="testmachine2">
             <interfaces>
                 <eth id="eth1" label="tnet" />
-                <eth id="eth2" label="tnet">
-                    <addresses>
-                        <address value="2002::2/64" />
-                    </addresses>
-                </eth>
                 <vlan id="vlan10">
                     <options>
                         <option name="vlan_tci" value="10" />
