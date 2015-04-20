@@ -24,7 +24,7 @@
             <interfaces>
                 <eth id="guestnic" label="to_guest">
                     <params>
-                        <param name="driver" value="virtio_net"/>
+                        <param name="driver" value="virtio"/>
                     </params>
                     <addresses>
                         <address>192.168.10.10/24</address>
