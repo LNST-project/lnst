@@ -228,7 +228,7 @@ class InterfaceManager(object):
             if (not "hwaddr" in config or
                 "name" in config):
                 return
-            hwaddr = normalize_hwaddr(netdev["hwaddr"])
+            hwaddr = normalize_hwaddr(config["hwaddr"])
             for dev in self._devices:
                 if dev.get_hwaddr() == hwaddr:
                     return dev.get_name()
