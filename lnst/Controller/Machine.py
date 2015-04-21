@@ -951,6 +951,9 @@ class UnusedInterface(Interface):
     def initialize(self):
         self._machine._rpc_call('set_unmapped_device_down', self._hwaddr)
 
+    def set_driver(self, driver):
+        pass
+
     def configure(self):
         pass
 
