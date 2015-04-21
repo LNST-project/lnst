@@ -5,14 +5,14 @@ from lnst.Controller.Task import ctl
 # ------
 
 # Host 1 + guests 1 and 2
-#h1 = ctl.get_host("host1")
+h1 = ctl.get_host("host1")
 g1 = ctl.get_host("guest1")
 g1.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 g2 = ctl.get_host("guest2")
 g2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 
 # Host 2 + guests 3 and 4
-#h2 = ctl.get_host("host2")
+h2 = ctl.get_host("host2")
 g3 = ctl.get_host("guest3")
 g3.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 g4 = ctl.get_host("guest4")
