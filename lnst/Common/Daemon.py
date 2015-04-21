@@ -57,7 +57,7 @@ class Daemon:
         if pid:
             if self._check_pid(pid):
                 logging.error("pidfile in use")
-                os.exit(1)
+                sys.exit(1)
             else:
                 self._del_pidfile()
         try:
