@@ -12,7 +12,7 @@ jtluka@redhat.com (Jan Tluka)
 
 import os
 from urlparse import urljoin
-from urllib2 import urlopen
+from urllib2 import urlopen, HTTPError
 from tempfile import NamedTemporaryFile
 
 def get_recipepath_class(root, path):
