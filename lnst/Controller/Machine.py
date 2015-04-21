@@ -184,7 +184,7 @@ class Machine(object):
         if hello != "hello":
             msg = "Unable to establish RPC connection " \
                   "to machine %s, handshake failed!" % hostname
-            raise Machine(msg)
+            raise MachineError(msg)
 
         for iface in self._interfaces:
             iface.initialize()
