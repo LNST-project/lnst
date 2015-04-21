@@ -553,7 +553,7 @@ class Interface(object):
     def add_master(self, master, primary=True):
         if primary and self._master["primary"] != None:
             msg = "Interface %s already has a primary master."\
-                    % self._master["primary"].get_id()
+                    % self.get_id()
             raise MachineError(msg)
         else:
             if primary:
