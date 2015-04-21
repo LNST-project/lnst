@@ -347,7 +347,7 @@ class PerfRepoMetric(PerfRepoObject):
         self._description = description
 
     def set_comparator(self, comparator):
-        if comapator not in ["HB", "LB"]:
+        if comparator not in ["HB", "LB"]:
             raise PerfRepoException("Invalid comparator value.")
         self._comparator = comparator
 
