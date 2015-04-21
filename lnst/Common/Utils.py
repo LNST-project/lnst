@@ -139,7 +139,7 @@ def has_changed_since(filepath, threshold):
     if os.path.isfile(filepath):
         return _is_newer_than(filepath, threshold)
 
-    for root, dirs, files in os.walk(directory):
+    for root, dirs, files in os.walk(filepath):
         for f in files:
             if _is_newer_than(f, threshold):
                 return False
