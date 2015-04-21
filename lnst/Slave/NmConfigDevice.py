@@ -460,6 +460,7 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
         self._nm_add_connection()
 
     def _rm_bond(self):
+        config = self._dev_config
         if self._con_obj_path != None:
             self._nm_rm_connection()
 
@@ -550,6 +551,7 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
         self._nm_add_connection()
 
     def _rm_bridge(self):
+        config = self._dev_config
         if self._con_obj_path != None:
             self._nm_rm_connection()
 
