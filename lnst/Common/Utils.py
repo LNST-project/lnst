@@ -112,12 +112,12 @@ def create_tar_archive(input_path, target_path, compression=False):
     else:
         args = "cf"
 
-    if os.path.isdir(target_path):
-        target_path += "/%s.tar.bz" % os.path.basename(input_file.rstrip("/"))
-
     input_path = input_path.rstrip("/")
     input_file = os.path.basename(input_path)
     parent = os.path.dirname(input_path)
+
+    if os.path.isdir(target_path):
+        target_path += "/%s.tar.bz" % os.path.basename(input_file.rstrip("/"))
 
     exec_cmd("cd \"%s\" && tar %s \"%s\" \"%s\"" % \
                 (parent, args, target_path, input_file))
