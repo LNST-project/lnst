@@ -36,7 +36,7 @@
         <run command="ping -c 4 {ip(tm2,phy1)}" host="tm1" netns="in"/>
         <run command="ping {ip(tm2,phy1)}" host="tm1" netns="in" bg_id="on_bg"/>
         <ctl_wait seconds="2"/>
-        <run command="pstree -p" host="tm1" netns="in"/>
+        <run command="ps aux" host="tm1" netns="in"/>
         <ctl_wait seconds="2"/>
         <intr host="tm1" bg_id="on_bg"/>
     </task>
