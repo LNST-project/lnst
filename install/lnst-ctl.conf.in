@@ -55,3 +55,9 @@ log_dir = @ctl_logs_dir@
 # dynamic interface configuration. This feature is mostly used by LNST
 # developers when testing new features.
 allow_virtual = True
+
+# Optional section for configuring access to a PerfRepo instance
+#[perfrepo]
+#url =
+#username =
+#password =

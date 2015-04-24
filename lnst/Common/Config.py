@@ -82,6 +82,26 @@ class Config():
                 "name" : "allow_virtual"
                 }
 
+        self._options['perfrepo'] = dict()
+        self._options['perfrepo']['url'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPlain,
+                "name" : "url"
+                }
+        self._options['perfrepo']['username'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPlain,
+                "name" : "username"
+                }
+        self._options['perfrepo']['password'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPlain,
+                "name" : "password"
+                }
+
         self.colours_scheme()
 
     def slave_init(self):

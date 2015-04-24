@@ -14,6 +14,7 @@ from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
 from lnst.Common.Utils import dot_to_dict, dict_to_dot, list_to_dot
+from lnst.Common.Config import lnst_config
 
 # The handle to be imported from each task
 ctl = None
@@ -102,9 +103,15 @@ class ControllerAPI(object):
         """
         return self._ctl._get_alias(alias)
 
-    def connect_PerfRepo(self, hostname, username, password):
+    def connect_PerfRepo(self, url=None, username=None, password=None):
         if not self._perf_repo_api.connected():
-            self._perf_repo_api.connect(hostname, username, password)
+            if url is None:
+                url = lnst_config.get_option("perfrepo", "url")
+            if username is None:
+                url = lnst_config.get_option("perfrepo", "username")
+            if password is None:
+                url = lnst_config.get_option("perfrepo", "password")
+            self._perf_repo_api.connect(url, username, password)
         return self._perf_repo_api
 
     def get_configuration(self):
@@ -454,8 +461,8 @@ class PerfRepoAPI(object):
     def connected(self):
         return self._rest_api is not None
 
-    def connect(self, hostname, username, password):
-        self._rest_api = PerfRepoRESTAPI(hostname, username, password)
+    def connect(self, url, username, password):
+        self._rest_api = PerfRepoRESTAPI(url, username, password)
 
     def new_result(self, testUid, name):
         result = PerfRepoResult(testUid, name)
