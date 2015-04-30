@@ -221,10 +221,10 @@ def list_to_dot(original_list, prefix="", key=""):
     return_list = []
     index = 0
     for value in original_list:
-        iter_key = prefix + key + str(index) + '.'
+        iter_key = prefix + key + str(index)
         index += 1
         if isinstance(value, collections.Mapping):
-            sub_list = dict_to_dot(value, iter_key)
+            sub_list = dict_to_dot(value, iter_key + '.')
             return_list.extend(sub_list)
         elif isinstance(value, list):
             raise Exception("Nested lists not allowed")
