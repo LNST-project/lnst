@@ -501,7 +501,6 @@ class PerfRepoAPI(object):
         second_max = second.get_value(metric_name + "_max")
 
         comp = second_value.get_comparator()
-        print second_min.get_result(),  first_max.get_result()
         if comp == "HB":
             if second_min.get_result() > first_max.get_result():
                 return False
