@@ -132,7 +132,7 @@ class InterfaceManager(object):
         elif if_id in self._tmp_mapping:
             return self._tmp_mapping[if_id]
         else:
-            raise IfMgrError("No device with id %s mapped." % if_id)
+            return None
 
     def get_mapped_devices(self):
         ret = {}

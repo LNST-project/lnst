@@ -253,7 +253,10 @@ class SlaveMethods:
 
     def deconfigure_interface(self, if_id):
         device = self._if_manager.get_mapped_device(if_id)
-        device.clear_configuration()
+        if device is not None:
+            device.clear_configuration()
+        else:
+            logging.error("No device with id '%s' to deconfigure." % if_id)
         return True
 
     def start_packet_capture(self, filt):
