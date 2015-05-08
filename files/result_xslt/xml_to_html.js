@@ -1,4 +1,4 @@
-window.toggleResultData = function (event, task_id, bg_id) {
+window.toggleResultData = function (event, task_id, host_id, bg_id) {
     switch_display = function(elem){
         if (elem.style.display == 'none'){
             elem.style.display = '';
@@ -13,17 +13,19 @@ window.toggleResultData = function (event, task_id, bg_id) {
     result_cell = row.cells[result_cell_i];
     switch_display(result_cell);
 
-    if (task_id !== undefined && bg_id !== undefined){
+    if (task_id !== undefined && host_id != undefined && bg_id !== undefined){
         rows = row.parentNode.rows;
         for (i = 0; i < rows.length; ++i){
-            if (rows[i].name == ("task_id="+task_id+"bg_id="+bg_id)){
+            if (rows[i].name == ("task_id=" + task_id +
+                                 "host_id=" + host_id +
+                                 "bg_id=" + bg_id)){
                 switch_display(rows[i].cells[2]);
             }
         }
     }
 }
 
-window.highlightResultData = function (event, task_id, bg_id) {
+window.highlightResultData = function (event, task_id, host_id, bg_id) {
     switch_background = function(elem){
         if (elem.style.background == ''){
             elem.style.background = 'lightblue';
@@ -35,10 +37,12 @@ window.highlightResultData = function (event, task_id, bg_id) {
     cell = event.target.parentNode;
     row = cell.parentNode;
 
-    if (task_id !== undefined && bg_id !== undefined){
+    if (task_id !== undefined && host_id != undefined && bg_id !== undefined){
         rows = row.parentNode.rows;
         for (i = 0; i < rows.length; ++i){
-            if (rows[i].getAttribute("name") == ("task_id="+task_id+"bg_id="+bg_id)){
+            if (rows[i].getAttribute("name") == ("task_id=" + task_id +
+                                                 "host_id=" + host_id +
+                                                 "bg_id="   + bg_id)){
                 switch_background(rows[i]);
             }
         }

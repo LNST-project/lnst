@@ -84,7 +84,7 @@
     <xsl:template match="command">
         <xsl:param name="task_id"/>
         <tr class="tr_top">
-            <xsl:attribute name="name">task_id=<xsl:value-of select="$task_id"/>bg_id=<xsl:value-of select="@proc_id"/></xsl:attribute>
+            <xsl:attribute name="name">task_id=<xsl:value-of select="$task_id"/>host_id=<xsl:value-of select="@host"/>bg_id=<xsl:value-of select="@proc_id"/></xsl:attribute>
             <xsl:choose>
                 <xsl:when test="@type='exec'">
                     <xsl:call-template name="cmd_exec"/>
@@ -300,7 +300,7 @@
             <xsl:choose>
                 <xsl:when test="@bg_id">
                     <xsl:attribute name="onclick">
-                        toggleResultData(event, '<xsl:value-of select="$task_id"/>', '<xsl:value-of select="@bg_id"/>');
+                        toggleResultData(event, '<xsl:value-of select="$task_id"/>', '<xsl:value-of select="@host"/>', '<xsl:value-of select="@bg_id"/>');
                     </xsl:attribute>
                 </xsl:when>
                 <xsl:otherwise>
@@ -317,7 +317,7 @@
         <xsl:param name="task_id"/>
         <button type="button">
             <xsl:attribute name="onclick">
-                highlightResultData(event, '<xsl:value-of select="$task_id"/>', '<xsl:value-of select="@bg_id"/>');
+                highlightResultData(event, '<xsl:value-of select="$task_id"/>', '<xsl:value-of select="@host"/>', '<xsl:value-of select="@bg_id"/>');
             </xsl:attribute>
             Highlight result command
         </button>
@@ -358,7 +358,7 @@
             </xsl:when>
             <xsl:otherwise>
                 <tr class="tr_bottom">
-                    <xsl:attribute name="name">task_id=<xsl:value-of select="$task_id"/>bg_id=<xsl:value-of select="@proc_id"/></xsl:attribute>
+                    <xsl:attribute name="name">task_id=<xsl:value-of select="$task_id"/>host_id=<xsl:value-of select="@host"/>bg_id=<xsl:value-of select="@proc_id"/></xsl:attribute>
                     <td>
                     </td>
                     <td>
