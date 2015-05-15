@@ -91,8 +91,7 @@ class Machine(object):
         except:
             iface = None
         if iface:
-            iface.set_hwaddr(if_data["hwaddr"])
-            iface.set_devname(if_data["devname"])
+            iface.update(if_data)
 
     #
     # Factory methods for constructing interfaces on this machine. The
@@ -513,6 +512,7 @@ class Interface(object):
 
         self._netns = None
         self._peer = None
+        self._mtu = None
 
     def get_id(self):
         return self._id
@@ -611,6 +611,29 @@ class Interface(object):
             return self._addresses[num].split('/')[1]
         except IndexError:
             raise PrefixMissingError
+
+    def get_mtu(self):
+        return self._mtu
+
+    def set_mtu(self, mtu):
+        command = {"type": "config",
+                   "host": self._machine.get_id(),
+                   "persistent": False,
+                   "options":[
+                       {"name": "/sys/class/net/%s/mtu" % self._devname,
+                        "value": str(mtu)}
+                    ]}
+        if self._netns != None:
+            command["netns"] = self._netns
+
+        self._machine.run_command(command)
+        self._mtu = mtu
+        return self._mtu
+
+    def update(self, if_data):
+        self.set_hwaddr(if_data["hwaddr"])
+        self.set_devname(if_data["devname"])
+        self._mtu = if_data["mtu"]
 
     def _get_config(self):
         config = {"hwaddr": self._hwaddr, "type": self._type,

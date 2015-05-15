@@ -270,6 +270,7 @@ class Device(object):
         self._slaves = []
         self._netns = None
         self._peer = None
+        self._mtu = None
 
         self._if_manager = if_manager
 
@@ -282,6 +283,7 @@ class Device(object):
         self._ip = None #TODO
         self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
         self._netns = None
+        self._mtu = nl_msg.get_attr("IFLA_MTU")
 
         self._initialized = True
 
@@ -292,6 +294,7 @@ class Device(object):
             self._state = nl_msg.get_attr("IFLA_OPERSTATE")
             self._ip = None #TODO
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
+            self._mtu = nl_msg.get_attr("IFLA_MTU")
 
             link = nl_msg.get_attr("IFLA_LINK")
             if link != None:
@@ -316,7 +319,8 @@ class Device(object):
             #return an update message that will be sent to the controller
             return {"type": "if_update",
                     "devname": self._name,
-                    "hwaddr": self._hwaddr}
+                    "hwaddr": self._hwaddr,
+                    "mtu": self._mtu}
         return None
 
     def del_link(self):

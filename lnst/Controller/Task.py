@@ -353,6 +353,12 @@ class InterfaceAPI(object):
     def get_ip_prefix(self, ip_index):
         return VolatileValue(self._if.get_prefix, ip_index)
 
+    def get_mtu(self):
+        return VolatileValue(self._if.get_mtu)
+
+    def set_mtu(self, mtu):
+        return self._if.set_mtu(mtu)
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 
