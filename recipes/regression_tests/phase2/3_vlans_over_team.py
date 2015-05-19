@@ -97,7 +97,7 @@ for vlan1 in vlans:
             # These tests should pass
             # Ping between same VLANs
             if vlan1 == vlan2:
-                for state in ["on", "off"]:
+                for state in ["off", "on"]:
                 # Offload setup
                     m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
                                                     offload, state))
@@ -149,7 +149,7 @@ for vlan1 in vlans:
             # These tests should fail
             # Ping across different VLAN
             elif vlan1 != vlan2:
-                for state in ["on", "off"]:
+                for state in ["off", "on"]:
                     # Offload setup
                     m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
                                                     offload, state))

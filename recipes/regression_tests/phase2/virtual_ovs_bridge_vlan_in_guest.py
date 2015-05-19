@@ -93,7 +93,7 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
 
 
 for offload in offloads:
-    for state in ["on", "off"]:
+    for state in ["off", "on"]:
         h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic"),
                                         offload, state))
         g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),

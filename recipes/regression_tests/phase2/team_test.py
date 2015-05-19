@@ -87,7 +87,7 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                   })
 
 for offload in offloads:
-    for state in ["on", "off"]:
+    for state in ["off", "on"]:
         m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"), offload,
                                         state))
         m2.run("ethtool -K %s %s %s" % (m2.get_devname("test_if"), offload,
@@ -190,7 +190,7 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                   })
 
 for offload in offloads:
-    for state in ["on", "off"]:
+    for state in ["off", "on"]:
         m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"), offload,
                                         state))
         m2.run("ethtool -K %s %s %s" % (m2.get_devname("test_if"), offload,
