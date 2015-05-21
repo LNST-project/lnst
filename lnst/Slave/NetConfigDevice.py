@@ -15,7 +15,7 @@ import logging
 import re
 import sys
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
+from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option, parse_netem
 from lnst.Common.Utils import kmod_in_use, bool_it
 from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
 from lnst.Slave.NmConfigDevice import is_nm_managed
@@ -86,6 +86,15 @@ class NetConfigDeviceEth(NetConfigDeviceGeneric):
         config = self._dev_config
         exec_cmd("ip addr flush %s" % config["name"])
         exec_cmd("ethtool -A %s rx off tx off" % config["name"], die_on_err=False, log_outputs=False)
+        if config["netem"] is not None:
+            cmd = "tc qdisc add dev %s root netem %s" % (config["name"], parse_netem(config["netem"]))
+            exec_cmd(cmd)
+            config["netem_cmd"] = cmd
+
+    def deconfigure(self):
+        config = self._dev_config
+        if "netem_cmd" in config:
+            exec_cmd(config["netem_cmd"].replace("add", "del"))
 
 class NetConfigDeviceLoopback(NetConfigDeviceGeneric):
     def configure(self):

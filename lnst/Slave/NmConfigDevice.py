@@ -19,7 +19,7 @@ import uuid
 import socket, struct
 import time
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
+from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option, parse_netem
 from lnst.Common.Utils import kmod_in_use, bool_it
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.Utils import check_process_running
@@ -371,8 +371,15 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
 
         self._connection = connection
         self._nm_add_connection()
+        if config["netem"] is not None:
+            cmd = "tc qdisc add dev %s root netem %s" % (config["name"], parse_netem(config["netem"]))
+            exec_cmd(cmd)
+            config["netem_cmd"] = cmd
 
     def deconfigure(self):
+        config = self._dev_config
+        if "netem_cmd" in config:
+            exec_cmd(config["netem_cmd"].replace("add", "del"))
         if self._con_obj_path != None:
             self._nm_rm_connection()
 
