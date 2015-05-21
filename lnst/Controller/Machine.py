@@ -500,6 +500,7 @@ class Interface(object):
         self._hwaddr = None
         self._devname = None
         self._network = None
+        self._netem = None
 
         self._slaves = {}
         self._slave_options = {}
@@ -549,6 +550,9 @@ class Interface(object):
 
     def set_option(self, name, value):
         self._options.append((name, value))
+
+    def set_netem(self, netem):
+        self._netem = netem
 
     def add_master(self, master, primary=True):
         if primary and self._master["primary"] != None:
@@ -642,7 +646,7 @@ class Interface(object):
                   "slave_options": self._slave_options,
                   "master": None, "other_masters": [],
                   "ovs_conf": self._ovs_conf, "netns": self._netns,
-                  "peer": self._peer}
+                  "peer": self._peer, "netem" : self._netem}
 
         if self._master["primary"] != None:
             config["master"] = self._master["primary"].get_id()

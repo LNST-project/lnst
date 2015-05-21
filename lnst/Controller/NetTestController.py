@@ -326,6 +326,9 @@ class NetTestController:
             for opt in iface_xml_data["options"]:
                 iface.set_option(opt["name"], opt["value"])
 
+        if "netem" in iface_xml_data:
+            iface.set_netem(iface_xml_data["netem"].to_dict())
+
         if "ovs_conf" in iface_xml_data:
             iface.set_ovs_conf(iface_xml_data["ovs_conf"].to_dict())
 
