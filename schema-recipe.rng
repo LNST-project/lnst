@@ -164,6 +164,10 @@
                 <optional>
                     <ref name="addresses"/>
                 </optional>
+
+                <optional>
+                    <ref name="netem"/>
+                </optional>
             </interleave>
         </element>
     </define>
@@ -445,6 +449,48 @@
                         </choice>
                     </element>
                 </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="netem">
+        <element name="netem">
+            <interleave>
+                <optional>
+                    <element name="delay">
+                        <optional>
+                            <ref name="options"/>
+                        </optional>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="loss">
+                        <optional>
+                            <ref name="options"/>
+                        </optional>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="duplication">
+                        <optional>
+                            <ref name="options"/>
+                        </optional>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="corrupt">
+                        <optional>
+                            <ref name="options"/>
+                        </optional>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="reordering">
+                        <optional>
+                            <ref name="options"/>
+                        </optional>
+                    </element>
+                </optional>
             </interleave>
         </element>
     </define>
