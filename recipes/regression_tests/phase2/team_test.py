@@ -86,6 +86,8 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                           "-L %s -6" % m2.get_ip("test_if", 1)
                                   })
 
+ctl.wait(15)
+
 for offload in offloads:
     for state in ["off", "on"]:
         m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"), offload,

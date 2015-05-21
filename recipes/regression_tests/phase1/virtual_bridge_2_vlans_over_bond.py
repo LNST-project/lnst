@@ -144,6 +144,8 @@ ping_mod6_bad2 = ctl.get_module("Icmp6Ping",
                                "interval" : 0.1
                            })
 
+ctl.wait(15)
+
 for offload in offloads:
     for state in ["off", "on"]:
         h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic1"),

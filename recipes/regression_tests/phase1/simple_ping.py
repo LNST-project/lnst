@@ -22,6 +22,8 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
                               "iface" : hostA.get_ip("testiface", 1),
                               "limit_rate": 90})
 
+ctl.wait(15)
+
 if ctl.get_alias('ipv') == 'ipv6':
     hostA.run(ping_mod6)
 

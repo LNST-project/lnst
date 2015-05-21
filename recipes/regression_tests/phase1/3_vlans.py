@@ -19,6 +19,8 @@ offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias('ipv')
 
+ctl.wait(15)
+
 for vlan1 in vlans:
     for vlan2 in vlans:
         ping_mod = ctl.get_module("IcmpPing",

@@ -91,6 +91,8 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                           "-L %s -6" % h2.get_ip("vlan10", 1)
                                   })
 
+ctl.wait(15)
+
 for offload in offloads:
     for state in ["off", "on"]:
             g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
