@@ -1,0 +1,39 @@
+<lnstrecipe>
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="testiface" label="testnet">
+                    <netem>
+                        <corrupt>
+                            <options>
+                                <option name="percent" value="10%" />
+                                <option name="correlation" value="50%" />
+                            </options>
+                        </corrupt>
+                    </netem>
+                    <addresses>
+                        <address>192.168.101.10/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="testiface" label="testnet">
+                    <netem>
+                        <corrupt>
+                            <options>
+                                <option name="percent" value="10%" />
+                                <option name="correlation" value="50%" />
+                            </options>
+                        </corrupt>
+                    </netem>
+                    <addresses>
+                        <address>192.168.101.11/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+    <task python="netem_test.py"/>
+</lnstrecipe>

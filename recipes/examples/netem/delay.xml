@@ -1,0 +1,43 @@
+<lnstrecipe>
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="testiface" label="testnet">
+                    <netem>
+                        <delay>
+                            <options>
+                                <option name="time" value="10ms" />
+                                <option name="jitter" value="1ms" />
+                                <option name="correlation" value="50%" />
+                                <option name="distribution" value="normal" />
+                            </options>
+                        </delay>
+                    </netem>
+                    <addresses>
+                        <address>192.168.101.10/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="testiface" label="testnet">
+                    <netem>
+                        <delay>
+                            <options>
+                                <option name="time" value="10ms" />
+                                <option name="jitter" value="1ms" />
+                                <option name="correlation" value="50%" />
+                                <option name="distribution" value="normal" />
+                            </options>
+                        </delay>
+                    </netem>
+                    <addresses>
+                        <address>192.168.101.11/24</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+    <task python="netem_test.py"/>
+</lnstrecipe>
