@@ -1,0 +1,42 @@
+<interfaces>
+    <eth id="testiface" label="net">
+        <netem>
+            <delay>
+                <options>
+                    <option name="time" value="10ms" />
+                    <option name="jitter" value="1ms" />
+                    <option name="correlation" value="50%" />
+                    <option name="distribution" value="normal" />
+                </options>
+            </delay>
+            <loss>
+                <options>
+                    <option name="percent" value="1%" />
+                    <option name="correlation" value="15%" />
+                </options>
+            </loss>
+            <corrupt>
+                <options>
+                    <option name="percent" value="1%" />
+                    <option name="correlation" value="25%" />
+                </options>
+            </corrupt>
+            <duplication>
+                <options>
+                    <option name="percent" value="1%" />
+                    <option name="correlation" value="25%" />
+                </options>
+            </duplication>
+            <reordering>
+                <options>
+                    <option name="percent" value="1%" />
+                    <option name="correlation" value="25%" />
+                    <option name="gap_distance" value="5" />
+                </options>
+            </reordering>
+        </netem>
+        <addresses>
+            <address value="{$testip}"/>
+        </addresses>
+    </eth>
+</interfaces>
