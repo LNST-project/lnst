@@ -101,7 +101,7 @@ for offload in offloads:
                                             offload, state))
             h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic"),
                                             offload, state))
-            if ipv == 'ipv4':
+            if ipv in [ 'ipv4', 'both' ]:
                 g1.run(ping_mod)
                 server_proc = g1.run(netperf_srv, bg=True)
                 ctl.wait(2)
@@ -109,22 +109,7 @@ for offload in offloads:
                 h2.run(netperf_cli_udp, timeout=70)
                 server_proc.intr()
 
-            elif ipv == 'ipv6':
-                g1.run(ping_mod6)
-                server_proc = g1.run(netperf_srv6, bg=True)
-                ctl.wait(2)
-                h2.run(netperf_cli_tcp6, timeout=70)
-                h2.run(netperf_cli_udp6, timeout=70)
-                server_proc.intr()
-
-            else:
-                g1.run(ping_mod)
-                server_proc = g1.run(netperf_srv, bg=True)
-                ctl.wait(2)
-                h2.run(netperf_cli_tcp, timeout=70)
-                h2.run(netperf_cli_udp, timeout=70)
-                server_proc.intr()
-
+            if ipv in [ 'ipv6', 'both' ]:
                 g1.run(ping_mod6)
                 server_proc = g1.run(netperf_srv6, bg=True)
                 ctl.wait(2)

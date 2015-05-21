@@ -106,7 +106,7 @@ for vlan1 in vlans:
                                                     offload, state))
                     m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
                                                     offload, state))
-                    if ipv == 'ipv4':
+                    if ipv in [ 'ipv4', 'both' ]:
                         # Ping test
                         m1.run(ping_mod)
 
@@ -116,27 +116,10 @@ for vlan1 in vlans:
                         m2.run(netperf_cli_tcp, timeout=70)
                         m2.run(netperf_cli_udp, timeout=70)
                         srv_proc.intr()
-                    elif ipv == 'ipv6':
+
+                    if ipv in [ 'ipv6', 'both' ]:
                         # Ping test
                         m1.run(ping_mod6)
-
-                        # Netperf test (both TCP and UDP)
-                        srv_proc = m1.run(netperf_srv6, bg=True)
-                        ctl.wait(2)
-                        m2.run(netperf_cli_tcp6, timeout=70)
-                        m2.run(netperf_cli_udp6, timeout=70)
-                        srv_proc.intr()
-                    else:
-                        # Ping tests
-                        m1.run(ping_mod)
-                        m1.run(ping_mod6)
-
-                        # Netperf test (both TCP and UDP)
-                        srv_proc = m1.run(netperf_srv, bg=True)
-                        ctl.wait(2)
-                        m2.run(netperf_cli_tcp, timeout=70)
-                        m2.run(netperf_cli_udp, timeout=70)
-                        srv_proc.intr()
 
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv6, bg=True)
@@ -155,11 +138,9 @@ for vlan1 in vlans:
                     m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
                                                     offload, state))
 
-                    if ipv == 'ipv4':
+                    if ipv in [ 'ipv4', 'both' ]:
                         # Ping test
                         m1.run(ping_mod, expect="fail")
-                    elif ipv == 'ipv6':
-                        m1.run(ping_mod6, expect="fail")
-                    else:
-                        m1.run(ping_mod, expect="fail")
+
+                    if ipv in [ 'ipv6', 'both' ]:
                         m1.run(ping_mod6, expect="fail")

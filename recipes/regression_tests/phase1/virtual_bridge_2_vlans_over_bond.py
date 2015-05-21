@@ -164,7 +164,7 @@ for offload in offloads:
                                         offload, state))
         g4.run("ethtool -K %s %s %s" % (g4.get_devname("guestnic"),
                                         offload, state))
-        if ipv == 'ipv4':
+        if ipv in [ 'ipv4', 'both' ]:
             g1.run(ping_mod)
             g4.run(ping_mod2)
             g1.run(ping_mod_bad, expect="fail")
@@ -175,30 +175,8 @@ for offload in offloads:
             g3.run(netperf_cli_tcp, timeout=70)
             g3.run(netperf_cli_udp, timeout=70)
             server_proc.intr()
-        elif ipv == 'ipv6':
-            g1.run(ping_mod6)
-            g4.run(ping_mod62)
-            g1.run(ping_mod6_bad, expect="fail")
-            g3.run(ping_mod6_bad2, expect="fail")
 
-            server_proc = g1.run(netperf_srv6, bg=True)
-            ctl.wait(2)
-            g3.run(netperf_cli_tcp6, timeout=70)
-            g3.run(netperf_cli_udp6, timeout=70)
-            server_proc.intr()
-        else:
-            # IPv4
-            g1.run(ping_mod)
-            g4.run(ping_mod2)
-            g1.run(ping_mod_bad, expect="fail")
-            g3.run(ping_mod_bad2, expect="fail")
-
-            server_proc = g1.run(netperf_srv, bg=True)
-            ctl.wait(2)
-            g3.run(netperf_cli_tcp, timeout=70)
-            g3.run(netperf_cli_udp, timeout=70)
-            server_proc.intr()
-            # IPv6
+        if ipv in [ 'ipv6', 'both' ]:
             g1.run(ping_mod6)
             g4.run(ping_mod62)
             g1.run(ping_mod6_bad, expect="fail")

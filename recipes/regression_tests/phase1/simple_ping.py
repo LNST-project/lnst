@@ -24,12 +24,10 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
 
 ctl.wait(15)
 
-if ctl.get_alias('ipv') == 'ipv6':
+ipv = ctl.get_alias('ipv')
+
+if ipv in [ 'ipv6', 'both' ]:
     hostA.run(ping_mod6)
 
-elif ctl.get_alias('ipv') == 'ipv4':
+if ipv in [ 'ipv4', 'both' ]:
     hostA.run(ping_mod)
-
-else:
-    hostA.run(ping_mod)
-    hostA.run(ping_mod6)
