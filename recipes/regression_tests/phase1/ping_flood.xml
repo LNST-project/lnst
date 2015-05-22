@@ -1,6 +1,7 @@
 <lnstrecipe>
     <define>
         <alias name="ipv" value="both" />
+        <alias name="mtu" value="1500" />
     </define>
     <network>
         <host id="machine1">

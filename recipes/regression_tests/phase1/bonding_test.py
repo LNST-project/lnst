@@ -18,6 +18,12 @@ m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 offloads = ["tso", "gro", "gso"]
 
 ipv = ctl.get_alias('ipv')
+mtu = ctl.get_alias('mtu')
+
+test_if1 = m1.get_interface("test_if")
+test_if1.set_mtu(mtu)
+test_if2 = m2.get_interface("test_if")
+test_if2.set_mtu(mtu)
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={

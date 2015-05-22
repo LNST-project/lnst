@@ -18,6 +18,19 @@ vlans = ["vlan10", "vlan20", "vlan30"]
 offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias('ipv')
+mtu = ctl.get_alias('mtu')
+
+m1_team = m1.get_interface("test_if")
+m1_team.set_mtu(mtu)
+m2_phy1 = m2.get_interface("eth1")
+m2_phy1.set_mtu(mtu)
+
+for vlan in vlans:
+    vlan_if1 = m1.get_interface(vlan)
+    vlan_if1.set_mtu(mtu)
+    vlan_if2 = m2.get_interface(vlan)
+    vlan_if2.set_mtu(mtu)
+
 
 ctl.wait(15)
 
