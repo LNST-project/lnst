@@ -96,10 +96,10 @@ for vlan1 in vlans:
                                                   "-L %s -6" % m2.get_ip(vlan1, 1)
                                           })
 
-        for offload in offloads:
+        if vlan1 == vlan2:
             # These tests should pass
             # Ping between same VLANs
-            if vlan1 == vlan2:
+            for offload in offloads:
                 for state in ["off", "on"]:
                 # Offload setup
                     m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
@@ -128,19 +128,11 @@ for vlan1 in vlans:
                         m2.run(netperf_cli_udp6, timeout=70)
                         srv_proc.intr()
 
-            # These tests should fail
-            # Ping across different VLAN
-            elif vlan1 != vlan2:
-                for state in ["off", "on"]:
-                    # Offload setup
-                    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
-                                                    offload, state))
-                    m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
-                                                    offload, state))
+        # These tests should fail
+        # Ping across different VLAN
+        else:
+            if ipv in [ 'ipv4', 'both' ]:
+                m1.run(ping_mod, expect="fail")
 
-                    if ipv in [ 'ipv4', 'both' ]:
-                        # Ping test
-                        m1.run(ping_mod, expect="fail")
-
-                    if ipv in [ 'ipv6', 'both' ]:
-                        m1.run(ping_mod6, expect="fail")
+            if ipv in [ 'ipv6', 'both' ]:
+                m1.run(ping_mod6, expect="fail")
