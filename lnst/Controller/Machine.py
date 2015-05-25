@@ -638,6 +638,18 @@ class Interface(object):
         self._mtu = mtu
         return self._mtu
 
+    def update_from_slave(self):
+        if self._netns != None:
+            if_data = self._machine._rpc_call_to_netns(self._netns,
+                                                       "get_if_data",
+                                                       self._id)
+        else:
+            if_data = self._machine._rpc_call("get_if_data", self._id)
+
+        if if_data is not None:
+            self.update(if_data)
+        return
+
     def update(self, if_data):
         self.set_hwaddr(if_data["hwaddr"])
         self.set_devname(if_data["devname"])
@@ -724,6 +736,7 @@ class Interface(object):
         else:
             self._machine._rpc_call("configure_interface", self.get_id(),
                                     self.get_config())
+        self.update_from_slave()
 
     def deconfigure(self):
         if not self._configured:
@@ -806,6 +819,7 @@ class LoopbackInterface(Interface):
             self._machine._rpc_call("configure_interface", self.get_id(),
                                     self.get_config())
         self._configured = True
+        self.update_from_slave()
 
     def deconfigure(self):
         if not self._configured:
@@ -949,6 +963,7 @@ class SoftInterface(Interface):
             dev_name = self._machine._rpc_call("create_soft_interface",
                                                self._id, self.get_config())
         self.set_devname(dev_name)
+        self.update_from_slave()
 
     def deconfigure(self):
         if not self._configured:
