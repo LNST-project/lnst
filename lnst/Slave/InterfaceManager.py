@@ -13,6 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import logging
+import re
 from lnst.Slave.NetConfigDevice import NetConfigDevice
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
@@ -271,6 +272,7 @@ class Device(object):
         self._netns = None
         self._peer = None
         self._mtu = None
+        self._driver = None
 
         self._if_manager = if_manager
 
@@ -284,6 +286,9 @@ class Device(object):
         self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
         self._netns = None
         self._mtu = nl_msg.get_attr("IFLA_MTU")
+
+        if self._driver is None:
+            self._driver = self._ethtool_get_driver()
 
         self._initialized = True
 
@@ -314,6 +319,9 @@ class Device(object):
 
             if self._conf_dict:
                 self._conf_dict["name"] = self._name
+
+            if self._driver is None:
+                self._driver = self._ethtool_get_driver()
 
             self._initialized = True
 
@@ -485,3 +493,10 @@ class Device(object):
 
     def get_netns(self):
         return self._netns
+
+    def _ethtool_get_driver(self):
+        if self._ifi_type == 772:  #loopback ifi type
+            return 'loopback'
+        out, _ = exec_cmd("ethtool -i %s" % self._name, False, False, False)
+        match = re.search("^driver: (.*)$", out, re.MULTILINE)
+        return match.group(1)
