@@ -74,6 +74,19 @@ class Machine(object):
         self._namespaces = []
         self._bg_cmds = {}
 
+    def get_configuration(self):
+        configuration = {}
+        configuration["id"] = self._id
+        configuration["hostname"] = self._hostname
+        configuration["kernel_release"] = self._slave_desc["kernel_release"]
+        configuration["redhat_release"] = self._slave_desc["redhat_release"]
+
+        configuration["interfaces"] = {}
+        for i in self._interfaces:
+            if not isinstance(i, UnusedInterface):
+                configuration["interface_"+i.get_id()] = i.get_config()
+        return configuration
+
     def _add_interface(self, if_id, if_type, cls):
         if if_id != None:
             for iface in self._interfaces:

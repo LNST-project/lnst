@@ -115,7 +115,11 @@ class ControllerAPI(object):
         return self._perf_repo_api
 
     def get_configuration(self):
-        return self._ctl._recipe["machines"]
+        machines = self._ctl._machines
+        configuration = {}
+        for m_id, m in machines.items():
+            configuration["machine_"+m_id] = m.get_configuration()
+        return configuration
 
     def get_mapping(self):
         match = self._ctl.get_pool_match()
@@ -537,7 +541,7 @@ class PerfRepoResult(object):
     def set_configuration(self, configuration=None):
         if configuration is None:
             configuration = ctl.get_configuration()
-        for pair in list_to_dot(configuration, "configuration.", "machine"):
+        for pair in dict_to_dot(configuration, "configuration."):
             self._testExecution.add_parameter(pair[0], pair[1])
 
     def set_mapping(self, mapping=None):
