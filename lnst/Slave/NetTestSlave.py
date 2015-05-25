@@ -83,6 +83,7 @@ class SlaveMethods:
         self._log_ctl.set_recipe(recipe_path, expand=date)
         sleep(1)
 
+        slave_desc = {}
         if check_process_running("NetworkManager"):
             logging.warning("=============================================")
             logging.warning("NetworkManager is running on a slave machine!")
@@ -91,7 +92,16 @@ class SlaveMethods:
             else:
                 logging.warning("Usage of NM is disabled!")
             logging.warning("=============================================")
-        return "hello"
+            slave_desc["nm_running"] = True
+        else:
+            slave_desc["nm_running"] = False
+
+        k_release, _ = exec_cmd("uname -r", False, False, False)
+        r_release, _ = exec_cmd("cat /etc/redhat-release", False, False, False)
+        slave_desc["kernel_release"] = k_release
+        slave_desc["redhat_release"] = r_release
+
+        return ("hello", slave_desc)
 
     def bye(self):
         self.restore_system_config()

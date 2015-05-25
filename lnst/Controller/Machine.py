@@ -51,6 +51,7 @@ class Machine(object):
     def __init__(self, m_id, hostname=None, libvirt_domain=None, rpcport=None):
         self._id = m_id
         self._hostname = hostname
+        self._slave_desc = None
         self._connection = None
         self._configured = False
         self._system_config = {}
@@ -179,11 +180,13 @@ class Machine(object):
         connection = socket.create_connection((hostname, port))
         self._msg_dispatcher.add_slave(self, connection)
 
-        hello = self._rpc_call("hello", recipe_name)
+        hello, slave_desc = self._rpc_call("hello", recipe_name)
         if hello != "hello":
             msg = "Unable to establish RPC connection " \
                   "to machine %s, handshake failed!" % hostname
             raise MachineError(msg)
+
+        self._slave_desc = slave_desc
 
         for iface in self._interfaces:
             iface.initialize()
