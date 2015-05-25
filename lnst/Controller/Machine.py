@@ -644,14 +644,24 @@ class Interface(object):
         self._mtu = if_data["mtu"]
         self._driver = if_data["driver"]
 
-    def _get_config(self):
-        config = {"hwaddr": self._hwaddr, "type": self._type,
-                  "addresses": self._addresses, "slaves": self._slaves.keys(),
+    def get_config(self):
+        config = {"id": self._id,
+                  "hwaddr": self._hwaddr,
+                  "devname": self._devname,
+                  "network_label": self._network,
+                  "type": self._type,
+                  "addresses": self._addresses,
+                  "slaves": self._slaves.keys(),
                   "options": self._options,
                   "slave_options": self._slave_options,
-                  "master": None, "other_masters": [],
-                  "ovs_conf": self._ovs_conf, "netns": self._netns,
-                  "peer": self._peer, "netem" : self._netem}
+                  "master": None,
+                  "other_masters": [],
+                  "ovs_conf": self._ovs_conf,
+                  "netns": self._netns,
+                  "peer": self._peer,
+                  "netem": self._netem,
+                  "mtu": self._mtu,
+                  "driver": self._driver}
 
         if self._master["primary"] != None:
             config["master"] = self._master["primary"].get_id()
@@ -710,10 +720,10 @@ class Interface(object):
         if self._netns != None:
             self._machine._rpc_call("set_if_netns", self.get_id(), self._netns)
             self._machine._rpc_call_to_netns(self._netns, "configure_interface",
-                                             self.get_id(), self._get_config())
+                                             self.get_id(), self.get_config())
         else:
             self._machine._rpc_call("configure_interface", self.get_id(),
-                                    self._get_config())
+                                    self.get_config())
 
     def deconfigure(self):
         if not self._configured:
@@ -791,10 +801,10 @@ class LoopbackInterface(Interface):
 
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns, "configure_interface",
-                                             self.get_id(), self._get_config())
+                                             self.get_id(), self.get_config())
         else:
             self._machine._rpc_call("configure_interface", self.get_id(),
-                                    self._get_config())
+                                    self.get_config())
         self._configured = True
 
     def deconfigure(self):
@@ -922,9 +932,9 @@ class SoftInterface(Interface):
 
         if self._type == "veth":
             peer_if = self._machine.get_interface(self._peer)
-            peer_config = peer_if._get_config()
+            peer_config = peer_if.get_config()
             dev_name, peer_name = self._machine._rpc_call("create_if_pair",
-                                                self._id, self._get_config(),
+                                                self._id, self.get_config(),
                                                 self._peer, peer_config)
             self.set_devname(dev_name)
             peer_if.set_devname(peer_name)
@@ -934,10 +944,10 @@ class SoftInterface(Interface):
 
         if self._netns != None:
             dev_name = self._machine._rpc_call_to_netns(self._netns,
-                          "create_soft_interface", self._id, self._get_config())
+                          "create_soft_interface", self._id, self.get_config())
         else:
             dev_name = self._machine._rpc_call("create_soft_interface",
-                                               self._id, self._get_config())
+                                               self._id, self.get_config())
         self.set_devname(dev_name)
 
     def deconfigure(self):
