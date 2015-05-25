@@ -289,6 +289,7 @@ class Device(object):
 
     def update_netlink(self, nl_msg):
         if self._if_index == nl_msg['index']:
+            self._ifi_type = nl_msg['ifi_type']
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
             self._name = nl_msg.get_attr("IFLA_IFNAME")
             self._state = nl_msg.get_attr("IFLA_OPERSTATE")
