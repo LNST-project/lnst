@@ -546,9 +546,19 @@ class PerfRepoResult(object):
         for pair in list_to_dot(mapping, "mapping.", "machine"):
             self._testExecution.add_parameter(pair[0], pair[1])
 
+    def set_tag(self, tag):
+        self._testExecution.add_tag(tag)
+
     def set_tags(self, tags):
         for tag in tags:
-            self._testExecution.add_tag(tag)
+            self.set_tag(tag)
+
+    def set_parameter(self, name, value):
+        self._testExecution.add_parameter(name, value)
+
+    def set_parameters(self, params):
+        for name, value in params:
+            self.set_parameter(name, value)
 
     def get_testExecution(self):
         return self._testExecution
