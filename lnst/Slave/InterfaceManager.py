@@ -327,9 +327,7 @@ class Device(object):
 
             #return an update message that will be sent to the controller
             return {"type": "if_update",
-                    "devname": self._name,
-                    "hwaddr": self._hwaddr,
-                    "mtu": self._mtu}
+                    "if_data": self.get_if_data()}
         return None
 
     def del_link(self):
@@ -500,3 +498,10 @@ class Device(object):
         out, _ = exec_cmd("ethtool -i %s" % self._name, False, False, False)
         match = re.search("^driver: (.*)$", out, re.MULTILINE)
         return match.group(1)
+
+    def get_if_data(self):
+        if_data = {"devname": self._name,
+                   "hwaddr": self._hwaddr,
+                   "mtu": self._mtu,
+                   "driver": self._driver}
+        return if_data

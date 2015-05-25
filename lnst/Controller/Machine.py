@@ -91,7 +91,7 @@ class Machine(object):
         except:
             iface = None
         if iface:
-            iface.update(if_data)
+            iface.update(if_data['if_data'])
 
     #
     # Factory methods for constructing interfaces on this machine. The

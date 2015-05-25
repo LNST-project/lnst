@@ -149,6 +149,12 @@ class SlaveMethods:
 
         return matched
 
+    def get_if_data(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is None:
+            return None
+        return dev.get_if_data()
+
     def set_device_up(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         dev.up()
