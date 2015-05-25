@@ -517,6 +517,7 @@ class Interface(object):
         self._netns = None
         self._peer = None
         self._mtu = None
+        self._driver = None
 
     def get_id(self):
         return self._id
@@ -641,6 +642,7 @@ class Interface(object):
         self.set_hwaddr(if_data["hwaddr"])
         self.set_devname(if_data["devname"])
         self._mtu = if_data["mtu"]
+        self._driver = if_data["driver"]
 
     def _get_config(self):
         config = {"hwaddr": self._hwaddr, "type": self._type,
