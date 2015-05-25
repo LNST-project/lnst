@@ -529,7 +529,6 @@ class PerfRepoResult(object):
         self._testExecution.set_testUid(testUid)
         self._testExecution.set_name(name)
         self.set_configuration(ctl.get_configuration())
-        self.set_mapping(ctl.get_mapping())
 
     def add_value(self, val_name, value):
         perf_value = PerfRepoValue()
