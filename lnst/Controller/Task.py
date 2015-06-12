@@ -14,6 +14,7 @@ from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
 from lnst.Common.Utils import dot_to_dict, dict_to_dot, list_to_dot
+from lnst.Common.Utils import recursive_dict_update
 from lnst.Common.Config import lnst_config
 
 # The handle to be imported from each task
@@ -383,6 +384,15 @@ class ModuleAPI(object):
 
     def set_options(self, options):
         self._opts = {}
+        for opt, val in options.iteritems():
+            self._opts[opt] = []
+            if type(val) == list:
+                for v in val:
+                    self._opts[opt].append({"value": str(v)})
+            else:
+                self._opts[opt].append({"value": str(val)})
+
+    def update_options(self, options):
         for opt, val in options.iteritems():
             self._opts[opt] = []
             if type(val) == list:
