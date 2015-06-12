@@ -108,9 +108,9 @@ class ControllerAPI(object):
             if url is None:
                 url = lnst_config.get_option("perfrepo", "url")
             if username is None:
-                url = lnst_config.get_option("perfrepo", "username")
+                username = lnst_config.get_option("perfrepo", "username")
             if password is None:
-                url = lnst_config.get_option("perfrepo", "password")
+                password = lnst_config.get_option("perfrepo", "password")
             self._perf_repo_api.connect(url, username, password)
         return self._perf_repo_api
 
