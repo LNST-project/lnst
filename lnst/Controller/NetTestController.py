@@ -682,10 +682,13 @@ class NetTestController:
         # Initialize the API handle
         Task.ctl = Task.ControllerAPI(self, self._machines)
 
+        cwd = os.getcwd()
         task_path = task["python"]
         name = os.path.basename(task_path.abs_path()).split(".")[0]
         sys.path.append(os.path.dirname(task_path.resolve()))
+        os.chdir(os.path.dirname(task_path.resolve()))
         module = imp.load_source(name, task_path.resolve())
+        os.chdir(cwd)
         sys.path.remove(os.path.dirname(task_path.resolve()))
 
         #restore resource table
