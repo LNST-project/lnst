@@ -11,6 +11,7 @@ import errno
 import re
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ShellProcess import ShellProcess
+from lnst.Common.Utils import std_deviation
 
 class Netperf(TestGeneric):
 
@@ -27,7 +28,7 @@ class Netperf(TestGeneric):
             duration = self.get_opt("duration")
             port = self.get_opt("port")
             testname = self.get_opt("testname")
-            cmd = "netperf -H %s" % netperf_server
+            cmd = "netperf -H %s -f k" % netperf_server
             if port is not None:
                 """
                 client connects on this port
@@ -76,7 +77,7 @@ class Netperf(TestGeneric):
                 cmd += " %s" % netperf_opts
         return cmd
 
-    def _parse_output(self, threshold, output):
+    def _parse_output(self, output):
         testname = self.get_opt("testname")
         if testname == "UDP_STREAM":
             # pattern for UDP_STREAM throughput output
@@ -98,69 +99,60 @@ class Netperf(TestGeneric):
             # decimal decimal decimal float (float)
             pattern_sctp = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
             r2 = re.search(pattern_sctp, output.lower())
-        if threshold is not None:
-            # pattern for threshold
-            # group(1) ... threshold value
-            # group(3) ... threshold units
-            # group(4) ... bytes/bits
-            if (testname == "TCP_STREAM" or testname == "UDP_STREAM" or
-               testname == "SCTP_STREAM" or testname == "SCTP_STREAM_MANY"):
-                pattern_stream = "(\d*(\.\d*){0,1})\s*([ kmgt])(bits|bytes)\/sec"
-                r1 = re.search(pattern_stream, threshold.lower())
-                if r1 is None:
-                    return (False, "Invalid unit type in the throughput option")
-                threshold_rate = float(r1.group(1))
-                threshold_unit_size = r1.group(3)
-                threshold_unit_type = r1.group(4)
-            elif (testname == "TCP_RR" or testname == "UDP_RR" or
-                 testname == "SCTP_RR"):
-                pattern_rr =  "(\d*(\.\d*){0,1})\s*trans\.\/sec"
-                r1 = re.search(pattern_rr, threshold.lower())
-                if r1 is None:
-                    return (False, "Invalid unit type in the throughput option")
-                threshold_rate = float(r1.group(1))
-                threshold_unit_size = ""
-                threshold_unit_type = "Trans./sec"
-            throughput_rate = float(r2.group(1))
-            """
-            this part converts threshold and throughput rates to same format
-            user will get output in format specified in threshold option
-            if no threshold option is put in, default format is Mbits
-            """
-            if (testname == "UDP_STREAM" or testname == "TCP_STREAM" or
-               testname == "SCTP_STREAM" or testname == "SCTP_STREAM_MANY"):
-                if threshold_unit_size == 'k':
-                    throughput_rate *= 1000
-                elif threshold_unit_size == 'g':
-                    throughput_rate /= 1000
-                elif threshold_unit_size == 't':
-                    throughput_rate /= 1000 * 1000
-                if threshold_unit_type == "bytes":
-                    throughput_rate /= 8
-            if threshold_rate > throughput_rate:
-                return (False, "Measured rate (%s %s%s) is below threshold "
-                               "(%s %s%s)!" % (throughput_rate,
-                                               threshold_unit_size.upper(),
-                                               threshold_unit_type,
-                                               threshold_rate,
-                                               threshold_unit_size.upper(),
-                                               threshold_unit_type))
-            else:
-                return (True, "Measured rate (%s %s%s) is over threshold "
-                              "(%s %s%s)." % (throughput_rate,
-                                              threshold_unit_size.upper(),
-                                              threshold_unit_type,
-                                              threshold_rate,
-                                              threshold_unit_size.upper(),
-                                              threshold_unit_type))
-        else:
-            if (testname == "TCP_RR" or testname == "UDP_RR" or
-               testname == "SCTP_RR"):
-                return (True, "Measured rate: %s Trans./sec" % r2.group(1))
-            else:
-                return (True, "Measured rate: %s Mbits/sec" % r2.group(1))
+
+        rate_in_kb = float(r2.group(1))
+
+        return {"rate": rate_in_kb*1000,
+                "unit": "bps"}
 
 
+    def _parse_threshold(self, threshold):
+        if threshold is None:
+            return None
+        # pattern for threshold
+        # group(1) ... threshold value
+        # group(3) ... threshold units
+        # group(4) ... bytes/bits
+        if (testname == "TCP_STREAM" or testname == "UDP_STREAM" or
+           testname == "SCTP_STREAM" or testname == "SCTP_STREAM_MANY"):
+            pattern_stream = "(\d*(\.\d*)?)\s*([ kmgtKMGT])(bits|bytes)\/sec"
+            r1 = re.search(pattern_stream, threshold)
+            if r1 is None:
+                res_data["msg"] = "Invalid unit type in the "\
+                                  "throughput option"
+                return (False, res_data)
+            threshold_rate = float(r1.group(1))
+            threshold_unit_size = r1.group(3)
+            threshold_unit_type = r1.group(4)
+            if threshold_unit_size == 'k':
+                threshold_rate *= 1000
+            elif threshold_unit_size == 'K':
+                threshold_rate *= 1024
+            elif threshold_unit_size == 'g':
+                threshold_rate *= 1000*1000
+            elif threshold_unit_size == 'G':
+                threshold_rate *= 1024*1024
+            elif threshold_unit_size == 't':
+                threshold_rate *= 1000 * 1000 * 1000
+            elif threshold_unit_size == 'T':
+                threshold_rate *= 1024 * 1024 * 1024
+            if threshold_unit_type == "bytes":
+                threshold_rate *= 8
+            threshold_unit_type = "bps"
+        elif (testname == "TCP_RR" or testname == "UDP_RR" or
+             testname == "SCTP_RR"):
+            pattern_rr =  "(\d*(\.\d*)?)\s*trans\.\/sec"
+            r1 = re.search(pattern_rr, threshold.lower())
+            if r1 is None:
+                res_data["msg"] = "Invalid unit type in the "\
+                                  "throughput option"
+                return (False, res_data)
+            threshold_rate = float(r1.group(1))
+            threshold_unit_size = ""
+            threshold_unit_type = "tps"
+
+        return {"rate": threshold_rate,
+                "unit": threshold_unit_type}
 
     def _run_server(self, cmd):
         logging.debug("running as server...")
@@ -173,29 +165,83 @@ class Netperf(TestGeneric):
 
     def _run_client(self, cmd):
         logging.debug("running as client...")
-        client = ShellProcess(cmd)
-        try:
-            rv = client.wait()
-        except OSError as e:
-            if e.errno == errno.EINTR:
-                client.kill()
-        output = client.read_nonblocking()
+
+        res_data = {}
+
+        rv = 0
+        runs = self.get_opt("runs", default=1)
+        results = []
+        rates = []
+        for i in range(1, runs+1):
+            if runs > 1:
+                logging.info("Netperf starting run %d" % i)
+            client = ShellProcess(cmd)
+            try:
+                rv += client.wait()
+            except OSError as e:
+                if e.errno == errno.EINTR:
+                    client.kill()
+            output = client.read_nonblocking()
+            results.append(self._parse_output(output))
+            rates.append(results[-1]["rate"])
+
+        if runs > 1:
+            res_data["results"] = results
+
+        rate = sum(rates)/len(rates)
+        rate_std_deviation = std_deviation(rates)
+        res_data["rate"] = rate
+        res_data["rate_std_deviation"] = rate_std_deviation
+
+        threshold = self._parse_threshold(self.get_opt("threshold"))
+        threshold_std_deviation = self._parse_threshold(self.get_opt("threshold_std_deviation"))
+
+        res_val = False
+        if threshold is not None:
+            threshold = threshold["rate"]
+            if threshold_std_deviation is None:
+                threshold_std_deviation = 0.0
+            else:
+                threshold_std_deviation = threshold_std_deviation["rate"]
+            result_interval = (rate - rate_std_deviation,
+                               rate + rate_std_deviation)
+            threshold_interval = (threshold - threshold_std_deviation,
+                                  threshold + threshold_std_deviation)
+
+            if threshold_interval[0] > result_interval[1]:
+                res_val = False
+                res_data["msg"] = "Measured rate %.2f +-%.2f bps is lower "\
+                                  "than threshold %.2f +-%.2f" %\
+                                  (rate, rate_std_deviation,
+                                   threshold, threshold_std_deviation)
+            else:
+                res_val = True
+                res_data["msg"] = "Measured rate %.2f +-%.2f bps is higher "\
+                                  "than threshold %.2f +-.2%f" %\
+                                  (rate, rate_std_deviation,
+                                   threshold, threshold_std_deviation)
+        else:
+            if rate > 0.0:
+                res_val = True
+            else:
+                res_val = False
+            res_data["msg"] = "Measured rate was %.2f +-%.2f bps" %\
+                                                (rate, rate_std_deviation)
+
         if rv != 0:
-            logging.info("Could not get performance throughput! Are you sure "
-                         "netperf is installed on both machines and machines "
-                         "are mutually accessible?")
-            return (False, "Could not get performance throughput! Are you "
-                           "sure netperf is installed on both machines and "
-                           "machines are mutually accessible?")
-        return self._parse_output(self.get_opt("threshold"), output)
+            res_data["msg"] = "Could not get performance throughput! Are you "\
+                              "sure netperf is installed on both machines and "\
+                              "machines are mutually accessible?"
+            logging.info(res_data["msg"])
+            return (False, res_data)
+        return (res_val, res_data)
 
     def run(self):
         self.role = self.get_mopt("role")
         cmd = self._compose_cmd(self.role)
         logging.debug("compiled command: %s" % cmd)
         if self.role == "client":
-            (rv, message) = self._run_client(cmd)
-            res_data = {"msg" : message}
+            (rv, res_data) = self._run_client(cmd)
             if rv == False:
                 return self.set_fail(res_data)
             return self.set_pass(res_data)
