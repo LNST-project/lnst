@@ -21,6 +21,7 @@ import re
 from time import time
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import recv_data, send_data
+from lnst.Common.Logs import log_exc_traceback
 
 DEFAULT_TIMEOUT = 60
 
@@ -157,6 +158,7 @@ class NetTestCommand:
         except (KeyboardInterrupt, SystemExit):
             pass
         except:
+            log_exc_traceback()
             type, value, tb = sys.exc_info()
             data = {"Exception": "%s" % value}
             self._cmd_cls.set_fail(data)
