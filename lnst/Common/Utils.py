@@ -19,6 +19,7 @@ import subprocess
 import errno
 import ast
 import collections
+import math
 from _ast import Call, Attribute
 from lnst.Common.ExecCmd import exec_cmd
 
@@ -244,3 +245,11 @@ def dict_to_dot(original_dict, prefix=""):
         else:
             return_list.append((prefix+key, str(value)))
     return return_list
+
+def std_deviation(values):
+    s1 = 0.0
+    s2 = 0.0
+    for val in values:
+        s1 += val
+        s2 += val**2
+    return (math.sqrt(len(values)*s2 - s1**2))/len(values)
