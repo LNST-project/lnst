@@ -229,6 +229,10 @@ def list_to_dot(original_list, prefix="", key=""):
             return_list.extend(sub_list)
         elif isinstance(value, list):
             raise Exception("Nested lists not allowed")
+        elif isinstance(value, tuple):
+            #TODO temporary fix, tuples shouldn't be here
+            if len(value) == 2:
+                return_list.append((iter_key+'.'+value[0], value[1]))
         else:
             return_list.append((iter_key, value))
     return return_list
@@ -242,6 +246,10 @@ def dict_to_dot(original_dict, prefix=""):
         elif isinstance(value, list):
             sub_list = list_to_dot(value, prefix, key)
             return_list.extend(sub_list)
+        elif isinstance(value, tuple):
+            #TODO temporary fix, tuples shouldn't be here
+            if len(value) == 2:
+                return_list.append((iter_key+'.'+value[0], value[1]))
         else:
             return_list.append((prefix+key, str(value)))
     return return_list
