@@ -207,8 +207,14 @@ class PerfRepoTestExecution(PerfRepoObject):
     def add_tag(self, tag):
         self._tags.append(tag)
 
+    def get_tags(self):
+        return self._tags
+
     def add_parameter(self, name, value):
         self._parameters.append((name, value))
+
+    def get_parameters(self):
+        return self._parameters
 
     def to_xml(self):
         root = Element('testExecution')
