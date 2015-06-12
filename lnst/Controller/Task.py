@@ -10,6 +10,7 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
+import hashlib
 from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
@@ -575,3 +576,15 @@ class PerfRepoResult(object):
 
     def get_testExecution(self):
         return self._testExecution
+
+    def generate_hash(self):
+        tags = self._testExecution.get_tags()
+        params = self._testExecution.get_parameters()
+
+        sha1 = hashlib.sha1()
+        for i in sorted(tags):
+            sha1.update(i)
+        for i in sorted(params, key=lambda x: x[0]):
+            sha1.update(i[0])
+            sha1.update(i[1])
+        return sha1.hexdigest()
