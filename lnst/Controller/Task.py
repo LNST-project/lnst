@@ -176,6 +176,7 @@ class HostAPI(object):
         cmd = {"host": str(self._id), "type": "config"}
         cmd["options"] = [{"name": option, "value": value}]
         cmd["persistent"] = persistent
+        cmd["netns"] = netns
 
         return self._ctl._run_command(cmd)
 
