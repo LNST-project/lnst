@@ -37,7 +37,7 @@ ping_mod2 = ctl.get_module("IcmpPing",
                            options={
                                "addr" : g2.get_ip("guestnic", 0),
                                "count" : 100,
-                               "iface" : g4.get_ip("guestnic"),
+                               "iface" : g4.get_devname("guestnic"),
                                "interval" : 0.1
                            })
 
