@@ -15,12 +15,11 @@ import os
 import sys
 import signal
 import imp
-import pickle, traceback
 import multiprocessing
 import re
 from time import time
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
-from lnst.Common.ConnectionHandler import recv_data, send_data
+from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.Logs import log_exc_traceback
 
 DEFAULT_TIMEOUT = 60

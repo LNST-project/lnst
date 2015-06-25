@@ -13,14 +13,11 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import re
-import sys
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option, parse_netem
-from lnst.Common.Utils import kmod_in_use, bool_it
+from lnst.Common.Utils import bool_it
 from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
 from lnst.Slave.NmConfigDevice import is_nm_managed
-from lnst.Common.Utils import check_process_running
-from lnst.Common.Config import lnst_config
 
 
 class NetConfigDeviceGeneric(object):

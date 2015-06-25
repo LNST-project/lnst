@@ -14,7 +14,6 @@ import os
 import re
 import time
 import shutil
-from lnst.Common.Utils import md5sum
 from lnst.Common.ExecCmd import exec_cmd
 
 SETUP_SCRIPT_NAME = "lnst-setup.sh"

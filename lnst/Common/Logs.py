@@ -9,11 +9,10 @@ published by the Free Software Foundation; see COPYING for details.
 __autor__ = """
 jzupka@redhat.com (Jiri Zupka)
 """
-import os, sys, shutil, datetime
+import os, sys, shutil
 from logging import Formatter
 import logging.handlers
 import traceback
-from lnst.Common.LoggingHandler import LogBuffer
 from lnst.Common.LoggingHandler import TransmitHandler
 from lnst.Common.Colours import decorate_with_preset, strip_colours
 

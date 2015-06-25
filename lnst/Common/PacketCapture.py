@@ -10,7 +10,6 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import logging
 import subprocess
 
 class PacketCapture:

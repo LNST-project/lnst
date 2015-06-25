@@ -12,11 +12,10 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import os
 import sys
-import logging
 import re
 from ConfigParser import ConfigParser
 from lnst.Common.Utils import bool_it
-from lnst.Common.NetUtils import verify_ip_address, verify_mac_address
+from lnst.Common.NetUtils import verify_mac_address
 from lnst.Common.Colours import get_preset_conf
 
 DefaultRPCPort = 9999

@@ -12,12 +12,11 @@ jpirko@redhat.com (Jiri Pirko)
 """
 
 import signal
-import select, logging
+import logging
 import os
 import sys, traceback
 import datetime
 import socket
-import dbus
 import ctypes
 import multiprocessing
 from time import sleep, time
@@ -26,20 +25,16 @@ from tempfile import NamedTemporaryFile
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.PacketCapture import PacketCapture
 from lnst.Common.Utils import die_when_parent_die
-from lnst.Common.NetUtils import scan_netdevs, test_tcp_connection
-from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ResourceCache import ResourceCache
 from lnst.Common.NetTestCommand import NetTestCommandContext
-from lnst.Common.NetTestCommand import CommandException, NetTestCommand
+from lnst.Common.NetTestCommand import NetTestCommand
 from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
-from lnst.Slave.NmConfigDevice import is_nm_managed_by_name
 from lnst.Common.Utils import check_process_running
-from lnst.Common.ConnectionHandler import recv_data, send_data
+from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
 from lnst.Common.Config import DefaultRPCPort
-from lnst.Common.NetTestCommand import NetTestCommandConfig
 from lnst.Slave.InterfaceManager import InterfaceManager
 
 class SlaveMethods:

@@ -11,7 +11,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import requests
-import collections
 import datetime
 import re
 from types import StringType, NoneType

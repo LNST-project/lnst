@@ -13,14 +13,12 @@ olicthne@redhat.com (Ondrej Lichtner)
 
 import logging
 import re
-import sys
 import dbus
 import uuid
 import socket, struct
 import time
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option, parse_netem
-from lnst.Common.Utils import kmod_in_use, bool_it
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.Utils import check_process_running
 from lnst.Common.Config import lnst_config

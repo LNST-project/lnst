@@ -11,7 +11,7 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
-from lnst.Common.ConnectionHandler import send_data, recv_data
+from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Controller.NetTestController import NetTestError
 

@@ -16,20 +16,17 @@ import socket
 import os
 import re
 import cPickle
-import tempfile
 import imp
 import copy
 import sys
 from time import sleep
-from xmlrpclib import Binary
 from lnst.Common.NetUtils import MacPool
-from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
+from lnst.Common.Utils import md5sum, dir_md5sum
 from lnst.Common.Utils import check_process_running, bool_it, get_module_tools
-from lnst.Common.NetTestCommand import NetTestCommandContext, NetTestCommand
 from lnst.Common.NetTestCommand import str_command, CommandException
 from lnst.Controller.RecipeParser import RecipeParser, RecipeError
 from lnst.Controller.SlavePool import SlavePool
-from lnst.Controller.Machine import Machine, MachineError, VirtualInterface
+from lnst.Controller.Machine import MachineError, VirtualInterface
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config

@@ -14,8 +14,7 @@ import hashlib
 from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
-from lnst.Common.Utils import dot_to_dict, dict_to_dot, list_to_dot
-from lnst.Common.Utils import recursive_dict_update
+from lnst.Common.Utils import dict_to_dot, list_to_dot
 from lnst.Common.Config import lnst_config
 
 # The handle to be imported from each task

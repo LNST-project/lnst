@@ -14,20 +14,14 @@ rpazdera@redhat.com (Radek Pazdera)
 import logging
 import socket
 import os
-import re
-import pickle
 import tempfile
 import signal
 from time import sleep
 from xmlrpclib import Binary
-from pprint import pprint, pformat
 from lnst.Common.Config import lnst_config
-from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.NetUtils import MacPool, normalize_hwaddr
-from lnst.Common.Utils import wait_for, md5sum, dir_md5sum, create_tar_archive
+from lnst.Common.NetUtils import normalize_hwaddr
+from lnst.Common.Utils import wait_for, create_tar_archive
 from lnst.Common.Utils import check_process_running
-from lnst.Common.ConnectionHandler import send_data, recv_data
-from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 
 # conditional support for libvirt

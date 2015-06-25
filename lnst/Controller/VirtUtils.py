@@ -15,7 +15,7 @@ import logging
 import libvirt
 from libvirt import libvirtError
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
-from lnst.Common.NetUtils import normalize_hwaddr, scan_netdevs
+from lnst.Common.NetUtils import scan_netdevs
 
 #this is a global object because opening the connection to libvirt in every
 #object instance that uses it sometimes fails - the libvirt server probably

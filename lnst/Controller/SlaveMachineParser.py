@@ -11,10 +11,6 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import logging
-import os
-import re
-from lxml import etree
 from lnst.Controller.XmlParser import XmlParser
 from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.XmlProcessing import XmlCollection

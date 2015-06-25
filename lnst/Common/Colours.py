@@ -10,8 +10,6 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import logging
-import os
 import re
 from lnst.Common.Utils import bool_it
 

@@ -13,12 +13,11 @@ rpazdera@redhat.com (Radek Pazdera)
 import os
 import re
 import sys
-import logging
 import copy
 from lxml import etree
 from lnst.Common.Config import lnst_config
-from lnst.Controller.XmlTemplates import XmlTemplates, XmlTemplateError
-from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
+from lnst.Controller.XmlTemplates import XmlTemplates
+from lnst.Controller.XmlProcessing import XmlProcessingError
 
 class XmlParser(object):
     XINCLUDE_RE = r"\{http\:\/\/www\.w3\.org\/[0-9]{4}\/XInclude\}include"

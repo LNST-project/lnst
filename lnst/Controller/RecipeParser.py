@@ -10,19 +10,11 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
-import logging
 import os
-import re
-import sys
-from lxml import etree
-from lnst.Common.Config import lnst_config
-from lnst.Common.NetUtils import normalize_hwaddr
-from lnst.Common.Utils import bool_it
 from lnst.Common.RecipePath import RecipePath
 from lnst.Controller.XmlParser import XmlParser
 from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.XmlProcessing import XmlCollection
-from lnst.Controller.XmlTemplates import XmlTemplates, XmlTemplateError
 
 class RecipeError(XmlProcessingError):
     pass

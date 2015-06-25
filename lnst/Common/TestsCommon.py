@@ -12,7 +12,6 @@ jpirko@redhat.com (Jiri Pirko)
 
 import re
 import logging
-import sys
 import os
 import signal
 import time

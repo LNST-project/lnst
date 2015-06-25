@@ -12,7 +12,6 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-import logging
 import re
 from lnst.Slave.NetConfigDevice import NetConfigDevice
 from lnst.Slave.NetConfigCommon import get_option

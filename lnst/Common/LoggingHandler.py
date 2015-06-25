@@ -14,7 +14,7 @@ __autor__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-import socket, struct, pickle
+import pickle
 import logging
 import xmlrpclib
 from lnst.Common.ConnectionHandler import send_data

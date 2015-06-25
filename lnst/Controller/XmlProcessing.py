@@ -11,7 +11,6 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import os
-import logging
 
 class XmlProcessingError(Exception):
     """ Exception thrown on parsing errors """

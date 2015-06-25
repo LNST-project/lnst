@@ -14,8 +14,7 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import datetime
 from xml.dom.minidom import getDOMImplementation
-from lnst.Common.NetTestCommand import str_command
-from lnst.Common.Colours import decorate_string, decorate_with_preset
+from lnst.Common.Colours import decorate_with_preset
 from lnst.Common.Config import lnst_config
 from lxml import etree
 
