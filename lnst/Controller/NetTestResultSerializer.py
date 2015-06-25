@@ -100,9 +100,17 @@ class NetTestResultSerializer:
                                         (m_id, m["target"]), ""))
                     for if_id, pool_if in m["interfaces"].iteritems():
                         pool_id = pool_if["target"]
-                        output_pairs.append((6*" " + "interface \"%s\" "\
-                                                    "matched to \"%s\"" %\
-                                                    (if_id, pool_id), ""))
+                        if "driver" in pool_if:
+                            driver = pool_if["driver"]
+                            output_pairs.append((6*" " + "interface \"%s\" "
+                                                        "matched to \"%s\" "
+                                                        "(driver: \"%s\")" %
+                                                        (if_id, pool_id,
+                                                            driver), ""))
+                        else:
+                            output_pairs.append((6*" " + "interface \"%s\" "
+                                                        "matched to \"%s\" " %
+                                                        (if_id, pool_id), ""))
 
             if recipe["result"] == "FAIL" and \
                "err_msg" in recipe and recipe["err_msg"] != "":

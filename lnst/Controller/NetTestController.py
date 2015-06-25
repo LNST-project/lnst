@@ -204,6 +204,11 @@ class NetTestController:
 
             for iface in ifaces:
                 iface.configure()
+                if m._libvirt_domain is None:
+                    driver = iface._driver
+                    if_id = iface._id
+                    mapped_machine = self._slave_pool._map['machines'][m_id]
+                    mapped_machine['interfaces'][if_id]['driver'] = driver
             for iface in ifaces:
                 iface.up()
 
