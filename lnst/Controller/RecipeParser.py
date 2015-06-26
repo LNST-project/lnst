@@ -158,7 +158,7 @@ class RecipeParser(XmlParser):
             opts = self._process_options(opts_tag)
             if len(opts) > 0:
                 iface["options"] = opts
-        elif iface["type"] in ["vti"]:
+        elif iface["type"] in ["vti", "vti6"]:
             # interface options
             opts_tag = iface_tag.find("options")
             opts = self._process_options(opts_tag)

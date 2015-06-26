@@ -137,6 +137,7 @@
                             <ref name="ovs_bridge"/>
                             <ref name="veth_pair"/>
                             <ref name="vti"/>
+                            <ref name="vti6"/>
                             <ref name="lo"/>
                         </choice>
                     </zeroOrMore>
@@ -376,6 +377,24 @@
 
     <define name="vti">
         <element name="vti">
+            <attribute name="id"/>
+            <optional>
+                <attribute name="netns"/>
+            </optional>
+            <interleave>
+                <optional>
+                    <ref name="define"/>
+                </optional>
+
+                <zeroOrMore>
+                    <ref name="options"/>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="vti6">
+        <element name="vti6">
             <attribute name="id"/>
             <optional>
                 <attribute name="netns"/>

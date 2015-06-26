@@ -487,6 +487,45 @@ class NetConfigDeviceVti(NetConfigDeviceGeneric):
     def deconfigure(self):
         return True
 
+class NetConfigDeviceVti6(NetConfigDeviceGeneric):
+    _modulename = ""
+    _moduleload = False
+
+    def create(self):
+        conf = self._dev_config
+        local = ''
+        remote = ''
+        key = None
+        device = ''
+        for opt, val in conf['options']:
+            if opt == 'local':
+                local = 'local ' + val
+            elif opt == 'remote':
+                remote = 'remote ' + val
+            elif opt == 'key':
+                key = val
+            elif opt == 'dev':
+                device = 'dev ' + val
+            else:
+                pass
+
+        if key == None:
+            raise Exception("Option 'key' not set for a vti6 device")
+
+        exec_cmd("ip link add %s type vti6 %s %s key %s %s" %
+                                    (conf["name"], local, remote, key, device))
+
+    def destroy(self):
+        conf = self._dev_config
+        exec_cmd("ip link del %s" % conf["name"])
+
+    def configure(self):
+        #no configuration options supported at the moment
+        return True
+
+    def deconfigure(self):
+        return True
+
 type_class_mapping = {
     "eth": NetConfigDeviceEth,
     "bond": NetConfigDeviceBond,
@@ -497,6 +536,7 @@ type_class_mapping = {
     "ovs_bridge": NetConfigDeviceOvsBridge,
     "veth": NetConfigDeviceVEth,
     "vti": NetConfigDeviceVti,
+    "vti6": NetConfigDeviceVti6,
     "lo": NetConfigDeviceLoopback
 }
 

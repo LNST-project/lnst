@@ -838,6 +838,12 @@ class NmConfigDeviceVti(NmConfigDeviceGeneric):
     def is_nm_managed(cls, dev_config, if_manager):
         return False
 
+class NmConfigDeviceVti6(NmConfigDeviceGeneric):
+    #Not supported by NetworkManager
+    @classmethod
+    def is_nm_managed(cls, dev_config, if_manager):
+        return False
+
 class NmConfigDeviceLoopback(NmConfigDeviceGeneric):
     #Not supported by NetworkManager
     @classmethod
@@ -854,6 +860,7 @@ type_class_mapping = {
     "ovs_bridge": NmConfigDeviceOvsBridge,
     "veth": NmConfigDeviceVEth,
     "vti": NmConfigDeviceVti,
+    "vti6": NmConfigDeviceVti6,
     "lo": NmConfigDeviceLoopback
 }
 
