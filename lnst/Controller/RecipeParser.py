@@ -58,10 +58,18 @@ class RecipeParser(XmlParser):
             machine["interfaces"] = XmlCollection(interfaces_tag)
 
             lo_netns = []
+            unique_ids = []
             for interface_tag in interfaces_tag:
                 interfaces = self._process_interface(interface_tag)
 
                 for interface in interfaces:
+                    if interface['id'] in unique_ids:
+                        msg = "Interface with ID \"%s\" has already been "\
+                              "defined for this machine." % interface['id']
+                        raise RecipeError(msg, interface_tag)
+                    else:
+                        unique_ids.append(interface['id'])
+
                     if interface['type'] != 'lo':
                         continue
                     elif interface['netns'] in lo_netns:
@@ -69,6 +77,7 @@ class RecipeParser(XmlParser):
                         raise RecipeError(msg, interface_tag)
                     else:
                         lo_netns.append(interface['netns'])
+
                 machine["interfaces"].extend(interfaces)
 
         return machine
