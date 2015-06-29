@@ -26,6 +26,7 @@ from lnst.Common.Config import lnst_config
 NM_BUS = "org.freedesktop.NetworkManager"
 OBJ_PRE = "/org/freedesktop/NetworkManager"
 IF_PRE = NM_BUS
+POLL_LOOP_TIMEOUT = 10
 
 #NetworkManager constants for state values
 _ACON_ACTIVATED = 2
@@ -150,11 +151,15 @@ class NmConfigDeviceGeneric(object):
         if self._device_state == self._wait_for:
             self._loop.quit()
 
-    def _poll_loop(self, func, expected_val, *args):
-        while True:
+    def _poll_loop(self, func, expected_val, timeout, *args):
+        timer = 0
+        while timer < timeout:
             if func(*args) == expected_val:
-                break
+                return
             time.sleep(1)
+            timer += 1
+        msg = "Timed out during NetworkManager polling."
+        raise Exception(msg)
 
     def _convert_hwaddr(self, dev_config):
         if "hwaddr" in dev_config:
@@ -274,6 +279,7 @@ class NmConfigDeviceGeneric(object):
                                            "org.freedesktop.DBus.Properties")
             self._poll_loop(act_con_props.Get,
                             _ACON_ACTIVATED,
+                            POLL_LOOP_TIMEOUT,
                             IF_PRE + ".Connection.Active", "State")
 
     def _nm_deactivate_connection(self):
@@ -339,6 +345,7 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
 
             self._poll_loop(dev_props.Get,
                             _DEV_DISCONNECTED,
+                            POLL_LOOP_TIMEOUT,
                             IF_PRE + ".Device", "State")
         else:
             exec_cmd("ip link set %s up" % config["name"])
