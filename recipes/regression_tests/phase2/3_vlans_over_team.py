@@ -17,8 +17,9 @@ m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 vlans = ["vlan10", "vlan20", "vlan30"]
 offloads = ["gso", "gro", "tso"]
 
-ipv = ctl.get_alias('ipv')
-mtu = ctl.get_alias('mtu')
+ipv = ctl.get_alias("ipv")
+mtu = ctl.get_alias("mtu")
+netperf_duration = ctl.get_alias("netperf_duration")
 
 m1_team = m1.get_interface("test_if")
 m1_team.set_mtu(mtu)
@@ -70,7 +71,7 @@ for vlan1 in vlans:
                                               "role" : "client",
                                               "netperf_server" :
                                                   m1.get_ip(vlan1, 0),
-                                              "duration" : 60,
+                                              "duration" : netperf_duration,
                                               "testname" : "TCP_STREAM",
                                               "netperf_opts" :
                                                   "-L %s" % m2.get_ip(vlan1, 0)
@@ -81,7 +82,7 @@ for vlan1 in vlans:
                                               "role" : "client",
                                               "netperf_server" :
                                                   m1.get_ip(vlan1, 0),
-                                              "duration" : 60,
+                                              "duration" : netperf_duration,
                                               "testname" : "UDP_STREAM",
                                               "netperf_opts" :
                                                   "-L %s" % m2.get_ip(vlan1, 0)
@@ -92,7 +93,7 @@ for vlan1 in vlans:
                                       "role" : "client",
                                       "netperf_server" :
                                           m1.get_ip(vlan1, 1),
-                                      "duration" : 60,
+                                      "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "netperf_opts" :
                                           "-L %s -6" % m2.get_ip(vlan1, 1)
@@ -102,7 +103,7 @@ for vlan1 in vlans:
                                       "role" : "client",
                                       "netperf_server" :
                                           m1.get_ip(vlan1, 1),
-                                      "duration" : 60,
+                                      "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "netperf_opts" :
                                           "-L %s -6" % m2.get_ip(vlan1, 1)

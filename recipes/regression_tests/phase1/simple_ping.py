@@ -24,8 +24,8 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
 
 ctl.wait(15)
 
-ipv = ctl.get_alias('ipv')
-mtu = ctl.get_alias('mtu')
+ipv = ctl.get_alias("ipv")
+mtu = ctl.get_alias("mtu")
 
 test_if1 = hostA.get_interface("testiface")
 test_if1.set_mtu(mtu)

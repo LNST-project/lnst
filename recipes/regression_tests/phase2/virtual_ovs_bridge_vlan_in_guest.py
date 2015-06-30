@@ -19,6 +19,7 @@ h2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias("ipv")
+netperf_duration = ctl.get_alias("netperf_duration")
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -53,7 +54,7 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "netperf_server" : g1.get_ip("vlan10"),
-                                      "duration" : 60,
+                                      "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "netperf_opts" : "-L %s" %
                                                             h2.get_ip("vlan10")
@@ -63,7 +64,7 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "netperf_server" : g1.get_ip("vlan10"),
-                                      "duration" : 60,
+                                      "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "netperf_opts" : "-L %s" %
                                                             h2.get_ip("vlan10")
@@ -74,7 +75,7 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "role" : "client",
                                       "netperf_server" :
                                           g1.get_ip("vlan10", 1),
-                                      "duration" : 60,
+                                      "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "netperf_opts" :
                                           "-L %s -6" % h2.get_ip("vlan10", 1)
@@ -85,7 +86,7 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "role" : "client",
                                       "netperf_server" :
                                           g1.get_ip("vlan10", 1),
-                                      "duration" : 60,
+                                      "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "netperf_opts" :
                                           "-L %s -6" % h2.get_ip("vlan10", 1)

@@ -1,6 +1,7 @@
 <lnstrecipe>
     <define>
         <alias name="ipv" value="both" />
+        <alias name="netperf_duration" value="60" />
     </define>
     <network>
         <host id="host1">
