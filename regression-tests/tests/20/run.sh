@@ -4,7 +4,7 @@
 
 init_test
 
-lnst-ctl -d run recipe1.xml | tee test.log
+lnst-ctl -d config_only recipe1.xml | tee test.log
 rv1=${PIPESTATUS[0]}
 
 lnst-ctl -d run recipe2.xml | tee test.log
