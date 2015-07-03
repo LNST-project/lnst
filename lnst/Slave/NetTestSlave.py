@@ -167,12 +167,19 @@ class SlaveMethods:
 
     def set_device_down(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
-        dev.down()
+        if dev is not None:
+            dev.down()
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
         return True
 
     def set_unmapped_device_down(self, hwaddr):
         dev = self._if_manager.get_device_by_hwaddr(hwaddr)
-        dev.down()
+        if dev is not None:
+            dev.down()
+        else:
+            logging.warning("Device with hwaddr '%s' not found." % hwaddr)
         return True
 
     def configure_interface(self, if_id, config):
