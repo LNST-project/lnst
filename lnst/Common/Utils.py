@@ -255,6 +255,8 @@ def dict_to_dot(original_dict, prefix=""):
     return return_list
 
 def std_deviation(values):
+    if len(values) <= 0:
+        return 0.0
     s1 = 0.0
     s2 = 0.0
     for val in values:
