@@ -27,7 +27,7 @@ class Netperf(TestGeneric):
             netperf_server = self.get_mopt("netperf_server", opt_type="addr")
             duration = self.get_opt("duration")
             port = self.get_opt("port")
-            testname = self.get_opt("testname")
+            testname = self.get_opt("testname", default="TCP_STREAM")
             cmd = "netperf -H %s -f k" % netperf_server
             if port is not None:
                 """
@@ -78,7 +78,7 @@ class Netperf(TestGeneric):
         return cmd
 
     def _parse_output(self, output):
-        testname = self.get_opt("testname")
+        testname = self.get_opt("testname", default="TCP_STREAM")
         if testname == "UDP_STREAM":
             # pattern for UDP_STREAM throughput output
             # decimal float decimal (float)
@@ -113,6 +113,7 @@ class Netperf(TestGeneric):
         # group(1) ... threshold value
         # group(3) ... threshold units
         # group(4) ... bytes/bits
+        testname = self.get_opt("testname", default="TCP_STREAM")
         if (testname == "TCP_STREAM" or testname == "UDP_STREAM" or
            testname == "SCTP_STREAM" or testname == "SCTP_STREAM_MANY"):
             pattern_stream = "(\d*(\.\d*)?)\s*([ kmgtKMGT])(bits|bytes)\/sec"
@@ -217,7 +218,7 @@ class Netperf(TestGeneric):
             else:
                 res_val = True
                 res_data["msg"] = "Measured rate %.2f +-%.2f bps is higher "\
-                                  "than threshold %.2f +-.2%f" %\
+                                  "than threshold %.2f +-%.2f" %\
                                   (rate, rate_std_deviation,
                                    threshold, threshold_std_deviation)
         else:
@@ -228,10 +229,16 @@ class Netperf(TestGeneric):
             res_data["msg"] = "Measured rate was %.2f +-%.2f bps" %\
                                                 (rate, rate_std_deviation)
 
-        if rv != 0:
+        if rv != 0 and runs == 0:
             res_data["msg"] = "Could not get performance throughput! Are you "\
                               "sure netperf is installed on both machines and "\
                               "machines are mutually accessible?"
+            logging.info(res_data["msg"])
+            return (False, res_data)
+        elif rv != 0 and runs > 1:
+            res_data["msg"] = "At least one of the Netperf runs failed, "\
+                              "check the logs and result data for more "\
+                              "information."
             logging.info(res_data["msg"])
             return (False, res_data)
         return (res_val, res_data)
