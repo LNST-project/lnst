@@ -93,8 +93,8 @@ class SlaveMethods:
 
         k_release, _ = exec_cmd("uname -r", False, False, False)
         r_release, _ = exec_cmd("cat /etc/redhat-release", False, False, False)
-        slave_desc["kernel_release"] = k_release
-        slave_desc["redhat_release"] = r_release
+        slave_desc["kernel_release"] = k_release.strip()
+        slave_desc["redhat_release"] = r_release.strip()
 
         return ("hello", slave_desc)
 
