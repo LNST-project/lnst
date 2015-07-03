@@ -501,12 +501,13 @@ class PerfRepoAPI(object):
 
     def get_baseline(self, report_id):
         report = self._rest_api.report_get_by_id(report_id)
-        return report.get_baseline()
-
-    def compare_to_baseline(self, result, report_id, metric_name):
-        baseline = self.get_baseline(report_id)
+        baseline = report.get_baseline()
         baseline_exec_id = baseline["execId"]
         baseline_testExec = self._rest_api.testExecution_get(baseline_exec_id)
+        return baseline_testExec
+
+    def compare_to_baseline(self, result, report_id, metric_name):
+        baseline_testExec = self.get_baseline(report_id)
         result_testExec = result.get_testExecution()
 
         return self.compare_testExecutions(result_testExec,
