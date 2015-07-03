@@ -11,6 +11,7 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import hashlib
+import re
 from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
@@ -577,14 +578,22 @@ class PerfRepoResult(object):
     def get_testExecution(self):
         return self._testExecution
 
-    def generate_hash(self):
+    def generate_hash(self, ignore=[]):
         tags = self._testExecution.get_tags()
         params = self._testExecution.get_parameters()
 
         sha1 = hashlib.sha1()
+        sha1.update(self._testExecution.get_testUid())
         for i in sorted(tags):
             sha1.update(i)
         for i in sorted(params, key=lambda x: x[0]):
+            skip = False
+            for j in ignore:
+                if re.search(j, i[0]):
+                    skip = True
+                    break
+            if skip:
+                continue
             sha1.update(i[0])
             sha1.update(i[1])
         return sha1.hexdigest()
