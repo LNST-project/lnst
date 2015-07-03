@@ -393,6 +393,8 @@ class SlaveMethods:
         logging.info("Performing machine cleanup.")
         self._command_context.cleanup()
 
+        self.restore_system_config()
+
         devs = self._if_manager.get_mapped_devices()
         for if_id, dev in devs.iteritems():
             peer = dev.get_peer()
@@ -411,7 +413,6 @@ class SlaveMethods:
 
         self._if_manager.clear_if_mapping()
         self._cache.del_old_entries()
-        self.restore_system_config()
         self._remove_capture_files()
         return True
 

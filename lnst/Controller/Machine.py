@@ -226,6 +226,8 @@ class Machine(object):
             for netns in self._namespaces:
                 self._rpc_call_to_netns(netns, "kill_cmds")
 
+            self.restore_system_config()
+
             if deconfigure:
                 ordered_ifaces.reverse()
                 for iface in ordered_ifaces:
