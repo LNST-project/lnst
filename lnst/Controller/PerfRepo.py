@@ -13,6 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import requests
 import datetime
 import re
+import logging
 from types import StringType, NoneType
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
@@ -431,6 +432,7 @@ class PerfRepoRESTAPI(object):
         get_url = self._url + '/rest/test/id/%s' % test_id
         response = self._session.get(get_url)
         if response.status_code != 200:
+            logging.debug(response.text)
             return None
         else:
             return PerfRepoTest(response.content)
@@ -439,6 +441,7 @@ class PerfRepoRESTAPI(object):
         get_url = self._url + '/rest/test/uid/%s' % test_uid
         response = self._session.get(get_url)
         if response.status_code != 200:
+            logging.debug(response.text)
             return None
         else:
             return PerfRepoTest(response.content)
@@ -447,6 +450,7 @@ class PerfRepoRESTAPI(object):
         post_url = self._url + '/rest/test/create'
         response = self._session.post(post_url, data=test.to_xml_string())
         if response.status_code != 201:
+            logging.debug(response.text)
             return None
         else:
             test.set_id(response.headers['Location'])
@@ -456,6 +460,7 @@ class PerfRepoRESTAPI(object):
         post_url = self._url + '/rest/test/id/%s/addMetric' % test_id
         response = self._session.post(post_url, data=metric.to_xml_string)
         if response.status_code != 201:
+            logging.debug(response.text)
             return None
         else:
             metric.set_id(response.headers['Location'])
@@ -473,6 +478,7 @@ class PerfRepoRESTAPI(object):
         get_url = self._url + '/rest/metric/%s' % metric_id
         response = self._session.get(get_url)
         if response.status_code != 200:
+            logging.debug(response.text)
             return None
         else:
             return PerfRepoMetric(response.content)
@@ -481,6 +487,7 @@ class PerfRepoRESTAPI(object):
         get_url = self._url + '/rest/testExecution/%s' % testExec_id
         response = self._session.get(get_url)
         if response.status_code != 200:
+            logging.debug(response.text)
             return None
         else:
             return PerfRepoTestExecution(response.content)
@@ -489,6 +496,7 @@ class PerfRepoRESTAPI(object):
         post_url = self._url + '/rest/testExecution/create'
         response = self._session.post(post_url, data=testExec.to_xml_string())
         if response.status_code != 201:
+            logging.debug(response.text)
             return None
         else:
             testExec.set_id(response.headers['Location'])
@@ -498,6 +506,7 @@ class PerfRepoRESTAPI(object):
         delete_url = self._url + '/rest/testExecution/%s' % testExec_id
         response = self._session.delete(delete_url)
         if response.status_code != 204:
+            logging.debug(response.text)
             return False
         else:
             return True
@@ -523,6 +532,7 @@ class PerfRepoRESTAPI(object):
         get_url = self._url + '/rest/report/id/%s' % report_id
         response = self._session.get(get_url)
         if response.status_code != 200:
+            logging.debug(response.text)
             return None
         else:
             return PerfRepoReport(response.content)
