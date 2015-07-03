@@ -189,6 +189,9 @@ class PerfRepoTestExecution(PerfRepoObject):
         else:
             self._testUid = testUid
 
+    def get_testUid(self):
+        return self._testUid
+
     def set_comment(self, comment):
         self._comment = comment
 
