@@ -194,7 +194,10 @@ class Netperf(TestGeneric):
         if runs > 1:
             res_data["results"] = results
 
-        rate = sum(rates)/len(rates)
+        if len(rates) > 0:
+            rate = sum(rates)/len(rates)
+        else:
+            rate = 0.0
         rate_std_deviation = std_deviation(rates)
         res_data["rate"] = rate
         res_data["rate_std_deviation"] = rate_std_deviation
