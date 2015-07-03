@@ -100,7 +100,10 @@ class Netperf(TestGeneric):
             pattern_sctp = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
             r2 = re.search(pattern_sctp, output.lower())
 
-        rate_in_kb = float(r2.group(1))
+        if r2 is None:
+            rate_in_kb = 0.0
+        else:
+            rate_in_kb = float(r2.group(1))
 
         return {"rate": rate_in_kb*1000,
                 "unit": "bps"}
@@ -178,13 +181,15 @@ class Netperf(TestGeneric):
                 logging.info("Netperf starting run %d" % i)
             client = ShellProcess(cmd)
             try:
-                rv += client.wait()
+                ret_code = client.wait()
+                rv += ret_code
             except OSError as e:
                 if e.errno == errno.EINTR:
                     client.kill()
-            output = client.read_nonblocking()
-            results.append(self._parse_output(output))
-            rates.append(results[-1]["rate"])
+            if ret_code == 0:
+                output = client.read_nonblocking()
+                results.append(self._parse_output(output))
+                rates.append(results[-1]["rate"])
 
         if runs > 1:
             res_data["results"] = results
