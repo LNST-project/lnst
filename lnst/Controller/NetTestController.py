@@ -27,6 +27,7 @@ from lnst.Common.NetTestCommand import str_command, CommandException
 from lnst.Controller.RecipeParser import RecipeParser, RecipeError
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.Machine import MachineError, VirtualInterface
+from lnst.Controller.Machine import StaticInterface
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
@@ -201,7 +202,8 @@ class NetTestController:
 
             for iface in ifaces:
                 iface.configure()
-                if m._libvirt_domain is None:
+                if (m._libvirt_domain is None and
+                        isinstance(iface, StaticInterface)):
                     driver = iface._driver
                     if_id = iface._id
                     mapped_machine = self._slave_pool._map['machines'][m_id]
