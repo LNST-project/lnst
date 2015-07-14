@@ -9,7 +9,6 @@
             <interfaces>
                 <eth id="eth1" label="tnet" />
                 <eth id="eth2" label="tnet" />
-                <eth id="eth3" label="tnet" />
                 <team id="test_if">
                     <options>
                         <option name="teamd_config">
@@ -22,7 +21,6 @@
                     <slaves>
                         <slave id="eth1" />
                         <slave id="eth2" />
-                        <slave id="eth3" />
                     </slaves>
                     <addresses>
                         <address value="192.168.0.1/24" />
