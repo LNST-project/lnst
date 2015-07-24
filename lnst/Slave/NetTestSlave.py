@@ -718,7 +718,7 @@ class ServerHandler(ConnectionHandler):
 
     def send_data_to_netns(self, netns, data):
         if netns not in self._netns_con_mapping:
-            raise Exception("No such namespace!")
+            raise Exception("No network namespace '%s'!" % netns)
         else:
             netns_con = self._netns_con_mapping[netns]
             return send_data(netns_con, data)
@@ -869,7 +869,17 @@ class NetTestSlave:
             self._server_handler.send_data_to_ctl(msg["data"])
         elif msg["type"] == "to_netns":
             netns = msg["netns"]
-            self._server_handler.send_data_to_netns(netns, msg["data"])
+            try:
+                self._server_handler.send_data_to_netns(netns, msg["data"])
+            except:
+                log_exc_traceback()
+                type, value, tb = sys.exc_info()
+                exc_trace = ''.join(traceback.format_exception(type,
+					   value, tb))
+                response = {"type": "exception", "Exception": value}
+
+                self._server_handler.send_data_to_ctl(response)
+                return
         else:
             raise Exception("Recieved unknown command")
 
