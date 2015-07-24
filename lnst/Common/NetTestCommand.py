@@ -59,6 +59,9 @@ def str_command(command):
     else:
         raise RuntimeError("Unknown command type '%s'" % command["type"])
 
+    if "netns" in command:
+        attrs.append("netns(%s)" % command["netns"])
+
     return ", ".join(attrs)
 
 class CommandException(Exception):
