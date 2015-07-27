@@ -31,10 +31,15 @@ class Netperf(TestGeneric):
         self._duration = self.get_opt("duration")
         self._port = self.get_opt("port")
         self._testname = self.get_opt("testname", default="TCP_STREAM")
+        self._confidence = self.get_opt("confidence")
         self._bind = self.get_opt("bind", opt_type="addr")
         self._family = self.get_opt("family")
 
         self._runs = self.get_opt("runs", default=1)
+        if self._runs > 1 and self._confidence is not None:
+            logging.warning("Ignoring 'runs' because 'confidence' "\
+                            "was specified.")
+            self._runs = 1
 
         self._threshold = self._parse_threshold(self.get_opt("threshold"))
         self._threshold_deviation = self._parse_threshold(
@@ -77,6 +82,12 @@ class Netperf(TestGeneric):
                     "are now officialy supported by LNST. You "
                     "can use other tests, but test result may not be correct.")
                 cmd += " -t %s" % self._testname
+
+            if self._confidence is not None:
+                """
+                confidence level that Netperf should try to achieve
+                """
+                cmd += " -I %s" % self._confidence
 
             if self._netperf_opts is not None:
                 """
@@ -129,8 +140,34 @@ class Netperf(TestGeneric):
         else:
             rate_in_kb = float(r2.group(1))
 
-        return {"rate": rate_in_kb*1000,
-                "unit": "bps"}
+        if self._confidence is not None:
+            confidence = self._parse_confidence(output)
+            return {"rate": rate_in_kb*1000,
+                    "unit": "bps",
+                    "confidence": confidence}
+        else:
+            return {"rate": rate_in_kb*1000,
+                    "unit": "bps"}
+
+    def _parse_confidence(self, output):
+        normal_pattern = r'\+/-(\d+\.\d*)% @ (\d+)% conf\.'
+        warning_pattern = r'!!! Confidence intervals: Throughput\s+: (\d+\.\d*)%'
+        normal_confidence = re.search(normal_pattern, output)
+        warning_confidence = re.search(warning_pattern, output)
+
+        if normal_confidence is None:
+            logging.error("Failed to parse confidence!!")
+            return (0, 0.0)
+
+        if warning_confidence is None:
+            real_confidence = (float(normal_confidence.group(2)),
+                               float(normal_confidence.group(1)))
+        else:
+            real_confidence = (float(normal_confidence.group(2)),
+                               float(warning_confidence.group(1)))
+
+        return real_confidence
+
 
     def _parse_threshold(self, threshold):
         if threshold is None:
@@ -224,6 +261,9 @@ class Netperf(TestGeneric):
 
         if len(rates) > 1:
             rate_deviation = std_deviation(rates)
+        elif len(rates) == 1 and self._confidence is not None:
+            result = results[0]
+            rate_deviation = rate * (result["confidence"][1] / 100)
         else:
             rate_deviation = 0.0
 
