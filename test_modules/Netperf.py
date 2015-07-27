@@ -18,78 +18,102 @@ class Netperf(TestGeneric):
     supported_tests = ["TCP_STREAM", "TCP_RR", "UDP_STREAM", "UDP_RR",
                        "SCTP_STREAM", "SCTP_STREAM_MANY", "SCTP_RR"]
 
-    def _compose_cmd(self, role):
+    def __init__(self, command):
+        super(TestGeneric, self).__init__(command)
+
+        self._role = self.get_mopt("role")
+
+        if self._role == "client":
+            self._netperf_server = self.get_mopt("netperf_server",
+                                                 opt_type="addr")
+
+        self._netperf_opts = self.get_opt("netperf_opts")
+        self._duration = self.get_opt("duration")
+        self._port = self.get_opt("port")
+        self._testname = self.get_opt("testname", default="TCP_STREAM")
+        self._bind = self.get_opt("bind", opt_type="addr")
+        self._family = self.get_opt("family")
+
+        self._runs = self.get_opt("runs", default=1)
+
+        self._threshold = self._parse_threshold(self.get_opt("threshold"))
+        self._threshold_deviation = self._parse_threshold(
+                                        self.get_opt("threshold_deviation"))
+        if self._threshold_deviation is None:
+            self._threshold_deviation = {"rate" : 0.0,
+                                         "unit" : "bps"}
+
+        if self._threshold is not None:
+            rate = self._threshold["rate"]
+            deviation = self._threshold_deviation["rate"]
+            self._threshold_interval = (rate - deviation,
+                                        rate + deviation)
+        else:
+            self._threshold_interval = None
+
+    def _compose_cmd(self):
         """
         composes commands for netperf and netserver based on xml recipe
         """
-        netperf_opts = self.get_opt("netperf_opts")
-        if role == "client":
-            netperf_server = self.get_mopt("netperf_server", opt_type="addr")
-            duration = self.get_opt("duration")
-            port = self.get_opt("port")
-            testname = self.get_opt("testname", default="TCP_STREAM")
-            cmd = "netperf -H %s -f k" % netperf_server
-            if port is not None:
+        if self._role == "client":
+            cmd = "netperf -H %s -f k" % self._netperf_server
+            if self._port is not None:
                 """
                 client connects on this port
                 """
-                cmd += " -p %s" % port
-            if duration is not None:
+                cmd += " -p %s" % self._port
+            if self._duration is not None:
                 """
                 test will last this duration
                 """
-                cmd += " -l %s" % duration
-            if testname is not None:
+                cmd += " -l %s" % self._duration
+            if self._testname is not None:
                 """
                 test that will be performed
                 """
-                if testname not in self.supported_tests:
+                if self._testname not in self.supported_tests:
                     logging.warning("Only TCP_STREAM, TCP_RR, UDP_STREAM, "
                     "UDP_RR, SCTP_STREAM, SCTP_STREAM_MANY and SCTP_RR tests "
                     "are now officialy supported by LNST. You "
                     "can use other tests, but test result may not be correct.")
-                cmd += " -t %s" % testname
+                cmd += " -t %s" % self._testname
 
-            if netperf_opts is not None:
+            if self._netperf_opts is not None:
                 """
                 custom options for netperf
                 """
-                cmd += " %s" % netperf_opts
-        elif role == "server":
-            bind = self.get_opt("bind", opt_type="addr")
-            port = self.get_opt("port")
-            family = self.get_opt("family")
+                cmd += " %s" % self._netperf_opts
+        elif self._role == "server":
             cmd = "netserver -D"
-            if bind is not None:
+            if self._bind is not None:
                 """
                 server is bound to this address
                 """
-                cmd += " -L %s" % bind
-            if port is not None:
+                cmd += " -L %s" % self._bind
+            if self._port is not None:
                 """
                 server listens on this port
                 """
-                cmd += " -p %s" % port
-            if netperf_opts is not None:
+                cmd += " -p %s" % self._port
+            if self._netperf_opts is not None:
                 """
                 custom options for netperf
                 """
-                cmd += " %s" % netperf_opts
+                cmd += " %s" % self._netperf_opts
         return cmd
 
     def _parse_output(self, output):
-        testname = self.get_opt("testname", default="TCP_STREAM")
-        if testname == "UDP_STREAM":
+        if self._testname == "UDP_STREAM":
             # pattern for UDP_STREAM throughput output
             # decimal float decimal (float)
             pattern_udp_stream = "\d+\s+\d+\.\d+\s+\d+\s+(\d+(\.\d+){0,1})\n"
             r2 = re.search(pattern_udp_stream, output.lower())
-        elif testname == "TCP_STREAM":
+        elif self._testname == "TCP_STREAM":
             # pattern for TCP_STREAM throughput output
             # decimal decimal decimal float (float)
             pattern_tcp_stream = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
             r2 = re.search(pattern_tcp_stream, output.lower())
-        elif testname == "TCP_RR" or testname == "UDP_RR" or testname == "SCTP_RR":
+        elif self._testname == "TCP_RR" or testname == "UDP_RR" or testname == "SCTP_RR":
             # pattern for TCP_RR, UDP_RR and SCTP_RR throughput output
             # decimal decimal decimal decimal float (float)
             pattern_tcp_rr = "\d+\s+\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
@@ -108,7 +132,6 @@ class Netperf(TestGeneric):
         return {"rate": rate_in_kb*1000,
                 "unit": "bps"}
 
-
     def _parse_threshold(self, threshold):
         if threshold is None:
             return None
@@ -116,9 +139,10 @@ class Netperf(TestGeneric):
         # group(1) ... threshold value
         # group(3) ... threshold units
         # group(4) ... bytes/bits
-        testname = self.get_opt("testname", default="TCP_STREAM")
-        if (testname == "TCP_STREAM" or testname == "UDP_STREAM" or
-           testname == "SCTP_STREAM" or testname == "SCTP_STREAM_MANY"):
+        if (self._testname == "TCP_STREAM" or
+            self._testname == "UDP_STREAM" or
+            self._testname == "SCTP_STREAM" or
+            self._testname == "SCTP_STREAM_MANY"):
             pattern_stream = "(\d*(\.\d*)?)\s*([ kmgtKMGT])(bits|bytes)\/sec"
             r1 = re.search(pattern_stream, threshold)
             if r1 is None:
@@ -143,8 +167,8 @@ class Netperf(TestGeneric):
             if threshold_unit_type == "bytes":
                 threshold_rate *= 8
             threshold_unit_type = "bps"
-        elif (testname == "TCP_RR" or testname == "UDP_RR" or
-             testname == "SCTP_RR"):
+        elif (self._testname == "TCP_RR" or self._testname == "UDP_RR" or
+              self._testname == "SCTP_RR"):
             pattern_rr =  "(\d*(\.\d*)?)\s*trans\.\/sec"
             r1 = re.search(pattern_rr, threshold.lower())
             if r1 is None:
@@ -173,11 +197,10 @@ class Netperf(TestGeneric):
         res_data = {}
 
         rv = 0
-        runs = self.get_opt("runs", default=1)
         results = []
         rates = []
-        for i in range(1, runs+1):
-            if runs > 1:
+        for i in range(1, self._runs+1):
+            if self._runs > 1:
                 logging.info("Netperf starting run %d" % i)
             client = ShellProcess(cmd)
             try:
@@ -191,59 +214,56 @@ class Netperf(TestGeneric):
                 results.append(self._parse_output(output))
                 rates.append(results[-1]["rate"])
 
-        if runs > 1:
+        if results > 1:
             res_data["results"] = results
 
         if len(rates) > 0:
             rate = sum(rates)/len(rates)
         else:
             rate = 0.0
-        rate_std_deviation = std_deviation(rates)
-        res_data["rate"] = rate
-        res_data["rate_std_deviation"] = rate_std_deviation
 
-        threshold = self._parse_threshold(self.get_opt("threshold"))
-        threshold_std_deviation = self._parse_threshold(self.get_opt("threshold_std_deviation"))
+        if len(rates) > 1:
+            rate_deviation = std_deviation(rates)
+        else:
+            rate_deviation = 0.0
+
+        res_data["rate"] = rate
+        res_data["rate_deviation"] = rate_deviation
 
         res_val = False
-        if threshold is not None:
-            threshold = threshold["rate"]
-            if threshold_std_deviation is None:
-                threshold_std_deviation = 0.0
-            else:
-                threshold_std_deviation = threshold_std_deviation["rate"]
-            result_interval = (rate - rate_std_deviation,
-                               rate + rate_std_deviation)
-            threshold_interval = (threshold - threshold_std_deviation,
-                                  threshold + threshold_std_deviation)
+        if self._threshold_interval is not None:
+            result_interval = (rate - rate_deviation,
+                               rate + rate_deviation)
 
-            if threshold_interval[0] > result_interval[1]:
+            if self._threshold_interval[0] > result_interval[1]:
                 res_val = False
                 res_data["msg"] = "Measured rate %.2f +-%.2f bps is lower "\
                                   "than threshold %.2f +-%.2f" %\
-                                  (rate, rate_std_deviation,
-                                   threshold, threshold_std_deviation)
+                                  (rate, rate_deviation,
+                                   self._threshold["rate"],
+                                   self._threshold_deviation["rate"])
             else:
                 res_val = True
                 res_data["msg"] = "Measured rate %.2f +-%.2f bps is higher "\
                                   "than threshold %.2f +-%.2f" %\
-                                  (rate, rate_std_deviation,
-                                   threshold, threshold_std_deviation)
+                                  (rate, rate_deviation,
+                                   self._threshold["rate"],
+                                   self._threshold_deviation["rate"])
         else:
             if rate > 0.0:
                 res_val = True
             else:
                 res_val = False
             res_data["msg"] = "Measured rate was %.2f +-%.2f bps" %\
-                                                (rate, rate_std_deviation)
+                                                (rate, rate_deviation)
 
-        if rv != 0 and runs == 0:
+        if rv != 0 and self._runs == 1:
             res_data["msg"] = "Could not get performance throughput! Are you "\
                               "sure netperf is installed on both machines and "\
                               "machines are mutually accessible?"
             logging.info(res_data["msg"])
             return (False, res_data)
-        elif rv != 0 and runs > 1:
+        elif rv != 0 and self._runs > 1:
             res_data["msg"] = "At least one of the Netperf runs failed, "\
                               "check the logs and result data for more "\
                               "information."
@@ -252,13 +272,12 @@ class Netperf(TestGeneric):
         return (res_val, res_data)
 
     def run(self):
-        self.role = self.get_mopt("role")
-        cmd = self._compose_cmd(self.role)
+        cmd = self._compose_cmd()
         logging.debug("compiled command: %s" % cmd)
-        if self.role == "client":
+        if self._role == "client":
             (rv, res_data) = self._run_client(cmd)
             if rv == False:
                 return self.set_fail(res_data)
             return self.set_pass(res_data)
-        elif self.role == "server":
+        elif self._role == "server":
             self._run_server(cmd)
