@@ -3,6 +3,7 @@
         <alias name="ipv" value="both" />
         <alias name="mtu" value="1500" />
         <alias name="netperf_duration" value="60" />
+        <alias name="mapping_file" value="3_vlans_over_round_robin_bond.mapping" />
     </define>
     <network>
         <host id="testmachine1">

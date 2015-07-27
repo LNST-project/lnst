@@ -3,6 +3,7 @@
         <alias name="ipv" value="both" />
         <alias name="mtu" value="1500" />
         <alias name="netperf_duration" value="60" />
+        <alias name="mapping_file" value="active_backup_double_bond.mapping" />
     </define>
     <network>
         <host id="testmachine1">
