@@ -17,6 +17,7 @@ from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
 from lnst.Common.Utils import dict_to_dot, list_to_dot
 from lnst.Common.Config import lnst_config
+from lnst.Controller.XmlTemplates import XmlTemplateError
 
 # The handle to be imported from each task
 ctl = None
@@ -103,7 +104,10 @@ class ControllerAPI(object):
             :return: value of a user defined alias
             :rtype: string
         """
-        return self._ctl._get_alias(alias)
+        try:
+            return self._ctl._get_alias(alias)
+        except XmlTemplateError:
+            return None
 
     def connect_PerfRepo(self, url=None, username=None, password=None):
         if not self._perf_repo_api.connected():
