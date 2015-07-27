@@ -1,7 +1,7 @@
 <interfaces>
     <eth id="1" label="testnet">
         <addresses>
-            <address value="192.168.122.20/24" />
+            <address value="192.168.100.20/24" />
         </addresses>
     </eth>
 </interfaces>
