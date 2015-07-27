@@ -498,7 +498,10 @@ class Device(object):
             return 'loopback'
         out, _ = exec_cmd("ethtool -i %s" % self._name, False, False, False)
         match = re.search("^driver: (.*)$", out, re.MULTILINE)
-        return match.group(1)
+        if match is not None:
+            return match.group(1)
+        else:
+            return None
 
     def get_if_data(self):
         if_data = {"devname": self._name,
