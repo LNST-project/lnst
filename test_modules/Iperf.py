@@ -35,15 +35,15 @@ class Iperf(TestGeneric):
 
     def _rate_over_threshold(self, rate):
         # convert rate to the same unit as threshold unit
-        pattern = "(\d*(\.\d*){0,1})\s*([ kMGT])bits\/sec"
+        pattern = "(\d*(\.\d*){0,1})\s*([ kKMGT])bits\/sec"
 
         # parse threshold value
         r1 = re.match(pattern, self.threshold)
-        thr_units = r1.group(3)
+        thr_units = r1.group(3).upper()
 
         # parse measured rate value
         r2 = re.match(pattern, rate)
-        rate_units = r2.group(3)
+        rate_units = r2.group(3).upper()
 
         thr_val = float(r1.group(1))
 
@@ -52,7 +52,7 @@ class Iperf(TestGeneric):
         # do the conversion of rate units
         if thr_units != rate_units:
             # remove any k,M,G,T from measured rate
-            if rate_units == 'k':
+            if rate_units == 'K':
                 rate_val *= 1000
             elif rate_units == 'M':
                 rate_val *= 1000*1000
@@ -60,7 +60,7 @@ class Iperf(TestGeneric):
                 rate_val *= 1000*1000*1000
 
             # divide by k or M or G if present
-            if thr_units == 'k':
+            if thr_units == 'K':
                 rate_val /= 1000
             elif thr_units == 'M':
                 rate_val /= 1000*1000
