@@ -2,6 +2,7 @@
     <define>
         <alias name="ipv" value="both" />
         <alias name="netperf_duration" value="60" />
+        <alias name="mapping_file" value="virtual_ovs_bridge_vlan_in_guest.mapping" />
     </define>
     <network>
         <host id="host1">
