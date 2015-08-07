@@ -238,7 +238,10 @@ class NetTestCommandContext:
         del self._dict[cmd.get_id()]
 
     def get_cmd(self, id):
-        return self._dict[id]
+        if id in self._dict:
+            return self._dict[id]
+        else:
+            return None
 
     def _kill_all_cmds(self):
         for id in self._dict:
