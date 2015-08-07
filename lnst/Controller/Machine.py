@@ -302,10 +302,20 @@ class Machine(object):
             else:
                 cmd_res = self._rpc_call("run_command", command)
         except MachineError as exc:
-            if "proc_id" in command:
-                cmd_res = self._rpc_call("kill_command", command["proc_id"])
+            if command["netns"] is not None:
+                netns = command["netns"]
+                if "proc_id" in command:
+                    cmd_res = self._rpc_call_to_netns(netns, "kill_command",
+                                                      command["proc_id"])
+                else:
+                    cmd_res = self._rpc_call_to_netns(netns, "kill_command",
+                                                      None)
             else:
-                cmd_res = self._rpc_call("kill_command", None)
+                if "proc_id" in command:
+                    cmd_res = self._rpc_call("kill_command", command["proc_id"])
+                else:
+                    cmd_res = self._rpc_call("kill_command", None)
+
             cmd_res["passed"] = False
             cmd_res["msg"] = str(exc)
 
