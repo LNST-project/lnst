@@ -316,8 +316,9 @@ class Machine(object):
                 else:
                     cmd_res = self._rpc_call("kill_command", None)
 
-            cmd_res["passed"] = False
-            cmd_res["msg"] = str(exc)
+            if "killed" in cmd_res and cmd_res["killed"]:
+                cmd_res["passed"] = False
+                cmd_res["msg"] = str(exc)
 
         signal.alarm(0)
         signal.signal(signal.SIGALRM, prev_handler)

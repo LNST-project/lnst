@@ -366,6 +366,18 @@ class SlaveMethods:
     def run_command(self, command):
         cmd = NetTestCommand(self._command_context, command,
                                     self._resource_table, self._log_ctl)
+
+        if self._command_context.get_cmd(cmd.get_id()) != None:
+            prev_cmd = self._command_context.get_cmd(cmd.get_id())
+            if not prev_cmd.get_result_sent():
+                if cmd.get_id() is None:
+                    raise Exception("Previous foreground command still "\
+                                    "running!")
+                else:
+                    raise Exception("Different command with id '%s' "\
+                                    "still running!" % cmd.get_id())
+            else:
+                self._command_context.del_cmd(cmd)
         self._command_context.add_cmd(cmd)
 
         res = cmd.run()
@@ -385,9 +397,16 @@ class SlaveMethods:
 
     def kill_command(self, id):
         cmd = self._command_context.get_cmd(id)
-        cmd.kill(None)
-        self._command_context.del_cmd(cmd)
-        return cmd.get_result()
+        if cmd is not None:
+            if not cmd.get_result_sent():
+                cmd.kill(None)
+                result = cmd.get_result()
+                cmd.set_result_sent()
+                return result
+            else:
+                pass
+        else:
+            raise Exception("No command with id '%s'." % id)
 
     def machine_cleanup(self):
         logging.info("Performing machine cleanup.")
@@ -852,7 +871,7 @@ class NetTestSlave:
                 self._server_handler.send_data_to_ctl(msg)
                 cmd = self._cmd_context.get_cmd(None)
                 cmd.join()
-                self._cmd_context.del_cmd(cmd)
+                cmd.set_result_sent()
             else:
                 cmd = self._cmd_context.get_cmd(msg["cmd_id"])
                 cmd.join()
@@ -862,7 +881,7 @@ class NetTestSlave:
                 if cmd.finished():
                     msg["result"] = cmd.get_result()
                     self._server_handler.send_data_to_ctl(msg)
-                    self._cmd_context.del_cmd(cmd)
+                    cmd.set_result_sent()
         elif msg["type"] == "netlink":
             self._if_manager.handle_netlink_msgs(msg["data"])
         elif msg["type"] == "from_netns":

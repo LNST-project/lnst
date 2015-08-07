@@ -212,6 +212,7 @@ class NetTestCommand:
             result = self._cmd_cls.get_result()
             result["passed"] = True
             result["msg"] = "Command killed."
+            result["killed"] = True
             self._result = result
 
         return self._result
