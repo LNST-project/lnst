@@ -99,6 +99,7 @@ class NetTestCommand:
         self._result = None
         self._log_ctl = log_ctl
         self._start_time = None
+        self._result_sent = False
 
         if "bg_id" not in self._command:
             self._id = None
@@ -110,6 +111,12 @@ class NetTestCommand:
 
     def forked(self):
         return self._process != None
+
+    def set_result_sent(self, value=True):
+        self._result_sent = value
+
+    def get_result_sent(self):
+        return self._result_sent
 
     def finished(self):
         return self._finished
