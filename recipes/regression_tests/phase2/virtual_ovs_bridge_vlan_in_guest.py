@@ -193,7 +193,7 @@ for offload in offloads:
                 perf_api.save_result(result_tcp)
 
             if result_udp is not None and udp_res_data.get_result() is not None and\
-               result_udp.get_result()['res_data'] is not None:
+               udp_res_data.get_result()['res_data'] is not None:
                 rate = udp_res_data.get_result()['res_data']['rate']
                 deviation = udp_res_data.get_result()['res_data']['rate_deviation']
 
@@ -269,7 +269,7 @@ for offload in offloads:
                 perf_api.save_result(result_tcp)
 
             if result_udp is not None and udp_res_data.get_result() is not None and\
-               result_udp.get_result()['res_data'] is not None:
+               udp_res_data.get_result()['res_data'] is not None:
                 rate = udp_res_data.get_result()['res_data']['rate']
                 deviation = udp_res_data.get_result()['res_data']['rate_deviation']
 

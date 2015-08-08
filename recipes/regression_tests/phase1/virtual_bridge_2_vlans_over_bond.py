@@ -241,8 +241,8 @@ for offload in offloads:
 
             server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
-            result_tcp = g3.run(netperf_cli_tcp, timeout = int(netperf_duration)*5 + 20)
-            result_udp = g3.run(netperf_cli_udp, timeout = int(netperf_duration)*5 + 20)
+            tcp_res_data = g3.run(netperf_cli_tcp, timeout = int(netperf_duration)*5 + 20)
+            udp_res_data = g3.run(netperf_cli_udp, timeout = int(netperf_duration)*5 + 20)
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -258,7 +258,7 @@ for offload in offloads:
                 perf_api.save_result(result_tcp)
 
             if result_udp is not None and udp_res_data.get_result() is not None and\
-               result_udp.get_result()['res_data'] is not None:
+               udp_res_data.get_result()['res_data'] is not None:
                 rate = udp_res_data.get_result()['res_data']['rate']
                 deviation = udp_res_data.get_result()['res_data']['rate_deviation']
 
@@ -320,8 +320,8 @@ for offload in offloads:
 
             server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            result_tcp = g3.run(netperf_cli_tcp6, timeout = int(netperf_duration)*5 + 20)
-            result_udp = g3.run(netperf_cli_udp6, timeout = int(netperf_duration)*5 + 20)
+            tcp_res_data = g3.run(netperf_cli_tcp6, timeout = int(netperf_duration)*5 + 20)
+            udp_res_data = g3.run(netperf_cli_udp6, timeout = int(netperf_duration)*5 + 20)
             server_proc.intr()
 
             if result_tcp is not None and tcp_res_data.get_result() is not None and\
@@ -336,7 +336,7 @@ for offload in offloads:
                 perf_api.save_result(result_tcp)
 
             if result_udp is not None and udp_res_data.get_result() is not None and\
-               result_udp.get_result()['res_data'] is not None:
+               udp_res_data.get_result()['res_data'] is not None:
                 rate = udp_res_data.get_result()['res_data']['rate']
                 deviation = udp_res_data.get_result()['res_data']['rate_deviation']
 
