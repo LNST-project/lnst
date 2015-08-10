@@ -224,7 +224,7 @@ for offload in offloads:
                 result_udp.set_parameter(offload, state)
                 if product_name is not None:
                     result_udp.set_tag(product_name)
-                res_hash = result_tcp.generate_hash(['kernel-release',
+                res_hash = result_udp.generate_hash(['kernel-release',
                                                      'redhat-release'])
                 result_udp.set_tag(res_hash)
 
@@ -303,7 +303,7 @@ for offload in offloads:
                 result_udp.set_parameter(offload, state)
                 if product_name is not None:
                     result_udp.set_tag(product_name)
-                res_hash = result_tcp.generate_hash(['kernel-release',
+                res_hash = result_udp.generate_hash(['kernel-release',
                                                      'redhat-release'])
                 result_udp.set_tag(res_hash)
 
