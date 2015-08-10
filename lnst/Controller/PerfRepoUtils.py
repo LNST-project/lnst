@@ -14,7 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import re
 
 def parse_id_mapping(filename):
-    line_re = re.compile(r"^(\w+)\s*=\s*(\w+)$")
+    line_re = re.compile(r"^(\w+)\s*=\s*(\w+)\s*$")
     res_dict = {}
     try:
         with open(filename) as f:
