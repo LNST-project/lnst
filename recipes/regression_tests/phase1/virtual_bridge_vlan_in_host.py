@@ -9,6 +9,8 @@ from lnst.Controller.PerfRepoUtils import parse_id_mapping, get_id
 mapping_file = ctl.get_alias("mapping_file")
 mapping = parse_id_mapping(mapping_file)
 
+product_name = ctl.get_alias("product_name")
+
 tcp_ipv4_id = get_id(mapping, "tcp_ipv4_id")
 tcp_ipv6_id = get_id(mapping, "tcp_ipv6_id")
 udp_ipv4_id = get_id(mapping, "udp_ipv4_id")
