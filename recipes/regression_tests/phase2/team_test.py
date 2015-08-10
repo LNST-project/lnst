@@ -160,8 +160,8 @@ for offload in offloads:
             if udp_ipv4_id is not None:
                 result_udp = perf_api.new_result(udp_ipv4_id, "udp_ipv4_result")
                 result_udp.set_parameter(offload, state)
-                result_tcp.set_parameter('netperf_server', "testmachine1")
-                result_tcp.set_parameter('netperf_client', "testmachine2")
+                result_udp.set_parameter('netperf_server', "testmachine1")
+                result_udp.set_parameter('netperf_client', "testmachine2")
                 if product_name is not None:
                     result_udp.set_tag(product_name)
                 res_hash = result_udp.generate_hash(['kernel-release',
@@ -217,7 +217,8 @@ for offload in offloads:
             if tcp_ipv6_id is not None:
                 result_tcp = perf_api.new_result(tcp_ipv6_id, "tcp_ipv6_result")
                 result_tcp.set_parameter(offload, state)
-                result_tcp.set_parameter('netperf_direction', "testmachine1->testmachine2")
+                result_tcp.set_parameter('netperf_server', "testmachine1")
+                result_tcp.set_parameter('netperf_client', "testmachine2")
                 if product_name is not None:
                     result_tcp.set_tag(product_name)
                 res_hash = result_tcp.generate_hash(['kernel-release',
@@ -239,7 +240,8 @@ for offload in offloads:
             if udp_ipv6_id is not None:
                 result_udp = perf_api.new_result(udp_ipv4_id, "udp_ipv6_result")
                 result_udp.set_parameter(offload, state)
-                result_tcp.set_parameter('netperf_direction', "testmachine1->testmachine2")
+                result_udp.set_parameter('netperf_server', "testmachine1")
+                result_udp.set_parameter('netperf_client', "testmachine2")
                 if product_name is not None:
                     result_udp.set_tag(product_name)
                 res_hash = result_udp.generate_hash(['kernel-release',
@@ -347,8 +349,8 @@ for offload in offloads:
             if udp_ipv4_id is not None:
                 result_udp = perf_api.new_result(udp_ipv4_id, "udp_ipv4_result")
                 result_udp.set_parameter(offload, state)
-                result_udp.set_parameter('netperf_server', "testmachine1")
-                result_udp.set_parameter('netperf_client', "testmachine2")
+                result_udp.set_parameter('netperf_server', "testmachine2")
+                result_udp.set_parameter('netperf_client', "testmachine1")
                 if product_name is not None:
                     result_udp.set_tag(product_name)
                 res_hash = result_udp.generate_hash(['kernel-release',
