@@ -124,7 +124,8 @@ class Netperf(TestGeneric):
             # decimal decimal decimal float (float)
             pattern_tcp_stream = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
             r2 = re.search(pattern_tcp_stream, output.lower())
-        elif self._testname == "TCP_RR" or testname == "UDP_RR" or testname == "SCTP_RR":
+        elif self._testname == "TCP_RR" or self._testname == "UDP_RR"\
+             or self._testname == "SCTP_RR":
             # pattern for TCP_RR, UDP_RR and SCTP_RR throughput output
             # decimal decimal decimal decimal float (float)
             pattern_tcp_rr = "\d+\s+\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
@@ -170,6 +171,8 @@ class Netperf(TestGeneric):
 
 
     def _parse_threshold(self, threshold):
+        res_data = {}
+
         if threshold is None:
             return None
         # pattern for threshold
