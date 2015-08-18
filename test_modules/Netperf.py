@@ -165,7 +165,7 @@ class Netperf(TestGeneric):
                                float(normal_confidence.group(1)))
         else:
             real_confidence = (float(normal_confidence.group(2)),
-                               float(warning_confidence.group(1)))
+                               float(warning_confidence.group(1))/2)
 
         return real_confidence
 
