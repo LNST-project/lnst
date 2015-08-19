@@ -803,12 +803,18 @@ class LoopbackInterface(Interface):
 
     def configure(self):
         self._hwaddr = '00:00:00:00:00:00'
+        self._driver = 'loopback'
+
         if self._netns:
             phys_devs = self._machine._rpc_call_to_netns(self._netns,
-                                    "map_if_by_hwaddr", self._id, self._hwaddr)
+                                    "map_if_by_params", self._id,
+                                    { 'hwaddr': self._hwaddr,
+                                      'driver': self._driver })
         else:
-            phys_devs = self._machine._rpc_call("map_if_by_hwaddr",
-                                                self._id, self._hwaddr)
+            phys_devs = self._machine._rpc_call("map_if_by_params",
+                                                self._id,
+                                                { 'hwaddr': self._hwaddr,
+                                                  'driver': self._driver })
 
         if len(phys_devs) == 1:
             self.set_devname(phys_devs[0]["name"])
