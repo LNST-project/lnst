@@ -112,11 +112,7 @@ class SlaveMethods:
         return "Commands killed"
 
     def map_if_by_hwaddr(self, if_id, hwaddr):
-        devices = self.get_devices_by_hwaddr(hwaddr)
-
-        if len(devices) == 1:
-            dev = self._if_manager.get_device_by_hwaddr(hwaddr)
-            self._if_manager.map_if(if_id, dev.get_if_index())
+        devices = self.map_if_by_params(if_id, {'hwaddr' : hwaddr})
 
         return devices
 
