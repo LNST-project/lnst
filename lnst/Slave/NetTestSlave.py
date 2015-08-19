@@ -120,6 +120,15 @@ class SlaveMethods:
 
         return devices
 
+    def map_if_by_params(self, if_id, params):
+        devices = self.get_devices_by_params(params)
+
+        if len(devices) == 1:
+            dev = self._if_manager.get_device_by_params(params)
+            self._if_manager.map_if(if_id, dev.get_if_index())
+
+        return devices
+
     def unmap_if(self, if_id):
         self._if_manager.unmap_if(if_id)
         return True
