@@ -154,6 +154,23 @@ class SlaveMethods:
 
         return matched
 
+    def get_devices_by_params(self, params):
+        devices = self._if_manager.get_devices()
+        matched = []
+        for dev in devices:
+            dev_data = dev.get_if_data()
+            entry = {"name": dev.get_name(),
+                     "hwaddr": dev.get_hwaddr()}
+            for key, value in params.iteritems():
+                if key not in dev_data or dev_data[key] != value:
+                    entry = None
+                    break
+
+            if entry is not None:
+                matched.append(entry)
+
+        return matched
+
     def get_if_data(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is None:
