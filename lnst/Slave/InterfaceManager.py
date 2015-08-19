@@ -157,6 +157,21 @@ class InterfaceManager(object):
                 return dev
         return None
 
+    def get_device_by_params(self, params):
+        matched = None
+        for dev in self._devices.values():
+            matched = dev
+            dev_data = dev.get_if_data()
+            for key, value in params.iteritems():
+                if key not in dev_data or dev_data[key] != value:
+                    matched = None
+                    break
+
+            if matched:
+                break
+
+        return matched
+
     def deconfigure_all(self):
         for dev in self._devices.itervalues():
             dev.clear_configuration()
