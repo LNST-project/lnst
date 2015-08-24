@@ -137,8 +137,8 @@ for offload in offloads:
                 result_tcp.set_parameter(offload, state)
                 if product_name is not None:
                     result_tcp.set_tag(product_name)
-                res_hash = result_tcp.generate_hash(['kernel-release',
-                                                     'redhat-release'])
+                res_hash = result_tcp.generate_hash(['kernel_release',
+                                                     'redhat_release'])
                 result_tcp.set_tag(res_hash)
 
                 baseline = None
@@ -157,8 +157,8 @@ for offload in offloads:
                 result_udp.set_parameter(offload, state)
                 if product_name is not None:
                     result_udp.set_tag(product_name)
-                res_hash = result_udp.generate_hash(['kernel-release',
-                                                     'redhat-release'])
+                res_hash = result_udp.generate_hash(['kernel_release',
+                                                     'redhat_release'])
                 result_udp.set_tag(res_hash)
 
                 baseline = None
@@ -212,8 +212,8 @@ for offload in offloads:
                 result_tcp.set_parameter(offload, state)
                 if product_name is not None:
                     result_tcp.set_tag(product_name)
-                res_hash = result_tcp.generate_hash(['kernel-release',
-                                                     'redhat-release'])
+                res_hash = result_tcp.generate_hash(['kernel_release',
+                                                     'redhat_release'])
                 result_tcp.set_tag(res_hash)
 
                 baseline = None
@@ -233,8 +233,8 @@ for offload in offloads:
                 result_udp.set_parameter(offload, state)
                 if product_name is not None:
                     result_udp.set_tag(product_name)
-                res_hash = result_udp.generate_hash(['kernel-release',
-                                                     'redhat-release'])
+                res_hash = result_udp.generate_hash(['kernel_release',
+                                                     'redhat_release'])
                 result_udp.set_tag(res_hash)
 
                 baseline = None
