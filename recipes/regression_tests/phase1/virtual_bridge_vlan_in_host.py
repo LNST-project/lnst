@@ -42,6 +42,7 @@ offloads = ["gso", "gro", "tso"]
 ipv = ctl.get_alias("ipv")
 netperf_duration = ctl.get_alias("netperf_duration")
 mtu = ctl.get_alias("mtu")
+enable_udp_perf = ctl.get_alias("enable_udp_perf")
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -167,7 +168,7 @@ for offload in offloads:
                     netperf_cli_tcp.update_options({'threshold': '%s bits/sec' % baseline_throughput,
                                                     'threshold_deviation': '%s bits/sec' % baseline_deviation})
             # prepare PerfRepo result for udp
-            if udp_ipv4_id is not None:
+            if enable_udp_perf is not None and udp_ipv4_id is not None:
                 result_udp = perf_api.new_result(udp_ipv4_id, "udp_ipv4_result")
                 result_udp.set_parameter(offload, state)
                 if product_name is not None:
@@ -192,7 +193,9 @@ for offload in offloads:
             server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
             tcp_res_data = h2.run(netperf_cli_tcp, timeout = int(netperf_duration)*5 + 20)
-            udp_res_data = h2.run(netperf_cli_udp, timeout = int(netperf_duration)*5 + 20)
+            if enable_udp_perf is not None:
+                udp_res_data = h2.run(netperf_cli_udp, timeout = int(netperf_duration)*5 + 20)
+
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -207,7 +210,8 @@ for offload in offloads:
                 result_tcp.add_value('throughput_deviation', deviation)
                 perf_api.save_result(result_tcp)
 
-            if result_udp is not None and udp_res_data.get_result() is not None and\
+            if enable_udp_perf is not None and result_udp is not None and\
+               udp_res_data.get_result() is not None and\
                udp_res_data.get_result()['res_data'] is not None:
                 rate = udp_res_data.get_result()['res_data']['rate']
                 deviation = udp_res_data.get_result()['res_data']['rate_deviation']
@@ -247,7 +251,7 @@ for offload in offloads:
                                                     'threshold_deviation': '%s bits/sec' % baseline_deviation})
 
             # prepare PerfRepo result for udp ipv6
-            if udp_ipv6_id is not None:
+            if enable_udp_perf is not None and udp_ipv6_id is not None:
                 result_udp = perf_api.new_result(udp_ipv6_id, "udp_ipv6_result")
                 result_udp.set_parameter(offload, state)
                 if product_name is not None:
@@ -286,7 +290,8 @@ for offload in offloads:
                 result_tcp.add_value('throughput_deviation', deviation)
                 perf_api.save_result(result_tcp)
 
-            if result_udp is not None and udp_res_data.get_result() is not None and\
+            if enable_udp_perf is not None and result_udp is not None and\
+               udp_res_data.get_result() is not None and\
                udp_res_data.get_result()['res_data'] is not None:
                 rate = udp_res_data.get_result()['res_data']['rate']
                 deviation = udp_res_data.get_result()['res_data']['rate_deviation']
