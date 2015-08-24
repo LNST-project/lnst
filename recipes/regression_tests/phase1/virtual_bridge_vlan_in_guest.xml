@@ -2,6 +2,7 @@
     <define>
         <alias name="ipv" value="both" />
         <alias name="netperf_duration" value="60" />
+        <alias name="mtu" value="1500" />
         <alias name="mapping_file" value="virtual_bridge_vlan_in_guest.mapping" />
     </define>
     <network>

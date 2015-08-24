@@ -41,6 +41,7 @@ offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias("ipv")
 netperf_duration = ctl.get_alias("netperf_duration")
+mtu = ctl.get_alias("mtu")
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -116,6 +117,16 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "netperf_opts" :
                                           "-i 5 -L %s -6" % h2.get_ip("vlan10", 1)
                                   })
+
+# configure mtu
+h1.get_interface("nic").set_mtu(mtu)
+h1.get_interface("tap").set_mtu(mtu)
+h1.get_interface("br").set_mtu(mtu)
+
+g1.get_interface("guestnic").set_mtu(mtu)
+g1.get_interface("vlan10").set_mtu(mtu)
+
+h2.get_interface("nic").set_mtu(mtu)
 
 ctl.wait(15)
 

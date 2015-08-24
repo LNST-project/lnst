@@ -47,6 +47,7 @@ offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias("ipv")
 netperf_duration = ctl.get_alias("netperf_duration")
+mtu = ctl.get_alias("mtu")
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -169,6 +170,28 @@ ping_mod6_bad2 = ctl.get_module("Icmp6Ping",
                                "iface" : g3.get_devname("guestnic"),
                                "interval" : 0.1
                            })
+
+# configure mtu
+h1.get_interface("bond").set_mtu(mtu)
+h1.get_interface("tap1").set_mtu(mtu)
+h1.get_interface("tap2").set_mtu(mtu)
+h1.get_interface("vlan10").set_mtu(mtu)
+h1.get_interface("vlan20").set_mtu(mtu)
+h1.get_interface("br1").set_mtu(mtu)
+h1.get_interface("br2").set_mtu(mtu)
+
+h2.get_interface("bond").set_mtu(mtu)
+h2.get_interface("tap1").set_mtu(mtu)
+h2.get_interface("tap2").set_mtu(mtu)
+h2.get_interface("vlan10").set_mtu(mtu)
+h2.get_interface("vlan20").set_mtu(mtu)
+h2.get_interface("br1").set_mtu(mtu)
+h2.get_interface("br2").set_mtu(mtu)
+
+g1.get_interface("guestnic").set_mtu(mtu)
+g2.get_interface("guestnic").set_mtu(mtu)
+g3.get_interface("guestnic").set_mtu(mtu)
+g4.get_interface("guestnic").set_mtu(mtu)
 
 ctl.wait(15)
 
