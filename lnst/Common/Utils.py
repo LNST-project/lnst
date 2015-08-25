@@ -278,3 +278,15 @@ def deprecated(func):
                         % (func.__name__, self.__class__.__name__))
         return func(self, *args, **kwargs)
     return log
+
+def is_installed(program):
+    """
+    Returns True if program is detected by which, False otherwise
+    """
+    cmd = "which %s" % program
+    try:
+        subprocess.check_call(cmd, shell=True, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+        return True
+    except subprocess.CalledProcessError:
+        return False
