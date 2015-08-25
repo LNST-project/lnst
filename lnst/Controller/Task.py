@@ -285,6 +285,7 @@ class HostAPI(object):
         iface = self._interfaces[interface_id]
         return iface.get_hwaddr()
 
+    @deprecated
     def get_ip(self, interface_id, addr_number=0):
         """
             Returns an IP address of the interface.
