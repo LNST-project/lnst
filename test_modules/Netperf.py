@@ -11,7 +11,7 @@ import errno
 import re
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ShellProcess import ShellProcess
-from lnst.Common.Utils import std_deviation
+from lnst.Common.Utils import std_deviation, is_installed
 
 class Netperf(TestGeneric):
 
@@ -318,9 +318,20 @@ class Netperf(TestGeneric):
         cmd = self._compose_cmd()
         logging.debug("compiled command: %s" % cmd)
         if self._role == "client":
+            if not is_installed("netperf"):
+                res_data = {}
+                res_data["msg"] = "Netperf is not installed on this machine!"
+                logging.error(res_data["msg"])
+                return self.set_fail(res_data)
+
             (rv, res_data) = self._run_client(cmd)
             if rv == False:
                 return self.set_fail(res_data)
             return self.set_pass(res_data)
         elif self._role == "server":
+            if not is_installed("netserver"):
+                res_data = {}
+                res_data["msg"] = "Netserver is not installed on this machine!"
+                logging.error(res_data["msg"])
+                return self.set_fail(res_data)
             self._run_server(cmd)
