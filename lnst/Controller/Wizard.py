@@ -231,6 +231,10 @@ class Wizard:
                 param_el.setAttribute("name", "hwaddr")
                 param_el.setAttribute("value", iface["hwaddr"])
                 params_el.appendChild(param_el)
+                param_el = doc.createElement("param")
+                param_el.setAttribute("name", "driver")
+                param_el.setAttribute("value", iface["driver"])
+                params_el.appendChild(param_el)
         if interfaces_added == 0:
             sys.stderr.write("You didn't add any interface, no file "
                              "'%s' will be created\n" % filename)
