@@ -9,6 +9,7 @@ published by the Free Software Foundation; see COPYING for details.
 __autor__ = """
 jzupka@redhat.com (Jiri Zupka)
 """
+import functools
 import logging
 import time
 import re
@@ -263,3 +264,17 @@ def std_deviation(values):
         s1 += val
         s2 += val**2
     return (math.sqrt(len(values)*s2 - s1**2))/len(values)
+
+def deprecated(func):
+    """
+    Decorator which marks the method as deprecated - meaning when used,
+    it logs warning message with name of the method and class it belongs to
+    """
+
+    @functools.wraps(func)
+    def log(self, *args, **kwargs):
+        logging.warning("Function %s from class %s is deprecated, please, "\
+                        "check documentation for up-to-date method"
+                        % (func.__name__, self.__class__.__name__))
+        return func(self, *args, **kwargs)
+    return log
