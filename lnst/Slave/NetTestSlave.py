@@ -198,6 +198,24 @@ class SlaveMethods:
             return False
         return True
 
+    def set_link_up(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.link_up()
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
+    def set_link_down(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.link_down()
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
     def set_unmapped_device_down(self, hwaddr):
         dev = self._if_manager.get_device_by_hwaddr(hwaddr)
         if dev is not None:

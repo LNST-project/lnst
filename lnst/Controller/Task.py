@@ -379,6 +379,12 @@ class InterfaceAPI(object):
     def set_mtu(self, mtu):
         return self._if.set_mtu(mtu)
 
+    def set_link_up(self):
+        return self._if.set_link_up()
+
+    def set_link_down(self):
+        return self._if.set_link_down()
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

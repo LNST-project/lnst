@@ -501,6 +501,12 @@ class Device(object):
         else:
             exec_cmd("ip link set %s down" % self._name)
 
+    def link_up(self):
+        exec_cmd("ip link set %s up" % self._name)
+
+    def link_down(self):
+        exec_cmd("ip link set %s down" % self._name)
+
     def set_netns(self, netns):
         self._netns = netns
         return

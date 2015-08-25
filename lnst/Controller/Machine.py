@@ -717,6 +717,20 @@ class Interface(object):
         else:
             self._machine._rpc_call("set_device_down", self._id)
 
+    def set_link_up(self):
+        netns = self._netns
+        if netns != None:
+            self._machine._rpc_call_to_netns(netns, "set_link_up", self._id)
+        else:
+            self._machine._rpc_call("set_link_up", self._id)
+
+    def set_link_down(self):
+        netns = self._netns
+        if netns != None:
+            self._machine._rpc_call_to_netns(netns, "set_link_down", self._id)
+        else:
+            self._machine._rpc_call("set_link_down", self._id)
+
     def initialize(self):
         phys_devs = self._machine._rpc_call("map_if_by_hwaddr",
                                             self._id, self._hwaddr)
