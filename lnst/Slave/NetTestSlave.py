@@ -135,7 +135,9 @@ class SlaveMethods:
         result = {}
         for device in devices:
             if device._ifi_type == 1 and device._state == 'DOWN':
-                result[device._if_index] = {'name' : device._name, 'hwaddr' : device._hwaddr}
+                result[device._if_index] = {'name' : device._name,
+                                            'hwaddr' : device._hwaddr,
+                                            'driver' : device._driver}
         return result
 
     def get_devices_by_devname(self, devname):
