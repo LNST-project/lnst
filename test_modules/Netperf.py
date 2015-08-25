@@ -301,9 +301,7 @@ class Netperf(TestGeneric):
                                                 (rate, rate_deviation)
 
         if rv != 0 and self._runs == 1:
-            res_data["msg"] = "Could not get performance throughput! Are you "\
-                              "sure netperf is installed on both machines and "\
-                              "machines are mutually accessible?"
+            res_data["msg"] = "Could not get performance throughput!"
             logging.info(res_data["msg"])
             return (False, res_data)
         elif rv != 0 and self._runs > 1:
