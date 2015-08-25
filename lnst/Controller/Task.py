@@ -15,7 +15,7 @@ import re
 from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
-from lnst.Common.Utils import dict_to_dot, list_to_dot
+from lnst.Common.Utils import dict_to_dot, list_to_dot, deprecated
 from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplateError
 
@@ -362,9 +362,11 @@ class InterfaceAPI(object):
     def get_ips(self):
         return VolatileValue(self._if.get_addresses)
 
+    @deprecated
     def get_ip_addr(self, ip_index):
         return self.get_ip(ip_index)
 
+    @deprecated
     def get_ip_addrs(self):
         return self.get_ips()
 
