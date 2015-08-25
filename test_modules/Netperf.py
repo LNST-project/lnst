@@ -249,8 +249,10 @@ class Netperf(TestGeneric):
             except OSError as e:
                 if e.errno == errno.EINTR:
                     client.kill()
+
+            output = client.read_nonblocking()
+
             if ret_code == 0:
-                output = client.read_nonblocking()
                 results.append(self._parse_output(output))
                 rates.append(results[-1]["rate"])
 
