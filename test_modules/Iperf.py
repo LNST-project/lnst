@@ -13,6 +13,7 @@ import re
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ShellProcess import ShellProcess
+from lnst.Common.Utils import is_installed
 
 class Iperf(TestGeneric):
     def _compose_iperf_cmd(self, role):
@@ -138,6 +139,11 @@ class Iperf(TestGeneric):
         role = self.get_mopt("role")
         cmd = self._compose_iperf_cmd(role)
         logging.debug("compiled command: %s" % cmd)
+        if not is_installed("iperf"):
+            res_data = {}
+            res_data["msg"] = "Iperf is not installed on this machine!"
+            logging.error(res_data["msg"])
+            return self.set_fail(res_data)
 
         if role == "server":
             logging.debug("running as server ...")
