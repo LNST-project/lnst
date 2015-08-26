@@ -373,8 +373,12 @@ class InterfaceAPI(object):
     def get_ip_addrs(self):
         return self.get_ips()
 
-    def get_ip_prefix(self, ip_index):
+    def get_prefix(self, ip_index):
         return VolatileValue(self._if.get_prefix, ip_index)
+
+    @deprecated
+    def get_ip_prefix(self, ip_index):
+        return self.get_prefix(ip_index)
 
     def get_mtu(self):
         return VolatileValue(self._if.get_mtu)
