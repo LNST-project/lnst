@@ -259,6 +259,7 @@ class HostAPI(object):
     def get_interface(self, interface_id):
         return self._interfaces[interface_id]
 
+    @deprecated
     def get_devname(self, interface_id):
         """
             Returns devname of the interface.
@@ -272,6 +273,7 @@ class HostAPI(object):
         iface = self._interfaces[interface_id]
         return iface.get_devname()
 
+    @deprecated
     def get_hwaddr(self, interface_id):
         """
             Returns hwaddr of the interface.
@@ -302,6 +304,7 @@ class HostAPI(object):
         iface = self._interfaces[interface_id]
         return iface.get_ip_addr(addr_number)
 
+    @deprecated
     def get_prefix(self, interface_id, addr_number=0):
         """
             Returns an IP address prefix (netmask)
