@@ -17,6 +17,6 @@ assert_status "fail" "$rv"
 lnst-ctl -d run taskapi-alias-namespace-check.xml
 rv=$?
 
-assert_status "error" "$rv"
+assert_status "fail" "$rv"
 
 end_test
