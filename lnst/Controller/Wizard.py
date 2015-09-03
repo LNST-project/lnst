@@ -19,7 +19,7 @@ import socket
 import sys
 import time
 import os
-from lnst.Common.Utils import mkdir_p
+from lnst.Common.Utils import mkdir_p, check_process_running
 from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from xml.dom.minidom import getDOMImplementation
@@ -142,6 +142,50 @@ class Wizard:
                                  hostname=hostname, pool_dir=pool_dir,
                                  filename=filename, port=port,
                                  mode="noninteractive")
+
+    def virtual(self, pool_dir=None):
+        """ Starts Wizard in a virtual mode
+        @param pool_dir Path to pool directory (optional)
+        """
+
+        print("WARNING: For LNST Pool Wizard to work with virtual guests, "
+              "several conditions have to be met: \n"
+              "\t1) Guests must be running under libvirt and QEMU\n"
+              "\t2) Guests must be in \"default\" network and have an IP "
+              "address from DHCP in that network")
+
+        if not LIBVIRT_SUPPORT:
+            sys.stderr.write("Missing package libvirt-python, "
+                             "aborting wizard\n")
+            return
+
+        if not check_process_running("libvirtd"):
+            sys.stderr.write("libvirtd is not running, aborting wizard\n")
+            return
+
+        pool_dir = self._check_and_query_pool_dir(pool_dir)
+
+        conn = libvirt.openReadOnly("qemu:///system")
+
+        if conn is None:
+            sys.stderr.write("Failed to open connection to hypervisor, "
+                             "aborting wizard\n")
+            return
+
+        while True:
+            libvirt_domain, hostname = self._query_libvirt_domain(conn)
+            if hostname is None or libvirt_domain is None:
+                return
+            filename = self._query_filename(libvirt_domain)
+
+            self._create_xml(hostname=hostname, pool_dir=pool_dir,
+                             filename=filename, mode="virtual",
+                             libvirt_domain=libvirt_domain)
+
+            if self._query_continuation():
+                continue
+            else:
+                break
 
     def _check_hostname(self, hostname):
         """ Checks hostnames translatibility
