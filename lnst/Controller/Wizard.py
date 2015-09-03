@@ -186,7 +186,7 @@ class Wizard:
             print("Dir '%s' has been created" % pool_dir)
             return pool_dir
         except:
-            sys.stderr.write("Failed creating dir")
+            sys.stderr.write("Failed creating dir\n")
             return None
 
     def _create_xml(self, machine_interfaces, hostname,
