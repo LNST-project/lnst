@@ -60,7 +60,7 @@ class Wizard:
             else:
                 break
 
-    def noninteractive(self, hostlist, pool_dir):
+    def noninteractive(self, hostlist, pool_dir=DefaultPoolDir):
         """ Starts Wizard in noninteractive mode
         @param hostlist List of hosts (mandatory)
         @param pool_dir Path to pool_directory (optional)
