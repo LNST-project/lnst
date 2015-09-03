@@ -32,22 +32,7 @@ class Wizard:
         """ Starts Wizard in an interactive mode
         @param pool_dir Path to pool directory (optional)
         """
-        if pool_dir is None:
-            pool_dir = self._query_pool_dir()
-        else:
-            rv = self._check_path(pool_dir)
-            if rv == PATH_IS_DIR_ACCESSIBLE:
-                print("Pool directory set to '%s'" % pool_dir)
-            elif rv == PATH_DOES_NOT_EXIST:
-                sys.stderr.write("Path '%s' does not exist\n" % pool_dir)
-                pool_dir = self._query_pool_dir()
-            elif rv == PATH_NOT_DIR:
-                sys.stderr.write("Path '%s' exists but is not a directory\n"
-                                 % pool_dir)
-                pool_dir = self._query_pool_dir()
-            elif rv == PATH_IS_DIR_NOT_ACCESSIBLE:
-                sys.stderr.write("Directory '%s' is not writable\n" % pool_dir)
-                pool_dir = self._query_pool_dir()
+        pool_dir = self._check_and_query_pool_dir(pool_dir)
 
         while True:
             hostname = self._query_hostname()
@@ -160,6 +145,39 @@ class Wizard:
             return True
         except:
             return False
+
+    def _check_and_query_pool_dir(self, pool_dir):
+        """ Queries user for pool directory
+        @param pool_dir Optional pool_dir which will be checked and used if OK
+        @return Valid (is writable by user) path to directory
+        """
+        while True:
+            if pool_dir is None:
+                pool_dir = raw_input("Enter path to a pool directory "
+                                     "(default: '%s'): " % DefaultPoolDir)
+            if pool_dir == "":
+                pool_dir = DefaultPoolDir
+
+            pool_dir = os.path.expanduser(pool_dir)
+            rv = self._check_path(pool_dir)
+            if rv == PATH_IS_DIR_ACCESSIBLE:
+                print("Pool directory set to '%s'" % pool_dir)
+                return pool_dir
+            elif rv == PATH_DOES_NOT_EXIST:
+                sys.stderr.write("Path '%s' does not exist\n"
+                                 % pool_dir)
+                if self._query_dir_creation(pool_dir):
+                    created_dir = self._create_dir(pool_dir)
+                    if created_dir is not None:
+                        return created_dir
+
+            elif rv == PATH_NOT_DIR:
+                sys.stderr.write("Path '%s' exists but is not a directory\n"
+                                 % pool_dir)
+            elif rv == PATH_IS_DIR_NOT_ACCESSIBLE:
+                sys.stderr.write("Directory '%s' is not writable\n"
+                                 % pool_dir)
+            pool_dir = None
 
     def _check_path(self, pool_dir):
         """ Checks if path exists, is dir and is accessible by user
@@ -329,36 +347,6 @@ class Wizard:
             else:
                 sys.stderr.write("Hostname '%s' is not translatable into a "
                                  "valid IP address\n" % hostname)
-
-    def _query_pool_dir(self):
-        """ Queries user for pool directory
-        @return Valid (is writable by user) path to directory
-        """
-        while True:
-            pool_dir = raw_input("Enter path to a pool directory "
-                                 "(default: '%s'): " % DefaultPoolDir)
-            if pool_dir == "":
-                pool_dir = DefaultPoolDir
-
-            pool_dir = os.path.expanduser(pool_dir)
-            rv = self._check_path(pool_dir)
-            if rv == PATH_IS_DIR_ACCESSIBLE:
-                print("Pool directory set to '%s'" % pool_dir)
-                return pool_dir
-            elif rv == PATH_DOES_NOT_EXIST:
-                sys.stderr.write("Path '%s' does not exist\n"
-                                 % pool_dir)
-                if self._query_dir_creation(pool_dir):
-                    created_dir = self._create_dir(pool_dir)
-                    if created_dir is not None:
-                        return created_dir
-
-            elif rv == PATH_NOT_DIR:
-                sys.stderr.write("Path '%s' exists but is not a directory\n"
-                                 % pool_dir)
-            elif rv == PATH_IS_DIR_NOT_ACCESSIBLE:
-                sys.stderr.write("Directory '%s' is not writable\n"
-                                 % pool_dir)
 
     def _query_port(self):
         """ Queries user for port
