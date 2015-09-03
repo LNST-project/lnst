@@ -10,6 +10,11 @@ __author__ = """
 jprochaz@redhat.com (Jiri Prochazka)
 """
 
+try:
+    import libvirt
+    LIBVIRT_SUPPORT = True
+except ImportError:
+    LIBVIRT_SUPPORT = False
 import socket
 import sys
 import time
@@ -382,3 +387,36 @@ class Wizard:
             return True
         except:
             return False
+
+    def _query_libvirt_domain(self, conn):
+        """ Queries user for libvirt_domain
+        @note Virtual host must be running under libvirt
+              and has to have an IP from "default" network
+              DHCP server
+        @param conn libvirt connection to hypervisor
+        @return Tuple of string representing libvirt_domain of the hosthost and
+                string representing hostname of the host
+        """
+        while True:
+            libvirt_domain = raw_input("Enter libvirt domain "
+                                       "of virtual host: ")
+            if libvirt_domain == "":
+                sys.stderr.write("No domain entered\n")
+                continue
+            try:
+                conn.lookupByName(libvirt_domain)
+            except:
+                continue
+
+            # when libvirtd is old
+            try:
+                for lease in conn.networkLookupByName("default").DHCPLeases():
+                    if lease["hostname"] == libvirt_domain:
+                        return (libvirt_domain, lease["ipaddr"])
+            except:
+                sys.stderr.write("Failed getting DHCPLeases from hypervisor")
+
+            sys.stderr.write("Couldn't find any IP associated with "
+                             "libvirt_domain '%s'\n" % libvirt_domain)
+            hostname = self._query_hostname()
+            return libvirt_domain, hostname
