@@ -400,36 +400,6 @@ class Wizard:
                 sys.stderr.write("Hostname '%s' is not translatable into a "
                                  "valid IP address\n" % hostname)
 
-    def _query_port(self):
-        """ Queries user for port
-        @return Integer representing port
-        """
-        while True:
-            port = raw_input("Enter port (default: %d): " % DefaultRPCPort)
-            if port == "":
-                return DefaultRPCPort
-            else:
-                try:
-                    port = int(port)
-                    return port
-                except:
-                    sys.stderr.write("Invalid port entered\n")
-
-    def _write_to_file(self, pool_dir, filename, doc):
-        """ Writes contents of XML to a file
-        @param pool_dir Path to directory where the file will be created
-        @param filename Name of the created file
-        @param doc Contents of XML file
-        @return True if file was successfuly written, False otherwise
-        """
-        try:
-            f = open(pool_dir + "/" + filename, "w")
-            f.write(doc.toprettyxml())
-            f.close()
-            return True
-        except:
-            return False
-
     def _query_libvirt_domain(self, conn):
         """ Queries user for libvirt_domain
         @note Virtual host must be running under libvirt
@@ -462,3 +432,33 @@ class Wizard:
                              "libvirt_domain '%s'\n" % libvirt_domain)
             hostname = self._query_hostname()
             return libvirt_domain, hostname
+
+    def _query_port(self):
+        """ Queries user for port
+        @return Integer representing port
+        """
+        while True:
+            port = raw_input("Enter port (default: %d): " % DefaultRPCPort)
+            if port == "":
+                return DefaultRPCPort
+            else:
+                try:
+                    port = int(port)
+                    return port
+                except:
+                    sys.stderr.write("Invalid port entered\n")
+
+    def _write_to_file(self, pool_dir, filename, doc):
+        """ Writes contents of XML to a file
+        @param pool_dir Path to directory where the file will be created
+        @param filename Name of the created file
+        @param doc Contents of XML file
+        @return True if file was successfuly written, False otherwise
+        """
+        try:
+            f = open(pool_dir + "/" + filename, "w")
+            f.write(doc.toprettyxml())
+            f.close()
+            return True
+        except:
+            return False
