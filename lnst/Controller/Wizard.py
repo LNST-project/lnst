@@ -53,8 +53,10 @@ class Wizard:
                                  "'%s:%s'\n" % (hostname, port))
             elif machine_interfaces is not None:
                 filename = self._query_filename(hostname)
-                self._create_xml(machine_interfaces, hostname,
-                                 port, pool_dir, filename, "interactive")
+                self._create_xml(machine_interfaces=machine_interfaces,
+                                 hostname=hostname, pool_dir=pool_dir,
+                                 filename=filename, port=port,
+                                 mode="interactive")
             if self._query_continuation():
                 continue
             else:
@@ -131,8 +133,10 @@ class Wizard:
                 continue
             else:
                 filename = hostname + ".xml"
-                self._create_xml(machine_interfaces, hostname,
-                                 port, pool_dir, filename, "noninteractive")
+                self._create_xml(machine_interfaces=machine_interfaces,
+                                 hostname=hostname, pool_dir=pool_dir,
+                                 filename=filename, port=port,
+                                 mode="noninteractive")
 
     def _check_hostname(self, hostname):
         """ Checks hostnames translatibility
@@ -207,15 +211,16 @@ class Wizard:
             sys.stderr.write("Failed creating dir\n")
             return None
 
-    def _create_xml(self, machine_interfaces, hostname,
-                    port, pool_dir, filename, mode):
+    def _create_xml(self, machine_interfaces=None, hostname=None,
+                    pool_dir=None, filename=None, mode=None,
+                    port=None, libvirt_domain=None):
         """ Creates slave machine XML file
         @param machine_interfaces Dictionary with machine's interfaces
         @param hostname Hostname of the machine
-        @param port Port on which LNST listens on the machine
         @param pool_dir Path to directory where XML file will be created
         @param filename Name of the XML file
         @param mode Mode in which wizard was started
+        @param libvirt_domain Libvirt domain of virtual host
         """
 
         impl = getDOMImplementation()
@@ -227,49 +232,49 @@ class Wizard:
         param_el.setAttribute("name", "hostname")
         param_el.setAttribute("value", hostname)
         params_el.appendChild(param_el)
-        interfaces_el = doc.createElement("interfaces")
-        top_el.appendChild(interfaces_el)
+        if port is not None:
+            param_el = doc.createElement("param")
+            param_el.setAttribute("name", "rpc_port")
+            param_el.setAttribute("value", str(port))
+            params_el.appendChild(param_el)
+        if mode == "virtual":
+            param_el = doc.createElement("param")
+            param_el.setAttribute("name", "libvirt_domain")
+            param_el.setAttribute("value", libvirt_domain)
+            params_el.appendChild(param_el)
+        else:
+            interfaces_el = doc.createElement("interfaces")
+            top_el.appendChild(interfaces_el)
 
-        interfaces_added = 0
-        for iface in machine_interfaces.itervalues():
-            if mode == "interactive":
-                answer = raw_input("Do you want to add interface '%s' (%s) "
-                                   "to the recipe? [Y/n]: " % (iface["name"],
-                                                               iface["hwaddr"]))
-            if mode == "noninteractive" or answer.lower() == "y"\
-               or answer == "":
-                interfaces_added += 1
-                eth_el = doc.createElement("eth")
-                eth_el.setAttribute("id", iface["name"])
-                eth_el.setAttribute("label", "default_network")
-                interfaces_el.appendChild(eth_el)
-                params_el = doc.createElement("params")
-                eth_el.appendChild(params_el)
-                param_el = doc.createElement("param")
-                param_el.setAttribute("name", "hwaddr")
-                param_el.setAttribute("value", iface["hwaddr"])
-                params_el.appendChild(param_el)
-                param_el = doc.createElement("param")
-                param_el.setAttribute("name", "driver")
-                param_el.setAttribute("value", iface["driver"])
-                params_el.appendChild(param_el)
-        if interfaces_added == 0:
-            sys.stderr.write("You didn't add any interface, no file "
-                             "'%s' will be created\n" % filename)
-            return
+            interfaces_added = 0
+            for iface in machine_interfaces.itervalues():
+                if mode == "interactive":
+                    msg = "Do you want to add interface '%s' (%s) to the "\
+                          "recipe? [Y/n]: " % (iface["name"], iface["hwaddr"])
+                    answer = raw_input(msg)
+                if mode == "noninteractive" or answer.lower() == "y"\
+                   or answer == "":
+                    interfaces_added += 1
+                    eth_el = doc.createElement("eth")
+                    eth_el.setAttribute("id", iface["name"])
+                    eth_el.setAttribute("label", "default_network")
+                    interfaces_el.appendChild(eth_el)
+                    params_el = doc.createElement("params")
+                    eth_el.appendChild(params_el)
+                    param_el = doc.createElement("param")
+                    param_el.setAttribute("name", "hwaddr")
+                    param_el.setAttribute("value", iface["hwaddr"])
+                    params_el.appendChild(param_el)
+            if interfaces_added == 0:
+                sys.stderr.write("You didn't add any interface, no file "
+                                 "'%s' will be created\n" % filename)
+                return
 
-
-        try:
-            f = open(pool_dir + "/" + filename, "w")
-            f.write(doc.toprettyxml())
-            f.close()
-        except:
-            msg = "File '%s/%s' could not be opened or data written\n"\
-                  % (pool_dir, filename)
-            sys.stderr.write(msg)
-            return
-
-        print("File '%s' successfuly created" % filename)
+        if self._write_to_file(pool_dir, filename, doc):
+            print("File '%s/%s' successfuly created." % (pool_dir, filename))
+        else:
+            sys.stderr.write("File '%s/%s' could not be opened "
+                             "or data written.\n" % (pool_dir, filename))
 
     def _get_connection(self, hostname, port):
         """ Connects to machine
@@ -362,3 +367,18 @@ class Wizard:
                     return port
                 except:
                     sys.stderr.write("Invalid port entered\n")
+
+    def _write_to_file(self, pool_dir, filename, doc):
+        """ Writes contents of XML to a file
+        @param pool_dir Path to directory where the file will be created
+        @param filename Name of the created file
+        @param doc Contents of XML file
+        @return True if file was successfuly written, False otherwise
+        """
+        try:
+            f = open(pool_dir + "/" + filename, "w")
+            f.write(doc.toprettyxml())
+            f.close()
+            return True
+        except:
+            return False
