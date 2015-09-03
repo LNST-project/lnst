@@ -29,6 +29,7 @@ def help(retval=0):
           " -i, --interactive          start wizard in interactive mode (this "\
           "is default mode)\n"\
           " -n, --noninteractive       start wizard in noninteractive mode\n"\
+          " -v, --virtual              start wizard in mode for VMs\n"\
           "Examples:\n"\
           " lnst-pool-wizard --interactive\n"\
           " lnst-pool-wizard --noninteractive 192.168.122.2\n"\
@@ -41,14 +42,14 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "hinp:",
-            ["help", "interactive", "noninteractive", "pool_dir="]
+            "hinvp:",
+            ["help", "interactive", "noninteractive", "virtual", "pool_dir="]
         )
     except getopt.GetoptError as err:
         sys.stderr.write(str(err))
         help(RETVAL_ERR)
 
-    pool_dir= None
+    pool_dir = None
     mode = "interactive"
 
     for opt, arg  in opts:
@@ -63,6 +64,8 @@ def main():
             else:
                 hostlist = args
             mode = "noninteractive"
+        elif opt in ("-v", "--virtual"):
+            mode = "virtual"
         elif opt in ("-p", "--pool_dir"):
             if not arg:
                 sys.stderr.write("No pool directory specified\n")
@@ -71,12 +74,14 @@ def main():
         else:
             help(RETVAL_ERR)
 
-    w = Wizard()
+    wizard = Wizard()
 
     if mode == "noninteractive":
-        w.noninteractive(hostlist, pool_dir)
+        wizard.noninteractive(hostlist, pool_dir)
+    elif mode == "virtual":
+        wizard.virtual(pool_dir)
     else:
-        w.interactive(pool_dir)
+        wizard.interactive(pool_dir)
 
     sys.exit(RETVAL_PASS)
 
