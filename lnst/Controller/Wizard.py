@@ -17,7 +17,6 @@ except ImportError:
     LIBVIRT_SUPPORT = False
 import socket
 import sys
-import time
 import os
 from lnst.Common.Utils import mkdir_p, check_process_running
 from lnst.Common.Config import DefaultRPCPort
@@ -93,7 +92,6 @@ class Wizard:
             sys.stderr.write("Directory '%s' is not writable\n" % pool_dir)
             sys.stderr.write("Pool wizard aborted\n")
             return
-
 
         for host in hostlist:
             print("Processing host '%s'" % host)
