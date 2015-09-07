@@ -353,6 +353,9 @@ class InterfaceAPI(object):
     def get_network(self):
         return self._if.get_network()
 
+    def get_driver(self):
+        return VolatileValue(self._if.get_driver)
+
     def get_devname(self):
         return VolatileValue(self._if.get_devname)
 
