@@ -542,6 +542,9 @@ class Interface(object):
     def get_id(self):
         return self._id
 
+    def get_driver(self):
+        return self._driver
+
     def set_hwaddr(self, hwaddr):
         self._hwaddr = normalize_hwaddr(hwaddr)
 
