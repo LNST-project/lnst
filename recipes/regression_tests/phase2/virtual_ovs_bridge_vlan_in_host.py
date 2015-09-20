@@ -174,8 +174,8 @@ for offload in offloads:
 
             server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
-            tcp_res_data = h2.run(netperf_cli_tcp, timeout = int(netperf_duration)*5 + 20)
-            udp_res_data = h2.run(netperf_cli_udp, timeout = int(netperf_duration)*5 + 20)
+            tcp_res_data = h2.run(netperf_cli_tcp, timeout = (int(netperf_duration) + 20)*5)
+            udp_res_data = h2.run(netperf_cli_udp, timeout = (int(netperf_duration) + 20)*5)
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -250,8 +250,8 @@ for offload in offloads:
 
             server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            tcp_res_data = h2.run(netperf_cli_tcp6, timeout = int(netperf_duration)*5 + 20)
-            udp_res_data = h2.run(netperf_cli_udp6, timeout = int(netperf_duration)*5 + 20)
+            tcp_res_data = h2.run(netperf_cli_tcp6, timeout = (int(netperf_duration) + 20)*5)
+            udp_res_data = h2.run(netperf_cli_udp6, timeout = (int(netperf_duration) + 20)*5)
             server_proc.intr()
 
             if result_tcp is not None and tcp_res_data.get_result() is not None and\
