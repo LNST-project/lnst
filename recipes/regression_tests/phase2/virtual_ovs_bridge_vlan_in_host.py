@@ -41,6 +41,7 @@ offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
+nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -174,8 +175,10 @@ for offload in offloads:
 
             server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
-            tcp_res_data = h2.run(netperf_cli_tcp, timeout = (netperf_duration + 20)*5)
-            udp_res_data = h2.run(netperf_cli_udp, timeout = (netperf_duration + 20)*5)
+            tcp_res_data = h2.run(netperf_cli_tcp,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
+            udp_res_data = h2.run(netperf_cli_udp,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -250,8 +253,10 @@ for offload in offloads:
 
             server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            tcp_res_data = h2.run(netperf_cli_tcp6, timeout = (netperf_duration + 20)*5)
-            udp_res_data = h2.run(netperf_cli_udp6, timeout = (netperf_duration + 20)*5)
+            tcp_res_data = h2.run(netperf_cli_tcp6,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
+            udp_res_data = h2.run(netperf_cli_udp6,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
             server_proc.intr()
 
             if result_tcp is not None and tcp_res_data.get_result() is not None and\

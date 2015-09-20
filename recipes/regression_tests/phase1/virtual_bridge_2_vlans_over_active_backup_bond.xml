@@ -2,6 +2,7 @@
     <define>
         <alias name="ipv" value="both" />
         <alias name="netperf_duration" value="60" />
+        <alias name="nperf_reserve" value="20" />
         <alias name="mtu" value="1500" />
         <alias name="mapping_file" value="virtual_bridge_2_vlans_over_active_backup_bond.mapping" />
     </define>

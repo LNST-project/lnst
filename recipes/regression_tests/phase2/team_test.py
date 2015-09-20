@@ -41,6 +41,7 @@ offloads = ["tso", "gro", "gso"]
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
+nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 
 test_if1 = m1.get_interface("test_if")
 test_if1.set_mtu(mtu)
@@ -181,8 +182,10 @@ for offload in offloads:
 
             server_proc = m1.run(netperf_srv, bg=True)
             ctl.wait(2)
-            tcp_res_data = m2.run(netperf_cli_tcp, timeout = (netperf_duration + 20)*5)
-            udp_res_data = m2.run(netperf_cli_udp, timeout = (netperf_duration + 20)*5)
+            tcp_res_data = m2.run(netperf_cli_tcp,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
+            udp_res_data = m2.run(netperf_cli_udp,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -261,8 +264,10 @@ for offload in offloads:
 
             server_proc = m1.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            tcp_res_data = m2.run(netperf_cli_tcp6, timeout = (netperf_duration + 20)*5)
-            udp_res_data = m2.run(netperf_cli_udp6, timeout = (netperf_duration + 20)*5)
+            tcp_res_data = m2.run(netperf_cli_tcp6,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
+            udp_res_data = m2.run(netperf_cli_udp6,
+                                  timeout = (netperf_duration + nperf_reserve)*5)
             server_proc.intr()
 
             if result_tcp is not None and tcp_res_data.get_result() is not None and\
@@ -370,8 +375,8 @@ for offload in offloads:
 
             server_proc = m2.run(netperf_srv, bg=True)
             ctl.wait(2)
-            tcp_res_data = m1.run(netperf_cli_tcp, timeout = (netperf_duration + 20)*5)
-            udp_res_data = m1.run(netperf_cli_udp, timeout = (netperf_duration + 20)*5)
+            tcp_res_data = m1.run(netperf_cli_tcp, timeout = (netperf_duration + nperf_reserve)*5)
+            udp_res_data = m1.run(netperf_cli_udp, timeout = (netperf_duration + nperf_reserve)*5)
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -450,8 +455,8 @@ for offload in offloads:
 
             server_proc = m2.run(netperf_srv6, bg=True)
             ctl.wait(2)
-            tcp_res_data = m1.run(netperf_cli_tcp6, timeout = (netperf_duration + 20)*5)
-            udp_res_data = m1.run(netperf_cli_udp6, timeout = (netperf_duration + 20)*5)
+            tcp_res_data = m1.run(netperf_cli_tcp6, timeout = (netperf_duration + nperf_reserve)*5)
+            udp_res_data = m1.run(netperf_cli_udp6, timeout = (netperf_duration + nperf_reserve)*5)
             server_proc.intr()
 
             if result_tcp is not None and tcp_res_data.get_result() is not None and\
