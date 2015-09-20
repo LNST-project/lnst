@@ -41,7 +41,7 @@ offloads = ["gso", "gro", "tso"]
 
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
-netperf_duration = ctl.get_alias("netperf_duration")
+netperf_duration = int(ctl.get_alias("netperf_duration"))
 
 m1_bond = m1.get_interface("test_bond")
 m1_bond.set_mtu(mtu)
@@ -196,8 +196,8 @@ for vlan1 in vlans:
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv, bg=True)
                         ctl.wait(2)
-                        tcp_res_data = m2.run(netperf_cli_tcp, timeout = (int(netperf_duration) + 20)*5)
-                        udp_res_data = m2.run(netperf_cli_udp, timeout = (int(netperf_duration) + 20)*5)
+                        tcp_res_data = m2.run(netperf_cli_tcp, timeout = (netperf_duration + 20)*5)
+                        udp_res_data = m2.run(netperf_cli_udp, timeout = (netperf_duration + 20)*5)
                         srv_proc.intr()
 
                         if result_tcp is not None and\
@@ -278,8 +278,8 @@ for vlan1 in vlans:
                         # Netperf test (both TCP and UDP)
                         srv_proc = m1.run(netperf_srv6, bg=True)
                         ctl.wait(2)
-                        tcp_res_data = m2.run(netperf_cli_tcp6, timeout = (int(netperf_duration) + 20)*5)
-                        udp_res_data = m2.run(netperf_cli_udp6, timeout = (int(netperf_duration) + 20)*5)
+                        tcp_res_data = m2.run(netperf_cli_tcp6, timeout = (netperf_duration + 20)*5)
+                        udp_res_data = m2.run(netperf_cli_udp6, timeout = (netperf_duration + 20)*5)
                         srv_proc.intr()
 
                         if result_tcp is not None and tcp_res_data.get_result() is not None and\
