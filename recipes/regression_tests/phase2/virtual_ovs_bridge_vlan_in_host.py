@@ -42,6 +42,8 @@ offloads = ["gso", "gro", "tso"]
 ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
+nperf_confidence = ctl.get_alias("nperf_confidence")
+nperf_max_runs = int(nperf_confidence.split(",")[1])
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -78,9 +80,9 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "netperf_server" : g1.get_ip("guestnic"),
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
-                                      "confidence" : "99,5",
-                                      "netperf_opts" : "-i 5 -L %s" %
-                                                            h2.get_ip("vlan10")
+                                      "confidence" : nperf_confidence,
+                                      "netperf_opts" : "-i %s -L %s" %
+                                                            (nperf_max_runs, h2.get_ip("vlan10"))
                                   })
 
 netperf_cli_udp = ctl.get_module("Netperf",
@@ -89,9 +91,9 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "netperf_server" : g1.get_ip("guestnic"),
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
-                                      "confidence" : "99,5",
-                                      "netperf_opts" : "-i 5 -L %s" %
-                                                            h2.get_ip("vlan10")
+                                      "confidence" : nperf_confidence,
+                                      "netperf_opts" : "-i %s -L %s" %
+                                                            (nperf_max_runs, h2.get_ip("vlan10"))
                                   })
 
 netperf_cli_tcp6 = ctl.get_module("Netperf",
@@ -101,9 +103,9 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                           g1.get_ip("guestnic", 1),
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
-                                      "confidence" : "99,5",
+                                      "confidence" : nperf_confidence,
                                       "netperf_opts" :
-                                          "-i 5 -L %s -6" % h2.get_ip("vlan10", 1)
+                                          "-i %s -L %s -6" % (nperf_max_runs, h2.get_ip("vlan10", 1))
                                   })
 
 netperf_cli_udp6 = ctl.get_module("Netperf",
@@ -113,9 +115,9 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                           g1.get_ip("guestnic", 1),
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
-                                      "confidence" : "99,5",
+                                      "confidence" : nperf_confidence,
                                       "netperf_opts" :
-                                          "-i 5 -L %s -6" % h2.get_ip("vlan10", 1)
+                                          "-i %s -L %s -6" % (nperf_max_runs, h2.get_ip("vlan10", 1))
                                   })
 ctl.wait(15)
 
@@ -176,9 +178,9 @@ for offload in offloads:
             server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
             tcp_res_data = h2.run(netperf_cli_tcp,
-                                  timeout = (netperf_duration + nperf_reserve)*5)
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
             udp_res_data = h2.run(netperf_cli_udp,
-                                  timeout = (netperf_duration + nperf_reserve)*5)
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
             server_proc.intr()
 
             if result_tcp is not None and\
@@ -254,9 +256,9 @@ for offload in offloads:
             server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
             tcp_res_data = h2.run(netperf_cli_tcp6,
-                                  timeout = (netperf_duration + nperf_reserve)*5)
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
             udp_res_data = h2.run(netperf_cli_udp6,
-                                  timeout = (netperf_duration + nperf_reserve)*5)
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
             server_proc.intr()
 
             if result_tcp is not None and tcp_res_data.get_result() is not None and\

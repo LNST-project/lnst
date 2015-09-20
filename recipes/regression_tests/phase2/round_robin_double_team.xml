@@ -4,6 +4,7 @@
         <alias name="mtu" value="1500" />
         <alias name="netperf_duration" value="60" />
         <alias name="nperf_reserve" value="20" />
+        <alias name="nperf_confidence" value="99,5" />
         <alias name="mapping_file" value="round_robin_double_team.mapping" />
     </define>
     <network>
