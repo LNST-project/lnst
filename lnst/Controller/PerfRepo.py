@@ -390,7 +390,6 @@ class PerfRepoMetric(PerfRepoObject):
 
 class PerfRepoReport(PerfRepoObject):
     def __init__(self, xml=None):
-        self._baselines = []
         self._user = None
         if type(xml) is NoneType:
             self._id = None
@@ -417,26 +416,280 @@ class PerfRepoReport(PerfRepoObject):
                 tmp_dict = dot_to_dict(value_tag.get("name"),
                                        value_tag.get("value"))
                 recursive_dict_update(self._properties, tmp_dict)
-
-            self._parse_baseline_properties()
         else:
             raise PerfRepoException("Parameter xml must be"\
                                     " a string, an Element or None")
 
-    def _parse_baseline_properties(self):
-        chart = self._properties["chart0"] #TODO more charts per report?
-        baseline_re = re.compile(r'baseline(\d+)')
-        for key, value in chart.iteritems():
-            match = baseline_re.match(key)
-            if match is None:
-                continue
-            self._baselines.append(value)
-
-    def get_baseline(self, index=-1):
-        return self._baselines[index]
-
     def get_obj_url(self):
         return "/reports/%s/%s" % (self._type.lower(), self._id)
+
+    def _find_max_num(self, str_tmp, search_dict):
+        max_num = -1
+        for key, item in search_dict.items():
+            match = re.match(r'%s(\d)+' % str_tmp, key)
+            if match == None:
+                continue
+            num = int(match.group(1))
+
+            if num > max_num:
+                max_num = num
+        return max_num
+
+    def get_chart(self, chart_num):
+        chart_name = "chart%d" % chart_num
+        for key, chart in self._properties.items():
+            if key == chart_name:
+                return chart
+        return None
+
+    def add_chart(self, name, test_id):
+        max_chart_num = self._find_max_num("chart", self._properties)
+
+        chart_name = "chart%d" % (max_chart_num + 1)
+
+        new_chart = self._properties[chart_name] = {}
+        new_chart["name"] = str(name)
+        new_chart["test"] = str(test_id)
+
+        return new_chart
+
+    def del_chart(self, chart_num):
+        chart_name = "chart%d" % chart_num
+
+        if chart_name in self._properties:
+            chart = self._properties[chart_name]
+            del self._properties[chart_name]
+            return chart
+        else:
+            return None
+
+    def set_chart_name(self, chart_num, name):
+        chart = self.get_chart(chart_num)
+
+        if chart:
+            chart["name"] = name
+            return chart
+        else:
+            return None
+
+    def set_chart_test_id(self, chart_num, test_id):
+        chart = self.get_chart(chart_num)
+
+        if chart:
+            chart["test"] = test_id
+            return chart
+        else:
+            return None
+
+    def get_baseline(self, chart_num=0, index=-1):
+        chart = self.get_chart(chart_num)
+
+        if chart is None:
+            return None
+
+        if index >= 0:
+            baseline_name = "baseline%d" % (index)
+            for key, item in chart.items():
+                if key == baseline_name:
+                    return item
+            return None
+        else:
+            baselines = []
+            for key, item in chart.items():
+                if re.match(r'baseline\d+', key):
+                    baselines.append(item)
+            if abs(index) <= len(baselines):
+                return baselines[index]
+            else:
+                return None
+
+    def add_baseline(self, chart_num, name, exec_id, metric_id):
+        if chart_num is None:
+            chart_num = self._find_max_num("chart", self._properties)
+
+        chart = self.get_chart(chart_num)
+        if chart is None:
+            return None
+
+        max_baseline_num = self._find_max_num("baseline", chart)
+
+        baseline_name = "baseline%d" % (max_baseline_num + 1)
+
+        new_baseline = chart[baseline_name] = {}
+        new_baseline["name"] = str(name)
+        new_baseline["metric"] = str(metric_id)
+        new_baseline["execId"] = str(exec_id)
+
+        return new_baseline
+
+    def del_baseline(self, chart_num, baseline_num):
+        chart = self.get_chart(chart_num)
+        if chart is None:
+            return None
+
+        baseline_name = "baseline%d" % (baseline_num)
+
+        if baseline_name in chart:
+            baseline = chart[baseline_name]
+            del chart[baseline_name]
+            return baseline
+        else:
+            return None
+
+    def set_baseline_name(self, chart_num, baseline_num, name):
+        baseline = self.get_baseline(chart_num, baseline_num)
+
+        if baseline is None:
+            return None
+
+        baseline["name"] = name
+        return baseline
+
+    def set_baseline_metric(self, chart_num, baseline_num, metric_id):
+        baseline = self.get_baseline(chart_num, baseline_num)
+
+        if baseline is None:
+            return None
+
+        baseline["metric"] = metric_id
+        return baseline
+
+    def set_baseline_execid(self, chart_num, baseline_num, exec_id):
+        baseline = self.get_baseline(chart_num, baseline_num)
+
+        if baseline is None:
+            return None
+
+        baseline["execId"] = exec_id
+        return baseline
+
+    def add_series(self, chart_num, name, metric_id, tags=[]):
+        if chart_num is None:
+            chart_num = self._find_max_num("chart", self._properties)
+
+        chart = self.get_chart(chart_num)
+        if chart is None:
+            return None
+
+        max_series_num = self._find_max_num("series", chart)
+
+        series_name = "series%d" % (max_series_num + 1)
+
+        new_series = chart[series_name] = {}
+        new_series["name"] = name
+        new_series["metric"] = metric_id
+        new_series["tags"] = " ".join(tags)
+
+        return new_series
+
+    def get_series(self, chart_num, series_num):
+        chart = self.get_chart(chart_num)
+        if chart is None:
+            return None
+
+        series_name = "series%d" % int(series_num)
+        for key, item in chart.items():
+            if key == series_name:
+                return item
+        return None
+
+    def del_series(self, chart_num, series_num):
+        if chart_num is None:
+            chart_num = self._find_max_num("chart", self._properties)
+
+        chart = self.get_chart(chart_num)
+        if chart is None:
+            return None
+
+        series_name = "series%d" % (series_num)
+
+        if series_name in chart:
+            series = chart[series_name]
+            del chart[series_name]
+            return series
+        else:
+            return None
+
+    def set_series_name(self, chart_num, series_num, name):
+        series = self.get_series(chart_num, series_num)
+
+        if series is None:
+            return None
+
+        series["name"] = name
+        return series
+
+    def set_series_metric(self, chart_num, series_num, metric_id):
+        series = self.get_series(chart_num, series_num)
+
+        if series is None:
+            return None
+
+        series["metric"] = metric_id
+        return series
+
+    def set_series_tags(self, chart_num, series_num, tags):
+        series = self.get_series(chart_num, series_num)
+
+        if series is None:
+            return None
+
+        series["tags"] = " ".join(tags)
+        return series
+
+    def remove_series_tags(self, chart_num, series_num, remove_tags):
+        series = self.get_series(chart_num, series_num)
+
+        if series is None:
+            return None
+
+        tags = series["tags"].split(" ")
+
+        for tag in remove_tags:
+            for i in range(tags.count(tag)):
+                tags.remove(tag)
+
+        series["tags"] = " ".join(tags)
+        return series
+
+    def add_series_tags(self, chart_num, series_num, add_tags):
+        series = self.get_series(chart_num, series_num)
+
+        if series is None:
+            return None
+
+        tags = series["tags"].split(" ")
+
+        for tag in add_tags:
+            if tags.count(tag) == 0:
+                tags.append(tag)
+
+        series["tags"] = " ".join(tags)
+        return series
+
+    def set_id(self, new_id=None):
+        self._id = new_id
+
+    def get_id(self):
+        return self._id
+
+    def set_name(self, new_name=None):
+        self._name = new_name
+
+    def get_name(self):
+        return self._name
+
+    def set_type(self, new_type=None):
+        self._type = new_type
+
+    def get_type(self):
+        return self._type
+
+    def set_user(self, new_user=None):
+        self._user = new_user
+
+    def get_user(self):
+        return self._user
 
     def to_xml(self):
         root = Element('report')
