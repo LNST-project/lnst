@@ -868,6 +868,18 @@ class PerfRepoRESTAPI(object):
             report.set_id(new_id)
             return report
 
+    def report_update(self, report):
+        post_url = self._url + '/rest/report/update/%s' % report.get_id()
+
+        report.set_user(self._user)
+
+        response = self._session.post(post_url, data=report.to_xml_string())
+        if response.status_code != 201:
+            logging.debug(response.text)
+            return None
+        else:
+            return report
+
     def report_delete(self, report_id):
         #TODO not needed yet and therefore not tested
         delete_url = self._url + '/rest/report/delete'
