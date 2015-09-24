@@ -290,3 +290,9 @@ def is_installed(program):
         return True
     except subprocess.CalledProcessError:
         return False
+
+def indent(string, spaces):
+    ret_str = []
+    for line in string.split('\n'):
+        ret_str.append(' '*spaces + line)
+    return '\n'.join(ret_str)
