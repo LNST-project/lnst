@@ -372,6 +372,7 @@ class PerfRepoMetric(PerfRepoObject):
 class PerfRepoReport(PerfRepoObject):
     def __init__(self, xml=None):
         self._baselines = []
+        self._user = None
         if type(xml) is NoneType:
             self._id = None
             self._name = None
