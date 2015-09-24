@@ -767,7 +767,8 @@ class PerfRepoRESTAPI(object):
             logging.debug(response.text)
             return None
         else:
-            test.set_id(response.headers['Location'])
+            new_id = response.headers["Location"].split('/')[-1]
+            test.set_id(new_id)
             return test
 
     def test_add_metric(self, test_id, metric):
@@ -777,7 +778,8 @@ class PerfRepoRESTAPI(object):
             logging.debug(response.text)
             return None
         else:
-            metric.set_id(response.headers['Location'])
+            new_id = response.headers["Location"].split('/')[-1]
+            metric.set_id(new_id)
             return metric
 
     def test_remove(self, test_id):
@@ -813,7 +815,8 @@ class PerfRepoRESTAPI(object):
             logging.debug(response.text)
             return None
         else:
-            testExec.set_id(response.headers['Location'])
+            new_id = response.headers["Location"].split('/')[-1]
+            testExec.set_id(new_id)
             return testExec
 
     def testExecution_delete(self, testExec_id):
