@@ -121,7 +121,7 @@ class PerfRepoTestExecution(PerfRepoObject):
         if type(xml) is NoneType:
             self._id = None
             self._name = None
-            self._started = datetime.datetime.now().isoformat()
+            self._started = datetime.datetime.utcnow().isoformat()
             self._testId = None
             self._testUid = None
             self._comment = ""
@@ -173,8 +173,7 @@ class PerfRepoTestExecution(PerfRepoObject):
 
     def set_started(self, date=None):
         if isinstance(date, NoneType):
-            date = datetime.datetime.now()
-            self._started = date.isoformat()
+            self._started = datetime.datetime.utcnow().isoformat()
         else:
             self._started = date
 
