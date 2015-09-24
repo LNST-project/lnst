@@ -74,6 +74,74 @@ class TestCLI(GenericCLI):
         print("", file=f)
         print("       %s test get {ID | UID}" % sys.argv[0], file=f)
         print("       %s test show {ID | UID}" % sys.argv[0], file=f)
+        print("", file=f)
+        print("       %s test create" % sys.argv[0], file=f)
+        print("                     name NAME", file=f)
+        print("                     uid UID", file=f)
+        print("                     groupid GID", file=f)
+        print("                     [description DESCRIPTION]", file=f)
+        print("                     [metric ID ...]", file=f)
+        print("", file=f)
+        print("       %s test delete ID" % sys.argv[0], file=f)
+
+    def _do_create(self, argv):
+        test = PerfRepo.PerfRepoTest()
+        i = 0
+        try:
+            while i < len(argv):
+                if argv[i] == "name":
+                    test.set_name(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "uid":
+                    test.set_uid(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "groupid":
+                    test.set_groupid(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "description":
+                    test.set_description(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "metric":
+                    metric = PerfRepo.PerfRepoMetric()
+                    metric.set_id(argv[i+1])
+                    test.add_metric(metric)
+                    i += 2
+                    continue
+                else:
+                    print("Argument '%s' not supported for test create!" % argv[i])
+                    return -1
+        except IndexError:
+            print("Parameter '%s' requires a value!" % argv[i])
+            return -1
+
+        if test.get_name() is None:
+            print("Name not specified!")
+            return -1
+        elif test.get_uid() is None:
+            print("UID not specified!")
+            return -1
+        elif test.get_groupid() is None:
+            print("GID not specified!")
+            return -1
+
+        test = self._perf_api.test_create(test)
+        print("Created test with url: %s" % self._perf_api.get_obj_url(test))
+        return 0
+
+    def _do_delete(self, argv):
+        if len(argv) < 1:
+            print("Test delete requires an ID!")
+            return -1
+        if self._perf_api.test_delete(argv[0]):
+            print("Test deleted")
+        else:
+            print("Test not found")
+            return -1
+        return 0
 
     def run(self):
         argv = self._argv
@@ -98,6 +166,10 @@ class TestCLI(GenericCLI):
             except ValueError:
                 print("ID needs to be an integer!", file=sys.stderr)
                 return -1
+        elif argv[0] == "create":
+            self._do_create(argv[1:])
+        elif argv[0] == "delete":
+            self._do_delete(argv[1:])
         else:
             print("Command '%s' not implemented for Tests." % argv[0], file=sys.stderr)
             return -1
@@ -112,6 +184,97 @@ class TestExecCLI(GenericCLI):
         print("", file=f)
         print("       %s texec get ID" % sys.argv[0], file=f)
         print("       %s texec show ID" % sys.argv[0], file=f)
+        print("", file=f)
+        print("       %s testexec create" % sys.argv[0], file=f)
+        print("                     name NAME", file=f)
+        print("                     {testid ID | testuid UID}", file=f)
+        print("                     [comment COMMENT]", file=f)
+        print("                     value NAME=VAL [value NAME=value ...]", file=f)
+        print("                     tags TAG,[TAG,...]", file=f)
+        print("                     [param NAME=VAL ...]", file=f)
+        print("", file=f)
+        print("       %s testexec delete ID" % sys.argv[0], file=f)
+
+    def _do_create(self, argv):
+        texec = PerfRepo.PerfRepoTestExecution()
+        i = 0
+        try:
+            while i < len(argv):
+                if argv[i] == "name":
+                    texec.set_name(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "testid":
+                    texec.set_testId(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "testuid":
+                    texec.set_testUid(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "comment":
+                    texec.set_comment(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "tags":
+                    tags = argv[i+1].split(",")
+                    for tag in tags:
+                        texec.add_tag(tag)
+                    i += 2
+                    continue
+                elif argv[i] == "param":
+                    param = argv[i+1].split("=")
+                    try:
+                        param_name = param[0]
+                        param_val = param[1]
+                    except:
+                        print("Invalid param '%s'" % argv[i+1])
+
+                    texec.add_parameter(param_name, param_val)
+                    i += 2
+                elif argv[i] == "value":
+                    value = argv[i+1].split("=")
+                    try:
+                        value_name = value[0]
+                        value_val = float(value[1])
+                    except:
+                        print("Invalid value '%s'" % argv[i+1])
+
+                    value = PerfRepo.PerfRepoValue()
+                    value.set_metricName(value_name)
+                    value.set_result(value_val)
+
+                    texec.add_value(value)
+                    i += 2
+                    continue
+                else:
+                    print("Argument '%s' not supported for test create!" % argv[i])
+                    return -1
+        except IndexError:
+            print("Parameter '%s' requires a value!" % argv[i])
+            return -1
+
+        if texec.get_name() is None:
+            print("Name not specified!")
+            return -1
+        elif texec.get_testUid() is None and texec.get_testId() is None:
+            print("Test ID/UID not specified!")
+            return -1
+
+        texec = self._perf_api.testExecution_create(texec)
+        print("Created TestExecution with url: %s" % self._perf_api.get_obj_url(texec))
+        return 0
+
+    def _do_delete(self, argv):
+        if len(argv) < 1:
+            print("TestExecution delete requires an ID!")
+            return -1
+        if self._perf_api.testExecution_delete(argv[0]):
+            print("TestExecution removed")
+        else:
+            print("TestExecution not found")
+            return -1
+        return 0
 
     def run(self):
         argv = self._argv
@@ -134,6 +297,12 @@ class TestExecCLI(GenericCLI):
             except ValueError:
                 print("ID needs to be an integer!", file=sys.stderr)
                 return -1
+        elif argv[0] == "create":
+            self._do_create(argv[1:])
+            return 0
+        elif argv[0] == "delete":
+            self._do_delete(argv[1:])
+            return 0
         else:
             print("Command '%s' not implemented for TestExecutions." % argv[0], file=sys.stderr)
             return -1
