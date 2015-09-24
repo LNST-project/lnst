@@ -118,6 +118,13 @@ class PerfRepoTest(PerfRepoObject):
     def set_groupid(self, groupid):
         self._groupid = groupid
 
+    def add_metric(self, metric):
+        if not isinstance(metric, PerfRepoMetric):
+            return None
+        else:
+            self._metrics.append(metric)
+            return metric
+
     def to_xml(self):
         root = Element('test')
         self._set_element_atrib(root, 'id', self._id)
@@ -206,8 +213,14 @@ class PerfRepoTestExecution(PerfRepoObject):
     def set_id(self, id):
         self._id = id
 
+    def get_id(self):
+        return self._id
+
     def set_name(self, name):
         self._name = name
+
+    def get_name(self):
+        return self._name
 
     def set_started(self, date=None):
         if isinstance(date, NoneType):
@@ -215,11 +228,17 @@ class PerfRepoTestExecution(PerfRepoObject):
         else:
             self._started = date
 
+    def get_started(self):
+        return self._started
+
     def set_testId(self, testId):
         if isinstance(testId, PerfRepoTest):
             self._testId = testId.get_id()
         else:
             self._testId = testId
+
+    def get_testId(self):
+        return self._testId
 
     def set_testUid(self, testUid):
         if isinstance(testUid, PerfRepoTest):
@@ -232,6 +251,9 @@ class PerfRepoTestExecution(PerfRepoObject):
 
     def set_comment(self, comment):
         self._comment = comment
+
+    def get_comment(self):
+        return self._comment
 
     def add_value(self, value):
         self._values.append(value)
@@ -350,6 +372,9 @@ class PerfRepoValue(PerfRepoObject):
 
     def add_parameter(self, name, value):
         self._parameters.append((name, value))
+
+    def get_parameters(self):
+        return self._parameters
 
     def get_metricName(self):
         return self._metricName
