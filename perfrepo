@@ -1,0 +1,521 @@
+#! /usr/bin/env python2
+"""
+
+Copyright 2015 Red Hat, Inc.
+Licensed under the GNU General Public License, version 2 as
+published by the Free Software Foundation; see COPYING for details.
+"""
+
+from __future__ import print_function
+
+__author__ = """
+olichtne@redhat.com (Ondrej Lichtner)
+"""
+
+import sys
+import logging
+import os
+import re
+import datetime
+import lnst.Controller.PerfRepo as PerfRepo
+from lnst.Controller.PerfRepo import PerfRepoRESTAPI
+from lnst.Common.Config import lnst_config
+
+def usage(retval=0, f=sys.stderr):
+    """
+    Print usage of this app
+    """
+    print("Usage: %s [OPTIONS...] OBJECT {COMMAND | help} [COMMAND_OPTS]" % sys.argv[0], file=f)
+    print("", file=f)
+    print("OBJECT := { report | testexec | test }", file=f)
+    print("OPTIONS := { -u URL | --url URL |", file=f)
+    print("             -n USERNAME | --username USERNAME |", file=f)
+    print("             -p PASSWORD | --password PASSWORD |", file=f)
+    print("             -c FILE | --config FILE}", file=f)
+    sys.exit(retval)
+
+
+class GenericCLI(object):
+    def __init__(self, url, username, password, argv):
+        if url is not None:
+            self._url = url
+        else:
+            self._url = lnst_config.get_option("perfrepo", "url")
+
+        if username is not None:
+            self._username = username
+        else:
+            self._username = lnst_config.get_option("perfrepo", "username")
+
+        if password is not None:
+            self._password = password
+        else:
+            self._password = lnst_config.get_option("perfrepo", "password")
+
+        self._argv = argv
+        self._perf_api = PerfRepoRESTAPI(self._url,
+                                         self._username,
+                                         self._password)
+
+    def usage(self, f=sys.stderr):
+        pass
+
+    def run(self):
+        print("Not implemented yet!", file=sys.stderr)
+        self.usage()
+        return -1
+
+class TestCLI(GenericCLI):
+    pass
+
+class TestExecCLI(GenericCLI):
+    pass
+
+class ReportCLI(GenericCLI):
+    def usage(self, f=sys.stderr):
+        """
+        Print usage for the report object
+        """
+        print("Usage: %s report help" % sys.argv[0], file=f)
+        print("", file=f)
+        print("       %s report get ID" % sys.argv[0], file=f)
+        print("       %s report show ID" % sys.argv[0], file=f)
+        print("", file=f)
+        print("       %s report create" % sys.argv[0], file=f)
+        print("                     name NAME [type TYPE]", file=f)
+        print("                         chart NAME", file=f)
+        print("                         {testid ID | testuid UID}", file=f)
+        print("                             series NAME", file=f)
+        print("                                    metric ID", file=f)
+        print("                                    tags TAG[,TAG,...]", file=f)
+        print("                             baseline NAME", file=f)
+        print("                                    execid ID", file=f)
+        print("                                    metric ID", file=f)
+        print("       %s report update" % sys.argv[0], file=f)
+        print("                     id ID", file=f)
+        print("                         [name NAME]", file=f)
+        print("                         OP chart [NUM | NAME]", file=f)
+        print("                         [testid ID | testuid UID]", file=f)
+        print("                             [name NAME]", file=f)
+        print("                             [ OP series [NUM | NAME] ]", file=f)
+        print("                                    [name NAME]", file=f)
+        print("                                    [metric ID]", file=f)
+        print("                                    [+tags TAG[,TAG,...] ]", file=f)
+        print("                                    [-tags TAG[,TAG,...] ]", file=f)
+        print("                             [ OP baseline [ NUM | NAME] ]", file=f)
+        print("                                    [name NAME]", file=f)
+        print("                                    [execid ID]", file=f)
+        print("                                    [metric ID]", file=f)
+        print("                     WHERE OP is [add | del | edit]", file=f)
+        print("                     edit is implicit - noOP == 'edit'", file=f)
+        print("                     OPs 'edit' and 'del' require NUM, whereas 'add' requires NAME", file=f)
+        print("                     if chart OP == 'add' then all further OPs are 'add' as in the 'report create' command", file=f)
+
+    def _parse_baseline(self, argv):
+        baseline = {}
+        baseline["name"] = argv[0]
+
+        i = 1
+        try:
+            while i < len(argv):
+                if argv[i] == "execid":
+                    baseline["execid"] = argv[i+1]
+                    i += 2
+                    continue
+                elif argv[i] == "metric":
+                    baseline["metric"] = argv[i+1]
+                    i += 2
+                    continue
+                else:
+                    return (baseline, i)
+        except IndexError:
+            print("Parameter '%s' requires a value!" % argv[i])
+            return ({}, 0)
+        return (baseline, i)
+
+    def _parse_series(self, argv):
+        series = {"tags": []}
+        series["name"] = argv[0]
+
+        i = 1
+        try:
+            while i < len(argv):
+                if argv[i] == "tags":
+                    tags = argv[i+1].split(",")
+                    series["tags"] = tags
+                    i += 2
+                    continue
+                elif argv[i] == "metric":
+                    series["metric"] = argv[i+1]
+                    i += 2
+                    continue
+                else:
+                    return (series, i)
+        except IndexError:
+            print("Parameter '%s' requires a value!" % argv[i])
+            return ({}, 0)
+        return (series, i)
+
+    def _parse_chart_add(self, argv):
+        chart = {"series": [], "baselines": []}
+
+        baseline = None
+        series = None
+
+        chart["name"] = argv[0]
+        i = 1
+        try:
+            while i < len(argv):
+                if argv[i] == "testid":
+                    chart["test"] = argv[i+1]
+                    i += 2
+                    continue
+                elif argv[i] == "testuid":
+                    test = self._perf_api.test_get_by_uid(argv[i+1])
+                    chart["test"] = test.get_id()
+                    i += 2
+                    continue
+                elif argv[i] == "series":
+                    series, new_i = self._parse_series(argv[i+1:])
+                    chart["series"].append(series)
+                    i += 1 + new_i
+                elif argv[i] == "baseline":
+                    baseline, new_i = self._parse_baseline(argv[i+1:])
+                    chart["baselines"].append(baseline)
+                    i += 1 + new_i
+                    continue
+                else:
+                    return (chart, i)
+        except IndexError:
+            print("Parameter '%s' requires a value!" % argv[i])
+            return ({}, 0)
+        return (chart, i)
+
+    def _report_add_chart(self, report, chart):
+        report.add_chart(chart["name"], chart["test"])
+
+        for baseline in chart["baselines"]:
+            try:
+                report.add_baseline(None, baseline["name"],
+                                          baseline["metric"],
+                                          baseline["execid"])
+            except KeyError as e:
+                print("Parameter '%s' is required for a baseline!" %\
+                        e.args[0])
+                return -1
+
+        for series in chart["series"]:
+            try:
+                report.add_series(None, series["name"],
+                                        series["metric"],
+                                        series["tags"])
+            except KeyError as e:
+                print("Parameter '%s' is required for a series!" %\
+                        e.args[0])
+                return -1
+        return 0
+
+    def _do_create(self, argv):
+        charts = []
+        i = 1
+        series = None
+        baseline = None
+
+        report = PerfRepo.PerfRepoReport()
+        report.set_type("Metric")
+
+        try:
+            while i < len(argv):
+                if argv[i] == "name":
+                    if report.get_name() is None:
+                        report.set_name(argv[i+1])
+                        i += 2
+                        continue
+                    else:
+                        print("Report name already specified!",
+                              file=sys.stderr)
+                        return -1
+                elif argv[i] == "type":
+                    report.set_type(argv[i+1])
+                    i += 2
+                    continue
+                elif argv[i] == "chart":
+                    chart, new_i = self._parse_chart_add(argv[i+1:])
+                    charts.append(chart)
+                    i += 1 + new_i
+                    continue
+                else:
+                    print("Parameter '%s' not defined/implemented!" %\
+                            argv[i], file=sys.stderr)
+                    return -1
+        except IndexError:
+            print("Parameter '%s' requires a value!" % argv[i])
+            return -1
+
+        if report.get_name() is None:
+            print("Report name not specified!", file=sys.stderr)
+            return -1
+
+        for chart in charts:
+            self._report_add_chart(report, chart)
+
+        report = self._perf_api.report_create(report)
+        print("Created report with url: %s" % self._perf_api.get_obj_url(report))
+        return 0
+
+    def _do_update(self, argv):
+        report_id = None
+        try:
+            if argv[1] != "id":
+                print("Parameter 'id' is required!", file=sys.stderr)
+                return -1
+            report_id = str(int(argv[2]))
+        except IndexError:
+            print("Parameter 'id' is required!", file=sys.stderr)
+            return -1
+        except ValueError:
+            print("Value of parameter 'id' must be a number!", file=sys.stderr)
+            return -1
+
+        report = self._perf_api.report_get_by_id(report_id)
+        if report is None:
+            print("Invalid ID specified!", file=sys.stderr)
+            return -1
+
+        i = 3
+        while i < len(argv):
+            if argv[i] == "name":
+                report.set_name(argv[i+1])
+                i += 2
+                continue
+
+            op = "edit"
+            if argv[i] in ["add", "del", "edit"]:
+                op = argv[i]
+                i += 1
+            if argv[i] == "chart":
+                if op == "add":
+                    chart, new_i = self._parse_chart_add(argv[i+1:])
+                    i += 1 + new_i
+
+                    self._report_add_chart(report, chart)
+                elif op == "edit":
+                    chart_num = int(argv[i+1])
+                    i += 2
+                    while i < len(argv):
+                        if argv[i] == "name":
+                            report.set_chart_name(chart_num, argv[i+1])
+                            i += 2
+                            continue
+                        elif argv[i] == "testid":
+                            report.set_chart_test_id(chart_num, argv[i+1])
+                            i += 2
+                            continue
+                        elif argv[i] == "testuid":
+                            test = self._perf_api.test_get_by_uid(argv[i+1])
+                            report.set_chart_test_id(chart_num, test.get_id())
+                            i += 2
+                            continue
+
+                        op2 = "edit"
+                        if argv[i] in ["add", "del", "edit"]:
+                            op = argv[i]
+                            i += 1
+
+                        if argv[i] == "series":
+                            if op == "add":
+                                series, new_i = self._parse_series(argv[i+1:])
+                                i += 1 + new_i
+                                try:
+                                    report.add_series(chart_num,
+                                                      series["name"],
+                                                      series["metric"],
+                                                      series["tags"])
+                                except KeyError as e:
+                                    print("Parameter '%s' is required for a series!"\
+                                          % e.args[0])
+                                    return -1
+                            elif op == "edit":
+                                series_num = int(argv[i+1])
+                                i += 2
+                                while i < len(argv):
+                                    if argv[i] == "name":
+                                        report.set_series_name(chart_num,
+                                                               series_num,
+                                                               argv[i+1])
+                                        i += 2
+                                        continue
+                                    elif argv[i] == "metric":
+                                        report.set_series_metric(chart_num,
+                                                                 series_num,
+                                                                 argv[i+1])
+                                        i += 2
+                                        continue
+                                    elif argv[i] == "+tags":
+                                        tags = argv[i+1].split(',')
+                                        report.add_series_tags(chart_num,
+                                                               series_num,
+                                                               tags)
+                                        i += 2
+                                        continue
+                                    elif argv[i] == "-tags":
+                                        tags = argv[i+1].split(',')
+                                        report.remove_series_tags(chart_num,
+                                                                  series_num,
+                                                                  tags)
+                                        i += 2
+                                        continue
+                                    else:
+                                        break
+                            elif op == "del":
+                                series_num = argv[i+1]
+                                report.del_series(chart_num, series_num)
+                                i += 2
+                                continue
+                        elif argv[i] == "baseline":
+                            if op == "add":
+                                baseline, new_i = self._parse_baseline(argv[i+1:])
+                                i += 1 + new_i
+
+                                try:
+                                    report.add_baseline(None, baseline["name"],
+                                                              baseline["metric"],
+                                                              baseline["execid"])
+                                except KeyError as e:
+                                    print("Parameter '%s' is required for a baseline!"\
+                                          % e.args[0])
+                                    return -1
+                            elif op == "edit":
+                                baseline_num = argv[i+1]
+                                i += 2
+                                while i < len(argv):
+                                    if argv[i] == "name":
+                                        report.set_baseline_name(chart_num,
+                                                                 baseline_num,
+                                                                 argv[i+1])
+                                        i += 2
+                                        continue
+                                    elif argv[i] == "metric":
+                                        report.set_baseline_metric(chart_num,
+                                                                   baseline_num,
+                                                                   argv[i+1])
+                                        i += 2
+                                        continue
+                                    elif argv[i] == "execid":
+                                        report.set_baseline_execid(chart_num,
+                                                                   baseline_num,
+                                                                   argv[i+1])
+                                        i += 2
+                                        continue
+                                    else:
+                                        break
+                            elif op == "del":
+                                baseline_num = argv[i+1]
+                                report.del_baseline(chart_num, baseline_num)
+                                i += 2
+                                continue
+                        else:
+                            break
+
+                elif op == "del":
+                    chart_num = int(argv[i+1])
+                    report.del_chart(chart_num)
+                    i += 2
+                    continue
+            else:
+                print("Unknown parameter '%s'!" % argv[i])
+                return -1
+        self._perf_api.report_update(report)
+        return 0
+
+    def run(self):
+        argv = self._argv
+        if len(argv) == 0:
+            return -1
+        elif argv[0] == "help":
+            self.usage(sys.stdout)
+            return 0
+        elif argv[0] in ["get", "show"]:
+            try:
+                report_id = int(argv[1])
+                report = self._perf_api.report_get_by_id(report_id)
+                print(report)
+            except IndexError:
+                print("No ID specified!", file=sys.stderr)
+                return -1
+            except ValueError:
+                print("ID needs to be an integer!", file=sys.stderr)
+                return -1
+        elif argv[0] in ["create"]:
+            return self._do_create(argv)
+        elif argv[0] in ["update"]:
+            return self._do_update(argv)
+        else:
+            print("Command '%s' not implemented for Reports." % argv[0], file=sys.stderr)
+            return -1
+        return 0
+
+def main():
+    """
+    Main function
+    """
+    cli_classes = {"report": ReportCLI,
+                   "testexec": TestExecCLI,
+                   "test": TestCLI}
+    obj = None
+    conf_file = None
+    url = None
+    username = None
+    password = None
+
+    i = 1
+    while obj is None and i < len(sys.argv):
+        if sys.argv[i] in cli_classes:
+            obj = sys.argv[i]
+            i += 1
+        elif sys.argv[i] in ["-u", "--url"]:
+            url = sys.argv[i+1]
+            i += 2
+        elif sys.argv[i] in ["-n", "--username"]:
+            username = sys.argv[i+1]
+            i += 2
+        elif sys.argv[i] in ["-p", "--password"]:
+            password = sys.argv[i+1]
+            i += 2
+        elif sys.argv[i] in ["-c", "--config"]:
+            conf_file = sys.argv[i+1]
+            i += 2
+        elif sys.argv[i] in ["-h", "--help", "help"]:
+            usage(0, sys.stdout)
+        else:
+            usage(-1)
+
+    if obj is None:
+        usage(0, f=sys.stdout)
+    else:
+        lnst_config.controller_init()
+        dirname = os.path.dirname(sys.argv[0])
+        gitcfg = os.path.join(dirname, "lnst-ctl.conf")
+        if os.path.isfile(gitcfg):
+            lnst_config.load_config(gitcfg)
+        else:
+            lnst_config.load_config('/etc/lnst-ctl.conf')
+
+        usr_cfg = os.path.expanduser('~/.lnst/lnst-ctl.conf')
+        if os.path.isfile(usr_cfg):
+            lnst_config.load_config(usr_cfg)
+
+        if conf_file is not None:
+            lnst_config.load_config(conf_file)
+
+        cli = cli_classes[obj](url, username, password, sys.argv[i:])
+        ret_val = cli.run()
+
+        if ret_val < 0:
+            cli.usage()
+        return ret_val
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
