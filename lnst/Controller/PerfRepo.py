@@ -27,6 +27,9 @@ class PerfRepoObject(object):
     def __init__(self):
         pass
 
+    def get_obj_url(self):
+        return "/"
+
     def _set_element_atrib(self, element, name, value):
         if value != None:
             element.set(name, value)
@@ -68,6 +71,9 @@ class PerfRepoTest(PerfRepoObject):
         else:
             raise PerfRepoException("Parameter xml must be"\
                                     " a string, an Element or None")
+
+    def get_obj_url(self):
+        return "/test/%s" % self._id
 
     def get_id(self):
         return self._id
@@ -164,6 +170,9 @@ class PerfRepoTestExecution(PerfRepoObject):
         else:
             raise PerfRepoException("Parameter xml must be"\
                                     " a string, an Element or None")
+
+    def get_obj_url(self):
+        return "/exec/%s" % self._id
 
     def set_id(self, id):
         self._id = id
@@ -416,6 +425,9 @@ class PerfRepoReport(PerfRepoObject):
     def get_baseline(self, index=-1):
         return self._baselines[index]
 
+    def get_obj_url(self):
+        return "/reports/%s/%s" % (self._type.lower(), self._id)
+
 class PerfRepoRESTAPI(object):
     '''Wrapper class for the REST API provided by PerfRepo'''
     def __init__(self, url, user, password):
@@ -427,6 +439,11 @@ class PerfRepoRESTAPI(object):
         self._session.auth = (self._user, self._password)
         self._session.stream = True
         self._session.headers['Content-Type'] = 'text/xml'
+
+    def get_obj_url(self, obj):
+        if not isinstance(obj, PerfRepoObject):
+            return ""
+        return self._url + obj.get_obj_url()
 
     def test_get_by_id(self, test_id):
         get_url = self._url + '/rest/test/id/%s' % test_id
