@@ -21,7 +21,7 @@ from types import StringType, NoneType
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 from lnst.Common.Utils import recursive_dict_update
-from lnst.Common.Utils import dot_to_dict, dict_to_dot
+from lnst.Common.Utils import dot_to_dict, dict_to_dot, indent
 
 class PerfRepoException(Exception):
     pass
@@ -131,6 +131,25 @@ class PerfRepoTest(PerfRepoObject):
             metrics.append(metric.to_xml())
 
         return root
+
+    def __str__(self):
+        ret_str = """\
+                  id = %s
+                  uid = %s
+                  name = %s
+                  groupid = %s
+                  description:
+                  """ % ( self._id,
+                          self._uid,
+                          self._name,
+                          self._groupid)
+        ret_str = textwrap.dedent(ret_str)
+        ret_str += indent(self._description, 4)
+        ret_str += "metrics:\n"
+        for metric in self._metrics:
+            ret_str +=  indent(str(metric), 4)
+            ret_str +=  indent("------------------------", 4)
+        return textwrap.dedent(ret_str)
 
 class PerfRepoTestExecution(PerfRepoObject):
     def __init__(self, xml=None):
@@ -264,6 +283,32 @@ class PerfRepoTestExecution(PerfRepoObject):
 
         return root
 
+    def __str__(self):
+        ret_str = """\
+                  id = %s
+                  name = %s
+                  date = %s
+                  testId = %s
+                  testUid = %s
+                  comment = %s
+                  tags = %s
+                  """ % ( self._id,
+                          self._name,
+                          self._started,
+                          self._testId,
+                          self._testUid,
+                          self._comment,
+                          " ".join(self._tags))
+        ret_str = textwrap.dedent(ret_str)
+        ret_str += "parameters:\n"
+        for param in self._parameters:
+            ret_str +=  indent("%s = %s" % (param[0], param[1]), 4)
+        ret_str += "values:\n"
+        for val in self._values:
+            ret_str +=  indent(str(val), 4)
+            ret_str +=  indent("------------------------", 4)
+        return textwrap.dedent(ret_str)
+
 class PerfRepoValue(PerfRepoObject):
     def __init__(self, xml=None):
         if type(xml) is NoneType:
@@ -329,6 +374,18 @@ class PerfRepoValue(PerfRepoObject):
             self._set_element_atrib(param_elem, "value", param[1])
         return root
 
+    def __str__(self):
+        ret_str = """\
+                  metric name = %s
+                  result = %s
+                  """ % ( self._metricName,
+                          self._result)
+        ret_str = textwrap.dedent(ret_str)
+        ret_str += "parameters:\n"
+        for param in self._parameters:
+            ret_str +=  indent("%s = %s" % (param[0], param[1]), 4)
+        return textwrap.dedent(ret_str)
+
 class PerfRepoMetric(PerfRepoObject):
     def __init__(self, xml=None):
         if type(xml) is NoneType:
@@ -387,6 +444,19 @@ class PerfRepoMetric(PerfRepoObject):
         self._set_element_atrib(root, 'comparator', self._comparator)
 
         return root
+
+    def __str__(self):
+        ret_str = """\
+                  id = %s
+                  name = %s
+                  comparator = %s
+                  description:
+                  """ % ( self._id,
+                          self._name,
+                          self._comparator)
+        ret_str = textwrap.dedent(ret_str)
+        ret_str += indent(self._description, 4)
+        return ret_str
 
 class PerfRepoReport(PerfRepoObject):
     def __init__(self, xml=None):
