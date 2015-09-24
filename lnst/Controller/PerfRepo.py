@@ -883,7 +883,7 @@ class PerfRepoRESTAPI(object):
             logging.info("Obj url: %s" % self.get_obj_url(test))
             return metric
 
-    def test_remove(self, test_id):
+    def test_delete(self, test_id):
         delete_url = self._url + '/rest/test/id/%s' % test_id
         response = self._session.delete(delete_url)
         if response.status_code != 204:
