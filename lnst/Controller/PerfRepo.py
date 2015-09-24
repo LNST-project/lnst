@@ -15,11 +15,13 @@ import datetime
 import re
 import logging
 import xml.dom.minidom
+import textwrap
+import pprint
 from types import StringType, NoneType
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 from lnst.Common.Utils import recursive_dict_update
-from lnst.Common.Utils import dot_to_dict
+from lnst.Common.Utils import dot_to_dict, dict_to_dot
 
 class PerfRepoException(Exception):
     pass
@@ -435,6 +437,40 @@ class PerfRepoReport(PerfRepoObject):
 
     def get_obj_url(self):
         return "/reports/%s/%s" % (self._type.lower(), self._id)
+
+    def to_xml(self):
+        root = Element('report')
+        self._set_element_atrib(root, 'id', self._id)
+        self._set_element_atrib(root, 'name', self._name)
+        self._set_element_atrib(root, 'type', self._type)
+        self._set_element_atrib(root, 'user', self._user)
+
+        properties = ElementTree.SubElement(root, 'properties')
+        dot_props = dict_to_dot(self._properties)
+        for prop in dot_props:
+            entry_elem = ElementTree.SubElement(properties, 'entry')
+            key_elem = ElementTree.SubElement(entry_elem, 'key')
+            value_elem = ElementTree.SubElement(entry_elem, 'value')
+
+            key_elem.text = prop[0]
+            self._set_element_atrib(value_elem, 'name', prop[0])
+            self._set_element_atrib(value_elem, 'value', prop[1])
+
+        return root
+
+    def __str__(self):
+        str_props = pprint.pformat(self._properties)
+        ret_str = """\
+                  id = %s
+                  name = %s
+                  type = %s
+                  properties =
+                  """ % ( self._id,
+                          self._name,
+                          self._type)
+        ret_str = textwrap.dedent(ret_str)
+        ret_str += str_props
+        return textwrap.dedent(ret_str)
 
 class PerfRepoRESTAPI(object):
     '''Wrapper class for the REST API provided by PerfRepo'''
