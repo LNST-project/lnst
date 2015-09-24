@@ -967,8 +967,11 @@ class PerfRepoRESTAPI(object):
             logging.info("Obj url: %s" % self.get_obj_url(report))
             return report
 
-    def report_delete(self, report_id):
-        #TODO not needed yet and therefore not tested
-        delete_url = self._url + '/rest/report/delete'
-        self._session.delete(post_url)
-        return None
+    def report_delete_by_id(self, report_id):
+        delete_url = self._url + '/rest/report/id/%s' % report_id
+        response = self._session.delete(delete_url)
+        if response.status_code != 204:
+            return False
+        else:
+            logging.info("DELETE %s success" % delete_url)
+            return True
