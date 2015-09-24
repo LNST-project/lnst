@@ -14,6 +14,7 @@ import requests
 import datetime
 import re
 import logging
+import xml.dom.minidom
 from types import StringType, NoneType
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
@@ -40,6 +41,13 @@ class PerfRepoObject(object):
     def to_xml_string(self):
         root = self.to_xml()
         return ElementTree.tostring(root)
+
+    def to_pretty_xml_string(self):
+        tmp_xml = xml.dom.minidom.parseString(self.to_xml_string())
+        return tmp_xml.toprettyxml()
+
+    def __str__(self):
+        return self.to_pretty_xml_string()
 
 class PerfRepoTest(PerfRepoObject):
     def __init__(self, xml=None):
