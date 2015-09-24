@@ -66,10 +66,78 @@ class GenericCLI(object):
         return -1
 
 class TestCLI(GenericCLI):
-    pass
+    def usage(self, f=sys.stderr):
+        """
+        Print usage for the report object
+        """
+        print("Usage: %s test help" % sys.argv[0], file=f)
+        print("", file=f)
+        print("       %s test get {ID | UID}" % sys.argv[0], file=f)
+        print("       %s test show {ID | UID}" % sys.argv[0], file=f)
+
+    def run(self):
+        argv = self._argv
+        if len(argv) == 0:
+            return -1
+        elif argv[0] == "help":
+            self.usage(sys.stdout)
+            return 0
+        elif argv[0] in ["get", "show"]:
+            try:
+                test_id = int(argv[1])
+                test = self._perf_api.test_get_by_id(test_id)
+                if test is None:
+                    test = self._perf_api.test_get_by_uid(test_id)
+                if test is None:
+                    print("Test not found.")
+                else:
+                    print(test)
+            except IndexError:
+                print("No ID specified!", file=sys.stderr)
+                return -1
+            except ValueError:
+                print("ID needs to be an integer!", file=sys.stderr)
+                return -1
+        else:
+            print("Command '%s' not implemented for Tests." % argv[0], file=sys.stderr)
+            return -1
+        return 0
 
 class TestExecCLI(GenericCLI):
-    pass
+    def usage(self, f=sys.stderr):
+        """
+        Print usage for the report object
+        """
+        print("Usage: %s texec help" % sys.argv[0], file=f)
+        print("", file=f)
+        print("       %s texec get ID" % sys.argv[0], file=f)
+        print("       %s texec show ID" % sys.argv[0], file=f)
+
+    def run(self):
+        argv = self._argv
+        if len(argv) == 0:
+            return -1
+        elif argv[0] == "help":
+            self.usage(sys.stdout)
+            return 0
+        elif argv[0] in ["get", "show"]:
+            try:
+                exec_id = int(argv[1])
+                texec = self._perf_api.testExecution_get(exec_id)
+                if texec is None:
+                    print("TestExecution not found.")
+                else:
+                    print(texec)
+            except IndexError:
+                print("No ID specified!", file=sys.stderr)
+                return -1
+            except ValueError:
+                print("ID needs to be an integer!", file=sys.stderr)
+                return -1
+        else:
+            print("Command '%s' not implemented for TestExecutions." % argv[0], file=sys.stderr)
+            return -1
+        return 0
 
 class ReportCLI(GenericCLI):
     def usage(self, f=sys.stderr):
@@ -450,6 +518,20 @@ class ReportCLI(GenericCLI):
             return self._do_create(argv)
         elif argv[0] in ["update"]:
             return self._do_update(argv)
+        elif argv[0] in ["delete"]:
+            try:
+                report_id = int(argv[1])
+                result = self._perf_api.report_delete_by_id(report_id)
+                if result:
+                    print("Report deleted.")
+                else:
+                    print("Report delete failed.")
+            except IndexError:
+                print("No ID specified!", file=sys.stderr)
+                return -1
+            except ValueError:
+                print("ID needs to be an integer!", file=sys.stderr)
+                return -1
         else:
             print("Command '%s' not implemented for Reports." % argv[0], file=sys.stderr)
             return -1
