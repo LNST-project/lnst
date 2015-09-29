@@ -426,7 +426,7 @@ class Wizard:
                     if lease["hostname"] == libvirt_domain:
                         return (libvirt_domain, lease["ipaddr"])
             except:
-                sys.stderr.write("Failed getting DHCPLeases from hypervisor")
+                sys.stderr.write("Failed getting DHCPLeases from hypervisor\n")
 
             sys.stderr.write("Couldn't find any IP associated with "
                              "libvirt_domain '%s'\n" % libvirt_domain)
