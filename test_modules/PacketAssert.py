@@ -65,6 +65,7 @@ class PacketAssert(TestGeneric):
             pcap_filter = ""
 
         cmd = "tcpdump -p -nn -i %s \"%s\"" % (interface, pcap_filter)
+        logging.debug("PacketAssert tcpdump command: %s" % cmd)
         self._cmd = cmd
 
     def _execute_tcpdump(self):
