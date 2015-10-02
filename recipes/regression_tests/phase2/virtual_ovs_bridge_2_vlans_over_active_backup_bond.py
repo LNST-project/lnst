@@ -49,7 +49,7 @@ ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
-nperf_max_runs = int(nperf_confidence.split(",")[1])
+nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={

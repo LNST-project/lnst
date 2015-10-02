@@ -43,7 +43,7 @@ mtu = ctl.get_alias("mtu")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
-nperf_max_runs = int(nperf_confidence.split(",")[1])
+nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 
 m1_team = m1.get_interface("test_if")
 m1_team.set_mtu(mtu)

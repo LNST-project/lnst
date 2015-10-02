@@ -5,6 +5,7 @@
         <alias name="netperf_duration" value="60" />
         <alias name="nperf_reserve" value="20" />
         <alias name="nperf_confidence" value="99,5" />
+        <alias name="nperf_max_runs" value="5"/>
         <alias name="mapping_file" value="3_vlans_over_active_backup_bond.mapping" />
     </define>
     <network>
