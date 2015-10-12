@@ -849,7 +849,7 @@ class PerfRepoRESTAPI(object):
             return None
         else:
             if log:
-                logging.info("GET %s success" % get_url)
+                logging.debug("GET %s success" % get_url)
             return PerfRepoTest(response.content)
 
     def test_get_by_uid(self, test_uid, log=True):
@@ -861,7 +861,7 @@ class PerfRepoRESTAPI(object):
             return None
         else:
             if log:
-                logging.info("GET %s success" % get_url)
+                logging.debug("GET %s success" % get_url)
             return PerfRepoTest(response.content)
 
     def test_create(self, test, log=True):
@@ -875,7 +875,7 @@ class PerfRepoRESTAPI(object):
             new_id = response.headers["Location"].split('/')[-1]
             test.set_id(new_id)
             if log:
-                logging.info("POST %s success" % post_url)
+                logging.debug("POST %s success" % post_url)
                 logging.info("Obj url: %s" % self.get_obj_url(test))
             return test
 
@@ -890,7 +890,7 @@ class PerfRepoRESTAPI(object):
             new_id = response.headers["Location"].split('/')[-1]
             metric.set_id(new_id)
             if log:
-                logging.info("POST %s success" % post_url)
+                logging.debug("POST %s success" % post_url)
                 logging.info("Obj url: %s" % self.get_obj_url(test))
             return metric
 
@@ -901,7 +901,7 @@ class PerfRepoRESTAPI(object):
             return False
         else:
             if log:
-                logging.info("DELETE %s success" % delete_url)
+                logging.debug("DELETE %s success" % delete_url)
             return True
 
     def metric_get(self, metric_id, log=True):
@@ -913,7 +913,7 @@ class PerfRepoRESTAPI(object):
             return None
         else:
             if log:
-                logging.info("GET %s success" % get_url)
+                logging.debug("GET %s success" % get_url)
             return PerfRepoMetric(response.content)
 
     def testExecution_get(self, testExec_id, log=True):
@@ -925,7 +925,7 @@ class PerfRepoRESTAPI(object):
             return None
         else:
             if log:
-                logging.info("GET %s success" % get_url)
+                logging.debug("GET %s success" % get_url)
             return PerfRepoTestExecution(response.content)
 
     def testExecution_create(self, testExec, log=True):
@@ -939,7 +939,7 @@ class PerfRepoRESTAPI(object):
             new_id = response.headers["Location"].split('/')[-1]
             testExec.set_id(new_id)
             if log:
-                logging.info("POST %s success" % post_url)
+                logging.debug("POST %s success" % post_url)
                 logging.info("Obj url: %s" % self.get_obj_url(testExec))
             return testExec
 
@@ -952,7 +952,7 @@ class PerfRepoRESTAPI(object):
             return False
         else:
             if log:
-                logging.info("DELETE %s success" % delete_url)
+                logging.debug("DELETE %s success" % delete_url)
             return True
 
     def testExecution_add_value(self, value, log=True):
@@ -981,7 +981,7 @@ class PerfRepoRESTAPI(object):
             return None
         else:
             if log:
-                logging.info("GET %s success" % get_url)
+                logging.debug("GET %s success" % get_url)
             return PerfRepoReport(response.content)
 
     def report_create(self, report, log=True):
@@ -998,7 +998,7 @@ class PerfRepoRESTAPI(object):
             new_id = response.headers["Location"].split('/')[-1]
             report.set_id(new_id)
             if log:
-                logging.info("POST %s success" % post_url)
+                logging.debug("POST %s success" % post_url)
                 logging.info("Obj url: %s" % self.get_obj_url(report))
             return report
 
@@ -1014,7 +1014,7 @@ class PerfRepoRESTAPI(object):
             return None
         else:
             if log:
-                logging.info("UPDATE %s success" % post_url)
+                logging.debug("UPDATE %s success" % post_url)
                 logging.info("Obj url: %s" % self.get_obj_url(report))
             return report
 
@@ -1025,5 +1025,5 @@ class PerfRepoRESTAPI(object):
             return False
         else:
             if log:
-                logging.info("DELETE %s success" % delete_url)
+                logging.debug("DELETE %s success" % delete_url)
             return True
