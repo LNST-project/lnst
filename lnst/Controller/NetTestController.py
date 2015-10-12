@@ -280,11 +280,11 @@ class NetTestController:
                             mod_path = res_table['module'][mod]["path"]
                             mod_tools = get_module_tools(mod_path)
                             for t in mod_tools:
-                                 if t in sync_table['tools']:
-                                     continue
-                                 logging.debug("Adding '%s' tool as dependency\
-                                     of %s test module" % (t, mod))
-                                 sync_table['tools'][t] = res_table['tools'][t]
+                                if t in sync_table['tools']:
+                                    continue
+                                logging.debug("Adding '%s' tool as "\
+                                    "dependency of %s test module" % (t, mod))
+                                sync_table['tools'][t] = res_table['tools'][t]
                         else:
                             msg = "Module '%s' not found on the controller"\
                                     % mod
