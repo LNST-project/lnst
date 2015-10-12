@@ -576,6 +576,10 @@ class PerfRepoAPI(object):
         elif isinstance(result, Noop):
             return
         elif isinstance(result, PerfRepoResult):
+            if len(result.get_testExecution().get_values()) < 1:
+                logging.debug("PerfRepoResult with no result data, skipping "\
+                              "send to PerfRepo.")
+                return
             h = result.generate_hash()
             logging.debug("Adding hash '%s' as tag to result." % h)
             result.add_tag(h)
