@@ -58,7 +58,7 @@ class NetTestController:
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
-        self._recipe_path = recipe_path
+        self._recipe_path = Path(None, recipe_path).abs_path()
         self._msg_dispatcher = MessageDispatcher(log_ctl)
         self._packet_capture = packet_capture
         self._reduce_sync = reduce_sync
