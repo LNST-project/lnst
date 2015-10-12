@@ -434,8 +434,8 @@ class ReportCLI(GenericCLI):
         for baseline in chart["baselines"]:
             try:
                 report.add_baseline(None, baseline["name"],
-                                          baseline["metric"],
-                                          baseline["execid"])
+                                          baseline["execid"],
+                                          baseline["metric"])
             except KeyError as e:
                 print("Parameter '%s' is required for a baseline!" %\
                         e.args[0])
