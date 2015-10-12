@@ -1,29 +1,16 @@
 import logging
 from lnst.Controller.Task import ctl
-from lnst.Controller.PerfRepoUtils import parse_id_mapping, get_id
+from lnst.Controller.PerfRepoUtils import netperf_baseline_template
+from lnst.Controller.PerfRepoUtils import netperf_result_template
 
 # ------
 # SETUP
 # ------
 
 mapping_file = ctl.get_alias("mapping_file")
-mapping = parse_id_mapping(mapping_file)
+perf_api = ctl.connect_PerfRepo(mapping_file)
 
 product_name = ctl.get_alias("product_name")
-
-tcp_ipv4_id = get_id(mapping, "tcp_ipv4_id")
-tcp_ipv6_id = get_id(mapping, "tcp_ipv6_id")
-udp_ipv4_id = get_id(mapping, "udp_ipv4_id")
-udp_ipv6_id = get_id(mapping, "udp_ipv6_id")
-
-if tcp_ipv4_id is not None or\
-   tcp_ipv6_id is not None or\
-   udp_ipv4_id is not None or\
-   udp_ipv6_id is not None:
-    perf_api = ctl.connect_PerfRepo()
-    logging.info("PerfRepo support enabled for this run.")
-else:
-    logging.info("PerfRepo support disabled for this run.")
 
 h1 = ctl.get_host("host1")
 g1 = ctl.get_host("guest1")
@@ -132,153 +119,87 @@ for offload in offloads:
         if ipv in [ 'ipv4', 'both' ]:
             g1.run(ping_mod)
 
-            # prepare PerfRepo result for tcp
-            result_tcp = None
-            result_udp = None
-            if tcp_ipv4_id is not None:
-                result_tcp = perf_api.new_result(tcp_ipv4_id, "tcp_ipv4_result")
-                result_tcp.set_parameter(offload, state)
-                if product_name is not None:
-                    result_tcp.set_tag(product_name)
-                res_hash = result_tcp.generate_hash(['kernel_release',
-                                                     'redhat_release'])
-                result_tcp.set_tag(res_hash)
-
-                baseline = None
-                report_id = get_id(mapping, res_hash)
-                if report_id is not None:
-                    baseline = perf_api.get_baseline(report_id)
-
-                if baseline is not None:
-                    baseline_throughput = baseline.get_value('throughput').get_result()
-                    baseline_deviation = baseline.get_value('throughput_deviation').get_result()
-                    netperf_cli_tcp.update_options({'threshold': '%s bits/sec' % baseline_throughput,
-                                                    'threshold_deviation': '%s bits/sec' % baseline_deviation})
-            # prepare PerfRepo result for udp
-            if udp_ipv4_id is not None:
-                result_udp = perf_api.new_result(udp_ipv4_id, "udp_ipv4_result")
-                result_udp.set_parameter(offload, state)
-                if product_name is not None:
-                    result_udp.set_tag(product_name)
-                res_hash = result_udp.generate_hash(['kernel_release',
-                                                     'redhat_release'])
-                result_udp.set_tag(res_hash)
-
-                baseline = None
-                report_id = get_id(mapping, res_hash)
-                if report_id is not None:
-                    baseline = perf_api.get_baseline(report_id)
-
-                if baseline is not None:
-                    baseline_throughput = baseline.get_value('throughput').get_result()
-                    baseline_deviation = baseline.get_value('throughput_deviation').get_result()
-                    netperf_cli_udp.update_options({'threshold': '%s bits/sec' % baseline_throughput,
-                                                    'threshold_deviation': '%s bits/sec' % baseline_deviation})
-
             server_proc = g1.run(netperf_srv, bg=True)
             ctl.wait(2)
+
+            # prepare PerfRepo result for tcp
+            result_tcp = perf_api.new_result("tcp_ipv4_id",
+                                             "tcp_ipv4_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+            result_tcp.set_parameter(offload, state)
+            result_tcp.add_tag(product_name)
+
+            baseline = perf_api.get_baseline_of_result(result_tcp)
+            netperf_baseline_template(netperf_cli_tcp, baseline)
+
             tcp_res_data = h2.run(netperf_cli_tcp,
                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+            netperf_result_template(result_tcp, tcp_res_data)
+            perf_api.save_result(result_tcp)
+
+            # prepare PerfRepo result for udp
+            result_udp = perf_api.new_result("udp_ipv4_id",
+                                             "udp_ipv4_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+            result_udp.set_parameter(offload, state)
+            result_udp.add_tag(product_name)
+
+            baseline = perf_api.get_baseline_of_result(result_udp)
+            netperf_baseline_template(netperf_cli_udp, baseline)
+
             udp_res_data = h2.run(netperf_cli_udp,
                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+            netperf_result_template(result_udp, udp_res_data)
+            perf_api.save_result(result_udp)
+
             server_proc.intr()
-
-            if result_tcp is not None and\
-               tcp_res_data.get_result() is not None and\
-               tcp_res_data.get_result()['res_data'] is not None:
-                rate = tcp_res_data.get_result()['res_data']['rate']
-                deviation = tcp_res_data.get_result()['res_data']['rate_deviation']
-
-                result_tcp.add_value('throughput', rate)
-                result_tcp.add_value('throughput_min', rate - deviation)
-                result_tcp.add_value('throughput_max', rate + deviation)
-                result_tcp.add_value('throughput_deviation', deviation)
-                perf_api.save_result(result_tcp)
-
-            if result_udp is not None and udp_res_data.get_result() is not None and\
-               udp_res_data.get_result()['res_data'] is not None:
-                rate = udp_res_data.get_result()['res_data']['rate']
-                deviation = udp_res_data.get_result()['res_data']['rate_deviation']
-
-                result_udp.add_value('throughput', rate)
-                result_udp.add_value('throughput_min', rate - deviation)
-                result_udp.add_value('throughput_max', rate + deviation)
-                result_udp.add_value('throughput_deviation', deviation)
-                perf_api.save_result(result_udp)
 
         if ipv in [ 'ipv6', 'both' ]:
             g1.run(ping_mod6)
 
-            # prepare PerfRepo result for tcp ipv6
-            result_tcp = None
-            result_udp = None
-            if tcp_ipv6_id is not None:
-                result_tcp = perf_api.new_result(tcp_ipv6_id, "tcp_ipv6_result")
-                result_tcp.set_parameter(offload, state)
-                if product_name is not None:
-                    result_tcp.set_tag(product_name)
-                res_hash = result_tcp.generate_hash(['kernel_release',
-                                                     'redhat_release'])
-                result_tcp.set_tag(res_hash)
-
-                baseline = None
-                report_id = get_id(mapping, res_hash)
-                if report_id is not None:
-                    baseline = perf_api.get_baseline(report_id)
-
-                if baseline is not None:
-                    baseline_throughput = baseline.get_value('throughput').get_result()
-                    baseline_deviation = baseline.get_value('throughput_deviation').get_result()
-                    netperf_cli_tcp.update_options({'threshold': '%s bits/sec' % baseline_throughput,
-                                                    'threshold_deviation': '%s bits/sec' % baseline_deviation})
-
-            # prepare PerfRepo result for udp ipv6
-            if udp_ipv6_id is not None:
-                result_udp = perf_api.new_result(udp_ipv6_id, "udp_ipv6_result")
-                result_udp.set_parameter(offload, state)
-                if product_name is not None:
-                    result_udp.set_tag(product_name)
-                res_hash = result_udp.generate_hash(['kernel_release',
-                                                     'redhat_release'])
-                result_udp.set_tag(res_hash)
-
-                baseline = None
-                report_id = get_id(mapping, res_hash)
-                if report_id is not None:
-                    baseline = perf_api.get_baseline(report_id)
-
-                if baseline is not None:
-                    baseline_throughput = baseline.get_value('throughput').get_result()
-                    baseline_deviation = baseline.get_value('throughput_deviation').get_result()
-                    netperf_cli_udp.update_options({'threshold': '%s bits/sec' % baseline_throughput,
-                                                    'threshold_deviation': '%s bits/sec' % baseline_deviation})
-
             server_proc = g1.run(netperf_srv6, bg=True)
             ctl.wait(2)
+
+            # prepare PerfRepo result for tcp ipv6
+            result_tcp = perf_api.new_result("tcp_ipv6_id",
+                                             "tcp_ipv6_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+            result_tcp.set_parameter(offload, state)
+            result_tcp.add_tag(product_name)
+
+            baseline = perf_api.get_baseline_of_result(result_tcp)
+            netperf_baseline_template(netperf_cli_tcp6, baseline)
+
             tcp_res_data = h2.run(netperf_cli_tcp6,
                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+            netperf_result_template(result_tcp, tcp_res_data)
+            perf_api.save_result(result_tcp)
+
+            # prepare PerfRepo result for udp ipv6
+            result_udp = perf_api.new_result("udp_ipv6_id",
+                                             "udp_ipv6_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+            result_udp.set_parameter(offload, state)
+            result_udp.add_tag(product_name)
+
+            baseline = perf_api.get_baseline_of_result(result_udp)
+            netperf_baseline_template(netperf_cli_udp6, baseline)
+
             udp_res_data = h2.run(netperf_cli_udp6,
                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+            netperf_result_template(result_udp, udp_res_data)
+            perf_api.save_result(result_udp)
+
             server_proc.intr()
-
-            if result_tcp is not None and tcp_res_data.get_result() is not None and\
-               tcp_res_data.get_result()['res_data'] is not None:
-                rate = tcp_res_data.get_result()['res_data']['rate']
-                deviation = tcp_res_data.get_result()['res_data']['rate_deviation']
-
-                result_tcp.add_value('throughput', rate)
-                result_tcp.add_value('throughput_min', rate - deviation)
-                result_tcp.add_value('throughput_max', rate + deviation)
-                result_tcp.add_value('throughput_deviation', deviation)
-                perf_api.save_result(result_tcp)
-
-            if result_udp is not None and udp_res_data.get_result() is not None and\
-               udp_res_data.get_result()['res_data'] is not None:
-                rate = udp_res_data.get_result()['res_data']['rate']
-                deviation = udp_res_data.get_result()['res_data']['rate_deviation']
-
-                result_udp.add_value('throughput', rate)
-                result_udp.add_value('throughput_min', rate - deviation)
-                result_udp.add_value('throughput_max', rate + deviation)
-                result_udp.add_value('throughput_deviation', deviation)
-                perf_api.save_result(result_udp)
