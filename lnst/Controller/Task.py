@@ -12,12 +12,16 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import hashlib
 import re
+import logging
 from lnst.Controller.PerfRepo import PerfRepoRESTAPI
 from lnst.Controller.PerfRepo import PerfRepoTestExecution
 from lnst.Controller.PerfRepo import PerfRepoValue
 from lnst.Common.Utils import dict_to_dot, list_to_dot, deprecated
 from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplateError
+from lnst.Common.Path import Path
+from lnst.Controller.PerfRepoMapping import PerfRepoMapping
+from lnst.Common.Utils import Noop
 
 # The handle to be imported from each task
 ctl = None
@@ -109,7 +113,7 @@ class ControllerAPI(object):
         except XmlTemplateError:
             return None
 
-    def connect_PerfRepo(self, url=None, username=None, password=None):
+    def connect_PerfRepo(self, mapping_file, url=None, username=None, password=None):
         if not self._perf_repo_api.connected():
             if url is None:
                 url = lnst_config.get_option("perfrepo", "url")
@@ -118,6 +122,14 @@ class ControllerAPI(object):
             if password is None:
                 password = lnst_config.get_option("perfrepo", "password")
             self._perf_repo_api.connect(url, username, password)
+
+            root = Path(None, self._ctl._recipe_path).get_root()
+            path = Path(root, mapping_file)
+            self._perf_repo_api.load_mapping(path)
+
+            if not self._perf_repo_api.connected():
+                logging.warn("Connection to PerfRepo incomplete, further "\
+                             "PerfRepo commands will be ignored.")
         return self._perf_repo_api
 
     def get_configuration(self):
@@ -508,32 +520,139 @@ class VolatileValue(object):
 class PerfRepoAPI(object):
     def __init__(self):
         self._rest_api = None
+        self._mapping = None
+
+    def load_mapping(self, file_path):
+        try:
+            self._mapping = PerfRepoMapping(file_path.resolve())
+        except:
+            logging.error("Failed to load PerfRepo mapping file '%s'" %\
+                          file_path.abs_path())
+            self._mapping = None
+
+    def get_mapping(self):
+        return self._mapping
 
     def connected(self):
-        return self._rest_api is not None
+        if self._rest_api is not None and self._mapping is not None:
+            return True
+        else:
+            return False
 
     def connect(self, url, username, password):
         self._rest_api = PerfRepoRESTAPI(url, username, password)
 
-    def new_result(self, testUid, name):
-        result = PerfRepoResult(testUid, name)
+    def new_result(self, mapping_key, name, hash_ignore=[]):
+        if not self.connected():
+            return Noop()
+
+        mapping_id = self._mapping.get_id(mapping_key)
+        if mapping_id is None:
+            logging.debug("Test key '%s' has no mapping defined!" % mapping_key)
+            return Noop()
+
+        logging.debug("Test key '%s' mapped to id '%s'" % (mapping_key,
+                                                           mapping_id))
+
+        test = self._rest_api.test_get_by_id(mapping_id, log=False)
+        if test is None:
+            test = self._rest_api.test_get_by_uid(mapping_id, log=False)
+
+        if test is not None:
+            test_url = self._rest_api.get_obj_url(test)
+            logging.debug("Found Test with id='%s' and uid='%s'! %s" % \
+                            (test.get_id(), test.get_uid(), test_url))
+        else:
+            logging.debug("No Test with id or uid '%s' found!" % mapping_id)
+            return Noop()
+
+        logging.info("Creating a new result object for PerfRepo")
+        result = PerfRepoResult(test, name, hash_ignore)
         return result
 
     def save_result(self, result):
-        if not isinstance(result, PerfRepoResult):
-            raise TaskError("Parameter result must be an instance "\
-                            "of PerfRepoResult")
-        elif self._rest_api is None:
+        if self._rest_api is None:
             raise TaskError("Not connected to PerfRepo.")
-        else:
+        elif isinstance(result, Noop):
+            return
+        elif isinstance(result, PerfRepoResult):
+            h = result.generate_hash()
+            logging.debug("Adding hash '%s' as tag to result." % h)
+            result.add_tag(h)
+            logging.info("Sending TestExecution to PerfRepo.")
             self._rest_api.testExecution_create(result.get_testExecution())
 
+            report_id = self._mapping.get_id(h)
+            if not report_id and result.get_testExecution().get_id() != None:
+                logging.debug("No mapping defined for hash '%s'" % h)
+                logging.debug("If you want to create a new report and set "\
+                              "this result as the baseline run this command:")
+                cmd = "perfrepo report create"
+                cmd += " name REPORTNAME"
+
+                test = result.get_test()
+                cmd += " chart CHARTNAME"
+                cmd += " testid %s" % test.get_id()
+                series_num = 0
+                for m in test.get_metrics():
+                    cmd += " series NAME%d" % series_num
+                    cmd += " metric %s" % m.get_id()
+                    cmd += " tags %s" % h
+                    series_num += 1
+                cmd += " baseline BASELINENAME"
+                cmd += " execid %s" % result.get_testExecution().get_id()
+                cmd += " metric %s" % test.get_metrics()[0].get_id()
+                logging.debug(cmd)
+        else:
+            raise TaskError("Parameter result must be an instance "\
+                            "of PerfRepoResult")
+
     def get_baseline(self, report_id):
-        report = self._rest_api.report_get_by_id(report_id)
+        if report_id is None:
+            return Noop()
+
+        report = self._rest_api.report_get_by_id(report_id, log=False)
+        if report is None:
+            logging.debug("No report with id %s found!" % report_id)
+            return Noop()
+        logging.debug("Report found: %s" %\
+                        self._rest_api.get_obj_url(report))
+
         baseline = report.get_baseline()
+
+        if baseline is None:
+            logging.debug("No baseline set for report %s" %\
+                            self._rest_api.get_obj_url(report))
+            return Noop()
+
         baseline_exec_id = baseline["execId"]
-        baseline_testExec = self._rest_api.testExecution_get(baseline_exec_id)
-        return baseline_testExec
+        baseline_testExec = self._rest_api.testExecution_get(baseline_exec_id,
+                                                             log=False)
+
+        logging.debug("TestExecution of baseline: %s" %\
+                        self._rest_api.get_obj_url(baseline_testExec))
+        return PerfRepoBaseline(baseline_testExec)
+
+    def get_baseline_of_result(self, result):
+        if not isinstance(result, PerfRepoResult):
+            return Noop()
+
+        res_hash = result.generate_hash()
+        logging.debug("Result hash is: '%s'" % res_hash)
+
+        report_id = self._mapping.get_id(res_hash)
+        if report_id is not None:
+            logging.debug("Hash '%s' maps to report id '%s'" % (res_hash,
+                                                               report_id))
+        else:
+            logging.debug("Hash '%s' has no mapping defined!" % res_hash)
+            return Noop()
+
+        baseline = self.get_baseline(report_id)
+
+        if baseline.get_texec() is None:
+            logging.debug("No baseline set for results with hash %s" % res_hash)
+        return baseline
 
     def compare_to_baseline(self, result, report_id, metric_name):
         baseline_testExec = self.get_baseline(report_id)
@@ -566,11 +685,14 @@ class PerfRepoAPI(object):
         return False
 
 class PerfRepoResult(object):
-    def __init__(self, testUid, name):
+    def __init__(self, test, name, hash_ignore=[]):
+        self._test = test
         self._testExecution = PerfRepoTestExecution()
-        self._testExecution.set_testUid(testUid)
+        self._testExecution.set_testId(test.get_id())
+        self._testExecution.set_testUid(test.get_uid())
         self._testExecution.set_name(name)
         self.set_configuration(ctl.get_configuration())
+        self._hash_ignore = hash_ignore
 
     def add_value(self, val_name, value):
         perf_value = PerfRepoValue()
@@ -594,9 +716,15 @@ class PerfRepoResult(object):
     def set_tag(self, tag):
         self._testExecution.add_tag(tag)
 
+    def add_tag(self, tag):
+        self.set_tag(tag)
+
     def set_tags(self, tags):
         for tag in tags:
             self.set_tag(tag)
+
+    def add_tags(self, tags):
+        self.set_tags(tags)
 
     def set_parameter(self, name, value):
         self._testExecution.add_parameter(name, value)
@@ -605,10 +733,20 @@ class PerfRepoResult(object):
         for name, value in params:
             self.set_parameter(name, value)
 
+    def set_hash_ignore(self, hash_ignore):
+        self._hash_ignore = hash_ignore
+
+    def get_hash_ignore(self):
+        return self._hash_ignore
+
     def get_testExecution(self):
         return self._testExecution
 
+    def get_test(self):
+        return self._test
+
     def generate_hash(self, ignore=[]):
+        ignore.extend(self._hash_ignore)
         tags = self._testExecution.get_tags()
         params = self._testExecution.get_parameters()
 
@@ -627,3 +765,16 @@ class PerfRepoResult(object):
             sha1.update(i[0])
             sha1.update(i[1])
         return sha1.hexdigest()
+
+class PerfRepoBaseline(object):
+    def __init__(self, texec):
+        self._texec = texec
+
+    def get_value(self, name):
+        if self._texec is None:
+            return None
+        perfrepovalue = self._texec.get_value(name)
+        return perfrepovalue.get_result()
+
+    def get_texec(self):
+        return self._texec
