@@ -296,3 +296,9 @@ def indent(string, spaces):
     for line in string.split('\n'):
         ret_str.append(' '*spaces + line)
     return '\n'.join(ret_str)
+
+class Noop(object):
+    def __getattr__(self, name):
+        def noop(*args, **kwargs):
+            pass
+        return noop
