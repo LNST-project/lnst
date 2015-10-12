@@ -31,7 +31,7 @@ from lnst.Controller.Machine import StaticInterface
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
-from lnst.Common.RecipePath import RecipePath
+from lnst.Common.Path import Path
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Common.NetUtils import test_tcp_connection
 import lnst.Controller.Task as Task
@@ -357,8 +357,8 @@ class NetTestController:
                 task["tools_dir"] = task_data["tools_dir"]
 
             if "python" in task_data:
-                root = RecipePath(None, self._recipe_path).get_root()
-                path = RecipePath(root, task_data["python"])
+                root = Path(None, self._recipe_path).get_root()
+                path = Path(root, task_data["python"])
 
                 task["python"] = path
                 if not path.exists():

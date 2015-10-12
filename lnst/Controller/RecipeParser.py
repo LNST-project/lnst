@@ -11,7 +11,7 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import os
-from lnst.Common.RecipePath import RecipePath
+from lnst.Common.Path import Path
 from lnst.Controller.XmlParser import XmlParser
 from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.XmlProcessing import XmlCollection
@@ -21,7 +21,7 @@ class RecipeError(XmlProcessingError):
 
 class RecipeParser(XmlParser):
     def __init__(self, recipe_path):
-        recipe_path = RecipePath(None, recipe_path).abs_path()
+        recipe_path = Path(None, recipe_path).abs_path()
         super(RecipeParser, self).__init__("schema-recipe.rng", recipe_path)
 
     def _process(self, lnst_recipe):

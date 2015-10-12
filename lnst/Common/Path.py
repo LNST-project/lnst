@@ -1,5 +1,5 @@
 """
-This module contains code code for LNST recipe paths and references.
+This module contains code code for paths and references.
 
 Copyright 2012 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -15,43 +15,43 @@ from urlparse import urljoin
 from urllib2 import urlopen, HTTPError
 from tempfile import NamedTemporaryFile
 
-def get_recipepath_class(root, path):
+def get_path_class(root, path):
     if root == None:
         if path.startswith('http'):
-            return HttpRecipePath(root, path)
+            return HttpPath(root, path)
         else:
             if os.access(path, os.R_OK):
-                return FileRecipePath(None, os.path.realpath(path))
+                return FilePath(None, os.path.realpath(path))
             else:
-                raise Exception("Recipe path does not exist \"%s\"!" % path)
+                raise Exception("Path does not exist \"%s\"!" % path)
 
     if root.startswith('http'):
-        return HttpRecipePath(root, path)
+        return HttpPath(root, path)
     elif os.access(root, os.R_OK):
-        return FileRecipePath(root, path)
+        return FilePath(root, path)
     else:
-        raise Exception("Could not recognize recipe path type \"%s\"" % path)
+        raise Exception("Could not recognize path type \"%s\"" % path)
 
-class RecipePath:
+class Path:
     def __init__(self, root, path):
-        self._recipepath_class = get_recipepath_class(root, path)
+        self._path_class = get_path_class(root, path)
 
     def get_root(self):
-        return self._recipepath_class.get_root()
+        return self._path_class.get_root()
 
     def abs_path(self):
-        return self._recipepath_class.abs_path()
+        return self._path_class.abs_path()
 
     def to_str(self):
-        return self._recipepath_class.to_str()
+        return self._path_class.to_str()
 
     def exists(self):
-        return self._recipepath_class.exists()
+        return self._path_class.exists()
 
     def resolve(self):
-        return self._recipepath_class.resolve()
+        return self._path_class.resolve()
 
-class RecipePathGeneric:
+class PathGeneric:
     def __init__(self, root, path):
         self._root = root
         self._path = path
@@ -72,7 +72,7 @@ class RecipePathGeneric:
     def resolve(self):
         pass
 
-class FileRecipePath(RecipePathGeneric):
+class FilePath(PathGeneric):
     def _load_file(self):
         f = open(self.abs_path(),'r')
         self._data = f.read()
@@ -104,7 +104,7 @@ class FileRecipePath(RecipePathGeneric):
     def resolve(self):
         return self.abs_path()
 
-class HttpRecipePath(RecipePathGeneric):
+class HttpPath(PathGeneric):
     _file = None
     def _get_url(self):
         url = self.abs_path()
@@ -148,7 +148,7 @@ class HttpRecipePath(RecipePathGeneric):
         if self._file:
             return self._file.name
 
-        self._file = NamedTemporaryFile(suffix='.py',delete=True)
+        self._file = NamedTemporaryFile(delete=True)
         self._file.write(self.to_str())
         self._file.flush()
 
