@@ -249,3 +249,6 @@ class LoggingCtl:
         self._origin_name = name
         if self.transmit_handler != None:
             self.transmit_handler.set_origin_name(name)
+
+    def print_log_dir(self):
+        logging.info("Logs are stored in '%s'" % self.log_folder)
