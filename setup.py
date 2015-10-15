@@ -172,7 +172,7 @@ DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES + \
              SCHEMAS + BASH_COMP + RECIPE_FILES
 
 setup(name="lnst",
-    version="8",
+    version="9",
     description="Linux Network Stack Test",
     author="LNST Team",
     author_email="lnst-developers@lists.fedorahosted.org",
