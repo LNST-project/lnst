@@ -444,6 +444,10 @@ class ModuleAPI(object):
             else:
                 self._opts[opt].append({"value": str(val)})
 
+    def unset_option(self, option_name):
+        if option_name in self._opts:
+            del self._opts[option_name]
+
 class ProcessAPI(object):
     """ An API class representing either a running or finished process. """
 
