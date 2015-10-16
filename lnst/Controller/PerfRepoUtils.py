@@ -15,8 +15,8 @@ import logging
 from lnst.Common.Utils import Noop
 
 def netperf_baseline_template(module, baseline):
-    module.update_options({'threshold': None,
-                           'threshold_deviation': None})
+    module.unset_option('threshold')
+    module.unset_option('threshold_deviation')
 
     if baseline.get_texec() is None:
         return module
