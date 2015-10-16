@@ -140,7 +140,7 @@ for offload in offloads:
             # prepare PerfRepo result for tcp
             result_tcp = perf_api.new_result("tcp_ipv4_id",
                                              "tcp_ipv4_result",
-                                             ignore_hash=['kernel_release',
+                                             hash_ignore=['kernel_release',
                                                  'redhat_release',
                                                  r'guest\d+\.hostname',
                                                  r'guest\d+\..*hwaddr'])
