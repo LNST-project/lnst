@@ -214,7 +214,7 @@ for offload in offloads:
                 result_udp.set_parameter(offload, state)
                 result_udp.add_tag(product_name)
 
-                baseline = perf_api.get_baseline_of_result(result_tcp)
+                baseline = perf_api.get_baseline_of_result(result_udp)
                 netperf_baseline_template(netperf_cli_udp6, baseline)
 
                 udp_res_data = h2.run(netperf_cli_udp6,
