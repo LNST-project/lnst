@@ -605,7 +605,7 @@ class ReportCLI(GenericCLI):
                                     else:
                                         break
                             elif op == "del":
-                                series_num = argv[i+1]
+                                series_num = int(argv[i+1])
                                 report.del_series(chart_num, series_num)
                                 i += 2
                                 continue
@@ -623,7 +623,7 @@ class ReportCLI(GenericCLI):
                                           % e.args[0])
                                     return -1
                             elif op == "edit":
-                                baseline_num = argv[i+1]
+                                baseline_num = int(argv[i+1])
                                 i += 2
                                 while i < len(argv):
                                     if argv[i] == "name":
@@ -647,7 +647,7 @@ class ReportCLI(GenericCLI):
                                     else:
                                         break
                             elif op == "del":
-                                baseline_num = argv[i+1]
+                                baseline_num = int(argv[i+1])
                                 report.del_baseline(chart_num, baseline_num)
                                 i += 2
                                 continue
