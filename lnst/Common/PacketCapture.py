@@ -11,6 +11,7 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import subprocess
+import os
 
 class PacketCapture:
     """ Capture/handle traffic that goes through a specific
@@ -49,14 +50,15 @@ class PacketCapture:
         output_file = self._file
         pcap_filter = self._filter
 
-        self._cmd = "tcpdump -p -i %s -w %s \"%s\" 2>/dev/null" % \
+        self._cmd = "tcpdump -p -i %s -w %s %s" % \
                             (interface, output_file, pcap_filter)
 
     def _execute_tcpdump(self):
         """ Start tcpdump in the background """
-        cmd = self._cmd
-        self._tcpdump = subprocess.Popen(cmd, shell=True, stdout=None,
-                                            stderr=None)
+        cmd = self._cmd.split()
+        fnull = open(os.devnull, "w")
+        self._tcpdump = subprocess.Popen(cmd, shell=False, stdout=fnull,
+                                            stderr=subprocess.STDOUT)
 
     def _run(self):
         self._compose_cmd()
