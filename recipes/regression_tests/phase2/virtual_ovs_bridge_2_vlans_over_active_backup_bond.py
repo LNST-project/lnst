@@ -30,7 +30,12 @@ g4.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # TESTS
 # ------
 
-offloads = ["gso", "gro", "tso"]
+offloads = ["gro", "gso", "tso", "rx", "tx"]
+offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
 
 ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
@@ -164,113 +169,137 @@ ping_mod6_bad2 = ctl.get_module("Icmp6Ping",
 
 ctl.wait(15)
 
-for offload in offloads:
-    for state in ["off", "on"]:
+for setting in offload_settings:
+    for offload in setting:
         h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic1"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic2"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic1"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic2"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         g2.run("ethtool -K %s %s %s" % (g2.get_devname("guestnic"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         g3.run("ethtool -K %s %s %s" % (g3.get_devname("guestnic"),
-                                        offload, state))
+                                        offload[0], offload[1]))
         g4.run("ethtool -K %s %s %s" % (g4.get_devname("guestnic"),
-                                        offload, state))
-        if ipv in [ 'ipv4', 'both' ]:
-            g1.run(ping_mod)
-            g4.run(ping_mod2)
-            g1.run(ping_mod_bad, expect="fail")
-            g3.run(ping_mod_bad2, expect="fail")
+                                        offload[0], offload[1]))
 
-            server_proc = g1.run(netperf_srv, bg=True)
-            ctl.wait(2)
+    if ipv in [ 'ipv4', 'both' ]:
+        g1.run(ping_mod)
+        g4.run(ping_mod2)
+        g1.run(ping_mod_bad, expect="fail")
+        g3.run(ping_mod_bad2, expect="fail")
 
-            # prepare PerfRepo result for tcp
-            result_tcp = perf_api.new_result("tcp_ipv4_id",
-                                             "tcp_ipv4_result",
-                                             hash_ignore=[
-                                                 'kernel_release',
-                                                 'redhat_release'])
-            result_tcp.set_parameter(offload, state)
-            result_tcp.add_tag(product_name)
+        server_proc = g1.run(netperf_srv, bg=True)
+        ctl.wait(2)
 
-            baseline = perf_api.get_baseline_of_result(result_tcp)
-            netperf_baseline_template(netperf_cli_tcp, baseline)
+        # prepare PerfRepo result for tcp
+        result_tcp = perf_api.new_result("tcp_ipv4_id",
+                                         "tcp_ipv4_result",
+                                         hash_ignore=[
+                                             'kernel_release',
+                                             'redhat_release'])
+        for offload in setting:
+            result_tcp.set_parameter(offload[0], offload[1])
+        result_tcp.add_tag(product_name)
 
-            tcp_res_data = g3.run(netperf_cli_tcp,
-                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        baseline = perf_api.get_baseline_of_result(result_tcp)
+        netperf_baseline_template(netperf_cli_tcp, baseline)
 
-            netperf_result_template(result_tcp, tcp_res_data)
-            perf_api.save_result(result_tcp)
+        tcp_res_data = g3.run(netperf_cli_tcp,
+                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            # prepare PerfRepo result for udp
-            result_udp = perf_api.new_result("udp_ipv4_id",
-                                             "udp_ipv4_result",
-                                             hash_ignore=[
-                                                 'kernel_release',
-                                                 'redhat_release'])
-            result_udp.set_parameter(offload, state)
-            result_udp.add_tag(product_name)
+        netperf_result_template(result_tcp, tcp_res_data)
+        perf_api.save_result(result_tcp)
 
-            baseline = perf_api.get_baseline_of_result(result_udp)
-            netperf_baseline_template(netperf_cli_udp, baseline)
+        # prepare PerfRepo result for udp
+        result_udp = perf_api.new_result("udp_ipv4_id",
+                                         "udp_ipv4_result",
+                                         hash_ignore=[
+                                             'kernel_release',
+                                             'redhat_release'])
+        for offload in setting:
+            result_udp.set_parameter(offload[0], offload[1])
+        result_udp.add_tag(product_name)
 
-            udp_res_data = g3.run(netperf_cli_udp,
-                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        baseline = perf_api.get_baseline_of_result(result_udp)
+        netperf_baseline_template(netperf_cli_udp, baseline)
 
-            netperf_result_template(result_udp, udp_res_data)
-            perf_api.save_result(result_udp)
+        udp_res_data = g3.run(netperf_cli_udp,
+                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            server_proc.intr()
-        if ipv in [ 'ipv6', 'both' ]:
-            g1.run(ping_mod6)
-            g4.run(ping_mod62)
-            g1.run(ping_mod6_bad, expect="fail")
-            g3.run(ping_mod6_bad2, expect="fail")
+        netperf_result_template(result_udp, udp_res_data)
+        perf_api.save_result(result_udp)
 
-            server_proc = g1.run(netperf_srv6, bg=True)
-            ctl.wait(2)
+        server_proc.intr()
+    if ipv in [ 'ipv6', 'both' ]:
+        g1.run(ping_mod6)
+        g4.run(ping_mod62)
+        g1.run(ping_mod6_bad, expect="fail")
+        g3.run(ping_mod6_bad2, expect="fail")
 
-            # prepare PerfRepo result for tcp ipv6
-            result_tcp = perf_api.new_result("tcp_ipv6_id",
-                                             "tcp_ipv6_result",
-                                             hash_ignore=[
-                                                 'kernel_release',
-                                                 'redhat_release'])
-            result_tcp.set_parameter(offload, state)
-            result_tcp.add_tag(product_name)
+        server_proc = g1.run(netperf_srv6, bg=True)
+        ctl.wait(2)
 
-            baseline = perf_api.get_baseline_of_result(result_tcp)
-            netperf_baseline_template(netperf_cli_tcp6, baseline)
+        # prepare PerfRepo result for tcp ipv6
+        result_tcp = perf_api.new_result("tcp_ipv6_id",
+                                         "tcp_ipv6_result",
+                                         hash_ignore=[
+                                             'kernel_release',
+                                             'redhat_release'])
+        for offload in setting:
+            result_tcp.set_parameter(offload[0], offload[1])
+        result_tcp.add_tag(product_name)
 
-            tcp_res_data = g3.run(netperf_cli_tcp6,
-                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        baseline = perf_api.get_baseline_of_result(result_tcp)
+        netperf_baseline_template(netperf_cli_tcp6, baseline)
 
-            netperf_result_template(result_tcp, tcp_res_data)
-            perf_api.save_result(result_tcp)
+        tcp_res_data = g3.run(netperf_cli_tcp6,
+                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            # prepare PerfRepo result for udp ipv6
-            result_udp = perf_api.new_result("udp_ipv6_id",
-                                             "udp_ipv6_result",
-                                             hash_ignore=[
-                                                 'kernel_release',
-                                                 'redhat_release'])
-            result_udp.set_parameter(offload, state)
-            result_udp.add_tag(product_name)
+        netperf_result_template(result_tcp, tcp_res_data)
+        perf_api.save_result(result_tcp)
 
-            baseline = perf_api.get_baseline_of_result(result_udp)
-            netperf_baseline_template(netperf_cli_udp6, baseline)
+        # prepare PerfRepo result for udp ipv6
+        result_udp = perf_api.new_result("udp_ipv6_id",
+                                         "udp_ipv6_result",
+                                         hash_ignore=[
+                                             'kernel_release',
+                                             'redhat_release'])
+        for offload in setting:
+            result_udp.set_parameter(offload[0], offload[1])
+        result_udp.add_tag(product_name)
 
-            udp_res_data = g3.run(netperf_cli_udp6,
-                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        baseline = perf_api.get_baseline_of_result(result_udp)
+        netperf_baseline_template(netperf_cli_udp6, baseline)
 
-            netperf_result_template(result_udp, udp_res_data)
-            perf_api.save_result(result_udp)
+        udp_res_data = g3.run(netperf_cli_udp6,
+                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            server_proc.intr()
+        netperf_result_template(result_udp, udp_res_data)
+        perf_api.save_result(result_udp)
+
+        server_proc.intr()
+
+#reset offload states
+for offload in offloads:
+    h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic1"),
+                                    offload, "on"))
+    h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic2"),
+                                    offload, "on"))
+    h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic1"),
+                                    offload, "on"))
+    h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic2"),
+                                    offload, "on"))
+    g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
+                                    offload, "on"))
+    g2.run("ethtool -K %s %s %s" % (g2.get_devname("guestnic"),
+                                    offload, "on"))
+    g3.run("ethtool -K %s %s %s" % (g3.get_devname("guestnic"),
+                                    offload, "on"))
+    g4.run("ethtool -K %s %s %s" % (g4.get_devname("guestnic"),
+                                    offload, "on"))

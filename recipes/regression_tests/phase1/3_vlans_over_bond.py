@@ -23,7 +23,12 @@ m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # ------
 
 vlans = ["vlan10", "vlan20", "vlan30"]
-offloads = ["gso", "gro", "tso"]
+offloads = ["gro", "gso", "tso", "rx", "tx"]
+offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
 
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
@@ -120,114 +125,119 @@ for vlan1 in vlans:
         if vlan1 == vlan2:
             # These tests should pass
             # Ping between same VLANs
-            for offload in offloads:
-                for state in ["off", "on"]:
-                # Offload setup
+            for setting in offload_settings:
+                #apply offload setting
+                for offload in setting:
                     m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
-                                                    offload, state))
+                                                    offload[0], offload[1]))
                     m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth2"),
-                                                    offload, state))
+                                                    offload[0], offload[1]))
                     m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
-                                                    offload, state))
-                    if ipv in [ 'ipv4', 'both' ]:
-                        # Ping test
-                        m1.run(ping_mod)
+                                                    offload[0], offload[1]))
 
-                        # Netperf test (both TCP and UDP)
-                        srv_proc = m1.run(netperf_srv, bg=True)
-                        ctl.wait(2)
+                if ipv in [ 'ipv4', 'both' ]:
+                    # Ping test
+                    m1.run(ping_mod)
 
-                        # prepare PerfRepo result for tcp
-                        result_tcp = perf_api.new_result("tcp_ipv4_id",
-                                                         "tcp_ipv4_result",
-                                                         hash_ignore=[
-                                                             'kernel_release',
-                                                             'redhat_release'])
-                        result_tcp.set_parameter(offload, state)
-                        result_tcp.set_parameter('netperf_server_on_vlan', vlan1)
-                        result_tcp.set_parameter('netperf_client_on_vlan', vlan2)
-                        result_tcp.add_tag(product_name)
+                    # Netperf test (both TCP and UDP)
+                    srv_proc = m1.run(netperf_srv, bg=True)
+                    ctl.wait(2)
 
-                        baseline = perf_api.get_baseline_of_result(result_tcp)
-                        netperf_baseline_template(netperf_cli_tcp, baseline)
+                    # prepare PerfRepo result for tcp
+                    result_tcp = perf_api.new_result("tcp_ipv4_id",
+                                                     "tcp_ipv4_result",
+                                                     hash_ignore=[
+                                                         'kernel_release',
+                                                         'redhat_release'])
+                    for offload in setting:
+                        result_tcp.set_parameter(offload[0], offload[1])
+                    result_tcp.set_parameter('netperf_server_on_vlan', vlan1)
+                    result_tcp.set_parameter('netperf_client_on_vlan', vlan2)
+                    result_tcp.add_tag(product_name)
 
-                        tcp_res_data = m2.run(netperf_cli_tcp,
-                                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+                    baseline = perf_api.get_baseline_of_result(result_tcp)
+                    netperf_baseline_template(netperf_cli_tcp, baseline)
 
-                        netperf_result_template(result_tcp, tcp_res_data)
-                        perf_api.save_result(result_tcp)
+                    tcp_res_data = m2.run(netperf_cli_tcp,
+                                          timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-                        # prepare PerfRepo result for udp
-                        result_udp = perf_api.new_result("udp_ipv4_id",
-                                                         "udp_ipv4_result",
-                                                         hash_ignore=[
-                                                             'kernel_release',
-                                                             'redhat_release'])
-                        result_udp.set_parameter(offload, state)
-                        result_udp.set_parameter('netperf_server_on_vlan', vlan1)
-                        result_udp.set_parameter('netperf_client_on_vlan', vlan2)
-                        result_udp.add_tag(product_name)
+                    netperf_result_template(result_tcp, tcp_res_data)
+                    perf_api.save_result(result_tcp)
 
-                        baseline = perf_api.get_baseline_of_result(result_udp)
-                        netperf_baseline_template(netperf_cli_udp, baseline)
+                    # prepare PerfRepo result for udp
+                    result_udp = perf_api.new_result("udp_ipv4_id",
+                                                     "udp_ipv4_result",
+                                                     hash_ignore=[
+                                                         'kernel_release',
+                                                         'redhat_release'])
+                    for offload in setting:
+                        result_udp.set_parameter(offload[0], offload[1])
+                    result_udp.set_parameter('netperf_server_on_vlan', vlan1)
+                    result_udp.set_parameter('netperf_client_on_vlan', vlan2)
+                    result_udp.add_tag(product_name)
 
-                        udp_res_data = m2.run(netperf_cli_udp,
-                                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+                    baseline = perf_api.get_baseline_of_result(result_udp)
+                    netperf_baseline_template(netperf_cli_udp, baseline)
 
-                        netperf_result_template(result_udp, udp_res_data)
-                        perf_api.save_result(result_udp)
+                    udp_res_data = m2.run(netperf_cli_udp,
+                                          timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-                        srv_proc.intr()
+                    netperf_result_template(result_udp, udp_res_data)
+                    perf_api.save_result(result_udp)
 
-                    if ipv in [ 'ipv6', 'both' ]:
-                        # Ping test
-                        m1.run(ping_mod6)
+                    srv_proc.intr()
 
-                        # Netperf test (both TCP and UDP)
-                        srv_proc = m1.run(netperf_srv6, bg=True)
-                        ctl.wait(2)
+                if ipv in [ 'ipv6', 'both' ]:
+                    # Ping test
+                    m1.run(ping_mod6)
 
-                        # prepare PerfRepo result for tcp ipv6
-                        result_tcp = perf_api.new_result("tcp_ipv6_id",
-                                                         "tcp_ipv6_result",
-                                                         hash_ignore=[
-                                                             'kernel_release',
-                                                             'redhat_release'])
-                        result_tcp.set_parameter(offload, state)
-                        result_tcp.set_parameter('netperf_server_on_vlan', vlan1)
-                        result_tcp.set_parameter('netperf_client_on_vlan', vlan2)
-                        result_tcp.add_tag(product_name)
+                    # Netperf test (both TCP and UDP)
+                    srv_proc = m1.run(netperf_srv6, bg=True)
+                    ctl.wait(2)
 
-                        baseline = perf_api.get_baseline_of_result(result_tcp)
-                        netperf_baseline_template(netperf_cli_tcp6, baseline)
+                    # prepare PerfRepo result for tcp ipv6
+                    result_tcp = perf_api.new_result("tcp_ipv6_id",
+                                                     "tcp_ipv6_result",
+                                                     hash_ignore=[
+                                                         'kernel_release',
+                                                         'redhat_release'])
+                    for offload in setting:
+                        result_tcp.set_parameter(offload[0], offload[1])
+                    result_tcp.set_parameter('netperf_server_on_vlan', vlan1)
+                    result_tcp.set_parameter('netperf_client_on_vlan', vlan2)
+                    result_tcp.add_tag(product_name)
 
-                        tcp_res_data = m2.run(netperf_cli_tcp6,
-                                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+                    baseline = perf_api.get_baseline_of_result(result_tcp)
+                    netperf_baseline_template(netperf_cli_tcp6, baseline)
 
-                        netperf_result_template(result_tcp, tcp_res_data)
-                        perf_api.save_result(result_tcp)
+                    tcp_res_data = m2.run(netperf_cli_tcp6,
+                                          timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-                        # prepare PerfRepo result for udp ipv6
-                        result_udp = perf_api.new_result("udp_ipv6_id",
-                                                         "udp_ipv6_result",
-                                                         hash_ignore=[
-                                                             'kernel_release',
-                                                             'redhat_release'])
-                        result_udp.set_parameter(offload, state)
-                        result_udp.set_parameter('netperf_server_on_vlan', vlan1)
-                        result_udp.set_parameter('netperf_client_on_vlan', vlan2)
-                        result_udp.add_tag(product_name)
+                    netperf_result_template(result_tcp, tcp_res_data)
+                    perf_api.save_result(result_tcp)
 
-                        baseline = perf_api.get_baseline_of_result(result_udp)
-                        netperf_baseline_template(netperf_cli_udp6, baseline)
+                    # prepare PerfRepo result for udp ipv6
+                    result_udp = perf_api.new_result("udp_ipv6_id",
+                                                     "udp_ipv6_result",
+                                                     hash_ignore=[
+                                                         'kernel_release',
+                                                         'redhat_release'])
+                    for offload in setting:
+                        result_udp.set_parameter(offload[0], offload[1])
+                    result_udp.set_parameter('netperf_server_on_vlan', vlan1)
+                    result_udp.set_parameter('netperf_client_on_vlan', vlan2)
+                    result_udp.add_tag(product_name)
 
-                        udp_res_data = m2.run(netperf_cli_udp6,
-                                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+                    baseline = perf_api.get_baseline_of_result(result_udp)
+                    netperf_baseline_template(netperf_cli_udp6, baseline)
 
-                        netperf_result_template(result_udp, udp_res_data)
-                        perf_api.save_result(result_udp)
+                    udp_res_data = m2.run(netperf_cli_udp6,
+                                          timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-                        srv_proc.intr()
+                    netperf_result_template(result_udp, udp_res_data)
+                    perf_api.save_result(result_udp)
+
+                    srv_proc.intr()
 
         # These tests should fail
         # Ping across different VLAN
@@ -237,3 +247,12 @@ for vlan1 in vlans:
 
             if ipv in [ 'ipv6', 'both' ]:
                 m1.run(ping_mod6, expect="fail")
+
+#reset offload states
+for offload in offloads:
+    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
+        offload, "on"))
+    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth2"),
+        offload, "on"))
+    m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
+        offload, "on"))
