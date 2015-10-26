@@ -6,20 +6,23 @@ hostB = ctl.get_host("machine2")
 hostA.sync_resources(modules=["Icmp6Ping", "IcmpPing"])
 hostB.sync_resources(modules=["Icmp6Ping", "IcmpPing"])
 
+hostA_testiface = hostA.get_interface("testiface")
+hostB_testiface = hostB.get_interface("testiface")
+
 ping_mod = ctl.get_module("IcmpPing",
                            options={
-                              "addr": hostB.get_ip("testiface", 0),
+                              "addr": hostB_testiface.get_ip(0),
                               "count": 100,
                               "interval": 0.2,
-                              "iface" : hostA.get_devname("testiface"),
+                              "iface" : hostA_testiface.get_devname(),
                               "limit_rate": 90})
 
 ping_mod6 = ctl.get_module("Icmp6Ping",
                            options={
-                              "addr": hostB.get_ip("testiface", 1),
+                              "addr": hostB_testiface.get_ip(1),
                               "count": 100,
                               "interval": 0.2,
-                              "iface" : hostA.get_ip("testiface", 1),
+                              "iface" : hostA_testiface.get_ip(1),
                               "limit_rate": 90})
 
 ctl.wait(15)
