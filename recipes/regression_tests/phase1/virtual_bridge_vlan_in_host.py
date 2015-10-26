@@ -40,79 +40,84 @@ nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 mtu = ctl.get_alias("mtu")
 enable_udp_perf = ctl.get_alias("enable_udp_perf")
 
+h2_vlan10 = h2.get_interface("vlan10")
+g1_guestnic= g1.get_interface("guestnic")
+h1_nic = h1.get_interface("nic")
+h2_nic = h2.get_interface("nic")
+
 ping_mod = ctl.get_module("IcmpPing",
                            options={
-                               "addr" : h2.get_ip("vlan10"),
+                               "addr" : h2_vlan10.get_ip(0),
                                "count" : 100,
-                               "iface" : g1.get_devname("guestnic"),
+                               "iface" : g1_guestnic.get_devname(),
                                "interval" : 0.1
                            })
 
 ping_mod6 = ctl.get_module("Icmp6Ping",
                            options={
-                               "addr" : h2.get_ip("vlan10", 1),
+                               "addr" : h2_vlan10.get_ip(1),
                                "count" : 100,
-                               "iface" : g1.get_ip("guestnic", 1),
+                               "iface" : g1_guestnic.get_ip(1),
                                "interval" : 0.1
                            })
 
 netperf_srv = ctl.get_module("Netperf",
                               options={
                                   "role" : "server",
-                                  "bind" : g1.get_ip("guestnic")
+                                  "bind" : g1_guestnic.get_ip(0)
                               })
 
 netperf_srv6 = ctl.get_module("Netperf",
                               options={
                                   "role" : "server",
-                                  "bind" : g1.get_ip("guestnic", 1),
+                                  "bind" : g1_guestnic.get_ip(1),
                                   "netperf_opts" : " -6",
                               })
 
 netperf_cli_tcp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
-                                      "netperf_server" : g1.get_ip("guestnic"),
+                                      "netperf_server" : g1_guestnic.get_ip(0),
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "netperf_opts" : "-i %s -L %s" %
-                                                            (nperf_max_runs, h2.get_ip("vlan10"))
+                                                            (nperf_max_runs, h2_vlan10.get_ip(0))
                                   })
 
 netperf_cli_udp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
-                                      "netperf_server" : g1.get_ip("guestnic"),
+                                      "netperf_server" : g1_guestnic.get_ip(0),
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "netperf_opts" : "-i %s -L %s" %
-                                                            (nperf_max_runs, h2.get_ip("vlan10"))
+                                                            (nperf_max_runs, h2_vlan10.get_ip(0))
                                   })
 
 netperf_cli_tcp6 = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "netperf_server" :
-                                          g1.get_ip("guestnic", 1),
+                                          g1_guestnic.get_ip(1),
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, h2.get_ip("vlan10", 1))
+                                          "-i %s -L %s -6" % (nperf_max_runs, h2_vlan10.get_ip(1))
                                   })
 
 netperf_cli_udp6 = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "netperf_server" :
-                                          g1.get_ip("guestnic", 1),
+                                          g1_guestnic.get_ip(1),
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, h2.get_ip("vlan10", 1))
+                                          "-i %s -L %s -6" % (nperf_max_runs, h2_vlan10.get_ip(1))
                                   })
 
 # configure mtu
@@ -130,11 +135,11 @@ ctl.wait(15)
 
 for setting in offload_settings:
     for offload in setting:
-        g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
+        g1.run("ethtool -K %s %s %s" % (g1_guestnic.get_devname(),
                                         offload[0], offload[1]))
-        h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic"),
+        h1.run("ethtool -K %s %s %s" % (h1_nic.get_devname(),
                                         offload[0], offload[1]))
-        h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic"),
+        h2.run("ethtool -K %s %s %s" % (h2_nic.get_devname(),
                                         offload[0], offload[1]))
 
     if ipv in [ 'ipv4', 'both' ]:
@@ -237,9 +242,9 @@ for setting in offload_settings:
 
 #reset offload states
 for offload in offloads:
-    g1.run("ethtool -K %s %s %s" % (g1.get_devname("guestnic"),
+    g1.run("ethtool -K %s %s %s" % (g1_guestnic.get_devname(),
                                     offload, "on"))
-    h1.run("ethtool -K %s %s %s" % (h1.get_devname("nic"),
+    h1.run("ethtool -K %s %s %s" % (h1_nic.get_devname(),
                                     offload, "on"))
-    h2.run("ethtool -K %s %s %s" % (h2.get_devname("nic"),
+    h2.run("ethtool -K %s %s %s" % (h2_nic.get_devname(),
                                     offload, "on"))
