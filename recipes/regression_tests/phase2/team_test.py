@@ -44,83 +44,83 @@ test_if2.set_mtu(mtu)
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
-                               "addr" : m2.get_ip("test_if", 0),
+                               "addr" : test_if2.get_ip(0),
                                "count" : 100,
-                               "iface" : m1.get_devname("test_if"),
+                               "iface" : test_if1.get_devname(),
                                "interval" : 0.1
                            })
 
 ping_mod6 = ctl.get_module("Icmp6Ping",
                            options={
-                               "addr" : m2.get_ip("test_if", 1),
+                               "addr" : test_if2.get_ip(1),
                                "count" : 100,
-                               "iface" : m1.get_ip("test_if", 1),
+                               "iface" : test_if1.get_ip(1),
                                "interval" : 0.1
                            })
 
 netperf_srv = ctl.get_module("Netperf",
                               options = {
                                   "role" : "server",
-                                  "bind" : m1.get_ip("test_if", 0)
+                                  "bind" : test_if1.get_ip(0)
                               })
 
 netperf_srv6 = ctl.get_module("Netperf",
                               options = {
                                   "role" : "server",
-                                  "bind" : m1.get_ip("test_if", 1),
+                                  "bind" : test_if1.get_ip(1),
                                   "netperf_opts" : " -6"
                               })
 
 netperf_cli_tcp = ctl.get_module("Netperf",
                                   options = {
                                       "role" : "client",
-                                      "netperf_server" : m1.get_ip("test_if", 0),
+                                      "netperf_server" : test_if1.get_ip(0),
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, m2.get_ip("test_if", 0))
+                                      "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, test_if2.get_ip(0))
                                 })
 
 netperf_cli_udp = ctl.get_module("Netperf",
                                   options = {
                                       "role" : "client",
-                                      "netperf_server" : m1.get_ip("test_if", 0),
+                                      "netperf_server" : test_if1.get_ip(0),
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, m2.get_ip("test_if", 0))
+                                      "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, test_if2.get_ip(0))
                                   })
 
 netperf_cli_tcp6 = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "netperf_server" :
-                                          m1.get_ip("test_if", 1),
+                                          test_if1.get_ip(1),
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, m2.get_ip("test_if", 1))
+                                          "-i %s -L %s -6" % (nperf_max_runs, test_if2.get_ip(1))
                                   })
 netperf_cli_udp6 = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "netperf_server" :
-                                          m1.get_ip("test_if", 1),
+                                          test_if1.get_ip(1),
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, m2.get_ip("test_if", 1))
+                                          "-i %s -L %s -6" % (nperf_max_runs, test_if2.get_ip(1))
                                   })
 
 ctl.wait(15)
 
 for setting in offload_settings:
     for offload in setting:
-        m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"),
+        m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
                                         offload[0], offload[1]))
-        m2.run("ethtool -K %s %s %s" % (m2.get_devname("test_if"),
+        m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
                                         offload[0], offload[1]))
 
     if ipv in [ 'ipv4', 'both' ]:
@@ -224,39 +224,38 @@ for setting in offload_settings:
 
 #reset offload states
 for offload in offloads:
-    m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"),
+    m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
                                     offload, "on"))
-    m2.run("ethtool -K %s %s %s" % (m2.get_devname("test_if"),
+    m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
                                     offload, "on"))
 
+ping_mod.update_options({"addr" : test_if1.get_ip(0),
+                          "iface" : test_if2.get_devname()})
 
-ping_mod.update_options({"addr" : m1.get_ip("test_if", 0),
-                          "iface" : m2.get_devname("test_if")})
+ping_mod6.update_options({"addr" : test_if1.get_ip(1),
+                          "iface" : test_if2.get_devname()})
 
-ping_mod6.update_options({"addr" : m1.get_ip("test_if", 1),
-                          "iface" : m2.get_devname("test_if")})
+netperf_srv.update_options({"bind" : test_if2.get_ip(0)})
 
-netperf_srv.update_options({"bind" : m2.get_ip("test_if", 0)})
+netperf_srv6.update_options({"bind" : test_if2.get_ip(1)})
 
-netperf_srv6.update_options({"bind" : m2.get_ip("test_if", 1)})
+netperf_cli_tcp.update_options({"netperf_server" : test_if2.get_ip(0),
+                                "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, test_if1.get_ip(0))})
 
-netperf_cli_tcp.update_options({"netperf_server" : m2.get_ip("test_if", 0),
-                                "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, m1.get_ip("test_if", 0))})
+netperf_cli_udp.update_options({"netperf_server" : test_if2.get_ip(0),
+                                "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, test_if1.get_ip(0))})
 
-netperf_cli_udp.update_options({"netperf_server" : m2.get_ip("test_if", 0),
-                                "netperf_opts" : "-i %s -L %s" % (nperf_max_runs, m1.get_ip("test_if", 0))})
+netperf_cli_tcp6.update_options({"netperf_server" : test_if2.get_ip(1),
+                                "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, test_if1.get_ip(1))})
 
-netperf_cli_tcp6.update_options({"netperf_server" : m2.get_ip("test_if", 1),
-                                "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, m1.get_ip("test_if", 1))})
-
-netperf_cli_udp6.update_options({"netperf_server" : m2.get_ip("test_if", 1),
-                                 "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, m1.get_ip("test_if", 1))})
+netperf_cli_udp6.update_options({"netperf_server" : test_if2.get_ip(1),
+                                 "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, test_if1.get_ip(1))})
 
 for setting in offload_settings:
     for offload in setting:
-        m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"),
+        m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
                                         offload[0], offload[1]))
-        m2.run("ethtool -K %s %s %s" % (m2.get_devname("test_if"),
+        m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
                                         offload[0], offload[1]))
 
     if ipv in [ 'ipv4', 'both' ]:
@@ -360,7 +359,7 @@ for setting in offload_settings:
 
 #reset offload states
 for offload in offloads:
-    m1.run("ethtool -K %s %s %s" % (m1.get_devname("test_if"),
+    m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
                                     offload, "on"))
-    m2.run("ethtool -K %s %s %s" % (m2.get_devname("test_if"),
+    m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
                                     offload, "on"))

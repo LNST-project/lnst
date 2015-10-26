@@ -39,6 +39,8 @@ nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 
 m1_team = m1.get_interface("test_if")
 m1_team.set_mtu(mtu)
+m1_phy1 = m1.get_interface("eth1")
+m1_phy2 = m1.get_interface("eth2")
 m2_phy1 = m2.get_interface("eth1")
 m2_phy1.set_mtu(mtu)
 
@@ -100,39 +102,42 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                   })
 
 for vlan1 in vlans:
+    m1_vlan1 = m1.get_interface(vlan1)
     for vlan2 in vlans:
-        ping_mod.update_options({"addr": m2.get_ip(vlan2, 0),
-                                 "iface": m1.get_devname(vlan1)})
+        m2_vlan2 = m2.get_interface(vlan2)
 
-        ping_mod6.update_options({"addr": m2.get_ip(vlan2, 1),
-                                  "iface": m1.get_ip(vlan1, 1)})
+        ping_mod.update_options({"addr": m2_vlan2.get_ip(0),
+                                 "iface": m1_vlan1.get_devname()})
 
-        netperf_srv.update_options({"bind": m1.get_ip(vlan1, 0)})
+        ping_mod6.update_options({"addr": m2_vlan2.get_ip(1),
+                                  "iface": m1_vlan1.get_ip(1)})
 
-        netperf_srv6.update_options({"bind": m1.get_ip(vlan1, 1)})
+        netperf_srv.update_options({"bind": m1_vlan1.get_ip(0)})
 
-        netperf_cli_tcp.update_options({"netperf_server": m1.get_ip(vlan1, 0),
-                                        "netperf_opts": "-i %s -L %s" % (nperf_max_runs, m2.get_ip(vlan1, 0))})
+        netperf_srv6.update_options({"bind": m1_vlan1.get_ip(1)})
 
-        netperf_cli_udp.update_options({"netperf_server": m1.get_ip(vlan1, 0),
-                                        "netperf_opts": "-i %s -L %s" % (nperf_max_runs, m2.get_ip(vlan1, 0))})
+        netperf_cli_tcp.update_options({"netperf_server": m1_vlan1.get_ip(0),
+                                        "netperf_opts": "-i %s -L %s" % (nperf_max_runs, m2_vlan2.get_ip(0))})
 
-        netperf_cli_tcp6.update_options({"netperf_server": m1.get_ip(vlan1, 1),
-                                         "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2.get_ip(vlan1, 1))})
+        netperf_cli_udp.update_options({"netperf_server": m1_vlan1.get_ip(0),
+                                        "netperf_opts": "-i %s -L %s" % (nperf_max_runs, m2_vlan2.get_ip(0))})
 
-        netperf_cli_udp6.update_options({"netperf_server": m1.get_ip(vlan1, 1),
-                                         "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2.get_ip(vlan1, 1))})
+        netperf_cli_tcp6.update_options({"netperf_server": m1_vlan1.get_ip(1),
+                                         "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2_vlan2.get_ip(1))})
+
+        netperf_cli_udp6.update_options({"netperf_server": m1_vlan1.get_ip(1),
+                                         "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2_vlan2.get_ip(1))})
 
         if vlan1 == vlan2:
             # These tests should pass
             # Ping between same VLANs
             for setting in offload_settings:
                 for offload in setting:
-                    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
+                    m1.run("ethtool -K %s %s %s" % (m1_phy1.get_devname(),
                                                     offload[0], offload[1]))
-                    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth2"),
+                    m1.run("ethtool -K %s %s %s" % (m1_phy2.get_devname(),
                                                     offload[0], offload[1]))
-                    m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
+                    m2.run("ethtool -K %s %s %s" % (m2_phy1.get_devname(),
                                                     offload[0], offload[1]))
 
                 if ipv in [ 'ipv4', 'both' ]:
@@ -248,9 +253,9 @@ for vlan1 in vlans:
 
 #reset offload states
 for offload in offloads:
-    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth1"),
+    m1.run("ethtool -K %s %s %s" % (m1_phy1.get_devname(),
         offload, "on"))
-    m1.run("ethtool -K %s %s %s" % (m1.get_devname("eth2"),
+    m1.run("ethtool -K %s %s %s" % (m1_phy2.get_devname(),
         offload, "on"))
-    m2.run("ethtool -K %s %s %s" % (m2.get_devname("eth1"),
+    m2.run("ethtool -K %s %s %s" % (m2_phy1.get_devname(),
         offload, "on"))
