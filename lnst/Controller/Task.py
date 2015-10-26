@@ -374,25 +374,25 @@ class InterfaceAPI(object):
     def get_hwaddr(self):
         return VolatileValue(self._if.get_hwaddr)
 
-    def get_ip(self, ip_index):
+    def get_ip(self, ip_index=0):
         return VolatileValue(self._if.get_address, ip_index)
 
     def get_ips(self):
         return VolatileValue(self._if.get_addresses)
 
     @deprecated
-    def get_ip_addr(self, ip_index):
+    def get_ip_addr(self, ip_index=0):
         return self.get_ip(ip_index)
 
     @deprecated
     def get_ip_addrs(self):
         return self.get_ips()
 
-    def get_prefix(self, ip_index):
+    def get_prefix(self, ip_index=0):
         return VolatileValue(self._if.get_prefix, ip_index)
 
     @deprecated
-    def get_ip_prefix(self, ip_index):
+    def get_ip_prefix(self, ip_index=0):
         return self.get_prefix(ip_index)
 
     def get_mtu(self):
