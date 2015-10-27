@@ -121,13 +121,12 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
 ctl.wait(15)
 
 for setting in offload_settings:
+    dev_features = ""
     for offload in setting:
-        h1.run("ethtool -K %s %s %s" % (h1_nic.get_devname(),
-                                        offload[0], offload[1]))
-        g1.run("ethtool -K %s %s %s" % (g1_guestnic.get_devname(),
-                                        offload[0], offload[1]))
-        h2.run("ethtool -K %s %s %s" % (h2_nic.get_devname(),
-                                        offload[0], offload[1]))
+        dev_features += " %s %s" % (offload[0], offload[1])
+    h1.run("ethtool -K %s %s" % (h1_nic.get_devname(), dev_features))
+    g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
+    h2.run("ethtool -K %s %s" % (h2_nic.get_devname(), dev_features))
 
     if ipv in [ 'ipv4', 'both' ]:
         g1.run(ping_mod)
@@ -221,10 +220,9 @@ for setting in offload_settings:
         server_proc.intr()
 
 #reset offload states
+dev_features = ""
 for offload in offloads:
-    h1.run("ethtool -K %s %s %s" % (h1_nic.get_devname(),
-                                    offload, "on"))
-    g1.run("ethtool -K %s %s %s" % (g1_guestnic.get_devname(),
-                                    offload, "on"))
-    h2.run("ethtool -K %s %s %s" % (h2_nic.get_devname(),
-                                    offload, "on"))
+    dev_features += " %s %s" % (offload, "on")
+h1.run("ethtool -K %s %s" % (h1_nic.get_devname(), dev_features))
+g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
+h2.run("ethtool -K %s %s" % (h2_nic.get_devname(), dev_features))

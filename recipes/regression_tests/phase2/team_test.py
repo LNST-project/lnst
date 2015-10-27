@@ -117,11 +117,11 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
 ctl.wait(15)
 
 for setting in offload_settings:
+    dev_features = ""
     for offload in setting:
-        m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
-                                        offload[0], offload[1]))
-        m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
-                                        offload[0], offload[1]))
+        dev_features += " %s %s" % (offload[0], offload[1])
+    m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
+    m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))
 
     if ipv in [ 'ipv4', 'both' ]:
         m1.run(ping_mod)
@@ -223,11 +223,11 @@ for setting in offload_settings:
         server_proc.intr()
 
 #reset offload states
+dev_features = ""
 for offload in offloads:
-    m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
-                                    offload, "on"))
-    m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
-                                    offload, "on"))
+    dev_features += " %s %s" % (offload, "on")
+m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
+m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))
 
 ping_mod.update_options({"addr" : test_if1.get_ip(0),
                           "iface" : test_if2.get_devname()})
@@ -252,11 +252,11 @@ netperf_cli_udp6.update_options({"netperf_server" : test_if2.get_ip(1),
                                  "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, test_if1.get_ip(1))})
 
 for setting in offload_settings:
+    dev_features = ""
     for offload in setting:
-        m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
-                                        offload[0], offload[1]))
-        m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
-                                        offload[0], offload[1]))
+        dev_features += " %s %s" % (offload[0], offload[1])
+    m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
+    m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))
 
     if ipv in [ 'ipv4', 'both' ]:
         m2.run(ping_mod)
@@ -358,8 +358,8 @@ for setting in offload_settings:
         server_proc.intr()
 
 #reset offload states
+dev_features = ""
 for offload in offloads:
-    m1.run("ethtool -K %s %s %s" % (test_if1.get_devname(),
-                                    offload, "on"))
-    m2.run("ethtool -K %s %s %s" % (test_if2.get_devname(),
-                                    offload, "on"))
+    dev_features += " %s %s" % (offload, "on")
+m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
+m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))

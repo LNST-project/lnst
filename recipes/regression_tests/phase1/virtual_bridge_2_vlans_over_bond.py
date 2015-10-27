@@ -202,23 +202,17 @@ g4.get_interface("guestnic").set_mtu(mtu)
 ctl.wait(15)
 
 for setting in offload_settings:
+    dev_features = ""
     for offload in setting:
-        h1.run("ethtool -K %s %s %s" % (h1_nic1.get_devname(),
-                                        offload[0], offload[1]))
-        h1.run("ethtool -K %s %s %s" % (h1_nic2.get_devname(),
-                                        offload[0], offload[1]))
-        h2.run("ethtool -K %s %s %s" % (h2_nic1.get_devname(),
-                                        offload[0], offload[1]))
-        h2.run("ethtool -K %s %s %s" % (h2_nic2.get_devname(),
-                                        offload[0], offload[1]))
-        g1.run("ethtool -K %s %s %s" % (g1_guestnic.get_devname(),
-                                        offload[0], offload[1]))
-        g2.run("ethtool -K %s %s %s" % (g2_guestnic.get_devname(),
-                                        offload[0], offload[1]))
-        g3.run("ethtool -K %s %s %s" % (g3_guestnic.get_devname(),
-                                        offload[0], offload[1]))
-        g4.run("ethtool -K %s %s %s" % (g4_guestnic.get_devname(),
-                                        offload[0], offload[1]))
+        dev_features += " %s %s" % (offload[0], offload[1])
+    h1.run("ethtool -K %s %s" % (h1_nic1.get_devname(), dev_features))
+    h1.run("ethtool -K %s %s" % (h1_nic2.get_devname(), dev_features))
+    h2.run("ethtool -K %s %s" % (h2_nic1.get_devname(), dev_features))
+    h2.run("ethtool -K %s %s" % (h2_nic2.get_devname(), dev_features))
+    g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
+    g2.run("ethtool -K %s %s" % (g2_guestnic.get_devname(), dev_features))
+    g3.run("ethtool -K %s %s" % (g3_guestnic.get_devname(), dev_features))
+    g4.run("ethtool -K %s %s" % (g4_guestnic.get_devname(), dev_features))
 
     if ipv in [ 'ipv4', 'both' ]:
         g1.run(ping_mod)
@@ -325,20 +319,14 @@ for setting in offload_settings:
         server_proc.intr()
 
 #reset offload states
+dev_features = ""
 for offload in offloads:
-    h1.run("ethtool -K %s %s %s" % (h1_nic1.get_devname(),
-                                    offload, "on"))
-    h1.run("ethtool -K %s %s %s" % (h1_nic2.get_devname(),
-                                    offload, "on"))
-    h2.run("ethtool -K %s %s %s" % (h2_nic1.get_devname(),
-                                    offload, "on"))
-    h2.run("ethtool -K %s %s %s" % (h2_nic2.get_devname(),
-                                    offload, "on"))
-    g1.run("ethtool -K %s %s %s" % (g1_guestnic.get_devname(),
-                                    offload, "on"))
-    g2.run("ethtool -K %s %s %s" % (g2_guestnic.get_devname(),
-                                    offload, "on"))
-    g3.run("ethtool -K %s %s %s" % (g3_guestnic.get_devname(),
-                                    offload, "on"))
-    g4.run("ethtool -K %s %s %s" % (g4_guestnic.get_devname(),
-                                    offload, "on"))
+    dev_features = " %s %s" % (offload, "on")
+h1.run("ethtool -K %s %s" % (h1_nic1.get_devname(), dev_features))
+h1.run("ethtool -K %s %s" % (h1_nic2.get_devname(), dev_features))
+h2.run("ethtool -K %s %s" % (h2_nic1.get_devname(), dev_features))
+h2.run("ethtool -K %s %s" % (h2_nic2.get_devname(), dev_features))
+g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
+g2.run("ethtool -K %s %s" % (g2_guestnic.get_devname(), dev_features))
+g3.run("ethtool -K %s %s" % (g3_guestnic.get_devname(), dev_features))
+g4.run("ethtool -K %s %s" % (g4_guestnic.get_devname(), dev_features))

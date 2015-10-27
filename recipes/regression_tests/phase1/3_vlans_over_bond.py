@@ -132,13 +132,15 @@ for vlan1 in vlans:
             # Ping between same VLANs
             for setting in offload_settings:
                 #apply offload setting
+                dev_features = ""
                 for offload in setting:
-                    m1.run("ethtool -K %s %s %s" % (m1_phy1.get_devname(),
-                                                    offload[0], offload[1]))
-                    m1.run("ethtool -K %s %s %s" % (m1_phy2.get_devname(),
-                                                    offload[0], offload[1]))
-                    m2.run("ethtool -K %s %s %s" % (m2_phy1.get_devname(),
-                                                    offload[0], offload[1]))
+                    dev_features += " %s %s" % (offload[0], offload[1])
+                m1.run("ethtool -K %s %s" % (m1_phy1.get_devname(),
+                                             dev_features))
+                m1.run("ethtool -K %s %s" % (m1_phy2.get_devname(),
+                                             dev_features))
+                m2.run("ethtool -K %s %s" % (m2_phy1.get_devname(),
+                                             dev_features))
 
                 if ipv in [ 'ipv4', 'both' ]:
                     # Ping test
@@ -253,10 +255,9 @@ for vlan1 in vlans:
                 m1.run(ping_mod6, expect="fail")
 
 #reset offload states
+dev_features = ""
 for offload in offloads:
-    m1.run("ethtool -K %s %s %s" % (m1_phy1.get_devname(),
-        offload, "on"))
-    m1.run("ethtool -K %s %s %s" % (m1_phy2.get_devname(),
-        offload, "on"))
-    m2.run("ethtool -K %s %s %s" % (m2_phy1.get_devname(),
-        offload, "on"))
+    dev_features += " %s %s" % (offload, "on")
+m1.run("ethtool -K %s %s" % (m1_phy1.get_devname(), dev_features))
+m1.run("ethtool -K %s %s" % (m1_phy2.get_devname(), dev_features))
+m2.run("ethtool -K %s %s" % (m2_phy1.get_devname(), dev_features))
