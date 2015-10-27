@@ -844,8 +844,6 @@ class LoopbackInterface(Interface):
                   % (self._hwaddr, self._machine.get_id())
             raise MachineError(msg)
 
-        self.down()
-
         if self._configured:
             msg = "Unable to configure interface %s on machine %s. " \
                   "It has been configured already." % (self.get_id(),
