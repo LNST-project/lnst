@@ -102,8 +102,12 @@ class NetConfigDeviceLoopback(NetConfigDeviceGeneric):
         # this might have an unpredictable impact on further testing.
         # In case of non-root namespace leaving loopback device up is not
         # a problem since the namespace will get destroyed after recipe is
-        # finished
-        pass
+        # finished. So, we will remove the configured addresses only
+        config = self._dev_config
+        if "addresses" in config:
+            for address in config["addresses"]:
+                exec_cmd("ip addr del %s dev %s" % (address, config["name"]),
+                         die_on_err=False)
 
 class NetConfigDeviceBond(NetConfigDeviceGeneric):
     _modulename = "bonding"
