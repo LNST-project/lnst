@@ -140,7 +140,11 @@ for setting in offload_settings:
                                          "tcp_ipv4_result",
                                          hash_ignore=[
                                              'kernel_release',
-                                             'redhat_release'])
+                                             'redhat_release',
+                                             r'guest\d+\.hostname',
+                                             r'guest\d+\..*hwaddr',
+                                             r'host\d+\..*tap\d*\.hwaddr',
+                                             r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
         result_tcp.add_tag(product_name)
@@ -159,7 +163,11 @@ for setting in offload_settings:
                                          "udp_ipv4_result",
                                          hash_ignore=[
                                              'kernel_release',
-                                             'redhat_release'])
+                                             'redhat_release',
+                                             r'guest\d+\.hostname',
+                                             r'guest\d+\..*hwaddr',
+                                             r'host\d+\..*tap\d*\.hwaddr',
+                                             r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_udp.set_parameter(offload[0], offload[1])
         result_udp.add_tag(product_name)
@@ -186,7 +194,11 @@ for setting in offload_settings:
                                          "tcp_ipv6_result",
                                          hash_ignore=[
                                              'kernel_release',
-                                             'redhat_release'])
+                                             'redhat_release',
+                                             r'guest\d+\.hostname',
+                                             r'guest\d+\..*hwaddr',
+                                             r'host\d+\..*tap\d*\.hwaddr',
+                                             r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
         result_tcp.add_tag(product_name)
@@ -205,7 +217,11 @@ for setting in offload_settings:
                                          "udp_ipv6_result",
                                          hash_ignore=[
                                              'kernel_release',
-                                             'redhat_release'])
+                                             'redhat_release',
+                                             r'guest\d+\.hostname',
+                                             r'guest\d+\..*hwaddr',
+                                             r'host\d+\..*tap\d*\.hwaddr',
+                                             r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_udp.set_parameter(offload[0], offload[1])
         result_udp.add_tag(product_name)
