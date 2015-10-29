@@ -36,6 +36,7 @@ netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
+nperf_cpupin = ctl.get_alias("nperf_cpupin")
 
 h2_vlan10 = h2.get_interface("vlan10")
 g1_guestnic = g1.get_interface("guestnic")
@@ -71,6 +72,10 @@ netperf_srv6 = ctl.get_module("Netperf",
                                   "netperf_opts" : " -6",
                               })
 
+p_opts = "-i %s -L %s" % (nperf_max_runs, h2_vlan10.get_ip(0))
+if nperf_cpupin:
+    p_opts += " -T%s" % nperf_cpupin
+
 netperf_cli_tcp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
@@ -78,8 +83,7 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "netperf_opts" : "-i %s -L %s" %
-                                                            (nperf_max_runs, h2_vlan10.get_ip(0))
+                                      "netperf_opts" : p_opts
                                   })
 
 netperf_cli_udp = ctl.get_module("Netperf",
@@ -89,8 +93,7 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "netperf_opts" : "-i %s -L %s" %
-                                                            (nperf_max_runs, h2_vlan10.get_ip(0))
+                                      "netperf_opts" : p_opts
                                   })
 
 netperf_cli_tcp6 = ctl.get_module("Netperf",

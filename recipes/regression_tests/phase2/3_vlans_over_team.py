@@ -36,6 +36,7 @@ netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
+nperf_cpupin = ctl.get_alias("nperf_cpupin")
 
 m1_team = m1.get_interface("test_if")
 m1_team.set_mtu(mtu)
@@ -116,11 +117,15 @@ for vlan1 in vlans:
 
         netperf_srv6.update_options({"bind": m1_vlan1.get_ip(1)})
 
+        p_opts = "-i %s -L %s" % (nperf_max_runs, m2_vlan2.get_ip(0))
+        if nperf_cpupin:
+            p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
+
         netperf_cli_tcp.update_options({"netperf_server": m1_vlan1.get_ip(0),
-                                        "netperf_opts": "-i %s -L %s" % (nperf_max_runs, m2_vlan2.get_ip(0))})
+                                        "netperf_opts": p_opts})
 
         netperf_cli_udp.update_options({"netperf_server": m1_vlan1.get_ip(0),
-                                        "netperf_opts": "-i %s -L %s" % (nperf_max_runs, m2_vlan2.get_ip(0))})
+                                        "netperf_opts": p_opts})
 
         netperf_cli_tcp6.update_options({"netperf_server": m1_vlan1.get_ip(1),
                                          "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2_vlan2.get_ip(1))})
