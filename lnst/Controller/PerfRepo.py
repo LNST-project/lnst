@@ -19,7 +19,7 @@ import textwrap
 import pprint
 from types import StringType, NoneType
 from xml.etree import ElementTree
-from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Element, iselement
 from lnst.Common.Utils import recursive_dict_update
 from lnst.Common.Utils import dot_to_dict, dict_to_dot, indent
 
@@ -60,11 +60,12 @@ class PerfRepoTest(PerfRepoObject):
             self._description = None
             self._groupid = None
             self._metrics = []
-        elif type(xml) is StringType or isinstance(xml, Element):
+        elif type(xml) is StringType or iselement(xml):
             if type(xml) is StringType:
                 root = ElementTree.fromstring(xml)
-            else:
+            elif iselement(xml):
                 root = xml
+
             if root.tag != "test":
                 raise PerfRepoException("Invalid xml.")
 
@@ -171,11 +172,12 @@ class PerfRepoTestExecution(PerfRepoObject):
             self._values = []
             self._tags = []
             self._parameters = []
-        elif type(xml) is StringType or isinstance(xml, Element):
+        elif type(xml) is StringType or iselement(xml):
             if type(xml) is StringType:
                 root = ElementTree.fromstring(xml)
-            else:
+            elif iselement(xml):
                 root = xml
+
             if root.tag != "testExecution":
                 raise PerfRepoException("Invalid xml.")
 
@@ -340,11 +342,12 @@ class PerfRepoValue(PerfRepoObject):
             self._metricName = None
             self._result = None
             self._parameters = []
-        elif type(xml) is StringType or isinstance(xml, Element):
+        elif type(xml) is StringType or iselement(xml):
             if type(xml) is StringType:
                 root = ElementTree.fromstring(xml)
-            else:
+            elif iselement(xml):
                 root = xml
+
             if root.tag != "value":
                 raise PerfRepoException("Invalid xml.")
 
@@ -420,11 +423,12 @@ class PerfRepoMetric(PerfRepoObject):
             self._name = None
             self._description = None
             self._comparator = None
-        elif type(xml) is StringType or isinstance(xml, Element):
+        elif type(xml) is StringType or iselement(xml):
             if type(xml) is StringType:
                 root = ElementTree.fromstring(xml)
-            else:
+            elif iselement(xml):
                 root = xml
+
             if root.tag != "metric":
                 raise PerfRepoException("Invalid xml.")
 
@@ -493,11 +497,12 @@ class PerfRepoReport(PerfRepoObject):
             self._name = None
             self._type = None
             self._properties = {}
-        elif type(xml) is StringType or isinstance(xml, Element):
+        elif type(xml) is StringType or iselement(xml):
             if type(xml) is StringType:
                 root = ElementTree.fromstring(xml)
-            else:
+            elif iselement(xml):
                 root = xml
+
             if root.tag != "report":
                 raise PerfRepoException("Invalid xml.")
 
