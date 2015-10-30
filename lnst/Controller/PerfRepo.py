@@ -896,7 +896,7 @@ class PerfRepoRESTAPI(object):
             metric.set_id(new_id)
             if log:
                 logging.debug("POST %s success" % post_url)
-                logging.info("Obj url: %s" % self.get_obj_url(test))
+                logging.info("Obj url: %s" % self.get_obj_url(metric))
             return metric
 
     def test_delete(self, test_id, log=True):
