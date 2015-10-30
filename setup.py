@@ -102,7 +102,7 @@ project website <https://fedorahosted.org/lnst>.
 """
 
 PACKAGES = ["lnst", "lnst.Common", "lnst.Controller", "lnst.Slave"]
-SCRIPTS = ["lnst-ctl", "lnst-slave"]
+SCRIPTS = ["lnst-ctl", "lnst-slave", "lnst-pool-wizard"]
 
 RECIPE_FILES = []
 for dirpath, dirnames, files in os.walk("recipes/"):
@@ -172,7 +172,7 @@ DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES + \
              SCHEMAS + BASH_COMP + RECIPE_FILES
 
 setup(name="lnst",
-    version="9",
+    version="10",
     description="Linux Network Stack Test",
     author="LNST Team",
     author_email="lnst-developers@lists.fedorahosted.org",
