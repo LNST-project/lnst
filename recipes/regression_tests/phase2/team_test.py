@@ -22,11 +22,11 @@ m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # TESTS
 # ------
 
-offloads = ["gro", "gso", "tso", "rx", "tx"]
-offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
-                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
-                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
-                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")]]
+offloads = ["gro", "gso", "tso", "tx"]
+offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on")],
+                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on")],
+                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off")]]
 
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
