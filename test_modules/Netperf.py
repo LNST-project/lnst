@@ -235,6 +235,7 @@ class Netperf(TestGeneric):
         logging.debug("running as client...")
 
         res_data = {}
+        res_data["testname"] = self._testname
 
         rv = 0
         results = []
