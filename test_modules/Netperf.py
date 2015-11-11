@@ -34,6 +34,7 @@ class Netperf(TestGeneric):
         self._confidence = self.get_opt("confidence")
         self._bind = self.get_opt("bind", opt_type="addr")
         self._family = self.get_opt("family")
+        self._cpu_util = self.get_opt("cpu_util")
 
         self._runs = self.get_opt("runs", default=1)
         if self._runs > 1 and self._confidence is not None:
@@ -61,7 +62,8 @@ class Netperf(TestGeneric):
         composes commands for netperf and netserver based on xml recipe
         """
         if self._role == "client":
-            cmd = "netperf -H %s -f k" % self._netperf_server
+            # -P 0 disables banner header of output
+            cmd = "netperf -H %s -f k -P 0" % self._netperf_server
             if self._port is not None:
                 """
                 client connects on this port
@@ -89,11 +91,22 @@ class Netperf(TestGeneric):
                 """
                 cmd += " -I %s" % self._confidence
 
+            if self._cpu_util is not None:
+                if self._cpu_util.lower() == "both":
+                    cmd += " -c -C"
+                elif self._cpu_util.lower() == "local":
+                    cmd += " -c"
+                elif self._cpu_util.lower() == "remote":
+                    cmd += " -C"
+
             if self._netperf_opts is not None:
                 """
                 custom options for netperf
                 """
                 cmd += " %s" % self._netperf_opts
+            # Print only relevant output
+            cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID"'
+
         elif self._role == "server":
             cmd = "netserver -D"
             if self._bind is not None:
@@ -114,58 +127,43 @@ class Netperf(TestGeneric):
         return cmd
 
     def _parse_output(self, output):
-        if self._testname == "UDP_STREAM":
-            # pattern for UDP_STREAM throughput output
-            # decimal float decimal (float)
-            pattern_udp_stream = "\d+\s+\d+\.\d+\s+\d+\s+(\d+(\.\d+){0,1})\n"
-            r2 = re.search(pattern_udp_stream, output.lower())
-        elif self._testname == "TCP_STREAM":
-            # pattern for TCP_STREAM throughput output
-            # decimal decimal decimal float (float)
-            pattern_tcp_stream = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
-            r2 = re.search(pattern_tcp_stream, output.lower())
-        elif self._testname == "TCP_RR" or self._testname == "UDP_RR"\
-             or self._testname == "SCTP_RR":
-            # pattern for TCP_RR, UDP_RR and SCTP_RR throughput output
-            # decimal decimal decimal decimal float (float)
-            pattern_tcp_rr = "\d+\s+\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
-            r2 = re.search(pattern_tcp_rr, output.lower())
-        else:
-            # pattern for SCTP streams and other tests
-            # decimal decimal decimal float (float)
-            pattern_sctp = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(\.\d+){0,1})"
-            r2 = re.search(pattern_sctp, output.lower())
+        res_val = {}
 
-        if r2 is None:
+        pattern_throughput = "THROUGHPUT=(\d+\.\d+)"
+        throughput = re.search(pattern_throughput, output)
+
+        if throughput is None:
             rate_in_kb = 0.0
         else:
-            rate_in_kb = float(r2.group(1))
+            rate_in_kb = float(throughput.group(1))
+
+        res_val["rate"] = rate_in_kb*1000
+        res_val["unit"] = "bps"
+
+        if self._cpu_util is not None:
+            if self._cpu_util == "local" or self._cpu_util == "both":
+                pattern_loc_cpu_util = "LOCAL_CPU_UTIL=([-]?\d+\.\d+)"
+                loc_cpu_util = re.search(pattern_loc_cpu_util, output)
+                res_val["LOCAL_CPU_UTIL"] = float(loc_cpu_util.group(1))
+
+            if self._cpu_util == "remote" or self._cpu_util == "both":
+                pattern_rem_cpu_util = "REMOTE_CPU_UTIL=([-]?\d+\.\d+)"
+                rem_cpu_util = re.search(pattern_rem_cpu_util, output)
+                res_val["REMOTE_CPU_UTIL"] = float(rem_cpu_util.group(1))
 
         if self._confidence is not None:
             confidence = self._parse_confidence(output)
-            return {"rate": rate_in_kb*1000,
-                    "unit": "bps",
-                    "confidence": confidence}
-        else:
-            return {"rate": rate_in_kb*1000,
-                    "unit": "bps"}
+            res_val["confidence"] = confidence
+
+        return res_val
 
     def _parse_confidence(self, output):
-        normal_pattern = r'\+/-(\d+\.\d*)% @ (\d+)% conf\.'
-        warning_pattern = r'!!! Confidence intervals: Throughput\s+: (\d+\.\d*)%'
-        normal_confidence = re.search(normal_pattern, output)
-        warning_confidence = re.search(warning_pattern, output)
+        pattern_throughput_confid = "THROUGHPUT_CONFID=([-]?\d+\.\d+)"
+        pattern_confidence_level = "CONFIDENCE_LEVEL=(\d+)"
+        throughput_confid = float(re.search(pattern_throughput_confid, output).group(1))
+        confidence_level = int(re.search(pattern_confidence_level, output).group(1))
 
-        if normal_confidence is None:
-            logging.error("Failed to parse confidence!!")
-            return (0, 0.0)
-
-        if warning_confidence is None:
-            real_confidence = (float(normal_confidence.group(2)),
-                               float(normal_confidence.group(1)))
-        else:
-            real_confidence = (float(normal_confidence.group(2)),
-                               float(warning_confidence.group(1))/2)
+        real_confidence = (confidence_level, throughput_confid/2)
 
         return real_confidence
 
@@ -216,7 +214,6 @@ class Netperf(TestGeneric):
                                   "throughput option"
                 return (False, res_data)
             threshold_rate = float(r1.group(1))
-            threshold_unit_size = ""
             threshold_unit_type = "tps"
 
         return {"rate": threshold_rate,
