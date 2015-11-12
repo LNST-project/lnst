@@ -37,6 +37,7 @@ nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
+nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 
 m1_phy1 = m1.get_interface("eth1")
 m1_phy1.set_mtu(mtu)
@@ -75,28 +76,32 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "role" : "client",
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
-                                      "confidence" : nperf_confidence
+                                      "confidence" : nperf_confidence,
+                                      "cpu_util" : nperf_cpu_util
                                   })
 netperf_cli_udp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
-                                      "confidence" : nperf_confidence
+                                      "confidence" : nperf_confidence,
+                                      "cpu_util" : nperf_cpu_util
                                   })
 netperf_cli_tcp6 = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
-                                      "confidence" : nperf_confidence
+                                      "confidence" : nperf_confidence,
+                                      "cpu_util" : nperf_cpu_util
                                   })
 netperf_cli_udp6 = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
-                                      "confidence" : nperf_confidence
+                                      "confidence" : nperf_confidence,
+                                      "cpu_util" : nperf_cpu_util
                                   })
 
 for vlan1 in vlans:
