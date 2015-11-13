@@ -2,13 +2,14 @@
     <define>
         <alias name="ipv" value="both" />
         <alias name="mtu" value="1500" />
+        <alias name="net" value="192.168.101" />
     </define>
     <network>
         <host id="machine1">
             <interfaces>
                 <eth id="testiface" label="testnet">
                     <addresses>
-                        <address>192.168.101.10/24</address>
+                        <address>{$net}.10/24</address>
                         <address>2002::1/64</address>
                     </addresses>
                 </eth>
@@ -18,7 +19,7 @@
             <interfaces>
                 <eth id="testiface" label="testnet">
                     <addresses>
-                        <address>192.168.101.11/24</address>
+                        <address>{$net}.11/24</address>
                         <address>2002::2/64</address>
                     </addresses>
                 </eth>

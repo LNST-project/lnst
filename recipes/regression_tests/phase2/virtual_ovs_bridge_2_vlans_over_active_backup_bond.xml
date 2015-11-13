@@ -6,6 +6,10 @@
         <alias name="nperf_confidence" value="99,5" />
         <alias name="nperf_max_runs" value="5" />
         <alias name="mapping_file" value="virtual_ovs_bridge_2_vlans_over_active_backup_bond.mapping" />
+        <alias name="vlan10_net" value="192.168.10"/>
+        <alias name="vlan10_tag" value="10"/>
+        <alias name="vlan20_net" value="192.168.20"/>
+        <alias name="vlan20_tag" value="20"/>
     </define>
     <network>
         <host id="host1">
@@ -21,12 +25,12 @@
                         <slave id="tap1"/>
                         <slave id="tap2"/>
                     </slaves>
-                    <vlan tag="10">
+                    <vlan tag="{$vlan10_tag}">
                         <slaves>
                             <slave id="tap1"/>
                         </slaves>
                     </vlan>
-                    <vlan tag="20">
+                    <vlan tag="{$vlan20_tag}">
                         <slaves>
                             <slave id="tap2"/>
                         </slaves>
@@ -48,7 +52,7 @@
             <interfaces>
                 <eth id="guestnic" label="to_guest1">
                     <addresses>
-                        <address>192.168.10.100/24</address>
+                        <address>{$vlan10_net}.100/24</address>
                         <address>2002::10:100/64</address>
                     </addresses>
                 </eth>
@@ -58,7 +62,7 @@
             <interfaces>
                 <eth id="guestnic" label="to_guest2">
                     <addresses>
-                        <address>192.168.20.100/24</address>
+                        <address>{$vlan20_net}.100/24</address>
                         <address>2002::20:100/64</address>
                     </addresses>
                 </eth>
@@ -78,12 +82,12 @@
                         <slave id="tap1"/>
                         <slave id="tap2"/>
                     </slaves>
-                    <vlan tag="10">
+                    <vlan tag="{$vlan10_tag}">
                         <slaves>
                             <slave id="tap1"/>
                         </slaves>
                     </vlan>
-                    <vlan tag="20">
+                    <vlan tag="{$vlan20_tag}">
                         <slaves>
                             <slave id="tap2"/>
                         </slaves>
@@ -105,7 +109,7 @@
             <interfaces>
                 <eth id="guestnic" label="to_guest3">
                     <addresses>
-                        <address>192.168.10.101/24</address>
+                        <address>{$vlan10_net}.101/24</address>
                         <address>2002::10:101/64</address>
                     </addresses>
                 </eth>
@@ -115,7 +119,7 @@
             <interfaces>
                 <eth id="guestnic" label="to_guest4">
                     <addresses>
-                        <address>192.168.20.101/24</address>
+                        <address>{$vlan20_net}.101/24</address>
                         <address>2002::20:100/64</address>
                     </addresses>
                 </eth>

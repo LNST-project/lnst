@@ -6,6 +6,8 @@
         <alias name="nperf_confidence" value="99,5" />
         <alias name="nperf_max_runs" value="5" />
         <alias name="mapping_file" value="virtual_ovs_bridge_vlan_in_guest.mapping" />
+        <alias name="vlan10_net" value="192.168.10"/>
+        <alias name="vlan10_tag" value="10"/>
     </define>
     <network>
         <host id="host1">
@@ -29,13 +31,13 @@
                 </eth>
                 <vlan id="vlan10">
                     <options>
-                        <option name="vlan_tci" value="10" />
+                        <option name="vlan_tci" value="{$vlan10_tag}" />
                     </options>
                     <slaves>
                         <slave id="guestnic" />
                     </slaves>
                     <addresses>
-                        <address>192.168.10.10/24</address>
+                        <address>{$vlan10_net}.10/24</address>
                         <address>2002::10:10/64</address>
                     </addresses>
                 </vlan>
@@ -46,13 +48,13 @@
                 <eth id="nic" label="to_switch" />
                 <vlan id="vlan10">
                     <options>
-                        <option name="vlan_tci" value="10" />
+                        <option name="vlan_tci" value="{$vlan10_tag}" />
                     </options>
                     <slaves>
                         <slave id="nic" />
                     </slaves>
                     <addresses>
-                        <address>192.168.10.11/24</address>
+                        <address>{$vlan10_net}.11/24</address>
                         <address>2002::10:11/64</address>
                     </addresses>
                 </vlan>

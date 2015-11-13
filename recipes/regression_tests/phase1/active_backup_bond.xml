@@ -7,6 +7,7 @@
         <alias name="nperf_confidence" value="99,5" />
         <alias name="nperf_max_runs" value="5"/>
         <alias name="mapping_file" value="active_backup_bond.mapping" />
+        <alias name="net" value="192.168.0"/>
     </define>
     <network>
         <host id="testmachine1">
@@ -23,7 +24,7 @@
                         <slave id="eth2" />
                     </slaves>
                     <addresses>
-                        <address value="192.168.0.1/24" />
+                        <address value="{$net}.1/24" />
                         <address value="2002::1/64"/>
                     </addresses>
                 </bond>
@@ -33,7 +34,7 @@
             <interfaces>
                 <eth id="test_if" label="tnet">
                     <addresses>
-                        <address value="192.168.0.2/24" />
+                        <address value="{$net}.2/24" />
                         <address value="2002::2/64"/>
                     </addresses>
                 </eth>
