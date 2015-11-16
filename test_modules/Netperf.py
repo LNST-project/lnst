@@ -19,7 +19,7 @@ class Netperf(TestGeneric):
                        "SCTP_STREAM", "SCTP_STREAM_MANY", "SCTP_RR"]
 
     def __init__(self, command):
-        super(TestGeneric, self).__init__(command)
+        super(Netperf, self).__init__(command)
 
         self._role = self.get_mopt("role")
 
