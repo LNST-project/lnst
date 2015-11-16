@@ -304,7 +304,10 @@ class Netperf(TestGeneric):
             rate = 0.0
 
         if len(rates) > 1:
-            rate_deviation = std_deviation(rates)
+            # setting deviation to 2xstd_deviation because of the 68-95-99.7
+            # rule this seems comparable to the -I 99 netperf setting
+            res_data["std_deviation"] = std_deviation(rates)
+            rate_deviation = 2*res_data["std_deviation"]
         elif len(rates) == 1 and self._confidence is not None:
             result = results[0]
             rate_deviation = rate * (result["confidence"][1] / 100)
