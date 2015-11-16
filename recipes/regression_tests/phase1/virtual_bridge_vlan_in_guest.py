@@ -161,7 +161,9 @@ for setting in offload_settings:
                                          hash_ignore=['kernel_release',
                                              'redhat_release',
                                              r'guest\d+\.hostname',
-                                             r'guest\d+\..*hwaddr'])
+                                             r'guest\d+\..*hwaddr',
+                                             r'host\d+\..*tap\d*\.hwaddr',
+                                             r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
         result_tcp.add_tag(product_name)
@@ -212,7 +214,9 @@ for setting in offload_settings:
                                          hash_ignore=['kernel_release',
                                              'redhat_release',
                                              r'guest\d+\.hostname',
-                                             r'guest\d+\..*hwaddr'])
+                                             r'guest\d+\..*hwaddr',
+                                             r'host\d+\..*tap\d*\.hwaddr',
+                                             r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
         result_tcp.add_tag(product_name)
