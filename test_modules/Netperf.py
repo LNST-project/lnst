@@ -35,6 +35,7 @@ class Netperf(TestGeneric):
         self._bind = self.get_opt("bind", opt_type="addr")
         self._family = self.get_opt("family")
         self._cpu_util = self.get_opt("cpu_util")
+        self._num_parallel = int(self.get_opt("num_parallel", default=1))
 
         self._runs = self.get_opt("runs", default=1)
         if self._runs > 1 and self._confidence is not None:
@@ -85,7 +86,7 @@ class Netperf(TestGeneric):
                     "can use other tests, but test result may not be correct.")
                 cmd += " -t %s" % self._testname
 
-            if self._confidence is not None:
+            if self._confidence is not None and self._num_parallel <= 1:
                 """
                 confidence level that Netperf should try to achieve
                 """
@@ -104,6 +105,15 @@ class Netperf(TestGeneric):
                 custom options for netperf
                 """
                 cmd += " %s" % self._netperf_opts
+
+            if self._num_parallel > 1:
+                """
+                wait 1 second before starting the data transfer
+                taken from the super_netperf script, can be removed if it
+                doesn't make sense
+                """
+                cmd += " -s 1"
+
             # Print only relevant output
             cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID"'
 
@@ -219,6 +229,25 @@ class Netperf(TestGeneric):
         return {"rate": threshold_rate,
                 "unit": threshold_unit_type}
 
+    def _sum_results(self, first, second):
+        result = {}
+
+        #add rates
+        if first["unit"] == second["unit"]:
+            result["unit"] = first["unit"]
+            result["rate"] = first["rate"] + second["rate"]
+
+        # netperf measures the complete cpu utilization of the machine,
+        # so both second and first should be +- the same number
+        if "LOCAL_CPU_UTIL" in first and "LOCAL_CPU_UTIL" in second:
+            result["LOCAL_CPU_UTIL"] = first["LOCAL_CPU_UTIL"]
+
+        if "REMOTE_CPU_UTIL" in first and "REMOTE_CPU_UTIL" in second:
+            result["REMOTE_CPU_UTIL"] = first["REMOTE_CPU_UTIL"]
+
+        #ignoring confidence because it doesn't make sense to sum those
+        return result
+
     def _run_server(self, cmd):
         logging.debug("running as server...")
         server = ShellProcess(cmd)
@@ -240,18 +269,30 @@ class Netperf(TestGeneric):
         for i in range(1, self._runs+1):
             if self._runs > 1:
                 logging.info("Netperf starting run %d" % i)
-            client = ShellProcess(cmd)
-            try:
-                ret_code = client.wait()
-                rv += ret_code
-            except OSError as e:
-                if e.errno == errno.EINTR:
-                    client.kill()
+            clients = []
+            client_results = []
+            for i in range(0, self._num_parallel):
+                clients.append(ShellProcess(cmd))
 
-            output = client.read_nonblocking()
+            for client in clients:
+                try:
+                    ret_code = client.wait()
+                    rv += ret_code
+                except OSError as e:
+                    if e.errno == errno.EINTR:
+                        client.kill()
 
-            if ret_code == 0:
-                results.append(self._parse_output(output))
+                if ret_code == 0:
+                    output = client.read_nonblocking()
+                    client_results.append(self._parse_output(output))
+
+            if len(client_results) > 0:
+                #accumulate all the parallel results into one
+                result = client_results[0]
+                for res in client_results[1:]:
+                    result = self._sum_results(result, res)
+
+                results.append(result)
                 rates.append(results[-1]["rate"])
 
         if results > 1:
