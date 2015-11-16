@@ -332,6 +332,13 @@ class NetTestCommandGeneric(object):
                 if type(value) == dict:
                     formatted_data += level*4*" " + str(key) + ":\n"
                     formatted_data += self.format_res_data(value, level+1)
+                if type(value) == list:
+                    formatted_data += level*4*" " + str(key) + ":\n"
+                    for i in range(0, len(value)):
+                        formatted_data += (level+1)*4*" " +\
+                                          "item %d:" % (i+1) + "\n"
+                        formatted_data += self.format_res_data(value[i],
+                                                               level+2)
                 else:
                     formatted_data += level*4*" " + str(key) + ":" + \
                                       (max_key_len-len(key))*" " + \
