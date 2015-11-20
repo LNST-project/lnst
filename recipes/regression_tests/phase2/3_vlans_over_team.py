@@ -37,6 +37,8 @@ nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
+nperf_mode = ctl.get_alias("nperf_mode")
+nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 
 m1_team = m1.get_interface("test_if")
 m1_team.set_mtu(mtu)
@@ -109,6 +111,17 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs
                                   })
+
+if nperf_mode == "multi":
+    netperf_cli_tcp.unset_option("confidence")
+    netperf_cli_udp.unset_option("confidence")
+    netperf_cli_tcp6.unset_option("confidence")
+    netperf_cli_udp6.unset_option("confidence")
+
+    netperf_cli_tcp.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_udp.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
 
 for vlan1 in vlans:
     m1_vlan1 = m1.get_interface(vlan1)

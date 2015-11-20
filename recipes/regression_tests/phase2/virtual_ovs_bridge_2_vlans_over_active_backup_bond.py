@@ -42,6 +42,8 @@ nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
+nperf_mode = ctl.get_alias("nperf_mode")
+nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 
 h1_nic1 = h1.get_interface("nic1")
 h1_nic2 = h1.get_interface("nic2")
@@ -150,6 +152,17 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "netperf_opts" :
                                           "-L %s -6" % (g3_guestnic.get_ip(1))
                                   })
+
+if nperf_mode == "multi":
+    netperf_cli_tcp.unset_option("confidence")
+    netperf_cli_udp.unset_option("confidence")
+    netperf_cli_tcp6.unset_option("confidence")
+    netperf_cli_udp6.unset_option("confidence")
+
+    netperf_cli_tcp.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_udp.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
 
 ping_mod_bad = ctl.get_module("IcmpPing",
                                options={

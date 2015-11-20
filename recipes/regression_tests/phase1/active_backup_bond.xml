@@ -6,6 +6,8 @@
         <alias name="nperf_reserve" value="20" />
         <alias name="nperf_confidence" value="99,5" />
         <alias name="nperf_max_runs" value="5"/>
+        <alias name="nperf_mode" value="default"/>
+        <alias name="nperf_num_parallel" value="2"/>
         <alias name="mapping_file" value="active_backup_bond.mapping" />
         <alias name="net" value="192.168.0"/>
     </define>
