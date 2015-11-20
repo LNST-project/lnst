@@ -79,7 +79,8 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "cpu_util" : nperf_cpu_util
+                                      "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs
                                   })
 netperf_cli_udp = ctl.get_module("Netperf",
                                   options={
@@ -87,7 +88,8 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "cpu_util" : nperf_cpu_util
+                                      "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs
                                   })
 netperf_cli_tcp6 = ctl.get_module("Netperf",
                                   options={
@@ -95,7 +97,8 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "duration" : netperf_duration,
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "cpu_util" : nperf_cpu_util
+                                      "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs
                                   })
 netperf_cli_udp6 = ctl.get_module("Netperf",
                                   options={
@@ -103,7 +106,8 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "duration" : netperf_duration,
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
-                                      "cpu_util" : nperf_cpu_util
+                                      "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs
                                   })
 
 for vlan1 in vlans:
@@ -121,7 +125,7 @@ for vlan1 in vlans:
 
         netperf_srv6.update_options({"bind": m1_vlan1.get_ip(1)})
 
-        p_opts = "-i %s -L %s" % (nperf_max_runs, m2_vlan2.get_ip(0))
+        p_opts = "-L %s" % (m2_vlan2.get_ip(0))
         if nperf_cpupin:
             p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
@@ -132,10 +136,10 @@ for vlan1 in vlans:
                                         "netperf_opts": p_opts})
 
         netperf_cli_tcp6.update_options({"netperf_server": m1_vlan1.get_ip(1),
-                                         "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2_vlan2.get_ip(1))})
+                                         "netperf_opts": "-L %s -6" % (m2_vlan2.get_ip(1))})
 
         netperf_cli_udp6.update_options({"netperf_server": m1_vlan1.get_ip(1),
-                                         "netperf_opts": "-i %s -L %s -6" % (nperf_max_runs, m2_vlan2.get_ip(1))})
+                                         "netperf_opts": "-L %s -6" % (m2_vlan2.get_ip(1))})
 
         if vlan1 == vlan2:
             # These tests should pass

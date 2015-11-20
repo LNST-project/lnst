@@ -73,7 +73,7 @@ netperf_srv6 = ctl.get_module("Netperf",
                                   "netperf_opts" : " -6",
                               })
 
-p_opts = "-i %s -L %s" % (nperf_max_runs, h2_vlan10.get_ip(0))
+p_opts = "-L %s" % (h2_vlan10.get_ip(0))
 if nperf_cpupin:
     p_opts += " -T%s" % nperf_cpupin
 
@@ -85,6 +85,7 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts
                                   })
 
@@ -96,6 +97,7 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts
                                   })
 
@@ -108,8 +110,9 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, h2_vlan10.get_ip(1))
+                                          "-L %s -6" % (h2_vlan10.get_ip(1))
                                   })
 
 netperf_cli_udp6 = ctl.get_module("Netperf",
@@ -121,8 +124,9 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, h2_vlan10.get_ip(1))
+                                          "-L %s -6" % (h2_vlan10.get_ip(1))
                                   })
 ctl.wait(15)
 

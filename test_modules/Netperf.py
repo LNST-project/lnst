@@ -36,12 +36,7 @@ class Netperf(TestGeneric):
         self._family = self.get_opt("family")
         self._cpu_util = self.get_opt("cpu_util")
         self._num_parallel = int(self.get_opt("num_parallel", default=1))
-
         self._runs = self.get_opt("runs", default=1)
-        if self._runs > 1 and self._confidence is not None:
-            logging.warning("Ignoring 'runs' because 'confidence' "\
-                            "was specified.")
-            self._runs = 1
 
         self._threshold = self._parse_threshold(self.get_opt("threshold"))
         self._threshold_deviation = self._parse_threshold(
@@ -91,6 +86,9 @@ class Netperf(TestGeneric):
                 confidence level that Netperf should try to achieve
                 """
                 cmd += " -I %s" % self._confidence
+                if self._runs >= 3:
+                    cmd += " -i %d,%d" % (self._runs, self._runs)
+                    self._runs = 1
 
             if self._cpu_util is not None:
                 if self._cpu_util.lower() == "both":

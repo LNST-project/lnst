@@ -72,7 +72,7 @@ netperf_srv6 = ctl.get_module("Netperf",
                                   "netperf_opts" : " -6"
                               })
 
-p_opts = "-i %s -L %s" % (nperf_max_runs, test_if2.get_ip(0))
+p_opts = "-L %s" % (test_if2.get_ip(0))
 if nperf_cpupin:
     p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
@@ -84,6 +84,7 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts
                                 })
 
@@ -95,6 +96,7 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts
                                   })
 
@@ -107,8 +109,9 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, test_if2.get_ip(1))
+                                          "-L %s -6" % (test_if2.get_ip(1))
                                   })
 netperf_cli_udp6 = ctl.get_module("Netperf",
                                   options={
@@ -119,8 +122,9 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, test_if2.get_ip(1))
+                                          "-L %s -6" % (test_if2.get_ip(1))
                                   })
 
 ctl.wait(15)
@@ -248,7 +252,7 @@ netperf_srv.update_options({"bind" : test_if2.get_ip(0)})
 
 netperf_srv6.update_options({"bind" : test_if2.get_ip(1)})
 
-p_opts = "-i %s -L %s" % (nperf_max_runs, test_if1.get_ip(0))
+p_opts = "-L %s" % (test_if1.get_ip(0))
 if nperf_cpupin:
     p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
@@ -259,10 +263,10 @@ netperf_cli_udp.update_options({"netperf_server" : test_if2.get_ip(0),
                                 "netperf_opts" : p_opts})
 
 netperf_cli_tcp6.update_options({"netperf_server" : test_if2.get_ip(1),
-                                "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, test_if1.get_ip(1))})
+                                "netperf_opts" : "-L %s -6" % (test_if1.get_ip(1))})
 
 netperf_cli_udp6.update_options({"netperf_server" : test_if2.get_ip(1),
-                                 "netperf_opts" : "-i %s -L %s -6" % (nperf_max_runs, test_if1.get_ip(1))})
+                                 "netperf_opts" : "-L %s -6" % (test_if1.get_ip(1))})
 
 for setting in offload_settings:
     dev_features = ""

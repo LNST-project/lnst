@@ -105,8 +105,9 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
-                                      "netperf_opts" : "-i %s -L %s" %
-                                                          (nperf_max_runs, g3_guestnic.get_ip(0))
+                                      "runs": nperf_max_runs,
+                                      "netperf_opts" : "-L %s" %
+                                                          (g3_guestnic.get_ip(0))
                                   })
 
 netperf_cli_udp = ctl.get_module("Netperf",
@@ -117,8 +118,9 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
-                                      "netperf_opts" : "-i %s -L %s" %
-                                                          (nperf_max_runs, g3_guestnic.get_ip(0))
+                                      "runs": nperf_max_runs,
+                                      "netperf_opts" : "-L %s" %
+                                                          (g3_guestnic.get_ip(0))
                                   })
 
 netperf_cli_tcp6 = ctl.get_module("Netperf",
@@ -130,8 +132,9 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "testname" : "TCP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, g3_guestnic.get_ip(1))
+                                          "-L %s -6" % (g3_guestnic.get_ip(1))
                                   })
 
 netperf_cli_udp6 = ctl.get_module("Netperf",
@@ -143,8 +146,9 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "testname" : "UDP_STREAM",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
+                                      "runs": nperf_max_runs,
                                       "netperf_opts" :
-                                          "-i %s -L %s -6" % (nperf_max_runs, g3_guestnic.get_ip(1))
+                                          "-L %s -6" % (g3_guestnic.get_ip(1))
                                   })
 
 ping_mod_bad = ctl.get_module("IcmpPing",
