@@ -138,7 +138,7 @@ for vlan1 in vlans:
         netperf_srv6.update_options({"bind": m1_vlan1.get_ip(1)})
 
         p_opts = "-L %s" % (m2_vlan2.get_ip(0))
-        if nperf_cpupin:
+        if nperf_cpupin and nperf_mode != "multi":
             p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
         netperf_cli_tcp.update_options({"netperf_server": m1_vlan1.get_ip(0),
@@ -187,6 +187,9 @@ for vlan1 in vlans:
                     result_tcp.set_parameter('netperf_server_on_vlan', vlan1)
                     result_tcp.set_parameter('netperf_client_on_vlan', vlan2)
                     result_tcp.add_tag(product_name)
+                    if nperf_mode == "multi":
+                        result_tcp.add_tag("multithreaded")
+                        result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
                     baseline = perf_api.get_baseline_of_result(result_tcp)
                     netperf_baseline_template(netperf_cli_tcp, baseline)
@@ -208,6 +211,9 @@ for vlan1 in vlans:
                     result_udp.set_parameter('netperf_server_on_vlan', vlan1)
                     result_udp.set_parameter('netperf_client_on_vlan', vlan2)
                     result_udp.add_tag(product_name)
+                    if nperf_mode == "multi":
+                        result_udp.add_tag("multithreaded")
+                        result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
                     baseline = perf_api.get_baseline_of_result(result_udp)
                     netperf_baseline_template(netperf_cli_udp, baseline)
@@ -239,6 +245,9 @@ for vlan1 in vlans:
                     result_tcp.set_parameter('netperf_server_on_vlan', vlan1)
                     result_tcp.set_parameter('netperf_client_on_vlan', vlan2)
                     result_tcp.add_tag(product_name)
+                    if nperf_mode == "multi":
+                        result_tcp.add_tag("multithreaded")
+                        result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
                     baseline = perf_api.get_baseline_of_result(result_tcp)
                     netperf_baseline_template(netperf_cli_tcp6, baseline)
@@ -260,6 +269,9 @@ for vlan1 in vlans:
                     result_udp.set_parameter('netperf_server_on_vlan', vlan1)
                     result_udp.set_parameter('netperf_client_on_vlan', vlan2)
                     result_udp.add_tag(product_name)
+                    if nperf_mode == "multi":
+                        result_udp.add_tag("multithreaded")
+                        result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
                     baseline = perf_api.get_baseline_of_result(result_udp)
                     netperf_baseline_template(netperf_cli_udp6, baseline)

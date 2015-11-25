@@ -75,7 +75,7 @@ netperf_srv6 = ctl.get_module("Netperf",
                               })
 
 p_opts = "-L %s" % (test_if2.get_ip(0))
-if nperf_cpupin:
+if nperf_cpupin and nperf_mode != "multi":
     p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
 netperf_cli_tcp = ctl.get_module("Netperf",
@@ -166,6 +166,9 @@ for setting in offload_settings:
         result_tcp.set_parameter('netperf_server', "testmachine1")
         result_tcp.set_parameter('netperf_client', "testmachine2")
         result_tcp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         netperf_baseline_template(netperf_cli_tcp, baseline)
@@ -187,6 +190,9 @@ for setting in offload_settings:
         result_udp.set_parameter('netperf_server', "testmachine1")
         result_udp.set_parameter('netperf_client', "testmachine2")
         result_udp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp, baseline)
@@ -215,6 +221,9 @@ for setting in offload_settings:
         result_tcp.set_parameter('netperf_server', "testmachine1")
         result_tcp.set_parameter('netperf_client', "testmachine2")
         result_tcp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         netperf_baseline_template(netperf_cli_tcp6, baseline)
@@ -236,6 +245,9 @@ for setting in offload_settings:
         result_udp.set_parameter('netperf_server', "testmachine1")
         result_udp.set_parameter('netperf_client', "testmachine2")
         result_udp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp6, baseline)
@@ -266,7 +278,7 @@ netperf_srv.update_options({"bind" : test_if2.get_ip(0)})
 netperf_srv6.update_options({"bind" : test_if2.get_ip(1)})
 
 p_opts = "-L %s" % (test_if1.get_ip(0))
-if nperf_cpupin:
+if nperf_cpupin and nperf_mode != "multi":
     p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
 netperf_cli_tcp.update_options({"netperf_server" : test_if2.get_ip(0),
@@ -305,6 +317,9 @@ for setting in offload_settings:
         result_tcp.set_parameter('netperf_server', "testmachine2")
         result_tcp.set_parameter('netperf_client', "testmachine1")
         result_tcp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         netperf_baseline_template(netperf_cli_tcp, baseline)
@@ -326,6 +341,9 @@ for setting in offload_settings:
         result_udp.set_parameter('netperf_server', "testmachine2")
         result_udp.set_parameter('netperf_client', "testmachine1")
         result_udp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp, baseline)
@@ -354,6 +372,9 @@ for setting in offload_settings:
         result_tcp.set_parameter('netperf_server', "testmachine2")
         result_tcp.set_parameter('netperf_client', "testmachine1")
         result_tcp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         netperf_baseline_template(netperf_cli_tcp6, baseline)
@@ -375,6 +396,9 @@ for setting in offload_settings:
         result_udp.set_parameter('netperf_server', "testmachine2")
         result_udp.set_parameter('netperf_client', "testmachine1")
         result_udp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp6, baseline)

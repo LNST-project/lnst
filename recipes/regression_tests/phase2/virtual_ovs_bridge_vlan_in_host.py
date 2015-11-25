@@ -76,7 +76,7 @@ netperf_srv6 = ctl.get_module("Netperf",
                               })
 
 p_opts = "-L %s" % (h2_vlan10.get_ip(0))
-if nperf_cpupin:
+if nperf_cpupin and nperf_mode != "multi":
     p_opts += " -T%s" % nperf_cpupin
 
 netperf_cli_tcp = ctl.get_module("Netperf",
@@ -171,6 +171,9 @@ for setting in offload_settings:
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
         result_tcp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         netperf_baseline_template(netperf_cli_tcp, baseline)
@@ -194,6 +197,9 @@ for setting in offload_settings:
         for offload in setting:
             result_udp.set_parameter(offload[0], offload[1])
         result_udp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp, baseline)
@@ -225,6 +231,9 @@ for setting in offload_settings:
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
         result_tcp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         netperf_baseline_template(netperf_cli_tcp6, baseline)
@@ -248,6 +257,9 @@ for setting in offload_settings:
         for offload in setting:
             result_udp.set_parameter(offload[0], offload[1])
         result_udp.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp6, baseline)
