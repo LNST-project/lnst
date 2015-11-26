@@ -296,7 +296,10 @@ def is_installed(program):
 def indent(string, spaces):
     ret_str = []
     for line in string.split('\n'):
-        ret_str.append(' '*spaces + line)
+        if line == "":
+            ret_str.append(line)
+        else:
+            ret_str.append(' '*spaces + line)
     return '\n'.join(ret_str)
 
 class Noop(object):
