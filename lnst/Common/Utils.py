@@ -250,7 +250,9 @@ def dict_to_dot(original_dict, prefix=""):
         elif isinstance(value, tuple):
             #TODO temporary fix, tuples shouldn't be here
             if len(value) == 2:
-                return_list.append((iter_key+'.'+value[0], value[1]))
+                return_list.append((prefix+key,
+                                    "(%s, %s)" % (value[0],
+                                                  value[1]) ))
         else:
             return_list.append((prefix+key, str(value)))
     return return_list
