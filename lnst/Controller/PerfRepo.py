@@ -152,11 +152,11 @@ class PerfRepoTest(PerfRepoObject):
                           self._name,
                           self._groupid)
         ret_str = textwrap.dedent(ret_str)
-        ret_str += indent(self._description, 4)
+        ret_str += indent(self._description + "\n", 4)
         ret_str += "metrics:\n"
         for metric in self._metrics:
-            ret_str +=  indent(str(metric), 4)
-            ret_str +=  indent("------------------------", 4)
+            ret_str += indent(str(metric), 4)
+            ret_str += indent("------------------------\n", 4)
         return textwrap.dedent(ret_str)
 
 class PerfRepoTestExecution(PerfRepoObject):
@@ -328,11 +328,11 @@ class PerfRepoTestExecution(PerfRepoObject):
         ret_str = textwrap.dedent(ret_str)
         ret_str += "parameters:\n"
         for param in self._parameters:
-            ret_str +=  indent("%s = %s" % (param[0], param[1]), 4)
+            ret_str +=  indent("%s = %s\n" % (param[0], param[1]), 4)
         ret_str += "values:\n"
         for val in self._values:
             ret_str +=  indent(str(val), 4)
-            ret_str +=  indent("------------------------", 4)
+            ret_str +=  indent("------------------------\n", 4)
         return textwrap.dedent(ret_str)
 
 class PerfRepoValue(PerfRepoObject):
@@ -413,7 +413,7 @@ class PerfRepoValue(PerfRepoObject):
         ret_str = textwrap.dedent(ret_str)
         ret_str += "parameters:\n"
         for param in self._parameters:
-            ret_str +=  indent("%s = %s" % (param[0], param[1]), 4)
+            ret_str +=  indent("%s = %s\n" % (param[0], param[1]), 4)
         return textwrap.dedent(ret_str)
 
 class PerfRepoMetric(PerfRepoObject):
@@ -486,7 +486,7 @@ class PerfRepoMetric(PerfRepoObject):
                           self._name,
                           self._comparator)
         ret_str = textwrap.dedent(ret_str)
-        ret_str += indent(self._description, 4)
+        ret_str += indent(self._description + "\n", 4)
         return ret_str
 
 class PerfRepoReport(PerfRepoObject):
