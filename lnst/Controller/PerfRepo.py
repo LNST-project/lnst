@@ -35,7 +35,7 @@ class PerfRepoObject(object):
 
     def _set_element_atrib(self, element, name, value):
         if value != None:
-            element.set(name, value)
+            element.set(str(name), str(value))
 
     def to_xml(self):
         pass
@@ -133,7 +133,7 @@ class PerfRepoTest(PerfRepoObject):
         self._set_element_atrib(root, 'uid', self._uid)
         self._set_element_atrib(root, 'groupId', self._groupid)
         description = ElementTree.SubElement(root, 'description')
-        description.text = self._description
+        description.text = str(self._description)
         metrics = ElementTree.SubElement(root, 'metrics')
         for metric in self._metrics:
             metrics.append(metric.to_xml())
@@ -290,7 +290,7 @@ class PerfRepoTestExecution(PerfRepoObject):
         self._set_element_atrib(root, 'testId', self._testId)
         self._set_element_atrib(root, 'testUid', self._testUid)
         comment = ElementTree.SubElement(root, 'comment')
-        comment.text = self._comment
+        comment.text = str(self._comment)
 
         parameters = ElementTree.SubElement(root, 'parameters')
         for param in self._parameters:
@@ -395,7 +395,7 @@ class PerfRepoValue(PerfRepoObject):
         self._set_element_atrib(root, 'metricComparator',
                                       self._metricComparator)
         self._set_element_atrib(root, 'metricName', self._metricName)
-        self._set_element_atrib(root, 'result', str(self._result))
+        self._set_element_atrib(root, 'result', self._result)
 
         parameters = ElementTree.SubElement(root, 'parameters')
         for param in self._parameters:
@@ -471,7 +471,7 @@ class PerfRepoMetric(PerfRepoObject):
         self._set_element_atrib(root, 'id', self._id)
         self._set_element_atrib(root, 'name', self._name)
         description = ElementTree.SubElement(root, 'description')
-        description.text = self._description
+        description.text = str(self._description)
         self._set_element_atrib(root, 'comparator', self._comparator)
 
         return root
@@ -807,7 +807,7 @@ class PerfRepoReport(PerfRepoObject):
             key_elem = ElementTree.SubElement(entry_elem, 'key')
             value_elem = ElementTree.SubElement(entry_elem, 'value')
 
-            key_elem.text = prop[0]
+            key_elem.text = str(prop[0])
             self._set_element_atrib(value_elem, 'name', prop[0])
             self._set_element_atrib(value_elem, 'value', prop[1])
 
