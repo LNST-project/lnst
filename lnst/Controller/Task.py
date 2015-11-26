@@ -771,7 +771,7 @@ class PerfRepoResult(object):
             if skip:
                 continue
             sha1.update(i[0])
-            sha1.update(i[1])
+            sha1.update(str(i[1]))
         return sha1.hexdigest()
 
 class PerfRepoBaseline(object):
