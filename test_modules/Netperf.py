@@ -33,7 +33,6 @@ class Netperf(TestGeneric):
         self._testname = self.get_opt("testname", default="TCP_STREAM")
         self._confidence = self.get_opt("confidence")
         self._bind = self.get_opt("bind", opt_type="addr")
-        self._family = self.get_opt("family")
         self._cpu_util = self.get_opt("cpu_util")
         self._num_parallel = int(self.get_opt("num_parallel", default=1))
         self._runs = self.get_opt("runs", default=1)
