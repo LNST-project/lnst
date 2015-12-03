@@ -149,6 +149,10 @@ for setting in offload_settings:
                                  dev_features))
     m2.run("ethtool -K %s %s" % (m2_phy1.get_devname(),
                                  dev_features))
+    if ("rx", "off") in setting:
+        # when rx offload is turned off some of the cards might get reset
+        # and link goes down, so wait a few seconds until NIC is ready
+        ctl.wait(15)
 
     # Ping test
     for vlan1 in vlans:

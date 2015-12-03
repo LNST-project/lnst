@@ -153,6 +153,11 @@ for setting in offload_settings:
     g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
     h2.run("ethtool -K %s %s" % (h2_nic.get_devname(), dev_features))
 
+    if ("rx", "off") in setting:
+        # when rx offload is turned off some of the cards might get reset
+        # and link goes down, so wait a few seconds until NIC is ready
+        ctl.wait(15)
+
     if ipv in [ 'ipv4', 'both' ]:
         g1.run(ping_mod)
 
