@@ -13,9 +13,9 @@ rpazdera@redhat.com (Radek Pazdera)
 import hashlib
 import re
 import logging
-from lnst.Controller.PerfRepo import PerfRepoRESTAPI
-from lnst.Controller.PerfRepo import PerfRepoTestExecution
-from lnst.Controller.PerfRepo import PerfRepoValue
+from perfrepo import PerfRepoRESTAPI
+from perfrepo import PerfRepoTestExecution
+from perfrepo import PerfRepoValue
 from lnst.Common.Utils import dict_to_dot, list_to_dot, deprecated
 from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplateError
