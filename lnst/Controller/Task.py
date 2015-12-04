@@ -13,15 +13,21 @@ rpazdera@redhat.com (Radek Pazdera)
 import hashlib
 import re
 import logging
-from perfrepo import PerfRepoRESTAPI
-from perfrepo import PerfRepoTestExecution
-from perfrepo import PerfRepoValue
 from lnst.Common.Utils import dict_to_dot, list_to_dot, deprecated
 from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplateError
 from lnst.Common.Path import Path
 from lnst.Controller.PerfRepoMapping import PerfRepoMapping
 from lnst.Common.Utils import Noop
+
+try:
+    from perfrepo import PerfRepoRESTAPI
+    from perfrepo import PerfRepoTestExecution
+    from perfrepo import PerfRepoValue
+except:
+    PerfRepoRESTAPI = None
+    PerfRepoTestExecution = None
+    PerfRepoValue = None
 
 # The handle to be imported from each task
 ctl = None
@@ -547,7 +553,12 @@ class PerfRepoAPI(object):
             return False
 
     def connect(self, url, username, password):
-        self._rest_api = PerfRepoRESTAPI(url, username, password)
+        if PerfRepoRESTAPI is not None:
+            self._rest_api = PerfRepoRESTAPI(url, username, password)
+            if not self._rest_api.connected():
+                self._rest_api = None
+        else:
+            self._rest_api = None
 
     def new_result(self, mapping_key, name, hash_ignore=[]):
         if not self.connected():
