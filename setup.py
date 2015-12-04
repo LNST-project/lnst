@@ -101,7 +101,8 @@ For detailed description of the architecture of LNST please refer to
 project website <https://fedorahosted.org/lnst>.
 """
 
-PACKAGES = ["lnst", "lnst.Common", "lnst.Controller", "lnst.Slave"]
+PACKAGES = ["lnst", "lnst.Common", "lnst.Controller", "lnst.Slave",
+            "lnst.RecipeCommon" ]
 SCRIPTS = ["lnst-ctl", "lnst-slave", "lnst-pool-wizard"]
 
 RECIPE_FILES = []
