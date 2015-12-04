@@ -547,7 +547,8 @@ class PerfRepoAPI(object):
         return self._mapping
 
     def connected(self):
-        if self._rest_api is not None and self._mapping is not None:
+        if self._rest_api is not None and self._rest_api.connected() and\
+                self._mapping is not None:
             return True
         else:
             return False
@@ -589,10 +590,10 @@ class PerfRepoAPI(object):
         return result
 
     def save_result(self, result):
-        if self._rest_api is None:
-            raise TaskError("Not connected to PerfRepo.")
-        elif isinstance(result, Noop):
+        if isinstance(result, Noop):
             return
+        elif not self.connected():
+            raise TaskError("Not connected to PerfRepo.")
         elif isinstance(result, PerfRepoResult):
             if len(result.get_testExecution().get_values()) < 1:
                 logging.debug("PerfRepoResult with no result data, skipping "\
@@ -630,7 +631,7 @@ class PerfRepoAPI(object):
                             "of PerfRepoResult")
 
     def get_baseline(self, report_id):
-        if report_id is None:
+        if report_id is None or not self.connected():
             return Noop()
 
         report = self._rest_api.report_get_by_id(report_id, log=False)
@@ -656,7 +657,7 @@ class PerfRepoAPI(object):
         return PerfRepoBaseline(baseline_testExec)
 
     def get_baseline_of_result(self, result):
-        if not isinstance(result, PerfRepoResult):
+        if not isinstance(result, PerfRepoResult) or not self.connected():
             return Noop()
 
         res_hash = result.generate_hash()
@@ -677,6 +678,8 @@ class PerfRepoAPI(object):
         return baseline
 
     def compare_to_baseline(self, result, report_id, metric_name):
+        if not self.connected():
+            return False
         baseline_testExec = self.get_baseline(report_id)
         result_testExec = result.get_testExecution()
 
