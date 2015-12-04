@@ -3,6 +3,8 @@ from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import netperf_baseline_template
 from lnst.Controller.PerfRepoUtils import netperf_result_template
 
+from lnst.RecipeCommon.IRQ import pin_dev_irqs
+
 # ------
 # SETUP
 # ------
@@ -51,6 +53,14 @@ for vlan in vlans:
     vlan_if1.set_mtu(mtu)
     vlan_if2 = m2.get_interface(vlan)
     vlan_if2.set_mtu(mtu)
+
+if nperf_cpupin:
+    m1.run("service irqbalance stop")
+    m2.run("service irqbalance stop")
+
+    # this will pin devices irqs to cpu #0
+    for m, d in [ (m1, m1_phy1), (m2, m2_phy1) ]:
+        pin_dev_irqs(m, d, 0)
 
 ctl.wait(15)
 
@@ -298,3 +308,7 @@ for offload in offloads:
     dev_features += " %s %s" % (offload, "on")
 m1.run("ethtool -K %s %s" % (m1_phy1.get_devname(), dev_features))
 m2.run("ethtool -K %s %s" % (m2_phy1.get_devname(), dev_features))
+
+if nperf_cpupin:
+    m1.run("service irqbalance start")
+    m2.run("service irqbalance start")

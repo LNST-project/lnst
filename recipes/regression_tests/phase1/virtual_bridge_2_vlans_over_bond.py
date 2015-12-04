@@ -3,6 +3,8 @@ from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import netperf_baseline_template
 from lnst.Controller.PerfRepoUtils import netperf_result_template
 
+from lnst.RecipeCommon.IRQ import pin_dev_irqs
+
 # ------
 # SETUP
 # ------
@@ -56,6 +58,13 @@ g1_guestnic = g1.get_interface("guestnic")
 g2_guestnic = g2.get_interface("guestnic")
 g3_guestnic = g3.get_interface("guestnic")
 g4_guestnic = g4.get_interface("guestnic")
+
+h1.run("service irqbalance stop")
+h2.run("service irqbalance stop")
+
+# this will pin devices irqs to cpu #0
+for m, d in [ (h1, h1_nic1), (h2, h2_nic1) ,  (h1, h1_nic2), (h2, h2_nic2) ]:
+    pin_dev_irqs(m, d, 0)
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -371,3 +380,6 @@ g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
 g2.run("ethtool -K %s %s" % (g2_guestnic.get_devname(), dev_features))
 g3.run("ethtool -K %s %s" % (g3_guestnic.get_devname(), dev_features))
 g4.run("ethtool -K %s %s" % (g4_guestnic.get_devname(), dev_features))
+
+h1.run("service irqbalance start")
+h2.run("service irqbalance start")

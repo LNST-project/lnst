@@ -3,6 +3,8 @@ from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import netperf_baseline_template
 from lnst.Controller.PerfRepoUtils import netperf_result_template
 
+from lnst.RecipeCommon.IRQ import pin_dev_irqs
+
 # ------
 # SETUP
 # ------
@@ -44,6 +46,25 @@ test_if1 = m1.get_interface("test_if")
 test_if1.set_mtu(mtu)
 test_if2 = m2.get_interface("test_if")
 test_if2.set_mtu(mtu)
+
+if nperf_cpupin:
+    m1.run("service irqbalance stop")
+    m2.run("service irqbalance stop")
+
+    m1_phy1 = m1.get_interface("eth1")
+    m1_phy2 = m1.get_interface("eth2")
+    dev_list = [(m1, m1_phy1), (m1, m1_phy2)]
+
+    if test_if2.get_type() == "bond":
+        m2_phy1 = m2.get_interface("eth1")
+        m2_phy2 = m2.get_interface("eth2")
+        dev_list.extend([(m2, m2_phy1), (m2, m2_phy2)])
+    else:
+        dev_list.append((m2, test_if2))
+
+    # this will pin devices irqs to cpu #0
+    for m, d in dev_list:
+        pin_dev_irqs(m, d, 0)
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -259,3 +280,7 @@ for offload in offloads:
     dev_features += " %s %s" % (offload, "on")
 m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
 m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))
+
+if nperf_cpupin:
+    m1.run("service irqbalance start")
+    m2.run("service irqbalance start")
