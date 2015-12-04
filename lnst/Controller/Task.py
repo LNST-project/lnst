@@ -362,6 +362,9 @@ class InterfaceAPI(object):
     def get_id(self):
         return self._if.get_id()
 
+    def get_type(self):
+        return self._if.get_type()
+
     def get_network(self):
         return self._if.get_network()
 

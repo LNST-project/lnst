@@ -542,6 +542,9 @@ class Interface(object):
     def get_id(self):
         return self._id
 
+    def get_type(self):
+        return self._type
+
     def get_driver(self):
         return self._driver
 
