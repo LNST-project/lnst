@@ -22,6 +22,7 @@ from lnst.Common.Utils import mkdir_p, check_process_running
 from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from xml.dom.minidom import getDOMImplementation
+from lxml import etree
 
 DefaultPoolDir = os.path.expanduser("~/.lnst/pool/")
 PATH_IS_DIR_ACCESSIBLE = 0
@@ -416,20 +417,31 @@ class Wizard:
                 sys.stderr.write("No domain entered\n")
                 continue
             try:
-                conn.lookupByName(libvirt_domain)
+                guest = conn.lookupByName(libvirt_domain)
             except:
                 continue
 
-            # when libvirtd is old
+            guestxml = etree.fromstring(guest.XMLDesc())
+
+            macs = list()
+            for mac in guestxml.findall(".//interface/source[@network='default']/../mac"):
+                macs.append(mac.get('address'))
+
+            guest_ip = None
             try:
                 for lease in conn.networkLookupByName("default").DHCPLeases():
-                    if lease["hostname"] == libvirt_domain:
-                        return (libvirt_domain, lease["ipaddr"])
+                    if lease['mac'] in macs:
+                        guest_ip = lease['ipaddr']
+                        break
             except:
                 sys.stderr.write("Failed getting DHCPLeases from hypervisor\n")
 
-            sys.stderr.write("Couldn't find any IP associated with "
-                             "libvirt_domain '%s'\n" % libvirt_domain)
+            if guest_ip == None:
+                sys.stderr.write("Couldn't find any IP associated with "
+                                 "libvirt_domain '%s'\n" % libvirt_domain)
+            else:
+                return libvirt_domain, lease['ipaddr']
+
             hostname = self._query_hostname()
             return libvirt_domain, hostname
 
