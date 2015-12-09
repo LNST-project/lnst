@@ -86,17 +86,19 @@ Git Source Tree:       https://github.com/jpirko/lnst
 Mailing List:          <lnst-developers@lists.fedorahosted.org>
 
 .SH AUTHORS
-\fBJiri Pirko\fR <jpirko@redhat.com>
-.br
-\fBJiri Zupka\fR <jzupka@redhat.com>
+\fBJiri Pirko\fR <jiri@resnulli.us>
 .br
 \fBJan Tluka\fR <jtluka@redhat.com>
 .br
-\fBRadek Pazdera\fR <rpazdera@redhat.com>
-.br
 \fBOndrej Lichtner\fR <olichtne@redhat.com>
+.br
+\fBJiri Prochazka\fR <jprochaz@redhat.com>
+.br
+\fBJiri Zupka\fR <jzupka@redhat.com>
+.br
+\fBRadek Pazdera\fR <radek@pazdera.co.uk>
 .SH COPYRIGHT
-Copyright (C) 2011\-2013 Red Hat, Inc.
+Copyright (C) 2011\-2015 Red Hat, Inc.
 
 LNST is distributed under GNU General Public License version 2. See
 the file "COPYING" in the source distribution for information on terms &
