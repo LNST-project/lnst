@@ -18,12 +18,12 @@ su
 
 ## Authors
 
-* Jiri Pirko <jpirko@redhat.com>
-* Jiri Zupka <jzupka@redhat.com>
+* Jiri Pirko <jiri@resnulli.us>
 * Jan Tluka <jtluka@redhat.com>
-* Radek Pazdera <radek@pazdera.co.uk>
 * Ondrej Lichtner <olichtne@redhat.com>
 * Jiri Prochazka <jprochaz@redhat.com>
+* Jiri Zupka <jzupka@redhat.com>
+* Radek Pazdera <radek@pazdera.co.uk>
 
 
 ## Internet Resources
