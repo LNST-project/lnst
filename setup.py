@@ -169,8 +169,11 @@ BASH_COMP = [(BASH_COMP_DIR, ["install/lnst-ctl.bash",
 
 SCHEMAS = [(CTL_RESOURCE_DIR, ["schema-recipe.rng", "schema-sm.rng"])]
 
+RESULT_XSLT_DATA = [(CTL_RESOURCE_DIR + "result_xslt/",
+                     ["result_xslt/" + f for f in os.listdir("result_xslt")])]
+
 DATA_FILES = CONFIG + TEST_MODULES + MULTICAST_TEST_TOOLS + MAN_PAGES + \
-             SCHEMAS + BASH_COMP + RECIPE_FILES
+             SCHEMAS + BASH_COMP + RECIPE_FILES + RESULT_XSLT_DATA
 
 setup(name="lnst",
     version="10",
