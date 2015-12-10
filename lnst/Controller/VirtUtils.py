@@ -61,7 +61,6 @@ def _virsh(cmd):
         raise VirtUtilsError("virsh error: %s" % err)
 
 class VirtDomainCtl:
-    _name = None
     _net_device_template = """
     <interface type='network'>
         <mac address='{0}'/>
@@ -130,8 +129,6 @@ class VirtDomainCtl:
             return False
 
 class NetCtl(object):
-    _name = None
-
     def __init__(self, name):
         self._name = name
 
@@ -197,14 +194,13 @@ class VirtNetCtl(NetCtl):
             return False
 
 class BridgeCtl(NetCtl):
-    _remove = False
-
     def __init__(self, name=None):
         if not name:
             name = self._generate_name()
 
         self._check_name(name)
         self._name = name
+        self._remove = False
 
     def get_name(self):
         return self._name
