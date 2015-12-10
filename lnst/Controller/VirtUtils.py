@@ -20,7 +20,12 @@ from lnst.Common.NetUtils import scan_netdevs
 #this is a global object because opening the connection to libvirt in every
 #object instance that uses it sometimes fails - the libvirt server probably
 #can't handle that many connections at a time
-_libvirt_conn = libvirt.open(None)
+_libvirt_conn = None
+
+def init_libvirt_con():
+    global _libvirt_conn
+    if _libvirt_conn is None:
+        _libvirt_conn = libvirt.open(None)
 
 class VirtUtilsError(Exception):
     pass
@@ -73,6 +78,8 @@ class VirtDomainCtl:
     def __init__(self, domain_name):
         self._name = domain_name
         self._created_interfaces = {}
+
+        init_libvirt_con()
 
         try:
             self._domain = _libvirt_conn.lookupByName(domain_name)
@@ -147,6 +154,8 @@ class VirtNetCtl(NetCtl):
     """
 
     def __init__(self, name=None):
+        init_libvirt_con()
+
         if not name:
             name = self._generate_name()
         self._name = name
