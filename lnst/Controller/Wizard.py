@@ -32,12 +32,36 @@ PATH_NOT_DIR = 3
 
 
 class Wizard:
-
-    def interactive(self, pool_dir=None):
+    def interactive(self, hostlist=None, pool_dir=None):
         """ Starts Wizard in an interactive mode
         @param pool_dir Path to pool directory (optional)
         """
         pool_dir = self._check_and_query_pool_dir(pool_dir)
+
+        if hostlist is not None:
+            for host in hostlist:
+                hostname, port = self._parse_host(host)
+                if hostname == -1:
+                    continue
+
+                sock = self._get_connection(hostname, port)
+
+                if sock is None:
+                    continue
+                machine_interfaces = self._get_machine_interfaces(sock)
+                sock.close()
+
+                if machine_interfaces == {}:
+                    sys.stderr.write("No suitable interfaces found on the host "
+                                     "'%s:%s'\n" % (hostname, port))
+                elif machine_interfaces is not None:
+                    filename = self._query_filename(hostname)
+                    self._create_xml(machine_interfaces=machine_interfaces,
+                                     hostname=hostname, pool_dir=pool_dir,
+                                     filename=filename, port=port,
+                                     mode="interactive")
+
+            return
 
         while True:
             hostname = self._query_hostname()
@@ -62,6 +86,7 @@ class Wizard:
                                  hostname=hostname, pool_dir=pool_dir,
                                  filename=filename, port=port,
                                  mode="interactive")
+
             if self._query_continuation():
                 continue
             else:

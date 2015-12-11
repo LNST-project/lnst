@@ -26,12 +26,12 @@ def help(retval=0):
           " -h, --help                 display this help text and exit\n"\
           " -p, --pool_dir <directory> set the pool dir (works both in) "\
           "interactive and noninteractive mode\n"\
-          " -i, --interactive          start wizard in interactive mode (this "\
-          "is default mode)\n"\
+          " -i, --interactive          start wizard in interactive mode (default)"\
           " -n, --noninteractive       start wizard in noninteractive mode\n"\
           " -v, --virtual              start wizard in mode for VMs\n"\
           "Examples:\n"\
           " lnst-pool-wizard --interactive\n"\
+          " lnst-pool-wizard hostname1:1234 hostname2\n"\
           " lnst-pool-wizard --noninteractive 192.168.122.2\n"\
           " lnst-pool-wizard -n 192.168.122.2:8888 192.168.122.4\n"\
           " lnst-pool-wizard -p \".pool/\" -n 192.168.1.1:8877 192.168.122.4"
@@ -61,8 +61,6 @@ def main():
             if not args:
                 sys.stderr.write("No hostnames entered\n")
                 return RETVAL_ERR
-            else:
-                hostlist = args
             mode = "noninteractive"
         elif opt in ("-v", "--virtual"):
             mode = "virtual"
@@ -74,6 +72,9 @@ def main():
         else:
             help(RETVAL_ERR)
 
+    if args is not None:
+        hostlist = args
+
     wizard = Wizard()
 
     if mode == "noninteractive":
@@ -81,7 +82,7 @@ def main():
     elif mode == "virtual":
         wizard.virtual(pool_dir)
     else:
-        wizard.interactive(pool_dir)
+        wizard.interactive(hostlist, pool_dir)
 
     sys.exit(RETVAL_PASS)
 
