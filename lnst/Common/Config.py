@@ -13,7 +13,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 import os
 import sys
 import re
-from ConfigParser import ConfigParser
 from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_mac_address
 from lnst.Common.Colours import get_preset_conf
@@ -165,15 +164,55 @@ class Config():
         sect = self.get_section(section)
         sect[option]["value"] = value
 
+    def _preprocess_lines(self, lines):
+        comment_re = re.compile(r'^#.*$')
+        empty_line_re = re.compile(r'^\s*$')
+        result = []
+        for line in lines:
+            if comment_re.match(line):
+                continue
+            if empty_line_re.match(line):
+                continue
+            result.append(line.strip())
+        return result
+
+    def _parse_file(self, path):
+        result = {}
+        current_section = None
+
+        section_re = re.compile(r'^\[(\w+)\]$')
+        option_re = re.compile(r'^(\w+)\s*(\+?=)\s*(.*)$')
+        with open(path, "r") as f:
+            lines = f.readlines()
+
+        lines = self._preprocess_lines(lines)
+        for line in lines:
+            section = section_re.match(line)
+            option = option_re.match(line)
+            if section:
+                current_section = section.group(1)
+                if current_section in result:
+                    raise ConfigError("Section '[%s]' already defined." %\
+                                      current_section)
+                result[current_section] = []
+            elif option:
+                if current_section is None:
+                    raise ConfigError("No section defined yet.")
+                opt = {"name": option.group(1),
+                       "operator": option.group(2),
+                       "value": option.group(3)}
+                result[current_section].append(opt)
+            else:
+                msg = "Invalid format of config line:\n%s" % line
+                raise ConfigError(msg)
+        return result
+
     def load_config(self, path):
         '''Parse and load the config file'''
         exp_path = os.path.expanduser(path)
         abs_path = os.path.abspath(exp_path)
-        parser = ConfigParser(dict_type=dict)
         print >> sys.stderr, "Loading config file '%s'" % abs_path
-        parser.read(abs_path)
-
-        sections = parser._sections
+        sections = self._parse_file(abs_path)
 
         self.handleSections(sections, abs_path)
 
@@ -188,37 +227,30 @@ class Config():
     def handleOptions(self, section_name, config, cfg_path):
         section = self._options[section_name]
 
-        config.pop('__name__', None)
         for opt in config:
-            if not config[opt]:
+            opt_name = opt["name"]
+            opt_operator = opt["operator"]
+            opt_value = opt["value"]
+            if not opt_value:
                 continue
-            option = self._find_option_by_name(section, opt)
+            option = self._find_option_by_name(section, opt_name)
             if option != None:
-                if option[1]: #additive?
-                    option[0]["value"] +=\
-                            option[0]["action"](config[opt], cfg_path)
-                else:
-                    option[0]["value"] =\
-                            option[0]["action"](config[opt], cfg_path)
+                if opt_operator == "=":
+                    option["value"] = option["action"](opt_value, cfg_path)
+                elif opt_operator == "+=" and option["additive"]:
+                    option["value"] += option["action"](opt_value, cfg_path)
+                elif opt_operator == "+=":
+                    msg = "Operator += not allowed for option %s" % opt_name
+                    raise ConfigError(msg)
             else:
-                msg = "Unknown option: %s in section %s" % (opt, section_name)
+                msg = "Unknown option: %s in section %s" % (opt_name,
+                                                            section_name)
                 raise ConfigError(msg)
 
     def _find_option_by_name(self, section, opt_name):
-        match = re.match(r'^(\w*)(\s+\+)$', opt_name)
-        if match != None:
-            additive = True
-            opt_name = match.groups()[0]
-        else:
-            additive = False
-
         for option in section.itervalues():
             if option["name"] == opt_name:
-                if (not option["additive"]) and additive:
-                    msg = "Operator += cannot be used in option %s" % opt_name
-                    raise ConfigError(msg)
-                return (option, additive)
-
+                return option
         return None
 
     def optionPort(self, option, cfg_path):
