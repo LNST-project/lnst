@@ -96,24 +96,9 @@ class Wizard:
 
         for host in hostlist:
             print("Processing host '%s'" % host)
-            # Check if port was entered along with hostname
-            if host.find(":") != -1:
-                hostname = host.split(":")[0]
-                if hostname == "":
-                    msg = "'%s' does not contain valid hostname\n" % host
-                    sys.stderr.write(msg)
-                    sys.stderr.write("Skipping host '%s'\n" % host)
-                    continue
-                try:
-                    port = int(host.split(":")[1])
-                except:
-                    port = DefaultRPCPort
-                    msg = "Invalid port entered, "\
-                          "using '%s' instead\n" % port
-                    sys.stderr.write(msg)
-            else:
-                hostname = host
-                port = DefaultRPCPort
+            hostname, port = self._parse_host(host)
+            if hostname == -1:
+                continue
 
             if not self._check_hostname(hostname):
                 sys.stderr.write("Hostname '%s' is not translatable into a "
@@ -352,6 +337,31 @@ class Wizard:
             data = recv_data(sock)
             if data["type"] == "result":
                 return data["result"]
+
+    def _parse_host(self, host):
+        """ Parses hostname:port string
+        @param host String where hostname and optionally port is stored
+        @return touple with string hostname and int port
+        """
+        if host.find(":") != -1:
+            hostname = host.split(":")[0]
+            if hostname == "":
+                msg = "'%s' does not contain valid hostname\n" % host
+                sys.stderr.write(msg)
+                sys.stderr.write("Skipping host '%s'\n" % host)
+                return -1, -1
+            try:
+                port = int(host.split(":")[1])
+            except:
+                port = DefaultRPCPort
+                msg = "Invalid port entered, "\
+                      "using '%s' instead\n" % port
+                sys.stderr.write(msg)
+        else:
+            hostname = host
+            port = DefaultRPCPort
+
+        return hostname, port
 
     def _query_continuation(self):
         """ Queries user for adding next machine
