@@ -66,10 +66,6 @@ class NetTestController:
 
         self.remove_saved_machine_config()
 
-        sp = SlavePool(lnst_config.get_option('environment', 'pool_dirs'),
-                       pool_checks)
-        self._slave_pool = sp
-
         self._machines = {}
         self._network_bridges = {}
         self._tasks = []
@@ -80,6 +76,9 @@ class NetTestController:
         self._parser.set_machines(self._machines)
         self._parser.set_aliases(defined_aliases, overriden_aliases)
         self._recipe = self._parser.parse()
+
+        sp = SlavePool(lnst_config.get_pools(), pool_checks)
+        self._slave_pool = sp
 
         mreq = self._get_machine_requirements()
         sp.set_machine_requirements(mreq)
