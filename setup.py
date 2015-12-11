@@ -165,7 +165,8 @@ MAN_PAGES = [(MAN_DIR, ["install/lnst-ctl.1.gz", "install/lnst-slave.1.gz"])]
 CONFIG = [(CONF_DIR, ["install/lnst-ctl.conf", "install/lnst-slave.conf"])]
 
 BASH_COMP = [(BASH_COMP_DIR, ["install/lnst-ctl.bash",
-                              "install/lnst-slave.bash"])]
+                              "install/lnst-slave.bash",
+                              "install/lnst-pool-wizard.bash"])]
 
 SCHEMAS = [(CTL_RESOURCE_DIR, ["schema-recipe.rng", "schema-sm.rng"])]
 
