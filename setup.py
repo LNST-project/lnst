@@ -79,7 +79,8 @@ TEMPLATES = [
 "install/lnst-ctl.conf.in",
 "install/lnst-slave.conf.in",
 "install/lnst-ctl.1.in",
-"install/lnst-slave.1.in"
+"install/lnst-slave.1.in",
+"install/lnst-pool-wizard.1.in"
 ]
 
 for template in TEMPLATES:
@@ -89,6 +90,7 @@ for template in TEMPLATES:
 # Pack man pages
 gzip_file("install/lnst-ctl.1")
 gzip_file("install/lnst-slave.1")
+gzip_file("install/lnst-pool-wizard.1")
 # ---
 
 
@@ -160,7 +162,8 @@ MULTICAST_TEST_TOOLS = [
          "test_tools/tcp_conn/tcp_listen.c"])
 ]
 
-MAN_PAGES = [(MAN_DIR, ["install/lnst-ctl.1.gz", "install/lnst-slave.1.gz"])]
+MAN_PAGES = [(MAN_DIR, ["install/lnst-ctl.1.gz", "install/lnst-slave.1.gz",
+                        "install/lnst-pool-wizard.1.gz"])]
 
 CONFIG = [(CONF_DIR, ["install/lnst-ctl.conf", "install/lnst-slave.conf"])]
 
