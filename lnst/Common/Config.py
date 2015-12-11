@@ -41,11 +41,6 @@ class Config():
                 "additive" : False,
                 "action" : self.optionPort,
                 "name" : "rpcport"}
-        self._options['environment']['pool_dirs'] = {\
-                "value" : [],
-                "additive" : True,
-                "action" : self.optionDirList,
-                "name" : "machine_pool_dirs"}
         self._options['environment']['tool_dirs'] = {\
                 "value" : [],
                 "additive" : True,
@@ -99,6 +94,8 @@ class Config():
                 "action" : self.optionPlain,
                 "name" : "password"
                 }
+
+        self._options['pools'] = dict()
 
         self.colours_scheme()
 
@@ -219,7 +216,10 @@ class Config():
     def handleSections(self, sections, path):
         for section in sections:
             if section in self._options:
-                self.handleOptions(section, sections[section], path)
+                if section == "pools":
+                    self.handlePools(sections[section], path)
+                else:
+                    self.handleOptions(section, sections[section], path)
             else:
                 msg = "Unknown section: %s" % section
                 raise ConfigError(msg)
@@ -246,6 +246,32 @@ class Config():
                 msg = "Unknown option: %s in section %s" % (opt_name,
                                                             section_name)
                 raise ConfigError(msg)
+
+    def handlePools(self, config, cfg_path):
+        for pool in config:
+            if pool["operator"] != "=":
+                msg = "Only opetator '=' is allowed for section pools."
+                raise ConfigError(msg)
+            self.add_pool(pool["name"], pool["value"], cfg_path)
+
+    def add_pool(self, pool_name, pool_dir, cfg_path):
+        pool = {"value" : self.optionPath(pool_dir, cfg_path),
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : pool_name}
+        self._options["pools"][pool_name] = pool
+
+    def get_pools(self):
+        pools = {}
+        for pool_name, pool in self._options["pools"].items():
+            pools[pool_name] = pool["value"]
+        return pools
+
+    def get_pool(self, pool_name):
+        try:
+            return self._options["pools"][pool_name]
+        except KeyError:
+            return None
 
     def _find_option_by_name(self, section, opt_name):
         for option in section.itervalues():

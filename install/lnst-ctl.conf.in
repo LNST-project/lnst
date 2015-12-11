@@ -18,14 +18,6 @@ mac_pool_range = 52:54:01:00:00:01 52:54:01:FF:FF:FF
 # value.
 rpcport = 9999
 
-# This option specifies where the controller should look for specifications
-# of machines that can be used for matching templates inside recipes. It
-# accepts a variable number of directory paths separated by white spaces.
-# It is also important to note that you can use the operator += to add to
-# the list of directories. If the operator = is used, the previous list is
-# replaced.
-machine_pool_dirs =
-
 # 'test_tool_dirs' specifies where the controller looks for custom tools that
 # are used in tests. Every tool has it's own subdirectory in one of the
 # directories in this list. The option behaves the same way as the option
@@ -55,6 +47,14 @@ log_dir = @ctl_logs_dir@
 # dynamic interface configuration. This feature is mostly used by LNST
 # developers when testing new features.
 allow_virtual = True
+
+
+# This section specifies where the controller should look for specifications
+# of machines that can be used for matching templates inside recipes. You can
+# specify pools as you would any other option, the name of the option becomes
+# the name of the pool and the value of the option should point to a directory
+# which contains the slave machine descriptions.
+[pools]
 
 # Optional section for configuring access to a PerfRepo instance
 #[perfrepo]

@@ -220,9 +220,9 @@ def main():
         usr_cfg_dir = os.path.dirname(usr_cfg)
         pool_dir = usr_cfg_dir + "/pool"
         mkdir_p(pool_dir)
-        global_pool = lnst_config.get_option("environment", "pool_dirs")
-        if (len(global_pool) == 0):
-            lnst_config.set_option("environment", "pool_dirs", [pool_dir])
+        global_pools = lnst_config.get_section("pools")
+        if (len(global_pools) == 0):
+            lnst_config.add_pool("default", pool_dir, "./")
         with open(usr_cfg, 'w') as f:
             f.write(lnst_config.dump_config())
 

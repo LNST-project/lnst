@@ -31,9 +31,9 @@ class SlavePool:
     This class is responsible for managing test machines that
     are available at the controler and can be used for testing.
     """
-    def __init__(self, pool_dirs, pool_checks=True):
+    def __init__(self, pools, pool_checks=True):
         self._map = {}
-        self._pool_dirs = {}
+        self._pools = {}
         self._pool = {}
 
         self._machine_matches = []
@@ -48,36 +48,37 @@ class SlavePool:
         self._mreqs = None
 
         logging.info("Checking machine pool availability.")
-        for pool_dir in pool_dirs:
-            self._pool_dirs[pool_dir] = {}
-            self.add_dir(pool_dir)
-            if len(self._pool_dirs[pool_dir]) == 0:
-                del self._pool_dirs[pool_dir]
+        for pool_name, pool_dir in pools.items():
+            self._pools[pool_name] = {}
+            self.add_dir(pool_name, pool_dir)
+            if len(self._pools[pool_name]) == 0:
+                del self._pools[pool_name]
 
-        self._mapper.set_pool_dirs(self._pool_dirs)
+        self._mapper.set_pools(self._pools)
+        logging.info("Finished loading pools.")
 
-    def add_dir(self, dir_path):
-        logging.info("Processing pool dir '%s'" % dir_path)
-
-        pool_dir = self._pool_dirs[dir_path]
+    def add_dir(self, pool_name, dir_path):
+        logging.info("Processing pool '%s', directory '%s'" % (pool_name,
+                                                               dir_path))
+        pool = self._pools[pool_name]
 
         dentries = os.listdir(dir_path)
         for dirent in dentries:
-            m_id, m = self.add_file(dir_path, dirent)
+            m_id, m = self.add_file(pool_name, dir_path, dirent)
             if m_id != None and m != None:
-                pool_dir[m_id] = m
+                pool[m_id] = m
 
-        if len(pool_dir) == 0:
-            logging.warn("No machines found in this directory")
+        if len(pool) == 0:
+            logging.warn("No machines found in this pool")
 
         max_len = 0
-        for m_id in pool_dir.keys():
+        for m_id in pool.keys():
             if len(m_id) > max_len:
                 max_len = len(m_id)
 
         if self._pool_checks:
             check_sockets = {}
-            for m_id, m in pool_dir.iteritems():
+            for m_id, m in pool.iteritems():
                 hostname = m["params"]["hostname"]
                 if "rpc_port" in m["params"]:
                     port = m["params"]["rpc_port"]
@@ -101,17 +102,17 @@ class SlavePool:
                     err = s.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
                     m_id = check_sockets[s]
                     if err == 0:
-                        pool_dir[m_id]["available"] = True
+                        pool[m_id]["available"] = True
                         del check_sockets[s]
                     else:
-                        pool_dir[m_id]["available"] = False
+                        pool[m_id]["available"] = False
                         del check_sockets[s]
         else:
-            for m_id in pool_dir.keys():
-                pool_dir[m_id]["available"] = True
+            for m_id in pool.keys():
+                pool[m_id]["available"] = True
 
-        for m_id in list(pool_dir.keys()):
-            m = pool_dir[m_id]
+        for m_id in list(pool.keys()):
+            m = pool[m_id]
             if m["available"]:
                 if 'libvirt_domain' in m['params']:
                     libvirt_msg = "   libvirt_domain: %s" %\
@@ -124,13 +125,13 @@ class SlavePool:
             else:
                 msg = "%s%s [%s]" % (m_id, (max_len - len(m_id)) * " ",
                                      decorate_with_preset("DOWN", "fail"))
-                del pool_dir[m_id]
+                del pool[m_id]
 
             logging.info(msg)
 
-    def add_file(self, dir_path, dirent):
+    def add_file(self, pool_name, dir_path, dirent):
         filepath = dir_path + "/" + dirent
-        pool_dir = self._pool_dirs[dir_path]
+        pool = self._pools[pool_name]
         if os.path.isfile(filepath) and re.search("\.xml$", filepath, re.I):
             dirname, basename = os.path.split(filepath)
             m_id = re.sub("\.[xX][mM][lL]$", "", basename)
@@ -148,7 +149,7 @@ class SlavePool:
 
             # Check if there isn't any machine with the same
             # hostname or libvirt_domain already in the pool
-            for pm_id, m in pool_dir.iteritems():
+            for pm_id, m in pool.iteritems():
                 pm = m["params"]
                 rm = machine_spec["params"]
                 if pm["hostname"] == rm["hostname"]:
@@ -246,9 +247,8 @@ class SlavePool:
         :return: XML machineconfigs of requested machines
         :rtype: dict
         """
-
-
         mapper = self._mapper
+        logging.info("Matching machines, without virtuals.")
         res = mapper.match()
 
         if not res and not mapper.get_virtual() and self._allow_virt:
@@ -267,7 +267,7 @@ class SlavePool:
             self._pool = {}
             return False
         else:
-            self._pool = self._pool_dirs[self._map["pool_dir"]]
+            self._pool = self._pools[self._map["pool_name"]]
 
         if self._map["virtual"]:
             mreqs = self._mreqs
@@ -364,10 +364,10 @@ class MapperError(Exception):
 
 class SetupMapper(object):
     def __init__(self):
-        self._pool_dirs = {}
-        self._pool_dir_stack = []
+        self._pools = {}
+        self._pool_stack = []
         self._pool = {}
-        self._pool_dir = None
+        self._pool_name = None
         self._mreqs = {}
         self._unmatched_req_machines = []
         self._matched_pool_machines = []
@@ -378,8 +378,8 @@ class SetupMapper(object):
     def set_requirements(self, mreqs):
         self._mreqs = mreqs
 
-    def set_pool_dirs(self, pool_dirs):
-        self._pool_dirs = pool_dirs
+    def set_pools(self, pools):
+        self._pools = pools
 
     def set_virtual(self, virt_value):
         self._virtual_matching = virt_value
@@ -404,11 +404,10 @@ class SetupMapper(object):
         self._machine_stack = []
         self._unmatched_req_machines = self._mreqs.keys()
 
-        self._pool_dir_stack = list(self._pool_dirs.keys())
-        if len(self._pool_dir_stack) > 0:
-            self._pool_dir = self._pool_dir_stack.pop()
-            self._pool = self._pool_dirs[self._pool_dir]
-            logging.info("Using pool dir: %s" % self._pool_dir)
+        self._pool_stack = list(self._pools.keys())
+        if len(self._pool_stack) > 0:
+            self._pool_name = self._pool_stack.pop()
+            self._pool = self._pools[self._pool_name]
 
         self._unmatched_pool_machines = []
         for p_id, p_machine in self._pool.iteritems():
@@ -422,6 +421,7 @@ class SetupMapper(object):
             self._push_machine_stack()
 
     def match(self):
+        logging.info("Trying match with pool: %s" % self._pool_name)
         while len(self._machine_stack)>0:
             stack_top = self._machine_stack[-1]
             if self._virtual_matching and stack_top["virt_matched"]:
@@ -466,10 +466,13 @@ class SetupMapper(object):
                 else:
                     self._pop_machine_stack()
                     if len(self._machine_stack) == 0 and\
-                       len(self._pool_dir_stack) > 0:
-                        self._pool_dir = self._pool_dir_stack.pop()
-                        self._pool = self._pool_dirs[self._pool_dir]
-                        logging.info("Using pool dir: %s" % self._pool_dir)
+                       len(self._pool_stack) > 0:
+                        logging.info("Match with pool %s not found." %
+                                     self._pool_name)
+                        self._pool_name = self._pool_stack.pop()
+                        self._pool = self._pools[self._pool_name]
+                        logging.info("Trying match with pool: %s" %
+                                     self._pool_name)
 
                         self._unmatched_pool_machines = []
                         for p_id, p_machine in self._pool.iteritems():
@@ -599,7 +602,7 @@ class SetupMapper(object):
 
     def get_mapping(self):
         mapping = {"machines": {}, "networks": {}, "virtual": False,
-                   "pool_dir": self._pool_dir}
+                   "pool_name": self._pool_name}
 
         for req_label, label_map in self._net_label_mapping.iteritems():
             mapping["networks"][req_label] = label_map[0]
