@@ -54,7 +54,7 @@ class NetTestController:
                  res_serializer=None, pool_checks=True,
                  packet_capture=False,
                  defined_aliases=None, overriden_aliases=None,
-                 reduce_sync=False):
+                 reduce_sync=False, restrict_pools=[]):
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
@@ -77,7 +77,18 @@ class NetTestController:
         self._parser.set_aliases(defined_aliases, overriden_aliases)
         self._recipe = self._parser.parse()
 
-        sp = SlavePool(lnst_config.get_pools(), pool_checks)
+        conf_pools = lnst_config.get_pools()
+        pools = {}
+        if len(restrict_pools) > 0:
+            for pool_name in restrict_pools:
+                if pool_name in conf_pools:
+                    pools[pool_name] = conf_pools[pool_name]
+                else:
+                    raise NetTestError("Pool %s does not exist!" % pool_name)
+        else:
+            pools = conf_pools
+
+        sp = SlavePool(pools, pool_checks)
         self._slave_pool = sp
 
         mreq = self._get_machine_requirements()

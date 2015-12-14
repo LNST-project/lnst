@@ -51,6 +51,8 @@ def usage(retval=0):
               "machines in the pool"
     print "  -p, --packet-capture            capture and log all ongoing " \
               "network communication during the test"
+    print "      --pools=NAME[,...]          restricts which pools to use "\
+              "for matching"
     print "  -r, --reduce-sync               reduces resource synchronization "\
               "for python tasks, see documentation"
     print "  -s, --xslt-url=URL              URL to a XSLT document that will "\
@@ -87,7 +89,7 @@ def exec_action(action, nettestctl):
 def get_recipe_result(action, file_path, log_ctl, res_serializer,
                       pool_checks, packet_capture,
                       defined_aliases, overriden_aliases,
-                      reduce_sync, multi_match):
+                      reduce_sync, multi_match, pools):
     retval = RETVAL_PASS
 
     matches = 1
@@ -106,7 +108,8 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                                        packet_capture=packet_capture,
                                        defined_aliases=defined_aliases,
                                        overriden_aliases=overriden_aliases,
-                                       reduce_sync=reduce_sync)
+                                       reduce_sync=reduce_sync,
+                                       restrict_pools=pools)
     except XmlProcessingError as err:
         log_exc_traceback()
         logging.error(err)
@@ -199,6 +202,7 @@ def main():
              "html=",
              "multi-match",
              "result=",
+             "pools="
             ]
         )
     except getopt.GetoptError as err:
@@ -238,6 +242,7 @@ def main():
     reduce_sync = False
     multi_match = False
     dump_config = False
+    pools = []
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug += 1
@@ -271,7 +276,8 @@ def main():
             multi_match = True
         elif opt in ("--dump-config"):
             dump_config = True
-
+        elif opt in ("--pools"):
+            pools.extend(arg.split(","))
 
     if xslt_url != None:
         lnst_config.set_option("environment", "xslt_url", xslt_url)
@@ -330,7 +336,7 @@ def main():
         rv = get_recipe_result(action, recipe_file, log_ctl, res_serializer,
                                pool_checks, packet_capture,
                                defined_aliases, overriden_aliases,
-                               reduce_sync, multi_match)
+                               reduce_sync, multi_match, pools)
         if rv > retval:
             retval = rv
 
