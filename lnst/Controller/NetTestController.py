@@ -83,6 +83,8 @@ class NetTestController:
             for pool_name in restrict_pools:
                 if pool_name in conf_pools:
                     pools[pool_name] = conf_pools[pool_name]
+                elif len(restrict_pools) == 1 and os.path.isdir(pool_name):
+                    pools = {"cmd_line_pool": pool_name}
                 else:
                     raise NetTestError("Pool %s does not exist!" % pool_name)
         else:

@@ -52,7 +52,8 @@ def usage(retval=0):
     print "  -p, --packet-capture            capture and log all ongoing " \
               "network communication during the test"
     print "      --pools=NAME[,...]          restricts which pools to use "\
-              "for matching"
+              "for matching, value can be a comma separated list of values or"
+    print "      --pools=PATH                a single path to a pool directory"
     print "  -r, --reduce-sync               reduces resource synchronization "\
               "for python tasks, see documentation"
     print "  -s, --xslt-url=URL              URL to a XSLT document that will "\
