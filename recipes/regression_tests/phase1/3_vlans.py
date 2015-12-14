@@ -189,9 +189,6 @@ for setting in offload_settings:
                 if ipv in [ 'ipv4', 'both' ]:
                     m1.run(ping_mod, expect="fail")
 
-                if ipv in [ 'ipv6', 'both' ]:
-                    m1.run(ping_mod6, expect="fail")
-
     # Netperf test (both TCP and UDP)
     if ipv in [ 'ipv4', 'both' ]:
         srv_proc = m1.run(netperf_srv, bg=True)
