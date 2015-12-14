@@ -55,7 +55,7 @@
                 <eth id="guestnic" label="to_guest1">
                     <addresses>
                         <address>{$vlan10_net}.100/24</address>
-                        <address>2002::10:100/64</address>
+                        <address>fc00:0:0:10::100/64</address>
                     </addresses>
                 </eth>
             </interfaces>
@@ -65,7 +65,7 @@
                 <eth id="guestnic" label="to_guest2">
                     <addresses>
                         <address>{$vlan20_net}.100/24</address>
-                        <address>2002::20:100/64</address>
+                        <address>fc00:0:0:20::100/64</address>
                     </addresses>
                 </eth>
             </interfaces>
@@ -112,7 +112,7 @@
                 <eth id="guestnic" label="to_guest3">
                     <addresses>
                         <address>{$vlan10_net}.101/24</address>
-                        <address>2002::10:101/64</address>
+                        <address>fc00:0:0:10::101/64</address>
                     </addresses>
                 </eth>
             </interfaces>
@@ -122,7 +122,7 @@
                 <eth id="guestnic" label="to_guest4">
                     <addresses>
                         <address>{$vlan20_net}.101/24</address>
-                        <address>2002::20:100/64</address>
+                        <address>fc00:0:0:20::101/64</address>
                     </addresses>
                 </eth>
             </interfaces>

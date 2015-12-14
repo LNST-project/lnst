@@ -44,7 +44,7 @@
                     </slaves>
                     <addresses>
                         <address>{$vlan10_net}.10/24</address>
-                        <address>2002::10:10/64</address>
+                        <address>fc00:0:0:10::10/64</address>
                     </addresses>
                 </vlan>
             </interfaces>
@@ -61,7 +61,7 @@
                     </slaves>
                     <addresses>
                         <address>{$vlan10_net}.11/24</address>
-                        <address>2002::10:11/64</address>
+                        <address>fc00:0:0:10::11/64</address>
                     </addresses>
                 </vlan>
             </interfaces>
