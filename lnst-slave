@@ -58,6 +58,10 @@ def main():
     else:
         lnst_config.load_config('/etc/lnst-slave.conf')
 
+    usr_cfg = os.path.expanduser('~/.lnst/lnst-slave.conf')
+    if os.path.isfile(usr_cfg):
+        lnst_config.load_config(usr_cfg)
+
     debug = False
     daemon = False
     pidfile = "lnst-slave.pid"
