@@ -174,6 +174,19 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
     def _add_rm_bridge(self, prefix):
         exec_cmd("brctl %sbr %s " % (prefix, self._dev_config["name"]))
 
+    def _get_bridge_dir(self):
+        return "/sys/class/net/%s/bridge" % self._dev_config["name"]
+
+    def _setup_options(self):
+        if not "options" in self._dev_config:
+            return
+        options = self._dev_config["options"]
+
+        for option, value in options:
+            exec_cmd('echo "%s" > %s/%s' % (value,
+                                            self._get_bridge_dir(),
+                                            option))
+
     def _add_rm_port(self, prefix, slave_id):
         port_name = self._if_manager.get_mapped_device(slave_id).get_name()
         exec_cmd("brctl %sif %s %s" % (prefix, self._dev_config["name"],
@@ -190,6 +203,7 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
         self._add_rm_bridge("del")
 
     def configure(self):
+        self._setup_options()
         self._add_rm_ports("add")
 
     def deconfigure(self):
