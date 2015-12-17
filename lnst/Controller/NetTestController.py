@@ -374,7 +374,7 @@ class NetTestController:
 
                 task["python"] = path
                 if not path.exists():
-                    msg = "Task file '%s' not found." % path
+                    msg = "Task file '%s' not found." % path.to_str()
                     raise RecipeError(msg, task_data)
 
                 self._tasks.append(task)
