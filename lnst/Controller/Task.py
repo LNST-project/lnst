@@ -175,7 +175,7 @@ class HostAPI(object):
         for i in self._m.get_interfaces():
             if i.get_id() is None:
                 continue
-            self._interfaces[i.get_id()] = InterfaceAPI(i)
+            self._interfaces[i.get_id()] = InterfaceAPI(i, self)
 
         self._bg_id_seq = 0
 
@@ -364,8 +364,9 @@ class HostAPI(object):
         self._m.sync_resources(sync_table)
 
 class InterfaceAPI(object):
-    def __init__(self, interface):
+    def __init__(self, interface, host):
         self._if = interface
+        self._host = host
 
     def get_id(self):
         return self._if.get_id()
@@ -417,6 +418,9 @@ class InterfaceAPI(object):
 
     def set_link_down(self):
         return self._if.set_link_down()
+
+    def get_host(self):
+        return self._host
 
 class ModuleAPI(object):
     """ An API class representing a module. """
