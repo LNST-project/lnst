@@ -236,6 +236,8 @@ class HostAPI(object):
                     raise TaskError(msg)
 
                 cmd["expect"] = argval == "pass"
+            elif arg == "fail_expected":
+                cmd["expect"] = not argval
             elif arg == "timeout":
                 try:
                     cmd["timeout"] = int(argval)
