@@ -81,13 +81,29 @@ class Machine(object):
                 configuration["interface_"+i.get_id()] = i.get_config()
         return configuration
 
+    def _if_id_exists(self, if_id):
+        for iface in self._interfaces:
+            if if_id == iface.get_id():
+                return True
+        return False
+
+    def _generate_if_id(self, if_type):
+        i = 0
+        while True:
+            if_id = "gen_%s_%d" % (if_type, i)
+            if not self._if_id_exists(if_id):
+                break
+            i += 1
+        return if_id
+
     def _add_interface(self, if_id, if_type, cls):
         if if_id != None:
-            for iface in self._interfaces:
-                if if_id == iface.get_id():
-                    msg = "Interface '%s' already exists on machine '%s'" \
-                                                 % (if_id, self._id)
-                    raise MachineError(msg)
+            if self._if_id_exists(if_id):
+                msg = "Interface '%s' already exists on machine '%s'" \
+                                             % (if_id, self._id)
+                raise MachineError(msg)
+        else:
+            if_id = self._generate_if_id(if_type)
 
         iface = cls(self, if_id, if_type)
         self._interfaces.append(iface)
