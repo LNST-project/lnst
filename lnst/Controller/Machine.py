@@ -627,7 +627,11 @@ class Interface(object):
         self._slave_options[slave_id].append((name, value))
 
     def add_address(self, addr):
-        self._addresses.append(addr)
+        if (type(addr) == type([])):
+            for one_addr in addr:
+                self._addresses.append(one_addr)
+        else:
+            self._addresses.append(addr)
 
     def get_address(self, num):
         return self._addresses[num].split('/')[0]
