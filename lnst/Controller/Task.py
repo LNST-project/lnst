@@ -171,11 +171,11 @@ class HostAPI(object):
         self._id = host_id
         self._m = host
 
-        self._interfaces = {}
-        for i in self._m.get_interfaces():
-            if i.get_id() is None:
+        self._ifaces = {}
+        for interface in self._m.get_interfaces():
+            if interface.get_id() is None:
                 continue
-            self._interfaces[i.get_id()] = InterfaceAPI(i, self)
+            self._ifaces[interface.get_id()] = InterfaceAPI(interface, self)
 
         self._bg_id_seq = 0
 
@@ -274,72 +274,72 @@ class HostAPI(object):
         return ProcessAPI(self._ctl, self._id, cmd_res, bg_id, cmd["netns"])
 
     def get_interfaces(self):
-        return self._interfaces
+        return self._ifaces
 
-    def get_interface(self, interface_id):
-        return self._interfaces[interface_id]
+    def get_interface(self, if_id):
+        return self._ifaces[if_id]
 
     @deprecated
-    def get_devname(self, interface_id):
+    def get_devname(self, if_id):
         """
             Returns devname of the interface.
 
-            :param interface_id: which interface
-            :type interface_id: string
+            :param if_id: which interface
+            :type if_id: string
 
             :return: Device name (e.g., eth0).
             :rtype: str
         """
-        iface = self._interfaces[interface_id]
+        iface = self._ifaces[if_id]
         return iface.get_devname()
 
     @deprecated
-    def get_hwaddr(self, interface_id):
+    def get_hwaddr(self, if_id):
         """
             Returns hwaddr of the interface.
 
-            :param interface_id: which interface
-            :type interface_id: string
+            :param if_id: which interface
+            :type if_id: string
 
             :return: HW address (e.g., 00:11:22:33:44:55:FF).
             :rtype: str
         """
-        iface = self._interfaces[interface_id]
+        iface = self._ifaces[if_id]
         return iface.get_hwaddr()
 
     @deprecated
-    def get_ip(self, interface_id, addr_number=0):
+    def get_ip(self, if_id, addr_number=0):
         """
             Returns an IP address of the interface.
 
-            :param interface_id: which interface
-            :type interface_id: string
+            :param if_id: which interface
+            :type if_id: string
 
-            :param interface_id: which address
-            :type interface_id: int
+            :param addr_number: which address
+            :type addr_number: int
 
             :return: IP address (e.g., 192.168.1.10).
             :rtype: str
         """
-        iface = self._interfaces[interface_id]
+        iface = self._ifaces[if_id]
         return iface.get_ip_addr(addr_number)
 
     @deprecated
-    def get_prefix(self, interface_id, addr_number=0):
+    def get_prefix(self, if_id, addr_number=0):
         """
             Returns an IP address prefix (netmask)
             of the interface.
 
-            :param interface_id: which interface
-            :type interface_id: string
+            :param if_id: which interface
+            :type if_id: string
 
-            :param interface_id: which address
-            :type interface_id: int
+            :param addr_number: which address
+            :type addr_number: int
 
             :return: netmask (e.g., 24).
             :rtype: str
         """
-        iface = self._interfaces[interface_id]
+        iface = self._ifaces[if_id]
         return iface.get_ip_prefix(addr_number)
 
     def sync_resources(self, modules=[], tools=[]):
