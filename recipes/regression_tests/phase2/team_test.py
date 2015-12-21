@@ -254,7 +254,7 @@ for setting in offload_settings:
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp
-        result_udp = perf_api.new_result("udp_ipv4_id",
+        result_udp = perf_api.new_result("udp_ipv6_id",
                                          "udp_ipv6_result",
                                          hash_ignore=[
                                              'kernel_release',
@@ -405,7 +405,7 @@ for setting in offload_settings:
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp
-        result_udp = perf_api.new_result("udp_ipv4_id",
+        result_udp = perf_api.new_result("udp_ipv6_id",
                                          "udp_ipv6_result",
                                          hash_ignore=[
                                              'kernel_release',
