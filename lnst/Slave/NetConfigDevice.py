@@ -283,7 +283,7 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
 
 def prepare_json_str(json_str):
     if not json_str:
-        return ""
+        return "{}"
     json_str = json_str.replace('"', '\\"')
     json_str = re.sub('\s+', ' ', json_str)
     return json_str
