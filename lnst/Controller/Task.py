@@ -363,6 +363,67 @@ class HostAPI(object):
 
         self._m.sync_resources(sync_table)
 
+    def _add_iface(self, if_type, if_id, netns, ip, options, slaves):
+        interface = self._m.new_soft_interface(if_id, if_type)
+        iface = InterfaceAPI(interface, self)
+        self._ifaces[if_id] = iface
+
+        if slaves:
+            for slave in slaves:
+                if type(slave) == type(()):
+                    slave_iface = slave[0]
+                    slave_options = slave[1]
+                    for key in slave_options:
+                        interface.set_slave_option(slave_iface.get_id(),
+                                                   key, slave_options[key])
+                else:
+                    slave_iface = slave
+                interface.add_slave(slave_iface._if)
+
+        if ip:
+            interface.add_address(ip)
+
+        if options:
+            for key in options:
+                interface.set_option(key, options[key])
+
+        if netns:
+            interface.set_netns(netns)
+
+        interface.configure()
+        interface.up()
+        return iface
+
+    def create_bond(self, if_id=None, netns=None, ip=None,
+                    options=None, slaves=None):
+        return self._add_iface("bond", if_id, netns, ip, options, slaves)
+
+    def create_bridge(self, if_id=None, netns=None, ip=None,
+                      options=None, slaves=None):
+        return self._add_iface("bridge", if_id, netns, ip, options, slaves)
+
+    def create_team(self, config=None, if_id=None, netns=None, ip=None,
+                    slaves=None):
+        out_slaves = []
+        for slave in slaves:
+            if type(slave) == type(()):
+                slave_iface = slave[0]
+                slave_config = slave[1]
+                out_slaves.append((slave_iface,
+                                   {"teamd_port_config": slave_config}))
+            else:
+                out_slaves.append(slave)
+
+        options = {}
+        if config:
+            options["teamd_config"] = config
+
+        return self._add_iface("team", if_id, netns, ip, options, out_slaves)
+
+    def create_vlan(self, realdev_iface, vlan_tci, if_id=None, netns=None, ip=None):
+        return self._add_iface("vlan", if_id, netns, ip, {"vlan_tci": vlan_tci},
+                               [realdev_iface])
+
 class InterfaceAPI(object):
     def __init__(self, interface, host):
         self._if = interface
@@ -421,6 +482,19 @@ class InterfaceAPI(object):
 
     def get_host(self):
         return self._host
+
+    def reset(self, ip=None, netns=None):
+        self._if.down()
+        self._if.deconfigure()
+
+        if ip:
+            self._if.add_address(ip)
+
+        if netns:
+            self._if.set_netns(netns)
+
+        self._if.configure()
+        self._if.up()
 
 class ModuleAPI(object):
     """ An API class representing a module. """
