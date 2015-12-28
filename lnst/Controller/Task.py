@@ -365,6 +365,7 @@ class HostAPI(object):
 
     def _add_iface(self, if_type, if_id, netns, ip, options, slaves):
         interface = self._m.new_soft_interface(if_id, if_type)
+        if_id = interface.get_id()
         iface = InterfaceAPI(interface, self)
         self._ifaces[if_id] = iface
 
