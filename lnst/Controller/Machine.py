@@ -109,6 +109,10 @@ class Machine(object):
         self._interfaces.append(iface)
         return iface
 
+    def remove_interface(self, if_id):
+        iface = self.get_interface(if_id)
+        self._interfaces.remove(iface)
+
     def interface_update(self, if_data):
         try:
             iface = self.get_interface(if_data["if_id"])

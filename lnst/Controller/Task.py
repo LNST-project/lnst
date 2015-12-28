@@ -395,6 +395,14 @@ class HostAPI(object):
         interface.up()
         return iface
 
+    def _remove_iface(self, iface):
+        interface = iface._if
+        interface.deconfigure()
+        interface.cleanup()
+        if_id = interface.get_id()
+        self._m.remove_interface(if_id)
+        self._ifaces.pop(if_id)
+
     def create_bond(self, if_id=None, netns=None, ip=None,
                     options=None, slaves=None):
         return self._add_iface("bond", if_id, netns, ip, options, slaves)
@@ -496,6 +504,9 @@ class InterfaceAPI(object):
 
         self._if.configure()
         self._if.up()
+
+    def destroy(self):
+        self._host._remove_iface(self)
 
 class ModuleAPI(object):
     """ An API class representing a module. """
