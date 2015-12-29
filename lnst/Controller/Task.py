@@ -508,6 +508,18 @@ class InterfaceAPI(object):
     def destroy(self):
         self._host._remove_iface(self)
 
+    def add_br_vlan(_self, vlan_tci, pvid=False, untagged=False,
+                    self=False, master=False):
+        _self._if.add_br_vlan({"vlan_id": vlan_tci, "pvid": pvid,
+                               "untagged": untagged,
+                               "self": self, "master": master})
+
+    def del_br_vlan(_self, vlan_tci, pvid=False, untagged=False,
+                    self=False, master=False):
+        _self._if.del_br_vlan({"vlan_id": vlan_tci, "pvid": pvid,
+                               "untagged": untagged,
+                               "self": self, "master": master})
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

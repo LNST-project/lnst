@@ -36,6 +36,7 @@ from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
 from lnst.Common.Config import DefaultRPCPort
 from lnst.Slave.InterfaceManager import InterfaceManager
+from lnst.Slave.BridgeTool import BridgeTool
 
 class SlaveMethods:
     '''
@@ -691,6 +692,24 @@ class SlaveMethods:
 
             device.set_netns(None)
             return True
+
+    def add_br_vlan(self, if_id, br_vlan_info):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.add_vlan(br_vlan_info)
+        return True
+
+    def del_br_vlan(self, if_id, br_vlan_info):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.del_vlan(br_vlan_info)
+        return True
 
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):

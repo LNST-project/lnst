@@ -764,6 +764,14 @@ class Interface(object):
                                          "return_if_netns", self.get_id())
         self._configured = False
 
+    def add_br_vlan(self, br_vlan_info):
+        self._machine._rpc_call_x(self._netns, "add_br_vlan",
+                                  self._id, br_vlan_info)
+
+    def del_br_vlan(self, br_vlan_info):
+        self._machine._rpc_call_x(self._netns, "del_br_vlan",
+                                  self._id, br_vlan_info)
+
 class StaticInterface(Interface):
     """ Static interface
 
