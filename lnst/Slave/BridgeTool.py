@@ -34,3 +34,20 @@ class BridgeTool:
 
     def del_vlan(self, br_vlan_info):
         return self._add_del_vlan("del", br_vlan_info)
+
+    def _add_del_fdb(self, op, br_fdb_info):
+        cmd = "bridge fdb %s %s dev %s" % (op, br_fdb_info["hwaddr"],
+                                           self._dev_name)
+        if br_fdb_info["self"]:
+            cmd += " self"
+        if br_fdb_info["master"]:
+            cmd += " master"
+        if br_fdb_info["vlan_id"]:
+            cmd += " vlan %s" % br_fdb_info["vlan_id"]
+        exec_cmd(cmd)
+
+    def add_fdb(self, br_fdb_info):
+        return self._add_del_fdb("add", br_fdb_info)
+
+    def del_fdb(self, br_fdb_info):
+        return self._add_del_fdb("del", br_fdb_info)

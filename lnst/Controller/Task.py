@@ -520,6 +520,14 @@ class InterfaceAPI(object):
                                "untagged": untagged,
                                "self": self, "master": master})
 
+    def add_br_fdb(_self, hwaddr, self=False, master=False, vlan_tci=None):
+        _self._if.add_br_fdb({"hwaddr": hwaddr, "self": self, "master": master,
+                              "vlan_id": vlan_tci})
+
+    def del_br_fdb(_self, hwaddr, self=False, master=False, vlan_tci=None):
+        _self._if.del_br_fdb({"hwaddr": hwaddr, "self": self, "master": master,
+                              "vlan_id": vlan_tci})
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

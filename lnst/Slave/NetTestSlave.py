@@ -711,6 +711,24 @@ class SlaveMethods:
         brt.del_vlan(br_vlan_info)
         return True
 
+    def add_br_fdb(self, if_id, br_fdb_info):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.add_fdb(br_fdb_info)
+        return True
+
+    def del_br_fdb(self, if_id, br_fdb_info):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.del_fdb(br_fdb_info)
+        return True
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()
