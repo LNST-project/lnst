@@ -191,6 +191,11 @@ class Machine(object):
 
         return result
 
+    def _rpc_call_x(self, netns, method_name, *args):
+        if not netns:
+            return self._rpc_call(method_name, *args)
+        return self._rpc_call_to_netns(netns, method_name, *args)
+
     def configure(self, recipe_name):
         """ Prepare the machine
 
@@ -289,16 +294,12 @@ class Machine(object):
             if bg_cmd["netns"] != None:
                 command["netns"] = bg_cmd["netns"]
 
+        netns = command["netns"]
         if command["type"] == "wait":
             logging.debug("Get remaining time of bg process with bg_id == %s"
                               % command["proc_id"])
-            if command["netns"] != None:
-                remaining_time = self._rpc_call_to_netns(command["netns"],
-                                                         "get_remaining_time",
-                                                         command["proc_id"])
-            else:
-                remaining_time = self._rpc_call("get_remaining_time",
-                                                command["proc_id"])
+            remaining_time = self._rpc_call_x(netns, "get_remaining_time",
+                                              command["proc_id"])
             logging.debug("Setting timeout to %d", remaining_time)
             if remaining_time > 0:
                 signal.alarm(remaining_time)
@@ -316,25 +317,14 @@ class Machine(object):
                 signal.alarm(DEFAULT_TIMEOUT)
 
         try:
-            if 'netns' in command and command['netns'] != None:
-                netns = command["netns"]
-                cmd_res = self._rpc_call_to_netns(netns, "run_command", command)
-            else:
-                cmd_res = self._rpc_call("run_command", command)
+            cmd_res = self._rpc_call_x(netns, "run_command", command)
         except MachineError as exc:
-            if command["netns"] is not None:
-                netns = command["netns"]
-                if "proc_id" in command:
-                    cmd_res = self._rpc_call_to_netns(netns, "kill_command",
-                                                      command["proc_id"])
-                else:
-                    cmd_res = self._rpc_call_to_netns(netns, "kill_command",
-                                                      None)
+            if "proc_id" in command:
+                cmd_res = self._rpc_call_x(netns, "kill_command",
+                                           command["proc_id"])
             else:
-                if "proc_id" in command:
-                    cmd_res = self._rpc_call("kill_command", command["proc_id"])
-                else:
-                    cmd_res = self._rpc_call("kill_command", None)
+                cmd_res = self._rpc_call_x(netns, "kill_command",
+                                           None)
 
             if "killed" in cmd_res and cmd_res["killed"]:
                 cmd_res["passed"] = False
@@ -400,10 +390,7 @@ class Machine(object):
 
         tmp = {}
         for netns in namespaces:
-            if netns == None:
-                tmp.update(self._rpc_call("start_packet_capture", ""))
-            else:
-                tmp.update(self._rpc_call_to_netns(netns, "start_packet_capture", ""))
+            tmp.update(self._rpc_call_x(netns, "start_packet_capture", ""))
         return tmp
 
     def stop_packet_capture(self):
@@ -412,17 +399,10 @@ class Machine(object):
             namespaces.add(iface.get_netns())
 
         for netns in namespaces:
-            if netns == None:
-                self._rpc_call("stop_packet_capture")
-            else:
-                self._rpc_call_to_netns(netns, "stop_packet_capture")
+            self._rpc_call_x(netns, "stop_packet_capture")
 
     def copy_file_to_machine(self, local_path, remote_path=None, netns=None):
-        if netns:
-            remote_path = self._rpc_call_to_netns(netns, "start_copy_to",
-                              remote_path)
-        else:
-            remote_path = self._rpc_call("start_copy_to", remote_path)
+        remote_path = self._rpc_call_x(netns, "start_copy_to", remote_path)
 
         f = open(local_path, "rb")
 
@@ -431,16 +411,9 @@ class Machine(object):
             if len(data) == 0:
                 break
 
-            if netns:
-                self._rpc_call_to_netns(netns, "copy_part_to", remote_path,
-                    Binary(data))
-            else:
-                self._rpc_call("copy_part_to", remote_path, Binary(data))
+            self._rpc_call_x(netns, "copy_part_to", remote_path, Binary(data))
 
-        if netns:
-            self._rpc_call_to_netns(netns, "finish_copy_to", remote_path)
-        else:
-            self._rpc_call("finish_copy_to", remote_path)
+        self._rpc_call_x(netns, "finish_copy_to", remote_path)
 
         return remote_path
 
@@ -689,12 +662,8 @@ class Interface(object):
         return self._mtu
 
     def update_from_slave(self):
-        if self._netns != None:
-            if_data = self._machine._rpc_call_to_netns(self._netns,
-                                                       "get_if_data",
-                                                       self._id)
-        else:
-            if_data = self._machine._rpc_call("get_if_data", self._id)
+        if_data = self._machine._rpc_call_x(self._netns, "get_if_data",
+                                            self._id)
 
         if if_data is not None:
             self.update(if_data)
@@ -734,32 +703,16 @@ class Interface(object):
         return config
 
     def up(self):
-        netns = self._netns
-        if netns != None:
-            self._machine._rpc_call_to_netns(netns, "set_device_up", self._id)
-        else:
-            self._machine._rpc_call("set_device_up", self._id)
+        self._machine._rpc_call_x(self._netns, "set_device_up", self._id)
 
     def down(self):
-        netns = self._netns
-        if netns != None:
-            self._machine._rpc_call_to_netns(netns, "set_device_down", self._id)
-        else:
-            self._machine._rpc_call("set_device_down", self._id)
+        self._machine._rpc_call_x(self._netns, "set_device_down", self._id)
 
     def set_link_up(self):
-        netns = self._netns
-        if netns != None:
-            self._machine._rpc_call_to_netns(netns, "set_link_up", self._id)
-        else:
-            self._machine._rpc_call("set_link_up", self._id)
+        self._machine._rpc_call_x(self._netns, "set_link_up", self._id)
 
     def set_link_down(self):
-        netns = self._netns
-        if netns != None:
-            self._machine._rpc_call_to_netns(netns, "set_link_down", self._id)
-        else:
-            self._machine._rpc_call("set_link_down", self._id)
+        self._machine._rpc_call_x(self._netns, "set_link_down", self._id)
 
     def initialize(self):
         phys_devs = self._machine._rpc_call("map_if_by_hwaddr",
@@ -795,24 +748,20 @@ class Interface(object):
 
         if self._netns != None:
             self._machine._rpc_call("set_if_netns", self.get_id(), self._netns)
-            self._machine._rpc_call_to_netns(self._netns, "configure_interface",
-                                             self.get_id(), self.get_config())
-        else:
-            self._machine._rpc_call("configure_interface", self.get_id(),
-                                    self.get_config())
+        self._machine._rpc_call_x(self._netns, "configure_interface",
+                                  self.get_id(), self.get_config())
+
         self.update_from_slave()
 
     def deconfigure(self):
         if not self._configured:
             return
 
+        self._machine._rpc_call_x(self._netns, "deconfigure_interface",
+                                  self.get_id())
         if self._netns != None:
             self._machine._rpc_call_to_netns(self._netns,
-                                         "deconfigure_interface", self.get_id())
-            self._machine._rpc_call_to_netns(self._netns,
                                          "return_if_netns", self.get_id())
-        else:
-            self._machine._rpc_call("deconfigure_interface", self.get_id())
         self._configured = False
 
 class StaticInterface(Interface):
@@ -849,16 +798,10 @@ class LoopbackInterface(Interface):
         self._hwaddr = '00:00:00:00:00:00'
         self._driver = 'loopback'
 
-        if self._netns:
-            phys_devs = self._machine._rpc_call_to_netns(self._netns,
-                                    "map_if_by_params", self._id,
-                                    { 'hwaddr': self._hwaddr,
-                                      'driver': self._driver })
-        else:
-            phys_devs = self._machine._rpc_call("map_if_by_params",
-                                                self._id,
-                                                { 'hwaddr': self._hwaddr,
-                                                  'driver': self._driver })
+        phys_devs = self._machine._rpc_call_x(self._netns,
+                                              "map_if_by_params", self._id,
+                                              { 'hwaddr': self._hwaddr,
+                                                'driver': self._driver })
 
         if len(phys_devs) == 1:
             self.set_devname(phys_devs[0]["name"])
@@ -880,12 +823,8 @@ class LoopbackInterface(Interface):
         logging.info("Configuring interface %s on machine %s", self.get_id(),
                      self._machine.get_id())
 
-        if self._netns != None:
-            self._machine._rpc_call_to_netns(self._netns, "configure_interface",
-                                             self.get_id(), self.get_config())
-        else:
-            self._machine._rpc_call("configure_interface", self.get_id(),
-                                    self.get_config())
+        self._machine._rpc_call_x(self._netns, "configure_interface",
+                                  self.get_id(), self.get_config())
         self._configured = True
         self.update_from_slave()
 
@@ -893,14 +832,9 @@ class LoopbackInterface(Interface):
         if not self._configured:
             return
 
-        if self._netns != None:
-            self._machine._rpc_call_to_netns(self._netns,
-                                         "deconfigure_interface", self.get_id())
-            self._machine._rpc_call_to_netns(self._netns,
-                                         "unmap_if", self.get_id())
-        else:
-            self._machine._rpc_call("deconfigure_interface", self.get_id())
-            self._machine._rpc_call("unmap_if", self.get_id())
+        self._machine._rpc_call_x(self._netns, "deconfigure_interface",
+                                  self.get_id())
+        self._machine._rpc_call_x(self._netns, "unmap_if", self.get_id())
         self._configured = False
 
 class VirtualInterface(Interface):
@@ -1024,12 +958,9 @@ class SoftInterface(Interface):
             peer_if._configured = True
             return
 
-        if self._netns != None:
-            dev_name = self._machine._rpc_call_to_netns(self._netns,
-                          "create_soft_interface", self._id, self.get_config())
-        else:
-            dev_name = self._machine._rpc_call("create_soft_interface",
-                                               self._id, self.get_config())
+        dev_name = self._machine._rpc_call_x(self._netns,
+                                             "create_soft_interface",
+                                             self._id, self.get_config())
         self.set_devname(dev_name)
         self.update_from_slave()
 
@@ -1048,14 +979,9 @@ class SoftInterface(Interface):
             peer_if._configured = False
             return
 
-        if self._netns != None:
-            self._machine._rpc_call_to_netns(self._netns,
-                                         "deconfigure_interface", self.get_id())
-            self._machine._rpc_call_to_netns(self._netns,
-                                         "unmap_if", self.get_id())
-        else:
-            self._machine._rpc_call("deconfigure_interface", self.get_id())
-            self._machine._rpc_call("unmap_if", self.get_id())
+        self._machine._rpc_call_x(self._netns, "deconfigure_interface",
+                                  self.get_id())
+        self._machine._rpc_call_x(self._netns, "unmap_if", self.get_id())
         self._configured = False
 
 class UnusedInterface(Interface):
