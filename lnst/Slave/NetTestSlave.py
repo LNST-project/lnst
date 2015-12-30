@@ -849,10 +849,12 @@ class ServerHandler(ConnectionHandler):
         self._netns_con_mapping = {}
 
 class NetTestSlave:
-    def __init__(self, log_ctl, port = DefaultRPCPort):
+    def __init__(self, log_ctl):
         die_when_parent_die()
 
         self._cmd_context = NetTestCommandContext()
+        port = lnst_config.get_option("environment", "rpcport")
+        logging.info("Using RPC port %d." % port)
         self._server_handler = ServerHandler(("", port))
         self._if_manager = InterfaceManager(self._server_handler)
 

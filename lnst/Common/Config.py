@@ -112,6 +112,11 @@ class Config():
                 "additive" : False,
                 "action" : self.optionBool,
                 "name" : "use_nm"}
+        self._options['environment']['rpcport'] = {\
+                "value" : DefaultRPCPort,
+                "additive" : False,
+                "action" : self.optionPort,
+                "name" : "rpcport"}
 
         self._options['cache'] = dict()
         self._options['cache']['dir'] = {\

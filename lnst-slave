@@ -88,10 +88,10 @@ def main():
                      colours=coloured_output)
     logging.info("Started")
 
-    if port:
-        nettestslave = NetTestSlave(log_ctl, port=port)
-    else:
-        nettestslave = NetTestSlave(log_ctl)
+    if port != None:
+        lnst_config.set_option("environment", "rpcport", port)
+
+    nettestslave = NetTestSlave(log_ctl)
 
     if daemon:
         daemon = Daemon(pidfile)
