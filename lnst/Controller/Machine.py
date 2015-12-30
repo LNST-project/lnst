@@ -654,8 +654,7 @@ class Interface(object):
                        {"name": "/sys/class/net/%s/mtu" % self._devname,
                         "value": str(mtu)}
                     ]}
-        if self._netns != None:
-            command["netns"] = self._netns
+        command["netns"] = self._netns
 
         self._machine.run_command(command)
         self._mtu = mtu
