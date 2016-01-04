@@ -433,6 +433,21 @@ class HostAPI(object):
         return self._add_iface("vlan", if_id, netns, ip, {"vlan_tci": vlan_tci},
                                [realdev_iface])
 
+    def create_vxlan(self, vxlan_id, realdev_iface=None, group_ip=None,
+                     remote_ip=None, if_id=None, netns=None, ip=None, options={}):
+        if group_ip is None and remote_ip is None:
+            raise TaskError("Either group_ip or remote_ip must be specified.")
+
+        options.update({"id": vxlan_id,
+                        "group_ip": group_ip,
+                        "remote_ip": remote_ip})
+        if realdev_iface is not None:
+            slaves = [realdev_iface]
+        else:
+            slaves = []
+
+        return self._add_iface("vxlan", if_id, netns, ip, options, slaves)
+
 class InterfaceAPI(object):
     def __init__(self, interface, host):
         self._if = interface
