@@ -134,6 +134,8 @@ class ControllerAPI(object):
             self._perf_repo_api.load_mapping(path)
 
             if not self._perf_repo_api.connected():
+                if PerfRepoRESTAPI is None:
+                    logging.warn("Python PerfRepo library not found.")
                 logging.warn("Connection to PerfRepo incomplete, further "\
                              "PerfRepo commands will be ignored.")
         return self._perf_repo_api
