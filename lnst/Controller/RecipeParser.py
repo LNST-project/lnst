@@ -184,6 +184,26 @@ class RecipeParser(XmlParser):
             opts = self._process_options(opts_tag)
             if len(opts) > 0:
                 iface["options"] = opts
+        elif iface["type"] in ["vxlan"]:
+            # real_dev of the VXLAN interface
+            slaves_tag = iface_tag.find("slaves")
+            if slaves_tag is not  None and len(slaves_tag) > 1:
+                msg = "VXLAN '%s' needs one or no slave definition."\
+                        % iface["id"]
+                raise RecipeError(msg, iface_tag)
+
+            if slaves_tag:
+                iface["slaves"] = XmlCollection(slaves_tag)
+                slave_tag = slaves_tag[0]
+                slave = XmlData(slave_tag)
+                slave["id"] = self._get_attribute(slave_tag, "id")
+                iface["slaves"].append(slave)
+
+            # interface options
+            opts_tag = iface_tag.find("options")
+            opts = self._process_options(opts_tag)
+            if len(opts) > 0:
+                iface["options"] = opts
         elif iface["type"] == "ovs_bridge":
             slaves_tag = iface_tag.find("slaves")
             iface["slaves"] = XmlCollection(slaves_tag)

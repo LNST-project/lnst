@@ -850,6 +850,12 @@ class NmConfigDeviceLoopback(NmConfigDeviceGeneric):
     def is_nm_managed(cls, dev_config, if_manager):
         return False
 
+class NmConfigDeviceVxlan(NmConfigDeviceGeneric):
+    #Not supported by NetworkManager
+    @classmethod
+    def is_nm_managed(cls, dev_config, if_manager):
+        return False
+
 type_class_mapping = {
     "eth": NmConfigDeviceEth,
     "bond": NmConfigDeviceBond,
@@ -861,7 +867,8 @@ type_class_mapping = {
     "veth": NmConfigDeviceVEth,
     "vti": NmConfigDeviceVti,
     "vti6": NmConfigDeviceVti6,
-    "lo": NmConfigDeviceLoopback
+    "lo": NmConfigDeviceLoopback,
+    "vxlan": NmConfigDeviceVxlan
 }
 
 def is_nm_managed(dev_config, if_manager):

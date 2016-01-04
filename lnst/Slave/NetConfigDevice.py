@@ -281,6 +281,58 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
 
         super(NetConfigDeviceVlan, self).up()
 
+class NetConfigDeviceVxlan(NetConfigDeviceGeneric):
+    _modulename = ""
+
+    def create(self):
+        config = self._dev_config
+
+        slaves = get_slaves(config)
+        if len(slaves) == 1:
+            realdev_id = slaves[0]
+            name = self._if_manager.get_mapped_device(realdev_id).get_name()
+            dev_param = "dev %s" % name
+        else:
+            dev_param = ""
+
+        dev_name = config["name"]
+        vxlan_id = int(get_option(config, "id"))
+        group_ip = get_option(config, "group_ip")
+        remote_ip = get_option(config, "remote_ip")
+
+        if group_ip:
+            group_or_remote = "group %s" % group_ip
+        elif remote_ip:
+            group_or_remote = "remote %s" % remote_ip
+        else:
+            raise Exception("group or remote must be specified for vxlan")
+
+        dstport = get_option(config, "dstport")
+        if not dstport:
+            dstport = 0
+        else:
+            dstport = int(dstport)
+
+        exec_cmd("ip link add %s type vxlan id %d %s %s dstport %d"
+                                % (dev_name,
+                                   vxlan_id,
+                                   dev_param,
+                                   group_or_remote,
+                                   dstport))
+
+    def destroy(self):
+        dev_name = self._dev_config["name"]
+        exec_cmd("ip link del %s" % dev_name)
+
+    def up(self):
+        slaves = get_slaves(self._dev_config)
+        if len(slaves) == 1:
+            parent_id = get_slaves(self._dev_config)[0]
+            parent_dev = self._if_manager.get_mapped_device(parent_id)
+            parent_dev.up()
+
+        super(NetConfigDeviceVxlan, self).up()
+
 def prepare_json_str(json_str):
     if not json_str:
         return "{}"
@@ -563,7 +615,8 @@ type_class_mapping = {
     "veth": NetConfigDeviceVEth,
     "vti": NetConfigDeviceVti,
     "vti6": NetConfigDeviceVti6,
-    "lo": NetConfigDeviceLoopback
+    "lo": NetConfigDeviceLoopback,
+    "vxlan": NetConfigDeviceVxlan
 }
 
 def NetConfigDevice(dev_config, if_manager):

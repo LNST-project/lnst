@@ -1,0 +1,60 @@
+<lnstrecipe>
+    <network>
+        <host id="testmachine1">
+            <interfaces>
+                <eth id="1" label="tnet">
+                    <addresses>
+                        <address value="192.168.101.1/24"/>
+                    </addresses>
+                </eth>
+                <vxlan id="testifc1">
+                    <options>
+                        <option name="id" value="1"/>
+                        <option name="group_ip" value="239.1.1.1"/>
+                        <!--<option name="remote_ip" value="192.168.101.2"/>-->
+                    </options>
+                    <slaves>
+                        <slave id="1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.100.1/24"/>
+                    </addresses>
+                </vxlan>
+            </interfaces>
+        </host>
+
+        <host id="testmachine2">
+            <interfaces>
+                <eth id="1" label="tnet">
+                    <addresses>
+                        <address value="192.168.101.2/24"/>
+                    </addresses>
+                </eth>
+                <vxlan id="testifc2">
+                    <options>
+                        <option name="id" value="1"/>
+                        <option name="group_ip" value="239.1.1.1"/>
+                        <!--<option name="remote_ip" value="192.168.101.1"/>-->
+                    </options>
+                    <slaves>
+                        <slave id="1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="192.168.100.2/24"/>
+                    </addresses>
+                </vxlan>
+            </interfaces>
+        </host>
+    </network>
+
+    <task>
+        <run host="testmachine1" module="IcmpPing">
+            <options>
+                <option name="addr" value="{ip(testmachine2,testifc2)}"/>
+                <option name="count" value="40"/>
+                <option name="interval" value="0"/>
+                <option name="iface" value="{devname(testmachine1, testifc1)}"/>
+            </options>
+        </run>
+    </task>
+</lnstrecipe>

@@ -139,6 +139,7 @@
                             <ref name="vti"/>
                             <ref name="vti6"/>
                             <ref name="lo"/>
+                            <ref name="vxlan"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -287,6 +288,13 @@
 
     <define name="team">
         <element name="team">
+            <attribute name="id"/>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="vxlan">
+        <element name="vxlan">
             <attribute name="id"/>
             <ref name="softdevice"/>
         </element>
