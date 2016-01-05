@@ -119,6 +119,15 @@ class ControllerAPI(object):
         except XmlTemplateError:
             return None
 
+    def get_aliases(self):
+        """
+            Get all user defined aliases.
+
+            :return: names and values of a user defined aliases
+            :rtype: dict
+        """
+        return self._ctl._get_aliases()
+
     def connect_PerfRepo(self, mapping_file, url=None, username=None, password=None):
         if not self._perf_repo_api.connected():
             if url is None:

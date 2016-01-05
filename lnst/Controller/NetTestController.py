@@ -855,6 +855,10 @@ class NetTestController:
         templates = self._parser._template_proc
         return templates._find_definition(alias)
 
+    def _get_aliases(self):
+        templates = self._parser._template_proc
+        return templates._dump_definitions()
+
 class MessageDispatcher(ConnectionHandler):
     def __init__(self, log_ctl):
         super(MessageDispatcher, self).__init__()

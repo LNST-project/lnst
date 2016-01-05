@@ -302,6 +302,16 @@ class XmlTemplates:
         err = "Alias '%s' is not defined here" % name
         raise XmlTemplateError(err)
 
+    def _dump_definitions(self):
+        dump = self._overriden_aliases.copy()
+
+        for level in self._definitions:
+            for name in level:
+                if not name in dump:
+                    dump[name] = level[name]
+
+        return dump
+
     def process_aliases(self, element):
         """ Expand aliases within an element and its children
 
