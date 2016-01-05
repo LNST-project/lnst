@@ -152,7 +152,7 @@ class NetTestController:
             # Each machine must have at least one interface
             if "interfaces" not in machine or \
               ("interfaces" in machine and len(machine["interfaces"]) == 0):
-                msg = "Hot '%s' has no interfaces specified." % m_id
+                msg = "Host '%s' has no interfaces specified." % m_id
                 raise RecipeError(msg, machine)
 
             ifaces = {}
