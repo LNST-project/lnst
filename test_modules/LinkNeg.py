@@ -7,12 +7,19 @@ idosch@mellanox.com (Ido Schimmel)
 """
 
 import logging
+import re
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.Utils import bool_it
+from lnst.Common.ExecCmd import exec_cmd
 from pyroute2 import IPDB
 
 
 class LinkNeg(TestGeneric):
+    def get_speed(self, iface):
+        data_stdout = exec_cmd("ethtool %s" % iface)[0]
+        match = re.search('Speed: ([0-9]*)', data_stdout)
+        return 0 if match is None else int(match.group(1))
+
     def _cb(self, ipdb, msg, action):
         if action == 'RTM_NEWLINK':
             self.oper_state = msg.get_attr('IFLA_OPERSTATE', '')
@@ -21,6 +28,7 @@ class LinkNeg(TestGeneric):
         logging.info('Started LinkNeg...')
         iface = self.get_mopt('iface')
         state = bool_it(self.get_mopt('state'))
+        admin_speed = self.get_opt('speed', default=0)
         timeout = self.get_opt('timeout', default=10)
 
         ip = IPDB()
@@ -34,9 +42,18 @@ class LinkNeg(TestGeneric):
 
         admin_state = 'UP' if state else 'DOWN'
         oper_state = self.oper_state
-        res_data = {'admin_state': admin_state, 'oper_state': oper_state}
 
-        if admin_state == oper_state:
+        if admin_state == oper_state and admin_speed:
+            oper_speed = self.get_speed(iface)
+        else:
+            oper_speed = 0
+
+        res_data = {'admin_state': admin_state, 'oper_state': oper_state}
+        if admin_speed:
+            res_data['admin_speed'] = "%s Mb/s" % admin_speed
+            res_data['oper_speed'] = "%s Mb/s" % oper_speed
+
+        if admin_state == oper_state and admin_speed == oper_speed:
             self.set_pass(res_data)
         else:
             self.set_fail(res_data)
