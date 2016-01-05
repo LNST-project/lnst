@@ -90,6 +90,7 @@ class NetConfigDeviceEth(NetConfigDeviceGeneric):
 
     def deconfigure(self):
         config = self._dev_config
+        exec_cmd("ethtool -s %s autoneg on" % config["name"])
         if "netem_cmd" in config:
             exec_cmd(config["netem_cmd"].replace("add", "del"))
 

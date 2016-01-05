@@ -779,6 +779,12 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "del_br_fdb",
                                   self._id, br_fdb_info)
 
+    def set_speed(self, speed):
+        self._machine._rpc_call_x(self._netns, "set_speed", self._id, speed)
+
+    def set_autoneg(self):
+        self._machine._rpc_call_x(self._netns, "set_autoneg", self._id)
+
 class StaticInterface(Interface):
     """ Static interface
 

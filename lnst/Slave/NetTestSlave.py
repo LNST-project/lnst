@@ -729,6 +729,24 @@ class SlaveMethods:
         brt.del_fdb(br_fdb_info)
         return True
 
+    def set_speed(self, if_id, speed):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.set_speed(speed)
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
+    def set_autoneg(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.set_autoneg()
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()

@@ -532,3 +532,9 @@ class Device(object):
                    "mtu": self._mtu,
                    "driver": self._driver}
         return if_data
+
+    def set_speed(self, speed):
+        exec_cmd("ethtool -s %s speed %s autoneg off" % (self._name, speed))
+
+    def set_autoneg(self):
+        exec_cmd("ethtool -s %s autoneg on" % self._name)

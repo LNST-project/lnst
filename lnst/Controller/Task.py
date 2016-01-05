@@ -545,6 +545,12 @@ class InterfaceAPI(object):
         _self._if.del_br_fdb({"hwaddr": hwaddr, "self": self, "master": master,
                               "vlan_id": vlan_tci})
 
+    def set_speed(self, speed):
+        return self._if.set_speed(speed)
+
+    def set_autoneg(self):
+        return self._if.set_autoneg()
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 
