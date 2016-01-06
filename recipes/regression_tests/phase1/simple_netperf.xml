@@ -17,7 +17,7 @@
                 <eth id="testiface" label="testnet">
                     <addresses>
                         <address>{$net}.10/24</address>
-                        <address>2002::1/64</address>
+                        <address>fc00:0:0:0::1/64</address>
                     </addresses>
                 </eth>
             </interfaces>
@@ -27,7 +27,7 @@
                 <eth id="testiface" label="testnet">
                     <addresses>
                         <address>{$net}.11/24</address>
-                        <address>2002::2/64</address>
+                        <address>fc00:0:0:0::2/64</address>
                     </addresses>
                 </eth>
             </interfaces>

@@ -27,7 +27,7 @@
                     </slaves>
                     <addresses>
                         <address value="{$net}.1/24" />
-                        <address value="2002::1/64"/>
+                        <address value="fc00:0:0:0::1/64"/>
                     </addresses>
                 </bond>
             </interfaces>
@@ -47,7 +47,7 @@
                     </slaves>
                     <addresses>
                         <address value="{$net}.2/24" />
-                        <address value="2002::2/64"/>
+                        <address value="fc00:0:0:0::2/64"/>
                     </addresses>
                 </bond>
             </interfaces>
