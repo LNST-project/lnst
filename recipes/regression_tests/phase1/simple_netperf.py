@@ -59,6 +59,10 @@ p_opts = "-L %s" % (m2_testiface.get_ip(0))
 if nperf_cpupin and nperf_mode != "multi":
     p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
+p_opts6 = "-L %s -6" % (m2_testiface.get_ip(1))
+if nperf_cpupin and nperf_mode != "multi":
+    p_opts6 += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
+
 netperf_cli_tcp = ctl.get_module("Netperf",
                                   options={
                                       "role" : "client",
@@ -80,8 +84,7 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
                                       "runs" : nperf_max_runs,
-                                      "netperf_opts" :
-                                          "-L %s -6" % (m2_testiface.get_ip(1))
+                                      "netperf_opts" : p_opts6
                                   })
 
 netperf_cli_udp = ctl.get_module("Netperf",
@@ -105,8 +108,7 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
                                       "runs" : nperf_max_runs,
-                                      "netperf_opts" :
-                                          "-L %s -6" % (m2_testiface.get_ip(1))
+                                      "netperf_opts" : p_opts6
                                   })
 
 netperf_srv = ctl.get_module("Netperf",
