@@ -546,6 +546,9 @@ class InterfaceAPI(object):
                                "untagged": untagged,
                                "self": self, "master": master})
 
+    def get_br_vlans(self):
+        return self._if.get_br_vlans()
+
     def add_br_fdb(_self, hwaddr, self=False, master=False, vlan_tci=None):
         _self._if.add_br_fdb({"hwaddr": hwaddr, "self": self, "master": master,
                               "vlan_id": vlan_tci})

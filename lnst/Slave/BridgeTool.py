@@ -11,6 +11,7 @@ jiri@mellanox.com (Jiri Pirko)
 """
 
 from lnst.Common.ExecCmd import exec_cmd
+import re
 
 class BridgeTool:
     def __init__(self, dev_name):
@@ -34,6 +35,22 @@ class BridgeTool:
 
     def del_vlan(self, br_vlan_info):
         return self._add_del_vlan("del", br_vlan_info)
+
+    def get_vlans(self):
+        output = exec_cmd("bridge vlan show dev %s" % self._dev_name,
+                          die_on_err=False)[0]
+        br_vlan_info_list = []
+        for line in output.split("\n"):
+            match = re.match(r'.*\s+(\d+)', line)
+            if match:
+                vlan_id = int(match.groups()[0])
+                pvid = True if re.match(r'.*\s+PVID', line) else False
+                untagged = True if re.match(r'.*\s+Egress Untagged', line) \
+                                else False
+                br_vlan_info = {"vlan_id": vlan_id, "pvid": pvid,
+                                "untagged": untagged}
+                br_vlan_info_list.append(br_vlan_info)
+        return br_vlan_info_list
 
     def _add_del_fdb(self, op, br_fdb_info):
         cmd = "bridge fdb %s %s dev %s" % (op, br_fdb_info["hwaddr"],

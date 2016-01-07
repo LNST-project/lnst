@@ -771,6 +771,9 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "del_br_vlan",
                                   self._id, br_vlan_info)
 
+    def get_br_vlans(self):
+        return self._machine._rpc_call_x(self._netns, "get_br_vlans", self._id)
+
     def add_br_fdb(self, br_fdb_info):
         self._machine._rpc_call_x(self._netns, "add_br_fdb",
                                   self._id, br_fdb_info)
