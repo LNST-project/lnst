@@ -557,6 +557,9 @@ class InterfaceAPI(object):
         _self._if.del_br_fdb({"hwaddr": hwaddr, "self": self, "master": master,
                               "vlan_id": vlan_tci})
 
+    def get_br_fdbs(self):
+        return self._if.get_br_fdbs()
+
     def set_speed(self, speed):
         return self._if.set_speed(speed)
 

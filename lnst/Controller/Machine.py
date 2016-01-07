@@ -782,6 +782,9 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "del_br_fdb",
                                   self._id, br_fdb_info)
 
+    def get_br_fdbs(self):
+        return self._machine._rpc_call_x(self._netns, "get_br_fdbs", self._id)
+
     def set_speed(self, speed):
         self._machine._rpc_call_x(self._netns, "set_speed", self._id, speed)
 

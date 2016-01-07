@@ -68,3 +68,21 @@ class BridgeTool:
 
     def del_fdb(self, br_fdb_info):
         return self._add_del_fdb("del", br_fdb_info)
+
+    def get_fdbs(_self):
+        output = exec_cmd("bridge fdb show dev %s" % _self._dev_name,
+                          die_on_err=False)[0]
+        br_fdb_info_list = []
+        for line in output.split("\n"):
+            match = re.match(r'([0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2})', line)
+            if match:
+                hwaddr = match.groups()[0]
+                match = re.match(r'.*\s+vlan (\d+)', line)
+                vlan_id = match.groups()[0] if match else 0
+                self = True if re.match(r'.*\s+self', line) else False
+                master = True if re.match(r'.*\s+master', line) else False
+                offload = True if re.match(r'.*\s+offload', line) else False
+                br_fdb_info = {"hwaddr": hwaddr, "vlan_id": vlan_id,
+                               "self": self, "master": master, "offload": offload}
+                br_fdb_info_list.append(br_fdb_info)
+        return br_fdb_info_list
