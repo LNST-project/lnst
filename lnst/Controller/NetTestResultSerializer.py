@@ -156,6 +156,9 @@ class NetTestResultSerializer:
 
         output_pairs.append((8*" " + m_id + cmd_res["res_header"], res))
 
+        if "desc" in command:
+            output_pairs.append((12*" " + "description: " + command["desc"], ""))
+
         if "msg" in cmd_res and cmd_res["msg"] != "":
             output_pairs.append((12*" " + "message: " + cmd_res["msg"], ""))
 
