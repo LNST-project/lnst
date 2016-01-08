@@ -21,7 +21,7 @@
         <xsl:apply-templates select="pool_match"/>
         <table class="lnst_results">
             <tr><th colspan="5">Task</th></tr>
-            <tr><th>Host</th><th>Bg ID</th><th>Command</th><th>Result</th><th>Result message</th></tr>
+            <tr><th>Host</th><th>Bg ID</th><th>Command</th><th>Result</th><th>Result message</th><th>Description</th></tr>
             <xsl:apply-templates select="task"/>
         </table>
     </xsl:template>
@@ -75,7 +75,7 @@
     </xsl:template>
 
     <xsl:template match="task">
-        <tr class="task_header"><th colspan="5">Task <xsl:value-of select="position()"/></th></tr>
+        <tr class="task_header"><th colspan="6">Task <xsl:value-of select="position()"/></th></tr>
         <xsl:apply-templates select="command">
             <xsl:with-param name="task_id" select="position()"/>
         </xsl:apply-templates>
@@ -115,6 +115,11 @@
             </xsl:choose>
 
             <xsl:apply-templates select="result"/>
+            <td>
+                <xsl:if test="@desc">
+                    <xsl:value-of select="@desc"/>
+                </xsl:if>
+            </td>
         </tr>
 
         <xsl:call-template name="res_data">
