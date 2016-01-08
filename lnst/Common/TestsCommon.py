@@ -127,6 +127,14 @@ class TestGeneric(NetTestCommandGeneric):
         '''
         return self.get_multi_opt(name, mandatory=True, opt_type=opt_type)
 
+    def get_single_opts(self):
+        opts = {}
+        for key in self._command["options"]:
+            item = self._command["options"][key]
+            if len(item) == 1:
+                opts[key] = item[0]["value"]
+        return opts
+
     def _format_cmd_res_header(self):
         cmd_val = self._command["module"]
         cmd_type = self._command["type"]
