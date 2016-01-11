@@ -45,6 +45,8 @@ def usage(retval=0):
     print "  -d, --debug                     emit debugging messages"
     print "      --dump-config               dumps the join of all loaded " \
               "configuration files on stdout and exits"
+    print "      --dump-pools                dumps the available machine " \
+              "pools and exits"
     print "  -h, --help                      print this message"
     print "  -m, --no-colours                disable coloured terminal output"
     print "  -o, --disable-pool-checks       don't check the availability of " \
@@ -203,7 +205,8 @@ def main():
              "html=",
              "multi-match",
              "result=",
-             "pools="
+             "pools=",
+             "dump-pools"
             ]
         )
     except getopt.GetoptError as err:
@@ -243,6 +246,7 @@ def main():
     reduce_sync = False
     multi_match = False
     dump_config = False
+    dump_pools = False
     pools = []
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
@@ -279,12 +283,19 @@ def main():
             dump_config = True
         elif opt in ("--pools"):
             pools.extend(arg.split(","))
+        elif opt in ("--dump-pools"):
+            dump_pools = True
 
     if xslt_url != None:
         lnst_config.set_option("environment", "xslt_url", xslt_url)
 
     if dump_config:
         print lnst_config.dump_config()
+        return RETVAL_PASS
+
+    if dump_pools:
+        for pool_name, pool_path in lnst_config.get_pools().items():
+            print pool_name + ' = ' + pool_path
         return RETVAL_PASS
 
     if coloured_output:
