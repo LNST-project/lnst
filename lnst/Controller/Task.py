@@ -190,6 +190,9 @@ class HostAPI(object):
 
         self._bg_id_seq = 0
 
+    def get_id(self):
+        return self._m.get_id()
+
     def config(self, option, value, persistent=False, netns=None):
         """
             Configure an option in /sys or /proc on the host.
