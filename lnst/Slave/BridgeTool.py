@@ -78,7 +78,7 @@ class BridgeTool:
             if match:
                 hwaddr = match.groups()[0]
                 match = re.match(r'.*\s+vlan (\d+)', line)
-                vlan_id = match.groups()[0] if match else 0
+                vlan_id = int(match.groups()[0]) if match else 0
                 self = True if re.match(r'.*\s+self', line) else False
                 master = True if re.match(r'.*\s+master', line) else False
                 offload = True if re.match(r'.*\s+offload', line) else False
