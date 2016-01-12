@@ -59,9 +59,10 @@ function usage
 function get_pool_dirs
 {
     if [ "$use_user_conf" = "true" ]; then
-        command lnst-ctl --dump-config | grep 'machine_pool_dirs' | cut -d = -f2
+        command lnst-ctl --dump-pools 2>/dev/null | cut -d = -f2
     else
-        command lnst-ctl -c $repo/lnst-ctl.conf --dump-config | grep 'machine_pool_dirs' | cut -d = -f2
+        command lnst-ctl -c $repo/lnst-ctl.conf --dump-pools 2>/dev/null |
+                cut -d = -f2
     fi
 }
 
@@ -133,7 +134,7 @@ cp -r env/* $repo/
 pool_dirs=`PATH="$repo:$PATH" get_pool_dirs`
 
 # Scan the pool and prepare the machines in it
-for pool_dir in "$pool_dirs"; do
+for pool_dir in $pool_dirs; do
     for machine in `ls -1 $pool_dir`; do
         hostname=`get_hostname $pool_dir/$machine`
 
