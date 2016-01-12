@@ -10,6 +10,7 @@ __author__ = """
 jiri@mellanox.com (Jiri Pirko)
 """
 
+from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 import re
 
@@ -76,7 +77,7 @@ class BridgeTool:
         for line in output.split("\n"):
             match = re.match(r'([0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2})', line)
             if match:
-                hwaddr = match.groups()[0]
+                hwaddr = normalize_hwaddr(match.groups()[0])
                 match = re.match(r'.*\s+vlan (\d+)', line)
                 vlan_id = int(match.groups()[0]) if match else 0
                 self = True if re.match(r'.*\s+self', line) else False
