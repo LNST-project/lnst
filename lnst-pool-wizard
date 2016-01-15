@@ -51,6 +51,7 @@ def main():
 
     pool_dir = None
     mode = "interactive"
+    hostlist = None
 
     for opt, arg  in opts:
         if opt in ("-h", "--help"):
@@ -72,7 +73,7 @@ def main():
         else:
             help(RETVAL_ERR)
 
-    if args is not None:
+    if len(args) > 0:
         hostlist = args
 
     wizard = Wizard()
