@@ -223,6 +223,8 @@ class NetTestController:
             for iface in ifaces:
                 iface.up()
 
+            m.wait_interface_init()
+
     def provision_machines(self):
         sp = self._slave_pool
         machines = self._machines

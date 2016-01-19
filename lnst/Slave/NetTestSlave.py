@@ -763,6 +763,10 @@ class SlaveMethods:
             return False
         return True
 
+    def wait_interface_init(self):
+        self._if_manager.wait_interface_init()
+        return True
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()

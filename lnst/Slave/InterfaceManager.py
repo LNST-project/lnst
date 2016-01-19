@@ -13,11 +13,13 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import re
+import select
 from lnst.Slave.NetConfigDevice import NetConfigDevice
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.ConnectionHandler import recv_data
 from pyroute2 import IPRSocket
 try:
     from pyroute2.netlink.iproute import RTM_NEWLINK
@@ -209,6 +211,16 @@ class InterfaceManager(object):
         self._tmp_mapping[if_id1] = device1
         self._tmp_mapping[if_id2] = device2
         return name1, name2
+
+    def wait_interface_init(self):
+        while len(self._tmp_mapping) > 0:
+            rl, wl, xl = select.select([self._nl_socket], [], [], 1)
+
+            if len(rl) == 0:
+                continue
+
+            msgs = recv_data(self._nl_socket)["data"]
+            self.handle_netlink_msgs(msgs)
 
     def _is_name_used(self, name):
         for device in self._devices.itervalues():

@@ -407,6 +407,9 @@ class HostAPI(object):
 
         interface.configure()
         interface.up()
+
+        self._m.wait_interface_init()
+
         return iface
 
     def _remove_iface(self, iface):

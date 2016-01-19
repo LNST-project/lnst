@@ -500,6 +500,9 @@ class Machine(object):
         self._namespaces = []
         return True
 
+    def wait_interface_init(self):
+        return self._rpc_call("wait_interface_init")
+
 class Interface(object):
     """ Abstraction of a test network interface on a slave machine
 
