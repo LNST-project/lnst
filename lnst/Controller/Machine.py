@@ -788,6 +788,10 @@ class Interface(object):
     def get_br_fdbs(self):
         return self._machine._rpc_call_x(self._netns, "get_br_fdbs", self._id)
 
+    def set_br_learning(self, br_learning_info):
+        self._machine._rpc_call_x(self._netns, "set_br_learning", self._id,
+                                  br_learning_info)
+
     def set_speed(self, speed):
         self._machine._rpc_call_x(self._netns, "set_speed", self._id, speed)
 

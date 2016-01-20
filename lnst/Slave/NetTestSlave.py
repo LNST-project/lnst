@@ -745,6 +745,15 @@ class SlaveMethods:
         brt = BridgeTool(dev.get_name())
         return brt.get_fdbs()
 
+    def set_br_learning(self, if_id, br_learning_info):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.set_learning(br_learning_info)
+        return True
+
     def set_speed(self, if_id, speed):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is not None:

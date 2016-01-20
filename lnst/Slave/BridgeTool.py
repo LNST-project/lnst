@@ -87,3 +87,18 @@ class BridgeTool:
                                "self": self, "master": master, "offload": offload}
                 br_fdb_info_list.append(br_fdb_info)
         return br_fdb_info_list
+
+    def _set_link(self, attr, br_link_info):
+        cmd = "bridge link set dev %s %s" % (self._dev_name, attr)
+        if br_link_info["on"]:
+            cmd += " on"
+        else:
+            cmd += " off"
+        if br_link_info["self"]:
+            cmd += " self"
+        if br_link_info["master"]:
+            cmd += " master"
+        exec_cmd(cmd)
+
+    def set_learning(self, br_learning_info):
+        return self._set_link("learning", br_learning_info)
