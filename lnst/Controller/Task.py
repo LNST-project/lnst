@@ -569,6 +569,10 @@ class InterfaceAPI(object):
     def set_br_learning(_self, on=True, self=False, master=False):
         _self._if.set_br_learning({"on": on, "self": self, "master": master})
 
+    def set_br_learning_sync(_self, on=True, self=False, master=False):
+        _self._if.set_br_learning_sync({"on": on, "self": self,
+                                        "master": master})
+
     def set_speed(self, speed):
         return self._if.set_speed(speed)
 
