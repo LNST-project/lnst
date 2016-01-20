@@ -582,6 +582,12 @@ class InterfaceAPI(object):
     def set_autoneg(self):
         return self._if.set_autoneg()
 
+    def slave_add(self, slave_id):
+        return self._if.slave_add(slave_id)
+
+    def slave_del(self, slave_id):
+        return self._if.slave_del(slave_id)
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

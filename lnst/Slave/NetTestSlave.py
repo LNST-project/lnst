@@ -794,6 +794,24 @@ class SlaveMethods:
         self._if_manager.wait_interface_init()
         return True
 
+    def slave_add(self, if_id, slave_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.slave_add(slave_id)
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
+    def slave_del(self, if_id, slave_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.slave_del(slave_id)
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()

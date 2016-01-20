@@ -806,6 +806,12 @@ class Interface(object):
     def set_autoneg(self):
         self._machine._rpc_call_x(self._netns, "set_autoneg", self._id)
 
+    def slave_add(self, if_id):
+        self._machine._rpc_call_x(self._netns, "slave_add", self._id, if_id)
+
+    def slave_del(self, if_id):
+        self._machine._rpc_call_x(self._netns, "slave_del", self._id, if_id)
+
 class StaticInterface(Interface):
     """ Static interface
 

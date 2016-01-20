@@ -550,3 +550,11 @@ class Device(object):
 
     def set_autoneg(self):
         exec_cmd("ethtool -s %s autoneg on" % self._name)
+
+    def slave_add(self, if_id):
+        if self._conf != None:
+            self._conf.slave_add(if_id)
+
+    def slave_del(self, if_id):
+        if self._conf != None:
+            self._conf.slave_del(if_id)
