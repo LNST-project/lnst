@@ -1,0 +1,27 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <eth id="if2" label="B" />
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <params/>
+            <interfaces>
+                <eth id="if1" label="C" />
+                <eth id="if2" label="D" />
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <eth id="if2" label="B" />
+                <eth id="if3" label="C" />
+                <eth id="if4" label="D" />
+            </interfaces>
+        </host>
+    </network>
+    <task python="l2-015-bridge_team_vlan1d.py" />
+</lnstrecipe>
