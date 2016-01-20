@@ -105,3 +105,6 @@ class BridgeTool:
 
     def set_learning_sync(self, br_learning_sync_info):
         return self._set_link("learning_sync", br_learning_sync_info)
+
+    def set_flooding(self, br_flooding_info):
+        return self._set_link("flood", br_flooding_info)

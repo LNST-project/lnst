@@ -763,6 +763,15 @@ class SlaveMethods:
         brt.set_learning_sync(br_learning_sync_info)
         return True
 
+    def set_br_flooding(self, if_id, br_flooding_info):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.set_flooding(br_flooding_info)
+        return True
+
     def set_speed(self, if_id, speed):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is not None:
