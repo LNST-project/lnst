@@ -108,3 +108,12 @@ class BridgeTool:
 
     def set_flooding(self, br_flooding_info):
         return self._set_link("flood", br_flooding_info)
+
+    def set_state(self, br_state_info):
+        cmd = "bridge link set dev %s state %s" % (self._dev_name,
+                                                   br_state_info["state"])
+        if br_state_info["self"]:
+            cmd += " self"
+        if br_state_info["master"]:
+            cmd += " master"
+        exec_cmd(cmd)

@@ -800,6 +800,10 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "set_br_flooding", self._id,
                                   br_flooding_info)
 
+    def set_br_state(self, br_state_info):
+        self._machine._rpc_call_x(self._netns, "set_br_state", self._id,
+                                  br_state_info)
+
     def set_speed(self, speed):
         self._machine._rpc_call_x(self._netns, "set_speed", self._id, speed)
 
