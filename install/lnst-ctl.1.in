@@ -26,6 +26,12 @@ is a script used for managing slaves. It reads a recipe XML file as an
 input and executes tests on the specified slave machines.
 .SH OPTIONS
 .TP
+.BI "\-A, \-\-override\-alias"\ name=value
+Define top\-level alias that will override any other definitions in the recipe
+.TP
+.BI "\-a, \-\-define\-alias"\ name=value
+Define top\-level alias
+.TP
 .BI "\-c, \-\-config" =file
 Load a custom configuration file in addition to
 .I /etc/lnst-ctl.conf
@@ -35,6 +41,12 @@ that are loaded by default.
 .TP
 .B \-d, \-\-debug
 Toggle emitting debugging messages.
+.TP
+.B \-\-dump\-config
+Dumps the join of all loaded configuration files on stdout and exits
+.TP
+.B \-\-dump\-pools
+Dumps the available machine pools and exits
 .TP
 .B \-h, \-\-help
 Display usage of this command.
@@ -49,15 +61,31 @@ Skip the pool machine availability checks.
 Capture and log all ongoing network communication between the slaves
 during the test.
 .TP
-.BI "\-x, \-\-result" =file
-Write results in XML format to the specified
-.IR file .
+.BI "\-\-pools" =name[,...]
+Restricts which pools to use for matching, value is a comma separated list of values
+.TP
+.BI "\-\-pools=" path
+Restrict which pool to use for matching, value is single path to a pool directory
 .TP
 .B "\-r, \-\-reduce-sync"
 Disable synchronization of module and tool resources to slave machines,
 when python tasks are used in the recipe. Instead the user can manually
 synchronize resources from the python task itself. This option has no effect if
 the recipe only contains xml tasks.
+.TP
+.BI "\-s, \-\-xslt-url" =URL
+URL to a XSLT document that will be used when transforming the xml result file,
+only useful when -t is used as well
+.TP
+.BI "\-t, \-\-html" =file
+Generate a formatted result html
+.TP
+.B \-u, \-\-multi\-match
+Run each recipe with every pool match possible
+.TP
+.BI "\-x, \-\-result" =file
+Write results in XML format to the specified
+.IR file .
 .PP
 .I RECIPE
 can be either a LNST recipe file or a directory containing recipe files.
