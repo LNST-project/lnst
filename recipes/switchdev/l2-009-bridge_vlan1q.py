@@ -39,7 +39,7 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     sleep(15)
 
-    tl = TestLib(ctl, ipv, aliases)
+    tl = TestLib(ctl, aliases)
 
     tl.ping_simple(m1_if1, m2_if1)
     tl.netperf_tcp(m1_if1, m2_if1)
