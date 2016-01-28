@@ -94,7 +94,7 @@ class NetTestResultSerializer:
                                          "Setup is using virtual machines.",
                                          ""))
 
-                for m_id, m in match["machines"].iteritems():
+                for m_id, m in sorted(match["machines"].iteritems()):
                     output_pairs.append((4*" " + "host \"%s\" uses \"%s\"" %\
                                         (m_id, m["target"]), ""))
                     for if_id, pool_if in m["interfaces"].iteritems():
