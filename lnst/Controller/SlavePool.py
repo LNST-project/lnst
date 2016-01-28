@@ -78,7 +78,7 @@ class SlavePool:
 
         if self._pool_checks:
             check_sockets = {}
-            for m_id, m in pool.iteritems():
+            for m_id, m in sorted(pool.iteritems()):
                 hostname = m["params"]["hostname"]
                 if "rpc_port" in m["params"]:
                     port = m["params"]["rpc_port"]
@@ -111,7 +111,7 @@ class SlavePool:
             for m_id in pool.keys():
                 pool[m_id]["available"] = True
 
-        for m_id in list(pool.keys()):
+        for m_id in sorted(list(pool.keys())):
             m = pool[m_id]
             if m["available"]:
                 if 'libvirt_domain' in m['params']:
