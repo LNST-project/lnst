@@ -244,7 +244,7 @@ class NetTestController:
         logging.info("Pool match description:")
         if sp.is_setup_virtual():
             logging.info("  Setup is using virtual machines.")
-        for m_id, m in match["machines"].iteritems():
+        for m_id, m in sorted(match["machines"].iteritems()):
             logging.info("  host \"%s\" uses \"%s\"" % (m_id, m["target"]))
             for if_id, match in m["interfaces"].iteritems():
                 pool_id = match["target"]
