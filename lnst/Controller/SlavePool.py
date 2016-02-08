@@ -402,7 +402,7 @@ class SetupMapper(object):
     def reset_match_state(self):
         self._net_label_mapping = {}
         self._machine_stack = []
-        self._unmatched_req_machines = self._mreqs.keys()
+        self._unmatched_req_machines = sorted(self._mreqs.keys(), reverse=True)
 
         self._pool_stack = list(self._pools.keys())
         if len(self._pool_stack) > 0:
@@ -410,7 +410,7 @@ class SetupMapper(object):
             self._pool = self._pools[self._pool_name]
 
         self._unmatched_pool_machines = []
-        for p_id, p_machine in self._pool.iteritems():
+        for p_id, p_machine in sorted(self._pool.iteritems(), reverse=True):
             if self._virtual_matching:
                 if "libvirt_domain" in p_machine["params"]:
                     self._unmatched_pool_machines.append(p_id)
@@ -450,9 +450,9 @@ class SetupMapper(object):
                     if self._check_machine_compatibility(mreq_m_id, pool_m_id):
                         #map compatible pool machine
                         stack_top["current_match"] = pool_m_id
-                        pool_ifs = self._pool[pool_m_id]["interfaces"].keys()
-                        stack_top["unmatched_pool_ifs"] = list(pool_ifs)
-
+                        stack_top["unmatched_pool_ifs"] = \
+                            sorted(self._pool[pool_m_id]["interfaces"].keys(),
+                                   reverse=True)
                         self._unmatched_pool_machines.remove(pool_m_id)
                         break
 
@@ -475,7 +475,7 @@ class SetupMapper(object):
                                      self._pool_name)
 
                         self._unmatched_pool_machines = []
-                        for p_id, p_machine in self._pool.iteritems():
+                        for p_id, p_machine in sorted(self._pool.iteritems(), reverse=True):
                             if self._virtual_matching:
                                 if "libvirt_domain" in p_machine["params"]:
                                     self._unmatched_pool_machines.append(p_id)
@@ -550,7 +550,8 @@ class SetupMapper(object):
         machine_match["if_stack"] = []
 
         machine = self._mreqs[machine_match["m_id"]]
-        machine_match["unmatched_ifs"] = machine["interfaces"].keys()
+        machine_match["unmatched_ifs"] = sorted(machine["interfaces"].keys(),
+                                                reverse=True)
         machine_match["unmatched_pool_ifs"] = []
 
         if self._virtual_matching:
