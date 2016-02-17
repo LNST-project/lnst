@@ -121,16 +121,11 @@ def do_task(ctl, hosts, ifaces, aliases):
     # bridge code will flush it himself, instead of driver. Unlike the
     # previous case, here we check if the driver correctly removes the static
     # entry.
-    # XXX: This currently fails because firmware doesn't flush static FDBs.
-    # Uncomment it when it's introduced.
-    #sw_br.slave_del(sw_if1.get_id())
-    #sw_br.slave_add(sw_if1.get_id())
-    #sw_if1.set_br_learning(on=False, self=True)
-    #sw_if1.set_br_flooding(on=False, self=True)
-    #tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
-
-    # XXX: Cleanup because firmware doesn't do it.
-    sw_if1.del_br_fdb(str(m1_if1.get_hwaddr()), self=True, vlan_tci=1)
+    sw_br.slave_del(sw_if1.get_id())
+    sw_br.slave_add(sw_if1.get_id())
+    sw_if1.set_br_learning(on=False, self=True)
+    sw_if1.set_br_flooding(on=False, self=True)
+    tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
 
 do_task(ctl, [ctl.get_host("machine1"),
               ctl.get_host("machine2"),

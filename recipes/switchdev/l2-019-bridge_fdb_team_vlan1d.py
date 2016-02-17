@@ -132,16 +132,11 @@ def do_task(ctl, hosts, ifaces, aliases):
     # bridge code will flush it himself, instead of driver. Unlike the
     # previous case, here we check if the driver correctly removes the static
     # entry.
-    # XXX: This currently fails because firmware doesn't flush static FDBs.
-    # Uncomment it when it's introduced.
-    #sw_br.slave_del(sw_lag1_10.get_id())
-    #sw_br.slave_add(sw_lag1_10.get_id())
-    #sw_lag1_10.set_br_learning(on=False, self=True)
-    #sw_lag1_10.set_br_flooding(on=False, self=True)
-    #tl.ping_simple(m1_lag1_10, m2_lag1_20, fail_expected=True)
-
-    # XXX: Cleanup because firmware doesn't do it.
-    sw_lag1_10.del_br_fdb(str(m1_lag1_10.get_hwaddr()), self=True)
+    sw_br.slave_del(sw_lag1_10.get_id())
+    sw_br.slave_add(sw_lag1_10.get_id())
+    sw_lag1_10.set_br_learning(on=False, self=True)
+    sw_lag1_10.set_br_flooding(on=False, self=True)
+    tl.ping_simple(m1_lag1_10, m2_lag1_20, fail_expected=True)
 
 do_task(ctl, [ctl.get_host("machine1"),
               ctl.get_host("machine2"),
