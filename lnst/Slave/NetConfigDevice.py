@@ -212,8 +212,10 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
 
     def slave_add(self, slave_id):
         self._add_rm_port("add", slave_id)
+        self._dev_config["slaves"].append(slave_id)
 
     def slave_del(self, slave_id):
+        self._dev_config["slaves"].remove(slave_id)
         self._add_rm_port("del", slave_id)
 
 class NetConfigDeviceMacvlan(NetConfigDeviceGeneric):
@@ -379,14 +381,14 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         self._ports_down()
 
         for slave_id in get_slaves(self._dev_config):
-            self.slave_add(slave_id)
+            self._slave_add(slave_id)
         self._ports_up()
 
     def deconfigure(self):
         for slave_id in get_slaves(self._dev_config):
-            self.slave_del(slave_id)
+            self._slave_del(slave_id)
 
-    def slave_add(self, slave_id):
+    def _slave_add(self, slave_id):
         dev_name = self._dev_config["name"]
         port_dev = self._if_manager.get_mapped_device(slave_id)
         port_name = port_dev.get_name()
@@ -400,12 +402,20 @@ class NetConfigDeviceTeam(NetConfigDeviceGeneric):
         port_dev.down()
         exec_cmd("teamdctl %s %s port add %s" % (dbus_option, dev_name, port_name))
 
-    def slave_del(self, slave_id):
+    def slave_add(self, slave_id):
+        self._slave_add(slave_id)
+        self._dev_config["slaves"].append(slave_id)
+
+    def _slave_del(self, slave_id):
         dev_name = self._dev_config["name"]
         port_dev = self._if_manager.get_mapped_device(slave_id)
         port_name = port_dev.get_name()
         dbus_option = "-D" if self._should_enable_dbus() else ""
         exec_cmd("teamdctl %s %s port remove %s" % (dbus_option, dev_name, port_name))
+
+    def slave_del(self, slave_id):
+        self._dev_config["slaves"].remove(slave_id)
+        self._slave_del(slave_id)
 
 class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
     _modulename = "openvswitch"

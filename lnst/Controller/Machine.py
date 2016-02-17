@@ -591,6 +591,12 @@ class Interface(object):
             else:
                 self._master["other"].append(master)
 
+    def del_master(self, master):
+        if self._master["primary"] is master:
+            self._master["primary"] = None
+        else:
+            self._master["other"].remove(master)
+
     def get_primary_master(self):
         return self._master["primary"]
 
@@ -600,6 +606,10 @@ class Interface(object):
             iface.add_master(self, primary=False)
         else:
             iface.add_master(self)
+
+    def del_slave(self, iface):
+        iface.del_master(self)
+        del self._slaves[iface.get_id()]
 
     def set_slave_option(self, slave_id, name, value):
         if slave_id not in self._slave_options:
@@ -812,8 +822,10 @@ class Interface(object):
 
     def slave_add(self, if_id):
         self._machine._rpc_call_x(self._netns, "slave_add", self._id, if_id)
+        self.add_slave(self._machine.get_interface(if_id))
 
     def slave_del(self, if_id):
+        self.del_slave(self._machine.get_interface(if_id))
         self._machine._rpc_call_x(self._netns, "slave_del", self._id, if_id)
 
 class StaticInterface(Interface):
