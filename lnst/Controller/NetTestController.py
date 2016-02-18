@@ -232,12 +232,6 @@ class NetTestController:
             msg = "This setup cannot be provisioned with the current pool."
             raise NoMatchError(msg)
 
-        if sp.is_setup_virtual() and os.geteuid() != 0:
-            msg = "Provisioning this setup requires additional configuration "\
-                  "of the virtual hosts in the pool. LNST needs root "\
-                  "priviledges so it can connect to qemu."
-            raise NetTestError(msg)
-
     def print_match_description(self):
         sp = self._slave_pool
         match = sp.get_match()
