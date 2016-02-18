@@ -78,6 +78,22 @@ def do_task(ctl, hosts, ifaces, aliases):
     sleep(1)
     tl.ping_simple(m1_if1, m2_if1)
 
+    sw_if2.add_br_vlan(500, pvid=True, untagged=False)
+    sleep(1)
+    tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
+
+    sw_if2.add_br_vlan(500, pvid=True, untagged=True)
+    sleep(1)
+    tl.ping_simple(m1_if1, m2_if1)
+
+    sw_if2.add_br_vlan(500, pvid=False, untagged=True)
+    sleep(1)
+    tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
+
+    sw_if2.add_br_vlan(500, pvid=True, untagged=True)
+    sleep(1)
+    tl.ping_simple(m1_if1, m2_if1)
+
     sw_br.slave_del(sw_if1.get_id())
 
     sleep(5)
