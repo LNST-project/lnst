@@ -53,8 +53,6 @@ if nperf_cpupin:
     for m, d in [ (m1, m1_testiface), (m2, m2_testiface) ]:
         pin_dev_irqs(m, d, 0)
 
-ctl.wait(15)
-
 p_opts = "-L %s" % (m2_testiface.get_ip(0))
 if nperf_cpupin and nperf_mode != "multi":
     p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
