@@ -34,19 +34,61 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_lag1 = sw.create_team(slaves=[sw_if1, sw_if2], config=team_config)
     sw_lag2 = sw.create_team(slaves=[sw_if3, sw_if4], config=team_config)
     br_options = {"vlan_filtering": 1}
-    sw.create_bridge(slaves=[sw_lag1, sw_lag2], options=br_options)
+    sw_br1 = sw.create_bridge(slaves=[sw_lag1, sw_lag2], options=br_options)
 
     sw_lag1_10 = sw.create_vlan(sw_lag1, 10)
     sw_lag2_10 = sw.create_vlan(sw_lag2, 10)
-    sw.create_bridge(slaves=[sw_lag1_10, sw_lag2_10], options=br_options)
+    sw_br2 = sw.create_bridge(slaves=[sw_lag1_10, sw_lag2_10],
+                              options=br_options)
 
     sw_lag1_20 = sw.create_vlan(sw_lag1, 20)
     sw_lag2_21 = sw.create_vlan(sw_lag2, 21)
-    sw.create_bridge(slaves=[sw_lag1_20, sw_lag2_21], options=br_options)
+    sw_br3 = sw.create_bridge(slaves=[sw_lag1_20, sw_lag2_21],
+                              options=br_options)
 
     sleep(15)
 
     tl = TestLib(ctl, aliases)
+
+    tl.ping_simple(m1_lag1, m2_lag1)
+    tl.netperf_tcp(m1_lag1, m2_lag1)
+    tl.netperf_udp(m1_lag1, m2_lag1)
+
+    tl.ping_simple(m1_lag1_10, m2_lag1_10)
+    tl.netperf_tcp(m1_lag1_10, m2_lag1_10)
+    tl.netperf_udp(m1_lag1_10, m2_lag1_10)
+
+    tl.ping_simple(m1_lag1_20, m2_lag1_21)
+    tl.netperf_tcp(m1_lag1_20, m2_lag1_21)
+    tl.netperf_udp(m1_lag1_20, m2_lag1_21)
+
+    sw_lag1.slave_del(sw_if1.get_id())
+    sw_lag1.slave_del(sw_if2.get_id())
+
+    m1_lag1.slave_del(m1_if1.get_id())
+
+    # Make sure slowpath is working.
+    sw_if1.reset(ip=test_ip(4, 1))
+    m1_if1.reset(ip=test_ip(4, 2))
+
+    sleep(15)
+
+    tl.ping_simple(sw_if1, m1_if1)
+
+    # Repopulate the LAGs and make sure fastpath is OK.
+    sw_lag3 = sw.create_team(slaves=[sw_if1, sw_if2],
+                             config=team_config)
+    sw_br1.slave_add(sw_lag3.get_id())
+
+    sw_lag3_10 = sw.create_vlan(sw_lag3, 10)
+    sw_br2.slave_add(sw_lag3_10.get_id())
+
+    sw_lag3_20 = sw.create_vlan(sw_lag3, 20)
+    sw_br3.slave_add(sw_lag3_20.get_id())
+
+    m1_lag1.slave_add(m1_if1.get_id())
+
+    sleep(15)
 
     tl.ping_simple(m1_lag1, m2_lag1)
     tl.netperf_tcp(m1_lag1, m2_lag1)

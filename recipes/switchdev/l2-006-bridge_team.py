@@ -31,11 +31,37 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_lag2 = sw.create_team(slaves=[sw_if3, sw_if4],
                              config=team_config)
 
-    sw.create_bridge(slaves=[sw_lag1, sw_lag2], options={"vlan_filtering": 1})
+    sw_br = sw.create_bridge(slaves=[sw_lag1, sw_lag2],
+                             options={"vlan_filtering": 1})
 
     sleep(15)
 
     tl = TestLib(ctl, aliases)
+    tl.ping_simple(m1_lag1, m2_lag1)
+    tl.netperf_tcp(m1_lag1, m2_lag1)
+    tl.netperf_udp(m1_lag1, m2_lag1)
+
+    sw_lag1.slave_del(sw_if1.get_id())
+    sw_lag1.slave_del(sw_if2.get_id())
+
+    m1_lag1.slave_del(m1_if1.get_id())
+
+    # Make sure slowpath is working.
+    sw_if1.reset(ip=["192.168.102.10/24", "2003::1/64"])
+    m1_if1.reset(ip=["192.168.102.11/24", "2003::2/64"])
+
+    sleep(15)
+
+    tl.ping_simple(sw_if1, m1_if1)
+
+    # Repopulate the LAGs and make sure fastpath is OK.
+    sw_lag3 = sw.create_team(slaves=[sw_if1, sw_if2],
+                             config=team_config)
+    sw_br.slave_add(sw_lag3.get_id())
+    m1_lag1.slave_add(m1_if1.get_id())
+
+    sleep(15)
+
     tl.ping_simple(m1_lag1, m2_lag1)
     tl.netperf_tcp(m1_lag1, m2_lag1)
     tl.netperf_udp(m1_lag1, m2_lag1)
