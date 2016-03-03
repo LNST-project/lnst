@@ -90,16 +90,23 @@ class SlaveSecSocket(SecureSocket):
         elif sec_params["auth_types"] == "pubkey":
             cryptography_imports()
             srv_key = None
-            with open(sec_params["privkey"], 'r') as f:
-                srv_key = load_pem_private_key(f.read(), None, backend)
+            try:
+                with open(sec_params["privkey"], 'r') as f:
+                    srv_key = load_pem_private_key(f.read(), None, backend)
+            except:
+                srv_key = None
 
             ctl_pubkeys = {}
             for fname in os.listdir(sec_params["ctl_pubkeys"]):
                 path = os.path.join(sec_params["ctl_pubkeys"], fname)
                 if not os.path.isfile(path):
                     continue
-                with open(path, 'r') as f:
-                    ctl_pubkeys[fname] = load_pem_public_key(f.read(), backend)
+                try:
+                    with open(path, 'r') as f:
+                        ctl_pubkeys[fname] = load_pem_public_key(f.read(),
+                                                                 backend)
+                except:
+                    continue
 
             self._pubkey_handshake(srv_key, ctl_pubkeys)
         elif sec_params["auth_types"] == "password":
@@ -179,18 +186,30 @@ class SlaveSecSocket(SecureSocket):
                           "/etc/ssh/ssh_host_ecdsa_key"]
         ssh_dir_path = os.path.expanduser("~/.ssh")
         for f_name in sshd_key_paths:
-            with open(f_name, 'r') as f:
-                srv_keys.append(load_pem_private_key(f.read(), None, backend))
-                srv_pubkeys.append(srv_keys[-1].public_key())
+            try:
+                with open(f_name, 'r') as f:
+                    srv_keys.append(load_pem_private_key(f.read(),
+                                                         None,
+                                                         backend))
+                    srv_pubkeys.append(srv_keys[-1].public_key())
+            except:
+                continue
 
         with open(ssh_dir_path+"/authorized_keys", 'r') as f:
             for line in f.readlines():
-                authorized_keys.append(load_ssh_public_key(line, backend))
+                try:
+                    authorized_keys.append(load_ssh_public_key(line, backend))
+                except:
+                    continue
 
         msg = self.recv_msg()
         if msg["type"] != "ssh_client_hello":
             raise SecSocketException("Handshake failed.")
-        ctl_ssh_pubkey = load_pem_public_key(msg["ctl_ssh_pubkey"], backend)
+        try:
+            ctl_ssh_pubkey = load_pem_public_key(msg["ctl_ssh_pubkey"],
+                                                 backend)
+        except:
+            raise SecSocketException("Handshake failed.")
 
         authorized = False
         for key in authorized_keys:
@@ -240,7 +259,10 @@ class SlaveSecSocket(SecureSocket):
         if msg["type"] != "pubkey_client_hello":
             raise SecSocketException("Handshake failed.")
         ctl_identity = msg["identity"]
-        ctl_pubkey = load_pem_public_key(msg["ctl_pubkey"], backend)
+        try:
+            ctl_pubkey = load_pem_public_key(msg["ctl_pubkey"], backend)
+        except:
+            raise SecSocketException("Handshake failed.")
 
         local_ctl_pubkey = client_pubkeys[ctl_identity]
 

@@ -184,10 +184,16 @@ class CtlSecSocket(SecureSocket):
         with open(ssh_dir_path+"/known_hosts", 'r') as f:
             for line in f.readlines():
                 key = line[line.find(' ')+1:]
-                known_hosts.append(load_ssh_public_key(key, backend))
+                try:
+                    known_hosts.append(load_ssh_public_key(key, backend))
+                except:
+                    continue
 
-        with open(ssh_dir_path+"/id_rsa", 'r') as f:
-            ctl_ssh_key = load_pem_private_key(f.read(), None, backend)
+        try:
+            with open(ssh_dir_path+"/id_rsa", 'r') as f:
+                ctl_ssh_key = load_pem_private_key(f.read(), None, backend)
+        except:
+            ctl_ssh_key = None
 
         if not ctl_ssh_key:
             raise SecSocketException("Handshake failed.")
@@ -205,7 +211,10 @@ class CtlSecSocket(SecureSocket):
             raise SecSocketException("Handshake failed.")
         srv_ssh_pubkeys = []
         for key in msg["srv_ssh_pubkeys"]:
-            srv_ssh_pubkeys.append(load_pem_public_key(key, backend))
+            try:
+                srv_ssh_pubkeys.append(load_pem_public_key(key, backend))
+            except:
+                continue
 
         srv_ssh_pubkey = None
         i = 0
@@ -258,7 +267,11 @@ class CtlSecSocket(SecureSocket):
         if msg["type"] != "pubkey_server_hello":
             raise SecSocketException("Handshake failed.")
 
-        srv_pubkey = load_pem_public_key(msg["srv_pubkey"], backend)
+        try:
+            srv_pubkey = load_pem_public_key(msg["srv_pubkey"], backend)
+        except:
+            raise SecSocketException("Handshake failed.")
+
         if not self._cmp_pub_keys(local_srv_pubkey, srv_pubkey):
             raise SecSocketException("Handshake failed.")
 
