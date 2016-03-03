@@ -19,17 +19,6 @@ import os
 import cPickle
 import hashlib
 import hmac
-import cryptography.exceptions
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives.asymmetric import padding, ec
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
-from cryptography.hazmat.primitives.asymmetric.dsa import DSAPrivateKey
-from cryptography.hazmat.primitives.asymmetric.dsa import DSAPublicKey
-from cryptography.hazmat.backends import default_backend
 
 DH_GROUP = {"p": int("0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1"\
                      "29024E088A67CC74020BBEA63B139B22514A08798E3404DD"\
@@ -75,6 +64,58 @@ if SRP_GROUP["p"].bit_length()%8:
 class SecSocketException(Exception):
     pass
 
+cryptography = None
+hashes = None
+Cipher = None
+algorithms = None
+modes = None
+padding = None
+ec = None
+EllipticCurvePrivateKey = None
+EllipticCurvePublicKey = None
+RSAPrivateKey = None
+RSAPublicKey = None
+DSAPrivateKey = None
+DSAPublicKey = None
+default_backend = None
+cryptography_imported = False
+def cryptography_imports():
+    global cryptography_imported
+    if cryptography_imported:
+        return
+
+    global cryptography
+    global hashes
+    global Cipher
+    global algorithms
+    global modes
+    global padding
+    global ec
+    global EllipticCurvePrivateKey
+    global EllipticCurvePublicKey
+    global RSAPrivateKey
+    global RSAPublicKey
+    global DSAPrivateKey
+    global DSAPublicKey
+    global default_backend
+
+    try:
+        import cryptography.exceptions
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        from cryptography.hazmat.primitives.asymmetric import padding, ec
+        from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
+        from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+        from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+        from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+        from cryptography.hazmat.primitives.asymmetric.dsa import DSAPrivateKey
+        from cryptography.hazmat.primitives.asymmetric.dsa import DSAPublicKey
+        from cryptography.hazmat.backends import default_backend
+        cryptography_imported = True
+    except ImportError:
+        raise SecSocketException("Library 'cryptography' missing "\
+                                 "can't establish secure channel.")
+
 class SecureSocket(object):
     def __init__(self, soc):
         self._role = None
@@ -112,6 +153,7 @@ class SecureSocket(object):
     def _add_mac_sign(self, data):
         if not self._current_write_spec["mac_key"]:
             return data
+        cryptography_imports()
 
         msg = str(self._current_write_spec["seq_num"]) + str(len(data)) + data
         signature = hmac.new(self._current_write_spec["mac_key"],
@@ -124,6 +166,7 @@ class SecureSocket(object):
     def _del_mac_sign(self, signed_data):
         if not self._current_read_spec["mac_key"]:
             return signed_data
+        cryptography_imports()
 
         signed_msg = cPickle.loads(signed_data)
         data = signed_msg["data"]
@@ -140,6 +183,7 @@ class SecureSocket(object):
     def _add_padding(self, data):
         if not self._current_write_spec["enc_key"]:
             return data
+        cryptography_imports()
 
         block_size = algorithms.AES.block_size/8
         pad_length = block_size - (len(data) % block_size)
@@ -152,6 +196,7 @@ class SecureSocket(object):
     def _del_padding(self, data):
         if not self._current_read_spec["enc_key"]:
             return data
+        cryptography_imports()
 
         pad_length = int(data[-1].encode("hex"), 16)
         for char in data[-pad_length]:
@@ -163,6 +208,7 @@ class SecureSocket(object):
     def _add_encrypt(self, data):
         if not self._current_write_spec["enc_key"]:
             return data
+        cryptography_imports()
 
         iv = os.urandom(algorithms.AES.block_size/8)
         mode = modes.CBC(iv)
@@ -180,6 +226,7 @@ class SecureSocket(object):
     def _del_encrypt(self, data):
         if not self._current_read_spec["enc_key"]:
             return data
+        cryptography_imports()
 
         encrypted_msg = cPickle.loads(data)
         encrypted_data = encrypted_msg["enc_data"]
@@ -313,6 +360,7 @@ class SecureSocket(object):
             server_spec = self._next_read_spec
         else:
             raise SecSocketException("Socket without a role!")
+        cryptography_imports()
 
         aes_keysize = max(algorithms.AES.key_sizes)/8
         mac_keysize = hashlib.sha256().block_size
@@ -334,6 +382,7 @@ class SecureSocket(object):
         return
 
     def _sign_data(self, data, privkey):
+        cryptography_imports()
         if isinstance(privkey, DSAPrivateKey):
             signer = privkey.signer(hashes.SHA256())
         elif isinstance(privkey, RSAPrivateKey):
@@ -349,6 +398,7 @@ class SecureSocket(object):
         return signer.finalize()
 
     def _verify_signature(self, pubkey, data, signature):
+        cryptography_imports()
         if isinstance(pubkey, DSAPublicKey):
             verifier = pubkey.verifier(signature, hashes.SHA256())
         elif isinstance(pubkey, RSAPublicKey):

@@ -19,13 +19,39 @@ import logging
 from lnst.Common.SecureSocket import SecureSocket
 from lnst.Common.SecureSocket import DH_GROUP, SRP_GROUP
 from lnst.Common.SecureSocket import SecSocketException
-from cryptography.hazmat.primitives import serialization as ser
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
-from cryptography.hazmat.primitives.serialization import load_ssh_public_key
-from cryptography.hazmat.backends import default_backend
 
-backend = default_backend()
+ser = None
+load_pem_private_key = None
+load_pem_public_key = None
+load_ssh_public_key = None
+backend = None
+cryptography_imported = False
+def cryptography_imports():
+    global cryptography_imported
+    if cryptography_imported:
+        return
+
+    global ser
+    global load_pem_private_key
+    global load_pem_public_key
+    global load_ssh_public_key
+    global backend
+
+    try:
+        import cryptography
+        import cryptography.hazmat.primitives.serialization as ser
+        from cryptography.hazmat.primitives.serialization import load_pem_private_key
+        from cryptography.hazmat.primitives.serialization import load_pem_public_key
+        from cryptography.hazmat.primitives.serialization import load_ssh_public_key
+        from cryptography.hazmat.backends import default_backend
+    except ImportError:
+        logging.error("Library 'cryptography' missing "\
+                      "can't establish secure channel.")
+        raise SecSocketException("Library 'cryptography' missing "\
+                                 "can't establish secure channel.")
+
+    backend = default_backend()
+    cryptography_imported = True
 
 class SlaveSecSocket(SecureSocket):
     def __init__(self, soc):
@@ -55,10 +81,13 @@ class SlaveSecSocket(SecureSocket):
             logging.warning("        NO AUTHENTICATION IN PLACE")
             logging.warning("SECURE CHANNEL IS VULNERABLE TO MIM ATTACKS")
             logging.warning("===========================================")
+            cryptography_imports()
             self._dh_handshake()
         elif sec_params["auth_types"] == "ssh":
+            cryptography_imports()
             self._ssh_handshake()
         elif sec_params["auth_types"] == "pubkey":
+            cryptography_imports()
             srv_key = None
             with open(sec_params["privkey"], 'r') as f:
                 srv_key = load_pem_private_key(f.read(), None, backend)
@@ -73,6 +102,7 @@ class SlaveSecSocket(SecureSocket):
 
             self._pubkey_handshake(srv_key, ctl_pubkeys)
         elif sec_params["auth_types"] == "password":
+            cryptography_imports()
             self._passwd_handshake(sec_params["auth_password"])
         else:
             raise SecSocketException("Unknown authentication method.")
