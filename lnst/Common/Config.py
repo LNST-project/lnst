@@ -155,6 +155,16 @@ class Config():
             raise ConfigError(msg)
         return self._options[section]
 
+    def get_section_values(self, section):
+        if section not in self._options:
+            msg = 'Unknow section: %s' % section
+            raise ConfigError(msg)
+
+        res = {}
+        for opt_name, opt in self._options[section].items():
+            res[opt_name] = opt["value"]
+        return res
+
     def get_option(self, section, option):
         sect = self.get_section(section)
         if option not in sect:
