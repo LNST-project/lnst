@@ -97,6 +97,18 @@ class Config():
 
         self._options['pools'] = dict()
 
+        self._options['security'] = dict()
+        self._options['security']['identity'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPlain,
+                "name" : "identity"}
+        self._options['security']['privkey'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "privkey"}
+
         self.colours_scheme()
 
     def slave_init(self):
@@ -131,6 +143,28 @@ class Config():
                 "additive" : False,
                 "action" : self.optionTimeval,
                 "name" : "expiration_period"}
+
+        self._options['security'] = dict()
+        self._options['security']['auth_types'] = {\
+                "value" : "none",
+                "additive" : False,
+                "action" : self.optionPlain, #TODO list??
+                "name" : "auth_types"}
+        self._options['security']['auth_password'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPlain,
+                "name" : "auth_password"}
+        self._options['security']['privkey'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "privkey"}
+        self._options['security']['ctl_pubkeys'] = {\
+                "value" : "",
+                "additive" : False,
+                "action" : self.optionPath,
+                "name" : "ctl_pubkeys"}
 
         self.colours_scheme()
 
