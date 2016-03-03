@@ -11,6 +11,7 @@ __author__ = """
 rpazdera@redhat.com (Radek Pazdera)
 """
 
+import os
 from lnst.Controller.XmlParser import XmlParser
 from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
 from lnst.Controller.XmlProcessing import XmlCollection
@@ -39,6 +40,8 @@ class SlaveMachineParser(XmlParser):
                 interface = self._process_interface(eth_tag)
                 sm["interfaces"].append(interface)
 
+        security_tag = sm_tag.find("security")
+        sm["security"] = self._process_security(security_tag)
         return sm
 
     def _process_params(self, params_tag):
@@ -64,3 +67,31 @@ class SlaveMachineParser(XmlParser):
             iface["params"] = params
 
         return iface
+
+    def _process_security(self, sec_tag):
+        sec = XmlData(sec_tag)
+
+        if sec_tag is None:
+            sec["auth_type"] = "none"
+            return sec
+
+        auth_type_tag = sec_tag.find("auth_type")
+        sec["auth_type"] = auth_type_tag.text
+
+        auth_passwd_tag = sec_tag.find("auth_password")
+        if auth_passwd_tag is not None:
+            sec["auth_passwd"] = auth_passwd_tag.text
+        else:
+            sec["auth_passwd"] = ""
+
+        key_tag = sec_tag.find("pubkey_path")
+        if key_tag is not None:
+            path = key_tag.text
+            exp_path = os.path.expanduser(path)
+            abs_path = os.path.join(os.path.dirname(self._path), exp_path)
+            norm_path = os.path.normpath(abs_path)
+            sec["pubkey_path"] = norm_path
+        else:
+            sec["pubkey_path"] = ""
+
+        return sec

@@ -7,6 +7,10 @@
                     <ref name="define"/>
                 </optional>
 
+                <optional>
+                    <ref name="security"/>
+                </optional>
+
                 <zeroOrMore>
                     <ref name="params"/>
                 </zeroOrMore>
@@ -77,6 +81,31 @@
                     <ref name="params"/>
                 </oneOrMore>
             </interleave>
+        </element>
+    </define>
+
+    <define name="security">
+        <element name="security">
+            <element name="auth_type">
+                <choice>
+                    <value>none</value>
+                    <value>pubkey</value>
+                    <value>ssh</value>
+                    <value>password</value>
+                </choice>
+            </element>
+
+            <optional>
+                <element name="pubkey_path">
+                    <text/>
+                </element>
+            </optional>
+
+            <optional>
+                <element name="auth_password">
+                    <text/>
+                </element>
+            </optional>
         </element>
     </define>
 </grammar>
