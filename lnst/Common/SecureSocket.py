@@ -19,6 +19,7 @@ import os
 import cPickle
 import hashlib
 import hmac
+from lnst.Common.Utils import not_imported
 
 DH_GROUP = {"p": int("0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1"\
                      "29024E088A67CC74020BBEA63B139B22514A08798E3404DD"\
@@ -64,21 +65,21 @@ if SRP_GROUP["p"].bit_length()%8:
 class SecSocketException(Exception):
     pass
 
-cryptography = None
-hashes = None
-Cipher = None
-algorithms = None
-modes = None
-padding = None
-ec = None
-EllipticCurvePrivateKey = None
-EllipticCurvePublicKey = None
-RSAPrivateKey = None
-RSAPublicKey = None
-DSAPrivateKey = None
-DSAPublicKey = None
-default_backend = None
-cryptography_imported = False
+cryptography = not_imported
+hashes = not_imported
+Cipher = not_imported
+algorithms = not_imported
+modes = not_imported
+padding = not_imported
+ec = not_imported
+EllipticCurvePrivateKey = not_imported
+EllipticCurvePublicKey = not_imported
+RSAPrivateKey = not_imported
+RSAPublicKey = not_imported
+DSAPrivateKey = not_imported
+DSAPublicKey = not_imported
+default_backend = not_imported
+cryptography_imported = not_imported
 def cryptography_imports():
     global cryptography_imported
     if cryptography_imported:

@@ -307,3 +307,6 @@ class Noop(object):
         def noop(*args, **kwargs):
             pass
         return noop
+
+def not_imported(*args, **kwargs):
+    raise Exception("Object not imported.")

@@ -19,13 +19,14 @@ import logging
 from lnst.Common.SecureSocket import SecureSocket
 from lnst.Common.SecureSocket import DH_GROUP, SRP_GROUP
 from lnst.Common.SecureSocket import SecSocketException
+from lnst.Common.Utils import not_imported
 
-ser = None
-load_pem_private_key = None
-load_pem_public_key = None
-load_ssh_public_key = None
-backend = None
-cryptography_imported = False
+ser = not_imported
+load_pem_private_key = not_imported
+load_pem_public_key = not_imported
+load_ssh_public_key = not_imported
+backend = not_imported
+cryptography_imported = not_imported
 def cryptography_imports():
     global cryptography_imported
     if cryptography_imported:
