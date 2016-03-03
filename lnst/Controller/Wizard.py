@@ -190,11 +190,13 @@ class Wizard:
             libvirt_domain, hostname = self._query_libvirt_domain(conn)
             if hostname is None or libvirt_domain is None:
                 return
+            sec_params = self._query_sec_params(hostname)
             filename = self._query_filename(libvirt_domain)
 
             self._create_xml(hostname=hostname, pool_dir=pool_dir,
                              filename=filename, mode="virtual",
-                             libvirt_domain=libvirt_domain)
+                             libvirt_domain=libvirt_domain,
+                             sec_params=sec_params)
 
             if self._query_continuation():
                 continue
