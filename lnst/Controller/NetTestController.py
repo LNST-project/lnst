@@ -258,7 +258,7 @@ class NetTestController:
         machine.set_network_bridges(self._network_bridges)
 
         recipe_name = os.path.basename(self._recipe_path)
-        machine.configure(recipe_name)
+        machine.init_connection(recipe_name)
 
         sync_table = {'module': {}, 'tools': {}}
         if resource_sync:

@@ -203,8 +203,8 @@ class Machine(object):
             return self._rpc_call(method_name, *args)
         return self._rpc_call_to_netns(netns, method_name, *args)
 
-    def configure(self, recipe_name):
-        """ Prepare the machine
+    def init_connection(self, recipe_name):
+        """ Initialize the slave connection
 
             Calling this method will initialize the rpc connection to the
             machine and initialize all the interfaces. Note, that it will
