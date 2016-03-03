@@ -28,6 +28,8 @@ from lnst.Controller.RecipeParser import RecipeParser, RecipeError
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.Machine import MachineError, VirtualInterface
 from lnst.Controller.Machine import StaticInterface
+from lnst.Controller.CtlSecSocket import CtlSecSocket
+from lnst.Common.SecureSocket import SecSocketException
 from lnst.Common.ConnectionHandler import send_data, recv_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
@@ -548,6 +550,8 @@ class NetTestController:
                 machine["libvirt_dom"] = m.get_libvirt_domain()
             machine["interfaces"] = []
 
+            machine["security"] = m.get_security()
+
             for i in m._interfaces:
                 if isinstance(i, VirtualInterface):
                     hwaddr = i.get_orig_hwaddr()
@@ -559,6 +563,7 @@ class NetTestController:
             bridges.append(bridge.get_name())
 
         with open("/tmp/.lnst_machine_conf", "wb") as f:
+            os.fchmod(f.fileno(), 0o600)
             pickled_data = cPickle.dump(config_data, f)
 
     @classmethod
@@ -578,16 +583,23 @@ class NetTestController:
             for hostname, machine in cfg["machines"].iteritems():
                 port = lnst_config.get_option("environment", "rpcport")
                 if test_tcp_connection(hostname, port):
-                    rpc_con = socket.create_connection((hostname, port))
+                    s = socket.create_connection((hostname, port))
+                    rpc_con = CtlSecSocket(s)
+                    try:
+                        rpc_con.handshake(machine["security"])
+                    except SecSocketException:
+                        logging.error("Failed authentication for machine %s" %\
+                                      hostname)
+                        continue
 
                     rpc_msg= {"type": "command",
                               "method_name": "machine_cleanup",
                               "args": []}
 
                     logging.debug("Calling cleanup on slave '%s'" % hostname)
-                    send_data(rpc_con, rpc_msg)
+                    rpc_con.send_msg(rpc_msg)
                     while True:
-                        msg = recv_data(rpc_con)
+                        msg = rpc_con.recv_msg()
                         if msg['type'] == 'result':
                             break
                     rpc_con.close()

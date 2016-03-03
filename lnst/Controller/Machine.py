@@ -512,6 +512,9 @@ class Machine(object):
     def wait_interface_init(self):
         return self._rpc_call("wait_interface_init")
 
+    def get_security(self):
+        return self._security
+
 class Interface(object):
     """ Abstraction of a test network interface on a slave machine
 
