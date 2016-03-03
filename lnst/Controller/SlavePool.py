@@ -167,7 +167,7 @@ class SlavePool:
         return (None, None)
 
     def _process_machine_xml_data(self, m_id, machine_xml_data):
-        machine_spec = {"interfaces": {}, "params":{}}
+        machine_spec = {"interfaces": {}, "params":{}, "security": {}}
 
         # process parameters
         if "params" in machine_xml_data:
@@ -204,6 +204,8 @@ class SlavePool:
                       "This setup is supported only for virtual slaves." \
                       % m_id
                 raise SlaveMachineError(msg, machine_xml_data)
+
+        machine_spec["security"] = machine_xml_data["security"]
 
         return machine_spec
 
@@ -304,7 +306,7 @@ class SlavePool:
         if "rpc_port" in pm["params"]:
             rpcport = pm["params"]["rpc_port"]
 
-        machine = Machine(tm_id, hostname, None, rpcport)
+        machine = Machine(tm_id, hostname, None, rpcport, pm["security"])
 
         used = []
         if_map = self._map["machines"][tm_id]["interfaces"]
@@ -340,7 +342,8 @@ class SlavePool:
         if "rpc_port" in pm["params"]:
             rpcport = pm["params"]["rpc_port"]
 
-        machine = Machine(tm_id, hostname, libvirt_domain, rpcport)
+        machine = Machine(tm_id, hostname, libvirt_domain, rpcport,
+                          pm["security"])
 
         # make all the existing unused
         for if_id, if_data in pm["interfaces"].iteritems():

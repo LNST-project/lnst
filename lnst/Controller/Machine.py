@@ -42,13 +42,19 @@ class Machine(object):
         deconfiguration, and running commands.
     """
 
-    def __init__(self, m_id, hostname=None, libvirt_domain=None, rpcport=None):
+    def __init__(self, m_id, hostname=None, libvirt_domain=None, rpcport=None,
+                 security=None):
         self._id = m_id
         self._hostname = hostname
         self._slave_desc = None
         self._connection = None
         self._configured = False
         self._system_config = {}
+        self._security = security
+        self._security["identity"] = lnst_config.get_option("security",
+                                                            "identity")
+        self._security["privkey"] = lnst_config.get_option("security",
+                                                           "privkey")
 
         self._domain_ctl = None
         self._network_bridges = None
