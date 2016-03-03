@@ -37,6 +37,7 @@ from lnst.Common.Config import lnst_config
 from lnst.Common.Config import DefaultRPCPort
 from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
+from lnst.Slave.SlaveSecSocket import SlaveSecSocket, SecSocketException
 
 class SlaveMethods:
     '''
@@ -837,10 +838,18 @@ class ServerHandler(ConnectionHandler):
         self._netns = None
         self._c_socket = None
 
+        self._security = lnst_config.get_section_values("security")
+
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
-        self._c_socket = (self._c_socket, addr[0])
+        self._c_socket = (SlaveSecSocket(self._c_socket), addr[0])
         logging.info("Recieved connection from %s" % self._c_socket[1])
+
+        try:
+            self._c_socket[0].handshake(self._security)
+        except:
+            self.close_c_sock()
+            raise
 
         self.add_connection(self._c_socket[1], self._c_socket[0])
         return self._c_socket
@@ -974,7 +983,7 @@ class NetTestSlave:
                 try:
                     logging.info("Waiting for connection.")
                     self._server_handler.accept_connection()
-                except socket.error:
+                except (socket.error, SecSocketException):
                     continue
                 self._log_ctl.set_connection(
                                             self._server_handler.get_ctl_sock())

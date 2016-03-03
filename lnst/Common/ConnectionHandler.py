@@ -12,19 +12,15 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import select
-import cPickle
 import socket
 from _multiprocessing import Connection
 from pyroute2 import IPRSocket
+from lnst.Common.SecureSocket import SecureSocket, SecSocketException
 
 def send_data(s, data):
     try:
-        if isinstance(s, socket.SocketType):
-            pickled_data = cPickle.dumps(data)
-            length = len(pickled_data)
-
-            data_to_send = str(length) + " " + pickled_data
-            s.sendall(data_to_send)
+        if isinstance(s, SecureSocket):
+            s.send_msg(data)
         elif isinstance(s, Connection):
             s.send(data)
         else:
@@ -37,27 +33,11 @@ def recv_data(s):
     if isinstance(s, IPRSocket):
         msg = s.get()
         data = {"type": "netlink", "data": msg}
-    elif isinstance(s, socket.SocketType):
-        length = ""
-        while True:
-            c = s.recv(1)
-            if c == ' ':
-                length = int(length)
-                break
-            elif c == "":
-                return ""
-            else:
-                length += c
-        data = ""
-
-        while len(data)<length:
-            c = s.recv(length - len(data))
-            if c == "":
-                return ""
-            else:
-                data += c
-
-        data = cPickle.loads(data)
+    elif isinstance(s, SecureSocket):
+        try:
+            data = s.recv_msg()
+        except SecSocketException:
+            return ""
     elif isinstance(s, Connection):
         data = s.recv()
     else:
@@ -95,10 +75,11 @@ class ConnectionHandler(object):
                         f.close()
                         self.remove_connection(f)
                         f_ready = False
-                    else:
+                    elif data is not None:
                         id = self.get_connection_id(f)
                         requests.append((id, data))
 
+                    if f_ready:
                         #poll the file descriptor if there is another message
                         rll, _, _ = select.select([f], [], [], 0)
                         if rll == []:

@@ -23,6 +23,7 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import wait_for, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
+from lnst.Controller.CtlSecSocket import CtlSecSocket
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
@@ -215,7 +216,9 @@ class Machine(object):
         m_id = self._id
 
         logging.info("Connecting to RPC on machine %s (%s)", m_id, hostname)
-        connection = socket.create_connection((hostname, port))
+        connection = CtlSecSocket(socket.create_connection((hostname, port)))
+        connection.handshake(self._security)
+
         self._msg_dispatcher.add_slave(self, connection)
 
         hello, slave_desc = self._rpc_call("hello", recipe_name)
