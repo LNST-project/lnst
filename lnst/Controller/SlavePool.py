@@ -103,9 +103,12 @@ class SlavePool:
                     m_id = check_sockets[s]
                     if err == 0:
                         pool[m_id]["available"] = True
+                        s.shutdown(socket.SHUT_RDWR)
+                        s.close()
                         del check_sockets[s]
                     else:
                         pool[m_id]["available"] = False
+                        s.close()
                         del check_sockets[s]
         else:
             for m_id in pool.keys():
