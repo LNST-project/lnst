@@ -567,13 +567,13 @@ class Wizard:
                 break
             while True:
                 privkey = raw_input("Enter path to Ctl private key: ")
-                if privkey == "" or os.path.isfile(privkey):
+                if privkey == "" or not os.path.isfile(privkey):
                     sys.stderr.write("Invalid path to private key.")
                     continue
                 break
             while True:
                 srv_pubkey_path = raw_input("Enter path to Slave public key: ")
-                if srv_pubkey_path == "" or os.path.isfile(srv_pubkey_path):
+                if srv_pubkey_path == "" or not os.path.isfile(srv_pubkey_path):
                     sys.stderr.write("Invalid path to public key.")
                     continue
                 break
