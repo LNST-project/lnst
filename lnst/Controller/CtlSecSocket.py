@@ -181,19 +181,23 @@ class CtlSecSocket(SecureSocket):
         ctl_ssh_key = None
         known_hosts = []
         ssh_dir_path = os.path.expanduser("~/.ssh")
-        with open(ssh_dir_path+"/known_hosts", 'r') as f:
-            for line in f.readlines():
-                key = line[line.find(' ')+1:]
-                try:
-                    known_hosts.append(load_ssh_public_key(key, backend))
-                except:
-                    continue
+        if os.path.isfile(ssh_dir_path+"/known_hosts"):
+            with open(ssh_dir_path+"/known_hosts", 'r') as f:
+                for line in f.readlines():
+                    key = line[line.find(' ')+1:]
+                    try:
+                        known_hosts.append(load_ssh_public_key(key, backend))
+                    except:
+                        continue
+        else:
+            logging.error("No known hosts loaded.")
 
         try:
             with open(ssh_dir_path+"/id_rsa", 'r') as f:
                 ctl_ssh_key = load_pem_private_key(f.read(), None, backend)
         except:
             ctl_ssh_key = None
+            logging.error("No controller ssh key loaded.")
 
         if not ctl_ssh_key:
             raise SecSocketException("Handshake failed.")

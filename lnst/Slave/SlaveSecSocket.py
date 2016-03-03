@@ -195,12 +195,16 @@ class SlaveSecSocket(SecureSocket):
             except:
                 continue
 
-        with open(ssh_dir_path+"/authorized_keys", 'r') as f:
-            for line in f.readlines():
-                try:
-                    authorized_keys.append(load_ssh_public_key(line, backend))
-                except:
-                    continue
+        if os.path.isfile(ssh_dir_path+"/authorized_keys"):
+            with open(ssh_dir_path+"/authorized_keys", 'r') as f:
+                for line in f.readlines():
+                    try:
+                        authorized_keys.append(load_ssh_public_key(line,
+                                                                   backend))
+                    except:
+                        continue
+        else:
+            logging.error("No authorized keys loaded.")
 
         msg = self.recv_msg()
         if msg["type"] != "ssh_client_hello":
