@@ -96,7 +96,7 @@ class CtlSecSocket(SecureSocket):
             except:
                 ctl_key = None
 
-            srv_key_path = sec_params["srv_pubkey_path"]
+            srv_key_path = sec_params["pubkey_path"]
             try:
                 with open(srv_key_path, 'r') as f:
                     srv_key = load_pem_public_key(f.read(), backend)
