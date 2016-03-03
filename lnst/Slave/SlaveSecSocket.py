@@ -15,6 +15,7 @@ import os
 import hashlib
 import math
 import re
+import logging
 from lnst.Common.SecureSocket import SecureSocket
 from lnst.Common.SecureSocket import DH_GROUP, SRP_GROUP
 from lnst.Common.SecureSocket import SecSocketException
@@ -44,6 +45,16 @@ class SlaveSecSocket(SecureSocket):
         self.send_msg(slave_hello)
 
         if sec_params["auth_types"] == "none":
+            logging.warning("===================================")
+            logging.warning("NO SECURE CHANNEL SETUP IS IN PLACE")
+            logging.warning(" ALL COMMUNICATION IS IN PLAINTEXT")
+            logging.warning("===================================")
+            return True
+        if sec_params["auth_types"] == "no-auth":
+            logging.warning("===========================================")
+            logging.warning("        NO AUTHENTICATION IN PLACE")
+            logging.warning("SECURE CHANNEL IS VULNERABLE TO MIM ATTACKS")
+            logging.warning("===========================================")
             self._dh_handshake()
         elif sec_params["auth_types"] == "ssh":
             self._ssh_handshake()

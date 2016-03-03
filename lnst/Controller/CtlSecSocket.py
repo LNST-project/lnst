@@ -14,6 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import os
 import hashlib
 import math
+import logging
 from lnst.Common.SecureSocket import SecureSocket
 from lnst.Common.SecureSocket import DH_GROUP, SRP_GROUP
 from lnst.Common.SecureSocket import SecSocketException
@@ -45,6 +46,17 @@ class CtlSecSocket(SecureSocket):
         self._slave_random = slave_hello["slave_random"]
 
         if sec_params["auth_type"] == "none":
+            logging.warning("===================================")
+            logging.warning("%s:%d" % self._socket.getpeername())
+            logging.warning("NO SECURE CHANNEL SETUP IS IN PLACE")
+            logging.warning(" ALL COMMUNICATION IS IN PLAINTEXT")
+            logging.warning("===================================")
+            return True
+        if sec_params["auth_type"] == "no-auth":
+            logging.warning("===========================================")
+            logging.warning("        NO AUTHENTICATION IN PLACE")
+            logging.warning("SECURE CHANNEL IS VULNERABLE TO MIM ATTACKS")
+            logging.warning("===========================================")
             self._dh_handshake()
         elif sec_params["auth_type"] == "ssh":
             self._ssh_handshake()
