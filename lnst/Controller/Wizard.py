@@ -21,6 +21,8 @@ import os
 from lnst.Common.Utils import mkdir_p, check_process_running
 from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.ConnectionHandler import send_data, recv_data
+from lnst.Controller.CtlSecSocket import CtlSecSocket
+from lnst.Common.SecureSocket import SecSocketException
 from xml.dom.minidom import getDOMImplementation
 from lxml import etree
 
@@ -44,7 +46,8 @@ class Wizard:
                 if hostname == -1:
                     continue
 
-                sock = self._get_connection(hostname, port)
+                sec_params = {"auth_type": "none"}
+                sock = self._get_connection(hostname, port, sec_params)
 
                 if sock is None:
                     continue
@@ -66,8 +69,9 @@ class Wizard:
         while True:
             hostname = self._query_hostname()
             port = self._query_port()
+            sec_params = self._query_sec_params(hostname)
 
-            sock = self._get_connection(hostname, port)
+            sock = self._get_connection(hostname, port, sec_params)
             if sock is None:
                 if self._query_continuation():
                     continue
@@ -85,7 +89,7 @@ class Wizard:
                 self._create_xml(machine_interfaces=machine_interfaces,
                                  hostname=hostname, pool_dir=pool_dir,
                                  filename=filename, port=port,
-                                 mode="interactive")
+                                 mode="interactive", sec_params=sec_params)
 
             if self._query_continuation():
                 continue
@@ -131,7 +135,8 @@ class Wizard:
                 sys.stderr.write("Skipping host '%s'\n" % host)
                 continue
 
-            sock = self._get_connection(hostname, port)
+            sec_params = {"auth_type": "none"}
+            sock = self._get_connection(hostname, port, sec_params)
             if sock is None:
                 sys.stderr.write("Skipping host '%s'\n" % host)
                 continue
@@ -271,7 +276,7 @@ class Wizard:
 
     def _create_xml(self, machine_interfaces=None, hostname=None,
                     pool_dir=None, filename=None, mode=None,
-                    port=None, libvirt_domain=None):
+                    port=None, libvirt_domain=None, sec_params=None):
         """ Creates slave machine XML file
         @param machine_interfaces Dictionary with machine's interfaces
         @param hostname Hostname of the machine
@@ -328,13 +333,36 @@ class Wizard:
                                  "'%s' will be created\n" % filename)
                 return
 
+        if sec_params:
+            security_el = doc.createElement("security")
+            top_el.appendChild(security_el)
+
+            auth_type_el = doc.createElement("auth_type")
+            security_el.appendChild(auth_type_el)
+
+            auth_type_text = doc.createTextNode(sec_params["auth_type"])
+            auth_type_el.appendChild(auth_type_text)
+
+            if sec_params["auth_type"] is "password":
+                password_el = doc.createElement("auth_passwd")
+                security_el.appendChild(password_el)
+
+                password_text = doc.createTextNode(sec_params["auth_password"])
+                password_el.appendChild(password_text)
+            elif sec_params["auth_type"] is "pubkey":
+                pubkey_el = doc.createElement("pubkey_path")
+                security_el.appendChild(pubkey_el)
+
+                pubkey_text = doc.createTextNode(sec_params["srv_pubkey_path"])
+                pubkey_el.appendChild(pubkey_text)
+
         if self._write_to_file(pool_dir, filename, doc):
             print("File '%s/%s' successfuly created." % (pool_dir, filename))
         else:
             sys.stderr.write("File '%s/%s' could not be opened "
                              "or data written.\n" % (pool_dir, filename))
 
-    def _get_connection(self, hostname, port):
+    def _get_connection(self, hostname, port, sec_params):
         """ Connects to machine
         @param hostname Hostname of the machine
         @param port Port of the machine
@@ -342,7 +370,14 @@ class Wizard:
         """
         try:
             sock = socket.create_connection((hostname, port))
-            return sock
+            ret = CtlSecSocket(sock)
+            ret.handshake(sec_params)
+            return ret
+        except SecSocketException:
+            sys.stderr.write("Couldn't connect to host %s:%s, because "\
+                             "security negotiation failed.\n" %
+                             (hostname, port))
+            return None
         except socket.error:
             sys.stderr.write("Connection to remote host '%s:%s' failed\n"
                              % (hostname, port))
@@ -494,6 +529,58 @@ class Wizard:
                     return port
                 except:
                     sys.stderr.write("Invalid port entered\n")
+
+    def _query_sec_params(self, hostname):
+        """ Queries user for security parameters of the connection
+        @return Dictionary with the security parameters
+        """
+        while True:
+            auth_type = raw_input("Enter authentication type (default: none): ")
+            if auth_type == "":
+                auth_type = "none"
+            elif auth_type not in ["none", "no-auth", "password",
+                                   "pubkey", "ssh"]:
+                sys.stderr.write("Invalid authentication type.")
+                continue
+            break
+        if auth_type == "none":
+            return {"auth_type": "none"}
+        elif auth_type == "no-auth":
+            return {"auth_type": "no-auth"}
+        elif auth_type == "ssh":
+            return {"auth_type": "ssh"}
+        elif auth_type == "password":
+            while True:
+                password = raw_input("Enter password: ")
+                if password == "":
+                    sys.stderr.write("Invalid password.")
+                    continue
+                break
+            return {"auth_type": "password",
+                    "auth_passwd": password}
+        elif auth_type == "pubkey":
+            while True:
+                identity = raw_input("Enter identity: ")
+                if identity == "":
+                    sys.stderr.write("Invalid identity.")
+                    continue
+                break
+            while True:
+                privkey = raw_input("Enter path to Ctl private key: ")
+                if privkey == "" or os.path.isfile(privkey):
+                    sys.stderr.write("Invalid path to private key.")
+                    continue
+                break
+            while True:
+                srv_pubkey_path = raw_input("Enter path to Slave public key: ")
+                if srv_pubkey_path == "" or os.path.isfile(srv_pubkey_path):
+                    sys.stderr.write("Invalid path to public key.")
+                    continue
+                break
+            return {"auth_type": "pubkey",
+                    "identity": identity,
+                    "privkey": privkey,
+                    "srv_pubkey_path": srv_pubkey_path}
 
     def _write_to_file(self, pool_dir, filename, doc):
         """ Writes contents of XML to a file
