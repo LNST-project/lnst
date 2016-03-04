@@ -3,6 +3,7 @@ from lnst.Controller.PerfRepoUtils import netperf_baseline_template
 from lnst.Controller.PerfRepoUtils import netperf_result_template
 
 from lnst.RecipeCommon.IRQ import pin_dev_irqs
+from lnst.RecipeCommon.PerfRepo import generate_perfrepo_comment
 
 # ------
 # SETUP
@@ -40,6 +41,9 @@ nperf_cpupin = ctl.get_alias("nperf_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
+pr_user_comment = ctl.get_alias("perfrepo_comment")
+
+pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
 
 m1_team = m1.get_interface("test_if")
 m1_team.set_mtu(mtu)
@@ -219,6 +223,7 @@ for setting in offload_settings:
                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_tcp, tcp_res_data)
+        result_tcp.set_comment(pr_comment)
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp
@@ -243,6 +248,7 @@ for setting in offload_settings:
                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_udp, udp_res_data)
+        result_udp.set_comment(pr_comment)
         perf_api.save_result(result_udp)
 
         srv_proc.intr()
@@ -273,6 +279,7 @@ for setting in offload_settings:
                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_tcp, tcp_res_data)
+        result_tcp.set_comment(pr_comment)
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp ipv6
@@ -297,6 +304,7 @@ for setting in offload_settings:
                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_udp, udp_res_data)
+        result_udp.set_comment(pr_comment)
         perf_api.save_result(result_udp)
 
         srv_proc.intr()
