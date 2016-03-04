@@ -193,6 +193,9 @@ class HostAPI(object):
     def get_id(self):
         return self._m.get_id()
 
+    def get_configuration(self):
+        return self._m.get_configuration()
+
     def config(self, option, value, persistent=False, netns=None):
         """
             Configure an option in /sys or /proc on the host.
