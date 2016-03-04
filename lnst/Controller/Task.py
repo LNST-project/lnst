@@ -936,6 +936,10 @@ class PerfRepoResult(object):
     def set_hash_ignore(self, hash_ignore):
         self._hash_ignore = hash_ignore
 
+    def set_comment(self, comment):
+        if comment:
+            self._testExecution.set_comment(comment)
+
     def get_hash_ignore(self):
         return self._hash_ignore
 
