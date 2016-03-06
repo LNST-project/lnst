@@ -27,7 +27,7 @@ def linkneg(tl, if1, if2):
         speeds = [10000, 40000, 100000]
 
     for speed in speeds:
-        tl.linkneg(if1, if2, True, speed=speed, timeout=10)
+        tl.linkneg(if1, if2, True, speed=speed, timeout=30)
         tl.ping_simple(if1, if2)
 
 def do_task(ctl, hosts, ifaces, aliases):
@@ -43,7 +43,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_if3.reset(ip=["192.168.103.11/24", "2004::2/64"])
     sw_if4.reset(ip=["192.168.104.11/24", "2005::2/64"])
 
-    sleep(10)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
 
