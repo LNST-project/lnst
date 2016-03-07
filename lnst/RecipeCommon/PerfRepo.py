@@ -35,7 +35,7 @@ def generate_perfrepo_comment(hosts=[], user_comment=None):
     if 'BEAKER' in os.environ and 'JOBID' in os.environ:
         bkr_server = os.environ['BEAKER']
         bkr_jobid = os.environ['JOBID']
-        bkr_job_url = bkr_server + bkr_jobid
+        bkr_job_url = bkr_server + 'jobs/' + bkr_jobid
         comment += "Beaker job: %s<BR>" % bkr_job_url
 
     if user_comment:
