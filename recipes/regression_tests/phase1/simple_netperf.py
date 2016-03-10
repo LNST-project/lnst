@@ -25,10 +25,11 @@ m2.sync_resources(modules=["Netperf"])
 # ------
 
 offloads = ["gro", "gso", "tso", "tx"]
-offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on")],
-                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on")],
-                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on")],
-                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off")]]
+offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
+                     [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
 
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
@@ -145,9 +146,15 @@ for setting in offload_settings:
     m1.run("ethtool -K %s %s" % (m1_testiface.get_devname(), dev_features))
     m2.run("ethtool -K %s %s" % (m2_testiface.get_devname(), dev_features))
 
+    if ("rx", "off") in setting:
+        # when rx offload is turned off some of the cards might get reset
+        # and link goes down, so wait a few seconds until NIC is ready
+        ctl.wait(15)
+
     # Netperf test
     if ipv in [ 'ipv4', 'both' ]:
         srv_proc = m1.run(netperf_srv, bg=True)
+        ctl.wait(2)
 
         # prepare PerfRepo result for tcp
         result_tcp = perf_api.new_result("tcp_ipv4_id",
@@ -198,6 +205,7 @@ for setting in offload_settings:
 
     if ipv in [ 'ipv6', 'both' ]:
         srv_proc = m1.run(netperf_srv6, bg=True)
+        ctl.wait(2)
 
         # prepare PerfRepo result for tcp ipv6
         result_tcp = perf_api.new_result("tcp_ipv6_id",
