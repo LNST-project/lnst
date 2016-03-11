@@ -15,6 +15,7 @@ import re
 import sys
 import copy
 from lxml import etree
+from urllib2 import urlopen
 from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplates
 from lnst.Controller.XmlProcessing import XmlProcessingError
@@ -79,7 +80,10 @@ class XmlParser(object):
 
     def _parse(self, path):
         try:
-            doc = etree.parse(path)
+            if path.startswith('https'):
+                doc = etree.parse(urlopen(path))
+            else:
+                doc = etree.parse(path)
         except etree.LxmlError as err:
             # A workaround for cases when lxml (quite strangely)
             # sets the filename to <string>.
