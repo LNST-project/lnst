@@ -136,7 +136,15 @@ class ControllerAPI(object):
                 username = lnst_config.get_option("perfrepo", "username")
             if password is None:
                 password = lnst_config.get_option("perfrepo", "password")
-            self._perf_repo_api.connect(url, username, password)
+
+            if not url:
+                logging.warn("No PerfRepo URL specified in config file")
+            if not username:
+                logging.warn("No PerfRepo username specified in config file")
+            if not password:
+                logging.warn("No PerfRepo password specified in config file")
+            if url and username and password:
+                self._perf_repo_api.connect(url, username, password)
 
             root = Path(None, self._ctl._recipe_path).get_root()
             path = Path(root, mapping_file)
