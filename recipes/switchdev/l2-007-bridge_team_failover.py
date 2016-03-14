@@ -39,22 +39,22 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(m1_lag1, m2_lag1)
 
     sw_if1.set_link_down()
-    tl.ping_simple(m1_lag1, m2_lag1)
+    tl.ping_simple(m1_lag1, m2_lag1, limit_rate=50)
 
     sw_if1.set_link_up()
     sw_if2.set_link_down()
-    tl.ping_simple(m1_lag1, m2_lag1)
+    tl.ping_simple(m1_lag1, m2_lag1, limit_rate=50)
 
     sw_if2.set_link_up()
     sw_if1.set_link_down()
     sw_if3.set_link_down()
-    tl.ping_simple(m1_lag1, m2_lag1)
+    tl.ping_simple(m1_lag1, m2_lag1, limit_rate=50)
 
     sw_if1.set_link_up()
     sw_if3.set_link_up()
     sw_if2.set_link_down()
     sw_if4.set_link_down()
-    tl.ping_simple(m1_lag1, m2_lag1)
+    tl.ping_simple(m1_lag1, m2_lag1, limit_rate=50)
 
 do_task(ctl, [ctl.get_host("machine1"),
               ctl.get_host("machine2"),

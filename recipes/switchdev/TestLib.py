@@ -57,7 +57,8 @@ class TestLib:
 
         m2.run(linkneg_mod, desc=desc)
 
-    def ping_simple(self, if1, if2, fail_expected=False, desc=None):
+    def ping_simple(self, if1, if2, fail_expected=False, desc=None,
+                    limit_rate=90):
         if not desc:
             desc = self._generate_default_desc(if1, if2)
 
@@ -73,7 +74,7 @@ class TestLib:
                                         "count": 100,
                                         "interval": 0.2,
                                         "iface" : if1.get_devname(),
-                                        "limit_rate": 90})
+                                        "limit_rate": limit_rate})
 
         ping_mod6 = self._ctl.get_module("Icmp6Ping",
                                          options={
@@ -81,7 +82,7 @@ class TestLib:
                                          "count": 100,
                                          "interval": 0.2,
                                          "iface" : if1.get_ip(1),
-                                         "limit_rate": 90})
+                                         "limit_rate": limit_rate})
 
         if self._ipv in [ 'ipv6', 'both' ]:
             m1.run(ping_mod6, fail_expected=fail_expected, desc=desc)
