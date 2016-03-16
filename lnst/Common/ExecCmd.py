@@ -17,10 +17,12 @@ class ExecCmdFail(Exception):
     _cmd = None
     _retval = None
     _stderr = None
+    _stdout = None
     _report_stderr = None
 
-    def __init__(self, cmd=None, retval=None, err="", report_stderr=False):
-        self._stderr = err
+    def __init__(self, cmd=None, retval=None, outs=["", ""], report_stderr=False):
+        self._stdout = outs[0]
+        self._stderr = outs[1]
         self._retval = retval
         self._report_stderr = report_stderr
 
@@ -29,6 +31,9 @@ class ExecCmdFail(Exception):
 
     def get_stderr(self):
         return self._stderr
+
+    def get_stdout(self):
+        return self._stdout
 
     def __str__(self):
         retval = ""
@@ -63,7 +68,7 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False):
         if data_stderr:
             log_output(logging.debug, "Stderr", data_stderr)
     if subp.returncode and die_on_err:
-        err = ExecCmdFail(cmd, subp.returncode, data_stderr,report_stderr)
+        err = ExecCmdFail(cmd, subp.returncode, [data_stdout, data_stderr], report_stderr)
         logging.error(err)
         raise err
 
