@@ -678,7 +678,7 @@ class ProcessAPI(object):
                    "type": "wait",
                    "proc_id": self._bg_id,
                    "netns": self._netns}
-            self._res = self._ctl._run_command(cmd)
+            self._cmd_res = self._ctl._run_command(cmd)
 
     def intr(self):
         """ Interrupt the command. """
@@ -687,7 +687,7 @@ class ProcessAPI(object):
                    "type": "intr",
                    "proc_id": self._bg_id,
                    "netns": self._netns}
-            self._res = self._ctl._run_command(cmd)
+            self._cmd_res = self._ctl._run_command(cmd)
 
     def kill(self):
         """
@@ -702,7 +702,7 @@ class ProcessAPI(object):
                    "type": "kill",
                    "proc_id": self._bg_id,
                    "netns": self._netns}
-            self._res = self._ctl._run_command(cmd)
+            self._cmd_res = self._ctl._run_command(cmd)
 
 class VolatileValue(object):
     def __init__(self, func, *args, **kwargs):
