@@ -140,6 +140,7 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
             try:
                 nettestctl.provision_machines()
                 log_ctl.set_recipe(file_path, expand="match_%d" % matches)
+                log_dir = log_ctl.get_recipe_log_path()
                 recipe_head_log_entry(file_path, log_dir, matches)
                 res_serializer.add_recipe(file_path, matches)
                 nettestctl.print_match_description()
