@@ -413,12 +413,16 @@ class NetTestCommandExec(NetTestCommandGeneric):
             if self._save_output:
                 res_data = { "stdout": stdout, "stderr": stderr }
             self.set_pass(res_data)
-        except ExecCmdFail:
+        except ExecCmdFail as e:
+            res_data = None
+            if self._save_output:
+                res_data = { "stdout": e.get_stdout(),
+                             "stderr": e.get_stderr() }
             if "bg_id" in self._command:
                 logging.info("Command probably intentionally killed. Passing.")
-                self.set_pass()
+                self.set_pass(res_data)
             else:
-                self.set_fail()
+                self.set_fail(res_data)
 
     def _format_cmd_res_header(self):
         cmd_type = self._command["type"]
