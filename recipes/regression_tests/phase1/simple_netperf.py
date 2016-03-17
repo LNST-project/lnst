@@ -246,7 +246,7 @@ for setting in offload_settings:
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         netperf_baseline_template(netperf_cli_udp6, baseline)
-        udp_res_data = m2.run(netperf_cli_udp,
+        udp_res_data = m2.run(netperf_cli_udp6,
                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_udp, udp_res_data)
