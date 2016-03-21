@@ -34,12 +34,21 @@ DH_GROUP = {"p": int("0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1"\
                      "15728E5A8AACAA68FFFFFFFFFFFFFFFF", 16),
             "g": 2}
 
+# to support both Python2.6 and 2.7, use following workaround to count
+# the bit length of a number; note that the workaround does not work for
+# value 0 but we don't use it for such value
+def bit_length(i):
+    try:
+        return i.bit_length()
+    except AttributeError:
+        return len(bin(i)) - 2
+
 DH_GROUP["q"] = (DH_GROUP["p"]-1)/2
-DH_GROUP["q_size"] = DH_GROUP["q"].bit_length()/8
-if DH_GROUP["q"].bit_length()%8:
+DH_GROUP["q_size"] = bit_length(DH_GROUP["q"])/8
+if bit_length(DH_GROUP["q"])%8:
     DH_GROUP["q_size"] += 1
-DH_GROUP["p_size"] = DH_GROUP["p"].bit_length()/8
-if DH_GROUP["p"].bit_length()%8:
+DH_GROUP["p_size"] = bit_length(DH_GROUP["p"])/8
+if bit_length(DH_GROUP["p"])%8:
     DH_GROUP["p_size"] += 1
 
 SRP_GROUP = {"p": int("0xAC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC"
@@ -55,11 +64,11 @@ SRP_GROUP = {"p": int("0xAC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC"
              "g": 2}
 
 SRP_GROUP["q"] = (SRP_GROUP["p"]-1)/2
-SRP_GROUP["q_size"] = SRP_GROUP["q"].bit_length()/8
-if SRP_GROUP["q"].bit_length()%8:
+SRP_GROUP["q_size"] = bit_length(SRP_GROUP["q"])/8
+if bit_length(SRP_GROUP["q"])%8:
     SRP_GROUP["q_size"] += 1
-SRP_GROUP["p_size"] = SRP_GROUP["p"].bit_length()/8
-if SRP_GROUP["p"].bit_length()%8:
+SRP_GROUP["p_size"] = bit_length(SRP_GROUP["p"])/8
+if bit_length(SRP_GROUP["p"])%8:
     SRP_GROUP["p_size"] += 1
 
 class SecSocketException(Exception):
