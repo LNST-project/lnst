@@ -1,0 +1,6 @@
+Check if a user can get result data especially stdout of a background process.
+
+1. by calling intr()
+2. by calling wait()
+3. by calling kill()
+4. when process is not run on background
