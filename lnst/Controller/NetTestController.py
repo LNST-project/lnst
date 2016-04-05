@@ -264,8 +264,8 @@ class NetTestController:
 
         sync_table = {'module': {}, 'tools': {}}
         if resource_sync:
+            res_table = copy.deepcopy(self._resource_table)
             for task in self._recipe['tasks']:
-                res_table = copy.deepcopy(self._resource_table)
                 if 'module_dir' in task:
                     modules = self._load_test_modules([task['module_dir']])
                     res_table['module'].update(modules)
