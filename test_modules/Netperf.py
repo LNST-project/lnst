@@ -251,14 +251,18 @@ class Netperf(TestGeneric):
                 threshold_rate *= 1000
             elif threshold_unit_size == 'K':
                 threshold_rate *= 1024
-            elif threshold_unit_size == 'g':
+            elif threshold_unit_size == 'm':
                 threshold_rate *= 1000*1000
-            elif threshold_unit_size == 'G':
+            elif threshold_unit_size == 'M':
                 threshold_rate *= 1024*1024
+            elif threshold_unit_size == 'g':
+                threshold_rate *= 1000*1000*1000
+            elif threshold_unit_size == 'G':
+                threshold_rate *= 1024*1024*1024
             elif threshold_unit_size == 't':
-                threshold_rate *= 1000 * 1000 * 1000
+                threshold_rate *= 1000 * 1000 * 1000 * 1000
             elif threshold_unit_size == 'T':
-                threshold_rate *= 1024 * 1024 * 1024
+                threshold_rate *= 1024 * 1024 * 1024 * 1024
             if threshold_unit_type == "bytes":
                 threshold_rate *= 8
             threshold_unit_type = "bps"
