@@ -33,6 +33,7 @@ class Netperf(TestGeneric):
         self._duration = self.get_opt("duration")
         self._port = self.get_opt("port")
         self._testname = self.get_opt("testname", default="TCP_STREAM")
+        self._testoptions = self.get_opt("testoptions")
         self._confidence = self.get_opt("confidence")
         self._bind = self.get_opt("bind", opt_type="addr")
         self._cpu_util = self.get_opt("cpu_util")
@@ -121,6 +122,12 @@ class Netperf(TestGeneric):
             # Print only relevant output
             if self._is_omni():
                 cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID"'
+
+            if self._testoptions:
+                if self._is_omni():
+                    cmd += " %s" % self._testoptions
+                else:
+                    cmd += " -- %s" % self._testoptions
 
         elif self._role == "server":
             cmd = "netserver -D"
