@@ -308,6 +308,43 @@ class Netperf(TestGeneric):
             if e.errno == errno.EINTR:
                 server.kill()
 
+    def _pretty_rate(self, rate, unit=None):
+        pretty_rate = {}
+        if unit is None:
+            if rate < 1024:
+                pretty_rate["unit"] = "bits/sec"
+                pretty_rate["rate"] = rate
+            elif rate < 1024 * 1024:
+                pretty_rate["unit"] = "Kbits/sec"
+                pretty_rate["rate"] = rate / 1024
+            elif rate < 1024 * 1024 * 1024:
+                pretty_rate["unit"] = "Mbits/sec"
+                pretty_rate["rate"] = rate / (1024 * 1024)
+            elif rate < 1024 * 1024 * 1024 * 1024:
+                pretty_rate["unit"] = "Gbits/sec"
+                pretty_rate["rate"] = rate / (1024 * 1024 * 1024)
+            elif rate < 1024 * 1024 * 1024 * 1024 * 1024:
+                pretty_rate["unit"] = "tbits/sec"
+                pretty_rate["rate"] = rate / (1024 * 1024 * 1024 * 1024)
+        else:
+            if unit == "bits/sec":
+                pretty_rate["unit"] = "bits/sec"
+                pretty_rate["rate"] = rate
+            elif unit == "Kbits/sec":
+                pretty_rate["unit"] = "Kbits/sec"
+                pretty_rate["rate"] = rate / 1024
+            elif unit == "Mbits/sec":
+                pretty_rate["unit"] = "Mbits/sec"
+                pretty_rate["rate"] = rate / (1024 * 1024)
+            elif unit == "Gbits/sec":
+                pretty_rate["unit"] = "Gbits/sec"
+                pretty_rate["rate"] = rate / (1024 * 1024 * 1024)
+            elif unit == "Tbits/sec":
+                pretty_rate["unit"] = "Tbits/sec"
+                pretty_rate["rate"] = rate / (1024 * 1024 * 1024)
+
+        return pretty_rate
+
     def _run_client(self, cmd):
         logging.debug("running as client...")
 
@@ -368,6 +405,12 @@ class Netperf(TestGeneric):
         res_data["rate"] = rate
         res_data["rate_deviation"] = rate_deviation
 
+        rate_pretty = self._pretty_rate(rate)
+        rate_dev_pretty = self._pretty_rate(rate_deviation, unit=rate_pretty["unit"])
+        threshold_pretty = self._pretty_rate(self._threshold["rate"])
+        threshold_dev_pretty = self._pretty_rate(self._threshold_deviation["rate"],
+                                                 unit = threshold_pretty["unit"])
+
         res_val = False
         if self._threshold_interval is not None:
             result_interval = (rate - rate_deviation,
@@ -375,18 +418,24 @@ class Netperf(TestGeneric):
 
             if self._threshold_interval[0] > result_interval[1]:
                 res_val = False
-                res_data["msg"] = "Measured rate %.2f +-%.2f bps is lower "\
-                                  "than threshold %.2f +-%.2f" %\
-                                  (rate, rate_deviation,
-                                   self._threshold["rate"],
-                                   self._threshold_deviation["rate"])
+                res_data["msg"] = "Measured rate %.2f +-%.2f %s is lower "\
+                                  "than threshold %.2f +-%.2f %s" %\
+                                  (rate_pretty["rate"],
+                                   rate_deviation,
+                                   rate_pretty["unit"],
+                                   threshold_pretty["rate"],
+                                   threshold_dev_pretty["rate"],
+                                   threshold_pretty["unit"])
             else:
                 res_val = True
-                res_data["msg"] = "Measured rate %.2f +-%.2f bps is higher "\
-                                  "than threshold %.2f +-%.2f" %\
-                                  (rate, rate_deviation,
-                                   self._threshold["rate"],
-                                   self._threshold_deviation["rate"])
+                res_data["msg"] = "Measured rate %.2f +-%.2f %s is higher "\
+                                  "than threshold %.2f +-%.2f %s" %\
+                                  (rate_pretty["rate"],
+                                   rate_deviation,
+                                   rate_pretty["unit"],
+                                   threshold_pretty["rate"],
+                                   threshold_dev_pretty["rate"],
+                                   threshold_pretty["unit"])
         else:
             if rate > 0.0:
                 res_val = True
