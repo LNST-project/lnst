@@ -18,6 +18,8 @@ class Netperf(TestGeneric):
     supported_tests = ["TCP_STREAM", "TCP_RR", "UDP_STREAM", "UDP_RR",
                        "SCTP_STREAM", "SCTP_STREAM_MANY", "SCTP_RR"]
 
+    omni_tests = ["TCP_STREAM", "TCP_RR", "UDP_STREAM", "UDP_RR"]
+
     def __init__(self, command):
         super(Netperf, self).__init__(command)
 
@@ -52,13 +54,18 @@ class Netperf(TestGeneric):
         else:
             self._threshold_interval = None
 
+    def _is_omni(self):
+        return self._testname in self.omni_tests
+
     def _compose_cmd(self):
         """
         composes commands for netperf and netserver based on xml recipe
         """
         if self._role == "client":
-            # -P 0 disables banner header of output
-            cmd = "netperf -H %s -f k -P 0" % self._netperf_server
+            cmd = "netperf -H %s -f k" % self._netperf_server
+            if self._is_omni():
+                # -P 0 disables banner header of output
+                cmd += " -P 0"
             if self._port is not None:
                 """
                 client connects on this port
@@ -112,7 +119,8 @@ class Netperf(TestGeneric):
                 cmd += " -s 1"
 
             # Print only relevant output
-            cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID"'
+            if self._is_omni():
+                cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID"'
 
         elif self._role == "server":
             cmd = "netserver -D"
@@ -134,6 +142,20 @@ class Netperf(TestGeneric):
         return cmd
 
     def _parse_output(self, output):
+        res_val = None
+
+        if self._is_omni():
+            res_val = self._parse_omni_output(output)
+        else:
+            res_val = self._parse_non_omni_output(output)
+
+        if self._confidence is not None:
+            confidence = self._parse_confidence(output)
+            res_val["confidence"] = confidence
+
+        return res_val
+
+    def _parse_omni_output(self, output):
         res_val = {}
 
         pattern_throughput = "THROUGHPUT=(\d+\.\d+)"
@@ -158,9 +180,30 @@ class Netperf(TestGeneric):
                 rem_cpu_util = re.search(pattern_rem_cpu_util, output)
                 res_val["REMOTE_CPU_UTIL"] = float(rem_cpu_util.group(1))
 
-        if self._confidence is not None:
-            confidence = self._parse_confidence(output)
-            res_val["confidence"] = confidence
+        return res_val
+
+    def _parse_non_omni_output(self, output):
+        res_val = {}
+
+        # pattern for SCTP streams and other tests
+        # decimal decimal decimal float (float)
+        pattern = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(?:\.\d+){0,1})"
+        if self._cpu_util:
+            # cpu utilization data in format: float float
+            pattern += "\s+(\d+(?:\.\d+){0,1})\s+(\d+(?:\.\d+){0,1})"
+
+        r2 = re.search(pattern, output.lower())
+
+        if r2 is None:
+            rate_in_kb = 0.0
+        else:
+            rate_in_kb = float(r2.group(1))
+            if self._cpu_util:
+                res_val["LOCAL_CPU_UTIL"] = float(r2.group(2))
+                res_val["REMOTE_CPU_UTIL"] = float(r2.group(3))
+
+        res_val["rate"] = rate_in_kb*1000
+        res_val["unit"] = "bps"
 
         return res_val
 
