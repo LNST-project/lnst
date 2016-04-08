@@ -215,6 +215,12 @@ class Netperf(TestGeneric):
         return res_val
 
     def _parse_confidence(self, output):
+        if self._is_omni():
+            return self._parse_confidence_omni(output)
+        else:
+            return self._parse_confidence_non_omni(output)
+
+    def _parse_confidence_omni(self, output):
         pattern_throughput_confid = "THROUGHPUT_CONFID=([-]?\d+\.\d+)"
         pattern_confidence_level = "CONFIDENCE_LEVEL=(\d+)"
         throughput_confid = float(re.search(pattern_throughput_confid, output).group(1))
@@ -224,6 +230,24 @@ class Netperf(TestGeneric):
 
         return real_confidence
 
+    def _parse_confidence_non_omni(self, output):
+        normal_pattern = r'\+/-(\d+\.\d*)% @ (\d+)% conf\.'
+        warning_pattern = r'!!! Confidence intervals: Throughput\s+: (\d+\.\d*)%'
+        normal_confidence = re.search(normal_pattern, output)
+        warning_confidence = re.search(warning_pattern, output)
+
+        if normal_confidence is None:
+            logging.error("Failed to parse confidence!!")
+            return (0, 0.0)
+
+        if warning_confidence is None:
+            real_confidence = (float(normal_confidence.group(2)),
+                               float(normal_confidence.group(1)))
+        else:
+            real_confidence = (float(normal_confidence.group(2)),
+                               float(warning_confidence.group(1))/2)
+
+        return real_confidence
 
     def _parse_threshold(self, threshold):
         res_data = {}
