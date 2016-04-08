@@ -407,21 +407,22 @@ class Netperf(TestGeneric):
 
         rate_pretty = self._pretty_rate(rate)
         rate_dev_pretty = self._pretty_rate(rate_deviation, unit=rate_pretty["unit"])
-        threshold_pretty = self._pretty_rate(self._threshold["rate"])
-        threshold_dev_pretty = self._pretty_rate(self._threshold_deviation["rate"],
-                                                 unit = threshold_pretty["unit"])
 
         res_val = False
         if self._threshold_interval is not None:
             result_interval = (rate - rate_deviation,
                                rate + rate_deviation)
 
+            threshold_pretty = self._pretty_rate(self._threshold["rate"])
+            threshold_dev_pretty = self._pretty_rate(self._threshold_deviation["rate"],
+                                                     unit = threshold_pretty["unit"])
+
             if self._threshold_interval[0] > result_interval[1]:
                 res_val = False
                 res_data["msg"] = "Measured rate %.2f +-%.2f %s is lower "\
                                   "than threshold %.2f +-%.2f %s" %\
                                   (rate_pretty["rate"],
-                                   rate_deviation,
+                                   rate_dev_pretty["rate"],
                                    rate_pretty["unit"],
                                    threshold_pretty["rate"],
                                    threshold_dev_pretty["rate"],
@@ -431,7 +432,7 @@ class Netperf(TestGeneric):
                 res_data["msg"] = "Measured rate %.2f +-%.2f %s is higher "\
                                   "than threshold %.2f +-%.2f %s" %\
                                   (rate_pretty["rate"],
-                                   rate_deviation,
+                                   rate_dev_pretty["rate"],
                                    rate_pretty["unit"],
                                    threshold_pretty["rate"],
                                    threshold_dev_pretty["rate"],
@@ -441,8 +442,10 @@ class Netperf(TestGeneric):
                 res_val = True
             else:
                 res_val = False
-            res_data["msg"] = "Measured rate was %.2f +-%.2f bps" %\
-                                                (rate, rate_deviation)
+            res_data["msg"] = "Measured rate was %.2f +-%.2f %s" %\
+                                                (rate_pretty["rate"],
+                                                 rate_dev_pretty["rate"],
+                                                 rate_pretty["unit"])
 
         if rv != 0 and self._runs == 1:
             res_data["msg"] = "Could not get performance throughput!"
