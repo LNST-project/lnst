@@ -378,7 +378,7 @@ for setting in offload_settings:
 #reset offload states
 dev_features = ""
 for offload in offloads:
-    dev_features = " %s %s" % (offload, "on")
+    dev_features += " %s %s" % (offload, "on")
 h1.run("ethtool -K %s %s" % (h1_nic1.get_devname(), dev_features))
 h1.run("ethtool -K %s %s" % (h1_nic2.get_devname(), dev_features))
 h2.run("ethtool -K %s %s" % (h2_nic1.get_devname(), dev_features))
