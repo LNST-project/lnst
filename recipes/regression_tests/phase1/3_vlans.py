@@ -42,6 +42,7 @@ nperf_cpupin = ctl.get_alias("nperf_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
+nperf_debug = ctl.get_alias("nperf_debug")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
@@ -109,7 +110,8 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
-                                      "netperf_opts": p_opts
+                                      "netperf_opts": p_opts,
+                                      "debug" : nperf_debug
                                   })
 netperf_cli_udp = ctl.get_module("Netperf",
                                   options={
@@ -120,7 +122,8 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
-                                      "netperf_opts": p_opts
+                                      "netperf_opts": p_opts,
+                                      "debug" : nperf_debug
                                   })
 netperf_cli_tcp6 = ctl.get_module("Netperf",
                                   options={
@@ -131,7 +134,8 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
-                                      "netperf_opts": p_opts6
+                                      "netperf_opts": p_opts6,
+                                      "debug" : nperf_debug
                                   })
 netperf_cli_udp6 = ctl.get_module("Netperf",
                                   options={
@@ -142,7 +146,8 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "confidence" : nperf_confidence,
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
-                                      "netperf_opts": p_opts6
+                                      "netperf_opts": p_opts6,
+                                      "debug" : nperf_debug
                                   })
 
 if nperf_mode == "multi":

@@ -7,6 +7,7 @@
         <alias name="nperf_max_runs" value="5"/>
         <alias name="nperf_mode" value="default"/>
         <alias name="nperf_num_parallel" value="2"/>
+        <alias name="nperf_debug" value="0"/>
         <alias name="mtu" value="1500" />
         <alias name="mapping_file" value="virtual_bridge_vlan_in_guest.mapping" />
         <alias name="vlan10_net" value="192.168.10"/>
