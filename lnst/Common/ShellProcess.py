@@ -230,7 +230,6 @@ class ShellProcess:
                 return data
             if r and (r[0][1] & select.POLLIN):
                 new_data = os.read(fd, 1024)
-                logging.log(self.logging_level, "data:\n" + new_data.rstrip())
                 if not new_data:
                     return data
                 data += new_data
