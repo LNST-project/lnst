@@ -398,8 +398,10 @@ class Netperf(TestGeneric):
                     if e.errno == errno.EINTR:
                         client.kill()
 
+                output = client.read_nonblocking()
+                logging.debug(output)
+
                 if ret_code == 0:
-                    output = client.read_nonblocking()
                     client_results.append(self._parse_output(output))
 
             if len(client_results) > 0:
