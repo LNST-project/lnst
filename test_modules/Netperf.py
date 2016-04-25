@@ -391,6 +391,7 @@ class Netperf(TestGeneric):
                 clients.append(ShellProcess(cmd))
 
             for client in clients:
+                ret_code = None
                 try:
                     ret_code = client.wait()
                     rv += ret_code
@@ -401,7 +402,7 @@ class Netperf(TestGeneric):
                 output = client.read_nonblocking()
                 logging.debug(output)
 
-                if ret_code == 0:
+                if ret_code is not None and ret_code == 0:
                     client_results.append(self._parse_output(output))
 
             if len(client_results) > 0:
