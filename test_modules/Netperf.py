@@ -11,7 +11,7 @@ import errno
 import re
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ShellProcess import ShellProcess
-from lnst.Common.Utils import std_deviation, is_installed
+from lnst.Common.Utils import std_deviation, is_installed, int_it
 
 class Netperf(TestGeneric):
 
@@ -39,6 +39,7 @@ class Netperf(TestGeneric):
         self._cpu_util = self.get_opt("cpu_util")
         self._num_parallel = int(self.get_opt("num_parallel", default=1))
         self._runs = self.get_opt("runs", default=1)
+        self._debug = int_it(self.get_opt("debug", default=0))
 
         self._threshold = self._parse_threshold(self.get_opt("threshold"))
         self._threshold_deviation = self._parse_threshold(
@@ -104,6 +105,9 @@ class Netperf(TestGeneric):
                     cmd += " -c"
                 elif self._cpu_util.lower() == "remote":
                     cmd += " -C"
+
+            if self._debug > 0:
+                cmd += " -%s" % ('d' * self._debug)
 
             if self._netperf_opts is not None:
                 """
