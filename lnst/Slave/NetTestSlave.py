@@ -136,11 +136,16 @@ class SlaveMethods:
         devices = self._if_manager.get_devices()
         result = {}
         for device in devices:
-            if device._ifi_type == 1 and device._state == 'DOWN':
-                result[device._if_index] = {'name' : device._name,
-                                            'hwaddr' : device._hwaddr,
-                                            'driver' : device._driver}
+            result[device._if_index] = device.get_if_data()
         return result
+
+    def get_device(self, if_index):
+        self._if_manager.rescan_devices()
+        device = self._if_manager.get_device(if_index)
+        if device:
+            return device.get_if_data()
+        else:
+            return None
 
     def get_devices_by_devname(self, devname):
         name_scan = self._if_manager.get_devices()

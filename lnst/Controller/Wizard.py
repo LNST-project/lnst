@@ -54,7 +54,7 @@ class Wizard:
                 machine_interfaces = self._get_machine_interfaces(sock)
                 sock.close()
 
-                if machine_interfaces == {}:
+                if machine_interfaces == []:
                     sys.stderr.write("No suitable interfaces found on the host "
                                      "'%s:%s'\n" % (hostname, port))
                 elif machine_interfaces is not None:
@@ -81,7 +81,7 @@ class Wizard:
             machine_interfaces = self._get_machine_interfaces(sock)
             sock.close()
 
-            if machine_interfaces == {}:
+            if machine_interfaces == []:
                 sys.stderr.write("No suitable interfaces found on the host "
                                  "'%s:%s'\n" % (hostname, port))
             elif machine_interfaces is not None:
@@ -144,7 +144,7 @@ class Wizard:
             machine_interfaces = self._get_machine_interfaces(sock)
             sock.close()
 
-            if machine_interfaces is {}:
+            if machine_interfaces is []:
                 sys.stderr.write("No suitable interfaces found on the host "
                                  "'%s:%s'\n" % (hostname, port))
                 continue
@@ -280,7 +280,7 @@ class Wizard:
                     pool_dir=None, filename=None, mode=None,
                     port=None, libvirt_domain=None, sec_params=None):
         """ Creates slave machine XML file
-        @param machine_interfaces Dictionary with machine's interfaces
+        @param machine_interfaces List of machine's interfaces
         @param hostname Hostname of the machine
         @param pool_dir Path to directory where XML file will be created
         @param filename Name of the XML file
@@ -312,7 +312,7 @@ class Wizard:
             top_el.appendChild(interfaces_el)
 
             interfaces_added = 0
-            for iface in machine_interfaces.itervalues():
+            for iface in machine_interfaces:
                 if mode == "interactive":
                     msg = "Do you want to add interface '%s' (%s) to the "\
                           "recipe? [Y/n]: " % (iface["name"], iface["hwaddr"])
@@ -390,7 +390,9 @@ class Wizard:
         @param sock Socket used for connecting to machine
         @return Dictionary with machine interfaces or None if RPC call fails
         """
-        msg = {"type": "command", "method_name": "get_devices", "args": {}}
+        msg = {"type": "command",
+               "method_name": "get_devices_by_params",
+               "args": [{"ifi_type": 1, "state": "DOWN"}]}
         if not send_data(sock, msg):
             sys.stderr.write("Could not send request to slave machine\n")
             return None
