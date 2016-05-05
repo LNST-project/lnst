@@ -228,10 +228,11 @@ class InterfaceManager(object):
         config["name"] = self.assign_name(config)
 
         device = Device(self)
+        self._tmp_mapping[if_id] = device
+
         device.set_configuration(config)
         device.create()
 
-        self._tmp_mapping[if_id] = device
         return config["name"]
 
     def create_device_pair(self, if_id1, config1, if_id2, config2):
@@ -243,6 +244,8 @@ class InterfaceManager(object):
 
         device1 = Device(self)
         device2 = Device(self)
+        self._tmp_mapping[if_id1] = device1
+        self._tmp_mapping[if_id2] = device2
 
         device1.set_configuration(config1)
         device2.set_configuration(config2)
@@ -250,9 +253,6 @@ class InterfaceManager(object):
 
         device1.set_peer(device2)
         device2.set_peer(device1)
-
-        self._tmp_mapping[if_id1] = device1
-        self._tmp_mapping[if_id2] = device2
         return name1, name2
 
     def wait_interface_init(self):
