@@ -70,13 +70,23 @@ class RecipeParser(XmlParser):
                     else:
                         unique_ids.append(interface['id'])
 
-                    if interface['type'] != 'lo':
-                        continue
-                    elif interface['netns'] in lo_netns:
-                        msg = "Only one loopback device per netns is allowed."
-                        raise RecipeError(msg, interface_tag)
-                    else:
-                        lo_netns.append(interface['netns'])
+                    if interface['type'] == 'lo':
+                        if interface['netns'] in lo_netns:
+                            msg = "Only one loopback device per netns "\
+                                  "is allowed."
+                            raise RecipeError(msg, interface_tag)
+                        else:
+                            lo_netns.append(interface['netns'])
+                    elif interface['type'] == "ovs_bridge":
+                        ovs_conf = interface["ovs_conf"]
+                        for i in ovs_conf["tunnels"] + ovs_conf["internals"]:
+                            if i['id'] in unique_ids:
+                                msg = "Interface with ID \"%s\" has already "\
+                                      "been defined for this machine." %\
+                                      i['id']
+                                raise RecipeError(msg, i)
+                            else:
+                                unique_ids.append(i['id'])
 
                 machine["interfaces"].extend(interfaces)
 
@@ -125,14 +135,8 @@ class RecipeParser(XmlParser):
 
         # addresses
         addresses_tag = iface_tag.find("addresses")
-        if addresses_tag is not None and len(addresses_tag) > 0:
-            iface["addresses"] = XmlCollection(addresses_tag)
-            for addr_tag in addresses_tag:
-                if self._has_attribute(addr_tag, "value"):
-                    addr = self._get_attribute(addr_tag, "value")
-                else:
-                    addr = self._get_content(addr_tag)
-                iface["addresses"].append(addr)
+        addrs = self._process_addresses(addresses_tag)
+        iface["addresses"] = addrs
 
         if iface["type"] == "eth":
             iface["network"] = self._get_attribute(iface_tag, "label")
@@ -210,12 +214,17 @@ class RecipeParser(XmlParser):
             ovsb_slaves = []
 
             iface["ovs_conf"] = XmlData(slaves_tag)
-            for slave_tag in slaves_tag:
-                slave = XmlData(slave_tag)
-                slave["id"] = str(self._get_attribute(slave_tag, "id"))
-                ovsb_slaves.append(slave["id"])
+            if slaves_tag is not None:
+                for slave_tag in slaves_tag:
+                    slave = XmlData(slave_tag)
+                    slave["id"] = str(self._get_attribute(slave_tag, "id"))
+                    ovsb_slaves.append(slave["id"])
 
-                iface["slaves"].append(slave)
+                    opts_tag = slave_tag.find("options")
+                    opts = self._process_options(opts_tag)
+                    slave["options"] = opts
+
+                    iface["slaves"].append(slave)
 
             vlan_elems = iface_tag.findall("vlan")
             vlans = iface["ovs_conf"]["vlans"] = XmlData(slaves_tag)
@@ -279,7 +288,81 @@ class RecipeParser(XmlParser):
                 if len(opts) > 0:
                     bonds[bond_id]["options"] = opts
 
+            unique_ids = []
+            tunnels = iface["ovs_conf"]["tunnels"] = XmlCollection(slaves_tag)
+            tunnel_elems = iface_tag.findall("tunnel")
+            for tunnel_elem in tunnel_elems:
+                tunnels.append(XmlData(tunnel_elem))
+                tunnel = tunnels[-1]
+                tunnel["id"] = str(self._get_attribute(tunnel_elem, "id"))
+                if tunnel["id"] in unique_ids:
+                    msg = "Tunnel with id '%s' already defined for "\
+                          "this ovs_bridge." % tunnel["id"]
+                    raise RecipeError(msg, tunnel_elem)
+                else:
+                    unique_ids.append(tunnel["id"])
+
+                t = str(self._get_attribute(tunnel_elem, "type"))
+                tunnel["type"] = t
+
+                opts_elem = tunnel_elem.find("options")
+                opts = self._process_options(opts_elem)
+                if len(opts) > 0:
+                    tunnel["options"] = opts
+
+                # addresses
+                addresses_tag = tunnel_elem.find("addresses")
+                addrs = self._process_addresses(addresses_tag)
+                tunnel["addresses"] = addrs
+
+            iface["ovs_conf"]["internals"] = XmlCollection(slaves_tag)
+            internals = iface["ovs_conf"]["internals"]
+            internal_elems = iface_tag.findall("internal")
+            for internal_elem in internal_elems:
+                internals.append(XmlData(internal_elem))
+                internal = internals[-1]
+                internal["id"] = str(self._get_attribute(internal_elem, "id"))
+                if internal["id"] in unique_ids:
+                    msg = "Internal id '%s' already defined for "\
+                          "this ovs_bridge." % internal["id"]
+                    raise RecipeError(msg, internal_elem)
+                else:
+                    unique_ids.append(internal["id"])
+
+                opts_elem = internal_elem.find("options")
+                opts = self._process_options(opts_elem)
+                if len(opts) > 0:
+                    internal["options"] = opts
+
+                # addresses
+                addresses_tag = internal_elem.find("addresses")
+                addrs = self._process_addresses(addresses_tag)
+                internal["addresses"] = addrs
+
+            iface["ovs_conf"]["flow_entries"] = XmlCollection(slaves_tag)
+            flow_entries = iface["ovs_conf"]["flow_entries"]
+            flow_elems = iface_tag.findall("flow_entries")
+            if len(flow_elems) == 1:
+                entries = flow_elems[0].findall("entry")
+                for entry in entries:
+                    if self._has_attribute(entry, "value"):
+                        flow_entries.append(self._get_attribute(entry,
+                                                                "value"))
+                    else:
+                        flow_entries.append(self._get_content(entry))
+
         return [iface]
+
+    def _process_addresses(self, addresses_tag):
+        addresses = XmlCollection(addresses_tag)
+        if addresses_tag is not None and len(addresses_tag) > 0:
+            for addr_tag in addresses_tag:
+                if self._has_attribute(addr_tag, "value"):
+                    addr = self._get_attribute(addr_tag, "value")
+                else:
+                    addr = self._get_content(addr_tag)
+                addresses.append(addr)
+        return addresses
 
     def _process_options(self, opts_tag):
         options = XmlCollection(opts_tag)

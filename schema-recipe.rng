@@ -200,19 +200,24 @@
                     <ref name="define"/>
                 </optional>
 
-                <element name="slaves">
-                    <interleave>
-                        <optional>
-                            <ref name="define"/>
-                        </optional>
+                <optional>
+                    <element name="slaves">
+                        <interleave>
+                            <optional>
+                                <ref name="define"/>
+                            </optional>
 
-                        <oneOrMore>
-                            <element name="slave">
-                                <attribute name="id"/>
-                            </element>
-                        </oneOrMore>
-                    </interleave>
-                </element>
+                            <oneOrMore>
+                                <element name="slave">
+                                    <attribute name="id"/>
+                                    <optional>
+                                        <ref name="options"/>
+                                    </optional>
+                                </element>
+                            </oneOrMore>
+                        </interleave>
+                    </element>
+                </optional>
 
                 <zeroOrMore>
                     <element name="bond">
@@ -224,7 +229,7 @@
                             </optional>
 
                             <optional>
-                            <ref name="options"/>
+                                <ref name="options"/>
                             </optional>
 
                             <element name="slaves">
@@ -268,6 +273,51 @@
                         </interleave>
                     </element>
                 </zeroOrMore>
+                <zeroOrMore>
+                    <element name="tunnel">
+                        <attribute name="id"/>
+                        <attribute name="type">
+                            <choice>
+                                <value>vxlan</value>
+                                <value>gre</value>
+                                <value>geneve</value>
+                            </choice>
+                        </attribute>
+                        <interleave>
+                            <optional>
+                                <ref name="options"/>
+                            </optional>
+                            <optional>
+                                <ref name="addresses"/>
+                            </optional>
+                        </interleave>
+                    </element>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <element name="internal">
+                        <attribute name="id"/>
+                        <interleave>
+                            <optional>
+                                <ref name="options"/>
+                            </optional>
+                            <optional>
+                                <ref name="addresses"/>
+                            </optional>
+                        </interleave>
+                    </element>
+                </zeroOrMore>
+                <optional>
+                    <element name="flow_entries">
+                        <oneOrMore>
+                            <element name="entry">
+                                <choice>
+                                    <attribute name="value"/>
+                                    <text/>
+                                </choice>
+                            </element>
+                        </oneOrMore>
+                    </element>
+                </optional>
             </interleave>
         </element>
     </define>
