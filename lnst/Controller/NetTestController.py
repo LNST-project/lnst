@@ -920,6 +920,9 @@ class MessageDispatcher(ConnectionHandler):
         elif message[1]["type"] == "if_update":
             machine = self._machines[message[0]]
             machine.interface_update(message[1])
+        elif message[1]["type"] == "if_deleted":
+            machine = self._machines[message[0]]
+            machine.dev_db_delete(message[1])
         elif message[1]["type"] == "exception":
             msg = "Slave %s: %s" % (message[0], message[1]["Exception"])
             raise CommandException(msg)

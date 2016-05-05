@@ -116,6 +116,10 @@ class InterfaceManager(object):
             dev_name = self._devices[i].get_name()
             logging.debug("Deleting Device with if_index %d, name %s because "\
                           "it doesn't exist anymore." % (i, dev_name))
+
+            del_msg = {"type": "if_deleted",
+                       "if_index": i}
+            self._server_handler.send_data_to_ctl(del_msg)
             del self._devices[i]
 
     def handle_netlink_msgs(self, msgs):
@@ -159,6 +163,10 @@ class InterfaceManager(object):
                 if dev.get_netns() == None and dev.get_conf_dict() == None:
                     dev.del_link()
                     del self._devices[msg['index']]
+
+                    del_msg = {"type": "if_deleted",
+                               "if_index": msg['index']}
+                    self._server_handler.send_data_to_ctl(del_msg)
         else:
             return
 
