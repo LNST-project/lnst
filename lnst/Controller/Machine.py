@@ -18,6 +18,7 @@ import tempfile
 import signal
 from time import sleep
 from xmlrpclib import Binary
+from functools import wraps
 from lnst.Common.Config import lnst_config
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import wait_for, create_tar_archive
@@ -75,6 +76,8 @@ class Machine(object):
         self._namespaces = []
         self._bg_cmds = {}
 
+        self._device_database = {}
+
     def get_configuration(self):
         configuration = {}
         configuration["id"] = self._id
@@ -127,6 +130,23 @@ class Machine(object):
             iface = None
         if iface:
             iface.update(if_data['if_data'])
+
+        if if_data["if_data"]["if_index"] in self._device_database:
+            dev = self._device_database[if_data["if_data"]["if_index"]]
+            dev.update_data(if_data['if_data'])
+        else:
+            dev = Device(if_data["if_data"], self)
+            self._device_database[if_data["if_data"]["if_index"]] = dev
+
+    def dev_db_delete(self, update_msg):
+        if update_msg["if_index"] in self._device_database:
+            del self._device_database[update_msg["if_index"]]
+
+    def dev_db_get_name(self, dev_name):
+        for if_index, dev in self._device_database.iteritems():
+            if dev.get_name() == dev_name:
+                return dev
+        return None
 
     #
     # Factory methods for constructing interfaces on this machine. The
@@ -228,6 +248,10 @@ class Machine(object):
             raise MachineError(msg)
 
         self._slave_desc = slave_desc
+
+        devices = self._rpc_call("get_devices")
+        for if_index, dev in devices.items():
+            self._device_database[if_index] = Device(dev, self)
 
         for iface in self._interfaces:
             iface.initialize()
@@ -1095,3 +1119,125 @@ class UnusedInterface(Interface):
 
     def cleanup(self):
         pass
+
+class Device(object):
+    """ Represents device information received from a Slave"""
+
+    def pre_call_decorate(func):
+        @wraps(func)
+        def func_wrapper(inst, *args, **kwargs):
+            inst.slave_update()
+            return func(inst, *args, **kwargs)
+        return func_wrapper
+
+    def __init__(self, data, machine):
+        self._if_index = data["if_index"]
+        self._hwaddr = None
+        self._name = None
+        self._ip_addrs = None
+        self._ifi_type = None
+        self._state = None
+        self._master = None
+        self._slaves = None
+        self._netns = None
+        self._peer = None
+        self._mtu = None
+        self._driver = None
+
+        self._machine = machine
+
+        self.update_data(data)
+
+    def update_data(self, data):
+        if data["if_index"] != self._if_index:
+            return False
+
+        self._hwaddr = data["hwaddr"]
+        self._name = data["name"]
+        self._ip_addrs = data["ip_addrs"]
+        self._ifi_type = data["ifi_type"]
+        self._state = data["state"]
+        self._master = data["master"]
+        self._slaves = data["slaves"]
+        self._netns = data["netns"]
+        self._peer = data["peer"]
+        self._mtu = data["mtu"]
+        self._driver = data["driver"]
+        return True
+
+    def slave_update(self):
+        res = self._machine._rpc_call_x(self._netns,
+                                        "get_device",
+                                        self._if_index)
+        if res:
+            self.update_data(res)
+        return
+
+    def get_if_index(self):
+        return self._if_index
+
+    @pre_call_decorate
+    def get_hwaddr(self):
+        return self._hwaddr
+
+    @pre_call_decorate
+    def get_name(self):
+        return self._name
+
+    @pre_call_decorate
+    def get_ip_addrs(self, selector={}):
+        return [ip["addr"]
+                for ip in self._ip_addrs
+                    if selector.viewitems() <= ip.viewitems()]
+
+    @pre_call_decorate
+    def get_ip_addr(self, num, selector={}):
+        ips = self.get_ip_addrs(selector)
+        return ips[num]
+
+    @pre_call_decorate
+    def get_ifi_type(self):
+        return self._ifi_type
+
+    @pre_call_decorate
+    def get_state(self):
+        return self._state
+
+    @pre_call_decorate
+    def get_master(self):
+        return self._master
+
+    @pre_call_decorate
+    def get_slaves(self):
+        return self._slaves
+
+    @pre_call_decorate
+    def get_netns(self):
+        return self._netns
+
+    @pre_call_decorate
+    def get_peer(self):
+        return self._peer
+
+    @pre_call_decorate
+    def get_mtu(self):
+        return self._mtu
+
+    def set_mtu(self, mtu):
+        command = {"type": "config",
+                   "host": self._machine.get_id(),
+                   "persistent": False,
+                   "options":[
+                       {"name": "/sys/class/net/%s/mtu" % self._name,
+                        "value": str(mtu)}
+                    ]}
+        command["netns"] = self._netns
+
+        self._machine.run_command(command)
+
+        self.slave_update()
+        return self._mtu
+
+    @pre_call_decorate
+    def get_driver(self):
+        return self._driver
