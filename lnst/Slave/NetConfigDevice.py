@@ -280,7 +280,7 @@ class NetConfigDeviceVlan(NetConfigDeviceGeneric):
     def up(self):
         parent_id = get_slaves(self._dev_config)[0]
         parent_dev = self._if_manager.get_mapped_device(parent_id)
-        exec_cmd("ip link set %s up" % parent_dev.get_name())
+        parent_dev.link_up()
 
         super(NetConfigDeviceVlan, self).up()
 
@@ -332,7 +332,7 @@ class NetConfigDeviceVxlan(NetConfigDeviceGeneric):
         if len(slaves) == 1:
             parent_id = get_slaves(self._dev_config)[0]
             parent_dev = self._if_manager.get_mapped_device(parent_id)
-            parent_dev.up()
+            parent_dev.link_up()
 
         super(NetConfigDeviceVxlan, self).up()
 
