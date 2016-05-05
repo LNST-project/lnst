@@ -34,6 +34,22 @@ def netperf_baseline_template(module, baseline):
                                'threshold_deviation': '%s bits/sec' % deviation})
     return module
 
+def perfrepo_baseline_to_dict(baseline):
+    if baseline.get_texec() is None:
+        return {}
+
+    try:
+        throughput = baseline.get_value('throughput')
+        deviation = baseline.get_value('throughput_deviation')
+    except:
+        logging.error("Invalid baseline TestExecution passed.")
+        return {}
+
+    if throughput is not None and deviation is not None:
+        return {'threshold': '%s bits/sec' % throughput,
+                'threshold_deviation': '%s bits/sec' % deviation}
+    return {}
+
 def netperf_result_template(perfrepo_result, netperf_result):
     if isinstance(perfrepo_result, Noop):
         return perfrepo_result
