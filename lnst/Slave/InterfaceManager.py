@@ -275,7 +275,7 @@ class InterfaceManager(object):
                 return True
         return False
 
-    def _assign_name_generic(self, prefix):
+    def assign_name_generic(self, prefix):
         index = 0
         while (self._is_name_used(prefix + str(index))):
             index += 1
@@ -304,28 +304,28 @@ class InterfaceManager(object):
                 if dev.get_hwaddr() == hwaddr:
                     return dev.get_name()
         elif dev_type == "bond":
-            return self._assign_name_generic("t_bond")
+            return self.assign_name_generic("t_bond")
         elif dev_type == "bridge" or dev_type == "ovs_bridge":
-            return self._assign_name_generic("t_br")
+            return self.assign_name_generic("t_br")
         elif dev_type == "macvlan":
-            return self._assign_name_generic("t_macvlan")
+            return self.assign_name_generic("t_macvlan")
         elif dev_type == "team":
-            return self._assign_name_generic("t_team")
+            return self.assign_name_generic("t_team")
         elif dev_type == "vlan":
             netdev_name = self.get_mapped_device(config["slaves"][0]).get_name()
             vlan_tci = get_option(config, "vlan_tci")
             prefix = "%s.%s_" % (netdev_name, vlan_tci)
-            return self._assign_name_generic(prefix)
+            return self.assign_name_generic(prefix)
         elif dev_type == "veth":
             return self._assign_name_pair("veth")
         elif dev_type == "vti":
-            return self._assign_name_generic("vti")
+            return self.assign_name_generic("vti")
         elif dev_type == "vti6":
-            return self._assign_name_generic("t_ip6vti")
+            return self.assign_name_generic("t_ip6vti")
         elif dev_type == "vxlan":
-            return self._assign_name_generic("vxlan")
+            return self.assign_name_generic("vxlan")
         else:
-            return self._assign_name_generic("dev")
+            return self.assign_name_generic("dev")
 
 class Device(object):
     def __init__(self, if_manager):
