@@ -24,9 +24,13 @@ from pyroute2 import IPRSocket
 try:
     from pyroute2.netlink.iproute import RTM_NEWLINK
     from pyroute2.netlink.iproute import RTM_DELLINK
+    from pyroute2.netlink.iproute import RTM_NEWADDR
+    from pyroute2.netlink.iproute import RTM_DELADDR
 except ImportError:
     from pyroute2.iproute import RTM_NEWLINK
     from pyroute2.iproute import RTM_DELLINK
+    from pyroute2.iproute import RTM_NEWADDR
+    from pyroute2.iproute import RTM_DELADDR
 
 class IfMgrError(Exception):
     pass
@@ -95,7 +99,7 @@ class InterfaceManager(object):
             self._handle_netlink_msg(msg)
 
     def _handle_netlink_msg(self, msg):
-        if msg['header']['type'] == RTM_NEWLINK:
+        if msg['header']['type'] in [RTM_NEWLINK, RTM_NEWADDR, RTM_DELADDR]:
             if msg['index'] in self._devices:
                 update_msg = self._devices[msg['index']].update_netlink(msg)
                 if update_msg != None:
@@ -103,9 +107,8 @@ class InterfaceManager(object):
                         if if_index == msg['index']:
                             update_msg["if_id"] = if_id
                             break
-                    if "if_id" in update_msg:
-                        self._server_handler.send_data_to_ctl(update_msg)
-            else:
+                    self._server_handler.send_data_to_ctl(update_msg)
+            elif msg['header']['type'] == RTM_NEWLINK:
                 dev = None
                 for if_id, d in self._tmp_mapping.items():
                     d_cfg = d.get_conf_dict()
@@ -116,8 +119,16 @@ class InterfaceManager(object):
                         break
                 if dev == None:
                     dev = Device(self)
-                dev.init_netlink(msg)
+                update_msg = dev.init_netlink(msg)
                 self._devices[msg['index']] = dev
+
+                if update_msg != None:
+                    for if_id, if_index in self._id_mapping.iteritems():
+                        if if_index == msg['index']:
+                            update_msg["if_id"] = if_id
+                            break
+                    self._server_handler.send_data_to_ctl(update_msg)
+
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
                 dev = self._devices[msg['index']]
@@ -294,7 +305,7 @@ class Device(object):
         self._name = None
         self._conf = None
         self._conf_dict = None
-        self._ip = None
+        self._ip_addrs = []
         self._ifi_type = None
         self._state = None
         self._master = {"primary": None, "other": []}
@@ -312,7 +323,7 @@ class Device(object):
         self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
         self._name = nl_msg.get_attr("IFLA_IFNAME")
         self._state = nl_msg.get_attr("IFLA_OPERSTATE")
-        self._ip = None #TODO
+        self._ip_addrs = []
         self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
         self._netns = None
         self._mtu = nl_msg.get_attr("IFLA_MTU")
@@ -322,13 +333,18 @@ class Device(object):
 
         self._initialized = True
 
+        #return an update message that will be sent to the controller
+        return {"type": "if_update",
+                "if_data": self.get_if_data()}
+
     def update_netlink(self, nl_msg):
-        if self._if_index == nl_msg['index']:
+        if self._if_index != nl_msg['index']:
+            return None
+        if nl_msg['header']['type'] == RTM_NEWLINK:
             self._ifi_type = nl_msg['ifi_type']
             self._hwaddr = normalize_hwaddr(nl_msg.get_attr("IFLA_ADDRESS"))
             self._name = nl_msg.get_attr("IFLA_IFNAME")
             self._state = nl_msg.get_attr("IFLA_OPERSTATE")
-            self._ip = None #TODO
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
             self._mtu = nl_msg.get_attr("IFLA_MTU")
 
@@ -354,11 +370,29 @@ class Device(object):
                 self._driver = self._ethtool_get_driver()
 
             self._initialized = True
+        elif nl_msg['header']['type'] == RTM_NEWADDR:
+            scope = nl_msg['scope']
+            addr_val = nl_msg.get_attr('IFA_ADDRESS')
+            prefix_len = str(nl_msg['prefixlen'])
+            addr = {"addr": addr_val,
+                    "prefix": prefix_len,
+                    "scope": scope}
+            if self.find_addrs(addr) == []:
+                self._ip_addrs.append(addr)
+        elif nl_msg['header']['type'] == RTM_DELADDR:
+            scope = nl_msg['scope']
+            addr_val = nl_msg.get_attr('IFA_ADDRESS')
+            prefix_len = str(nl_msg['prefixlen'])
+            addr = {"addr": addr_val,
+                    "prefix": prefix_len,
+                    "scope": scope}
+            matching_addrs = self.find_addrs(addr)
+            for ip_addr in matching_addrs:
+                self._ip_addrs.remove(ip_addr)
 
-            #return an update message that will be sent to the controller
-            return {"type": "if_update",
-                    "if_data": self.get_if_data()}
-        return None
+        #return an update message that will be sent to the controller
+        return {"type": "if_update",
+                "if_data": self.get_if_data()}
 
     def del_link(self):
         if self._master["primary"]:
@@ -377,6 +411,13 @@ class Device(object):
             if dev != None:
                 dev.del_master(self._if_index)
 
+    def find_addrs(self, addr_spec):
+        ret = []
+        for addr in self._ip_addrs:
+            if addr_spec.viewitems() <= addr.viewitems():
+                ret.append(addr)
+        return ret
+
     def get_if_index(self):
         return self._if_index
 
@@ -386,8 +427,11 @@ class Device(object):
     def get_name(self):
         return self._name
 
-    def get_ip_conf(self):
-        return self._ip
+    def get_ips(self):
+        return self._ip_addrs
+
+    def clear_ips(self):
+        self._ip_addrs = []
 
     def is_configured(self):
         return self._configured
