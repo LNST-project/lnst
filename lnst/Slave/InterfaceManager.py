@@ -14,6 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import re
 import select
+import logging
 from lnst.Slave.NetConfigDevice import NetConfigDevice
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
@@ -85,14 +86,37 @@ class InterfaceManager(object):
         return self._nl_socket
 
     def rescan_devices(self):
-        self._devices = {}
+        devices_to_remove = self._devices.keys()
         devs = scan_netdevs()
         for dev in devs:
             if dev['index'] not in self._devices:
-                device = Device(self)
+                device = None
+                for if_id, d in self._tmp_mapping.items():
+                    d_cfg = d.get_conf_dict()
+                    if d_cfg["name"] == dev["name"]:
+                        device = d
+                        self._id_mapping[if_id] = dev['index']
+                        del self._tmp_mapping[if_id]
+                        break
+                if device == None:
+                    device = Device(self)
                 device.init_netlink(dev['netlink_msg'])
-
                 self._devices[dev['index']] = device
+            else:
+                self._devices[dev['index']].update_netlink(dev['netlink_msg'])
+                devices_to_remove.remove(dev['index'])
+
+            self._devices[dev['index']].clear_ips()
+            for addr_msg in dev['ip_addrs']:
+                self._devices[dev['index']].update_netlink(addr_msg)
+        for i in devices_to_remove:
+            if self._devices[i].get_netns() != None:
+                continue
+
+            dev_name = self._devices[i].get_name()
+            logging.debug("Deleting Device with if_index %d, name %s because "\
+                          "it doesn't exist anymore." % (i, dev_name))
+            del self._devices[i]
 
     def handle_netlink_msgs(self, msgs):
         for msg in msgs:
