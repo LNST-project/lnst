@@ -40,6 +40,9 @@ def scan_netdevs():
             else:
                 new_link["hwaddr"] = None
 
+            addrs = ipr.get_addr(index=new_link["index"])
+            new_link["ip_addrs"] = addrs
+
             scan.append(new_link)
     except:
         raise
