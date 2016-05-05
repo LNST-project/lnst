@@ -266,6 +266,7 @@ class InterfaceManager(object):
             self.handle_netlink_msgs(msgs)
 
     def _is_name_used(self, name):
+        self.rescan_devices()
         for device in self._devices.itervalues():
             if name == device.get_name():
                 return True
