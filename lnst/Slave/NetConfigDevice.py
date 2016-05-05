@@ -14,7 +14,8 @@ jpirko@redhat.com (Jiri Pirko)
 import logging
 import re
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option, parse_netem
+from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
+from lnst.Slave.NetConfigCommon import parse_netem, get_slave_options
 from lnst.Common.Utils import bool_it
 from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
 from lnst.Slave.NmConfigDevice import is_nm_managed
@@ -421,6 +422,28 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
     _modulename = "openvswitch"
     _moduleload = True
 
+    def up(self):
+        super(NetConfigDeviceOvsBridge, self).up()
+
+        int_ports = self._dev_config["ovs_conf"]["internals"]
+        br_name = self._dev_config["name"]
+        for iport in int_ports:
+            if "addresses" in iport:
+                for address in iport["addresses"]:
+                    exec_cmd("ip addr add %s dev %s" % (address, iport["name"]))
+            exec_cmd("ip link set %s up" % iport["name"])
+
+    def down(self):
+        int_ports = self._dev_config["ovs_conf"]["internals"]
+        br_name = self._dev_config["name"]
+        for iport in int_ports:
+            if "addresses" in iport:
+                for address in iport["addresses"]:
+                    exec_cmd("ip addr del %s dev %s" % (address, iport["name"]))
+            exec_cmd("ip link set %s down" % iport["name"])
+
+        super(NetConfigDeviceOvsBridge, self).down()
+
     @classmethod
     def type_init(self):
         super(NetConfigDeviceOvsBridge, self).type_init()
@@ -447,6 +470,10 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
             slave_dev = self._if_manager.get_mapped_device(slave_id)
             slave_name = slave_dev.get_name()
 
+            options = ""
+            for opt in get_slave_options(self._dev_config, slave_id):
+                options += " %s=%s" % (opt[0], opt[1])
+
             vlan_tags = []
             for tag, vlan in vlans.iteritems():
                 if slave_id in vlan["slaves"]:
@@ -458,6 +485,9 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
             elif len(vlan_tags) > 1:
                 tags = " trunks=" + ",".join(vlan_tags)
             exec_cmd("ovs-vsctl add-port %s %s%s" % (br_name, slave_name, tags))
+
+            if options != "":
+                exec_cmd("ovs-vsctl set Interface %s%s" % (slave_name, options))
 
     def _del_ports(self):
         slaves = self._dev_config["slaves"]
@@ -476,6 +506,56 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
             slave_name = slave_dev.get_name()
 
             exec_cmd("ovs-vsctl del-port %s %s" % (br_name, slave_name))
+
+    def _add_internal_ports(self):
+        int_ports = self._dev_config["ovs_conf"]["internals"]
+        br_name = self._dev_config["name"]
+
+        for i in int_ports:
+            i["name"] = self._if_manager.assign_name_generic(prefix="int")
+
+            options = ""
+            for opt in i["options"]:
+                options += " %s=%s" % (opt["name"], opt["value"])
+
+                if opt["name"] == "name":
+                    i["name"] = opt["value"]
+
+            exec_cmd("ovs-vsctl add-port %s %s -- set Interface %s "\
+                     "type=internal %s" % (br_name, i["name"],
+                                           i["name"], options))
+
+    def _del_internal_ports(self):
+        int_ports = self._dev_config["ovs_conf"]["internals"]
+        br_name = self._dev_config["name"]
+
+        for i in int_ports:
+            exec_cmd("ovs-vsctl del-port %s %s" % (br_name, i["name"]))
+
+    def _add_tunnels(self):
+        tunnels = self._dev_config["ovs_conf"]["tunnels"]
+        br_name = self._dev_config["name"]
+
+        for i in tunnels:
+            i["name"] = self._if_manager.assign_name_generic(prefix=i["type"])
+
+            options = ""
+            for opt in i["options"]:
+                options += " %s=%s" % (opt["name"], opt["value"])
+
+                if opt["name"] == "name":
+                    i["name"] = opt["value"]
+
+            exec_cmd("ovs-vsctl add-port %s %s -- set Interface %s "\
+                     "type=%s %s" % (br_name, i["name"], i["name"],
+                                     i["type"], options))
+
+    def _del_tunnels(self):
+        tunnels = self._dev_config["ovs_conf"]["tunnels"]
+        br_name = self._dev_config["name"]
+
+        for i in tunnels:
+            exec_cmd("ovs-vsctl del-port %s %s" % (br_name, i["name"]))
 
     def _add_bonds(self):
         br_name = self._dev_config["name"]
@@ -500,24 +580,41 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
         for bond_id, bond in bonds.iteritems():
             exec_cmd("ovs-vsctl del-port %s %s" % (br_name, bond_id))
 
+    def _add_flow_entries(self):
+        br_name = self._dev_config["name"]
+        entries = self._dev_config["ovs_conf"]["flow_entries"]
+
+        for entry in entries:
+            exec_cmd("ovs-ofctl add-flow %s '%s'" % (br_name, entry))
+
+    def _del_flow_entries(self):
+        br_name = self._dev_config["name"]
+        exec_cmd("ovs-ofctl del-flows %s" % (br_name))
+
     def create(self):
         dev_cfg = self._dev_config
         br_name = dev_cfg["name"]
         exec_cmd("ovs-vsctl add-br %s" % br_name)
 
+        self._add_internal_ports()
+        self._add_tunnels()
+
     def destroy(self):
+        self._del_tunnels()
+        self._del_internal_ports()
+
         dev_cfg = self._dev_config
         br_name = dev_cfg["name"]
         exec_cmd("ovs-vsctl del-br %s" % br_name)
 
     def configure(self):
         self._add_ports()
-
         self._add_bonds()
+        self._add_flow_entries()
 
     def deconfigure(self):
+        self._del_flow_entries()
         self._del_bonds()
-
         self._del_ports()
 
 class NetConfigDeviceVEth(NetConfigDeviceGeneric):
