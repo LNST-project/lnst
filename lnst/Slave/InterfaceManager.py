@@ -607,8 +607,16 @@ class Device(object):
             return None
 
     def get_if_data(self):
-        if_data = {"devname": self._name,
+        if_data = {"if_index": self._if_index,
                    "hwaddr": self._hwaddr,
+                   "name": self._name,
+                   "ip_addrs": self._ip_addrs,
+                   "ifi_type": self._ifi_type,
+                   "state": self._state,
+                   "master": self._master,
+                   "slaves": self._slaves,
+                   "netns": self._netns,
+                   "peer": self._peer.get_if_index() if self._peer else None,
                    "mtu": self._mtu,
                    "driver": self._driver}
         return if_data

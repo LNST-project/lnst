@@ -695,7 +695,7 @@ class Interface(object):
 
     def update(self, if_data):
         self.set_hwaddr(if_data["hwaddr"])
-        self.set_devname(if_data["devname"])
+        self.set_devname(if_data["name"])
         self._mtu = if_data["mtu"]
         self._driver = if_data["driver"]
 
