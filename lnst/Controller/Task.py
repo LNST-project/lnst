@@ -304,6 +304,13 @@ class HostAPI(object):
     def get_interface(self, if_id):
         return self._ifaces[if_id]
 
+    def get_device(self, name):
+        dev = self._m.dev_db_get_name(name)
+        if dev:
+            return DeviceAPI(self._m.dev_db_get_name(name), self)
+        else:
+            raise TaskError("No device with name '%s' found." % str(name))
+
     @deprecated
     def get_devname(self, if_id):
         """
@@ -476,6 +483,53 @@ class HostAPI(object):
 
         return self._add_iface("vxlan", if_id, netns, ip, options, slaves)
 
+class DeviceAPI(object):
+    def __init__(self, net_device, host):
+        self._dev = net_device
+        self._host = host
+
+    def get_if_index(self):
+        return self._dev.get_if_index()
+
+    def get_hwaddr(self):
+        return self._dev.get_hwaddr()
+
+    def get_devname(self):
+        return self._dev.get_name()
+
+    def get_ips(self, selector={}):
+        return self._dev.get_ip_addrs(selector)
+
+    def get_ip(self, num, selector={}):
+        return self._dev.get_ip_addr(num, selector)
+
+    def get_ifi_type(self):
+        return self._dev.get_ifi_type()
+
+    def get_state(self):
+        return self._dev.get_state()
+
+    # def get_master(self):
+        # return self._dev.get_master()
+
+    def get_slaves(self):
+        return self._dev.get_slaves()
+
+    def get_netns(self):
+        return self._dev.get_netns()
+
+    # def get_peer(self):
+        # return self._dev.get_peer()
+
+    def get_mtu(self):
+        return self._dev.get_mtu()
+
+    def set_mtu(self, mtu):
+        return self._dev.set_mtu(mtu)
+
+    def get_driver(self):
+        return self._dev.get_driver()
+
 class InterfaceAPI(object):
     def __init__(self, interface, host):
         self._if = interface
@@ -499,10 +553,10 @@ class InterfaceAPI(object):
     def get_hwaddr(self):
         return VolatileValue(self._if.get_hwaddr)
 
-    def get_ip(self, ip_index=0):
+    def get_ip(self, ip_index=0, selector={}):
         return VolatileValue(self._if.get_address, ip_index)
 
-    def get_ips(self):
+    def get_ips(self, selector={}):
         return VolatileValue(self._if.get_addresses)
 
     @deprecated
