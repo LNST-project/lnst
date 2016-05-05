@@ -68,6 +68,11 @@ class Netperf(TestGeneric):
             if self._is_omni():
                 # -P 0 disables banner header of output
                 cmd += " -P 0"
+            if self._bind is not None:
+                """
+                application is bound to this address
+                """
+                cmd += " -L %s" % self._bind
             if self._port is not None:
                 """
                 client connects on this port
