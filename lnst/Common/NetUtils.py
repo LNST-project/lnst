@@ -33,18 +33,13 @@ def scan_netdevs():
             new_link["netlink_msg"] = part
             new_link["index"] = part["index"]
             new_link["name"] = part.get_attr("IFLA_IFNAME")
-            #
-            # FIXME:
-            #
-            # nlmsg.get_attr() returns None if there is no
-            # such attribute in the NLA chain; if hwaddr is None,
-            # normalize_hwaddr(hwaddr) will raise AttributeError(),
-            # since None has no upper(). The issue is that the
-            # AttributeError() will be a bit unrelated to the
-            # root cause, and since that it will be confusing.
-            #
+
             hwaddr = part.get_attr("IFLA_ADDRESS")
-            new_link["hwaddr"] = normalize_hwaddr(hwaddr)
+            if hwaddr:
+                new_link["hwaddr"] = normalize_hwaddr(hwaddr)
+            else:
+                new_link["hwaddr"] = None
+
             scan.append(new_link)
     except:
         raise
