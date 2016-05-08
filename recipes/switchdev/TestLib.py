@@ -55,7 +55,7 @@ class TestLib:
         else:
             if1.set_link_down()
 
-        m2.run(linkneg_mod, desc=desc)
+        m2.run(linkneg_mod, desc=desc, netns=if2.get_netns())
 
     def ping_simple(self, if1, if2, fail_expected=False, desc=None,
                     limit_rate=90):
@@ -85,10 +85,10 @@ class TestLib:
                                          "limit_rate": limit_rate})
 
         if self._ipv in [ 'ipv6', 'both' ]:
-            m1.run(ping_mod6, fail_expected=fail_expected, desc=desc)
+            m1.run(ping_mod6, fail_expected=fail_expected, desc=desc, netns=if1.get_netns())
 
         if self._ipv in [ 'ipv4', 'both' ]:
-            m1.run(ping_mod, fail_expected=fail_expected, desc=desc)
+            m1.run(ping_mod, fail_expected=fail_expected, desc=desc, netns=if1.get_netns())
 
     def _get_netperf_srv_mod(self, if1, is_ipv6):
         if is_ipv6:
@@ -134,12 +134,12 @@ class TestLib:
         duration = self._netperf_duration
         num_parallel = self._netperf_num_parallel
 
-        server_proc = m1.run(self._get_netperf_srv_mod(if1, is_ipv6), bg=True)
+        server_proc = m1.run(self._get_netperf_srv_mod(if1, is_ipv6), bg=True, netns=if1.get_netns())
         self._ctl.wait(2)
         netperf_cli_mod = self._get_netperf_cli_mod(if1, if2, testname,
                                                     duration, num_parallel,
                                                     is_ipv6)
-        m2.run(netperf_cli_mod, timeout=duration + 10, desc=desc)
+        m2.run(netperf_cli_mod, timeout=duration + 10, desc=desc, netns=if2.get_netns())
         server_proc.intr()
 
     def _netperf(self, if1, if2, testname, desc):
@@ -172,7 +172,7 @@ class TestLib:
                                           "netdev_name": if1.get_devname(),
                                           "pktgen_option": pktgen_option})
 
-        m1.run(pktgen_mod, desc=desc)
+        m1.run(pktgen_mod, desc=desc, netns=if1.get_netns())
 
     def custom(self, m1, desc, err_msg=None):
         m1.sync_resources(modules=["Custom"])
