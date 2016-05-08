@@ -21,13 +21,17 @@ class TestLib:
         if "netperf_num_parallel" in aliases:
             self._netperf_num_parallel = int(aliases["netperf_num_parallel"])
 
-    def _generate_default_desc(self, if1, if2):
-        return "from %s->%s to %s->%s" % (if1.get_host().get_id(), if1.get_id(),
-                                          if2.get_host().get_id(), if2.get_id())
+    def _generate_default_desc(self, if1, ifs):
+        ret = "from %s->%s to " % (if1.get_host().get_id(), if1.get_id())
+        for i in ifs:
+            ret += "%s->%s" % (i.get_host().get_id(), i.get_id())
+            if i != ifs[-1]:
+                ret += ", "
+        return ret
 
     def linkneg(self, if1, if2, state, speed=0, timeout=5, desc=None):
         if not desc:
-            desc = self._generate_default_desc(if1, if2)
+            desc = self._generate_default_desc(if1, [if2])
 
         m2 = if2.get_host()
         m2.sync_resources(modules=["LinkNeg"])
@@ -60,7 +64,7 @@ class TestLib:
     def ping_simple(self, if1, if2, fail_expected=False, desc=None,
                     limit_rate=90):
         if not desc:
-            desc = self._generate_default_desc(if1, if2)
+            desc = self._generate_default_desc(if1, [if2])
 
         if1.set_mtu(self._mtu)
         if2.set_mtu(self._mtu)
@@ -123,7 +127,7 @@ class TestLib:
 
     def _run_netperf(self, if1, if2, testname, is_ipv6, desc):
         if not desc:
-            desc = self._generate_default_desc(if1, if2)
+            desc = self._generate_default_desc(if1, [if2])
 
         m1 = if1.get_host()
         m2 = if2.get_host()
