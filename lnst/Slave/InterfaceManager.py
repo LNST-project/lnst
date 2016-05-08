@@ -598,6 +598,32 @@ class Device(object):
     def link_down(self):
         exec_cmd("ip link set %s down" % self._name)
 
+    def link_stats(self):
+        stats = {"devname": self._name,
+                 "hwaddr": self._hwaddr}
+        out, _ = exec_cmd("ip -s link show %s" % self._name)
+        lines = iter(out.split("\n"))
+        for line in lines:
+            if (len(line.split()) == 0):
+                continue
+            if (line.split()[0] == "RX:"):
+                rx_stats = map(int, lines.next().split())
+                stats.update({"rx_bytes"  : rx_stats[0],
+                              "rx_packets": rx_stats[1],
+                              "rx_errors" : rx_stats[2],
+                              "rx_dropped": rx_stats[3],
+                              "rx_overrun": rx_stats[4],
+                              "rx_mcast"  : rx_stats[5]})
+            if (line.split()[0] == "TX:"):
+                tx_stats = map(int, lines.next().split())
+                stats.update({"tx_bytes"  : tx_stats[0],
+                              "tx_packets": tx_stats[1],
+                              "tx_errors" : tx_stats[2],
+                              "tx_dropped": tx_stats[3],
+                              "tx_carrier": tx_stats[4],
+                              "tx_collsns": tx_stats[5]})
+        return stats
+
     def set_netns(self, netns):
         self._netns = netns
         return

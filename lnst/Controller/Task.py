@@ -580,6 +580,9 @@ class InterfaceAPI(object):
     def set_mtu(self, mtu):
         return self._if.set_mtu(mtu)
 
+    def link_stats(self):
+        return self._if.link_stats()
+
     def set_link_up(self):
         return self._if.set_link_up()
 

@@ -709,6 +709,11 @@ class Interface(object):
         self._mtu = mtu
         return self._mtu
 
+    def link_stats(self):
+        stats = self._machine._rpc_call_x(self._netns, "link_stats",
+                                          self._id)
+        return stats
+
     def update_from_slave(self):
         if_data = self._machine._rpc_call_x(self._netns, "get_if_data",
                                             self._id)
