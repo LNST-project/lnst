@@ -589,6 +589,9 @@ class InterfaceAPI(object):
     def get_host(self):
         return self._host
 
+    def get_netns(self):
+        return self._if.get_netns()
+
     def reset(self, ip=None, netns=None):
         self._if.down()
         self._if.deconfigure()
