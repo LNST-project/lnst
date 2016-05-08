@@ -280,6 +280,19 @@ class Machine(object):
 
         ordered_ifaces = self.get_ordered_interfaces()
         try:
+            #dump statistics
+            for iface in self._interfaces:
+                # Getting stats only from real interfaces
+                if isinstance(iface, UnusedInterface):
+                    continue
+                stats = iface.link_stats()
+                logging.debug("%s:%s:%s: RX:\t bytes: %d\t packets: %d\t dropped: %d" %
+                              (iface.get_netns(), iface.get_host(), iface.get_id(),
+                              stats["rx_bytes"], stats["rx_packets"], stats["rx_dropped"]))
+                logging.debug("%s:%s:%s: TX:\t bytes: %d\t packets: %d\t dropped: %d" %
+                              (iface.get_netns(), iface.get_host(), iface.get_id(),
+                              stats["tx_bytes"], stats["tx_packets"], stats["tx_dropped"]))
+
             self._rpc_call("kill_cmds")
             for netns in self._namespaces:
                 self._rpc_call_to_netns(netns, "kill_cmds")
@@ -679,6 +692,9 @@ class Interface(object):
 
     def get_netns(self):
         return self._netns
+
+    def get_host(self):
+        return self._machine.get_id()
 
     def set_peer(self, peer):
         self._peer = peer
