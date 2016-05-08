@@ -611,6 +611,12 @@ class InterfaceAPI(object):
     def set_addresses(self, ips):
         self._if.set_addresses(ips)
 
+    def enable_multicast(self):
+        self._if.add_route("224.0.0.0/4")
+
+    def disable_multicast(self):
+        self._if.del_route("224.0.0.0/4")
+
     def destroy(self):
         self._host._remove_iface(self)
 

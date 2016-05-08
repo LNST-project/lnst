@@ -719,6 +719,14 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "set_addresses",
                                   self._id, ips)
 
+    def add_route(self, dest):
+        self._machine._rpc_call_x(self._netns, "add_route",
+                                  self._id, dest)
+
+    def del_route(self, dest):
+        self._machine._rpc_call_x(self._netns, "del_route",
+                                  self._id, dest)
+
     def update_from_slave(self):
         if_data = self._machine._rpc_call_x(self._netns, "get_if_data",
                                             self._id)

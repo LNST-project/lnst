@@ -630,6 +630,12 @@ class Device(object):
         for address in ips:
             exec_cmd("ip addr add %s dev %s" % (address, self._name))
 
+    def add_route(self, dest):
+        exec_cmd("ip route add %s dev %s" % (dest, self._name))
+
+    def del_route(self, dest):
+        exec_cmd("ip route del %s dev %s" % (dest, self._name))
+
     def set_netns(self, netns):
         self._netns = netns
         return
