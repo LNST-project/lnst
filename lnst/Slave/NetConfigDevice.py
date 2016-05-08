@@ -69,6 +69,9 @@ class NetConfigDeviceGeneric(object):
                          die_on_err=False)
         exec_cmd("ip link set %s down" % config["name"])
 
+    def set_addresses(self, ips):
+        self._dev_config["addresses"] = ips
+
     @classmethod
     def type_init(self):
         if self._modulename and self._moduleload:

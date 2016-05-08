@@ -608,6 +608,9 @@ class InterfaceAPI(object):
         self._if.configure()
         self._if.up()
 
+    def set_addresses(self, ips):
+        self._if.set_addresses(ips)
+
     def destroy(self):
         self._host._remove_iface(self)
 

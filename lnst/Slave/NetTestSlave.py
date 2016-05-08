@@ -198,6 +198,14 @@ class SlaveMethods:
             return None
         return dev.link_stats()
 
+    def set_addresses(self, if_id, ips):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is None:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        dev.set_addresses(ips)
+        return True
+
     def set_device_up(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         dev.up()

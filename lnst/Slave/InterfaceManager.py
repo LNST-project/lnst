@@ -624,6 +624,12 @@ class Device(object):
                               "tx_collsns": tx_stats[5]})
         return stats
 
+    def set_addresses(self, ips):
+        self._conf.set_addresses(ips)
+        exec_cmd("ip addr flush %s" % self._name)
+        for address in ips:
+            exec_cmd("ip addr add %s dev %s" % (address, self._name))
+
     def set_netns(self, netns):
         self._netns = netns
         return
