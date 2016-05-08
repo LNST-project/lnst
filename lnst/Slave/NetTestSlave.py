@@ -13,7 +13,7 @@ jpirko@redhat.com (Jiri Pirko)
 
 import signal
 import logging
-import os
+import os, stat
 import sys, traceback
 import datetime
 import socket
@@ -614,12 +614,25 @@ class SlaveMethods:
                 CLONE_NEWNS = 0x00020000
                 #based on ipnetns.c from the iproute2 project
                 MNT_DETACH = 0x00000002
+                MS_BIND = 4096
                 MS_SLAVE = 1<<19
                 MS_REC = 16384
-
                 libc = ctypes.CDLL(libc_name)
-                libc.unshare(CLONE_NEWNET)
+
                 #based on ipnetns.c from the iproute2 project
+                #bind to named namespace
+                netns_path = "/var/run/netns/"
+                if not os.path.exists(netns_path):
+                    os.mkdir(netns_path, stat.S_IRWXU | stat.S_IRGRP |
+                                         stat.S_IXGRP | stat.S_IROTH |
+                                         stat.S_IXOTH)
+                netns_path = netns_path + netns
+                f = os.open(netns_path, os.O_RDONLY | os.O_CREAT | os.O_EXCL, 0)
+                os.close(f)
+                libc.unshare(CLONE_NEWNET)
+                libc.mount("/proc/self/ns/net", netns_path, "none", MS_BIND, 0)
+
+                #map network sysfs to new net
                 libc.unshare(CLONE_NEWNS)
                 libc.mount("", "/", "none", MS_SLAVE | MS_REC, 0)
                 libc.umount2("/sys", MNT_DETACH)
@@ -654,6 +667,18 @@ class SlaveMethods:
             logging.debug("Network namespace %s doesn't exist." % netns)
             return False
         else:
+            MNT_DETACH = 0x00000002
+            libc_name = ctypes.util.find_library("c")
+            libc = ctypes.CDLL(libc_name)
+            netns_path = "/var/run/netns/" + netns
+
+            # Remove named namespace
+            try:
+                libc.umount2(netns_path, MNT_DETACH)
+                os.unlink(netns_path)
+            except:
+                logging.warning("Unable to remove named namespace %s." % netns_path)
+
             netns_pid = self._net_namespaces[netns]["pid"]
             os.kill(netns_pid, signal.SIGUSR1)
             os.waitpid(netns_pid, 0)
