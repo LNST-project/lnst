@@ -10,15 +10,15 @@
         <alias name="nperf_num_parallel" value="2"/>
         <alias name="mapping_file" value="2_virt_ovs_vxlan.mapping" />
         <alias name="net" value="192.168.2"/>
-        <alias name="net6" value="fc00:0:0:0"/>
         <alias name="vxlan_net" value="192.168.100"/>
+        <alias name="vxlan_net6" value="fc00:0:0:0"/>
     </define>
     <network>
         <host id="h1">
             <interfaces>
                 <eth id="if1" label="n1">
                     <addresses>
-                        <address value="{$vxlan_net}.1/24"/>
+                        <address value="{$net}.1/24"/>
                     </addresses>
                 </eth>
                 <eth id="if2" label="to_guest1"/>
@@ -38,7 +38,7 @@
                     </slaves>
                     <tunnel id="vxlan1" type="vxlan">
                         <options>
-                            <option name="option:remote_ip" value="{$vxlan_net}.2"/>
+                            <option name="option:remote_ip" value="{$net}.2"/>
                             <option name="option:key" value="flow"/>
                             <option name="ofport_request" value="10"/>
                         </options>
@@ -57,8 +57,8 @@
             <interfaces>
                 <eth id="if1" label="to_guest1">
                     <addresses>
-                        <address value="{$net}.1/24"/>
-                        <address value="{$net6}::1/64"/>
+                        <address value="{$vxlan_net}.1/24"/>
+                        <address value="{$vxlan_net6}::1/64"/>
                     </addresses>
                 </eth>
             </interfaces>
@@ -67,8 +67,8 @@
             <interfaces>
                 <eth id="if1" label="to_guest2">
                     <addresses>
-                        <address value="{$net}.2/24"/>
-                        <address value="{$net6}::2/64"/>
+                        <address value="{$vxlan_net}.2/24"/>
+                        <address value="{$vxlan_net6}::2/64"/>
                     </addresses>
                 </eth>
             </interfaces>
@@ -77,7 +77,7 @@
             <interfaces>
                 <eth id="if1" label="n1">
                     <addresses>
-                        <address value="{$vxlan_net}.2/24"/>
+                        <address value="{$net}.2/24"/>
                     </addresses>
                 </eth>
                 <eth id="if2" label="to_guest3"/>
@@ -97,7 +97,7 @@
                     </slaves>
                     <tunnel id="vxlan1" type="vxlan">
                         <options>
-                            <option name="option:remote_ip" value="{$vxlan_net}.1"/>
+                            <option name="option:remote_ip" value="{$net}.1"/>
                             <option name="option:key" value="flow"/>
                             <option name="ofport_request" value="10"/>
                         </options>
@@ -116,8 +116,8 @@
             <interfaces>
                 <eth id="if1" label="to_guest3">
                     <addresses>
-                        <address value="{$net}.3/24"/>
-                        <address value="{$net6}::3/64"/>
+                        <address value="{$vxlan_net}.3/24"/>
+                        <address value="{$vxlan_net6}::3/64"/>
                     </addresses>
                 </eth>
             </interfaces>
@@ -126,8 +126,8 @@
             <interfaces>
                 <eth id="if1" label="to_guest4">
                     <addresses>
-                        <address value="{$net}.4/24"/>
-                        <address value="{$net6}::4/64"/>
+                        <address value="{$vxlan_net}.4/24"/>
+                        <address value="{$vxlan_net6}::4/64"/>
                     </addresses>
                 </eth>
             </interfaces>

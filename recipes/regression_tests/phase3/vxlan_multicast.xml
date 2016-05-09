@@ -11,7 +11,7 @@
         <alias name="mapping_file" value="vxlan.mapping" />
         <alias name="net" value="192.168.0"/>
         <alias name="vxlan_net" value="192.168.100"/>
-        <alias name="vxlan_net6" value="fc01:0:0:0"/>
+        <alias name="vxlan_net6" value="fc00:0:0:0"/>
     </define>
     <network>
         <host id="testmachine1">
@@ -19,7 +19,6 @@
                 <eth id="eth" label="tnet">
                     <addresses>
                         <address value="{$net}.1/24" />
-                        <address value="fc00:0:0:0::1/64"/>
                     </addresses>
                 </eth>
                 <vxlan id="test_if">
@@ -42,7 +41,6 @@
                 <eth id="eth" label="tnet">
                     <addresses>
                         <address value="{$net}.2/24" />
-                        <address value="fc00:0:0:0::2/64"/>
                     </addresses>
                 </eth>
                 <vxlan id="test_if">
