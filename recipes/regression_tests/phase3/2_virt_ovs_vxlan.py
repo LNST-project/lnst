@@ -73,47 +73,47 @@ ctl.wait(15)
 #pings
 ping_opts = {"count": 100, "interval": 0.1}
 if ipv in ['ipv4', 'both']:
-    ping((guest1, g1_nic, 0),
-         (guest2, g2_nic, 0),
+    ping((guest1, g1_nic, 0, {"scope": 0}),
+         (guest2, g2_nic, 0, {"scope": 0}),
          options=ping_opts, expect="fail")
-    ping((guest1, g1_nic, 0),
-         (guest3, g3_nic, 0),
+    ping((guest1, g1_nic, 0, {"scope": 0}),
+         (guest3, g3_nic, 0, {"scope": 0}),
          options=ping_opts)
-    ping((guest1, g1_nic, 0),
-         (guest4, g4_nic, 0),
+    ping((guest1, g1_nic, 0, {"scope": 0}),
+         (guest4, g4_nic, 0, {"scope": 0}),
          options=ping_opts, expect="fail")
 
-    ping((guest2, g2_nic, 0),
-         (guest3, g3_nic, 0),
+    ping((guest2, g2_nic, 0, {"scope": 0}),
+         (guest3, g3_nic, 0, {"scope": 0}),
          options=ping_opts, expect="fail")
-    ping((guest2, g2_nic, 0),
-         (guest4, g4_nic, 0),
+    ping((guest2, g2_nic, 0, {"scope": 0}),
+         (guest4, g4_nic, 0, {"scope": 0}),
          options=ping_opts)
 
-    ping((guest3, g3_nic, 0),
-         (guest4, g4_nic, 0),
+    ping((guest3, g3_nic, 0, {"scope": 0}),
+         (guest4, g4_nic, 0, {"scope": 0}),
          options=ping_opts, expect="fail")
 
 if ipv in ['ipv6', 'both']:
-    ping6((guest1, g1_nic, 0),
-          (guest2, g2_nic, 1),
+    ping6((guest1, g1_nic, 1, {"scope": 0}),
+          (guest2, g2_nic, 1, {"scope": 0}),
           options=ping_opts, expect="fail")
-    ping6((guest1, g1_nic, 0),
-          (guest3, g3_nic, 1),
+    ping6((guest1, g1_nic, 1, {"scope": 0}),
+          (guest3, g3_nic, 1, {"scope": 0}),
           options=ping_opts)
-    ping6((guest1, g1_nic, 0),
-          (guest4, g4_nic, 1),
+    ping6((guest1, g1_nic, 1, {"scope": 0}),
+          (guest4, g4_nic, 1, {"scope": 0}),
           options=ping_opts, expect="fail")
 
-    ping6((guest2, g2_nic, 0),
-          (guest3, g3_nic, 1),
+    ping6((guest2, g2_nic, 1, {"scope": 0}),
+          (guest3, g3_nic, 1, {"scope": 0}),
           options=ping_opts, expect="fail")
-    ping6((guest2, g2_nic, 0),
-          (guest4, g4_nic, 1),
+    ping6((guest2, g2_nic, 1, {"scope": 0}),
+          (guest4, g4_nic, 1, {"scope": 0}),
           options=ping_opts)
 
-    ping6((guest3, g3_nic, 0),
-          (guest4, g4_nic, 1),
+    ping6((guest3, g3_nic, 1, {"scope": 0}),
+          (guest4, g4_nic, 1, {"scope": 0}),
           options=ping_opts, expect="fail")
 
 # if nperf_mode == "multi":
