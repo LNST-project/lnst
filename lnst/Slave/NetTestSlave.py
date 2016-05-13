@@ -898,7 +898,12 @@ class ServerHandler(ConnectionHandler):
         self._netns = None
         self._c_socket = None
 
+        self._if_manager = None
+
         self._security = lnst_config.get_section_values("security")
+
+    def set_if_manager(self, if_manager):
+        self._if_manager = if_manager
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
@@ -935,6 +940,13 @@ class ServerHandler(ConnectionHandler):
         self._c_socket[0].close()
         self.remove_connection(self._c_socket[0])
         self._c_socket = None
+
+    def check_connections(self):
+        msgs = super(ServerHandler, self).check_connections()
+        if 'netlink' not in self._connection_mapping:
+            self._if_manager.reconnect_netlink()
+            self.add_connection('netlink', self._if_manager.get_nl_socket())
+        return msgs
 
     def get_messages(self):
         messages = self.check_connections()
@@ -1018,6 +1030,8 @@ class NetTestSlave:
         logging.info("Using RPC port %d." % port)
         self._server_handler = ServerHandler(("", port))
         self._if_manager = InterfaceManager(self._server_handler)
+
+        self._server_handler.set_if_manager(self._if_manager)
 
         self._net_namespaces = {}
 
