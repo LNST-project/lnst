@@ -22,6 +22,9 @@ from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
 from pyroute2 import IPRSocket
+from pyroute2.netlink.rtnl import RTNLGRP_IPV4_IFADDR
+from pyroute2.netlink.rtnl import RTNLGRP_IPV6_IFADDR
+from pyroute2.netlink.rtnl import RTNLGRP_LINK
 try:
     from pyroute2.netlink.iproute import RTM_NEWLINK
     from pyroute2.netlink.iproute import RTM_DELLINK
@@ -36,6 +39,8 @@ except ImportError:
 class IfMgrError(Exception):
     pass
 
+NL_GROUPS = RTNLGRP_IPV4_IFADDR | RTNLGRP_IPV6_IFADDR | RTNLGRP_LINK
+
 class InterfaceManager(object):
     def __init__(self, server_handler):
         self._devices = {} #if_index to device
@@ -43,7 +48,7 @@ class InterfaceManager(object):
         self._tmp_mapping = {} #id from the ctl to newly created device
 
         self._nl_socket = IPRSocket()
-        self._nl_socket.bind()
+        self._nl_socket.bind(groups=NL_GROUPS)
 
         self.rescan_devices()
 
@@ -80,7 +85,7 @@ class InterfaceManager(object):
             self._nl_socket.close()
             self._nl_socket = None
         self._nl_socket = IPRSocket()
-        self._nl_socket.bind()
+        self._nl_socket.bind(groups=NL_GROUPS)
 
         self.rescan_devices()
 
