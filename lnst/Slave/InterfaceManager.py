@@ -82,6 +82,8 @@ class InterfaceManager(object):
         self._nl_socket = IPRSocket()
         self._nl_socket.bind()
 
+        self.rescan_devices()
+
     def get_nl_socket(self):
         return self._nl_socket
 

@@ -687,7 +687,6 @@ class SlaveMethods:
                 self._log_ctl.set_origin_name(netns)
                 self._log_ctl.set_connection(write_pipe)
 
-                self._if_manager.rescan_devices()
                 logging.debug("Created network namespace %s" % netns)
                 return True
             else:
