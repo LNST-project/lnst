@@ -64,7 +64,7 @@ def main():
 
     debug = False
     daemon = False
-    pidfile = "lnst-slave.pid"
+    pidfile = "/var/run/lnst-slave.pid"
     port = None
     coloured_output = not lnst_config.get_option("colours", "disable_colours")
     for opt, arg in opts:
