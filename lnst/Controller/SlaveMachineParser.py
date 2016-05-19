@@ -76,7 +76,7 @@ class SlaveMachineParser(XmlParser):
             return sec
 
         auth_type_tag = sec_tag.find("auth_type")
-        sec["auth_type"] = auth_type_tag.text
+        sec["auth_type"] = auth_type_tag.text.strip()
 
         auth_passwd_tag = sec_tag.find("auth_password")
         if auth_passwd_tag is not None:
