@@ -454,7 +454,7 @@ class Device(object):
     def find_addrs(self, addr_spec):
         ret = []
         for addr in self._ip_addrs:
-            if addr_spec.viewitems() <= addr.viewitems():
+            if addr_spec.items() <= addr.items():
                 ret.append(addr)
         return ret
 

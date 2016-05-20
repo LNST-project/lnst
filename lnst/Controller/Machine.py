@@ -1222,7 +1222,7 @@ class Device(object):
     def get_ip_addrs(self, selector={}):
         return [ip["addr"]
                 for ip in self._ip_addrs
-                    if selector.viewitems() <= ip.viewitems()]
+                    if selector.items() <= ip.items()]
 
     @pre_call_decorate
     def get_ip_addr(self, num, selector={}):
