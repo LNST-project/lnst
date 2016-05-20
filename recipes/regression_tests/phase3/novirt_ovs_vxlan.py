@@ -32,9 +32,10 @@ netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
+nperf_cpupin = ctl.get_alias("nperf_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
-nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
+nperf_debug = ctl.get_alias("nperf_debug")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([h1, h2], pr_user_comment)
@@ -45,23 +46,17 @@ h2_nic = h2.get_device("int0")
 h1_nic.set_mtu(mtu)
 h2_nic.set_mtu(mtu)
 
-h1.run("service irqbalance stop")
-h2.run("service irqbalance stop")
+if nperf_cpupin:
+    h1.run("service irqbalance stop")
+    h2.run("service irqbalance stop")
 
-# this will pin devices irqs to cpu #0
-for m, d in [(h1, h1_nic), (h2, h2_nic)]:
-    pin_dev_irqs(m, d, 0)
+    # this will pin devices irqs to cpu #0
+    for m, d in [(h1, h1_nic), (h2, h2_nic)]:
+        pin_dev_irqs(m, d, 0)
 
-# if nperf_mode == "multi":
-    # netperf_cli_tcp.unset_option("confidence")
-    # netperf_cli_udp.unset_option("confidence")
-    # netperf_cli_tcp6.unset_option("confidence")
-    # netperf_cli_udp6.unset_option("confidence")
-
-    # netperf_cli_tcp.update_options({"num_parallel": nperf_num_parallel})
-    # netperf_cli_udp.update_options({"num_parallel": nperf_num_parallel})
-    # netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
-    # netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
+nperf_opts = ""
+if nperf_cpupin and nperf_num_parallel == 1:
+    nperf_opts = " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
 ctl.wait(15)
 
@@ -88,7 +83,7 @@ if ipv in [ 'ipv4', 'both' ]:
                                          'kernel_release',
                                          'redhat_release'])
     result_tcp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
         result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -100,8 +95,11 @@ if ipv in [ 'ipv4', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "TCP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs},
+                                        "runs": nperf_max_runs,
+                                        "debug": nperf_debug,
+                                        "netperf_opts": nperf_opts},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -116,7 +114,7 @@ if ipv in [ 'ipv4', 'both' ]:
                                          'kernel_release',
                                          'redhat_release'])
     result_udp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
         result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -128,8 +126,11 @@ if ipv in [ 'ipv4', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "UDP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs},
+                                        "runs": nperf_max_runs,
+                                        "debug": nperf_debug,
+                                        "netperf_opts": nperf_opts},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -146,7 +147,7 @@ if ipv in [ 'ipv6', 'both' ]:
                                          'kernel_release',
                                          'redhat_release'])
     result_tcp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
         result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -158,9 +159,11 @@ if ipv in [ 'ipv6', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "TCP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
-                                        "netperf_opts" : "-6"},
+                                        "debug": nperf_debug,
+                                        "netperf_opts" : nperf_opts + "-6"},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -175,7 +178,7 @@ if ipv in [ 'ipv6', 'both' ]:
                                          'kernel_release',
                                          'redhat_release'])
     result_udp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
         result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -187,9 +190,11 @@ if ipv in [ 'ipv6', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "UDP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
-                                        "netperf_opts" : "-6"},
+                                        "debug": nperf_debug,
+                                        "netperf_opts" : nperf_opts + "-6"},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -197,5 +202,6 @@ if ipv in [ 'ipv6', 'both' ]:
     result_udp.set_comment(pr_comment)
     perf_api.save_result(result_udp)
 
-h1.run("service irqbalance start")
-h2.run("service irqbalance start")
+if nperf_cpupin:
+    h1.run("service irqbalance start")
+    h2.run("service irqbalance start")

@@ -6,8 +6,8 @@
         <alias name="nperf_reserve" value="20" />
         <alias name="nperf_confidence" value="99,5" />
         <alias name="nperf_max_runs" value="5"/>
-        <alias name="nperf_mode" value="default"/>
-        <alias name="nperf_num_parallel" value="2"/>
+        <alias name="nperf_num_parallel" value="1"/>
+        <alias name="nperf_debug" value="0"/>
         <alias name="mapping_file" value="2_virt_ovs_vxlan.mapping" />
         <alias name="net" value="192.168.2"/>
         <alias name="vxlan_net" value="192.168.100"/>

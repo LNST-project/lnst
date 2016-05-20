@@ -26,13 +26,6 @@ m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # TESTS
 # ------
 
-# offloads = ["gro", "gso", "tso", "tx", "rx"]
-# offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
-                     # [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
-                     # [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
-                     # [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
-                     # [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
-
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
@@ -41,8 +34,8 @@ nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
-nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
+nperf_debug = ctl.get_alias("nperf_debug")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
@@ -64,35 +57,13 @@ if nperf_cpupin:
     for m, d in dev_list:
         pin_dev_irqs(m, d, 0)
 
-# p_opts = "-L %s" % (test_if2.get_ip(0))
-# if nperf_cpupin and nperf_mode != "multi":
-    # p_opts += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
-
-# p_opts6 = "-L %s -6" % (test_if2.get_ip(1))
-# if nperf_cpupin and nperf_mode != "multi":
-    # p_opts6 += " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
-
-# if nperf_mode == "multi":
-    # netperf_cli_tcp.unset_option("confidence")
-    # netperf_cli_udp.unset_option("confidence")
-    # netperf_cli_tcp6.unset_option("confidence")
-    # netperf_cli_udp6.unset_option("confidence")
-
-    # netperf_cli_tcp.update_options({"num_parallel": nperf_num_parallel})
-    # netperf_cli_udp.update_options({"num_parallel": nperf_num_parallel})
-    # netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
-    # netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
+nperf_opts = ""
+if nperf_cpupin and nperf_num_parallel == 1:
+    nperf_opts = " -T%s,%s" % (nperf_cpupin, nperf_cpupin)
 
 ctl.wait(15)
 
 ping_opts = {"count": 100, "interval": 0.1}
-
-# for setting in offload_settings:
-    # dev_features = ""
-    # for offload in setting:
-        # dev_features += " %s %s" % (offload[0], offload[1])
-    # m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
-    # m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))
 
 if ipv in [ 'ipv4', 'both' ]:
     ping((m1, test_if1, 0, {"scope": 0}),
@@ -107,10 +78,8 @@ if ipv in [ 'ipv4', 'both' ]:
                                      hash_ignore=[
                                          'kernel_release',
                                          'redhat_release'])
-    # for offload in setting:
-        # result_tcp.set_parameter(offload[0], offload[1])
     result_tcp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
         result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -122,8 +91,11 @@ if ipv in [ 'ipv4', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "TCP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs},
+                                        "runs": nperf_max_runs,
+                                        "debug": nperf_debug,
+                                        "netperf_opts": nperf_opts},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -137,10 +109,8 @@ if ipv in [ 'ipv4', 'both' ]:
                                      hash_ignore=[
                                          'kernel_release',
                                          'redhat_release'])
-    # for offload in setting:
-        # result_udp.set_parameter(offload[0], offload[1])
     result_udp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
         result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -152,8 +122,11 @@ if ipv in [ 'ipv4', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "UDP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs},
+                                        "runs": nperf_max_runs,
+                                        "debug": nperf_debug,
+                                        "netperf_opts": nperf_opts},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -172,10 +145,8 @@ if ipv in [ 'ipv6', 'both' ]:
                                      hash_ignore=[
                                          'kernel_release',
                                          'redhat_release'])
-    # for offload in setting:
-        # result_tcp.set_parameter(offload[0], offload[1])
     result_tcp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
         result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -187,9 +158,11 @@ if ipv in [ 'ipv6', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "TCP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
-                                        "netperf_opts" : "-6"},
+                                        "debug": nperf_debug,
+                                        "netperf_opts" : nperf_opts + " -6"},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -203,10 +176,8 @@ if ipv in [ 'ipv6', 'both' ]:
                                      hash_ignore=[
                                          'kernel_release',
                                          'redhat_release'])
-    # for offload in setting:
-        # result_udp.set_parameter(offload[0], offload[1])
     result_udp.add_tag(product_name)
-    if nperf_mode == "multi":
+    if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
         result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
@@ -218,22 +189,17 @@ if ipv in [ 'ipv6', 'both' ]:
                            client_opts={"duration" : netperf_duration,
                                         "testname" : "UDP_STREAM",
                                         "confidence" : nperf_confidence,
+                                        "num_parallel" : nperf_num_parallel,
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
-                                        "netperf_opts" : "-6"},
+                                        "debug": nperf_debug,
+                                        "netperf_opts" : nperf_opts + "-6"},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
     netperf_result_template(result_udp, udp_res_data)
     result_udp.set_comment(pr_comment)
     perf_api.save_result(result_udp)
-
-#reset offload states
-# dev_features = ""
-# for offload in offloads:
-    # dev_features += " %s %s" % (offload, "on")
-# m1.run("ethtool -K %s %s" % (test_if1.get_devname(), dev_features))
-# m2.run("ethtool -K %s %s" % (test_if2.get_devname(), dev_features))
 
 if nperf_cpupin:
     m1.run("service irqbalance start")
