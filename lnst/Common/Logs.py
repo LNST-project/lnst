@@ -99,6 +99,7 @@ class LoggingCtl:
     recipe_log_path = ""
     slaves = {}
     transmit_handler = None
+    _id_seq = 0
 
     def __init__(self, debug=False, log_dir=None, log_subdir="", colours=True):
         #clear any previously set handlers
@@ -138,10 +139,21 @@ class LoggingCtl:
         logger.setLevel(logging.NOTSET)
         logger.addHandler(self.display_handler)
 
-    def set_recipe(self, recipe_path, clean=True, expand=""):
+    def _gen_index(self, increment=True):
+        if increment:
+            self._id_seq += 1
+        return "%02d" % self._id_seq
+
+    def set_recipe(self, recipe_path, clean=True, prepend=False, expand=""):
         recipe_name = os.path.splitext(os.path.split(recipe_path)[1])[0]
         if expand != "":
             recipe_name += "_" + expand
+        if prepend:
+            if expand == "match_1":
+                recipe_name = self._gen_index() + "_" + recipe_name
+            else:
+                recipe_name = self._gen_index(increment=False) + "_" + recipe_name
+
         self.recipe_log_path = os.path.join(self.log_folder, recipe_name)
         if clean:
             self._clean_folder(self.recipe_log_path)
