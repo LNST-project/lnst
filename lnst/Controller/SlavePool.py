@@ -65,7 +65,14 @@ class SlavePool:
                                                                dir_path))
         pool = self._pools[pool_name]
 
-        dentries = os.listdir(dir_path)
+        try:
+            dentries = os.listdir(dir_path)
+        except OSError:
+            logging.warn("Directory '%s' does not exist for pool '%s'" %
+                                                                  (dir_path,
+                                                                   pool_name))
+            return
+
         for dirent in dentries:
             m_id, m = self.add_file(pool_name, dir_path, dirent)
             if m_id != None and m != None:
