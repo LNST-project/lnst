@@ -57,6 +57,9 @@ class SlavePool:
         self._mapper.set_pools(self._pools)
         logging.info("Finished loading pools.")
 
+    def get_pools(self):
+        return self._pools
+
     def add_dir(self, pool_name, dir_path):
         logging.info("Processing pool '%s', directory '%s'" % (pool_name,
                                                                dir_path))
