@@ -45,9 +45,6 @@ Toggle emitting debugging messages.
 .B \-\-dump\-config
 Dumps the join of all loaded configuration files on stdout and exits
 .TP
-.B \-\-dump\-pools
-Dumps the available machine pools and exits
-.TP
 .B \-h, \-\-help
 Display usage of this command.
 .TP
@@ -86,6 +83,9 @@ Run each recipe with every pool match possible
 .BI "\-x, \-\-result" =file
 Write results in XML format to the specified
 .IR file .
+.TP
+.B \-v, \-\-verbose
+Extends output of list_pools action
 .PP
 .I RECIPE
 can be either a LNST recipe file or a directory containing recipe files.
@@ -99,8 +99,9 @@ bellow).
 can be one of
 .BR "run",
 .BR "config_only",
-.BR "deconfigure" ", and"
-.BR "match_setup".
+.BR "deconfigure" ",
+.BR "match_setup",\ and
+.BR "list_pools".
 
 When it is set to
 .BR "run",
@@ -121,6 +122,17 @@ In case of
 the configuration from a previous config_only run will be removed, including
 dynamically created devices on virtual machines. There is no need to specify a
 recipe for this action.
+
+In case of
+.BR "list_pools",
+lnst-ctl looks up all the pools entered in configs and dumps info about them.
+When used without
+.B \-v
+or
+.B \-\-verbose
+option, only pool names and paths are printed.
+With verbose option, all viable slave machine configs are printed in more
+human readable format.
 
 At last, when the
 .I ACTION
