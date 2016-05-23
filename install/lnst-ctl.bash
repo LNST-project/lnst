@@ -14,15 +14,15 @@ _list_has_item()
 
 _lnst_ctl()
 {
-    local SHORT_OPTS="-a -A -c -d -h -m -o -p -x"
+    local SHORT_OPTS="-a -A -c -d -h -m -o -p -x -v"
     local LONG_OPTS="--define-alias --override-alias --config --debug \
                      --help --no-colours --disable-pool-checks \
-                     --packet-capture --result"
+                     --packet-capture --result --verbose"
     local REQUIRE_ARG="-a --define-alias \
                        -A --override-alias \
                        -c --config \
                        -x --result"
-    local ACTIONS="config_only match_setup run"
+    local ACTIONS="config_only match_setup run list_pools"
 
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
