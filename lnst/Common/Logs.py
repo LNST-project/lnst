@@ -139,6 +139,9 @@ class LoggingCtl:
         logger.setLevel(logging.NOTSET)
         logger.addHandler(self.display_handler)
 
+    def unset_formatter(self):
+        self.display_handler.setFormatter(None)
+
     def _gen_index(self, increment=True):
         if increment:
             self._id_seq += 1
