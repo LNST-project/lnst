@@ -72,7 +72,9 @@ class SlavePool:
                 pool[m_id] = m
 
         if len(pool) == 0:
-            logging.warn("No machines found in this pool")
+            logging.warn("No machines found in pool '%s', directory '%s'" %
+                                                                   (pool_name,
+                                                                    dir_path))
 
         max_len = 0
         for m_id in pool.keys():
