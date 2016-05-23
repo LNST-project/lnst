@@ -24,6 +24,7 @@ from lnst.Common.Utils import mkdir_p
 from lnst.Controller.NetTestController import NetTestController, NetTestError
 from lnst.Controller.NetTestController import NoMatchError
 from lnst.Controller.NetTestResultSerializer import NetTestResultSerializer
+from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.XmlProcessing import XmlProcessingError
 
 RETVAL_PASS = 0
@@ -35,7 +36,8 @@ def usage(retval=0):
     """
     print "Usage: %s [OPTIONS...] ACTION [RECIPES...]" % sys.argv[0]
     print ""
-    print "ACTION = [ run | config_only | deconfigure | match_setup ]"
+    print "ACTION = [ run | config_only | deconfigure | match_setup | " \
+                     "list_pools]"
     print ""
     print "OPTIONS"
     print "  -A, --override-alias name=value define top-level alias that " \
@@ -47,6 +49,8 @@ def usage(retval=0):
               "configuration files on stdout and exits"
     print "      --dump-pools                dumps the available machine " \
               "pools and exits"
+    print "  -v, --verbose                   verbose version of list_pools " \
+              "command"
     print "  -h, --help                      print this message"
     print "  -m, --no-colours                disable coloured terminal output"
     print "  -o, --disable-pool-checks       don't check the availability of " \
@@ -66,6 +70,52 @@ def usage(retval=0):
               "pool match possible"
     print "  -x, --result=FILE               file to write xml_result"
     sys.exit(retval)
+
+def list_pools(restrict_pools, verbose):
+    conf_pools = lnst_config.get_pools()
+    pools = {}
+    if len(restrict_pools) > 0:
+        for pool_name in restrict_pools:
+            if pool_name in conf_pools:
+                pools[pool_name] = conf_pools[pool_name]
+            elif len(restrict_pools) == 1 and os.path.isdir(pool_name):
+                pools = {"cmd_line_pool": pool_name}
+            else:
+                raise NetTestError("Pool %s does not exist!" % pool_name)
+    else:
+        pools = conf_pools
+
+    sp = SlavePool(pools, pool_checks=False)
+
+    out = ""
+    # iterate over all pools
+    sp_pools = sp.get_pools()
+    for pool_name, pool_content in sp_pools.iteritems():
+        out += "Pool: %s (%s)\n" % (pool_name, pools[pool_name])
+        # verbose output
+        if verbose:
+        # iterate over all slave machine cfgs
+            for filename, pool in pool_content.iteritems():
+                # print in human-readable format
+                out += 3*" " + filename + ".xml\n"
+                out += 5*" " + "params:\n"
+                for key in pool['params']:
+                    out += 7*" " + key + " : " + pool['params'][key] + "\n"
+                if pool['interfaces']:
+                    out += 5*" " + "interfaces:\n"
+                for key in sorted(pool['interfaces']):
+                    out += 7*" " + "id : " + key + "\tlabel : " +\
+                           pool['interfaces'][key]['network'] + "\n"
+                    for param in pool['interfaces'][key]['params']:
+                        out += 9*" " + param + " : " +\
+                               pool['interfaces'][key]['params'][param] + "\n"
+                out += "\n"
+    # print wihout newlines on the end of string
+    if verbose:
+        print out[:-2]
+    else:
+        print out[:-1]
+
 
 def store_alias(alias_def, aliases_dict):
     try:
@@ -190,7 +240,7 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "A:a:c:dhmoprs:t:ux:",
+            "A:a:c:dhmoprs:t:ux:v",
             [
              "override_alias=",
              "define_alias=",
@@ -208,6 +258,7 @@ def main():
              "result=",
              "pools=",
              "dump-pools"
+             "verbose"
             ]
         )
     except getopt.GetoptError as err:
@@ -248,6 +299,7 @@ def main():
     multi_match = False
     dump_config = False
     dump_pools = False
+    verbose = False
     pools = []
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
@@ -286,6 +338,8 @@ def main():
             pools.extend(arg.split(","))
         elif opt in ("--dump-pools"):
             dump_pools = True
+        elif opt in ("-v", "--verbose"):
+            verbose= True
 
     if xslt_url != None:
         lnst_config.set_option("environment", "xslt_url", xslt_url)
@@ -316,12 +370,18 @@ def main():
 
     action = args[0]
     recipes = args[1:]
-    if not action in ['run', 'config_only', 'deconfigure', 'match_setup']:
+    if not action in ['run', 'config_only', 'deconfigure', 'match_setup',
+                      'list_pools']:
         logging.error("Action '%s' not recognised" % action)
         usage(RETVAL_ERR)
     if action == 'deconfigure':
         NetTestController.remove_saved_machine_config()
         return 0
+    elif action == 'list_pools':
+        log_ctl.unset_formatter()
+        logging.disable(logging.INFO)
+        list_pools(pools, verbose)
+        return RETVAL_PASS
 
     if recipes == []:
         logging.error("No recipe specified!")
