@@ -344,21 +344,21 @@ class Netperf(TestGeneric):
     def _pretty_rate(self, rate, unit=None):
         pretty_rate = {}
         if unit is None:
-            if rate < 1024:
+            if rate < 1000:
                 pretty_rate["unit"] = "bits/sec"
                 pretty_rate["rate"] = rate
-            elif rate < 1024 * 1024:
-                pretty_rate["unit"] = "Kbits/sec"
-                pretty_rate["rate"] = rate / 1024
-            elif rate < 1024 * 1024 * 1024:
-                pretty_rate["unit"] = "Mbits/sec"
-                pretty_rate["rate"] = rate / (1024 * 1024)
-            elif rate < 1024 * 1024 * 1024 * 1024:
-                pretty_rate["unit"] = "Gbits/sec"
-                pretty_rate["rate"] = rate / (1024 * 1024 * 1024)
-            elif rate < 1024 * 1024 * 1024 * 1024 * 1024:
+            elif rate < 1000 * 1000:
+                pretty_rate["unit"] = "kbits/sec"
+                pretty_rate["rate"] = rate / 1000
+            elif rate < 1000 * 1000 * 1000:
+                pretty_rate["unit"] = "mbits/sec"
+                pretty_rate["rate"] = rate / (1000 * 1000)
+            elif rate < 1000 * 1000 * 1000 * 1000:
+                pretty_rate["unit"] = "gbits/sec"
+                pretty_rate["rate"] = rate / (1000 * 1000 * 1000)
+            elif rate < 1000 * 1000 * 1000 * 1000 * 1000:
                 pretty_rate["unit"] = "tbits/sec"
-                pretty_rate["rate"] = rate / (1024 * 1024 * 1024 * 1024)
+                pretty_rate["rate"] = rate / (1000 * 1000 * 1000 * 1000)
         else:
             if unit == "bits/sec":
                 pretty_rate["unit"] = "bits/sec"
@@ -366,15 +366,27 @@ class Netperf(TestGeneric):
             elif unit == "Kbits/sec":
                 pretty_rate["unit"] = "Kbits/sec"
                 pretty_rate["rate"] = rate / 1024
+            elif unit == "kbits/sec":
+                pretty_rate["unit"] = "kbits/sec"
+                pretty_rate["rate"] = rate / 1000
             elif unit == "Mbits/sec":
                 pretty_rate["unit"] = "Mbits/sec"
                 pretty_rate["rate"] = rate / (1024 * 1024)
+            elif unit == "mbits/sec":
+                pretty_rate["unit"] = "mbits/sec"
+                pretty_rate["rate"] = rate / (1000 * 1000)
             elif unit == "Gbits/sec":
                 pretty_rate["unit"] = "Gbits/sec"
                 pretty_rate["rate"] = rate / (1024 * 1024 * 1024)
+            elif unit == "gbits/sec":
+                pretty_rate["unit"] = "gbits/sec"
+                pretty_rate["rate"] = rate / (1000 * 1000 * 1000)
             elif unit == "Tbits/sec":
                 pretty_rate["unit"] = "Tbits/sec"
-                pretty_rate["rate"] = rate / (1024 * 1024 * 1024)
+                pretty_rate["rate"] = rate / (1024 * 1024 * 1024 * 1024)
+            elif unit == "tbits/sec":
+                pretty_rate["unit"] = "tbits/sec"
+                pretty_rate["rate"] = rate / (1000 * 1000 * 1000 * 1000)
 
         return pretty_rate
 
