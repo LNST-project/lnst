@@ -60,5 +60,5 @@
         </host>
     </network>
 
-    <task python="vxlan_test.py" />
+    <task python="vxlan_remote.py" />
 </lnstrecipe>
