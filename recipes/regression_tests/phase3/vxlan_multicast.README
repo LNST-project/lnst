@@ -12,31 +12,51 @@ Topology:
           |                                  |
         +-+--+                             +-+--+
 +-------|eth1|------+              +-------|eth1|------+
-|       +-+--+      |              |       +-+--+      |
-|         |         |              |         |         |
-|      +-----+      |              |      +-----+      |
-|      |vxlan|      |              |      |vxlan|      |
-|      +-----+      |              |      +-----+      |
-|                   |              |                   |
-|       host1       |              |       host2       |
-|                   |              |                   |
-|                   |              |                   |
-|                   |              |                   |
-+-------------------+              +-------------------+
+|host1  +---++      |              |host2  +-+--+      |
+|           |       |              |         |         |
+|           |       |              |      +-----+      |
+|+-----+  +-+-+     |              |      |vxlan|      |
+||vxlan|--+br0|     |              |      +-----+      |
+|+-----+  +-+-+     |              |                   |
+|           |       |              |                   |
+|           |       |              |                   |
+|           |       |              |                   |
+|         +-+-+     |              |                   |
++---------|tap|-----+              +-------------------+
+          +-+-+
+            |
+          +-+--+
++---------|eth1|----+
+|guest1   +-+--+    |
+|           |       |
+|        +--+--+    |
+|        |vxlan|    |
+|        +-----+    |
+|                   |
++---------+---------+
 
-Number of hosts: 2
+Number of hosts: 3
 Host #1 description:
-    One ethernet device configured with ip address {$net}.1/24
-    VXLAN interface on top of the ethernet interface using group_ip 239.1.1.1
+    One ethernet device
+    Tap device connecting to a guest machine
+    Bridge br0 enslaving eth1 and tap devices, configured with ip address
+        {$net}.1/24
+    VXLAN interface on top of the bridge interface using group_ip 239.1.1.1
         configured with ip addresses:
         {$vxlan_net}.1/24
         {$vxlan_net6}::1/64
-Host #2 description:
+Guest #1 description:
     One ethernet device configured with ip address {$net}.2/24
     VXLAN interface on top of the ethernet interface using group_ip 239.1.1.1
         configured with ip addresses:
         {$vxlan_net}.2/24
         {$vxlan_net6}::2/64
+Host #2 description:
+    One ethernet device configured with ip address {$net}.3/24
+    VXLAN interface on top of the ethernet interface using group_ip 239.1.1.1
+        configured with ip addresses:
+        {$vxlan_net}.3/24
+        {$vxlan_net6}::3/64
 Test name:
     vxlan_test.py
 Test description:
@@ -44,10 +64,22 @@ Test description:
       + count: 100
       + interval: 0.1s
       + host1.vxlan -> host2.vxlan expecting PASS
+      + host1.vxlan -> guest1.vxlan expecting PASS
+      + host2.vxlan -> host1.vxlan expecting PASS
+      + host2.vxlan -> guest1.vxlan expecting PASS
+      + guest1.vxlan -> host1.vxlan expecting PASS
+      + guest1.vxlan -> host2.vxlan expecting PASS
+      All pings are executed in parallel
     Ping6:
       + count: 100
       + interval: 0.1s
       + host1.vxlan -> host2.vxlan expecting PASS
+      + host1.vxlan -> guest1.vxlan expecting PASS
+      + host2.vxlan -> host1.vxlan expecting PASS
+      + host2.vxlan -> guest1.vxlan expecting PASS
+      + guest1.vxlan -> host1.vxlan expecting PASS
+      + guest1.vxlan -> host2.vxlan expecting PASS
+      All pings are executed in parallel
     Netperf:
       + duration: 60s, repeated 5 times to calculate confidence
       + host1.vxlan -> host2.vxlan TCP_STREAM ipv4

@@ -16,18 +16,24 @@
     <network>
         <host id="testmachine1">
             <interfaces>
-                <eth id="eth" label="tnet">
+                <eth id="eth1" label="tnet"/>
+                <eth id="eth2" label="to_guest1"/>
+                <bridge id="br0">
+                    <slaves>
+                        <slave id="eth1"/>
+                        <slave id="eth2"/>
+                    </slaves>
                     <addresses>
                         <address value="{$net}.1/24" />
                     </addresses>
-                </eth>
+                </bridge>
                 <vxlan id="test_if">
                     <options>
                         <option name="id" value="1"/>
                         <option name="group_ip" value="239.1.1.1"/>
                     </options>
                     <slaves>
-                        <slave id="eth"/>
+                        <slave id="br0"/>
                     </slaves>
                     <addresses>
                         <address value="{$vxlan_net}.1/24" />
@@ -36,9 +42,9 @@
                 </vxlan>
             </interfaces>
         </host>
-        <host id="testmachine2">
+        <host id="guest1">
             <interfaces>
-                <eth id="eth" label="tnet">
+                <eth id="eth1" label="to_guest1">
                     <addresses>
                         <address value="{$net}.2/24" />
                     </addresses>
@@ -49,7 +55,7 @@
                         <option name="group_ip" value="239.1.1.1"/>
                     </options>
                     <slaves>
-                        <slave id="eth"/>
+                        <slave id="eth1"/>
                     </slaves>
                     <addresses>
                         <address value="{$vxlan_net}.2/24" />
@@ -58,7 +64,29 @@
                 </vxlan>
             </interfaces>
         </host>
+        <host id="testmachine2">
+            <interfaces>
+                <eth id="eth1" label="tnet">
+                    <addresses>
+                        <address value="{$net}.3/24" />
+                    </addresses>
+                </eth>
+                <vxlan id="test_if">
+                    <options>
+                        <option name="id" value="1"/>
+                        <option name="group_ip" value="239.1.1.1"/>
+                    </options>
+                    <slaves>
+                        <slave id="eth1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$vxlan_net}.3/24" />
+                        <address value="{$vxlan_net6}::3/64" />
+                    </addresses>
+                </vxlan>
+            </interfaces>
+        </host>
     </network>
 
-    <task python="vxlan_test.py" />
+    <task python="vxlan_multicast_test.py" />
 </lnstrecipe>
