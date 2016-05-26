@@ -12,7 +12,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 from lnst.Controller.Task import ctl
 
-def ping(src, dst, options={}, expect="pass"):
+def ping(src, dst, options={}, expect="pass", bg=False):
     """ Perform an IcmpPing from source to destination
 
     Keyword arguments:
@@ -56,9 +56,9 @@ def ping(src, dst, options={}, expect="pass"):
     ping_mod = ctl.get_module("IcmpPing",
                               options = options)
 
-    return h1.run(ping_mod, expect=expect)
+    return h1.run(ping_mod, expect=expect, bg=bg)
 
-def ping6(src, dst, options={}, expect="pass"):
+def ping6(src, dst, options={}, expect="pass", bg=False):
     """ Perform an Icmp6Ping from source to destination
 
     Keyword arguments:
@@ -102,7 +102,7 @@ def ping6(src, dst, options={}, expect="pass"):
     ping_mod = ctl.get_module("Icmp6Ping",
                               options = options)
 
-    return h1.run(ping_mod, expect=expect)
+    return h1.run(ping_mod, expect=expect, bg=bg)
 
 def netperf(src, dst, server_opts={}, client_opts={}, baseline={}, timeout=60):
     """ Start a Netserver on the given machine and ip address
