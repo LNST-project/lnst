@@ -44,6 +44,8 @@ def usage(retval=0):
               "will override any other definitions in the recipe"
     print "  -a, --define-alias name=value   define top-level alias"
     print "  -c, --config=FILE               load additional config file"
+    print "  -C, --config-override=FILE      reset config defaults and load " \
+              "the following config file"
     print "  -d, --debug                     emit debugging messages"
     print "      --dump-config               dumps the join of all loaded " \
               "configuration files on stdout and exits"
@@ -238,11 +240,12 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "A:a:c:dhmoprs:t:ux:v",
+            "A:a:c:C:dhmoprs:t:ux:v",
             [
              "override_alias=",
              "define_alias=",
              "config=",
+             "config-override=",
              "debug",
              "dump-config",
              "help",
@@ -307,6 +310,14 @@ def main():
                 print "File '%s' doesn't exist!" % arg
                 usage(RETVAL_ERR)
             else:
+                lnst_config.load_config(arg)
+        elif opt in ("-C", "--config-override"):
+            if not os.path.isfile(arg):
+                print "File '%s' doesn't exist!" % arg
+                usage(RETVAL_ERR)
+            else:
+                print >> sys.stderr, "Reloading config defaults!"
+                lnst_config.controller_init()
                 lnst_config.load_config(arg)
         elif opt in ("-x", "--result"):
             result_path = arg
