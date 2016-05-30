@@ -61,7 +61,7 @@ function get_pool_dirs
     if [ "$use_user_conf" = "true" ]; then
         command lnst-ctl --dump-pools 2>/dev/null | cut -d = -f2
     else
-        command lnst-ctl -c $repo/lnst-ctl.conf --dump-pools 2>/dev/null |
+        command lnst-ctl -C $repo/lnst-ctl.conf --dump-pools 2>/dev/null |
                 cut -d = -f2
     fi
 }
