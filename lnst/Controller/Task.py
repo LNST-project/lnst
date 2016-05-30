@@ -254,6 +254,8 @@ class HostAPI(object):
             if arg == "bg" and argval == True:
                 self._bg_id_seq += 1
                 cmd["bg_id"] = bg_id = self._bg_id_seq
+            elif arg == "bg" and argval == False:
+                continue
             elif arg == "expect":
                 if str(argval) not in ["pass", "fail"]:
                     msg = "Unrecognised value of the expect attribute (%s)." \
