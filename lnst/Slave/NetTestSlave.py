@@ -97,6 +97,7 @@ class SlaveMethods:
         r_release, _ = exec_cmd("cat /etc/redhat-release", False, False, False)
         slave_desc["kernel_release"] = k_release.strip()
         slave_desc["redhat_release"] = r_release.strip()
+        slave_desc["lnst_version"] = lnst_config.version
 
         return ("hello", slave_desc)
 
