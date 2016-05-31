@@ -247,6 +247,22 @@ class Machine(object):
                   "to machine %s, handshake failed!" % hostname
             raise MachineError(msg)
 
+        slave_version = slave_desc["lnst_version"]
+        slave_is_git = self.is_git_version(slave_version)
+        ctl_version = lnst_config.version
+        ctl_is_git = self.is_git_version(ctl_version)
+        if slave_version != ctl_version:
+            if ctl_is_git and slave_is_git:
+                msg = "Controller and Slave '%s' git versions are different"\
+                                                                    % hostname
+                logging.warning(len(msg)*"=")
+                logging.warning(msg)
+                logging.warning(len(msg)*"=")
+            else:
+                msg = "Controller and Slave '%s' versions are not compatible!"\
+                                                                    % hostname
+                raise MachineError(msg)
+
         self._slave_desc = slave_desc
 
         devices = self._rpc_call("get_devices")
@@ -257,6 +273,13 @@ class Machine(object):
             iface.initialize()
 
         self._configured = True
+
+    def is_git_version(self, version):
+        try:
+            int(version)
+            return False
+        except ValueError:
+            return True
 
     def is_configured(self):
         """ Test if the machine was configured """
