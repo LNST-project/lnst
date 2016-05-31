@@ -13,11 +13,14 @@ olichtne@redhat.com (Ondrej Lichtner)
 import os
 import sys
 import re
+import subprocess
 from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_mac_address
 from lnst.Common.Colours import get_preset_conf
 
 DefaultRPCPort = 9999
+
+LNSTMajorVersion = '11'
 
 class ConfigError(Exception):
     pass
@@ -28,6 +31,21 @@ class Config():
 
     def __init__(self):
         self._options = dict()
+        self.version = self._get_version()
+
+    def _get_version(self):
+        # Check if I'm in git
+        try:
+            cwd = os.getcwd()
+            abspath = os.path.abspath(__file__)
+            dname = os.path.dirname(abspath)
+            os.chdir(dname)
+            head = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+            return head
+        except subprocess.CalledProcessError:
+            return LNSTMajorVersion
+        finally:
+            os.chdir(cwd)
 
     def controller_init(self):
         self._options['environment'] = dict()
