@@ -14,6 +14,9 @@
     </define>
     <network>
         <host id="host1">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
             <interfaces>
                 <eth id="nic" label="to_switch"/>
                 <eth id="tap" label="to_guest"/>
@@ -44,6 +47,9 @@
             </interfaces>
         </host>
         <host id="host2">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
             <interfaces>
                 <eth id="nic" label="to_switch">
                 </eth>
