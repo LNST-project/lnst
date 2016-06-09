@@ -100,15 +100,16 @@ def list_pools(restrict_pools, verbose):
                 out += 3*" " + filename + ".xml\n"
                 out += 5*" " + "params:\n"
                 for key in pool['params']:
-                    out += 7*" " + key + " : " + pool['params'][key] + "\n"
+                    out += 7*" " + key + " : " +\
+                            str(pool['params'][key]) + "\n"
                 if pool['interfaces']:
                     out += 5*" " + "interfaces:\n"
                 for key in sorted(pool['interfaces']):
                     out += 7*" " + "id : " + key + "\tlabel : " +\
-                           pool['interfaces'][key]['network'] + "\n"
+                           str(pool['interfaces'][key]['network']) + "\n"
                     for param in pool['interfaces'][key]['params']:
                         out += 9*" " + param + " : " +\
-                               pool['interfaces'][key]['params'][param] + "\n"
+                           str(pool['interfaces'][key]['params'][param]) + "\n"
                 out += "\n"
     # print wihout newlines on the end of string
     if verbose:
