@@ -40,7 +40,7 @@ def get_slave_options(netdev, slave_id):
     try:
         options = netdev["slave_options"][slave_id]
     except KeyError:
-        return None
+        return []
     return options
 
 def get_netem_option(netem_tag, netem_name, opt_name):
