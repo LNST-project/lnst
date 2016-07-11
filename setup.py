@@ -23,7 +23,7 @@ import gzip
 import os
 from time import gmtime, strftime
 from distutils.core import setup
-from lnst.Common.Config import LNSTMajorVersion
+from lnst.Common.Version import LNSTMajorVersion
 
 def process_template(template_path, values):
     template_name_re = "\.in$"
