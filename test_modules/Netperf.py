@@ -474,6 +474,17 @@ class Netperf(TestGeneric):
         rate_pretty = self._pretty_rate(rate)
         rate_dev_pretty = self._pretty_rate(rate_deviation, unit=rate_pretty["unit"])
 
+        if rv != 0 and self._runs == 1:
+            res_data["msg"] = "Could not get performance throughput!"
+            logging.info(res_data["msg"])
+            return (False, res_data)
+        elif rv != 0 and self._runs > 1:
+            res_data["msg"] = "At least one of the Netperf runs failed, "\
+                              "check the logs and result data for more "\
+                              "information."
+            logging.info(res_data["msg"])
+            return (False, res_data)
+
         res_val = False
         if self._max_deviation is not None:
             if self._max_deviation["type"] == "percent":
@@ -517,6 +528,7 @@ class Netperf(TestGeneric):
                                    threshold_pretty["rate"],
                                    threshold_dev_pretty["rate"],
                                    threshold_pretty["unit"])
+                return (res_val, res_data)
             else:
                 res_val = True
                 res_data["msg"] = "Measured rate %.2f +-%.2f %s is higher "\
@@ -527,6 +539,7 @@ class Netperf(TestGeneric):
                                    threshold_pretty["rate"],
                                    threshold_dev_pretty["rate"],
                                    threshold_pretty["unit"])
+                return (res_val, res_data)
         else:
             if rate > 0.0:
                 res_val = True
@@ -536,17 +549,6 @@ class Netperf(TestGeneric):
                                                 (rate_pretty["rate"],
                                                  rate_dev_pretty["rate"],
                                                  rate_pretty["unit"])
-
-        if rv != 0 and self._runs == 1:
-            res_data["msg"] = "Could not get performance throughput!"
-            logging.info(res_data["msg"])
-            return (False, res_data)
-        elif rv != 0 and self._runs > 1:
-            res_data["msg"] = "At least one of the Netperf runs failed, "\
-                              "check the logs and result data for more "\
-                              "information."
-            logging.info(res_data["msg"])
-            return (False, res_data)
         return (res_val, res_data)
 
     def run(self):
