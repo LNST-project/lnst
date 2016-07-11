@@ -43,6 +43,7 @@ nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
+nperf_max_dev = ctl.get_alias("nperf_max_dev")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([h1, g1, h2], pr_user_comment)
@@ -108,7 +109,8 @@ netperf_cli_tcp = ctl.get_module("Netperf",
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts,
-                                      "debug" : nperf_debug
+                                      "debug" : nperf_debug,
+                                      "max_deviation" : nperf_max_dev
                                   })
 
 netperf_cli_udp = ctl.get_module("Netperf",
@@ -121,7 +123,8 @@ netperf_cli_udp = ctl.get_module("Netperf",
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts,
-                                      "debug" : nperf_debug
+                                      "debug" : nperf_debug,
+                                      "max_deviation" : nperf_max_dev
                                   })
 
 netperf_cli_tcp6 = ctl.get_module("Netperf",
@@ -135,7 +138,8 @@ netperf_cli_tcp6 = ctl.get_module("Netperf",
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts6,
-                                      "debug" : nperf_debug
+                                      "debug" : nperf_debug,
+                                      "max_deviation" : nperf_max_dev
                                   })
 
 netperf_cli_udp6 = ctl.get_module("Netperf",
@@ -149,7 +153,8 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "cpu_util" : nperf_cpu_util,
                                       "runs": nperf_max_runs,
                                       "netperf_opts" : p_opts6,
-                                      "debug" : nperf_debug
+                                      "debug" : nperf_debug,
+                                      "max_deviation" : nperf_max_dev
                                   })
 
 if nperf_mode == "multi":

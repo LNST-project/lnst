@@ -37,6 +37,7 @@ nperf_cpupin = ctl.get_alias("nperf_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
+nperf_max_dev = ctl.get_alias("nperf_max_dev")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
@@ -125,6 +126,7 @@ if ipv in [ 'ipv4', 'both' ]:
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
                                         "debug": nperf_debug,
+                                        "max_deviation": nperf_max_dev,
                                         "netperf_opts": nperf_opts},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
@@ -160,6 +162,7 @@ if ipv in [ 'ipv4', 'both' ]:
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
                                         "debug": nperf_debug,
+                                        "max_deviation": nperf_max_dev,
                                         "netperf_opts": nperf_opts},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
@@ -196,6 +199,7 @@ if ipv in [ 'ipv6', 'both' ]:
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
                                         "debug": nperf_debug,
+                                        "max_deviation": nperf_max_dev,
                                         "netperf_opts" : nperf_opts + " -6"},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
@@ -231,6 +235,7 @@ if ipv in [ 'ipv6', 'both' ]:
                                         "cpu_util" : nperf_cpu_util,
                                         "runs": nperf_max_runs,
                                         "debug": nperf_debug,
+                                        "max_deviation": nperf_max_dev,
                                         "netperf_opts" : nperf_opts + "-6"},
                            baseline = baseline,
                            timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
