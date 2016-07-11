@@ -56,6 +56,9 @@ class Netperf(TestGeneric):
         else:
             self._threshold_interval = None
 
+        self._max_deviation = self._parse_max_deviation(
+                                self.get_opt("max_deviation", default=None))
+
     def _is_omni(self):
         return self._testname in self.omni_tests
 
@@ -313,6 +316,21 @@ class Netperf(TestGeneric):
         return {"rate": threshold_rate,
                 "unit": threshold_unit_type}
 
+    def _parse_max_deviation(self, deviation):
+        if deviation is None:
+            return None
+        percentual_deviation = r"(\d+(.\d+)?)\s*%"
+        match = re.match(percentual_deviation, deviation)
+        if match:
+            return {"type": "percent",
+                    "value": float(match.group(1))}
+        else:
+            val = self._parse_threshold(deviation)
+            if val is not None:
+                return {"type": "absolute",
+                        "value": val}
+        return None
+
     def _sum_results(self, first, second):
         result = {}
 
@@ -457,6 +475,30 @@ class Netperf(TestGeneric):
         rate_dev_pretty = self._pretty_rate(rate_deviation, unit=rate_pretty["unit"])
 
         res_val = False
+        if self._max_deviation is not None:
+            if self._max_deviation["type"] == "percent":
+                percentual_deviation = (rate_deviation / rate) * 100
+                if percentual_deviation > self._max_deviation["value"]:
+                    res_val = False
+                    res_data["msg"] = "Measured rate %.2f +-%.2f %s has bigger "\
+                                      "deviation than allowed (+-%.2f %%)" %\
+                                      (rate_pretty["rate"],
+                                       rate_dev_pretty["rate"],
+                                       rate_pretty["unit"],
+                                       self._max_deviation["value"])
+                    return (res_val, res_data)
+            elif self._max_deviation["type"] == "absolute":
+                if rate_deviation > self._max_deviation["value"]["rate"]:
+                    pretty_deviation = self._pretty_rate(self._max_deviation["value"]["rate"])
+                    res_val = False
+                    res_data["msg"] = "Measured rate %.2f +-%.2f %s has bigger "\
+                                      "deviation than allowed (+-%.2f %s)" %\
+                                      (rate_pretty["rate"],
+                                       rate_dev_pretty["rate"],
+                                       rate_pretty["unit"],
+                                       pretty_deviation["rate"],
+                                       pretty_deviation["unit"])
+                    return (res_val, res_data)
         if self._threshold_interval is not None:
             result_interval = (rate - rate_deviation,
                                rate + rate_deviation)
