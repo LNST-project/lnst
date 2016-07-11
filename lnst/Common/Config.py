@@ -39,7 +39,9 @@ class Config():
             abspath = os.path.abspath(__file__)
             dname = os.path.dirname(abspath)
             os.chdir(dname)
-            head = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+            with open(os.devnull, 'w') as null:
+                head = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                                               stderr=null).strip()
             return head
         except subprocess.CalledProcessError:
             return LNSTMajorVersion
