@@ -21,16 +21,16 @@
                         <address value="{$net}.1/24"/>
                     </addresses>
                 </eth>
-                <eth id="if2" label="to_guest1"/>
-                <eth id="if3" label="to_guest2"/>
+                <eth id="tap1" label="to_guest1"/>
+                <eth id="tap2" label="to_guest2"/>
                 <ovs_bridge id="ovs1">
                     <slaves>
-                        <slave id="if2">
+                        <slave id="tap1">
                             <options>
                                 <option name="ofport_request" value="5"/>
                             </options>
                         </slave>
-                        <slave id="if3">
+                        <slave id="tap2">
                             <options>
                                 <option name="ofport_request" value="6"/>
                             </options>
@@ -80,16 +80,16 @@
                         <address value="{$net}.2/24"/>
                     </addresses>
                 </eth>
-                <eth id="if2" label="to_guest3"/>
-                <eth id="if3" label="to_guest4"/>
+                <eth id="tap1" label="to_guest3"/>
+                <eth id="tap2" label="to_guest4"/>
                 <ovs_bridge id="ovs2">
                     <slaves>
-                        <slave id="if2">
+                        <slave id="tap1">
                             <options>
                                 <option name="ofport_request" value="5"/>
                             </options>
                         </slave>
-                        <slave id="if3">
+                        <slave id="tap2">
                             <options>
                                 <option name="ofport_request" value="6"/>
                             </options>

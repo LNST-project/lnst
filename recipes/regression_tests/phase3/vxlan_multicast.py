@@ -54,7 +54,7 @@ if nperf_cpupin:
     g1.run("service irqbalance stop")
 
     m1_phy1 = m1.get_interface("eth1")
-    m1_phy2 = m1.get_interface("eth2")
+    m1_phy2 = m1.get_interface("tap1")
     m2_phy1 = m2.get_interface("eth1")
     g1_phy1 = g1.get_interface("eth1")
     dev_list = [(m1, m1_phy1), (m1, m1_phy2), (m2, m2_phy1), (g1, g1_phy1)]
@@ -102,8 +102,12 @@ if ipv in [ 'ipv4', 'both' ]:
     result_tcp = perf_api.new_result("tcp_ipv4_id",
                                      "tcp_ipv4_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                         r'guest\d+\.hostname',
+                                         r'guest\d+\.interface_eth\d+\.hwaddr',
+                                         r'test_if\.hwaddr'])
     result_tcp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
@@ -133,8 +137,12 @@ if ipv in [ 'ipv4', 'both' ]:
     result_udp = perf_api.new_result("udp_ipv4_id",
                                      "udp_ipv4_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                         r'guest\d+\.hostname',
+                                         r'guest\d+\.interface_eth\d+\.hwaddr',
+                                         r'test_if\.hwaddr'])
     result_udp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
@@ -165,8 +173,12 @@ if ipv in [ 'ipv6', 'both' ]:
     result_tcp = perf_api.new_result("tcp_ipv6_id",
                                      "tcp_ipv6_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                         r'guest\d+\.hostname',
+                                         r'guest\d+\.interface_eth\d+\.hwaddr',
+                                         r'test_if\.hwaddr'])
     result_tcp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
@@ -196,8 +208,12 @@ if ipv in [ 'ipv6', 'both' ]:
     result_udp = perf_api.new_result("udp_ipv6_id",
                                      "udp_ipv6_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                         r'guest\d+\.hostname',
+                                         r'guest\d+\.interface_eth\d+\.hwaddr',
+                                         r'test_if\.hwaddr'])
     result_udp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")

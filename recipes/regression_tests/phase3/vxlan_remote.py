@@ -76,8 +76,9 @@ if ipv in [ 'ipv4', 'both' ]:
     result_tcp = perf_api.new_result("tcp_ipv4_id",
                                      "tcp_ipv4_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'test_if\.hwaddr'])
     result_tcp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
@@ -107,8 +108,9 @@ if ipv in [ 'ipv4', 'both' ]:
     result_udp = perf_api.new_result("udp_ipv4_id",
                                      "udp_ipv4_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'test_if\.hwaddr'])
     result_udp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
@@ -143,8 +145,9 @@ if ipv in [ 'ipv6', 'both' ]:
     result_tcp = perf_api.new_result("tcp_ipv6_id",
                                      "tcp_ipv6_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'test_if\.hwaddr'])
     result_tcp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_tcp.add_tag("multithreaded")
@@ -174,8 +177,9 @@ if ipv in [ 'ipv6', 'both' ]:
     result_udp = perf_api.new_result("udp_ipv6_id",
                                      "udp_ipv6_result",
                                      hash_ignore=[
-                                         'kernel_release',
-                                         'redhat_release'])
+                                         r'kernel_release',
+                                         r'redhat_release',
+                                         r'test_if\.hwaddr'])
     result_udp.add_tag(product_name)
     if nperf_num_parallel > 1:
         result_udp.add_tag("multithreaded")
