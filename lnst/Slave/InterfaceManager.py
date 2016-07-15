@@ -21,6 +21,7 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
+from lnst.Slave.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
 from pyroute2.netlink.rtnl import RTNLGRP_IPV4_IFADDR
 from pyroute2.netlink.rtnl import RTNLGRP_IPV6_IFADDR
@@ -49,6 +50,8 @@ class InterfaceManager(object):
 
         self._nl_socket = IPRSocket()
         self._nl_socket.bind(groups=NL_GROUPS)
+
+        self._dl_manager = DevlinkManager()
 
         self.rescan_devices()
 
@@ -129,9 +132,19 @@ class InterfaceManager(object):
             self._server_handler.send_data_to_ctl(del_msg)
             del self._devices[i]
 
+        self._dl_manager.rescan_ports()
+        for device in self._devices.values():
+            dl_port = self._dl_manager.get_port(device.get_name())
+            device.set_devlink(dl_port)
+
     def handle_netlink_msgs(self, msgs):
         for msg in msgs:
             self._handle_netlink_msg(msg)
+
+        self._dl_manager.rescan_ports()
+        for device in self._devices.values():
+            dl_port = self._dl_manager.get_port(device.get_name())
+            device.set_devlink(dl_port)
 
     def _handle_netlink_msg(self, msg):
         if msg['header']['type'] in [RTM_NEWLINK, RTM_NEWADDR, RTM_DELADDR]:
@@ -354,8 +367,12 @@ class Device(object):
         self._peer = None
         self._mtu = None
         self._driver = None
+        self._devlink = None
 
         self._if_manager = if_manager
+
+    def set_devlink(self, devlink_port_data):
+        self._devlink = devlink_port_data
 
     def init_netlink(self, nl_msg):
         self._if_index = nl_msg['index']
@@ -672,7 +689,8 @@ class Device(object):
                    "netns": self._netns,
                    "peer": self._peer.get_if_index() if self._peer else None,
                    "mtu": self._mtu,
-                   "driver": self._driver}
+                   "driver": self._driver,
+                   "devlink": self._devlink}
         return if_data
 
     def set_speed(self, speed):
