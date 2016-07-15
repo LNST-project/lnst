@@ -16,6 +16,9 @@
     </define>
     <network>
         <host id="h1">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
             <interfaces>
                 <eth id="if1" label="n1">
                     <addresses>
@@ -75,6 +78,9 @@
             </interfaces>
         </host>
         <host id="h2">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
             <interfaces>
                 <eth id="if1" label="n1">
                     <addresses>

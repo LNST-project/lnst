@@ -16,6 +16,9 @@
     </define>
     <network>
         <host id="testmachine1">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
             <interfaces>
                 <eth id="eth1" label="tnet"/>
                 <eth id="tap1" label="to_guest1"/>
@@ -66,6 +69,9 @@
             </interfaces>
         </host>
         <host id="testmachine2">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
             <interfaces>
                 <eth id="eth1" label="tnet">
                     <addresses>
