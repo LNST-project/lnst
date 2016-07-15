@@ -267,6 +267,8 @@ class Machine(object):
 
         devices = self._rpc_call("get_devices")
         for if_index, dev in devices.items():
+            from pprint import pprint
+            pprint(dev)
             self._device_database[if_index] = Device(dev, self)
 
         for iface in self._interfaces:
@@ -606,6 +608,7 @@ class Interface(object):
         self._peer = None
         self._mtu = None
         self._driver = None
+        self._devlink = None
 
     def get_id(self):
         return self._id
@@ -779,6 +782,7 @@ class Interface(object):
         self.set_devname(if_data["name"])
         self._mtu = if_data["mtu"]
         self._driver = if_data["driver"]
+        self._devlink = if_data["devlink"]
 
     def get_config(self):
         config = {"id": self._id,
@@ -920,6 +924,18 @@ class Interface(object):
     def slave_del(self, if_id):
         self.del_slave(self._machine.get_interface(if_id))
         self._machine._rpc_call_x(self._netns, "slave_del", self._id, if_id)
+
+    def get_devlink_name(self):
+        if self._devlink:
+            return "%s/%s" % (self._devlink["bus_name"],
+                              self._devlink["dev_name"])
+        return None
+
+    def get_devlink_port_name(self):
+        if self._devlink:
+            return "%s/%u" % (self.get_devlink_name(),
+                              self._devlink["port_index"])
+        return None
 
 class StaticInterface(Interface):
     """ Static interface
@@ -1200,6 +1216,7 @@ class Device(object):
         self._peer = None
         self._mtu = None
         self._driver = None
+        self._devlink = None
 
         self._machine = machine
 
@@ -1220,6 +1237,7 @@ class Device(object):
         self._peer = data["peer"]
         self._mtu = data["mtu"]
         self._driver = data["driver"]
+        self._devlink = data["driver"]
         return True
 
     def slave_update(self):
@@ -1298,3 +1316,17 @@ class Device(object):
     @pre_call_decorate
     def get_driver(self):
         return self._driver
+
+    @pre_call_decorate
+    def get_devlink_name(self):
+        if self._devlink:
+            return "%s/%s" % (self._devlink["bus_name"],
+                              self._devlink["dev_name"])
+        return None
+
+    @pre_call_decorate
+    def get_devlink_port_name(self):
+        if self._devlink:
+            return "%s/%u" % (self.get_devlink_name(),
+                              self._devlink["port_index"])
+        return None

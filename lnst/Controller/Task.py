@@ -532,6 +532,12 @@ class DeviceAPI(object):
     def get_driver(self):
         return self._dev.get_driver()
 
+    def get_devlink_name(self):
+        return self._dev.get_devlink_name()
+
+    def get_devlink_port_name(self):
+        return self._dev.get_devlink_port_name()
+
 class InterfaceAPI(object):
     def __init__(self, interface, host):
         self._if = interface
@@ -672,6 +678,12 @@ class InterfaceAPI(object):
 
     def slave_del(self, slave_id):
         return self._if.slave_del(slave_id)
+
+    def get_devlink_name(self):
+        return self._if.get_devlink_name()
+
+    def get_devlink_port_name(self):
+        return self._if.get_devlink_port_name()
 
 class ModuleAPI(object):
     """ An API class representing a module. """
