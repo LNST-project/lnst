@@ -34,19 +34,26 @@ class Config():
 
     def _get_version(self):
         # Check if I'm in git
-        try:
-            cwd = os.getcwd()
-            abspath = os.path.abspath(__file__)
-            dname = os.path.dirname(abspath)
-            os.chdir(dname)
-            with open(os.devnull, 'w') as null:
-                head = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
-                                               stderr=null).strip()
-            return head
-        except subprocess.CalledProcessError:
-            return LNSTMajorVersion
-        finally:
-            os.chdir(cwd)
+        cwd = os.getcwd()
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
+        os.chdir(dname)
+        with open(os.devnull, 'w') as null:
+            cmd = ['git', 'rev-parse', 'HEAD']
+            try:
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=null)
+                data = proc.communicate()
+            except:
+                os.chdir(cwd)
+                return LNSTMajorVersion
+            # git command passed
+            if data[0] != '':
+                version = data[0].strip()
+            # git command failed
+            else:
+                version = LNSTMajorVersion
+        os.chdir(cwd)
+        return version
 
     def controller_init(self):
         self._options['environment'] = dict()
