@@ -267,8 +267,6 @@ class Machine(object):
 
         devices = self._rpc_call("get_devices")
         for if_index, dev in devices.items():
-            from pprint import pprint
-            pprint(dev)
             self._device_database[if_index] = Device(dev, self)
 
         for iface in self._interfaces:
