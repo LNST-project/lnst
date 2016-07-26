@@ -31,6 +31,7 @@ from lnst.Common.NetTestCommand import NetTestCommandContext
 from lnst.Common.NetTestCommand import NetTestCommand
 from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Common.Utils import check_process_running
+from lnst.Common.Utils import is_installed
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import lnst_config
@@ -359,6 +360,9 @@ class SlaveMethods:
         return True
 
     def start_packet_capture(self, filt):
+        if not is_installed("tcpdump"):
+            raise Exception("Can't start packet capture, tcpdump not available")
+
         files = {}
         for if_id, dev in self._if_manager.get_mapped_devices().iteritems():
             if dev.get_netns() != None:

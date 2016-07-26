@@ -651,8 +651,15 @@ class NetTestController:
             self._cleanup_slaves()
             raise
 
-        if self._packet_capture:
-            self._start_packet_capture()
+        try:
+            if self._packet_capture:
+                self._start_packet_capture()
+        except Exception as exc:
+            logging.error("Couldn't start packet capture.")
+            logging.error(str(exc))
+            self._cleanup_slaves()
+            return {"passed": False,
+                    "err_msg": str(exc)}
 
         err = None
         try:
