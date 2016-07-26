@@ -17,6 +17,7 @@ import dbus
 import uuid
 import socket, struct
 import time
+from dbus.exceptions import DBusException
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option, parse_netem
 from lnst.Common.NetUtils import scan_netdevs
@@ -291,7 +292,14 @@ class NmConfigDeviceGeneric(object):
                                                     % config["name"])
             logging.debug("Active connection object path: %s"
                                                     % self._acon_obj_path)
-            self._nm_if.DeactivateConnection(self._acon_obj_path)
+            try:
+                self._nm_if.DeactivateConnection(self._acon_obj_path)
+            except DBusException as e:
+                if e.get_dbus_name() == "org.freedesktop.NetworkManager."\
+                                        "ConnectionNotActive":
+                    pass
+                else:
+                    raise e
             self._acon_obj_path = None
 
     def nm_enslave(self, slave_type, master_uuid, slave_conf):
