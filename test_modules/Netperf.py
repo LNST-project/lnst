@@ -235,12 +235,17 @@ class Netperf(TestGeneric):
     def _parse_confidence_omni(self, output):
         pattern_throughput_confid = "THROUGHPUT_CONFID=([-]?\d+\.\d+)"
         pattern_confidence_level = "CONFIDENCE_LEVEL=(\d+)"
-        throughput_confid = float(re.search(pattern_throughput_confid, output).group(1))
-        confidence_level = int(re.search(pattern_confidence_level, output).group(1))
 
-        real_confidence = (confidence_level, throughput_confid/2)
+        throughput_confid = re.search(pattern_throughput_confid, output)
+        confidence_level = re.search(pattern_confidence_level, output)
 
-        return real_confidence
+        if throughput_confid is not None and confidence_level is not None:
+            throughput_confid = float(throughput_confid.group(1))
+            confidence_level = int(confidence_level.group(1))
+            real_confidence = (confidence_level, throughput_confid/2)
+            return real_confidence
+        else:
+            return (0, 0.0)
 
     def _parse_confidence_non_omni(self, output):
         normal_pattern = r'\+/-(\d+\.\d*)% @ (\d+)% conf\.'
