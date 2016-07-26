@@ -518,11 +518,12 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
             i["name"] = self._if_manager.assign_name_generic(prefix="int")
 
             options = ""
-            for opt in i["options"]:
-                options += " %s=%s" % (opt["name"], opt["value"])
+            if "options" in i:
+                for opt in i["options"]:
+                    options += " %s=%s" % (opt["name"], opt["value"])
 
-                if opt["name"] == "name":
-                    i["name"] = opt["value"]
+                    if opt["name"] == "name":
+                        i["name"] = opt["value"]
 
             exec_cmd("ovs-vsctl add-port %s %s -- set Interface %s "\
                      "type=internal %s" % (br_name, i["name"],
