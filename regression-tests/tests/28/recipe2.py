@@ -4,7 +4,7 @@ m1 = ctl.get_host("testmachine1")
 
 m1.sync_resources(modules=["Custom"], tools=[])
 
-test = m1.run("for i in `seq 5`; do echo test; sleep 1; done", bg=True, save_output="yes")
+test = m1.run("for i in `seq 5`; do echo test; sleep 1; done", bg=True)
 
 test.wait()
 

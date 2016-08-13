@@ -400,7 +400,6 @@ class NetTestCommandGeneric(object):
 class NetTestCommandExec(NetTestCommandGeneric):
     def __init__(self, command):
         super(NetTestCommandExec, self).__init__(command)
-        self._save_output = "save_output" in command
 
     def run(self):
         try:
@@ -409,15 +408,10 @@ class NetTestCommandExec(NetTestCommandGeneric):
                                                 self._command["command"])
             else:
                 stdout, stderr = self.exec_cmd(self._command["command"])
-            res_data = None
-            if self._save_output:
-                res_data = { "stdout": stdout, "stderr": stderr }
+            res_data = {"stdout": stdout, "stderr": stderr}
             self.set_pass(res_data)
         except ExecCmdFail as e:
-            res_data = None
-            if self._save_output:
-                res_data = { "stdout": e.get_stdout(),
-                             "stderr": e.get_stderr() }
+            res_data = {"stdout": e.get_stdout(), "stderr": e.get_stderr()}
             if "bg_id" in self._command:
                 logging.info("Command probably intentionally killed. Passing.")
                 self.set_pass(res_data)

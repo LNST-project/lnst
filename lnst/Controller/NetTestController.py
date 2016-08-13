@@ -439,8 +439,6 @@ class NetTestController:
 
             if "from" in cmd_data:
                 cmd["from"] = cmd_data["from"]
-            if "save_output" in cmd_data:
-                cmd["save_output"] = cmd_data["save_output"]
         elif cmd["type"] in ["wait", "intr", "kill"]:
             # 'proc_id' is used to store bg_id for wait/kill/intr
             # 'bg_id' is used for test/exec

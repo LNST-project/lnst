@@ -21,7 +21,7 @@ cpu: integer
 '''
 def pin_dev_irqs(machine, device, cpu):
     pi = machine.run("grep %s /proc/interrupts | cut -f1 -d: | sed 's/ //'"
-                    % device.get_devname(), save_output=True)
+                    % device.get_devname())
     res = pi.get_result()
     intrs = res["res_data"]["stdout"]
     for intr in intrs.split('\n'):
