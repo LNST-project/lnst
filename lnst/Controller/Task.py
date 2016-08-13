@@ -754,6 +754,15 @@ class ProcessAPI(object):
         """
         return self._cmd_res
 
+    def out(self):
+        """
+            Returns the whole command result stdout.
+
+            :return: Command result stdout.
+            :rtype: str
+        """
+        return self.get_result()["res_data"]["stdout"]
+
     def wait(self):
         """ Blocking wait until the command returns. """
         if self._bg_id:
