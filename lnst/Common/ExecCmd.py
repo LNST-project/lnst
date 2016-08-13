@@ -51,7 +51,7 @@ def log_output(log_func, out_type, out):
              "----------------------------"
              % (out_type, out))
 
-def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False):
+def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False, json=False):
     cmd = cmd.rstrip(" ")
     logging.debug("Executing: \"%s\"" % cmd)
     subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
@@ -71,5 +71,9 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False):
         err = ExecCmdFail(cmd, subp.returncode, [data_stdout, data_stderr], report_stderr)
         logging.error(err)
         raise err
+
+    if json:
+        import json
+        data_stdout = json.loads(data_stdout)
 
     return data_stdout, data_stderr

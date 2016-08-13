@@ -242,6 +242,8 @@ class HostAPI(object):
             :type timeout: int
             :param tool: Run from a tool (the same as 'from' in XML).
             :type tool: string
+            :param json: Process JSON output into dictionary.
+            :type json: bool
 
             :return: A handle for process.
             :rtype: ProcessAPI
@@ -283,6 +285,8 @@ class HostAPI(object):
                 cmd["netns"] = argval
             elif arg == "save_output":
                 pass # now ignored as output is saved always
+            elif arg == "json":
+                cmd["json"] = argval
             else:
                 msg = "Argument '%s' not recognised by the run() method." % arg
                 raise TaskError(msg)

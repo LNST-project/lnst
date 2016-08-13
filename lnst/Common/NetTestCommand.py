@@ -407,7 +407,8 @@ class NetTestCommandExec(NetTestCommandGeneric):
                 stdout, stderr = self.exec_from(self._command["from"],
                                                 self._command["command"])
             else:
-                stdout, stderr = self.exec_cmd(self._command["command"])
+                json = True if "json" in self._command else False
+                stdout, stderr = self.exec_cmd(self._command["command"], json=json)
             res_data = {"stdout": stdout, "stderr": stderr}
             self.set_pass(res_data)
         except ExecCmdFail as e:
