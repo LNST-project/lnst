@@ -61,10 +61,14 @@ class PacketAssert(TestGeneric):
 
         interface = self.get_mopt("interface")
         pcap_filter = self.get_opt("filter")
+        promiscuous = self.get_opt("promiscuous", default=False)
         if not pcap_filter:
             pcap_filter = ""
 
-        cmd = "tcpdump -p -nn -i %s \"%s\"" % (interface, pcap_filter)
+        promiscuous_str = "" if promiscuous else "-p"
+
+        cmd = "tcpdump %s -nn -i %s \"%s\"" % (promiscuous_str, interface,
+                                               pcap_filter)
         logging.debug("PacketAssert tcpdump command: %s" % cmd)
         self._cmd = cmd
 

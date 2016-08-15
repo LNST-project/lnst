@@ -519,6 +519,32 @@ class Device(object):
         self._conf = None
         self._conf_dict = None
 
+    def _clear_tc_qdisc(self):
+        exec_cmd("tc qdisc replace dev %s root pfifo" % self._name)
+        out, _ = exec_cmd("tc filter show dev %s" % self._name)
+        ingress_handles = re.findall("ingress (\\d+):", out)
+        for ingress_handle in ingress_handles:
+            exec_cmd("tc qdisc del dev %s handle %s: ingress" %
+                     (self._name, ingress_handle))
+        out, _ = exec_cmd("tc qdisc show dev %s" % self._name)
+        ingress_qdiscs = re.findall("qdisc ingress (\\w+):", out)
+        if len(ingress_qdiscs) != 0:
+                exec_cmd("tc qdisc del dev %s ingress" % self._name)
+
+    def _clear_tc_filters(self):
+        out, _ = exec_cmd("tc filter show dev %s" % self._name)
+        egress_prefs = re.findall("pref (\\d+) .* handle", out)
+        out, _ = exec_cmd("tc filter show dev %s ingress" % self._name)
+        ingress_prefs = re.findall("pref (\\d+) .* handle", out)
+
+        for egress_pref in egress_prefs:
+            exec_cmd("tc filter del dev %s pref %s" % (self._name,
+                     egress_pref))
+
+        for ingress_pref in ingress_prefs:
+            exec_cmd("tc filter del dev %s pref %s ingress" % (self._name,
+                     ingress_pref))
+
     def clear_configuration(self):
         if self._master["primary"]:
             primary_id = self._master["primary"]
@@ -532,6 +558,8 @@ class Device(object):
                 m_dev.clear_configuration()
 
         if self._conf != None:
+            self._clear_tc_qdisc()
+            self._clear_tc_filters()
             self.down()
             self.deconfigure()
             self.destroy()
