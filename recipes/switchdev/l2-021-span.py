@@ -38,8 +38,8 @@ class MirredPort:
         ingress_str = "ingress" if ingress else ""
         from_dev = self.mirred_port.get_devname()
         cmd = self.mach.run("tc filter show dev %s %s" % (from_dev,
-                       ingress_str), save_output=True)
-        output = cmd.get_result()["res_data"]["stdout"]
+                            ingress_str))
+        output = cmd.out()
         return re.findall("pref (\\d+) .* handle .*\n.* device %s" %
                 to_port.get_devname(), output, re.M)
 
