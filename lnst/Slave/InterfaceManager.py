@@ -534,16 +534,10 @@ class Device(object):
     def _clear_tc_filters(self):
         out, _ = exec_cmd("tc filter show dev %s" % self._name)
         egress_prefs = re.findall("pref (\\d+) .* handle", out)
-        out, _ = exec_cmd("tc filter show dev %s ingress" % self._name)
-        ingress_prefs = re.findall("pref (\\d+) .* handle", out)
 
         for egress_pref in egress_prefs:
             exec_cmd("tc filter del dev %s pref %s" % (self._name,
                      egress_pref))
-
-        for ingress_pref in ingress_prefs:
-            exec_cmd("tc filter del dev %s pref %s ingress" % (self._name,
-                     ingress_pref))
 
     def clear_configuration(self):
         if self._master["primary"]:
