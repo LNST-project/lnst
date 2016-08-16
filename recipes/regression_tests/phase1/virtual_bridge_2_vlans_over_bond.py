@@ -48,6 +48,7 @@ nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
+nperf_udp_size = ctl.get_alias("nperf_udp_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([h1, g1, g2, h2, g3, g4], pr_user_comment)
@@ -188,6 +189,10 @@ if nperf_mode == "multi":
     netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
 
+if nperf_udp_size is not None:
+    netperf_cli_udp.update_options({"udp_size" : nperf_udp_size})
+    netperf_cli_udp6.update_options({"udp_size" : nperf_udp_size})
+
 ping_mod_bad = ctl.get_module("IcmpPing",
                                options={
                                    "addr" : g4_guestnic.get_ip(0),
@@ -304,6 +309,10 @@ for setting in offload_settings:
                                                  r'host\d+\..*tap\d*\.devname'])
             for offload in setting:
                 result_udp.set_parameter(offload[0], offload[1])
+
+            if nperf_udp_size is not None:
+                result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+
             result_udp.add_tag(product_name)
             if nperf_mode == "multi":
                 result_udp.add_tag("multithreaded")
@@ -368,6 +377,10 @@ for setting in offload_settings:
                                                  r'host\d+\..*tap\d*\.devname'])
             for offload in setting:
                 result_udp.set_parameter(offload[0], offload[1])
+
+            if nperf_udp_size is not None:
+                result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+
             result_udp.add_tag(product_name)
             if nperf_mode == "multi":
                 result_udp.add_tag("multithreaded")

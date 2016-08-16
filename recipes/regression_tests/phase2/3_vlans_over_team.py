@@ -43,6 +43,7 @@ nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
+nperf_udp_size = ctl.get_alias("nperf_udp_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
@@ -167,6 +168,10 @@ if nperf_mode == "multi":
     netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
 
+if nperf_udp_size is not None:
+    netperf_cli_udp.update_options({"udp_size" : nperf_udp_size})
+    netperf_cli_udp6.update_options({"udp_size" : nperf_udp_size})
+
 for setting in offload_settings:
     #apply offload setting
     dev_features = ""
@@ -244,6 +249,10 @@ for setting in offload_settings:
                                              'redhat_release'])
         for offload in setting:
             result_udp.set_parameter(offload[0], offload[1])
+
+        if nperf_udp_size is not None:
+            result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+
         result_udp.set_parameter('netperf_server_on_vlan', vlans[0])
         result_udp.set_parameter('netperf_client_on_vlan', vlans[0])
         result_udp.add_tag(product_name)
@@ -300,6 +309,10 @@ for setting in offload_settings:
                                              'redhat_release'])
         for offload in setting:
             result_udp.set_parameter(offload[0], offload[1])
+
+        if nperf_udp_size is not None:
+            result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+
         result_udp.set_parameter('netperf_server_on_vlan', vlans[0])
         result_udp.set_parameter('netperf_client_on_vlan', vlans[0])
         result_udp.add_tag(product_name)
