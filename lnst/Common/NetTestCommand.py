@@ -419,6 +419,9 @@ class NetTestCommandExec(NetTestCommandGeneric):
             else:
                 self.set_fail(res_data)
 
+    def format_res_data(self, res_data, level=0):
+        return ""
+
     def _format_cmd_res_header(self):
         cmd_type = self._command["type"]
         cmd_val = self._command["command"]
