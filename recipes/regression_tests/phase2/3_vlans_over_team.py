@@ -242,33 +242,34 @@ for setting in offload_settings:
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp
-        result_udp = perf_api.new_result("udp_ipv4_id",
-                                         "udp_ipv4_result",
-                                         hash_ignore=[
-                                             'kernel_release',
-                                             'redhat_release'])
-        for offload in setting:
-            result_udp.set_parameter(offload[0], offload[1])
+        if ("gro", "off") not in setting:
+            result_udp = perf_api.new_result("udp_ipv4_id",
+                                             "udp_ipv4_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+            for offload in setting:
+                result_udp.set_parameter(offload[0], offload[1])
 
-        if nperf_udp_size is not None:
-            result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+            if nperf_udp_size is not None:
+                result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
 
-        result_udp.set_parameter('netperf_server_on_vlan', vlans[0])
-        result_udp.set_parameter('netperf_client_on_vlan', vlans[0])
-        result_udp.add_tag(product_name)
-        if nperf_mode == "multi":
-            result_udp.add_tag("multithreaded")
-            result_udp.set_parameter('num_parallel', nperf_num_parallel)
+            result_udp.set_parameter('netperf_server_on_vlan', vlans[0])
+            result_udp.set_parameter('netperf_client_on_vlan', vlans[0])
+            result_udp.add_tag(product_name)
+            if nperf_mode == "multi":
+                result_udp.add_tag("multithreaded")
+                result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
-        baseline = perf_api.get_baseline_of_result(result_udp)
-        netperf_baseline_template(netperf_cli_udp, baseline)
+            baseline = perf_api.get_baseline_of_result(result_udp)
+            netperf_baseline_template(netperf_cli_udp, baseline)
 
-        udp_res_data = m2.run(netperf_cli_udp,
-                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+            udp_res_data = m2.run(netperf_cli_udp,
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-        netperf_result_template(result_udp, udp_res_data)
-        result_udp.set_comment(pr_comment)
-        perf_api.save_result(result_udp)
+            netperf_result_template(result_udp, udp_res_data)
+            result_udp.set_comment(pr_comment)
+            perf_api.save_result(result_udp)
 
         srv_proc.intr()
 
@@ -302,33 +303,34 @@ for setting in offload_settings:
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp ipv6
-        result_udp = perf_api.new_result("udp_ipv6_id",
-                                         "udp_ipv6_result",
-                                         hash_ignore=[
-                                             'kernel_release',
-                                             'redhat_release'])
-        for offload in setting:
-            result_udp.set_parameter(offload[0], offload[1])
+        if ("gro", "off") not in setting:
+            result_udp = perf_api.new_result("udp_ipv6_id",
+                                             "udp_ipv6_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+            for offload in setting:
+                result_udp.set_parameter(offload[0], offload[1])
 
-        if nperf_udp_size is not None:
-            result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+            if nperf_udp_size is not None:
+                result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
 
-        result_udp.set_parameter('netperf_server_on_vlan', vlans[0])
-        result_udp.set_parameter('netperf_client_on_vlan', vlans[0])
-        result_udp.add_tag(product_name)
-        if nperf_mode == "multi":
-            result_udp.add_tag("multithreaded")
-            result_udp.set_parameter('num_parallel', nperf_num_parallel)
+            result_udp.set_parameter('netperf_server_on_vlan', vlans[0])
+            result_udp.set_parameter('netperf_client_on_vlan', vlans[0])
+            result_udp.add_tag(product_name)
+            if nperf_mode == "multi":
+                result_udp.add_tag("multithreaded")
+                result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
-        baseline = perf_api.get_baseline_of_result(result_udp)
-        netperf_baseline_template(netperf_cli_udp6, baseline)
+            baseline = perf_api.get_baseline_of_result(result_udp)
+            netperf_baseline_template(netperf_cli_udp6, baseline)
 
-        udp_res_data = m2.run(netperf_cli_udp6,
-                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+            udp_res_data = m2.run(netperf_cli_udp6,
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-        netperf_result_template(result_udp, udp_res_data)
-        result_udp.set_comment(pr_comment)
-        perf_api.save_result(result_udp)
+            netperf_result_template(result_udp, udp_res_data)
+            result_udp.set_comment(pr_comment)
+            perf_api.save_result(result_udp)
 
         srv_proc.intr()
 

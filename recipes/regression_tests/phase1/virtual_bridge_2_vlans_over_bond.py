@@ -297,7 +297,7 @@ for setting in offload_settings:
         result_tcp.set_comment(pr_comment)
         perf_api.save_result(result_tcp)
 
-        if enable_udp_perf is not None:
+        if enable_udp_perf is not None and ("gro", "off") not in setting:
             # prepare PerfRepo result for udp
             result_udp = perf_api.new_result("udp_ipv4_id",
                                              "udp_ipv4_result",
@@ -366,7 +366,7 @@ for setting in offload_settings:
         perf_api.save_result(result_tcp)
 
         # prepare PerfRepo result for udp ipv6
-        if enable_udp_perf is not None:
+        if enable_udp_perf is not None and ("gro", "off") not in setting:
             result_udp = perf_api.new_result("udp_ipv6_id",
                                              "udp_ipv6_result",
                                              hash_ignore=['kernel_release',
