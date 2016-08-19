@@ -142,7 +142,7 @@ def exec_action(action, nettestctl):
 
 def get_recipe_result(action, file_path, log_ctl, res_serializer,
                       pool_checks, packet_capture,
-                      defined_aliases, overriden_aliases,
+                      defined_aliases,
                       reduce_sync, multi_match, pools):
     retval = RETVAL_PASS
 
@@ -161,7 +161,6 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                                        pool_checks=pool_checks,
                                        packet_capture=packet_capture,
                                        defined_aliases=defined_aliases,
-                                       overriden_aliases=overriden_aliases,
                                        reduce_sync=reduce_sync,
                                        restrict_pools=pools,
                                        multi_match=multi_match)
@@ -413,7 +412,7 @@ def main():
     for recipe_file in recipe_files:
         rv = get_recipe_result(action, recipe_file, log_ctl, res_serializer,
                                pool_checks, packet_capture,
-                               defined_aliases, overriden_aliases,
+                               defined_aliases,
                                reduce_sync, multi_match, pools)
         if rv > retval:
             retval = rv
