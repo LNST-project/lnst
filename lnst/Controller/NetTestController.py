@@ -683,6 +683,24 @@ class NetTestController:
 
         return res
 
+    def prepare_test_env(self):
+        try:
+            self.provision_machines()
+            self.print_match_description()
+            if self.run_mode == "match_setup":
+                return True
+            self._prepare_network()
+            Task.ctl.init_hosts(self._machines)
+            return True
+        except (NoMatchError) as exc:
+            self._cleanup_slaves()
+            return False
+        except (KeyboardInterrupt, Exception) as exc:
+            msg = "Exception raised during configuration."
+            logging.error(msg)
+            self._cleanup_slaves()
+            raise
+
     def _run_recipe(self):
         overall_res = {"passed": True}
 
@@ -707,6 +725,9 @@ class NetTestController:
                     break
 
         return overall_res
+
+    def init_taskapi(self):
+        Task.ctl = Task.ControllerAPI(self)
 
     def _run_python_task(self, task):
         #backup of resource table
