@@ -45,9 +45,10 @@ def get_module(name, options={}):
     return ctl.get_module(name, options)
 
 def breakpoint():
-    if ctl.run_mode != "config_only":
+    if not ctl.breakpoints:
         return
-    raw_input("Breakpoint reached. Press enter to continue.")
+    logging.info("Breakpoint reached. Press enter to continue.")
+    raw_input("")
 
 def add_host(params={}):
     m_id = ctl.gen_m_id()
@@ -91,6 +92,7 @@ class ControllerAPI(object):
     def __init__(self, ctl):
         self._ctl = ctl
         self.run_mode = ctl.run_mode
+        self.breakpoints = ctl.breakpoints
         self._result = True
         self.first_run = True
         self._m_id_seq = 0

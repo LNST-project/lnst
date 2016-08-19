@@ -43,6 +43,7 @@ def usage(retval=0):
     print "  -A, --override-alias name=value define top-level alias that " \
               "will override any other definitions in the recipe"
     print "  -a, --define-alias name=value   define top-level alias"
+    print "  -b, --breakpoints               enable breakpoint feature"
     print "  -c, --config=FILE               load additional config file"
     print "  -C, --config-override=FILE      reset config defaults and load " \
               "the following config file"
@@ -142,7 +143,7 @@ def exec_action(action, nettestctl):
 
 def get_recipe_result(action, file_path, log_ctl, res_serializer,
                       pool_checks, packet_capture,
-                      defined_aliases,
+                      defined_aliases, breakpoints,
                       reduce_sync, multi_match, pools):
     retval = RETVAL_PASS
 
@@ -163,7 +164,8 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                                        defined_aliases=defined_aliases,
                                        reduce_sync=reduce_sync,
                                        restrict_pools=pools,
-                                       multi_match=multi_match)
+                                       multi_match=multi_match,
+                                       breakpoints=breakpoints)
     except XmlProcessingError as err:
         log_exc_traceback()
         logging.error(err)
@@ -244,8 +246,9 @@ def main():
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            "A:a:c:C:dhmoprs:t:ux:v",
+            "A:a:bc:C:dhmoprs:t:ux:v",
             [
+             "breakpoints",
              "override_alias=",
              "define_alias=",
              "config=",
@@ -290,6 +293,7 @@ def main():
         with open(usr_cfg, 'w') as f:
             f.write(lnst_config.dump_config())
 
+    breakpoints = False
     debug = 0
     result_path = None
     html_result_path = None
@@ -309,6 +313,8 @@ def main():
             debug += 1
         elif opt in ("-h", "--help"):
             usage(RETVAL_PASS)
+        elif opt in ("-b", "--breakpoints"):
+            breakpoints = True
         elif opt in ("-c", "--config"):
             if not os.path.isfile(arg):
                 print "File '%s' doesn't exist!" % arg
@@ -412,7 +418,7 @@ def main():
     for recipe_file in recipe_files:
         rv = get_recipe_result(action, recipe_file, log_ctl, res_serializer,
                                pool_checks, packet_capture,
-                               defined_aliases,
+                               defined_aliases, breakpoints,
                                reduce_sync, multi_match, pools)
         if rv > retval:
             retval = rv

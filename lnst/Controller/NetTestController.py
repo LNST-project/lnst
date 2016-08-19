@@ -56,7 +56,8 @@ class NetTestController:
                  res_serializer=None, pool_checks=True,
                  packet_capture=False,
                  defined_aliases=None, reduce_sync=False,
-                 restrict_pools=[], multi_match=False):
+                 restrict_pools=[], multi_match=False,
+                 breakpoints=False):
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
@@ -70,6 +71,7 @@ class NetTestController:
         self.remove_saved_machine_config()
 
         self.run_mode = "run"
+        self.breakpoints = breakpoints
 
         self._machines = {}
         self._network_bridges = {}
