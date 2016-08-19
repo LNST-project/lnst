@@ -39,13 +39,40 @@ class ControllerAPI(object):
 
     def __init__(self, ctl, hosts):
         self._ctl = ctl
+        self.run_mode = ctl.run_mode
         self._result = True
+        self.first_run = True
+        self._m_id_seq = 0
+        self.mreq = {}
 
         self._perf_repo_api = PerfRepoAPI()
 
         self._hosts = {}
         for host_id, host in hosts.iteritems():
             self._hosts[host_id] = HostAPI(self, host_id, host)
+
+    def get_mreq(self):
+        return self.mreq
+
+    def cleanup_slaves(self):
+       self._ctl._cleanup_slaves()
+
+    def packet_capture(self):
+        return self._ctl._packet_capture
+
+    def start_packet_capture(self):
+        self._ctl._start_packet_capture()
+
+    def gen_m_id(self):
+        self._m_id_seq += 1
+        return "m_id_%s" % self._m_id_seq
+
+    def add_host(self, host_id, handle):
+        self._hosts[host_id] = handle
+
+    def init_hosts(self, hosts):
+        for host_id, host in hosts.iteritems():
+            self._hosts[host_id].init_host(host)
 
     def _run_command(self, command):
         """
