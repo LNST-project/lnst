@@ -195,8 +195,38 @@ class HostAPI(object):
             if interface.get_id() is None:
                 continue
             self._ifaces[interface.get_id()] = InterfaceAPI(interface, self)
-
+        self._if_id_seq = 0
         self._bg_id_seq = 0
+
+    def _gen_if_id(self):
+        self._if_id_seq += 1
+        return "if_id_%s" % self._if_id_seq
+
+    def init_host(self, host):
+        self._m = host
+        self.init_ifaces()
+
+    def init_ifaces(self):
+        for interface in self._m.get_interfaces():
+            if interface.get_id() is None:
+                continue
+            self._ifaces[interface.get_id()].init_iface(interface)
+
+    def add_interface(self, label, netns=None, params=None):
+        m_id = self.get_id()
+        if_id = self._gen_if_id()
+
+        self._ctl.mreq[m_id]['interfaces'][if_id] = {}
+        self._ctl.mreq[m_id]['interfaces'][if_id]['network'] = label
+        self._ctl.mreq[m_id]['interfaces'][if_id]['netns'] = netns
+
+        if params:
+            self._ctl.mreq[m_id]['interfaces'][if_id]['params'] = params
+        else:
+            self._ctl.mreq[m_id]['interfaces'][if_id]['params'] = {}
+
+        self._ifaces[if_id] = InterfaceAPI(None, self)
+        return self._ifaces[if_id]
 
     def get_id(self):
         return self._m.get_id()
