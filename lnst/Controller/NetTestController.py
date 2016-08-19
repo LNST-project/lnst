@@ -71,6 +71,8 @@ class NetTestController:
 
         self.remove_saved_machine_config()
 
+        self.run_mode = "run"
+
         self._machines = {}
         self._network_bridges = {}
         self._tasks = []
