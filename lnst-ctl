@@ -178,9 +178,13 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
         res = {}
         if matches == 1:
             try:
-                nettestctl.provision_machines()
-                nettestctl.print_match_description()
+                # init TaskAPI.Ctl
+                nettestctl.init_taskapi()
                 res = exec_action(action, nettestctl)
+            except NoMatchError as err:
+                no_match = True
+                log_ctl.unset_recipe()
+                logging.warning("Match %d not possible." % matches)
             except Exception as err:
                 no_match = True
                 log_exc_traceback()
@@ -190,12 +194,11 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                 retval = RETVAL_ERR
         elif matches > 1:
             try:
-                nettestctl.provision_machines()
+                nettestctl.init_taskapi()
                 log_ctl.set_recipe(file_path, prepend=True, expand="match_%d" % matches)
                 log_dir = log_ctl.get_recipe_log_path()
                 recipe_head_log_entry(file_path, log_dir, matches)
                 res_serializer.add_recipe(file_path, matches)
-                nettestctl.print_match_description()
                 res = exec_action(action, nettestctl)
             except NoMatchError as err:
                 no_match = True
@@ -400,7 +403,7 @@ def main():
             all_files.sort()
             for f in all_files:
                 recipe_file = os.path.join(recipe_path, f)
-                if re.match(r'^.*\.xml$', recipe_file):
+                if re.match(r'^.*\.py$', recipe_file):
                     recipe_files.append(recipe_file)
         else:
             recipe_files.append(recipe_path)

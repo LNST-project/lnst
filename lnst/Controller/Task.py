@@ -88,7 +88,7 @@ class TaskError(Exception): pass
 class ControllerAPI(object):
     """ An API class representing the controller. """
 
-    def __init__(self, ctl, hosts):
+    def __init__(self, ctl):
         self._ctl = ctl
         self.run_mode = ctl.run_mode
         self._result = True
@@ -99,8 +99,6 @@ class ControllerAPI(object):
         self._perf_repo_api = PerfRepoAPI()
 
         self._hosts = {}
-        for host_id, host in hosts.iteritems():
-            self._hosts[host_id] = HostAPI(self, host_id, host)
 
     def get_mreq(self):
         return self.mreq
@@ -188,7 +186,7 @@ class ControllerAPI(object):
         cmd = {"type": "ctl_wait", "seconds": int(seconds)}
         return self._ctl._run_command(cmd)
 
-    def get_alias(self, alias):
+    def get_alias(self, alias, default=None):
         """
             Get the value of user defined alias.
 
@@ -199,9 +197,13 @@ class ControllerAPI(object):
             :rtype: string
         """
         try:
-            return self._ctl._get_alias(alias)
+            val =  self._ctl._get_alias(alias)
+            if val is None:
+                return default
+            else:
+                return val
         except XmlTemplateError:
-            return None
+            return default
 
     def get_aliases(self):
         """
@@ -269,16 +271,12 @@ class ControllerAPI(object):
 class HostAPI(object):
     """ An API class representing a host machine. """
 
-    def __init__(self, ctl, host_id, host):
+    def __init__(self, ctl, host_id):
         self._ctl = ctl
         self._id = host_id
-        self._m = host
+        self._m = None
 
         self._ifaces = {}
-        for interface in self._m.get_interfaces():
-            if interface.get_id() is None:
-                continue
-            self._ifaces[interface.get_id()] = InterfaceAPI(interface, self)
         self._if_id_seq = 0
         self._bg_id_seq = 0
 
@@ -313,7 +311,7 @@ class HostAPI(object):
         return self._ifaces[if_id]
 
     def get_id(self):
-        return self._m.get_id()
+        return self._id
 
     def get_configuration(self):
         return self._m.get_configuration()

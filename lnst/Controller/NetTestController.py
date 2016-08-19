@@ -61,11 +61,10 @@ class NetTestController:
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
-        self._recipe_path = Path(None, recipe_path).abs_path()
+        self._recipe_path = Path(None, recipe_path)
         self._msg_dispatcher = MessageDispatcher(log_ctl)
         self._packet_capture = packet_capture
         self._reduce_sync = reduce_sync
-        self._parser = RecipeParser(recipe_path)
         self._defined_aliases = defined_aliases
         self._multi_match = multi_match
 
@@ -79,10 +78,6 @@ class NetTestController:
 
         mac_pool_range = lnst_config.get_option('environment', 'mac_pool_range')
         self._mac_pool = MacPool(mac_pool_range[0], mac_pool_range[1])
-
-        self._parser.set_machines(self._machines)
-        self._parser.set_aliases(defined_aliases, overriden_aliases)
-        self._recipe = self._parser.parse()
 
         conf_pools = lnst_config.get_pools()
         pools = {}
@@ -99,9 +94,6 @@ class NetTestController:
 
         sp = SlavePool(pools, pool_checks)
         self._slave_pool = sp
-
-        mreq = self._get_machine_requirements()
-        sp.set_machine_requirements(mreq)
 
         modules_dirs = lnst_config.get_option('environment', 'module_dirs')
         tools_dirs = lnst_config.get_option('environment', 'tool_dirs')
@@ -196,21 +188,21 @@ class NetTestController:
         return mreq
 
     def _prepare_network(self, resource_sync=True):
-        recipe = self._recipe
+        mreq = Task.get_mreq()
 
         machines = self._machines
         for m_id in machines.keys():
             self._prepare_machine(m_id, resource_sync)
 
-        for machine_xml_data in recipe["machines"]:
-            m_id = machine_xml_data["id"]
+        for machine_id, machine_data in mreq.iteritems():
+            m_id = machine_id
             m = machines[m_id]
             namespaces = set()
-            for iface_xml_data in machine_xml_data["interfaces"]:
-                self._prepare_interface(m_id, iface_xml_data)
+            for if_id, iface_data in machine_data["interfaces"].iteritems():
+                self._prepare_interface(m_id, if_id, iface_data)
 
-                if iface_xml_data["netns"] != None:
-                    namespaces.add(iface_xml_data["netns"])
+                if iface_data["netns"] != None:
+                    namespaces.add(iface_data["netns"])
 
             if len(namespaces) > 0:
                 m.disable_nm()
@@ -269,148 +261,16 @@ class NetTestController:
         machine.set_mac_pool(self._mac_pool)
         machine.set_network_bridges(self._network_bridges)
 
-        recipe_name = os.path.basename(self._recipe_path)
+        recipe_name = os.path.basename(self._recipe_path.abs_path())
         machine.init_connection(recipe_name)
 
-        sync_table = {'module': {}, 'tools': {}}
-        if resource_sync:
-            res_table = copy.deepcopy(self._resource_table)
-            for task in self._recipe['tasks']:
-                if 'module_dir' in task:
-                    modules = self._load_test_modules([task['module_dir']])
-                    res_table['module'].update(modules)
-                if 'tools_dir' in task:
-                    tools = self._load_test_tools([task['tools_dir']])
-                    res_table['tools'].update(tools)
-
-                if 'commands' not in task:
-                    if not self._reduce_sync:
-                        sync_table = res_table
-                        break
-                    else:
-                        continue
-                for cmd in task['commands']:
-                    if 'host' not in cmd or cmd['host'] != m_id:
-                        continue
-                    if cmd['type'] == 'test':
-                        mod = cmd['module']
-                        if mod in res_table['module']:
-                            sync_table['module'][mod] = res_table['module'][mod]
-                            # check if test module uses some test tools
-                            mod_path = res_table['module'][mod]["path"]
-                            mod_tools = get_module_tools(mod_path)
-                            for t in mod_tools:
-                                if t in sync_table['tools']:
-                                    continue
-                                logging.debug("Adding '%s' tool as "\
-                                    "dependency of %s test module" % (t, mod))
-                                sync_table['tools'][t] = res_table['tools'][t]
-                        else:
-                            msg = "Module '%s' not found on the controller"\
-                                    % mod
-                            raise RecipeError(msg, cmd)
-                    if cmd['type'] == 'exec' and 'from' in cmd:
-                        tool = cmd['from']
-                        if tool in res_table['tools']:
-                            sync_table['tools'][tool] = res_table['tools'][tool]
-                        else:
-                            msg = "Tool '%s' not found on the controller" % tool
-                            raise RecipeError(msg, cmd)
-        machine.sync_resources(sync_table)
-
-    def _prepare_interface(self, m_id, iface_xml_data):
+    def _prepare_interface(self, m_id, if_id, iface_data):
         machine = self._machines[m_id]
-        if_id = iface_xml_data["id"]
-        if_type = iface_xml_data["type"]
 
-        try:
-            iface = machine.get_interface(if_id)
-        except MachineError:
-            if if_type == 'lo':
-                iface = machine.new_loopback_interface(if_id)
-            else:
-                iface = machine.new_soft_interface(if_id, if_type)
+        iface = machine.get_interface(if_id)
 
-        if "slaves" in iface_xml_data:
-            for slave in iface_xml_data["slaves"]:
-                slave_id = slave["id"]
-                iface.add_slave(machine.get_interface(slave_id))
-
-                # Some soft devices (such as team) use per-slave options
-                if "options" in slave:
-                    for opt in slave["options"]:
-                        iface.set_slave_option(slave_id, opt["name"],
-                                               opt["value"])
-
-        if "addresses" in iface_xml_data:
-            for addr in iface_xml_data["addresses"]:
-                iface.add_address(addr)
-
-        if "options" in iface_xml_data:
-            for opt in iface_xml_data["options"]:
-                iface.set_option(opt["name"], opt["value"])
-
-        if "netem" in iface_xml_data:
-            iface.set_netem(iface_xml_data["netem"].to_dict())
-
-        if "ovs_conf" in iface_xml_data:
-            iface.set_ovs_conf(iface_xml_data["ovs_conf"].to_dict())
-
-        if iface_xml_data["netns"] != None:
-            iface.set_netns(iface_xml_data["netns"])
-
-        if "peer" in iface_xml_data:
-            iface.set_peer(iface_xml_data["peer"])
-
-    def _prepare_tasks(self):
-        self._tasks = []
-        for task_data in self._recipe["tasks"]:
-            task = {}
-            task["quit_on_fail"] = False
-            if "quit_on_fail" in task_data:
-                task["quit_on_fail"] = bool_it(task_data["quit_on_fail"])
-
-            if "module_dir" in task_data:
-                task["module_dir"] = task_data["module_dir"]
-
-            if "tools_dir" in task_data:
-                task["tools_dir"] = task_data["tools_dir"]
-
-            if "python" in task_data:
-                root = Path(None, self._recipe_path).get_root()
-                path = Path(root, task_data["python"])
-
-                task["python"] = path
-                if not path.exists():
-                    msg = "Task file '%s' not found." % path.to_str()
-                    raise RecipeError(msg, task_data)
-
-                self._tasks.append(task)
-                continue
-
-            task["commands"] = task_data["commands"]
-            task["skeleton"] = []
-            for cmd_data in task["commands"]:
-                cmd = {"type": cmd_data["type"]}
-
-                if "host" in cmd_data:
-                    cmd["host"] = cmd_data["host"]
-                    if cmd["host"] not in self._machines:
-                        msg = "Invalid host id '%s'." % cmd["host"]
-                        raise RecipeError(msg, cmd_data)
-
-                if cmd["type"] in ["test", "exec"]:
-                    if "bg_id" in cmd_data:
-                        cmd["bg_id"] = cmd_data["bg_id"]
-                elif cmd["type"] in ["wait", "intr", "kill"]:
-                    cmd["proc_id"] = cmd_data["bg_id"]
-
-                task["skeleton"].append(cmd)
-
-            if self._check_task(task):
-                raise RecipeError("Incorrect command sequence.", task_data)
-
-            self._tasks.append(task)
+        if iface_data["netns"] != None:
+            iface.set_netns(iface_data["netns"])
 
     def _prepare_command(self, cmd_data):
         cmd = {"type": cmd_data["type"]}
@@ -633,43 +493,23 @@ class NetTestController:
             os.remove("/tmp/.lnst_machine_conf")
 
     def match_setup(self):
+        self.run_mode = "match_setup"
+        res = self._run_python_task()
         return {"passed": True}
 
     def config_only_recipe(self):
+        self.run_mode = "config_only"
         try:
-            self._prepare_network(resource_sync=False)
-        except (KeyboardInterrupt, Exception) as exc:
-            msg = "Exception raised during configuration."
-            logging.error(msg)
-            self._cleanup_slaves()
+            res = self._run_recipe()
+        except Exception as exc:
+            logging.error("Recipe execution terminated by unexpected exception")
             raise
+        finally:
+            self._cleanup_slaves()
 
-        self._save_machine_config()
-
-        self._cleanup_slaves(deconfigure=False)
-        return {"passed": True}
+        return res
 
     def run_recipe(self):
-        try:
-            self._prepare_tasks()
-            self._prepare_network()
-        except (KeyboardInterrupt, Exception) as exc:
-            msg = "Exception raised during configuration."
-            logging.error(msg)
-            self._cleanup_slaves()
-            raise
-
-        try:
-            if self._packet_capture:
-                self._start_packet_capture()
-        except Exception as exc:
-            logging.error("Couldn't start packet capture.")
-            logging.error(str(exc))
-            self._cleanup_slaves()
-            return {"passed": False,
-                    "err_msg": str(exc)}
-
-        err = None
         try:
             res = self._run_recipe()
         except Exception as exc:
@@ -704,70 +544,44 @@ class NetTestController:
     def _run_recipe(self):
         overall_res = {"passed": True}
 
-        for task in self._tasks:
+        try:
             self._res_serializer.add_task()
-            try:
-                res = self._run_task(task)
-            except CommandException as exc:
-                logging.debug(exc)
-                overall_res["passed"] = False
-                overall_res["err_msg"] = "Command exception raised."
-                break
+            res = self._run_python_task()
+        except CommandException as exc:
+            logging.debug(exc)
+            overall_res["passed"] = False
+            overall_res["err_msg"] = "Command exception raised."
 
-            for machine in self._machines.itervalues():
-                machine.restore_system_config()
+        for machine in self._machines.itervalues():
+            machine.restore_system_config()
 
-            # task failed, check if we should quit_on_fail
-            if not res:
-                overall_res["passed"] = False
-                overall_res["err_msg"] = "At least one command failed."
-                if task["quit_on_fail"]:
-                    break
+        # task failed
+        if not res:
+            overall_res["passed"] = False
+            overall_res["err_msg"] = "At least one command failed."
 
         return overall_res
 
     def init_taskapi(self):
         Task.ctl = Task.ControllerAPI(self)
 
-    def _run_python_task(self, task):
+    def _run_python_task(self):
         #backup of resource table
         res_table_bkp = copy.deepcopy(self._resource_table)
-        if 'module_dir' in task:
-            modules = self._load_test_modules([task['module_dir']])
-            self._resource_table['module'].update(modules)
-        if 'tools_dir' in task:
-            tools = self._load_test_tools([task['tools_dir']])
-            self._resource_table['tools'].update(tools)
-
-        # Initialize the API handle
-        Task.ctl = Task.ControllerAPI(self, self._machines)
 
         cwd = os.getcwd()
-        task_path = task["python"]
+        task_path = self._recipe_path
         name = os.path.basename(task_path.abs_path()).split(".")[0]
         sys.path.append(os.path.dirname(task_path.resolve()))
         os.chdir(os.path.dirname(task_path.resolve()))
-        module = imp.load_source(name, task_path.resolve())
+        imp.load_source(name, task_path.resolve())
         os.chdir(cwd)
         sys.path.remove(os.path.dirname(task_path.resolve()))
 
         #restore resource table
         self._resource_table = res_table_bkp
 
-        return module.ctl._result
-
-    def _run_task(self, task):
-        if "python" in task:
-            return self._run_python_task(task)
-
-        seq_passed = True
-        for cmd_data in task["commands"]:
-            cmd = self._prepare_command(cmd_data)
-            cmd_res = self._run_command(cmd)
-            if not cmd_res["passed"]:
-                seq_passed = False
-
-        return seq_passed
+        return Task.ctl._result
 
     def _run_command(self, command):
         logging.info("Executing command: [%s]", str_command(command))
@@ -896,12 +710,11 @@ class NetTestController:
         return packages
 
     def _get_alias(self, alias):
-        templates = self._parser._template_proc
-        return templates._find_definition(alias)
+        if alias in self._defined_aliases:
+            return self._defined_aliases[alias]
 
     def _get_aliases(self):
-        templates = self._parser._template_proc
-        return templates._dump_definitions()
+        return self._defined_aliases
 
 class MessageDispatcher(ConnectionHandler):
     def __init__(self, log_ctl):
