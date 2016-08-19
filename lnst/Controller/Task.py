@@ -32,6 +32,57 @@ except:
 # The handle to be imported from each task
 ctl = None
 
+def get_alias(alias, default=None):
+    return ctl.get_alias(alias, default)
+
+def get_mreq():
+    return ctl.get_mreq()
+
+def wait(seconds):
+    return ctl.wait(seconds)
+
+def get_module(name, options={}):
+    return ctl.get_module(name, options)
+
+def breakpoint():
+    if ctl.run_mode != "config_only":
+        return
+    raw_input("Breakpoint reached. Press enter to continue.")
+
+def add_host(params={}):
+    m_id = ctl.gen_m_id()
+    ctl.mreq[m_id] = {'interfaces' : {}, 'params' : params}
+    handle =  HostAPI(ctl, m_id)
+    ctl.add_host(m_id, handle)
+    return handle
+
+def match():
+    ctl.cleanup_slaves()
+
+    if ctl.first_run:
+        ctl.first_run = False
+        ctl.set_machine_requirements()
+
+        if ctl.prepare_test_env():
+            if ctl.run_mode == "match_setup":
+                return False
+            if ctl.packet_capture():
+                ctl.start_packet_capture()
+            return True
+    else:
+        if ctl._ctl._multi_match:
+            if ctl.prepare_test_env():
+                if ctl.run_mode == "match_setup":
+                    return False
+                if ctl.packet_capture():
+                    ctl.start_packet_capture()
+                return True
+            else:
+                return False
+        else:
+            return False
+
+
 class TaskError(Exception): pass
 
 class ControllerAPI(object):
