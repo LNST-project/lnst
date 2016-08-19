@@ -547,6 +547,9 @@ class InterfaceAPI(object):
         self._if = interface
         self._host = host
 
+    def init_iface(self, interface):
+        self._if = interface
+
     def get_id(self):
         return self._if.get_id()
 
