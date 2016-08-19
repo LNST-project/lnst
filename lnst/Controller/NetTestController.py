@@ -66,6 +66,7 @@ class NetTestController:
         self._packet_capture = packet_capture
         self._reduce_sync = reduce_sync
         self._parser = RecipeParser(recipe_path)
+        self._defined_aliases = defined_aliases
         self._multi_match = multi_match
 
         self.remove_saved_machine_config()
