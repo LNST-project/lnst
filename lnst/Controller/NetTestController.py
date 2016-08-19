@@ -24,7 +24,7 @@ from lnst.Common.NetUtils import MacPool
 from lnst.Common.Utils import md5sum, dir_md5sum
 from lnst.Common.Utils import check_process_running, bool_it, get_module_tools
 from lnst.Common.NetTestCommand import str_command, CommandException
-from lnst.Controller.RecipeParser import RecipeParser, RecipeError
+from lnst.Controller.RecipeParser import RecipeError
 from lnst.Controller.SlavePool import SlavePool
 from lnst.Controller.Machine import MachineError, VirtualInterface
 from lnst.Controller.Machine import StaticInterface
@@ -115,76 +115,6 @@ class NetTestController:
         logging.debug("%s terminated with status %s", session.command, status)
         msg = "SSH session terminated with status %s" % status
         raise NetTestError(msg)
-
-    def _get_machine_requirements(self):
-        recipe = self._recipe
-
-        # There must be some machines specified in the recipe
-        if "machines" not in recipe or \
-          ("machines" in recipe and len(recipe["machines"]) == 0):
-            msg = "No hosts specified in the recipe. At least two " \
-                  "hosts are required to perform a network test."
-            raise RecipeError(msg, recipe)
-
-        # machine requirements
-        mreq = {}
-        for machine in recipe["machines"]:
-            m_id = machine["id"]
-
-            if m_id in mreq:
-                msg = "Machine with id='%s' already exists." % m_id
-                raise RecipeError(msg, machine)
-
-            params = {}
-            if "params" in machine:
-                for p in machine["params"]:
-                    if p["name"] in params:
-                        msg = "Parameter '%s' of host %s was specified " \
-                              "multiple times. Overriding the previous value." \
-                              % (p["name"], m_id)
-                        logging.warn(RecipeError(msg, p))
-                    name = p["name"]
-                    val = p["value"]
-                    params[name] = val
-
-            # Each machine must have at least one interface
-            if "interfaces" not in machine or \
-              ("interfaces" in machine and len(machine["interfaces"]) == 0):
-                msg = "Host '%s' has no interfaces specified." % m_id
-                raise RecipeError(msg, machine)
-
-            ifaces = {}
-            for iface in machine["interfaces"]:
-                if_id = iface["id"]
-                if if_id in ifaces:
-                    msg = "Interface with id='%s' already exists on host " \
-                          "'%s'." % (if_id, m_id)
-
-                iface_type = iface["type"]
-                if iface_type != "eth":
-                    continue
-
-                iface_params = {}
-                if "params" in iface:
-                    for i in iface["params"]:
-                        if i["name"] in iface_params:
-                            msg = "Parameter '%s' of interface %s of " \
-                                  "host %s was defined multiple times. " \
-                                  "Overriding the previous value." \
-                                  % (i["name"], if_id, m_id)
-                            logging.warn(RecipeError(msg, p))
-                        name = i["name"]
-                        val = i["value"]
-                        iface_params[name] = val
-
-                ifaces[if_id] = {
-                    "network": iface["network"],
-                    "params": iface_params
-                }
-
-            mreq[m_id] = {"params": params, "interfaces": ifaces}
-
-        return mreq
 
     def _prepare_network(self, resource_sync=True):
         mreq = Task.get_mreq()
