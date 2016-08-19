@@ -140,27 +140,6 @@ class ControllerAPI(object):
         self._result = self._result and res["passed"]
         return res
 
-    def get_host(self, host_id):
-        """
-            Get an API handle for the host from the recipe spec with
-            a specific id.
-
-            :param host_id: id of the host as defined in the recipe
-            :type host_id: string
-
-            :return: The host handle.
-            :rtype: HostAPI
-
-            :raises TaskError: If there is no host with such id.
-        """
-        if host_id not in self._hosts:
-            raise TaskError("Host '%s' not found." % host_id)
-
-        return self._hosts[host_id]
-
-    def get_hosts(self):
-        return self._hosts
-
     def get_module(self, name, options={}):
         """
             Initialize a module to be run on a host.
@@ -416,82 +395,6 @@ class HostAPI(object):
         cmd_res = self._ctl._run_command(cmd)
         return ProcessAPI(self._ctl, self._id, cmd_res, bg_id, cmd["netns"])
 
-    def get_interfaces(self):
-        return self._ifaces
-
-    def get_interface(self, if_id):
-        return self._ifaces[if_id]
-
-    def get_device(self, name):
-        dev = self._m.dev_db_get_name(name)
-        if dev:
-            return DeviceAPI(self._m.dev_db_get_name(name), self)
-        else:
-            raise TaskError("No device with name '%s' found." % str(name))
-
-    @deprecated
-    def get_devname(self, if_id):
-        """
-            Returns devname of the interface.
-
-            :param if_id: which interface
-            :type if_id: string
-
-            :return: Device name (e.g., eth0).
-            :rtype: str
-        """
-        iface = self._ifaces[if_id]
-        return iface.get_devname()
-
-    @deprecated
-    def get_hwaddr(self, if_id):
-        """
-            Returns hwaddr of the interface.
-
-            :param if_id: which interface
-            :type if_id: string
-
-            :return: HW address (e.g., 00:11:22:33:44:55:FF).
-            :rtype: str
-        """
-        iface = self._ifaces[if_id]
-        return iface.get_hwaddr()
-
-    @deprecated
-    def get_ip(self, if_id, addr_number=0):
-        """
-            Returns an IP address of the interface.
-
-            :param if_id: which interface
-            :type if_id: string
-
-            :param addr_number: which address
-            :type addr_number: int
-
-            :return: IP address (e.g., 192.168.1.10).
-            :rtype: str
-        """
-        iface = self._ifaces[if_id]
-        return iface.get_ip_addr(addr_number)
-
-    @deprecated
-    def get_prefix(self, if_id, addr_number=0):
-        """
-            Returns an IP address prefix (netmask)
-            of the interface.
-
-            :param if_id: which interface
-            :type if_id: string
-
-            :param addr_number: which address
-            :type addr_number: int
-
-            :return: netmask (e.g., 24).
-            :rtype: str
-        """
-        iface = self._ifaces[if_id]
-        return iface.get_ip_prefix(addr_number)
-
     def sync_resources(self, modules=[], tools=[]):
         res_table = self._ctl._ctl._resource_table
         sync_table = {'module': {}, 'tools': {}}
@@ -686,20 +589,8 @@ class InterfaceAPI(object):
     def get_ips(self, selector={}):
         return VolatileValue(self._if.get_addresses)
 
-    @deprecated
-    def get_ip_addr(self, ip_index=0):
-        return self.get_ip(ip_index)
-
-    @deprecated
-    def get_ip_addrs(self):
-        return self.get_ips()
-
     def get_prefix(self, ip_index=0):
         return VolatileValue(self._if.get_prefix, ip_index)
-
-    @deprecated
-    def get_ip_prefix(self, ip_index=0):
-        return self.get_prefix(ip_index)
 
     def get_mtu(self):
         return VolatileValue(self._if.get_mtu)
