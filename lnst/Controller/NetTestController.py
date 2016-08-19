@@ -232,6 +232,11 @@ class NetTestController:
 
             m.wait_interface_init()
 
+    def set_machine_requirements(self):
+        mreq = Task.get_mreq()
+        sp = self._slave_pool
+        sp.set_machine_requirements(mreq)
+
     def provision_machines(self):
         sp = self._slave_pool
         machines = self._machines
