@@ -136,8 +136,6 @@ def store_alias(alias_def, aliases_dict):
 def exec_action(action, nettestctl):
     if action == "run":
         return nettestctl.run_recipe()
-    elif action == "config_only":
-        return nettestctl.config_only_recipe()
     elif action == "match_setup":
         return nettestctl.match_setup()
 
@@ -380,13 +378,9 @@ def main():
 
     action = args[0]
     recipes = args[1:]
-    if not action in ['run', 'config_only', 'deconfigure', 'match_setup',
-                      'list_pools']:
+    if not action in ['run', 'match_setup', 'list_pools']:
         logging.error("Action '%s' not recognised" % action)
         usage(RETVAL_ERR)
-    if action == 'deconfigure':
-        NetTestController.remove_saved_machine_config()
-        return 0
     elif action == 'list_pools':
         log_ctl.unset_formatter()
         logging.disable(logging.INFO)

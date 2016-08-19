@@ -68,8 +68,6 @@ class NetTestController:
         self._defined_aliases = defined_aliases
         self._multi_match = multi_match
 
-        self.remove_saved_machine_config()
-
         self.run_mode = "run"
         self.breakpoints = breakpoints
 
@@ -315,14 +313,14 @@ class NetTestController:
 
         return err
 
-    def _cleanup_slaves(self, deconfigure=True):
+    def _cleanup_slaves(self):
         if self._machines == None:
             return
 
         for machine_id, machine in self._machines.iteritems():
             if machine.is_configured():
                 try:
-                    machine.cleanup(deconfigure)
+                    machine.cleanup()
                 except:
                     pass
 
@@ -333,112 +331,14 @@ class NetTestController:
             del self._machines[m_id]
 
         # remove dynamically created bridges
-        if deconfigure:
-            for bridge in self._network_bridges.itervalues():
-                bridge.cleanup()
-            self._network_bridges = {}
-
-    def _save_machine_config(self):
-        #saves current virtual configuration to a file, after pickling it
-        config_data = dict()
-        machines = config_data["machines"] = {}
-        for m in self._machines.itervalues():
-            machine = machines[m.get_hostname()] = dict()
-
-            if m.get_libvirt_domain() != None:
-                machine["libvirt_dom"] = m.get_libvirt_domain()
-            machine["interfaces"] = []
-
-            machine["security"] = m.get_security()
-
-            for i in m._interfaces:
-                if isinstance(i, VirtualInterface):
-                    hwaddr = i.get_orig_hwaddr()
-
-                    machine["interfaces"].append(hwaddr)
-
-        config_data["bridges"] = bridges = []
         for bridge in self._network_bridges.itervalues():
-            bridges.append(bridge.get_name())
-
-        with open("/tmp/.lnst_machine_conf", "wb") as f:
-            os.fchmod(f.fileno(), 0o600)
-            pickled_data = cPickle.dump(config_data, f)
-
-    @classmethod
-    def remove_saved_machine_config(cls):
-        #removes previously saved configuration
-        cfg = None
-        try:
-            with open("/tmp/.lnst_machine_conf", "rb") as f:
-                cfg = cPickle.load(f)
-        except:
-            logging.info("No previous configuration found.")
-            return
-
-        if cfg:
-            logging.info("Cleaning up leftover configuration from previous "\
-                         "config_only run.")
-            for hostname, machine in cfg["machines"].iteritems():
-                port = lnst_config.get_option("environment", "rpcport")
-                if test_tcp_connection(hostname, port):
-                    s = socket.create_connection((hostname, port))
-                    rpc_con = CtlSecSocket(s)
-                    try:
-                        rpc_con.handshake(machine["security"])
-                    except SecSocketException:
-                        logging.error("Failed authentication for machine %s" %\
-                                      hostname)
-                        continue
-
-                    rpc_msg= {"type": "command",
-                              "method_name": "machine_cleanup",
-                              "args": []}
-
-                    logging.debug("Calling cleanup on slave '%s'" % hostname)
-                    rpc_con.send_msg(rpc_msg)
-                    while True:
-                        msg = rpc_con.recv_msg()
-                        if msg['type'] == 'result':
-                            break
-                    rpc_con.close()
-
-                if "libvirt_dom" in machine:
-                    libvirt_dom = machine["libvirt_dom"]
-                    domain_ctl = VirtDomainCtl(libvirt_dom)
-                    logging.info("Detaching dynamically created interfaces.")
-                    for i in machine["interfaces"]:
-                        try:
-                            domain_ctl.detach_interface(i)
-                        except:
-                            pass
-
-            logging.info("Removing dynamically created bridges.")
-            for br in cfg["bridges"]:
-                try:
-                    net_ctl = VirtNetCtl(br)
-                    net_ctl.cleanup()
-                except:
-                    pass
-
-            os.remove("/tmp/.lnst_machine_conf")
+            bridge.cleanup()
+        self._network_bridges = {}
 
     def match_setup(self):
         self.run_mode = "match_setup"
         res = self._run_python_task()
         return {"passed": True}
-
-    def config_only_recipe(self):
-        self.run_mode = "config_only"
-        try:
-            res = self._run_recipe()
-        except Exception as exc:
-            logging.error("Recipe execution terminated by unexpected exception")
-            raise
-        finally:
-            self._cleanup_slaves()
-
-        return res
 
     def run_recipe(self):
         try:

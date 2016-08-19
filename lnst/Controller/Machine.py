@@ -286,7 +286,7 @@ class Machine(object):
 
         return self._configured
 
-    def cleanup(self, deconfigure=True):
+    def cleanup(self):
         """ Clean the machine up
 
             This is the counterpart of the configure() method. It will
@@ -322,14 +322,13 @@ class Machine(object):
 
             self.restore_system_config()
 
-            if deconfigure:
-                ordered_ifaces.reverse()
-                for iface in ordered_ifaces:
-                    iface.deconfigure()
-                for iface in ordered_ifaces:
-                    iface.cleanup()
+            ordered_ifaces.reverse()
+            for iface in ordered_ifaces:
+                iface.deconfigure()
+            for iface in ordered_ifaces:
+                iface.cleanup()
 
-                self.del_namespaces()
+            self.del_namespaces()
 
             self.restore_nm_option()
             self._rpc_call("bye")
