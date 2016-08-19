@@ -163,7 +163,8 @@ def get_recipe_result(action, file_path, log_ctl, res_serializer,
                                        defined_aliases=defined_aliases,
                                        overriden_aliases=overriden_aliases,
                                        reduce_sync=reduce_sync,
-                                       restrict_pools=pools)
+                                       restrict_pools=pools,
+                                       multi_match=multi_match)
     except XmlProcessingError as err:
         log_exc_traceback()
         logging.error(err)

@@ -56,7 +56,8 @@ class NetTestController:
                  res_serializer=None, pool_checks=True,
                  packet_capture=False,
                  defined_aliases=None, overriden_aliases=None,
-                 reduce_sync=False, restrict_pools=[]):
+                 reduce_sync=False, restrict_pools=[],
+                 multi_match=False):
         self._res_serializer = res_serializer
         self._remote_capture_files = {}
         self._log_ctl = log_ctl
@@ -65,6 +66,7 @@ class NetTestController:
         self._packet_capture = packet_capture
         self._reduce_sync = reduce_sync
         self._parser = RecipeParser(recipe_path)
+        self._multi_match = multi_match
 
         self.remove_saved_machine_config()
 
