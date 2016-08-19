@@ -57,11 +57,17 @@ class ControllerAPI(object):
     def cleanup_slaves(self):
        self._ctl._cleanup_slaves()
 
+    def set_machine_requirements(self):
+        self._ctl.set_machine_requirements()
+
     def packet_capture(self):
         return self._ctl._packet_capture
 
     def start_packet_capture(self):
         self._ctl._start_packet_capture()
+
+    def prepare_test_env(self):
+        return self._ctl.prepare_test_env()
 
     def gen_m_id(self):
         self._m_id_seq += 1
