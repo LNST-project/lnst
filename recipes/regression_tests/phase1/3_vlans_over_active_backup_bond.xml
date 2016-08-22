@@ -32,9 +32,6 @@
                         <slave id="eth1" />
                         <slave id="eth2" />
                     </slaves>
-                    <addresses>
-                        <address value="2002::1/64" />
-                    </addresses>
                 </bond>
                 <vlan id="vlan10">
                     <options>
