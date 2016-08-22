@@ -309,12 +309,15 @@ class Machine(object):
                 if isinstance(iface, UnusedInterface):
                     continue
                 stats = iface.link_stats()
-                logging.debug("%s:%s:%s: RX:\t bytes: %d\t packets: %d\t dropped: %d" %
-                              (iface.get_netns(), iface.get_host(), iface.get_id(),
-                              stats["rx_bytes"], stats["rx_packets"], stats["rx_dropped"]))
-                logging.debug("%s:%s:%s: TX:\t bytes: %d\t packets: %d\t dropped: %d" %
-                              (iface.get_netns(), iface.get_host(), iface.get_id(),
-                              stats["tx_bytes"], stats["tx_packets"], stats["tx_dropped"]))
+                if stats:
+                    logging.debug("%s:%s:%s: RX:\t bytes: %d\t packets: %d\t dropped: %d" %
+                                  (iface.get_netns(), iface.get_host(),
+                                   iface.get_id(), stats["rx_bytes"],
+                                   stats["rx_packets"], stats["rx_dropped"]))
+                    logging.debug("%s:%s:%s: TX:\t bytes: %d\t packets: %d\t dropped: %d" %
+                                  (iface.get_netns(), iface.get_host(),
+                                   iface.get_id(), stats["tx_bytes"],
+                                   stats["tx_packets"], stats["tx_dropped"]))
 
             self._rpc_call("kill_cmds")
             for netns in self._namespaces:

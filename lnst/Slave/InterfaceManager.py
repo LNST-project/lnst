@@ -647,7 +647,11 @@ class Device(object):
     def link_stats(self):
         stats = {"devname": self._name,
                  "hwaddr": self._hwaddr}
-        out, _ = exec_cmd("ip -s link show %s" % self._name)
+        try:
+            out, _ = exec_cmd("ip -s link show %s" % self._name)
+        except:
+            return {}
+
         lines = iter(out.split("\n"))
         for line in lines:
             if (len(line.split()) == 0):
