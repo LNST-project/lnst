@@ -56,12 +56,3 @@ function print_separator
 {
     echo "--------------------------------------------------------------------------------"
 }
-
-function lnst-ctl
-{
-    if [ "$use_user_conf" = "true" ]; then
-        command lnst-ctl $@
-    else
-        command lnst-ctl -c $repo/lnst-ctl.conf $@
-    fi
-}

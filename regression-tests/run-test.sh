@@ -56,14 +56,18 @@ function usage
     exit 0
 }
 
+function lnst-ctl
+{
+    if [ "$use_user_conf" = "false" ]; then
+        command lnst-ctl -C $repo/lnst-ctl.conf $@
+    else
+        command lnst-ctl $@
+    fi
+}
+
 function get_pool_dirs
 {
-    if [ "$use_user_conf" = "true" ]; then
-        command lnst-ctl --dump-pools 2>/dev/null | cut -d = -f2
-    else
-        command lnst-ctl -C $repo/lnst-ctl.conf --dump-pools 2>/dev/null |
-                cut -d = -f2
-    fi
+    lnst-ctl list_pools 2>/dev/null | sed -n 's/Pool: .*(\(.*\))$/\1/p'
 }
 
 # ---
@@ -72,6 +76,7 @@ function get_pool_dirs
 url="../"
 use_git=true
 export use_user_conf="false"
+export -f lnst-ctl
 
 while getopts "chlr:t:g:ns" OPTION
 do
@@ -110,7 +115,7 @@ export repo=`mktemp -d`
 if $use_git ; then
     git clone $url $repo
 else
-    rsync -r $url $repo
+    rsync -r -L $url $repo
 fi
 
 if $use_git ; then
@@ -146,8 +151,7 @@ for pool_dir in $pool_dirs; do
         remote_repo=`ssh "root@$hostname" "mktemp -d"`
 
         # Transfer the repo to the machine
-        rsync -r --exclude "Logs" --exclude ".git" "$repo/" \
-            "root@$hostname:$remote_repo"
+        rsync -r -L --exclude "Logs" "$repo/" "root@$hostname:$remote_repo"
 
         if [ ! -z $nm_off ]; then
             ssh "root@$hostname" "cd $remote_repo && echo \"use_nm = false\" >> lnst-slave.conf"
