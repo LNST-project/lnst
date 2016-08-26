@@ -520,6 +520,13 @@ class Device(object):
         self._conf_dict = None
 
     def _clear_tc_qdisc(self):
+        try:
+            #checks device existence as it might have been removed by
+            #calling self.deconfigure()
+            exec_cmd("ip l show %s" % self._name, log_outputs=False)
+        except:
+            return
+
         exec_cmd("tc qdisc replace dev %s root pfifo" % self._name)
         out, _ = exec_cmd("tc filter show dev %s" % self._name)
         ingress_handles = re.findall("ingress (\\d+):", out)
@@ -532,6 +539,13 @@ class Device(object):
                 exec_cmd("tc qdisc del dev %s ingress" % self._name)
 
     def _clear_tc_filters(self):
+        try:
+            #checks device existence as it might have been removed by
+            #calling self.deconfigure()
+            exec_cmd("ip l show %s" % self._name, log_outputs=False)
+        except:
+            return
+
         out, _ = exec_cmd("tc filter show dev %s" % self._name)
         egress_prefs = re.findall("pref (\\d+) .* handle", out)
 
@@ -552,10 +566,10 @@ class Device(object):
                 m_dev.clear_configuration()
 
         if self._conf != None:
-            self._clear_tc_qdisc()
-            self._clear_tc_filters()
             self.down()
             self.deconfigure()
+            self._clear_tc_qdisc()
+            self._clear_tc_filters()
             self.destroy()
             self._conf = None
             self._conf_dict = None
