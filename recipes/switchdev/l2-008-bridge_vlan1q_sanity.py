@@ -44,8 +44,6 @@ def do_task(ctl, hosts, ifaces, aliases):
     m2_if1_20 = m2.create_vlan(m2_if1, 20, ip=test_ip(3, 2))
     m2_if1_30 = m2.create_vlan(m2_if1, 30, ip=test_ip(4, 2))
 
-    sw_if1.reset(ip=test_ip(1, 3))
-
     br_options = {"vlan_filtering": 1}
     sw_br = sw.create_bridge(slaves=[sw_if1, sw_if2], options=br_options)
 
@@ -95,8 +93,9 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(m1_if1, m2_if1)
 
     sw_br.slave_del(sw_if1.get_id())
+    sw_if1.reset(ip=test_ip(1, 3))
 
-    sleep(5)
+    sleep(15)
 
     tl.ping_simple(sw_if1, m1_if1)
 
