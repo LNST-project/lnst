@@ -135,6 +135,7 @@ class TestLib:
             "num_parallel" : num_parallel,
             "testname" : testname,
             "netperf_opts" : "-L %s%s" % (if2.get_ip(addr_index), ipv6_str),
+            "testoptions" : "-R 1",
         }
         return self._ctl.get_module("Netperf", options = modules_options)
 
