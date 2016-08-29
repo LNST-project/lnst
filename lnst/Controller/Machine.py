@@ -770,6 +770,14 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "del_route",
                                   self._id, dest, ipv6)
 
+    def add_nhs_route(self, dest, nhs, ipv6 = False):
+        self._machine._rpc_call_x(self._netns, "add_nhs_route",
+                                  self._id, dest, nhs, ipv6)
+
+    def del_nhs_route(self, dest, nhs, ipv6 = False):
+        self._machine._rpc_call_x(self._netns, "del_nhs_route",
+                                  self._id, dest, nhs, ipv6)
+
     def update_from_slave(self):
         if_data = self._machine._rpc_call_x(self._netns, "get_if_data",
                                             self._id)
