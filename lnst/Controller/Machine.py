@@ -762,13 +762,13 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "set_addresses",
                                   self._id, ips)
 
-    def add_route(self, dest):
+    def add_route(self, dest, ipv6 = False):
         self._machine._rpc_call_x(self._netns, "add_route",
-                                  self._id, dest)
+                                  self._id, dest, ipv6)
 
-    def del_route(self, dest):
+    def del_route(self, dest, ipv6 = False):
         self._machine._rpc_call_x(self._netns, "del_route",
-                                  self._id, dest)
+                                  self._id, dest, ipv6)
 
     def update_from_slave(self):
         if_data = self._machine._rpc_call_x(self._netns, "get_if_data",
