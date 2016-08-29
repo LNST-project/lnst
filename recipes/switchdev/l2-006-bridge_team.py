@@ -55,6 +55,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(sw_if1, m1_if1)
 
     # Repopulate the LAGs and make sure fastpath is OK.
+    sw_if1.set_addresses([])    # LAG port can't have IP address.
     sw_lag3 = sw.create_team(slaves=[sw_if1, sw_if2],
                              config=team_config)
     sw_br.slave_add(sw_lag3.get_id())
