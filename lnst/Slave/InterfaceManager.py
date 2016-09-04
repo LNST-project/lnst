@@ -656,6 +656,8 @@ class Device(object):
         for line in lines:
             if (len(line.split()) == 0):
                 continue
+            if (line.split()[0] == 'vf'):
+                break
             if (line.split()[0] == "RX:"):
                 rx_stats = map(int, lines.next().split())
                 stats.update({"rx_bytes"  : rx_stats[0],
