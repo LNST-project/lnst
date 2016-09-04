@@ -17,6 +17,7 @@ from lnst.Common.ExecCmd import exec_cmd
 from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Slave.NetConfigCommon import parse_netem, get_slave_options
 from lnst.Common.Utils import bool_it
+from lnst.Common.Utils import check_process_running
 from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
 from lnst.Slave.NmConfigDevice import is_nm_managed
 
@@ -450,11 +451,13 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
     @classmethod
     def type_init(self):
         super(NetConfigDeviceOvsBridge, self).type_init()
-        exec_cmd("mkdir -p /var/run/openvswitch/")
-        exec_cmd("ovsdb-server --detach --pidfile "\
+        if not check_process_running("ovsdb-server"):
+            exec_cmd("mkdir -p /var/run/openvswitch/")
+            exec_cmd("ovsdb-server --detach --pidfile "\
                               "--remote=punix:/var/run/openvswitch/db.sock",
                               die_on_err=False)
-        exec_cmd("ovs-vswitchd --detach --pidfile", die_on_err=False)
+        if not check_process_running("ovs-vswitchd"):
+            exec_cmd("ovs-vswitchd --detach --pidfile", die_on_err=False)
 
     def _add_ports(self):
         slaves = self._dev_config["slaves"]
