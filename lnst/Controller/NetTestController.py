@@ -760,7 +760,7 @@ class NetTestController:
 
         try:
             cmd_res = machine.run_command(command)
-        except Exception as exc:
+        except (KeyboardInterrupt, Exception) as exc:
             cmd_res = {"passed": False,
                        "res_data": {"Exception": str(exc)},
                        "msg": "Exception raised.",
