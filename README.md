@@ -15,6 +15,29 @@ su
 ./setup.py install
 ```
 
+### Prerequirement
+
+Make sure python-devel, dbus-devel and dbus-glib-devel packages are installed:
+```bash
+su
+dnf install python-devel dbus-devel dbus-glib-devel
+```
+
+In addition the following python libraries should be installed:
+
+Using package manager:
+```
+su
+dnf install dbus-python-devel
+dnf install python-pyroute2
+```
+
+Or using `pip`:
+```bash
+su
+pip install pyroute2
+pip install dbus-python
+```
 
 ## Authors
 

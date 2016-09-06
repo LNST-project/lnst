@@ -610,6 +610,7 @@ class Interface(object):
         self._mtu = None
         self._driver = None
         self._devlink = None
+        self._routes = []
 
     def get_id(self):
         return self._id
@@ -762,13 +763,29 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "set_addresses",
                                   self._id, ips)
 
-    def add_route(self, dest):
+    def add_route(self, dest, ipv6 = False):
+        self._routes+= [(dest, None, ipv6)]
         self._machine._rpc_call_x(self._netns, "add_route",
-                                  self._id, dest)
+                                  self._id, dest, ipv6)
 
-    def del_route(self, dest):
+    def del_route(self, dest, ipv6 = False):
+        for i, val in enumerate(self._routes):
+            if val == (dest, None, ipv6):
+                del self._routes[i]
         self._machine._rpc_call_x(self._netns, "del_route",
-                                  self._id, dest)
+                                  self._id, dest, ipv6)
+
+    def add_nhs_route(self, dest, nhs, ipv6 = False):
+        self._routes+= [(dest, nhs, ipv6)]
+        self._machine._rpc_call_x(self._netns, "add_nhs_route",
+                                  self._id, dest, nhs, ipv6)
+
+    def del_nhs_route(self, dest, nhs, ipv6 = False):
+        for i, val in enumerate(self._routes):
+            if val == (dest, nhs, ipv6):
+                del self._routes[i]
+        self._machine._rpc_call_x(self._netns, "del_nhs_route",
+                                  self._id, dest, nhs, ipv6)
 
     def update_from_slave(self):
         if_data = self._machine._rpc_call_x(self._netns, "get_if_data",
@@ -866,6 +883,12 @@ class Interface(object):
     def deconfigure(self):
         if not self._configured:
             return
+
+        while self._routes != []:
+            if self._routes[1] == None:
+                del_route(self._routes[0], self._routes[2])
+            else:
+                del_route(self._routes[0], self._routes[1], self._routes[2])
 
         self._machine._rpc_call_x(self._netns, "deconfigure_interface",
                                   self.get_id())

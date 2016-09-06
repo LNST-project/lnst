@@ -208,20 +208,36 @@ class SlaveMethods:
         dev.set_addresses(ips)
         return True
 
-    def add_route(self, if_id, dest):
+    def add_route(self, if_id, dest, ipv6):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is None:
             logging.error("Device with id '%s' not found." % if_id)
             return False
-        dev.add_route(dest)
+        dev.add_route(dest, ipv6)
         return True
 
-    def del_route(self, if_id, dest):
+    def del_route(self, if_id, dest, ipv6):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is None:
             logging.error("Device with id '%s' not found." % if_id)
             return False
-        dev.del_route(dest)
+        dev.del_route(dest, ipv6)
+        return True
+
+    def add_nhs_route(self, if_id, dest, nhs, ipv6):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is None:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        dev.add_nhs_route(dest, nhs, ipv6)
+        return True
+
+    def del_nhs_route(self, if_id, dest, nhs, ipv6):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is None:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        dev.del_nhs_route(dest, nhs, ipv6)
         return True
 
     def set_device_up(self, if_id):

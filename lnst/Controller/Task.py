@@ -623,11 +623,23 @@ class InterfaceAPI(object):
     def set_addresses(self, ips):
         self._if.set_addresses(ips)
 
+    def add_route(self, dest, ipv6 = False):
+        self._if.add_route(dest, ipv6)
+
+    def add_nhs_route(self, dest, nhs, ipv6 = False):
+        self._if.add_nhs_route(dest, nhs, ipv6)
+
+    def del_route(self, dest, ipv6 = False):
+        self._if.del_route(dest, ipv6)
+
+    def del_nhs_route(self, dest, nhs, ipv6 = False):
+        self._if.del_nhs_route(dest, nhs, ipv6)
+
     def enable_multicast(self):
-        self._if.add_route("224.0.0.0/4")
+        self._if.add_route("224.0.0.0/4", False)
 
     def disable_multicast(self):
-        self._if.del_route("224.0.0.0/4")
+        self._if.del_route("224.0.0.0/4", False)
 
     def destroy(self):
         self._host._remove_iface(self)

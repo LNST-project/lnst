@@ -680,11 +680,23 @@ class Device(object):
         for address in ips:
             exec_cmd("ip addr add %s dev %s" % (address, self._name))
 
-    def add_route(self, dest):
-        exec_cmd("ip route add %s dev %s" % (dest, self._name))
+    def add_route(self, dest, ipv6):
+        exec_cmd("ip %s route add %s dev %s" % ("-6" if ipv6 else "", dest, self._name))
 
-    def del_route(self, dest):
-        exec_cmd("ip route del %s dev %s" % (dest, self._name))
+    def del_route(self, dest, ipv6):
+        exec_cmd("ip %s route del %s dev %s" % ("-6" if ipv6 else "", dest, self._name))
+
+    def route_cmd(self, cmd, dest, nhs, ipv6):
+        cmd = "ip %s route %s %s" % ("-6" if ipv6 else "", cmd, dest)
+        for ns in nhs:
+            cmd = cmd + (" \\\n   nexthop via %s" % ns)
+        exec_cmd(cmd)
+
+    def add_nhs_route(self, dest, nhs, ipv6):
+        self.route_cmd("add", dest, nhs, ipv6)
+
+    def del_nhs_route(self, dest, nhs, ipv6):
+        self.route_cmd("del", dest, nhs, ipv6)
 
     def set_netns(self, netns):
         self._netns = netns
