@@ -17,12 +17,21 @@
         <alias name="vlan20_tag" value="20"/>
         <alias name="vlan30_net" value="192.168.30"/>
         <alias name="vlan30_tag" value="30"/>
+        <alias name="driver" value="ixgbe"/>
     </define>
     <network>
         <host id="testmachine1">
             <interfaces>
-                <eth id="eth1" label="tnet" />
-                <eth id="eth2" label="tnet" />
+                <eth id="eth1" label="tnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
+                <eth id="eth2" label="tnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
                 <bond id="test_bond">
                     <options>
                         <option name="mode" value="active-backup" />
@@ -73,7 +82,11 @@
         </host>
         <host id="testmachine2">
             <interfaces>
-                <eth id="eth1" label="tnet" />
+                <eth id="eth1" label="tnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
                 <vlan id="vlan10">
                     <options>
                         <option name="vlan_tci" value="{$vlan10_tag}" />

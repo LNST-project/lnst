@@ -12,12 +12,21 @@
         <alias name="nperf_max_dev" value="20%"/>
         <alias name="mapping_file" value="active_backup_bond.mapping" />
         <alias name="net" value="192.168.0"/>
+        <alias name="driver" value="ixgbe"/>
     </define>
     <network>
         <host id="testmachine1">
             <interfaces>
-                <eth id="eth1" label="tnet" />
-                <eth id="eth2" label="tnet" />
+                <eth id="eth1" label="tnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
+                <eth id="eth2" label="tnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
                 <bond id="test_if">
                     <options>
                         <option name="mode" value="active-backup" />
@@ -37,6 +46,9 @@
         <host id="testmachine2">
             <interfaces>
                 <eth id="test_if" label="tnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
                     <addresses>
                         <address value="{$net}.2/24" />
                         <address value="fc00:0:0:0::2/64"/>

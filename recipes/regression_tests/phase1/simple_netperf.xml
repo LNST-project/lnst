@@ -12,11 +12,15 @@
         <alias name="nperf_max_dev" value="20%"/>
         <alias name="mapping_file" value="simple_netperf.mapping" />
         <alias name="net" value="192.168.101" />
+        <alias name="driver" value="ixgbe" />
     </define>
     <network>
         <host id="machine1">
             <interfaces>
                 <eth id="testiface" label="testnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
                     <addresses>
                         <address>{$net}.10/24</address>
                         <address>fc00:0:0:0::1/64</address>
@@ -27,6 +31,9 @@
         <host id="machine2">
             <interfaces>
                 <eth id="testiface" label="testnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
                     <addresses>
                         <address>{$net}.11/24</address>
                         <address>fc00:0:0:0::2/64</address>

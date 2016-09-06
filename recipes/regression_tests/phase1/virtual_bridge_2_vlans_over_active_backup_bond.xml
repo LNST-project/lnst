@@ -15,12 +15,21 @@
         <alias name="vlan10_tag" value="10"/>
         <alias name="vlan20_net" value="192.168.20"/>
         <alias name="vlan20_tag" value="20"/>
+        <alias name="driver" value="ixgbe"/>
     </define>
     <network>
         <host id="host1">
             <interfaces>
-            <eth id="nic1" label="to_switch" />
-            <eth id="nic2" label="to_switch" />
+            <eth id="nic1" label="to_switch">
+                <params>
+                    <param name="driver" value="{$driver}" />
+                </params>
+            </eth>
+            <eth id="nic2" label="to_switch">
+                <params>
+                    <param name="driver" value="{$driver}" />
+                </params>
+            </eth>
             <eth id="tap1" label="to_guest1" />
             <eth id="tap2" label="to_guest2" />
             <bond id="bond">
@@ -95,8 +104,16 @@
 
         <host id="host2">
             <interfaces>
-            <eth id="nic1" label="to_switch"/>
-            <eth id="nic2" label="to_switch"/>
+            <eth id="nic1" label="to_switch">
+                <params>
+                    <param name="driver" value="{$driver}" />
+                </params>
+            </eth>
+            <eth id="nic2" label="to_switch">
+                <params>
+                    <param name="driver" value="{$driver}" />
+                </params>
+            </eth>
             <eth id="tap1" label="to_guest3"/>
             <eth id="tap2" label="to_guest4"/>
             <bond id="bond">

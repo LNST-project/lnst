@@ -12,6 +12,7 @@
         <alias name="mapping_file" value="virtual_ovs_bridge_vlan_in_guest.mapping" />
         <alias name="vlan10_net" value="192.168.10"/>
         <alias name="vlan10_tag" value="10"/>
+        <alias name="driver" value="ixgbe"/>
     </define>
     <network>
         <host id="host1">
@@ -19,7 +20,11 @@
                 <param name="machine_type" value="baremetal"/>
             </params>
             <interfaces>
-                <eth id="nic" label="to_switch" />
+                <eth id="nic" label="to_switch">
+                    <params>
+                        <param name="driver" value="{$driver}" />
+                    </params>
+                </eth>
                 <eth id="tap" label="to_guest" />
                 <ovs_bridge id="br">
                     <slaves>
@@ -55,7 +60,11 @@
                 <param name="machine_type" value="baremetal"/>
             </params>
             <interfaces>
-                <eth id="nic" label="to_switch" />
+                <eth id="nic" label="to_switch">
+                    <params>
+                        <param name="driver" value="{$driver}" />
+                    </params>
+                </eth>
                 <vlan id="vlan10">
                     <options>
                         <option name="vlan_tci" value="{$vlan10_tag}" />
