@@ -57,18 +57,24 @@ class NetConfigDeviceGeneric(object):
 
     def up(self):
         config = self._dev_config
-        if "addresses" in config:
-            for address in config["addresses"]:
-                exec_cmd("ip addr add %s dev %s" % (address, config["name"]))
         exec_cmd("ip link set %s up" % config["name"])
 
     def down(self):
+        config = self._dev_config
+        exec_cmd("ip link set %s down" % config["name"])
+
+    def address_setup(self):
+        config = self._dev_config
+        if "addresses" in config:
+            for address in config["addresses"]:
+                exec_cmd("ip addr add %s dev %s" % (address, config["name"]))
+
+    def address_cleanup(self):
         config = self._dev_config
         if "addresses" in config:
             for address in config["addresses"]:
                 exec_cmd("ip addr del %s dev %s" % (address, config["name"]),
                          die_on_err=False)
-        exec_cmd("ip link set %s down" % config["name"])
 
     def set_addresses(self, ips):
         self._dev_config["addresses"] = ips
@@ -452,9 +458,6 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
         int_ports = self._dev_config["ovs_conf"]["internals"]
         br_name = self._dev_config["name"]
         for iport in int_ports:
-            if "addresses" in iport:
-                for address in iport["addresses"]:
-                    exec_cmd("ip addr add %s dev %s" % (address, iport["name"]))
             exec_cmd("ip link set %s up" % iport["name"])
 
     def down(self):
@@ -467,6 +470,27 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
             exec_cmd("ip link set %s down" % iport["name"])
 
         super(NetConfigDeviceOvsBridge, self).down()
+
+    def address_setup(self):
+        super(NetConfigDeviceOvsBridge, self).up()
+
+        int_ports = self._dev_config["ovs_conf"]["internals"]
+        br_name = self._dev_config["name"]
+        for iport in int_ports:
+            if "addresses" in iport:
+                for address in iport["addresses"]:
+                    exec_cmd("ip addr add %s dev %s" % (address, iport["name"]))
+
+    def address_cleanup(self):
+        super(NetConfigDeviceOvsBridge, self).up()
+
+        int_ports = self._dev_config["ovs_conf"]["internals"]
+        br_name = self._dev_config["name"]
+        for iport in int_ports:
+            if "addresses" in iport:
+                for address in iport["addresses"]:
+                    exec_cmd("ip addr del %s dev %s" % (address, iport["name"]),
+                             die_on_err=False)
 
     @classmethod
     def type_init(self):

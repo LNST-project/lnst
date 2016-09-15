@@ -133,6 +133,34 @@ class NmConfigDeviceGeneric(object):
         if self._connection_added:
             self._nm_deactivate_connection()
 
+    def address_setup(self):
+        config = self._dev_config
+
+        if len(config["addresses"]) == 0:
+            return
+        else:
+            s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
+
+        self._connection["ipv4"] = s_ipv4
+        self._connection["ipv6"] = s_ipv6
+
+        self._nm_update_connection()
+
+        self._nm_reapply_connection()
+
+    def address_cleanup(self):
+        if self._connection['ipv4']['method'] == 'disabled' and\
+           self._connection['ipv6']['method'] == 'ignore':
+            return
+
+        self._connection["ipv4"] = dbus.Dictionary({'method': 'disabled'},
+                                                   signature='sv')
+        self._connection["ipv6"] = dbus.Dictionary({'method': 'ignore'},
+                                                   signature='sv')
+        self._nm_update_connection()
+
+        self._nm_reapply_connection()
+
     @classmethod
     def type_init(self):
         pass
@@ -217,13 +245,6 @@ class NmConfigDeviceGeneric(object):
         return (s_ipv4, s_ipv6)
 
     def _nm_add_connection(self):
-        #NM will succesfully add this connection but is unable to activate it...
-        if self._connection["ipv4"]["method"] == "disabled" and\
-           self._connection["ipv6"]["method"] == "ignore" and\
-           "master" not in self._connection["connection"] and\
-           self._connection["connection"]["type"] == "802-3-ethernet":
-               return
-
         if not self._connection_added:
             bus = self._bus
             settings_obj = bus.get_object(NM_BUS, OBJ_PRE + "/Settings")
@@ -302,6 +323,26 @@ class NmConfigDeviceGeneric(object):
                     raise e
             self._acon_obj_path = None
 
+    def _nm_reapply_connection(self):
+        if self._acon_obj_path == None:
+            return
+
+        config = self._dev_config
+
+        bus = self._bus
+        nm_if = self._nm_if
+
+        try:
+            device_obj_path = nm_if.GetDeviceByIpIface(config["name"])
+        except:
+            logging.error("Device needed to reapply connection doesn't exist")
+            return
+
+        dev_obj = bus.get_object(NM_BUS, device_obj_path)
+        dev_if = dbus.Interface(dev_obj, IF_PRE + ".Device")
+
+        dev_if.Reapply("", 0, 0)
+
     def nm_enslave(self, slave_type, master_uuid, slave_conf):
         if get_nm_version() < "1.0.0":
             self._connection["connection"]["slave_type"] = slave_type
@@ -367,8 +408,6 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
 
         hw_addr = self._convert_hwaddr(config)
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
-
         s_eth = dbus.Dictionary({'mac-address': hw_addr}, signature='sv')
         s_con = dbus.Dictionary({
             'type': '802-3-ethernet',
@@ -379,8 +418,9 @@ class NmConfigDeviceEth(NmConfigDeviceGeneric):
         connection = dbus.Dictionary({
             '802-3-ethernet': s_eth,
             'connection': s_con,
-            'ipv4': s_ipv4,
-            'ipv6': s_ipv6}, signature='sa{sv}')
+            'ipv4': dbus.Dictionary({'method': 'disabled'}, signature='sv'),
+            'ipv6': dbus.Dictionary({'method': 'ignore'}, signature='sv'),
+            }, signature='sa{sv}')
 
         self._connection = connection
         self._nm_add_connection()
@@ -468,12 +508,11 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
             s_bond = dbus.Dictionary({
                 'interface-name': config["name"]})
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
 
         connection = dbus.Dictionary({
             'bond': s_bond,
-            'ipv4': s_ipv4,
-            'ipv6': s_ipv6,
+            'ipv4': dbus.Dictionary({'method': 'disabled'}, signature='sv'),
+            'ipv6': dbus.Dictionary({'method': 'ignore'}, signature='sv'),
             'connection': s_bond_con})
 
         self._connection = connection
@@ -559,12 +598,10 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
             'interface-name': config["name"],
             'stp': dbus.Boolean(False)})
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
-
         connection = dbus.Dictionary({
             'bridge': s_bridge,
-            'ipv4': s_ipv4,
-            'ipv6': s_ipv6,
+            'ipv4': dbus.Dictionary({'method': 'disabled'}, signature='sv'),
+            'ipv6': dbus.Dictionary({'method': 'ignore'}, signature='sv'),
             'connection': s_bridge_con})
 
         self._connection = connection
@@ -686,12 +723,10 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
             'parent': realdev,
             'id': dbus.UInt32(vlan_tci)}, signature="sv")
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
-
         connection = dbus.Dictionary({
             'vlan': s_vlan,
-            'ipv4': s_ipv4,
-            'ipv6': s_ipv6,
+            'ipv4': dbus.Dictionary({'method': 'disabled'}, signature='sv'),
+            'ipv6': dbus.Dictionary({'method': 'ignore'}, signature='sv'),
             'connection': s_vlan_con})
 
         self._connection = connection
@@ -770,12 +805,10 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
             'interface-name': config["name"],
             'config': teamd_config})
 
-        s_ipv4, s_ipv6 = self._nm_make_ip_settings(config["addresses"])
-
         connection = dbus.Dictionary({
             'team': s_team,
-            'ipv4': s_ipv4,
-            'ipv6': s_ipv6,
+            'ipv4': dbus.Dictionary({'method': 'disabled'}, signature='sv'),
+            'ipv6': dbus.Dictionary({'method': 'ignore'}, signature='sv'),
             'connection': s_team_con})
 
         self._connection = connection

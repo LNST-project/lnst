@@ -566,6 +566,7 @@ class Device(object):
                 m_dev.clear_configuration()
 
         if self._conf != None:
+            self.address_cleanup()
             self.down()
             self.deconfigure()
             self._clear_tc_qdisc()
@@ -651,6 +652,14 @@ class Device(object):
             self._conf.down()
         else:
             exec_cmd("ip link set %s down" % self._name)
+
+    def address_setup(self):
+        if self._conf != None:
+            self._conf.address_setup()
+
+    def address_cleanup(self):
+        if self._conf != None:
+            self._conf.address_cleanup()
 
     def link_up(self):
         exec_cmd("ip link set %s up" % self._name)

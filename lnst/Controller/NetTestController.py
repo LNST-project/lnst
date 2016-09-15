@@ -225,6 +225,9 @@ class NetTestController:
             for iface in ifaces:
                 iface.up()
 
+            for iface in ifaces:
+                iface.address_setup()
+
             m.wait_interface_init()
 
     def provision_machines(self):

@@ -254,6 +254,20 @@ class SlaveMethods:
             return False
         return True
 
+    def device_address_setup(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        dev.address_setup()
+        return True
+
+    def device_address_cleanup(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.address_cleanup()
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
     def set_link_up(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is not None:

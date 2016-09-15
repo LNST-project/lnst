@@ -856,6 +856,12 @@ class Interface(object):
     def down(self):
         self._machine._rpc_call_x(self._netns, "set_device_down", self._id)
 
+    def address_setup(self):
+        self._machine._rpc_call_x(self._netns, "device_address_setup", self._id)
+
+    def address_cleanup(self):
+        self._machine._rpc_call_x(self._netns, "device_address_cleanup", self._id)
+
     def set_link_up(self):
         self._machine._rpc_call_x(self._netns, "set_link_up", self._id)
 
@@ -1246,6 +1252,12 @@ class UnusedInterface(Interface):
         pass
 
     def down(self):
+        pass
+
+    def address_setup(self):
+        pass
+
+    def address_cleanup(self):
         pass
 
     def cleanup(self):
