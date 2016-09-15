@@ -599,6 +599,9 @@ class SetupMapper(object):
         req_machine = self._mreqs[req_id]
         pool_machine = self._pool[pool_id]
         for param, value in req_machine["params"].iteritems():
+            # skip empty parameters
+            if len(value) == 0:
+                continue
             if param not in pool_machine["params"] or\
                value != pool_machine["params"][param]:
                 return False
@@ -614,6 +617,9 @@ class SetupMapper(object):
                req_label != req_if["network"]:
                 return False
         for param, value in req_if["params"].iteritems():
+            # skip empty parameters
+            if len(value) == 0:
+                continue
             if param not in pool_if["params"] or\
                value != pool_if["params"][param]:
                 return False
