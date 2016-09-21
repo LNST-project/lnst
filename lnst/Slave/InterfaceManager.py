@@ -774,3 +774,11 @@ class Device(object):
     def enable_lldp(self):
         self._conf.enable_lldp()
         exec_cmd("lldptool -i %s -L adminStatus=rxtx" % self._name)
+
+    def set_pause_on(self):
+        exec_cmd("ethtool -A %s rx on tx on autoneg off" % self._name,
+                 die_on_err=False)
+
+    def set_pause_off(self):
+        exec_cmd("ethtool -A %s rx off tx off autoneg off" % self._name,
+                 die_on_err=False)

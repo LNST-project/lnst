@@ -716,6 +716,12 @@ class InterfaceAPI(object):
     def enable_lldp(self):
         return self._if.enable_lldp()
 
+    def set_pause_on(self):
+        return self._if.set_pause_on()
+
+    def set_pause_off(self):
+        return self._if.set_pause_off()
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

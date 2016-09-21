@@ -989,6 +989,12 @@ class Interface(object):
     def enable_lldp(self):
         return self._machine._rpc_call_x(self._netns, "enable_lldp", self._id)
 
+    def set_pause_on(self):
+        return self._machine._rpc_call_x(self._netns, "set_pause_on", self._id)
+
+    def set_pause_off(self):
+        return self._machine._rpc_call_x(self._netns, "set_pause_off", self._id)
+
 class StaticInterface(Interface):
     """ Static interface
 
