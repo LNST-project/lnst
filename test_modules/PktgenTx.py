@@ -32,7 +32,6 @@ class PktgenWorkers:
     def _init_current_wrkr(self):
         num = self._current
         wrkr = Pktgen("/proc/net/pktgen/kpktgend_%d" % (num))
-        wrkr.set("rem_device_all")
         wrkr.set("max_before_softirq 5000")
         self._wrkrs[num] = wrkr
 
@@ -61,6 +60,11 @@ def pktget_options_merge(pktgen_options, default_pktgen_options):
     res = res + opts
     return [" ".join(opt) for opt in res]
 
+def pktgen_devices_remove():
+    for cpu in range(os.sysconf('SC_NPROCESSORS_ONLN')):
+        cmd = "echo rem_device_all > /proc/net/pktgen/kpktgend_{}"
+        exec_cmd(cmd.format(cpu))
+
 class PktgenTx(TestGeneric):
     def run(self):
         dev_names = self.get_multi_mopt("netdev_name")
@@ -76,6 +80,8 @@ class PktgenTx(TestGeneric):
                                               default_pktgen_options)
 
         exec_cmd("modprobe pktgen")
+
+        pktgen_devices_remove()
 
         pgctl = Pktgen("/proc/net/pktgen/pgctrl")
         pgwrkr = PktgenWorkers()
