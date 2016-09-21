@@ -312,3 +312,46 @@ class TestLib:
             err_msg = ""
 
         self.custom(iface.get_host(), "fdb test", err_msg)
+
+    def _lldp_set(self, iface, tlv_name, arg_name, arg):
+        iface_name = iface.get_devname()
+        m = iface.get_host()
+
+        cmd = "lldptool -i {} -V {} -T {}={}".format(iface_name, tlv_name,
+                                                     arg_name, arg)
+        m.run(cmd)
+
+    def lldp_ets_default_set(self, iface, willing=True):
+        up2tc = ','.join(["{}:0".format(x) for x in range(8)])
+        self._lldp_set(iface, "ETS-CFG", "up2tc", up2tc)
+
+        tsa = ','.join(["{}:strict".format(x) for x in range(8)])
+        self._lldp_set(iface, "ETS-CFG", "tsa", tsa)
+
+        willing = "yes" if willing else "no"
+        self._lldp_set(iface, "ETS-CFG", "willing", willing)
+
+        self._lldp_set(iface, "ETS-CFG", "enableTx", "yes")
+
+    def lldp_ets_up2tc_set(self, iface, up2tc):
+        up2tc = ','.join(["{}:{}".format(x[0], x[1]) for x in up2tc])
+        self._lldp_set(iface, "ETS-CFG", "up2tc", up2tc)
+
+    def lldp_ets_tsa_set(self, iface, tsa, tcbw):
+        tsa = ','.join(["{}:{}".format(prio, algo) for prio, algo in tsa])
+        self._lldp_set(iface, "ETS-CFG", "tsa", tsa)
+
+        tcbw_proper = [0] * 8
+        for prio, bw in tcbw:
+            tcbw_proper[prio] = bw
+        tcbw = ','.join(map(str, tcbw_proper))
+        self._lldp_set(iface, "ETS-CFG", "tcbw", tcbw)
+
+    def lldp_pfc_set(self, iface, prio, willing=True, delay=0):
+        prio = "none" if prio == [] else ','.join(map(str, prio))
+        self._lldp_set(iface, "PFC", "enabled", prio)
+
+        willing = "yes" if willing else "no"
+        self._lldp_set(iface, "PFC", "willing", willing)
+
+        self._lldp_set(iface, "PFC", "delay", delay)
