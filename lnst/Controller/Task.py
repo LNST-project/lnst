@@ -489,6 +489,12 @@ class HostAPI(object):
 
         return self._add_iface("vxlan", if_id, netns, ip, options, slaves)
 
+    def enable_service(self, service):
+        return self._m.enable_service(service)
+
+    def disable_service(self, service):
+        return self._m.disable_service(service)
+
 class DeviceAPI(object):
     def __init__(self, net_device, host):
         self._dev = net_device

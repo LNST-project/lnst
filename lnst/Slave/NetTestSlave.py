@@ -903,6 +903,24 @@ class SlaveMethods:
             return False
         return True
 
+    def _is_systemd(self):
+        stdout, _ = exec_cmd("pidof systemd", die_on_err=False)
+        return len(stdout) != 0
+
+    def _configure_service(self, service, start=True):
+        action = "start" if start else "stop"
+        if self._is_systemd():
+            exec_cmd("systemctl {} {}".format(action, service))
+        else:
+            exec_cmd("service {} {}".format(service, action))
+        return True
+
+    def enable_service(self, service):
+        return self._configure_service(service)
+
+    def disable_service(self, service):
+        return self._configure_service(service, start=False)
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()

@@ -74,6 +74,7 @@ class Machine(object):
 
         self._interfaces = []
         self._namespaces = []
+        self._services = []
         self._bg_cmds = {}
 
         self._device_database = {}
@@ -332,6 +333,7 @@ class Machine(object):
                 for iface in ordered_ifaces:
                     iface.cleanup()
 
+                self.disable_services()
                 self.del_namespaces()
 
             self.restore_nm_option()
@@ -577,6 +579,22 @@ class Machine(object):
 
     def get_security(self):
         return self._security
+
+    def enable_service(self, service):
+        self._services.append(service)
+        return self._rpc_call("enable_service", service)
+
+    def disable_service(self, service):
+        try:
+            self._services.remove(service)
+        except ValueError:
+            return False
+        return self._rpc_call("disable_service", service)
+
+    def disable_services(self):
+        for service in self._services:
+            self.disable_service(service)
+        return True
 
 class Interface(object):
     """ Abstraction of a test network interface on a slave machine
