@@ -3,4 +3,8 @@
     <alias name="mtu" value="1500" />
     <alias name="netperf_duration" value="60" />
     <alias name="netperf_num_parallel" value="30" />
+    <alias name="rx_prio_stats" value="rx_frames_prio_" />
+    <alias name="tx_prio_stats" value="tx_frames_prio_" />
+    <alias name="speed_hi" value="40000" />
+    <alias name="speed_lo" value="10000" />
 </define>

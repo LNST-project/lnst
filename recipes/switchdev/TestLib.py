@@ -37,6 +37,10 @@ class TestLib:
             self._mc_speed = int(aliases["mc_speed"])
         else:
             self._mc_speed = 1000
+        if "rx_prio_stats" in aliases:
+            self._rx_prio_stats = aliases["rx_prio_stats"]
+        if "tx_prio_stats" in aliases:
+            self._tx_prio_stats = aliases["tx_prio_stats"]
 
     def _generate_default_desc(self, if1, ifs):
         ret = "from %s->%s to " % (if1.get_host().get_id(), if1.get_id())
@@ -443,3 +447,22 @@ class TestLib:
         self.devlink_pool_thtype_set(m, devlink_dev, pool, True)
         self.devlink_port_quota_set(iface, pool, pool_size)
         self.devlink_port_tc_quota_set(iface, tc, False, pool, pool_size)
+
+    def get_rx_prio_stats(self, iface, prio):
+        stat = "{}{}".format(self._rx_prio_stats, prio)
+        return iface.get_ethtool_stats()[stat]
+
+    def get_tx_prio_stats(self, iface, prio):
+        stat = "{}{}".format(self._tx_prio_stats, prio)
+        return iface.get_ethtool_stats()[stat]
+
+    def check_stats(self, iface, count, expected, desc, fail=False):
+        match = count == expected
+        err_msg = ""
+
+        if match and fail:
+            err_msg = "number of packets matched when shouldn't"
+        elif not match and not fail:
+            err_msg = "got {} packets, expected {}".format(count, expected)
+
+        return self.custom(iface.get_host(), desc, err_msg)
