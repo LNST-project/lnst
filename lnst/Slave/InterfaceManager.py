@@ -760,3 +760,13 @@ class Device(object):
     def slave_del(self, if_id):
         if self._conf != None:
             self._conf.slave_del(if_id)
+
+    def get_ethtool_stats(self):
+        stdout, _ = exec_cmd("ethtool -S %s" % self._name)
+
+        d = {}
+        # First and last lines don't contain stats.
+        for line in stdout.split('\n')[1:-1]:
+            stat, count = line.split(':')
+            d[stat.strip()] = int(count)
+        return d

@@ -982,6 +982,10 @@ class Interface(object):
                               self._devlink["port_index"])
         return None
 
+    def get_ethtool_stats(self):
+        return self._machine._rpc_call_x(self._netns, "get_ethtool_stats",
+                                         self._id)
+
 class StaticInterface(Interface):
     """ Static interface
 

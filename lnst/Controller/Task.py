@@ -710,6 +710,9 @@ class InterfaceAPI(object):
     def get_devlink_port_name(self):
         return self._if.get_devlink_port_name()
 
+    def get_ethtool_stats(self):
+        return self._if.get_ethtool_stats()
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

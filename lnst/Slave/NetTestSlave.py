@@ -924,6 +924,13 @@ class SlaveMethods:
     def get_num_cpus(self):
         return int(os.sysconf('SC_NPROCESSORS_ONLN'))
 
+    def get_ethtool_stats(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return dev.get_ethtool_stats()
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()
