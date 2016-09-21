@@ -263,7 +263,7 @@ class TestLib:
         for i in err_str:
             self.custom(i[1].get_host(), "iperf_mc", i[0])
 
-    def pktgen(self, if1, if2, pkt_size, desc=None):
+    def pktgen(self, if1, if2, pkt_size, desc=None, thread_option=[]):
         if1.set_mtu(self._mtu)
         m1 = if1.get_host()
         m1.sync_resources(modules=["PktgenTx"])
@@ -272,10 +272,16 @@ class TestLib:
         pktgen_option.append("pkt_size %s" % pkt_size)
         pktgen_option.append("dst_mac %s" % if2.get_hwaddr())
         pktgen_option.append("dst %s" % if2.get_ip(0))
+        if not thread_option:
+            dev_names = if1.get_devname()
+        else:
+            dev_names = ["{}@{}".format(if1.get_devname(), idx) for idx in
+                         range(len(thread_option))]
         pktgen_mod = self._ctl.get_module("PktgenTx",
                                           options={
-                                          "netdev_name": if1.get_devname(),
-                                          "pktgen_option": pktgen_option})
+                                          "netdev_name": dev_names,
+                                          "pktgen_option": pktgen_option,
+                                          "thread_option": thread_option})
 
         m1.run(pktgen_mod, desc=desc, netns=if1.get_netns())
 

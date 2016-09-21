@@ -65,6 +65,7 @@ class PktgenTx(TestGeneric):
     def run(self):
         dev_names = self.get_multi_mopt("netdev_name")
         pktgen_options = self.get_multi_mopt("pktgen_option")
+        thread_options = self.get_multi_opt("thread_option")
 
         default_pktgen_options = [
             "count 10000000",
@@ -80,11 +81,16 @@ class PktgenTx(TestGeneric):
         pgwrkr = PktgenWorkers()
 
         try:
-            for dev_name in dev_names:
+            for idx, dev_name in enumerate(dev_names):
                 pgwrkr.add_device(dev_name)
                 pg = Pktgen("/proc/net/pktgen/%s" % dev_name)
                 for pktgen_option in pktgen_options:
                     pg.set(pktgen_option)
+                if not thread_options:
+                    continue
+                for thread_option in re.split(",", thread_options[idx]):
+                    pg.set(thread_option)
+
             pgctl.set("start")
         except ExecCmdFail:
             res_data = {"msg": "pktgen failed"}
