@@ -283,6 +283,9 @@ class TestLib:
         pktgen_option.append("dst_mac %s" % if2.get_hwaddr())
         pktgen_option.append("dst %s" % if2.get_ip(0))
         for arg, argval in kwargs.iteritems():
+            if arg == "vlan_id":
+                pktgen_option.insert(0, "{} {}".format(arg, argval))
+                continue
             pktgen_option.append("{} {}".format(arg, argval))
         if not thread_option:
             dev_names = if1.get_devname()
