@@ -921,6 +921,9 @@ class SlaveMethods:
     def disable_service(self, service):
         return self._configure_service(service, start=False)
 
+    def get_num_cpus(self):
+        return int(os.sysconf('SC_NPROCESSORS_ONLN'))
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()

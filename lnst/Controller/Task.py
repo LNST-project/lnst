@@ -495,6 +495,9 @@ class HostAPI(object):
     def disable_service(self, service):
         return self._m.disable_service(service)
 
+    def get_num_cpus(self):
+        return self._m.get_num_cpus()
+
 class DeviceAPI(object):
     def __init__(self, net_device, host):
         self._dev = net_device

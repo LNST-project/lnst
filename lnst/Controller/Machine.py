@@ -596,6 +596,9 @@ class Machine(object):
             self.disable_service(service)
         return True
 
+    def get_num_cpus(self):
+        return self._rpc_call("get_num_cpus")
+
 class Interface(object):
     """ Abstraction of a test network interface on a slave machine
 
