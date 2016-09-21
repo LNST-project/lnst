@@ -986,6 +986,9 @@ class Interface(object):
         return self._machine._rpc_call_x(self._netns, "get_ethtool_stats",
                                          self._id)
 
+    def enable_lldp(self):
+        return self._machine._rpc_call_x(self._netns, "enable_lldp", self._id)
+
 class StaticInterface(Interface):
     """ Static interface
 

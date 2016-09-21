@@ -770,3 +770,7 @@ class Device(object):
             stat, count = line.split(':')
             d[stat.strip()] = int(count)
         return d
+
+    def enable_lldp(self):
+        self._conf.enable_lldp()
+        exec_cmd("lldptool -i %s -L adminStatus=rxtx" % self._name)

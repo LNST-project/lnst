@@ -83,6 +83,9 @@ class NetConfigDeviceGeneric(object):
         if self._cleanupcmd:
             exec_cmd(self._cleanupcmd, die_on_err=False)
 
+    def enable_lldp(self):
+        pass
+
 class NetConfigDeviceEth(NetConfigDeviceGeneric):
     def configure(self):
         config = self._dev_config
@@ -98,6 +101,23 @@ class NetConfigDeviceEth(NetConfigDeviceGeneric):
         exec_cmd("ethtool -s %s autoneg on" % config["name"])
         if "netem_cmd" in config:
             exec_cmd(config["netem_cmd"].replace("add", "del"))
+        if "lldp" in config:
+            self.deconfigure_lldp()
+
+    def enable_lldp(self):
+        self._dev_config["lldp"] = True
+
+    def deconfigure_lldp(self):
+        config = self._dev_config
+        up2tc_def = ','.join(["{}:0".format(x) for x in range(8)])
+        tsa_def = ','.join(["{}:strict".format(x) for x in range(8)])
+        exec_cmd("lldptool -i %s -V ETS-CFG -T up2tc=%s" % (config["name"],
+                                                            up2tc_def))
+        exec_cmd("lldptool -i %s -V ETS-CFG -T tsa=%s" % (config["name"],
+                                                          tsa_def))
+        exec_cmd("lldptool -i %s -V PFC -T enabled=none" % config["name"])
+        exec_cmd("lldptool -i %s -L adminStatus=disabled" % config["name"])
+
 
 class NetConfigDeviceLoopback(NetConfigDeviceGeneric):
     def configure(self):

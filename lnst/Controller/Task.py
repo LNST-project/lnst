@@ -713,6 +713,9 @@ class InterfaceAPI(object):
     def get_ethtool_stats(self):
         return self._if.get_ethtool_stats()
 
+    def enable_lldp(self):
+        return self._if.enable_lldp()
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 

@@ -931,6 +931,14 @@ class SlaveMethods:
             return False
         return dev.get_ethtool_stats()
 
+    def enable_lldp(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        dev.enable_lldp()
+        return True
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()
