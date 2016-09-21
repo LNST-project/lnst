@@ -267,15 +267,23 @@ class TestLib:
         for i in err_str:
             self.custom(i[1].get_host(), "iperf_mc", i[0])
 
-    def pktgen(self, if1, if2, pkt_size, desc=None, thread_option=[]):
+    def pktgen(self, if1, if2, pkt_size, desc=None, thread_option=[], **kwargs):
         if1.set_mtu(self._mtu)
         m1 = if1.get_host()
         m1.sync_resources(modules=["PktgenTx"])
 
-        pktgen_option = ["count 10000", "clone_skb 0", "delay 0"]
+        pktgen_option = []
+        if "count" not in kwargs.keys():
+            pktgen_option.append("count 10000")
+        if "clone_skb" not in kwargs.keys():
+            pktgen_option.append("clone_skb 0")
+        if "delay" not in kwargs.keys():
+            pktgen_option.append("delay 0")
         pktgen_option.append("pkt_size %s" % pkt_size)
         pktgen_option.append("dst_mac %s" % if2.get_hwaddr())
         pktgen_option.append("dst %s" % if2.get_ip(0))
+        for arg, argval in kwargs.iteritems():
+            pktgen_option.append("{} {}".format(arg, argval))
         if not thread_option:
             dev_names = if1.get_devname()
         else:
