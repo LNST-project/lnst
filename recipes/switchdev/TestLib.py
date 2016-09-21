@@ -11,6 +11,10 @@ idosch@mellanox.com (Ido Schimmel)
 
 from time import sleep
 import logging
+import re
+
+class RunCmdException(Exception):
+    pass
 
 class TestLib:
     def __init__(self, ctl, aliases):
@@ -355,3 +359,76 @@ class TestLib:
         self._lldp_set(iface, "PFC", "willing", willing)
 
         self._lldp_set(iface, "PFC", "delay", delay)
+
+    def run_json_cmd(self, host, cmd):
+        cmd = host.run(cmd, json=True)
+        if not cmd.passed():
+            raise RunCmdException(cmd.get_result()["res_data"]["stderr"])
+        return cmd.out()
+
+    def devlink_clearmax(self, m, devlink_dev):
+        m.run("devlink sb occupancy clearmax {}".format(devlink_dev))
+
+    def _devlink_occ_snapshot(self, iface):
+        iface_name = iface.get_devname()
+        m = iface.get_host()
+        devlink_dev = iface.get_devlink_name()
+
+        m.run("devlink sb occupancy snapshot {}".format(devlink_dev))
+        cmd = "devlink sb occupancy show {} -j".format(iface_name)
+        return self.run_json_cmd(m, cmd)
+
+    def devlink_tc_max_occ_get(self, iface, ingress, tc):
+        d = self._devlink_occ_snapshot(iface)
+        ie_tc = "itc" if ingress else "etc"
+        iface_name = iface.get_devname()
+
+        return d["occupancy"][unicode(iface_name)][ie_tc][str(tc)]["max"]
+
+    def _devlink_port_tc_pool_get(self, iface, tc, ingress):
+        iface_name = iface.get_devname()
+        m = iface.get_host()
+        devlink_dev = iface.get_devlink_name()
+
+        ingress = "ingress" if ingress else "egress"
+        cmd = "devlink sb tc bind show {} tc {} type {} -j"
+        d = self.run_json_cmd(m, cmd.format(iface_name, tc, ingress))
+        return d["tc_bind"][unicode(iface_name)][0]["pool"]
+
+    def _devlink_pool_size_get(self, m, devlink_dev, pool):
+        cmd = "devlink sb pool show {} pool {} -j"
+        d = self.run_json_cmd(m, cmd.format(devlink_dev, pool))
+
+        return d["pool"][devlink_dev][0]["size"]
+
+    def devlink_pool_thtype_set(self, m, devlink_dev, pool, static):
+        pool_size = self._devlink_pool_size_get(m, devlink_dev, pool)
+
+        cmd = "devlink sb pool set {} pool {} size {} thtype {}"
+        m.run(cmd.format(devlink_dev, pool, pool_size,
+                         "static" if static else "dynamic"))
+
+    def devlink_port_tc_quota_set(self, iface, tc, ingress, pool, th):
+        ingress = "ingress" if ingress else "egress"
+        iface_name = iface.get_devname()
+        m = iface.get_host()
+
+        cmd = "devlink sb tc bind set {} tc {} type {} pool {} th {}"
+        m.run(cmd.format(iface_name, tc, ingress, pool, th))
+
+    def devlink_port_quota_set(self, iface, pool, th):
+        iface_name = iface.get_devname()
+        m = iface.get_host()
+
+        cmd = "devlink sb port pool set {} pool {} th {}"
+        m.run(cmd.format(iface_name, pool, th))
+
+    def devlink_port_etc_quota_max_set(self, iface, tc):
+        devlink_dev = iface.get_devlink_name()
+        m = iface.get_host()
+        pool = self._devlink_port_tc_pool_get(iface, tc, False)
+        pool_size = self._devlink_pool_size_get(m, devlink_dev, pool)
+
+        self.devlink_pool_thtype_set(m, devlink_dev, pool, True)
+        self.devlink_port_quota_set(iface, pool, pool_size)
+        self.devlink_port_tc_quota_set(iface, tc, False, pool, pool_size)
