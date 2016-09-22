@@ -494,6 +494,7 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
 
         s_bond_con = dbus.Dictionary({
             'type': 'bond',
+            'interface-name': config["name"],
             'autoconnect': dbus.Boolean(False),
             'uuid': config["master_uuid"],
             'id': config["name"]+"_con"})
@@ -502,12 +503,9 @@ class NmConfigDeviceBond(NmConfigDeviceGeneric):
 
         if options:
             s_bond = dbus.Dictionary({
-                'interface-name': config["name"],
                 'options': options})
         else:
-            s_bond = dbus.Dictionary({
-                'interface-name': config["name"]})
-
+            s_bond = dbus.Dictionary({})
 
         connection = dbus.Dictionary({
             'bond': s_bond,
@@ -591,11 +589,11 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
         s_bridge_con = dbus.Dictionary({
             'type': 'bridge',
             'autoconnect': dbus.Boolean(False),
+            'interface-name': config["name"],
             'uuid': config["master_uuid"],
             'id': config["name"]+"_con"})
 
         s_bridge = dbus.Dictionary({
-            'interface-name': config["name"],
             'stp': dbus.Boolean(False)})
 
         connection = dbus.Dictionary({
@@ -715,11 +713,11 @@ class NmConfigDeviceVlan(NmConfigDeviceGeneric):
         s_vlan_con = dbus.Dictionary({
             'type': 'vlan',
             'autoconnect': dbus.Boolean(False),
+            'interface-name': dev_name,
             'uuid': str(uuid.uuid4()),
             'id': dev_name+"_con"})
 
         s_vlan = dbus.Dictionary({
-            'interface-name': dev_name,
             'parent': realdev,
             'id': dbus.UInt32(vlan_tci)}, signature="sv")
 
@@ -796,13 +794,13 @@ class NmConfigDeviceTeam(NmConfigDeviceGeneric):
         s_team_con = dbus.Dictionary({
             'type': 'team',
             'autoconnect': dbus.Boolean(False),
+            'interface-name': config["name"],
             'uuid': config["master_uuid"],
             'id': config["name"]+"_con"})
 
         teamd_config = get_option(config, "teamd_config")
 
         s_team = dbus.Dictionary({
-            'interface-name': config["name"],
             'config': teamd_config})
 
         connection = dbus.Dictionary({
