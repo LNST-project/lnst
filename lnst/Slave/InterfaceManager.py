@@ -352,6 +352,7 @@ class Device(object):
         self._initialized = False
         self._configured = False
         self._created = False
+        self._addr_setup = False
 
         self._if_index = None
         self._hwaddr = None
@@ -565,7 +566,7 @@ class Device(object):
             if m_dev:
                 m_dev.clear_configuration()
 
-        if self._conf != None:
+        if self._conf != None and self._configured:
             self.address_cleanup()
             self.down()
             self.deconfigure()
@@ -654,12 +655,14 @@ class Device(object):
             exec_cmd("ip link set %s down" % self._name)
 
     def address_setup(self):
-        if self._conf != None:
+        if self._conf != None and self._configured and not self._addr_setup:
             self._conf.address_setup()
+            self._addr_setup = True
 
     def address_cleanup(self):
-        if self._conf != None:
+        if self._conf != None and self._addr_setup:
             self._conf.address_cleanup()
+            self._addr_setup = False
 
     def link_up(self):
         exec_cmd("ip link set %s up" % self._name)
