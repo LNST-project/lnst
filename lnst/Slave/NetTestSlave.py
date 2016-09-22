@@ -147,7 +147,7 @@ class SlaveMethods:
         if device:
             return device.get_if_data()
         else:
-            return None
+            return {}
 
     def get_devices_by_devname(self, devname):
         name_scan = self._if_manager.get_devices()
@@ -190,14 +190,14 @@ class SlaveMethods:
     def get_if_data(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is None:
-            return None
+            return {}
         return dev.get_if_data()
 
     def link_stats(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is None:
             logging.error("Device with id '%s' not found." % if_id)
-            return None
+            return {}
         return dev.link_stats()
 
     def set_addresses(self, if_id, ips):
@@ -670,7 +670,7 @@ class SlaveMethods:
                 self._net_namespaces[netns] = {"pid": pid,
                                                "pipe": read_pipe}
                 self._server_handler.add_netns(netns, read_pipe)
-                return None
+                return False
             elif pid == 0:
                 self._slave_server.set_netns_sighandlers()
                 #create new network namespace
