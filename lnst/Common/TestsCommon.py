@@ -79,7 +79,7 @@ class TestGeneric(NetTestCommandGeneric):
             '''
             return re.sub(r'/.*', r'', value)
 
-        if default != None:
+        if default != None and default != []:
             '''
             In case a default value is passed, retype value
             by the default value type.
@@ -94,10 +94,7 @@ class TestGeneric(NetTestCommandGeneric):
         except KeyError:
             if mandatory:
                 raise TestOptionMissing("Missing option '%s'!" % name)
-            if multi:
-                return [default]
-            else:
-                return default
+            return default
 
         if multi:
             value = []
@@ -114,7 +111,7 @@ class TestGeneric(NetTestCommandGeneric):
         '''
         return self.get_opt(name, mandatory=True, opt_type=opt_type)
 
-    def get_multi_opt(self, name, mandatory=False, opt_type="", default=None):
+    def get_multi_opt(self, name, mandatory=False, opt_type="", default=[]):
         '''
         This should be used to get multi options (array of values)
         '''
