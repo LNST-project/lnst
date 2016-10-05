@@ -62,7 +62,7 @@ def pktget_options_merge(pktgen_options, default_pktgen_options):
 
 def pktgen_devices_remove():
     for cpu in range(os.sysconf('SC_NPROCESSORS_ONLN')):
-        cmd = "echo rem_device_all > /proc/net/pktgen/kpktgend_{}"
+        cmd = "echo rem_device_all > /proc/net/pktgen/kpktgend_{0}"
         exec_cmd(cmd.format(cpu))
 
 class PktgenTx(TestGeneric):
