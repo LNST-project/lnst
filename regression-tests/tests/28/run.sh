@@ -25,9 +25,6 @@ assert_status "pass" "$rv1"
 assert_status "pass" "$rv2"
 assert_status "pass" "$rv3"
 assert_status "pass" "$rv4"
-assert_log "INFO" "stdout:.*test" "$log1"
-assert_log "INFO" "stdout:.*test" "$log2"
-assert_log "INFO" "stdout:.*test" "$log4"
 
 rm -f test.log
 
