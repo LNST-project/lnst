@@ -617,6 +617,7 @@ class InterfaceAPI(object):
         return self._if.get_netns()
 
     def reset(self, ip=None, netns=None):
+        self._if.address_cleanup()
         self._if.down()
         self._if.deconfigure()
 
@@ -628,6 +629,7 @@ class InterfaceAPI(object):
 
         self._if.configure()
         self._if.up()
+        self._if.address_setup()
 
     def set_addresses(self, ips):
         self._if.set_addresses(ips)
