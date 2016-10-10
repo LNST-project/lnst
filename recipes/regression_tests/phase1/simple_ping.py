@@ -25,8 +25,6 @@ ping_mod6 = ctl.get_module("Icmp6Ping",
                               "iface" : hostA_testiface.get_ip(1),
                               "limit_rate": 90})
 
-ctl.wait(15)
-
 ipv = ctl.get_alias("ipv")
 mtu = ctl.get_alias("mtu")
 
@@ -35,6 +33,7 @@ test_if1.set_mtu(mtu)
 test_if2 = hostB.get_interface("testiface")
 test_if2.set_mtu(mtu)
 
+ctl.wait(15)
 
 if ipv in [ 'ipv6', 'both' ]:
     hostA.run(ping_mod6)
