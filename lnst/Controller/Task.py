@@ -128,7 +128,7 @@ class ControllerAPI(object):
         """
         return self._ctl._get_aliases()
 
-    def connect_PerfRepo(self, mapping_file, url=None, username=None, password=None):
+    def connect_PerfRepo(self, mapping_file, url=None, username=None, password=None, max_retries=3):
         if not self._perf_repo_api.connected():
             if url is None:
                 url = lnst_config.get_option("perfrepo", "url")
@@ -144,7 +144,7 @@ class ControllerAPI(object):
             if not password:
                 logging.warn("No PerfRepo password specified in config file")
             if url and username and password:
-                self._perf_repo_api.connect(url, username, password)
+                self._perf_repo_api.connect(url, username, password, max_retries)
 
             root = Path(None, self._ctl._recipe_path).get_root()
             path = Path(root, mapping_file)
@@ -870,9 +870,10 @@ class PerfRepoAPI(object):
         else:
             return False
 
-    def connect(self, url, username, password):
+    def connect(self, url, username, password, max_retries=0):
         if PerfRepoRESTAPI is not None:
             self._rest_api = PerfRepoRESTAPI(url, username, password)
+            self._rest_api.set_retries(max_retries)
             if not self._rest_api.connected():
                 self._rest_api = None
         else:
