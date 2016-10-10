@@ -149,7 +149,7 @@ class Netperf(TestGeneric):
                 if self._is_omni() or self._testoptions:
                     cmd += " -m %s" % self._udp_size
                 else:
-                    cms += " -- -m %s" % self._udp_size
+                    cmd += " -- -m %s" % self._udp_size
 
 
         elif self._role == "server":
