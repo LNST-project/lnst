@@ -43,6 +43,9 @@ pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
 m1_phy = m1.get_interface("eth")
 m2_phy = m2.get_interface("eth")
 
+m1_phy.set_mtu(mtu)
+m2_phy.set_mtu(mtu)
+
 m1_phy_name = m1_phy.get_devname()
 m2_phy_name = m2_phy.get_devname()
 
