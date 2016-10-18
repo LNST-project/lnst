@@ -4,6 +4,7 @@ from lnst.Controller.PerfRepoUtils import netperf_result_template
 
 from lnst.RecipeCommon.IRQ import pin_dev_irqs
 from lnst.RecipeCommon.PerfRepo import generate_perfrepo_comment
+from lnst.RecipeCommon.Offloads import parse_offloads
 
 # ------
 # SETUP
@@ -26,13 +27,6 @@ h2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # TESTS
 # ------
 
-offloads = ["gro", "gso", "tso", "rx", "tx"]
-offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
-                     [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
-                     [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
-                     [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
-                     [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
-
 ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
@@ -46,6 +40,17 @@ nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
 nperf_udp_size = ctl.get_alias("nperf_udp_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
+offloads_alias = ctl.get_alias("offloads")
+
+if offloads_alias is not None:
+    offloads, offload_settings = parse_offloads(offloads_alias)
+else:
+    offloads = ["gro", "gso", "tso", "rx", "tx"]
+    offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                         [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
+                         [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
+                         [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
+                         [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
 
 pr_comment = generate_perfrepo_comment([h1, g1, h2], pr_user_comment)
 
