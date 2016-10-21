@@ -464,9 +464,6 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
         int_ports = self._dev_config["ovs_conf"]["internals"]
         br_name = self._dev_config["name"]
         for iport in int_ports:
-            if "addresses" in iport:
-                for address in iport["addresses"]:
-                    exec_cmd("ip addr del %s dev %s" % (address, iport["name"]))
             exec_cmd("ip link set %s down" % iport["name"])
 
         super(NetConfigDeviceOvsBridge, self).down()
