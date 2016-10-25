@@ -431,6 +431,7 @@ class HostAPI(object):
 
         interface.configure()
         interface.up()
+        interface.address_setup()
 
         self._m.wait_interface_init()
 
@@ -438,6 +439,7 @@ class HostAPI(object):
 
     def _remove_iface(self, iface):
         interface = iface._if
+        interface.address_cleanup()
         interface.deconfigure()
         interface.cleanup()
         if_id = interface.get_id()
