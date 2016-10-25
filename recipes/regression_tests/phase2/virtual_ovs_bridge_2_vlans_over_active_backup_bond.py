@@ -33,6 +33,7 @@ g4.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # TESTS
 # ------
 
+mtu = ctl.get_alias("mtu")
 ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
@@ -229,6 +230,25 @@ ping_mod6_bad2 = ctl.get_module("Icmp6Ping",
                                "iface" : g3_guestnic.get_devname(),
                                "interval" : 0.1
                            })
+
+
+# configure mtu
+h1_nic1.set_mtu(mtu)
+h1_nic2.set_mtu(mtu)
+h1.get_interface("tap1").set_mtu(mtu)
+h1.get_interface("tap2").set_mtu(mtu)
+h1.get_interface("bridge").set_mtu(mtu)
+
+h2_nic1.set_mtu(mtu)
+h2_nic2.set_mtu(mtu)
+h2.get_interface("tap1").set_mtu(mtu)
+h2.get_interface("tap2").set_mtu(mtu)
+h2.get_interface("bridge").set_mtu(mtu)
+
+g1.get_interface("guestnic").set_mtu(mtu)
+g2.get_interface("guestnic").set_mtu(mtu)
+g3.get_interface("guestnic").set_mtu(mtu)
+g4.get_interface("guestnic").set_mtu(mtu)
 
 ctl.wait(15)
 

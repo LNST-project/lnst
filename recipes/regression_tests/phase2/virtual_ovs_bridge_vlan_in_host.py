@@ -27,6 +27,7 @@ h2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
 # TESTS
 # ------
 
+mtu = ctl.get_alias("mtu")
 ipv = ctl.get_alias("ipv")
 netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
@@ -176,6 +177,16 @@ if nperf_mode == "multi":
 if nperf_udp_size is not None:
     netperf_cli_udp.update_options({"udp_size" : nperf_udp_size})
     netperf_cli_udp6.update_options({"udp_size" : nperf_udp_size})
+
+#set mtu
+h1.get_interface("nic").set_mtu(mtu)
+h1.get_interface("tap").set_mtu(mtu)
+h1.get_interface("ovs_br").set_mtu(mtu)
+
+h2.get_interface("nic").set_mtu(mtu)
+h2.get_interface("vlan10").set_mtu(mtu)
+
+g1.get_interface("guestnic").set_mtu(mtu)
 
 ctl.wait(15)
 
