@@ -13,11 +13,15 @@
         <alias name="net" value="192.168.2"/>
         <alias name="vxlan_net" value="192.168.100"/>
         <alias name="vxlan_net6" value="fc00:0:0:0"/>
+        <alias name="driver" value=""/>
     </define>
     <network>
         <host id="test_host1">
             <interfaces>
                 <eth id="if1" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
                     <addresses>
                         <address value="{$net}.1/24"/>
                     </addresses>
@@ -51,6 +55,9 @@
         <host id="test_host2">
             <interfaces>
                 <eth id="if1" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
                     <addresses>
                         <address value="{$net}.2/24"/>
                     </addresses>
