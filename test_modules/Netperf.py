@@ -134,7 +134,7 @@ class Netperf(TestGeneric):
 
             # Print only relevant output
             if self._is_omni():
-                cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID"'
+                cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, CONFIDENCE_LEVEL, THROUGHPUT_CONFID, LOCAL_SEND_SIZE, REMOTE_RECV_SIZE"'
 
             if self._testoptions:
                 if self._is_omni():
