@@ -195,7 +195,9 @@ if nperf_mode == "multi":
     netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
 
 if nperf_msg_size is not None:
+    netperf_cli_tcp.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_udp.update_options({"msg_size" : nperf_msg_size})
+    netperf_cli_tcp6.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_udp6.update_options({"msg_size" : nperf_msg_size})
 
 ping_mod_bad = ctl.get_module("IcmpPing",
@@ -287,6 +289,10 @@ for setting in offload_settings:
                                              r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
+
+        if nperf_msg_size is not None:
+            result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
+
         result_tcp.add_tag(product_name)
         if nperf_mode == "multi":
             result_tcp.add_tag("multithreaded")
@@ -355,6 +361,10 @@ for setting in offload_settings:
                                              r'host\d+\..*tap\d*\.devname'])
         for offload in setting:
             result_tcp.set_parameter(offload[0], offload[1])
+
+        if nperf_msg_size is not None:
+            result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
+
         result_tcp.add_tag(product_name)
         if nperf_mode == "multi":
             result_tcp.add_tag("multithreaded")
