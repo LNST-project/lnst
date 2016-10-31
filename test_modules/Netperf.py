@@ -39,7 +39,7 @@ class Netperf(TestGeneric):
         self._cpu_util = self.get_opt("cpu_util")
         self._num_parallel = int(self.get_opt("num_parallel", default=1))
         self._runs = self.get_opt("runs", default=1)
-        self._udp_size = self.get_opt("udp_size")
+        self._msg_size = self.get_opt("msg_size")
         self._debug = int_it(self.get_opt("debug", default=0))
 
         self._threshold = self._parse_threshold(self.get_opt("threshold"))
@@ -142,14 +142,14 @@ class Netperf(TestGeneric):
                 else:
                     cmd += " -- %s" % self._testoptions
 
-            if self._udp_size is not None:
+            if self._msg_size is not None:
                 """
-                udp packets will have this size
+                packets will have this size
                 """
                 if self._is_omni() or self._testoptions:
-                    cmd += " -m %s" % self._udp_size
+                    cmd += " -m %s" % self._msg_size
                 else:
-                    cmd += " -- -m %s" % self._udp_size
+                    cmd += " -- -m %s" % self._msg_size
 
 
         elif self._role == "server":
