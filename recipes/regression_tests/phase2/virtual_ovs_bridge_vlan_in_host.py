@@ -39,7 +39,7 @@ nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
-nperf_udp_size = ctl.get_alias("nperf_udp_size")
+nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 offloads_alias = ctl.get_alias("offloads")
 
@@ -174,9 +174,9 @@ if nperf_mode == "multi":
     netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
 
-if nperf_udp_size is not None:
-    netperf_cli_udp.update_options({"udp_size" : nperf_udp_size})
-    netperf_cli_udp6.update_options({"udp_size" : nperf_udp_size})
+if nperf_msg_size is not None:
+    netperf_cli_udp.update_options({"msg_size" : nperf_msg_size})
+    netperf_cli_udp6.update_options({"msg_size" : nperf_msg_size})
 
 #set mtu
 h1.get_interface("nic").set_mtu(mtu)
@@ -250,8 +250,8 @@ for setting in offload_settings:
             for offload in setting:
                 result_udp.set_parameter(offload[0], offload[1])
 
-            if nperf_udp_size is not None:
-                result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+            if nperf_msg_size is not None:
+                result_udp.set_parameter("nperf_msg_size", nperf_msg_size)
 
             result_udp.add_tag(product_name)
             if nperf_mode == "multi":
@@ -317,8 +317,8 @@ for setting in offload_settings:
             for offload in setting:
                 result_udp.set_parameter(offload[0], offload[1])
 
-            if nperf_udp_size is not None:
-                result_udp.set_parameter("nperf_udp_size", nperf_udp_size)
+            if nperf_msg_size is not None:
+                result_udp.set_parameter("nperf_msg_size", nperf_msg_size)
 
             result_udp.add_tag(product_name)
             if nperf_mode == "multi":
