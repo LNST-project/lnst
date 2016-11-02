@@ -528,7 +528,7 @@ class Device(object):
         except:
             return
 
-        exec_cmd("tc qdisc replace dev %s root pfifo" % self._name)
+        exec_cmd("tc qdisc del dev %s root" % self._name, die_on_err=False)
         out, _ = exec_cmd("tc filter show dev %s" % self._name)
         ingress_handles = re.findall("ingress (\\d+):", out)
         for ingress_handle in ingress_handles:
