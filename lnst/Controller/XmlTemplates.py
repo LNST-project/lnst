@@ -337,7 +337,8 @@ class XmlTemplates:
                     value = etree.tostring(element, method="text").strip()
                 self.define_alias(name, value)
             parent = element.getparent()
-            parent.remove(element)
+            if parent is not None:
+                parent.remove(element)
             return
 
         self.add_namespace_level()
