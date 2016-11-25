@@ -43,6 +43,8 @@ nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 offloads_alias = ctl.get_alias("offloads")
 
+sctp_default_msg_size = "16K"
+
 if offloads_alias is not None:
     offloads, offload_settings = parse_offloads(offloads_alias)
 else:
@@ -163,22 +165,58 @@ netperf_cli_udp6 = ctl.get_module("Netperf",
                                       "max_deviation" : nperf_max_dev
                                   })
 
+netperf_cli_sctp = ctl.get_module("Netperf",
+                                  options={
+                                      "role" : "client",
+                                      "netperf_server" : m1_vlan1.get_ip(0),
+                                      "duration" : netperf_duration,
+                                      "testname" : "SCTP_STREAM",
+                                      "confidence" : nperf_confidence,
+                                      "cpu_util" : nperf_cpu_util,
+                                      "runs" : nperf_max_runs,
+                                      "netperf_opts" : p_opts,
+                                      "msg_size" : sctp_default_msg_size,
+                                      "debug" : nperf_debug,
+                                      "max_deviation" : nperf_max_dev
+                                  })
+
+netperf_cli_sctp6 = ctl.get_module("Netperf",
+                                  options={
+                                      "role" : "client",
+                                      "netperf_server" : m1_vlan1.get_ip(1),
+                                      "duration" : netperf_duration,
+                                      "testname" : "SCTP_STREAM",
+                                      "confidence" : nperf_confidence,
+                                      "cpu_util" : nperf_cpu_util,
+                                      "runs" : nperf_max_runs,
+                                      "netperf_opts" : p_opts6,
+                                      "msg_size" : sctp_default_msg_size,
+                                      "debug" : nperf_debug,
+                                      "max_deviation" : nperf_max_dev
+                                  })
+
 if nperf_mode == "multi":
     netperf_cli_tcp.unset_option("confidence")
     netperf_cli_udp.unset_option("confidence")
+    netperf_cli_sctp.unset_option("confidence")
     netperf_cli_tcp6.unset_option("confidence")
     netperf_cli_udp6.unset_option("confidence")
+    netperf_cli_sctp6.unset_option("confidence")
 
     netperf_cli_tcp.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_udp.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_sctp.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_tcp6.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_sctp6.update_options({"num_parallel": nperf_num_parallel})
 
 if nperf_msg_size is not None:
     netperf_cli_tcp.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_udp.update_options({"msg_size" : nperf_msg_size})
+    netperf_cli_sctp.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_tcp6.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_udp6.update_options({"msg_size" : nperf_msg_size})
+    netperf_cli_sctp6.update_options({"msg_size" : nperf_msg_size})
 
 for setting in offload_settings:
     #apply offload setting
@@ -283,6 +321,33 @@ for setting in offload_settings:
             result_udp.set_comment(pr_comment)
             perf_api.save_result(result_udp)
 
+        # for SCTP only gso offload on/off
+        if (len([val for val in setting if val[1] == 'off']) == 0 or
+           ('gso', 'off') in setting):
+            result_sctp = perf_api.new_result("sctp_ipv4_id",
+                                              "sctp_ipv4_result",
+                                              hash_ignore=[
+                                                  'kernel_release',
+                                                  'redhat_release'])
+            for offload in setting:
+                result_sctp.set_parameter(offload[0], offload[1])
+
+            result_sctp.set_parameter('netperf_server_on_vlan', vlans[0])
+            result_sctp.set_parameter('netperf_client_on_vlan', vlans[0])
+            result_sctp.add_tag(product_name)
+            if nperf_mode == "multi":
+                result_sctp.add_tag("multithreaded")
+                result_sctp.set_parameter("num_parallel", nperf_num_parallel)
+
+            baseline = perf_api.get_baseline_of_result(result_sctp)
+            netperf_baseline_template(netperf_cli_sctp, baseline)
+            sctp_res_data = m2.run(netperf_cli_sctp,
+                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+            netperf_result_template(result_sctp, sctp_res_data)
+            result_sctp.set_comment(pr_comment)
+            perf_api.save_result(result_sctp)
+
         srv_proc.intr()
 
     if ipv in [ 'ipv6', 'both' ]:
@@ -347,6 +412,33 @@ for setting in offload_settings:
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
             perf_api.save_result(result_udp)
+
+        # for SCTP only gso offload on/off
+        if (len([val for val in setting if val[1] == 'off']) == 0 or
+           ('gso', 'off') in setting):
+            result_sctp = perf_api.new_result("sctp_ipv6_id",
+                                              "sctp_ipv6_result",
+                                              hash_ignore=[
+                                                  'kernel_release',
+                                                  'redhat_release'])
+            for offload in setting:
+                result_sctp.set_parameter(offload[0], offload[1])
+
+            result_sctp.set_parameter('netperf_server_on_vlan', vlans[0])
+            result_sctp.set_parameter('netperf_client_on_vlan', vlans[0])
+            result_sctp.add_tag(product_name)
+            if nperf_mode == "multi":
+                result_sctp.add_tag("multithreaded")
+                result_sctp.set_parameter("num_parallel", nperf_num_parallel)
+
+            baseline = perf_api.get_baseline_of_result(result_sctp)
+            netperf_baseline_template(netperf_cli_sctp, baseline)
+            sctp_res_data = m2.run(netperf_cli_sctp6,
+                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+            netperf_result_template(result_sctp, sctp_res_data)
+            result_sctp.set_comment(pr_comment)
+            perf_api.save_result(result_sctp)
 
         srv_proc.intr()
 
