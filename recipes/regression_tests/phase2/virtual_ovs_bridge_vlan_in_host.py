@@ -212,6 +212,10 @@ if nperf_mode == "multi":
     netperf_cli_udp6.update_options({"num_parallel": nperf_num_parallel})
     netperf_cli_sctp6.update_options({"num_parallel": nperf_num_parallel})
 
+    # we have to use multiqueue qdisc to get appropriate data
+    h1.run("tc qdisc replace dev %s root mq" % h1_nic.get_devname())
+    h2.run("tc qdisc replace dev %s root mq" % h2_nic.get_devname())
+
 if nperf_msg_size is not None:
     netperf_cli_tcp.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_tcp6.update_options({"msg_size" : nperf_msg_size})
