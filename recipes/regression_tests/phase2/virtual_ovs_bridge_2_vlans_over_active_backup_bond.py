@@ -47,6 +47,7 @@ nperf_max_dev = ctl.get_alias("nperf_max_dev")
 nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 offloads_alias = ctl.get_alias("offloads")
+nperf_protocols = ctl.get_alias("nperf_protocols")
 
 sctp_default_msg_size = "16K"
 
@@ -324,39 +325,40 @@ for setting in offload_settings:
         server_proc = g1.run(netperf_srv, bg=True)
         ctl.wait(2)
 
-        # prepare PerfRepo result for tcp
-        result_tcp = perf_api.new_result("tcp_ipv4_id",
-                                         "tcp_ipv4_result",
-                                         hash_ignore=[
-                                             'kernel_release',
-                                             'redhat_release',
-                                             r'guest\d+\.hostname',
-                                             r'guest\d+\..*hwaddr',
-                                             r'host\d+\..*tap\d*\.hwaddr',
-                                             r'host\d+\..*tap\d*\.devname'])
-        for offload in setting:
-            result_tcp.set_parameter(offload[0], offload[1])
+        if nperf_protocols.find("tcp") > -1:
+            # prepare PerfRepo result for tcp
+            result_tcp = perf_api.new_result("tcp_ipv4_id",
+                                             "tcp_ipv4_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release',
+                                                 r'guest\d+\.hostname',
+                                                 r'guest\d+\..*hwaddr',
+                                                 r'host\d+\..*tap\d*\.hwaddr',
+                                                 r'host\d+\..*tap\d*\.devname'])
+            for offload in setting:
+                result_tcp.set_parameter(offload[0], offload[1])
 
-        if nperf_msg_size is not None:
-            result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
+            if nperf_msg_size is not None:
+                result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
 
-        result_tcp.add_tag(product_name)
-        if nperf_mode == "multi":
-            result_tcp.add_tag("multithreaded")
-            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+            result_tcp.add_tag(product_name)
+            if nperf_mode == "multi":
+                result_tcp.add_tag("multithreaded")
+                result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
-        baseline = perf_api.get_baseline_of_result(result_tcp)
-        netperf_baseline_template(netperf_cli_tcp, baseline)
+            baseline = perf_api.get_baseline_of_result(result_tcp)
+            netperf_baseline_template(netperf_cli_tcp, baseline)
 
-        tcp_res_data = g3.run(netperf_cli_tcp,
-                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+            tcp_res_data = g3.run(netperf_cli_tcp,
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-        netperf_result_template(result_tcp, tcp_res_data)
-        result_tcp.set_comment(pr_comment)
-        perf_api.save_result(result_tcp)
+            netperf_result_template(result_tcp, tcp_res_data)
+            result_tcp.set_comment(pr_comment)
+            perf_api.save_result(result_tcp)
 
-        # prepare PerfRepo result for udp
-        if ("gro", "off") not in setting:
+        if nperf_protocols.find("udp") > -1 and ("gro", "off") not in setting:
+            # prepare PerfRepo result for udp
             result_udp = perf_api.new_result("udp_ipv4_id",
                                              "udp_ipv4_result",
                                              hash_ignore=[
@@ -388,8 +390,9 @@ for setting in offload_settings:
             perf_api.save_result(result_udp)
 
         # for SCTP only gso offload on/off
-        if (len([val for val in setting if val[1] == 'off']) == 0 or
-           ('gso', 'off') in setting):
+        if (nperf_protocols.find("sctp") > -1 and
+              (len([val for val in setting if val[1] == 'off']) == 0 or
+               ('gso', 'off') in setting)):
             result_sctp = perf_api.new_result("sctp_ipv4_id",
                                               "sctp_ipv4_result",
                                               hash_ignore=[
@@ -413,6 +416,7 @@ for setting in offload_settings:
             perf_api.save_result(result_sctp)
 
         server_proc.intr()
+
     if ipv in [ 'ipv6', 'both' ]:
         g1.run(ping_mod6)
         g4.run(ping_mod62)
@@ -422,39 +426,40 @@ for setting in offload_settings:
         server_proc = g1.run(netperf_srv6, bg=True)
         ctl.wait(2)
 
-        # prepare PerfRepo result for tcp ipv6
-        result_tcp = perf_api.new_result("tcp_ipv6_id",
-                                         "tcp_ipv6_result",
-                                         hash_ignore=[
-                                             'kernel_release',
-                                             'redhat_release',
-                                             r'guest\d+\.hostname',
-                                             r'guest\d+\..*hwaddr',
-                                             r'host\d+\..*tap\d*\.hwaddr',
-                                             r'host\d+\..*tap\d*\.devname'])
-        for offload in setting:
-            result_tcp.set_parameter(offload[0], offload[1])
+        if nperf_protocols.find("tcp") > -1:
+            # prepare PerfRepo result for tcp ipv6
+            result_tcp = perf_api.new_result("tcp_ipv6_id",
+                                             "tcp_ipv6_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release',
+                                                 r'guest\d+\.hostname',
+                                                 r'guest\d+\..*hwaddr',
+                                                 r'host\d+\..*tap\d*\.hwaddr',
+                                                 r'host\d+\..*tap\d*\.devname'])
+            for offload in setting:
+                result_tcp.set_parameter(offload[0], offload[1])
 
-        if nperf_msg_size is not None:
-            result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
+            if nperf_msg_size is not None:
+                result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
 
-        result_tcp.add_tag(product_name)
-        if nperf_mode == "multi":
-            result_tcp.add_tag("multithreaded")
-            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+            result_tcp.add_tag(product_name)
+            if nperf_mode == "multi":
+                result_tcp.add_tag("multithreaded")
+                result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
-        baseline = perf_api.get_baseline_of_result(result_tcp)
-        netperf_baseline_template(netperf_cli_tcp6, baseline)
+            baseline = perf_api.get_baseline_of_result(result_tcp)
+            netperf_baseline_template(netperf_cli_tcp6, baseline)
 
-        tcp_res_data = g3.run(netperf_cli_tcp6,
-                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+            tcp_res_data = g3.run(netperf_cli_tcp6,
+                                  timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-        netperf_result_template(result_tcp, tcp_res_data)
-        result_tcp.set_comment(pr_comment)
-        perf_api.save_result(result_tcp)
+            netperf_result_template(result_tcp, tcp_res_data)
+            result_tcp.set_comment(pr_comment)
+            perf_api.save_result(result_tcp)
 
-        # prepare PerfRepo result for udp ipv6
-        if ("gro", "off") not in setting:
+        if nperf_protocols.find("udp") > -1 and ("gro", "off") not in setting:
+            # prepare PerfRepo result for udp ipv6
             result_udp = perf_api.new_result("udp_ipv6_id",
                                              "udp_ipv6_result",
                                              hash_ignore=[
@@ -486,8 +491,9 @@ for setting in offload_settings:
             perf_api.save_result(result_udp)
 
         # for SCTP only gso offload on/off
-        if (len([val for val in setting if val[1] == 'off']) == 0 or
-           ('gso', 'off') in setting):
+        if (nperf_protocols.find("sctp") > -1 and
+              (len([val for val in setting if val[1] == 'off']) == 0 or
+               ('gso', 'off') in setting)):
             result_sctp = perf_api.new_result("sctp_ipv6_id",
                                               "sctp_ipv6_result",
                                               hash_ignore=[

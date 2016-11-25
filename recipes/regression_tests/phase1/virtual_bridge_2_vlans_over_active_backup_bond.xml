@@ -9,6 +9,7 @@
         <alias name="nperf_num_parallel" value="2"/>
         <alias name="nperf_debug" value="0"/>
         <alias name="nperf_max_dev" value="20%"/>
+        <alias name="nperf_protocols" value="tcp udp sctp"/>
         <alias name="mtu" value="1500" />
         <alias name="mapping_file" value="virtual_bridge_2_vlans_over_active_backup_bond.mapping" />
         <alias name="vlan10_net" value="192.168.10"/>
