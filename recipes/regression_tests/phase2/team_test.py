@@ -433,7 +433,7 @@ for setting in offload_settings:
                 result_sctp.set_parameter("num_parallel", nperf_num_parallel)
 
             baseline = perf_api.get_baseline_of_result(result_sctp)
-            netperf_baseline_template(netperf_cli_sctp, baseline)
+            netperf_baseline_template(netperf_cli_sctp6, baseline)
             sctp_res_data = m2.run(netperf_cli_sctp6,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -676,7 +676,7 @@ for setting in offload_settings:
                 result_sctp.set_parameter("num_parallel", nperf_num_parallel)
 
             baseline = perf_api.get_baseline_of_result(result_sctp)
-            netperf_baseline_template(netperf_cli_sctp, baseline)
+            netperf_baseline_template(netperf_cli_sctp6, baseline)
             sctp_res_data = m1.run(netperf_cli_sctp6,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
