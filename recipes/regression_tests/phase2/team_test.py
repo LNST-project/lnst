@@ -68,7 +68,7 @@ if nperf_cpupin:
     m1_phy2 = m1.get_interface("eth2")
     dev_list = [(m1, m1_phy1), (m1, m1_phy2)]
 
-    if test_if2.get_type() == "team":
+    if test_if2.get_type() in [ "team", "bond" ]:
         m2_phy1 = m2.get_interface("eth1")
         m2_phy2 = m2.get_interface("eth2")
         dev_list.extend([(m2, m2_phy1), (m2, m2_phy2)])
