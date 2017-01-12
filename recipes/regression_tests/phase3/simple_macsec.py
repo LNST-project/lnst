@@ -119,6 +119,16 @@ ping((m1, m1_phy, 0, {"scope": 0}),
 
 ctl.wait(2)
 
+client_opts = {"duration" : netperf_duration,
+               "testname" : "TCP_STREAM",
+               "confidence" : nperf_confidence,
+               "num_parallel" : nperf_num_parallel,
+               "cpu_util" : nperf_cpu_util,
+               "runs": nperf_max_runs,
+               "netperf_opts": nperf_opts,
+               "debug": nperf_debug,
+               "max_deviation": nperf_max_dev}
+
 for setting in encryption_settings:
     #macsec setup
     macsecSetup(setting)
@@ -150,18 +160,12 @@ for setting in encryption_settings:
             baseline = perf_api.get_baseline_of_result(result_tcp)
             baseline = perfrepo_baseline_to_dict(baseline)
 
+            client_opts["testname"] = "TCP_STREAM"
+            client_opts["netperf_opts"] = nperf_opts
+
             tcp_res_data = netperf((m1, m1_tif, 0, {"scope": 0}),
                                    (m2, m2_tif, 0, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "TCP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "netperf_opts": nperf_opts},
-                                   baseline = baseline,
+                                   client_opts = client_opts, baseline = baseline,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
             netperf_result_template(result_tcp, tcp_res_data)
@@ -185,18 +189,12 @@ for setting in encryption_settings:
             baseline = perf_api.get_baseline_of_result(result_udp)
             baseline = perfrepo_baseline_to_dict(baseline)
 
+            client_opts["testname"] = "UDP_STREAM"
+            client_opts["netperf_opts"] = nperf_opts
+
             udp_res_data = netperf((m1, m1_tif, 0, {"scope": 0}),
                                    (m2, m2_tif, 0, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "UDP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "netperf_opts": nperf_opts},
-                                   baseline = baseline,
+                                   client_opts = client_opts, baseline = baseline,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
             netperf_result_template(result_udp, udp_res_data)
@@ -228,18 +226,12 @@ for setting in encryption_settings:
             baseline = perf_api.get_baseline_of_result(result_tcp)
             baseline = perfrepo_baseline_to_dict(baseline)
 
+            client_opts["testname"] = "TCP_STREAM"
+            client_opts["netperf_opts"] = nperf_opts + " -6"
+
             tcp_res_data = netperf((m1, m1_tif, 1, {"scope": 0}),
                                    (m2, m2_tif, 1, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "TCP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "netperf_opts" : nperf_opts + " -6"},
-                                   baseline = baseline,
+                                   client_opts = client_opts, baseline = baseline,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
             netperf_result_template(result_tcp, tcp_res_data)
@@ -263,18 +255,12 @@ for setting in encryption_settings:
             baseline = perf_api.get_baseline_of_result(result_udp)
             baseline = perfrepo_baseline_to_dict(baseline)
 
+            client_opts["testname"] = "UDP_STREAM"
+            client_opts["netperf_opts"] = nperf_opts + " -6"
+
             udp_res_data = netperf((m1, m1_tif, 1, {"scope": 0}),
                                    (m2, m2_tif, 1, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "UDP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "netperf_opts" : nperf_opts + "-6"},
-                                   baseline = baseline,
+                                   client_opts = client_opts, baseline = baseline,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
             netperf_result_template(result_udp, udp_res_data)

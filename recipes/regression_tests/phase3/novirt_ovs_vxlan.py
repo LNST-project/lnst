@@ -74,6 +74,16 @@ if ipv in [ 'ipv6', 'both' ]:
           (h2, h2_nic, 1, {"scope": 0}),
           options=ping_opts)
 
+client_opts = {"duration" : netperf_duration,
+               "testname" : "TCP_STREAM",
+               "confidence" : nperf_confidence,
+               "num_parallel" : nperf_num_parallel,
+               "cpu_util" : nperf_cpu_util,
+               "runs": nperf_max_runs,
+               "netperf_opts": nperf_opts,
+               "debug": nperf_debug,
+               "max_deviation": nperf_max_dev}
+
 #netperfs
 if ipv in [ 'ipv4', 'both' ]:
     ctl.wait(2)
@@ -94,18 +104,12 @@ if ipv in [ 'ipv4', 'both' ]:
         baseline = perf_api.get_baseline_of_result(result_tcp)
         baseline = perfrepo_baseline_to_dict(baseline)
 
+        client_opts["testname"] = "TCP_STREAM"
+        client_opts["netperf_opts"] = nperf_opts
+
         tcp_res_data = netperf((h1, h1_nic, 0, {"scope": 0}),
                                (h2, h2_nic, 0, {"scope": 0}),
-                               client_opts={"duration" : netperf_duration,
-                                            "testname" : "TCP_STREAM",
-                                            "confidence" : nperf_confidence,
-                                            "num_parallel" : nperf_num_parallel,
-                                            "cpu_util" : nperf_cpu_util,
-                                            "runs": nperf_max_runs,
-                                            "debug": nperf_debug,
-                                            "max_deviation": nperf_max_dev,
-                                            "netperf_opts": nperf_opts},
-                               baseline = baseline,
+                               client_opts = client_opts, baseline = baseline,
                                timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_tcp, tcp_res_data)
@@ -128,18 +132,12 @@ if ipv in [ 'ipv4', 'both' ]:
         baseline = perf_api.get_baseline_of_result(result_udp)
         baseline = perfrepo_baseline_to_dict(baseline)
 
+        client_opts["testname"] = "UDP_STREAM"
+        client_opts["netperf_opts"] = nperf_opts
+
         udp_res_data = netperf((h1, h1_nic, 0, {"scope": 0}),
                                (h2, h2_nic, 0, {"scope": 0}),
-                               client_opts={"duration" : netperf_duration,
-                                            "testname" : "UDP_STREAM",
-                                            "confidence" : nperf_confidence,
-                                            "num_parallel" : nperf_num_parallel,
-                                            "cpu_util" : nperf_cpu_util,
-                                            "runs": nperf_max_runs,
-                                            "debug": nperf_debug,
-                                            "max_deviation": nperf_max_dev,
-                                            "netperf_opts": nperf_opts},
-                               baseline = baseline,
+                               client_opts = client_opts, baseline = baseline,
                                timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_udp, udp_res_data)
@@ -164,18 +162,12 @@ if ipv in [ 'ipv6', 'both' ]:
         baseline = perf_api.get_baseline_of_result(result_tcp)
         baseline = perfrepo_baseline_to_dict(baseline)
 
+        client_opts["testname"] = "TCP_STREAM"
+        client_opts["netperf_opts"] = nperf_opts + " -6"
+
         tcp_res_data = netperf((h1, h1_nic, 1, {"scope": 0}),
                                (h2, h2_nic, 1, {"scope": 0}),
-                               client_opts={"duration" : netperf_duration,
-                                            "testname" : "TCP_STREAM",
-                                            "confidence" : nperf_confidence,
-                                            "num_parallel" : nperf_num_parallel,
-                                            "cpu_util" : nperf_cpu_util,
-                                            "runs": nperf_max_runs,
-                                            "debug": nperf_debug,
-                                            "max_deviation": nperf_max_dev,
-                                            "netperf_opts" : nperf_opts + "-6"},
-                               baseline = baseline,
+                               client_opts = client_opts, baseline = baseline,
                                timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_tcp, tcp_res_data)
@@ -198,18 +190,12 @@ if ipv in [ 'ipv6', 'both' ]:
         baseline = perf_api.get_baseline_of_result(result_udp)
         baseline = perfrepo_baseline_to_dict(baseline)
 
+        client_opts["testname"] = "UDP_STREAM"
+        client_opts["netperf_opts"] = nperf_opts + " -6"
+
         udp_res_data = netperf((h1, h1_nic, 1, {"scope": 0}),
                                (h2, h2_nic, 1, {"scope": 0}),
-                               client_opts={"duration" : netperf_duration,
-                                            "testname" : "UDP_STREAM",
-                                            "confidence" : nperf_confidence,
-                                            "num_parallel" : nperf_num_parallel,
-                                            "cpu_util" : nperf_cpu_util,
-                                            "runs": nperf_max_runs,
-                                            "debug": nperf_debug,
-                                            "max_deviation": nperf_max_dev,
-                                            "netperf_opts" : nperf_opts + "-6"},
-                               baseline = baseline,
+                               client_opts = client_opts, baseline = baseline,
                                timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
         netperf_result_template(result_udp, udp_res_data)
