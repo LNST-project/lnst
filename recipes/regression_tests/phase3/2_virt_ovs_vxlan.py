@@ -44,6 +44,7 @@ nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
+nperf_protocols = ctl.get_alias("nperf_protocols")
 
 pr_comment = generate_perfrepo_comment([guest1, guest2, guest3, guest4],
                                        pr_user_comment)
@@ -127,148 +128,146 @@ if ipv in ['ipv6', 'both']:
 
 if ipv in [ 'ipv4', 'both' ]:
     # prepare PerfRepo result for tcp
-    result_tcp = perf_api.new_result("tcp_ipv4_id",
-                                     "tcp_ipv4_result",
-                                     hash_ignore=[
-                                         r'kernel_release',
-                                         r'redhat_release',
-                                         r'test_host\d+\.hostname',
-                                         r'test_host\d+\..*hwaddr',
-                                         r'machine_h\d+\..*ovs\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.devname'])
-    result_tcp.add_tag(product_name)
-    if nperf_num_parallel > 1:
-        result_tcp.add_tag("multithreaded")
-        result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+    if nperf_protocols.find("tcp") > -1:
+        result_tcp = perf_api.new_result("tcp_ipv4_id",
+                                         "tcp_ipv4_result",
+                                         hash_ignore=[
+                                             r'kernel_release',
+                                             r'redhat_release',
+                                             r'test_host\d+\.hostname',
+                                             r'test_host\d+\..*hwaddr',
+                                             r'machine_h\d+\..*ovs\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.devname'])
+        result_tcp.add_tag(product_name)
+        if nperf_num_parallel > 1:
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
-    baseline = perf_api.get_baseline_of_result(result_tcp)
-    baseline = perfrepo_baseline_to_dict(baseline)
+        baseline = perf_api.get_baseline_of_result(result_tcp)
+        baseline = perfrepo_baseline_to_dict(baseline)
 
-    tcp_res_data = netperf((guest1, g1_nic, 0), (guest3, g3_nic, 0),
-                           client_opts={"duration" : netperf_duration,
-                                        "testname" : "TCP_STREAM",
-                                        "confidence" : nperf_confidence,
-                                        "num_parallel" : nperf_num_parallel,
-                                        "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs,
-                                        "netperf_opts": nperf_opts,
-                                        "debug": nperf_debug,
-                                        "max_deviation": nperf_max_dev},
-                           baseline = baseline,
-                           timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        tcp_res_data = netperf((guest1, g1_nic, 0), (guest3, g3_nic, 0),
+                               client_opts={"duration" : netperf_duration,
+                                            "testname" : "TCP_STREAM",
+                                            "confidence" : nperf_confidence,
+                                            "num_parallel" : nperf_num_parallel,
+                                            "cpu_util" : nperf_cpu_util,
+                                            "runs": nperf_max_runs,
+                                            "netperf_opts": nperf_opts,
+                                            "debug": nperf_debug,
+                                            "max_deviation": nperf_max_dev},
+                               baseline = baseline,
+                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-    netperf_result_template(result_tcp, tcp_res_data)
-    result_tcp.set_comment(pr_comment)
-    perf_api.save_result(result_tcp)
+        netperf_result_template(result_tcp, tcp_res_data)
+        result_tcp.set_comment(pr_comment)
+        perf_api.save_result(result_tcp)
 
-    # prepare PerfRepo result for udp
-    result_udp = perf_api.new_result("udp_ipv4_id",
-                                     "udp_ipv4_result",
-                                     hash_ignore=[
-                                         r'kernel_release',
-                                         r'redhat_release',
-                                         r'test_host\d+\.hostname',
-                                         r'test_host\d+\..*hwaddr',
-                                         r'machine_h\d+\..*ovs\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.devname'])
-    result_udp.add_tag(product_name)
-    if nperf_num_parallel > 1:
-        result_udp.add_tag("multithreaded")
-        result_udp.set_parameter('num_parallel', nperf_num_parallel)
+    if nperf_protocols.find("udp") > -1:
+        # prepare PerfRepo result for udp
+        result_udp = perf_api.new_result("udp_ipv4_id",
+                                         "udp_ipv4_result",
+                                         hash_ignore=[
+                                             r'kernel_release',
+                                             r'redhat_release',
+                                             r'test_host\d+\.hostname',
+                                             r'test_host\d+\..*hwaddr',
+                                             r'machine_h\d+\..*ovs\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.devname'])
+        result_udp.add_tag(product_name)
+        if nperf_num_parallel > 1:
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
-    baseline = perf_api.get_baseline_of_result(result_udp)
-    baseline = perfrepo_baseline_to_dict(baseline)
+        baseline = perf_api.get_baseline_of_result(result_udp)
+        baseline = perfrepo_baseline_to_dict(baseline)
 
-    udp_res_data = netperf((guest1, g1_nic, 0), (guest3, g3_nic, 0),
-                           client_opts={"duration" : netperf_duration,
-                                        "testname" : "UDP_STREAM",
-                                        "confidence" : nperf_confidence,
-                                        "num_parallel" : nperf_num_parallel,
-                                        "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs,
-                                        "netperf_opts": nperf_opts,
-                                        "debug": nperf_debug,
-                                        "max_deviation": nperf_max_dev},
-                           baseline = baseline,
-                           timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        client_opts["testname"] = "UDP_STREAM"
+        client_opts["netperf_opts"] = nperf_opts
 
-    netperf_result_template(result_udp, udp_res_data)
-    result_udp.set_comment(pr_comment)
-    perf_api.save_result(result_udp)
+        udp_res_data = netperf((guest1, g1_nic, 0), (guest3, g3_nic, 0),
+                               client_opts = client_opts, baseline = baseline,
+                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+
+        netperf_result_template(result_udp, udp_res_data)
+        result_udp.set_comment(pr_comment)
+        perf_api.save_result(result_udp)
 if ipv in [ 'ipv6', 'both' ]:
     # prepare PerfRepo result for tcp ipv6
-    result_tcp = perf_api.new_result("tcp_ipv6_id",
-                                     "tcp_ipv6_result",
-                                     hash_ignore=[
-                                         r'kernel_release',
-                                         r'redhat_release',
-                                         r'test_host\d+\.hostname',
-                                         r'test_host\d+\..*hwaddr',
-                                         r'machine_h\d+\..*ovs\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.devname'])
-    result_tcp.add_tag(product_name)
-    if nperf_num_parallel > 1:
-        result_tcp.add_tag("multithreaded")
-        result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+    if nperf_protocols.find("tcp") > -1:
+        result_tcp = perf_api.new_result("tcp_ipv6_id",
+                                         "tcp_ipv6_result",
+                                         hash_ignore=[
+                                             r'kernel_release',
+                                             r'redhat_release',
+                                             r'test_host\d+\.hostname',
+                                             r'test_host\d+\..*hwaddr',
+                                             r'machine_h\d+\..*ovs\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.devname'])
+        result_tcp.add_tag(product_name)
+        if nperf_num_parallel > 1:
+            result_tcp.add_tag("multithreaded")
+            result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
-    baseline = perf_api.get_baseline_of_result(result_tcp)
-    baseline = perfrepo_baseline_to_dict(baseline)
+        baseline = perf_api.get_baseline_of_result(result_tcp)
+        baseline = perfrepo_baseline_to_dict(baseline)
 
-    tcp_res_data = netperf((guest1, g1_nic, 1), (guest3, g3_nic, 1),
-                           client_opts={"duration" : netperf_duration,
-                                        "testname" : "TCP_STREAM",
-                                        "confidence" : nperf_confidence,
-                                        "num_parallel" : nperf_num_parallel,
-                                        "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs,
-                                        "netperf_opts" : nperf_opts + "-6",
-                                        "debug": nperf_debug,
-                                        "max_deviation": nperf_max_dev},
-                           baseline = baseline,
-                           timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        tcp_res_data = netperf((guest1, g1_nic, 1), (guest3, g3_nic, 1),
+                               client_opts={"duration" : netperf_duration,
+                                            "testname" : "TCP_STREAM",
+                                            "confidence" : nperf_confidence,
+                                            "num_parallel" : nperf_num_parallel,
+                                            "cpu_util" : nperf_cpu_util,
+                                            "runs": nperf_max_runs,
+                                            "netperf_opts" : nperf_opts + "-6",
+                                            "debug": nperf_debug,
+                                            "max_deviation": nperf_max_dev},
+                               baseline = baseline,
+                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-    netperf_result_template(result_tcp, tcp_res_data)
-    result_tcp.set_comment(pr_comment)
-    perf_api.save_result(result_tcp)
+        netperf_result_template(result_tcp, tcp_res_data)
+        result_tcp.set_comment(pr_comment)
+        perf_api.save_result(result_tcp)
 
-    #prepare PerfRepo result for udp ipv6
-    result_udp = perf_api.new_result("udp_ipv6_id",
-                                     "udp_ipv6_result",
-                                     hash_ignore=[
-                                         r'kernel_release',
-                                         r'redhat_release',
-                                         r'test_host\d+\.hostname',
-                                         r'test_host\d+\..*hwaddr',
-                                         r'machine_h\d+\..*ovs\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.hwaddr',
-                                         r'machine_h\d+\..*tap\d*\.devname'])
-    result_udp.add_tag(product_name)
-    if nperf_num_parallel > 1:
-        result_udp.add_tag("multithreaded")
-        result_udp.set_parameter('num_parallel', nperf_num_parallel)
+    if nperf_protocols.find("udp") > -1:
+        #prepare PerfRepo result for udp ipv6
+        result_udp = perf_api.new_result("udp_ipv6_id",
+                                         "udp_ipv6_result",
+                                         hash_ignore=[
+                                             r'kernel_release',
+                                             r'redhat_release',
+                                             r'test_host\d+\.hostname',
+                                             r'test_host\d+\..*hwaddr',
+                                             r'machine_h\d+\..*ovs\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.hwaddr',
+                                             r'machine_h\d+\..*tap\d*\.devname'])
+        result_udp.add_tag(product_name)
+        if nperf_num_parallel > 1:
+            result_udp.add_tag("multithreaded")
+            result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
-    baseline = perf_api.get_baseline_of_result(result_udp)
-    baseline = perfrepo_baseline_to_dict(baseline)
+        baseline = perf_api.get_baseline_of_result(result_udp)
+        baseline = perfrepo_baseline_to_dict(baseline)
 
-    udp_res_data = netperf((guest1, g1_nic, 1), (guest3, g3_nic, 1),
-                           client_opts={"duration" : netperf_duration,
-                                        "testname" : "UDP_STREAM",
-                                        "confidence" : nperf_confidence,
-                                        "num_parallel" : nperf_num_parallel,
-                                        "cpu_util" : nperf_cpu_util,
-                                        "runs": nperf_max_runs,
-                                        "netperf_opts" : nperf_opts + "-6",
-                                        "debug": nperf_debug,
-                                        "max_deviation": nperf_max_dev},
-                           baseline = baseline,
-                           timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+        udp_res_data = netperf((guest1, g1_nic, 1), (guest3, g3_nic, 1),
+                               client_opts={"duration" : netperf_duration,
+                                            "testname" : "UDP_STREAM",
+                                            "confidence" : nperf_confidence,
+                                            "num_parallel" : nperf_num_parallel,
+                                            "cpu_util" : nperf_cpu_util,
+                                            "runs": nperf_max_runs,
+                                            "netperf_opts" : nperf_opts + "-6",
+                                            "debug": nperf_debug,
+                                            "max_deviation": nperf_max_dev},
+                               baseline = baseline,
+                               timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-    netperf_result_template(result_udp, udp_res_data)
-    result_udp.set_comment(pr_comment)
-    perf_api.save_result(result_udp)
+        netperf_result_template(result_udp, udp_res_data)
+        result_udp.set_comment(pr_comment)
+        perf_api.save_result(result_udp)
 
 if nperf_cpupin:
     host1.run("service irqbalance start")
