@@ -19,6 +19,7 @@ from lnst.Controller.XmlTemplates import XmlTemplateError
 from lnst.Common.Path import Path
 from lnst.Controller.PerfRepoMapping import PerfRepoMapping
 from lnst.Common.Utils import Noop
+from lnst.Controller.Machine import UnusedInterface
 
 try:
     from perfrepo import PerfRepoRESTAPI
@@ -192,7 +193,7 @@ class HostAPI(object):
 
         self._ifaces = {}
         for interface in self._m.get_interfaces():
-            if interface.get_id() is None:
+            if isinstance(interface, UnusedInterface):
                 continue
             self._ifaces[interface.get_id()] = InterfaceAPI(interface, self)
 
