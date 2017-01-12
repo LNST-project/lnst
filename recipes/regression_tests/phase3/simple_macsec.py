@@ -36,6 +36,7 @@ nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
+nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 nperf_protocols = ctl.get_alias("nperf_protocols")
 
@@ -129,6 +130,9 @@ client_opts = {"duration" : netperf_duration,
                "debug": nperf_debug,
                "max_deviation": nperf_max_dev}
 
+if nperf_msg_size is not None:
+    client_opts["msg_size"] = nperf_msg_size
+
 for setting in encryption_settings:
     #macsec setup
     macsecSetup(setting)
@@ -156,6 +160,9 @@ for setting in encryption_settings:
                 result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
             result_tcp.set_parameter('encryption', setting)
+
+            if nperf_msg_size is not None:
+                result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
 
             baseline = perf_api.get_baseline_of_result(result_tcp)
             baseline = perfrepo_baseline_to_dict(baseline)
@@ -185,6 +192,9 @@ for setting in encryption_settings:
                 result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
             result_udp.set_parameter('encryption', setting)
+
+            if nperf_msg_size is not None:
+                result_udp.set_parameter("nperf_msg_size", nperf_msg_size)
 
             baseline = perf_api.get_baseline_of_result(result_udp)
             baseline = perfrepo_baseline_to_dict(baseline)
@@ -223,6 +233,9 @@ for setting in encryption_settings:
 
             result_tcp.set_parameter('encryption', setting)
 
+            if nperf_msg_size is not None:
+                result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
+
             baseline = perf_api.get_baseline_of_result(result_tcp)
             baseline = perfrepo_baseline_to_dict(baseline)
 
@@ -251,6 +264,9 @@ for setting in encryption_settings:
                 result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
             result_udp.set_parameter('encryption', setting)
+
+            if nperf_msg_size is not None:
+                result_udp.set_parameter("nperf_msg_size", nperf_msg_size)
 
             baseline = perf_api.get_baseline_of_result(result_udp)
             baseline = perfrepo_baseline_to_dict(baseline)

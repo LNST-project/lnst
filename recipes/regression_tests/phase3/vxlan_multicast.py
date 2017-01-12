@@ -38,6 +38,7 @@ nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
+nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 nperf_protocols = ctl.get_alias("nperf_protocols")
 
@@ -108,6 +109,9 @@ client_opts = {"duration" : netperf_duration,
                "debug": nperf_debug,
                "max_deviation": nperf_max_dev}
 
+if nperf_msg_size is not None:
+    client_opts["msg_size"] = nperf_msg_size
+
 ctl.wait(2)
 if ipv in [ 'ipv4', 'both' ]:
     if nperf_protocols.find("tcp") > -1:
@@ -125,6 +129,9 @@ if ipv in [ 'ipv4', 'both' ]:
         if nperf_num_parallel > 1:
             result_tcp.add_tag("multithreaded")
             result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+
+        if nperf_msg_size is not None:
+            result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
 
         baseline = perf_api.get_baseline_of_result(result_tcp)
         baseline = perfrepo_baseline_to_dict(baseline)
@@ -156,6 +163,9 @@ if ipv in [ 'ipv4', 'both' ]:
         if nperf_num_parallel > 1:
             result_udp.add_tag("multithreaded")
             result_udp.set_parameter('num_parallel', nperf_num_parallel)
+
+        if nperf_msg_size is not None:
+            result_udp.set_parameter("nperf_msg_size", nperf_msg_size)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         baseline = perfrepo_baseline_to_dict(baseline)
@@ -189,6 +199,9 @@ if ipv in [ 'ipv6', 'both' ]:
             result_tcp.add_tag("multithreaded")
             result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
+        if nperf_msg_size is not None:
+            result_tcp.set_parameter("nperf_msg_size", nperf_msg_size)
+
         baseline = perf_api.get_baseline_of_result(result_tcp)
         baseline = perfrepo_baseline_to_dict(baseline)
 
@@ -219,6 +232,9 @@ if ipv in [ 'ipv6', 'both' ]:
         if nperf_num_parallel > 1:
             result_udp.add_tag("multithreaded")
             result_udp.set_parameter('num_parallel', nperf_num_parallel)
+
+        if nperf_msg_size is not None:
+            result_udp.set_parameter("nperf_msg_size", nperf_msg_size)
 
         baseline = perf_api.get_baseline_of_result(result_udp)
         baseline = perfrepo_baseline_to_dict(baseline)
