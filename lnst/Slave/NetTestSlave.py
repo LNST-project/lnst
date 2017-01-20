@@ -670,7 +670,8 @@ class SlaveMethods:
                 self._net_namespaces[netns] = {"pid": pid,
                                                "pipe": read_pipe}
                 self._server_handler.add_netns(netns, read_pipe)
-                return False
+                result = self._slave_server.wait_for_result(netns)
+                return result["result"]
             elif pid == 0:
                 self._slave_server.set_netns_sighandlers()
                 #create new network namespace
