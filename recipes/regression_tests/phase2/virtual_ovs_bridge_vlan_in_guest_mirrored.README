@@ -1,0 +1,87 @@
+Topology:
+
+                           +----------+
+                           |          |
+         +-----------------+  switch  +-----------------+
+         |                 |          |                 |
+         |                 +----------+                 |
+         |                                              |
+       +-+-+                                          +-+-+
++------|nic|------+                            +------|nic|------+
+|      +-+-+      |                            |      +-+-+      |
+|        |        |                            |        |        |
+|   +----+        |                            |        +----+   |
+|   |             |                            |             |   |
+| +-+---------+   |                            |   +---------+-+ |
+| | ovs_bridge|   |                            |   |ovs_bridge | |
+| +-+---------+   |                            |   +---------+-+ |
+|   |             |                            |             |   |
+| +-+-+   host1   |                            |  host2    +-+-+ |
++-|tap|-----------+                            +-----------|tap|-+
+  +-+-+                                                    +-+-+
+    |                                                        |
+    |VLAN10                                                  |VLAN10
+    |                                                        |
+  +-+-+                                                    +-+-+
++-|nic|--+                                               +-|nic|--+
+| +---+  |                                               | +---+  |
+| guest1 |                                               | guest2 |
+|        |                                               |        |
++--------+                                               +--------+
+
+Number of hosts: 4
+Host #1 description:
+    One ethernet device
+    One tap device
+    One Open vSwitch bridge device, bridging ethernet and tap devices
+    Host for guest1 virtual machine
+Host #2 description:
+    One ethernet device
+    One tap device
+    One bridge device, bridging ethernet and tap devices
+    Host for guest2 virtual machine
+Guest #1 description:
+    One ethernet device with one VLAN subinterface
+Guest #2 description:
+    One ethernet device with one VLAN subinterface
+Test name:
+    virtual_ovs_bridge_vlan_in_guest_mirrored.py
+Test description:
+    Ping:
+      + count: 100
+      + interval: 0.1s
+      + between guest1's VLAN10 and guest2's VLAN10
+    Netperf:
+      + duration: 60s
+      + TCP_STREAM and UDP_STREAM
+      + between guest1's VLAN10 and guest2's VLAN10
+
+PerfRepo integration:
+    First, preparation in PerfRepo is required - you need to create Test objects
+    through the web interface that properly describe the individual Netperf
+    tests that this recipe runs. Don't forget to also add appropriate metrics.
+    For these Netperf tests it's always:
+    * throughput
+    * throughput_min
+    * throughput_max
+    * throughput_deviation
+
+    After that, to enable support for PerfRepo you need to create the file
+    virtual_ovs_bridge_vlan_in_guest_mirrored.mapping and define the following id mappings:
+    tcp_ipv4_id -> to store ipv4 TCP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+    tcp_ipv6_id -> to store ipv6 TCP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+    udp_ipv4_id -> to store ipv4 UDP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+    udp_ipv6_id -> to store ipv4 UDP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+
+    To enable result comparison against baselines you need to create a Report in
+    PerfRepo that will store the baseline. Set up the Report to only contain results
+    with the same hash tag and then add a new mapping to the mapping file, with
+    this format:
+    <some_hash> = <report_id>
+
+    The hash value is automatically generated during test execution and added
+    to each result stored in PerfRepo. To get the Report id you need to open
+    that report in our browser and find if in the URL.
+
+    When running this recipe you should also define the 'product_name' alias
+    (e.g. RHEL7) in order to tag the result object in PerfRepo.

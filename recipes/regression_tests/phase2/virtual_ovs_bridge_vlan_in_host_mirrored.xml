@@ -1,0 +1,98 @@
+<lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+        <alias name="netperf_duration" value="60" />
+        <alias name="nperf_reserve" value="20" />
+        <alias name="nperf_confidence" value="99,5" />
+        <alias name="nperf_max_runs" value="5" />
+        <alias name="nperf_mode" value="default"/>
+        <alias name="nperf_num_parallel" value="2"/>
+        <alias name="nperf_debug" value="0"/>
+        <alias name="nperf_max_dev" value="20%"/>
+        <alias name="nperf_protocols" value="tcp udp sctp"/>
+        <alias name="mtu" value="1500" />
+        <alias name="mapping_file" value="virtual_ovs_bridge_vlan_in_host_mirrored.mapping" />
+        <alias name="vlan10_net" value="192.168.10"/>
+        <alias name="vlan10_tag" value="10"/>
+        <alias name="driver" value="ixgbe"/>
+    </define>
+    <network>
+        <host id="host1">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
+            <interfaces>
+                <eth id="nic" label="to_switch">
+                    <params>
+                        <param name="driver" value="{$driver}" />
+                    </params>
+                </eth>
+                <eth id="tap" label="to_guest1"/>
+                <ovs_bridge id="ovs_br">
+                    <slaves>
+                        <slave id="tap" />
+                        <slave id="nic" />
+                    </slaves>
+                    <vlan tag="{$vlan10_tag}">
+                        <slaves>
+                            <slave id="tap"/>
+                        </slaves>
+                    </vlan>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="guest1">
+            <interfaces>
+                <eth id="guestnic" label="to_guest1">
+                    <params>
+                        <param name="driver" value="virtio"/>
+                    </params>
+                    <addresses>
+                        <address>{$vlan10_net}.10/24</address>
+                        <address>fc00:0:0:10::10/64</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+
+        <host id="host2">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
+            <interfaces>
+                <eth id="nic" label="to_switch">
+                    <params>
+                        <param name="driver" value="{$driver}" />
+                    </params>
+                </eth>
+                <eth id="tap" label="to_guest2"/>
+                <ovs_bridge id="ovs_br">
+                    <slaves>
+                        <slave id="tap" />
+                        <slave id="nic" />
+                    </slaves>
+                    <vlan tag="{$vlan10_tag}">
+                        <slaves>
+                            <slave id="tap"/>
+                        </slaves>
+                    </vlan>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="guest2">
+            <interfaces>
+                <eth id="guestnic" label="to_guest2">
+                    <params>
+                        <param name="driver" value="virtio"/>
+                    </params>
+                    <addresses>
+                        <address>{$vlan10_net}.11/24</address>
+                        <address>fc00:0:0:10::11/64</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="virtual_ovs_bridge_vlan_in_host_mirrored.py" />
+</lnstrecipe>
