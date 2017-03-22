@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Bash completion script for lnst-slave command
 # Author: Radek Pazdera <rpazdera@redhat.com>
 

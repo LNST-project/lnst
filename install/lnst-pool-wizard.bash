@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Bash completion script for lnst-pool-wizard command
 # Author: Jiri Prochazka <jprochaz@redhat.com>
 
