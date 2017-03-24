@@ -19,7 +19,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     m1_if1.reset(ip=["192.168.101.10/24", "2002::1/64"])
     sw_if1.reset(ip=["192.168.101.11/24", "2002::2/64"])
 
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
     tl.ping_simple(m1_if1, sw_if1)
