@@ -160,12 +160,12 @@ def configure_ipsec(ciph_alg, ciph_key, hash_alg, hash_key, ip_version):
 
     m1.run("ip xfrm state add "\
            "src %s dst %s proto comp spi 4 mode %s "\
-           "comp deflate"\
-           % (m1_addr, m2_addr, ipsec_mode))
+           "comp deflate %s"\
+           % (m1_addr, m2_addr, ipsec_mode, m1_key))
     m1.run("ip xfrm state add "\
            "src %s dst %s proto comp spi 1 mode %s "\
-           "comp deflate"\
-           % (m2_addr, m1_addr, ipsec_mode))
+           "comp deflate %s"\
+           % (m2_addr, m1_addr, ipsec_mode, m1_key))
 
     m1.run("ip xfrm state add "\
            "src %s dst %s proto esp spi 2 mode %s "\
@@ -210,12 +210,12 @@ def configure_ipsec(ciph_alg, ciph_key, hash_alg, hash_key, ip_version):
 
     m2.run("ip xfrm state add "\
            "src %s dst %s proto comp spi 4 mode %s "\
-           "comp deflate"\
-           % (m1_addr, m2_addr, ipsec_mode))
+           "comp deflate %s"\
+           % (m1_addr, m2_addr, ipsec_mode, m2_key))
     m2.run("ip xfrm state add "\
            "src %s dst %s proto comp spi 1 mode %s "\
-           "comp deflate"\
-           % (m2_addr, m1_addr, ipsec_mode))
+           "comp deflate %s"\
+           % (m2_addr, m1_addr, ipsec_mode, m2_key))
 
     m2.run("ip xfrm state add "\
            "src %s dst %s proto esp spi 2 mode %s "\
