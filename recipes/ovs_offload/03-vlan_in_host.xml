@@ -1,0 +1,67 @@
+<lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+        <alias name="iperf" value="yes" />
+        <alias name="vlan10_net" value="1.1.1"/>
+        <alias name="vlan10_net6" value="fc00:0:0:0"/>
+        <alias name="vlan10_tag" value="10"/>
+    </define>
+    <network>
+        <host id="host1">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+                <param name="order" value="1"/>
+            </params>
+            <interfaces>
+                <eth id="nic" label="to_switch"/>
+                <eth id="tap" label="to_guest"/>
+                <ovs_bridge id="ovs_br">
+                    <slaves>
+                        <slave id="tap" />
+                        <slave id="nic" />
+                    </slaves>
+                    <vlan tag="{$vlan10_tag}">
+                        <slaves>
+                            <slave id="tap"/>
+                        </slaves>
+                    </vlan>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="guest1">
+            <params>
+                <param name="machine_type" value="guest"/>
+            </params>
+            <interfaces>
+                <eth id="guestnic" label="to_guest">
+                    <addresses>
+                        <address>{$vlan10_net}.10/24</address>
+                        <address>{$vlan10_net6}::10/64</address>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="host2">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
+            <interfaces>
+                <eth id="nic" label="to_switch"/>
+                <vlan id="vlan10">
+                    <options>
+                        <option name="vlan_tci" value="{$vlan10_tag}" />
+                    </options>
+                    <slaves>
+                        <slave id="nic" />
+                    </slaves>
+                    <addresses>
+                        <address>{$vlan10_net}.11/24</address>
+                        <address>{$vlan10_net6}::11/64</address>
+                    </addresses>
+                </vlan>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="03-vlan_in_host.py" />
+</lnstrecipe>
