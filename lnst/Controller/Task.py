@@ -314,7 +314,7 @@ class HostAPI(object):
     def get_device(self, name):
         dev = self._m.dev_db_get_name(name)
         if dev:
-            return DeviceAPI(self._m.dev_db_get_name(name), self)
+            return DeviceAPI(dev, self)
         else:
             raise TaskError("No device with name '%s' found." % str(name))
 
