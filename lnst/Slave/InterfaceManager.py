@@ -563,7 +563,7 @@ class Device(object):
 
         for m_id in self._master["other"]:
             m_dev = self._if_manager.get_device(m_id)
-            if m_dev:
+            if m_dev and self._if_index not in m_dev.get_master()["other"]:
                 m_dev.clear_configuration()
 
         if self._conf != None and self._configured:
@@ -638,7 +638,7 @@ class Device(object):
 
         for m_id in self._master["other"]:
             m_dev = self._if_manager.get_device(m_id)
-            if m_dev:
+            if m_dev and self._if_index not in m_dev.get_master()["other"]:
                 m_dev.deconfigure()
 
         if self._conf != None and self._configured:
