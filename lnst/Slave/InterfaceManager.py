@@ -593,6 +593,9 @@ class Device(object):
         elif if_index not in self._master["other"]:
             self._master["other"].append(if_index)
 
+    def get_master(self):
+        return self._master
+
     def del_master(self, if_index):
         if self._master["primary"] == if_index:
             self._master["primary"] = None
