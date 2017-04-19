@@ -57,10 +57,8 @@ if nperf_cpupin:
     g1.run("service irqbalance stop")
 
     m1_phy1 = m1.get_interface("eth1")
-    m1_phy2 = m1.get_interface("tap1")
     m2_phy1 = m2.get_interface("eth1")
-    g1_phy1 = g1.get_interface("eth1")
-    dev_list = [(m1, m1_phy1), (m1, m1_phy2), (m2, m2_phy1), (g1, g1_phy1)]
+    dev_list = [(m1, m1_phy1), (m2, m2_phy1)]
 
     # this will pin devices irqs to cpu #0
     for m, d in dev_list:
