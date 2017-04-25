@@ -302,7 +302,7 @@ class TestLib:
                                           "pktgen_option": pktgen_option,
                                           "thread_option": thread_option})
 
-        m1.run(pktgen_mod, desc=desc, netns=if1.get_netns())
+        m1.run(pktgen_mod, desc=desc, netns=if1.get_netns(), timeout=600)
 
     def custom(self, m1, desc, err_msg=None):
         m1.sync_resources(modules=["Custom"])
