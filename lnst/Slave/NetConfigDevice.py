@@ -479,7 +479,7 @@ class NetConfigDeviceOvsBridge(NetConfigDeviceGeneric):
                     exec_cmd("ip addr add %s dev %s" % (address, iport["name"]))
 
     def address_cleanup(self):
-        super(NetConfigDeviceOvsBridge, self).up()
+        super(NetConfigDeviceOvsBridge, self).down()
 
         int_ports = self._dev_config["ovs_conf"]["internals"]
         br_name = self._dev_config["name"]
