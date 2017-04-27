@@ -194,6 +194,9 @@
             <optional>
                 <attribute name="netns"/>
             </optional>
+            <optional>
+                <ref name="addresses"/>
+            </optional>
 
             <interleave>
                 <optional>
