@@ -68,7 +68,12 @@ class Netperf(TestGeneric):
         composes commands for netperf and netserver based on xml recipe
         """
         if self._role == "client":
-            cmd = "netperf -H %s -f k" % self._netperf_server
+            # for request response test transactions per seconds are used as unit
+            if "RR" in self._testname:
+                cmd = "netperf -H %s -f x" % self._netperf_server
+            # else 10^0bits/s are used as unit
+            else:
+                cmd = "netperf -H %s -f b" % self._netperf_server
             if self._is_omni():
                 # -P 0 disables banner header of output
                 cmd += " -P 0"
@@ -134,7 +139,8 @@ class Netperf(TestGeneric):
 
             # Print only relevant output
             if self._is_omni():
-                cmd += ' -- -k "THROUGHPUT, LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, '\
+                cmd += ' -- -k "THROUGHPUT, THROUGHPUT_UNITS, '\
+                       'LOCAL_CPU_UTIL, REMOTE_CPU_UTIL, '\
                        'CONFIDENCE_LEVEL, THROUGHPUT_CONFID, LOCAL_SEND_SIZE, '\
                        'REMOTE_RECV_SIZE, LOCAL_SEND_THROUGHPUT, '\
                        'REMOTE_RECV_THROUGHPUT, LOCAL_CPU_PEAK_UTIL, '\
@@ -195,13 +201,20 @@ class Netperf(TestGeneric):
         pattern_throughput = "THROUGHPUT=(\d+\.\d+)"
         throughput = re.search(pattern_throughput, output)
 
-        if throughput is None:
-            rate_in_kb = 0.0
-        else:
-            rate_in_kb = float(throughput.group(1))
+        pattern_throughput_units = "THROUGHPUT_UNITS=(.*)"
+        throughput_units = re.search(pattern_throughput_units, output).group(1)
 
-        res_val["rate"] = rate_in_kb*1000
-        res_val["unit"] = "bps"
+        if throughput is None:
+            rate = 0.0
+        else:
+            rate = float(throughput.group(1))
+
+        if throughput_units == "10^0bits/s":
+            res_val["unit"] = "bps"
+        elif throughput_units == "Trans/s":
+            res_val["unit"] = "tps"
+
+        res_val["rate"] = rate
 
         if self._cpu_util is not None:
             if self._cpu_util == "local" or self._cpu_util == "both":
@@ -229,14 +242,14 @@ class Netperf(TestGeneric):
         r2 = re.search(pattern, output.lower())
 
         if r2 is None:
-            rate_in_kb = 0.0
+            rate = 0.0
         else:
-            rate_in_kb = float(r2.group(1))
+            rate = float(r2.group(1))
             if self._cpu_util != 'None':
                 res_val["LOCAL_CPU_UTIL"] = float(r2.group(2))
                 res_val["REMOTE_CPU_UTIL"] = float(r2.group(3))
 
-        res_val["rate"] = rate_in_kb*1000
+        res_val["rate"] = rate
         res_val["unit"] = "bps"
 
         return res_val
@@ -381,6 +394,14 @@ class Netperf(TestGeneric):
 
     def _pretty_rate(self, rate, unit=None):
         pretty_rate = {}
+
+        # For Request/Response tests we don't need any conversions
+        if "RR" in self._testname:
+            pretty_rate["unit"] = "Trans/sec"
+            pretty_rate["rate"] = rate
+            return pretty_rate
+
+        # For STREAM tests we want to convert the rate from bits
         if unit is None:
             if rate < 1000:
                 pretty_rate["unit"] = "bits/sec"
