@@ -16,9 +16,9 @@ from lnst.Common.Utils import std_deviation, is_installed, int_it
 class Netperf(TestGeneric):
 
     supported_tests = ["TCP_STREAM", "TCP_RR", "UDP_STREAM", "UDP_RR",
-                       "SCTP_STREAM", "SCTP_STREAM_MANY", "SCTP_RR"]
+                       "SCTP_STREAM", "SCTP_STREAM_MANY", "SCTP_RR", "TCP_CRR"]
 
-    omni_tests = ["TCP_STREAM", "TCP_RR", "UDP_STREAM", "UDP_RR"]
+    omni_tests = ["TCP_STREAM", "UDP_STREAM", "TCP_RR", "UDP_RR", "TCP_CRR"]
 
     def __init__(self, command):
         super(Netperf, self).__init__(command)
