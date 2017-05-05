@@ -235,7 +235,7 @@ class Netperf(TestGeneric):
         # pattern for SCTP streams and other tests
         # decimal decimal decimal float (float)
         pattern = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(?:\.\d+){0,1})"
-        if self._cpu_util != 'None':
+        if self._cpu_util != 'None' and self._cpu_util is not None:
             # cpu utilization data in format: float float
             pattern += "\s+(\d+(?:\.\d+){0,1})\s+(\d+(?:\.\d+){0,1})"
 
@@ -245,7 +245,7 @@ class Netperf(TestGeneric):
             rate = 0.0
         else:
             rate = float(r2.group(1))
-            if self._cpu_util != 'None':
+            if self._cpu_util != 'None' and self._cpu_util is not None:
                 res_val["LOCAL_CPU_UTIL"] = float(r2.group(2))
                 res_val["REMOTE_CPU_UTIL"] = float(r2.group(3))
 
