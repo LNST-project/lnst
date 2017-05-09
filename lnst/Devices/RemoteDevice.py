@@ -1,0 +1,98 @@
+"""
+Defines the RemoteDevice class. This class wraps all other Device classes
+when creating device instances on the Controller.
+
+Copyright 2017 Red Hat, Inc.
+Licensed under the GNU General Public License, version 2 as
+published by the Free Software Foundation; see COPYING for details.
+"""
+
+__author__ = """
+olichtne@redhat.com (Ondrej Lichtner)
+"""
+
+from lnst.Devices.Device import Device
+from lnst.Common.DeviceError import DeviceDeleted
+
+def remotedev_decorator(cls):
+    def func(*args, **kwargs):
+        return RemoteDevice(cls, args, kwargs)
+    return func
+
+class RemoteDevice(object):
+    """Wraps all other Device classes on the Controller
+
+    Ensures that all public methods of Device objects also act as the tester
+    facing API even though the Device objects are instantiated on the Slave,
+    not where the recipe script is actually running.
+    """
+    def __init__(self, dev_cls, args=[], kwargs={}):
+        self.__dev_cls = dev_cls
+        self.__dev_args = args
+        self.__dev_kwargs = kwargs
+
+        self.host = None
+        self.if_index = None
+        self.deleted = False
+
+    @property
+    def _dev_cls(self):
+        return self.__dev_cls
+
+    @property
+    def _dev_args(self):
+        return self.__dev_args
+
+    @property
+    def _dev_kwargs(self):
+        return self.__dev_kwargs
+
+    def _get_dev_cls(self):
+        return self._dev_cls
+
+    def __getattr__(self, name):
+        attr = getattr(self._dev_cls, name)
+
+        if self.deleted:
+            raise DeviceDeleted("This device was deleted on the slave and does not exist anymore.")
+
+        if callable(attr):
+            def dev_method(*args, **kwargs):
+                return self.host.rpc_call("dev_method", self.if_index,
+                                          name, args, kwargs)
+            return dev_method
+        else:
+            return self.host.rpc_call("dev_attr", self.if_index, name)
+
+    def __iter__(self):
+        for x in dir(self._dev_cls):
+            if x[0] == '_' or x[0:1] == "__":
+                continue
+            attr = getattr(self._dev_cls, x)
+
+            if not callable(attr):
+                yield (x, getattr(self, x))
+
+    def _match_update_data(self, data):
+        return False
+
+class PairedRemoteDevice(RemoteDevice):
+    """RemoteDevice class for paired Devices (such as veth)"""
+    def __init__(self, peer, dev_cls, args=[], kwargs={}):
+        super(PairedRemoteDevice, self).__init__(dev_cls, args, kwargs)
+
+        self._peer = peer
+
+    @property
+    def _dev_kwargs(self):
+        ret = super(PairedRemoteDevice, self)._dev_kwargs
+        ret["peer_if_id"] = self._peer.if_index
+        return ret
+
+#register the RemoteDevice class as implementing the interface of the Device
+#class - this is true because it just proxies method/attribute calls to the
+#remote Slave where the correct method gets called.
+#registering the RemoteDevice class as an implementation of the Device
+#Interface is required for isinstance() checks in Common code -- Device is
+#available on both Controller and Slave, but RemoteDevice only on Controller
+Device.register(RemoteDevice)
