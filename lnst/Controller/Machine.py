@@ -23,16 +23,17 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import wait_for, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
+from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
     from lnst.Controller.VirtUtils import VirtNetCtl, VirtDomainCtl
 
-class MachineError(Exception):
+class MachineError(ControllerError):
     pass
 
-class PrefixMissingError(Exception):
+class PrefixMissingError(ControllerError):
     pass
 
 class Machine(object):

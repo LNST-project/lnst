@@ -12,8 +12,9 @@ jpirko@redhat.com (Jiri Pirko)
 
 import logging
 import subprocess
+from lnst.Common.LnstError import LnstError
 
-class ExecCmdFail(Exception):
+class ExecCmdFail(LnstError):
     _cmd = None
     _retval = None
     _stderr = None

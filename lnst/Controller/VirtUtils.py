@@ -16,6 +16,7 @@ import libvirt
 from libvirt import libvirtError
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.NetUtils import scan_netdevs
+from lnst.Controller.Common import ControllerError
 
 #this is a global object because opening the connection to libvirt in every
 #object instance that uses it sometimes fails - the libvirt server probably
@@ -27,7 +28,7 @@ def init_libvirt_con():
     if _libvirt_conn is None:
         _libvirt_conn = libvirt.open(None)
 
-class VirtUtilsError(Exception):
+class VirtUtilsError(ControllerError):
     pass
 
 def _ip(cmd):

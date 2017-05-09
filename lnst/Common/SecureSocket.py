@@ -20,6 +20,7 @@ import cPickle
 import hashlib
 import hmac
 from lnst.Common.Utils import not_imported
+from lnst.Common.LnstError import LnstError
 
 DH_GROUP = {"p": int("0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1"\
                      "29024E088A67CC74020BBEA63B139B22514A08798E3404DD"\
@@ -71,7 +72,7 @@ SRP_GROUP["p_size"] = bit_length(SRP_GROUP["p"])/8
 if bit_length(SRP_GROUP["p"])%8:
     SRP_GROUP["p_size"] += 1
 
-class SecSocketException(Exception):
+class SecSocketException(LnstError):
     pass
 
 cryptography = not_imported

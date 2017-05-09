@@ -16,6 +16,7 @@ import os
 import signal
 import time
 from lnst.Common.NetTestCommand import NetTestCommandGeneric
+from lnst.Common.LnstError import LnstError
 
 class testLogger(logging.Logger):
     def __init__(self, name, level=logging.NOTSET):
@@ -50,7 +51,7 @@ try:
 finally:
     logging._releaseLock()
 
-class TestOptionMissing(Exception):
+class TestOptionMissing(LnstError):
     pass
 
 class TestGeneric(NetTestCommandGeneric):

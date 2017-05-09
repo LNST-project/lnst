@@ -18,6 +18,7 @@ from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplateError
 from lnst.Common.Path import Path
 from lnst.Controller.PerfRepoMapping import PerfRepoMapping
+from lnst.Controller.Common import ControllerError
 from lnst.Common.Utils import Noop
 
 try:
@@ -84,7 +85,8 @@ def match():
             return False
 
 
-class TaskError(Exception): pass
+class TaskError(ControllerError):
+    pass
 
 class ControllerAPI(object):
     """ An API class representing the controller. """

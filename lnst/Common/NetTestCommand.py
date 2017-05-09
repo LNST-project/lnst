@@ -21,6 +21,7 @@ from time import time
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.LnstError import LnstError
 
 DEFAULT_TIMEOUT = 60
 
@@ -64,7 +65,7 @@ def str_command(command):
 
     return ", ".join(attrs)
 
-class CommandException(Exception):
+class CommandException(LnstError):
     """Base class for client errors."""
     def __init__(self, command):
         self.command = command
@@ -72,7 +73,7 @@ class CommandException(Exception):
     def __str__(self):
         return "CommandException: " + str(self.command)
 
-class BgCommandException(Exception):
+class BgCommandException(CommandException):
     """Base class for background command errors."""
     def __init__(self, str):
         self._str = str

@@ -10,6 +10,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+from lnst.Common.LnstError import LnstError
 from lnst.Controller.Task import ctl
 
 def ping(src, dst, options={}, expect="pass", bg=False):
@@ -24,10 +25,10 @@ def ping(src, dst, options={}, expect="pass", bg=False):
 
     options = dict(options)
     if 'addr' in options or 'iface' in options:
-        raise Exception("options can't contain keys 'addr' and 'iface'")
+        raise LnstError("options can't contain keys 'addr' and 'iface'")
 
     if not isinstance(src, tuple) or len(src) < 2 or len(src) > 4:
-        raise Exception('Invalid source specification')
+        raise LnstError('Invalid source specification')
     try:
         if len(src) == 2:
             h1, if1 = src
@@ -39,10 +40,10 @@ def ping(src, dst, options={}, expect="pass", bg=False):
             h1, if1, addr_index1, addr_selector1 = src
             options["iface"] = if1.get_ip(addr_index1, selector=addr_selector1)
     except:
-        raise Exception('Invalid source specification')
+        raise LnstError('Invalid source specification')
 
     if not isinstance(dst, tuple) or len(dst) < 3 or len(dst) > 4:
-        raise Exception('Invalid destination specification')
+        raise LnstError('Invalid destination specification')
     try:
         if len(dst) == 3:
             h2, if2, addr_index2 = dst
@@ -51,7 +52,7 @@ def ping(src, dst, options={}, expect="pass", bg=False):
             h2, if2, addr_index2, addr_selector2 = dst
             options["addr"] = if2.get_ip(addr_index2, selector=addr_selector2)
     except:
-        raise Exception('Invalid destination specification')
+        raise LnstError('Invalid destination specification')
 
     ping_mod = ctl.get_module("IcmpPing",
                               options = options)
@@ -70,10 +71,10 @@ def ping6(src, dst, options={}, expect="pass", bg=False):
 
     options = dict(options)
     if 'addr' in options or 'iface' in options:
-        raise Exception("options can't contain keys 'addr' and 'iface'")
+        raise LnstError("options can't contain keys 'addr' and 'iface'")
 
     if not isinstance(src, tuple) or len(src) < 2 or len(src) > 4:
-        raise Exception('Invalid source specification')
+        raise LnstError('Invalid source specification')
     try:
         if len(src) == 2:
             h1, if1 = src
@@ -85,10 +86,10 @@ def ping6(src, dst, options={}, expect="pass", bg=False):
             h1, if1, addr_index1, addr_selector1 = src
             options["iface"] = if1.get_ip(addr_index1, selector=addr_selector1)
     except:
-        raise Exception('Invalid source specification')
+        raise LnstError('Invalid source specification')
 
     if not isinstance(dst, tuple) or len(dst) < 3 or len(dst) > 4:
-        raise Exception('Invalid destination specification')
+        raise LnstError('Invalid destination specification')
     try:
         if len(dst) == 3:
             h2, if2, addr_index2 = dst
@@ -97,7 +98,7 @@ def ping6(src, dst, options={}, expect="pass", bg=False):
             h2, if2, addr_index2, addr_selector2 = dst
             options["addr"] = if2.get_ip(addr_index2, selector=addr_selector2)
     except:
-        raise Exception('Invalid destination specification')
+        raise LnstError('Invalid destination specification')
 
     ping_mod = ctl.get_module("Icmp6Ping",
                               options = options)
@@ -123,17 +124,17 @@ def netperf(src, dst, server_opts={}, client_opts={}, baseline={}, timeout=60):
 
     server_opts = dict(server_opts)
     if 'bind' in server_opts or 'role' in server_opts:
-        raise Exception("server_opts can't contain keys 'bind' and 'role'")
+        raise LnstError("server_opts can't contain keys 'bind' and 'role'")
 
     client_opts = dict(client_opts)
     if 'bind' in client_opts or\
        'role' in client_opts or\
        'netperf_server' in client_opts:
-        raise Exception("client_opts can't contain keys 'bind', 'role' "\
+        raise LnstError("client_opts can't contain keys 'bind', 'role' "\
                         "and 'netperf_server'")
 
     if not isinstance(src, tuple) or len(src) < 2 or len(src) > 4:
-        raise Exception('Invalid source specification')
+        raise LnstError('Invalid source specification')
     try:
         if len(src) == 3:
             h1, if1, addr_index1 = src
@@ -142,10 +143,10 @@ def netperf(src, dst, server_opts={}, client_opts={}, baseline={}, timeout=60):
             h1, if1, addr_index1, addr_selector1 = src
             client_ip = if1.get_ip(addr_index1, selector=addr_selector1)
     except:
-        raise Exception('Invalid source specification')
+        raise LnstError('Invalid source specification')
 
     if not isinstance(dst, tuple) or len(dst) < 3 or len(dst) > 4:
-        raise Exception('Invalid destination specification')
+        raise LnstError('Invalid destination specification')
     try:
         if len(dst) == 3:
             h2, if2, addr_index2 = dst
@@ -154,7 +155,7 @@ def netperf(src, dst, server_opts={}, client_opts={}, baseline={}, timeout=60):
             h2, if2, addr_index2, addr_selector2 = dst
             server_ip = if2.get_ip(addr_index2, addr_selector2)
     except:
-        raise Exception('Invalid destination specification')
+        raise LnstError('Invalid destination specification')
 
     server_opts["role"] = "server"
     server_opts["bind"] = server_ip

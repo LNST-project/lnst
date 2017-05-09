@@ -18,10 +18,11 @@ from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_mac_address
 from lnst.Common.Colours import get_preset_conf
 from lnst.Common.Version import LNSTMajorVersion
+from lnst.Common.LnstError import LnstError
 
 DefaultRPCPort = 9999
 
-class ConfigError(Exception):
+class ConfigError(LnstError):
     pass
 
 class Config():

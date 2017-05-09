@@ -13,9 +13,10 @@ import pty, os, termios, time, signal, re, select
 import logging, atexit
 from lnst.Common.Utils import wait_for
 from lnst.Common.ProcessManager import ProcessManager
+from lnst.Common.LnstError import LnstError
 
 class ShellProcess:
-    class ProcessError(Exception):
+    class ProcessError(LnstError):
         def __init__(self, patterns, output):
             Exception.__init__(self, patterns, output)
             self.patterns = patterns

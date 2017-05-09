@@ -15,10 +15,11 @@ import re
 import time
 import shutil
 from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.LnstError import LnstError
 
 SETUP_SCRIPT_NAME = "lnst-setup.sh"
 
-class ResourceCacheError(Exception):
+class ResourceCacheError(LnstError):
     pass
 
 class ResourceCache(object):
