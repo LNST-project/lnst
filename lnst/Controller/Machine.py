@@ -19,7 +19,6 @@ import signal
 from time import sleep
 from xmlrpclib import Binary
 from functools import wraps
-from lnst.Common.Config import lnst_config
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import wait_for, create_tar_archive
 from lnst.Common.Utils import check_process_running
@@ -44,18 +43,19 @@ class Machine(object):
         deconfiguration, and running commands.
     """
 
-    def __init__(self, m_id, hostname=None, libvirt_domain=None, rpcport=None,
-                 security=None):
+    def __init__(self, m_id, hostname, msg_dispatcher, ctl_config,
+                 libvirt_domain=None, rpcport=None, security=None):
         self._id = m_id
         self._hostname = hostname
+        self._ctl_config = ctl_config
         self._slave_desc = None
         self._connection = None
         self._configured = False
         self._system_config = {}
         self._security = security
-        self._security["identity"] = lnst_config.get_option("security",
+        self._security["identity"] = ctl_config.get_option("security",
                                                             "identity")
-        self._security["privkey"] = lnst_config.get_option("security",
+        self._security["privkey"] = ctl_config.get_option("security",
                                                            "privkey")
 
         self._domain_ctl = None
@@ -67,9 +67,9 @@ class Machine(object):
         if rpcport:
             self._port = rpcport
         else:
-            self._port = lnst_config.get_option('environment', 'rpcport')
+            self._port = ctl_config.get_option('environment', 'rpcport')
 
-        self._msg_dispatcher = None
+        self._msg_dispatcher = msg_dispatcher
         self._mac_pool = None
 
         self._interfaces = []
@@ -249,7 +249,7 @@ class Machine(object):
 
         slave_version = slave_desc["lnst_version"]
         slave_is_git = self.is_git_version(slave_version)
-        ctl_version = lnst_config.version
+        ctl_version = self._ctl_config.version
         ctl_is_git = self.is_git_version(ctl_version)
         if slave_version != ctl_version:
             if ctl_is_git and slave_is_git:
