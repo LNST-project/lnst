@@ -318,9 +318,3 @@ class Config():
             string = str(value)
 
         return string
-
-#Global object containing lnst configuration, available across modules
-#The object is created here but the contents are initialized
-#in lnst-ctl and lnst-slave, after that the modules that need the configuration
-#just import this object
-lnst_config = Config()
