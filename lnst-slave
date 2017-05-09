@@ -17,8 +17,8 @@ import os
 import logging
 from lnst.Common.Daemon import Daemon
 from lnst.Common.Logs import LoggingCtl
-from lnst.Common.Config import lnst_config
 from lnst.Common.Colours import load_presets_from_config
+from lnst.Slave.Config import SlaveConfig
 from lnst.Slave.NetTestSlave import NetTestSlave
 
 def usage():
@@ -50,23 +50,23 @@ def main():
         usage()
         sys.exit()
 
-    lnst_config.slave_init()
+    slave_config = SlaveConfig()
     dirname = os.path.dirname(sys.argv[0])
     gitcfg = os.path.join(dirname, "lnst-slave.conf")
     if os.path.isfile(gitcfg):
-        lnst_config.load_config(gitcfg)
+        slave_config.load_config(gitcfg)
     else:
-        lnst_config.load_config('/etc/lnst-slave.conf')
+        slave_config.load_config('/etc/lnst-slave.conf')
 
     usr_cfg = os.path.expanduser('~/.lnst/lnst-slave.conf')
     if os.path.isfile(usr_cfg):
-        lnst_config.load_config(usr_cfg)
+        slave_config.load_config(usr_cfg)
 
     debug = False
     daemon = False
     pidfile = "/var/run/lnst-slave.pid"
     port = None
-    coloured_output = not lnst_config.get_option("colours", "disable_colours")
+    coloured_output = not slave_config.get_option("colours", "disable_colours")
     for opt, arg in opts:
         if opt in ("-d", "--debug"):
             debug = True
@@ -81,17 +81,17 @@ def main():
         elif opt in ("-m", "--no-colours"):
             coloured_output = False
 
-    load_presets_from_config(lnst_config)
+    load_presets_from_config(slave_config)
 
     log_ctl = LoggingCtl(debug,
-                     log_dir=lnst_config.get_option('environment', 'log_dir'),
+                     log_dir=slave_config.get_option('environment', 'log_dir'),
                      colours=coloured_output)
     logging.info("Started")
 
     if port != None:
-        lnst_config.set_option("environment", "rpcport", port)
+        slave_config.set_option("environment", "rpcport", port)
 
-    nettestslave = NetTestSlave(log_ctl)
+    nettestslave = NetTestSlave(log_ctl, slave_config)
 
     if daemon:
         daemon = Daemon(pidfile)
