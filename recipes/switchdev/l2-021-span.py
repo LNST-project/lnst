@@ -43,11 +43,15 @@ class MirredPort:
         self.mach.run("tc filter del dev %s pref %d %s" % (from_dev,
                       self.pref[ingress], ingress_str))
 
-def run_packet_assert(num, main_if, from_if=None, to_if=None):
+def _run_packet_assert(num, main_if, from_addr, to_addr):
     mach = main_if.get_host()
-    filter_str = "icmp"
-    filter_str += " && src %s" % from_if.get_ip() if from_if else ""
-    filter_str += " && dst %s" % to_if.get_ip() if to_if else ""
+
+    # filter only icmp/icmpv6 ping, and the reuqested addresses
+    filter_str = "(icmp && (icmp[icmptype] == icmp-echo || \
+                            icmp[icmptype] == icmp-echoreply) \
+                   || (icmp6 && (ip6[40] == 128 || \
+                                 ip6[40] == 129))) \
+                  && src %s && dst %s" % (from_addr, to_addr)
 
     packet_assert_mod = ctl.get_module("PacketAssert", options = {
                                        "min" : num, "max" : num,
@@ -55,6 +59,21 @@ def run_packet_assert(num, main_if, from_if=None, to_if=None):
                                        "filter" : filter_str,
                                        "interface" : main_if.get_devname()})
     return mach.run(packet_assert_mod, bg=True)
+
+def run_packet_assert(num, main_if, from_if, to_if, ipv):
+    procs = []
+
+    if ipv in ["ipv4", "both"]:
+        ipv4_proc = _run_packet_assert(num, main_if, from_if.get_ip(0),
+                                       to_if.get_ip(0))
+        procs.append(ipv4_proc)
+
+    if ipv in ["ipv6", "both"]:
+        ipv6_proc = _run_packet_assert(num, main_if, from_if.get_ip(1),
+                                       to_if.get_ip(1))
+        procs.append(ipv6_proc)
+
+    return procs
 
 def change_mirror_status(mirror_status, change, mirred_port, to_if):
     mirror_status[change] = not mirror_status[change]
@@ -91,11 +110,13 @@ def do_task(ctl, hosts, ifaces, aliases):
         in_num = 10 if mirror_status["ingress"] else 0
         out_num = 10 if mirror_status["egress"] else 0
 
-        in_assert_proc = run_packet_assert(in_num, m2_if2, m2_if1, m1_if1)
-        out_assert_proc = run_packet_assert(out_num, m2_if2, m1_if1, m2_if1)
+        assert_procs = run_packet_assert(in_num, m2_if2, m2_if1, m1_if1,
+                                         aliases["ipv"])
+        assert_procs += run_packet_assert(out_num, m2_if2, m1_if1, m2_if1,
+                                         aliases["ipv"])
         tl.ping_simple(m1_if1, m2_if1, count=10)
-        in_assert_proc.intr()
-        out_assert_proc.intr()
+        for assert_proc in assert_procs:
+            assert_proc.intr()
 
     return 0
 
