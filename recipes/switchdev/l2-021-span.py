@@ -23,6 +23,7 @@ class MirredPort:
 
         mach.run("tc qdisc replace dev %s handle 0: root prio" % devname)
         mach.run("tc qdisc add dev %s handle ffff: ingress" % devname)
+        self.pref = [1, 1]
 
     def create_mirror(self, to_port, ingress = False):
         ingress_str = "ingress" if ingress else ""
@@ -30,26 +31,17 @@ class MirredPort:
         from_dev = self.mirred_port.get_devname()
         to_dev = to_port.get_devname()
 
-        self.mach.run("tc filter add dev %s parent %s: matchall skip_sw action \
-                       mirred egress mirror dev %s" % (from_dev, qdisc_handle,
-                                                       to_dev))
-
-    def get_mirrors(self, to_port, ingress = False):
-        ingress_str = "ingress" if ingress else ""
-        from_dev = self.mirred_port.get_devname()
-        cmd = self.mach.run("tc filter show dev %s %s" % (from_dev,
-                            ingress_str))
-        output = cmd.out()
-        return re.findall("pref (\\d+) .* handle .*\n.* device %s" %
-                to_port.get_devname(), output, re.M)
+        self.mach.run("tc filter add dev %s parent %s: pref %d matchall \
+                       skip_sw action mirred egress mirror dev %s" % (from_dev,
+                       qdisc_handle, self.pref[ingress], to_dev))
+        self.pref[ingress] += 1
 
     def remove_mirror(self, to_port, ingress = False):
-        prefs = self.get_mirrors(to_port, ingress)
         from_dev = self.mirred_port.get_devname()
         ingress_str = "ingress" if ingress else ""
-        for pref in prefs:
-            self.mach.run("tc filter del dev %s pref %s %s" % (from_dev, pref,
-                    ingress_str))
+        self.pref[ingress] -= 1
+        self.mach.run("tc filter del dev %s pref %d %s" % (from_dev,
+                      self.pref[ingress], ingress_str))
 
 def run_packet_assert(num, main_if, from_if=None, to_if=None):
     mach = main_if.get_host()
