@@ -108,6 +108,17 @@ def md5sum(file_path, block_size=2**20):
 
     return md5.hexdigest()
 
+def sha256sum(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(1024)
+            if not data:
+                break
+            sha256.update(data)
+
+    return sha256.hexdigest()
+
 def create_tar_archive(input_path, target_path, compression=False):
     if compression:
         args = "cfj"
