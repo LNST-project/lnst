@@ -14,10 +14,15 @@ import os
 import re
 import time
 import shutil
+import json
 from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.Utils import sha256sum
 from lnst.Common.LnstError import LnstError
 
-SETUP_SCRIPT_NAME = "lnst-setup.sh"
+#current index version
+INDEX_VERSION = 1
+#minimal supported index version -- will be updated to current one when loaded
+MIN_INDEX_VERSION = 1
 
 class ResourceCacheError(LnstError):
     pass
@@ -25,7 +30,6 @@ class ResourceCacheError(LnstError):
 class ResourceCache(object):
     _CACHE_INDEX_FILE_NAME = "index"
     _root = None
-    _entries = {}
     _expiration_period = None
 
     def __init__(self, cache_path, expiration_period):
@@ -38,98 +42,83 @@ class ResourceCache(object):
             os.makedirs(cache_path)
             self._root = cache_path
 
+        self._index = {"index_version": INDEX_VERSION,
+                       "entries": {}}
         self._read_index()
         self._expiration_period = expiration_period
 
     def _read_index(self):
-        logging.debug("Test cache index loaded")
         try:
-            f = open(self._get_index_loc(), "r")
+            with open(self.index_path, "w") as f:
+                index = json.load(f)
+                if index["index_version"] > INDEX_VERSION:
+                    raise ResourceCacheError("Incompatible ResourceCache index versions")
+                elif index["index_version"] == INDEX_VERSION:
+                    self._index = index
+                    logging.debug("Resource cache index loaded")
+                else:
+                    self._index = self._update_old_index(index)
+                    logging.debug("Resource cache index loaded")
+                    self._save_index()
         except:
-            return
+            pass
 
-        for line in f.readlines():
-            if not re.match("^\s*#", line) and not re.match("^\s*$", line):
-                try:
-                    entry_hash, last_used, entry_type, \
-                    entry_name, entry_path = line.split()
-                except:
-                    raise ResourceCacheError("Malformed cache index")
-
-                entry = {"type": entry_type, "name": entry_name,
-                         "last_used": int(last_used), "path": entry_path }
-                self._entries[entry_hash] = entry
+    def _update_old_index(self, old):
+        if old["index_version"] < MIN_INDEX_VERSION:
+            raise ResourceCacheError("ResourceCache index version too old to update")
+        logging.debug("Updating old index to newer version")
+        return old
 
     def _save_index(self):
-        logging.debug("Test cache index commited")
-        with open(self._get_index_loc(), "w") as f:
-            header = "# hash                           " \
-                     "last_used  type   name         path\n"
-            f.write(header)
-            for entry_hash, entry in self._entries.iteritems():
-                values = (entry_hash, entry["last_used"], entry["type"],
-                            entry["name"], entry["path"])
-                line = "%s %d %s %s %s\n" % values
-                f.write(line)
+        with open(self.index_path, "w") as f:
+            json.dump(self._index, f)
+            logging.debug("Resource cache index commited")
 
-    def _get_index_loc(self):
-        return "%s/%s" % (self._root, self._CACHE_INDEX_FILE_NAME)
+    @property
+    def index_path(self):
+        return "%s/%s" % (self.root, self._CACHE_INDEX_FILE_NAME)
+
+    @property
+    def root(self):
+        return self._root
 
     def query(self, res_hash):
-        return res_hash in self._entries
+        return res_hash in self._index["entries"]
 
     def get_path(self, res_hash):
-        return "%s/%s" % (self._root, self._entries[res_hash]["path"])
+        return self._index["entries"][res_hash]["path"]
 
     def renew_entry(self, entry_hash):
-        self._entries[entry_hash]["last_used"] = int(time.time())
+        self._index["entries"][entry_hash]["last_used"] = int(time.time())
         self._save_index()
 
-    def add_cache_entry(self, entry_hash, filepath, entry_name, entry_type):
-        if entry_hash in self._entries:
+    def add_file_entry(self, filepath, entry_name):
+        entry_hash = sha256sum(filepath)
+
+        if entry_hash in self._index["entries"]:
             raise ResourceCacheError("File already in cache")
 
-        entry_dir = "%s/%s" % (self._root, entry_hash)
-        if os.path.exists(entry_dir):
-            try:
-                shutil.rmtree(entry_dir)
-            except OSError as e:
-                if e.errno != 2:
-                    raise
-        os.makedirs(entry_dir)
+        entry_path = "%s/%s" % (self._root, entry_hash)
+        if os.path.exists(entry_path):
+            os.remove(entry_path)
 
-        shutil.move(filepath, entry_dir)
-        entry_path = "%s/%s" % (entry_dir, os.path.basename(filepath))
+        shutil.move(filepath, entry_path)
 
-        if entry_type == "module":
-            filename = "%s.py" % entry_name
-            shutil.move(entry_path, "%s/%s" % (entry_dir, filename))
-        elif entry_type == "tools":
-            filename = entry_name
-            tools_dir = "%s/%s" % (entry_dir, filename)
-
-            exec_cmd("tar xjmf \"%s\" -C \"%s\"" % (entry_path, entry_dir))
-
-            if os.path.exists("%s/%s" % (tools_dir, SETUP_SCRIPT_NAME)):
-                exec_cmd("cd \"%s\" && ./%s" % (tools_dir, SETUP_SCRIPT_NAME))
-            else:
-                msg = "%s not found in %s tools, skipping initialization." % \
-                           (SETUP_SCRIPT_NAME, entry_name)
-                logging.warn(msg)
-
-        entry = {"type": entry_type, "name": entry_name,
+        entry = {"name": entry_name,
+                 "path": entry_path,
                  "last_used": int(time.time()),
-                 "path": "%s/%s" % (entry_hash, filename)}
-        self._entries[entry_hash] = entry
+                 "digest": entry_hash,
+                 "type": "file"}
+        self._index["entries"][entry_hash] = entry
 
         self._save_index()
 
         return entry_hash
 
     def del_cache_entry(self, entry_hash):
-        if entry_hash in self._entries:
-            shutil.rmtree("%s/%s" % (self._root, entry_hash))
-            del self._entries[entry_hash]
+        if entry_hash in self._index["entries"]:
+            os.remove(self._index["entries"][entry_hash].path)
+            del self._index["entries"][entry_hash]
             self._save_index()
 
     def del_old_entries(self):
@@ -138,7 +127,7 @@ class ResourceCache(object):
 
         rm = []
         now = time.time()
-        for entry_hash, entry in self._entries.iteritems():
+        for entry_hash, entry in self._index["entries"].iteritems():
             if entry["last_used"] <= (now - self._expiration_period):
                 rm.append(entry_hash)
 
