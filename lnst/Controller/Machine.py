@@ -35,7 +35,7 @@ from lnst.Devices.VirtualDevice import VirtualDevice
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
-    from lnst.Controller.VirtUtils import VirtNetCtl, VirtDomainCtl
+    from lnst.Controller.VirtDomainCtl import VirtDomainCtl
 
 class MachineError(ControllerError):
     pass
