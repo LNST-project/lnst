@@ -105,7 +105,7 @@ project website <https://fedorahosted.org/lnst>.
 """
 
 PACKAGES = ["lnst", "lnst.Common", "lnst.Controller", "lnst.Slave",
-            "lnst.RecipeCommon" ]
+            "lnst.RecipeCommon", "lnst.Devices", "lnst.Tests" ]
 SCRIPTS = ["lnst-ctl", "lnst-slave", "lnst-pool-wizard"]
 
 RECIPE_FILES = []
