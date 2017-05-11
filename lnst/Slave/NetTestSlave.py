@@ -19,8 +19,10 @@ import datetime
 import socket
 import ctypes
 import multiprocessing
+import imp
+import types
 from time import sleep, time
-from xmlrpclib import Binary
+from inspect import isclass
 from tempfile import NamedTemporaryFile
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.PacketCapture import PacketCapture
@@ -34,62 +36,54 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.Utils import is_installed
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
-from lnst.Common.Config import lnst_config
 from lnst.Common.Config import DefaultRPCPort
+from lnst.Common.DeviceRef import DeviceRef
+from lnst.Common.LnstError import LnstError
+from lnst.Common.DeviceError import DeviceDeleted
+from lnst.Common.IpAddress import IpAddress
+from lnst.Slave.Job import Job, JobContext
 from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
 from lnst.Slave.SlaveSecSocket import SlaveSecSocket, SecSocketException
+
+Devices = types.ModuleType("Devices")
+Devices.__path__ = ["lnst.Devices"]
+
+sys.modules["lnst.Devices"] = Devices
 
 class SlaveMethods:
     '''
     Exported xmlrpc methods
     '''
-    def __init__(self, command_context, log_ctl, if_manager, net_namespaces,
-                 server_handler, slave_server):
+    def __init__(self, job_context, log_ctl, net_namespaces,
+                 server_handler, slave_config, slave_server):
         self._packet_captures = {}
-        self._if_manager = if_manager
-        self._command_context = command_context
+        self._if_manager = None
+        self._job_context = job_context
         self._log_ctl = log_ctl
         self._net_namespaces = net_namespaces
         self._server_handler = server_handler
         self._slave_server = slave_server
+        self._slave_config = slave_config
 
         self._capture_files = {}
         self._copy_targets = {}
         self._copy_sources = {}
         self._system_config = {}
 
-        self._cache = ResourceCache(lnst_config.get_option("cache", "dir"),
-                        lnst_config.get_option("cache", "expiration_period"))
+        self._cache = ResourceCache(slave_config.get_option("cache", "dir"),
+                        slave_config.get_option("cache", "expiration_period"))
 
-        self._resource_table = {'module': {}, 'tools': {}}
+        self._dynamic_modules = {}
+        self._dynamic_classes = {}
 
-        self._bkp_nm_opt_val = lnst_config.get_option("environment", "use_nm")
+        self._bkp_nm_opt_val = slave_config.get_option("environment", "use_nm")
 
-    def hello(self, recipe_path):
-        self.machine_cleanup()
-        self.restore_nm_option()
-
+    def hello(self):
         logging.info("Recieved a controller connection.")
-        self.clear_resource_table()
-        self._cache.del_old_entries()
-        self.reset_file_transfers()
-
-        self._if_manager.rescan_devices()
-
-        date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        self._log_ctl.set_recipe(recipe_path, expand=date)
-        sleep(1)
 
         slave_desc = {}
         if check_process_running("NetworkManager"):
-            logging.warning("=============================================")
-            logging.warning("NetworkManager is running on a slave machine!")
-            if lnst_config.get_option("environment", "use_nm"):
-                logging.warning("Support of NM is still experimental!")
-            else:
-                logging.warning("Usage of NM is disabled!")
-            logging.warning("=============================================")
             slave_desc["nm_running"] = True
         else:
             slave_desc["nm_running"] = False
@@ -98,54 +92,94 @@ class SlaveMethods:
         r_release, _ = exec_cmd("cat /etc/redhat-release", False, False, False)
         slave_desc["kernel_release"] = k_release.strip()
         slave_desc["redhat_release"] = r_release.strip()
-        slave_desc["lnst_version"] = lnst_config.version
+        slave_desc["lnst_version"] = self._slave_config.version
 
         return ("hello", slave_desc)
 
+    def set_recipe(self, recipe_name):
+        self.machine_cleanup()
+        self.restore_nm_option()
+
+        self._cache.del_old_entries()
+        self.reset_file_transfers()
+
+        date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        self._log_ctl.set_recipe(recipe_name, expand=date)
+        sleep(1)
+
+        if check_process_running("NetworkManager"):
+            logging.warning("=============================================")
+            logging.warning("NetworkManager is running on a slave machine!")
+            if self._slave_config.get_option("environment", "use_nm"):
+                logging.warning("Support of NM is still experimental!")
+            else:
+                logging.warning("Usage of NM is disabled!")
+            logging.warning("=============================================")
+
+        return True
+
     def bye(self):
         self.restore_system_config()
-        self.clear_resource_table()
         self._cache.del_old_entries()
         self.reset_file_transfers()
         self._remove_capture_files()
         return "bye"
 
-    def kill_cmds(self):
-        logging.info("Killing all forked processes.")
-        self._command_context.cleanup()
-        return "Commands killed"
+    def map_device_class(self, cls_name, module_name):
+        if cls_name in self._dynamic_classes:
+            return
 
-    def map_if_by_hwaddr(self, if_id, hwaddr):
-        devices = self.map_if_by_params(if_id, {'hwaddr' : hwaddr})
+        module = self._dynamic_modules[module_name]
+        cls = getattr(module, cls_name)
 
-        return devices
+        self._dynamic_classes[cls_name] = cls
 
-    def map_if_by_params(self, if_id, params):
-        devices = self.get_devices_by_params(params)
+        setattr(Devices, cls_name, cls)
 
-        if len(devices) == 1:
-            dev = self._if_manager.get_device_by_params(params)
-            self._if_manager.map_if(if_id, dev.get_if_index())
+    def load_cached_module(self, module_name, res_hash):
+        self._cache.renew_entry(res_hash)
+        if module_name in self._dynamic_modules:
+            return
+        module_path = self._cache.get_path(res_hash)
+        module = imp.load_source(module_name, module_path)
+        self._dynamic_modules[module_name] = module
 
-        return devices
+    def init_if_manager(self):
+        self._if_manager = InterfaceManager(self._server_handler)
+        for cls_name in dir(Devices):
+            cls = getattr(Devices, cls_name)
+            if isclass(cls):
+                self._if_manager.add_device_class(cls_name, cls)
 
-    def unmap_if(self, if_id):
-        self._if_manager.unmap_if(if_id)
+        self._if_manager.rescan_devices()
+        self._server_handler.set_if_manager(self._if_manager)
+        self._server_handler.add_connection('netlink',
+                                            self._if_manager.get_nl_socket())
         return True
+
+    def dev_method(self, if_index, name, args, kwargs):
+        dev = self._if_manager.get_device(if_index)
+        method = getattr(dev, name)
+
+        return method(*args, **kwargs)
+
+    def dev_attr(self, if_index, name):
+        dev = self._if_manager.get_device(if_index)
+        return getattr(dev, name)
 
     def get_devices(self):
         self._if_manager.rescan_devices()
         devices = self._if_manager.get_devices()
         result = {}
         for device in devices:
-            result[device._if_index] = device.get_if_data()
+            result[device.if_index] = device._get_if_data()
         return result
 
     def get_device(self, if_index):
         self._if_manager.rescan_devices()
         device = self._if_manager.get_device(if_index)
         if device:
-            return device.get_if_data()
+            return device._get_if_data()
         else:
             return None
 
@@ -156,7 +190,6 @@ class SlaveMethods:
         for entry in name_scan:
             if entry["name"] == devname:
                 netdevs.append(entry)
-
         return netdevs
 
     def get_devices_by_hwaddr(self, hwaddr):
@@ -167,14 +200,13 @@ class SlaveMethods:
                 entry = {"name": dev.get_name(),
                          "hwaddr": dev.get_hwaddr()}
                 matched.append(entry)
-
         return matched
 
     def get_devices_by_params(self, params):
         devices = self._if_manager.get_devices()
         matched = []
         for dev in devices:
-            dev_data = dev.get_if_data()
+            dev_data = dev._get_if_data()
             entry = {"name": dev.get_name(),
                      "hwaddr": dev.get_hwaddr()}
             for key, value in params.iteritems():
@@ -184,180 +216,121 @@ class SlaveMethods:
 
             if entry is not None:
                 matched.append(entry)
-
         return matched
 
-    def get_if_data(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
+    def destroy_devices(self):
+        devices = self._if_manager.get_devices()
+        for dev in devices:
+            try:
+                dev.destroy()
+            except DeviceDeleted:
+                pass
+            self._if_manager.rescan_devices()
+
+    # def add_route(self, if_id, dest):
+        # dev = self._if_manager.get_mapped_device(if_id)
+        # if dev is None:
+            # logging.error("Device with id '%s' not found." % if_id)
+            # return False
+        # dev.add_route(dest)
+        # return True
+
+    # def del_route(self, if_id, dest):
+        # dev = self._if_manager.get_mapped_device(if_id)
+        # if dev is None:
+            # logging.error("Device with id '%s' not found." % if_id)
+            # return False
+        # dev.del_route(dest)
+        # return True
+
+    def create_device(self, clsname, args=[], kwargs={}):
+        dev =  self._if_manager.create_device(clsname, args, kwargs)
         if dev is None:
-            return None
-        return dev.get_if_data()
+            raise Exception("Device creation failed")
+        return {"if_index": dev.if_index, "name": dev.name}
 
-    def link_stats(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is None:
-            logging.error("Device with id '%s' not found." % if_id)
-            return None
-        return dev.link_stats()
+    # def create_if_pair(self, if_id1, config1, if_id2, config2):
+        # dev_names = self._if_manager.create_device_pair(if_id1, config1,
+                                                        # if_id2, config2)
+        # dev1 = self._if_manager.get_mapped_device(if_id1)
+        # dev2 = self._if_manager.get_mapped_device(if_id2)
 
-    def set_addresses(self, if_id, ips):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is None:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        dev.set_addresses(ips)
-        return True
+        # while dev1.get_if_index() == None and dev2.get_if_index() == None:
+            # msgs = self._server_handler.get_messages_from_con('netlink')
+            # for msg in msgs:
+                # self._if_manager.handle_netlink_msgs(msg[1]["data"])
 
-    def add_route(self, if_id, dest):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is None:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        dev.add_route(dest)
-        return True
+        # if config1["netns"] != None:
+            # hwaddr = dev1.get_hwaddr()
+            # self.set_if_netns(if_id1, config1["netns"])
 
-    def del_route(self, if_id, dest):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is None:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        dev.del_route(dest)
-        return True
+            # msg = {"type": "command", "method_name": "configure_interface",
+                   # "args": [if_id1, config1]}
+            # self._server_handler.send_data_to_netns(config1["netns"], msg)
+            # result = self._slave_server.wait_for_result(config1["netns"])
+            # if result["result"] != True:
+                # raise Exception("Configuration failed.")
+        # else:
+            # dev1.configure()
+        # if config2["netns"] != None:
+            # hwaddr = dev2.get_hwaddr()
+            # self.set_if_netns(if_id2, config2["netns"])
 
-    def set_device_up(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        dev.up()
-        return True
+            # msg = {"type": "command", "method_name": "configure_interface",
+                   # "args": [if_id2, config2]}
+            # self._server_handler.send_data_to_netns(config2["netns"], msg)
+            # result = self._slave_server.wait_for_result(config2["netns"])
+            # if result["result"] != True:
+                # raise Exception("Configuration failed.")
+        # else:
+            # dev2.configure()
+        # return dev_names
 
-    def set_device_down(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.down()
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
+    # def deconfigure_if_pair(self, if_id1, if_id2):
+        # dev1 = self._if_manager.get_mapped_device(if_id1)
+        # dev2 = self._if_manager.get_mapped_device(if_id2)
 
-    def set_link_up(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.link_up()
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
+        # if dev1.get_netns() == None:
+            # dev1.deconfigure()
+        # else:
+            # netns = dev1.get_netns()
 
-    def set_link_down(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.link_down()
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
+            # msg = {"type": "command", "method_name": "deconfigure_interface",
+                   # "args": [if_id1]}
+            # self._server_handler.send_data_to_netns(netns, msg)
+            # result = self._slave_server.wait_for_result(netns)
+            # if result["result"] != True:
+                # raise Exception("Deconfiguration failed.")
 
-    def set_unmapped_device_down(self, hwaddr):
-        dev = self._if_manager.get_device_by_hwaddr(hwaddr)
-        if dev is not None:
-            dev.down()
-        else:
-            logging.warning("Device with hwaddr '%s' not found." % hwaddr)
-        return True
+            # self.return_if_netns(if_id1)
 
-    def configure_interface(self, if_id, config):
-        device = self._if_manager.get_mapped_device(if_id)
-        device.set_configuration(config)
-        device.configure()
-        return True
+        # if dev2.get_netns() == None:
+            # dev2.deconfigure()
+        # else:
+            # netns = dev2.get_netns()
 
-    def create_soft_interface(self, if_id, config):
-        dev_name = self._if_manager.create_device_from_config(if_id, config)
-        dev = self._if_manager.get_mapped_device(if_id)
-        dev.configure()
-        return dev_name
+            # msg = {"type": "command", "method_name": "deconfigure_interface",
+                   # "args": [if_id2]}
+            # self._server_handler.send_data_to_netns(netns, msg)
+            # result = self._slave_server.wait_for_result(netns)
+            # if result["result"] != True:
+                # raise Exception("Deconfiguration failed.")
 
-    def create_if_pair(self, if_id1, config1, if_id2, config2):
-        dev_names = self._if_manager.create_device_pair(if_id1, config1,
-                                                        if_id2, config2)
-        dev1 = self._if_manager.get_mapped_device(if_id1)
-        dev2 = self._if_manager.get_mapped_device(if_id2)
+            # self.return_if_netns(if_id2)
 
-        while dev1.get_if_index() == None and dev2.get_if_index() == None:
-            msgs = self._server_handler.get_messages_from_con('netlink')
-            for msg in msgs:
-                self._if_manager.handle_netlink_msgs(msg[1]["data"])
+        # dev1.destroy()
+        # dev2.destroy()
+        # dev1.del_configuration()
+        # dev2.del_configuration()
+        # return True
 
-        if config1["netns"] != None:
-            hwaddr = dev1.get_hwaddr()
-            self.set_if_netns(if_id1, config1["netns"])
-
-            msg = {"type": "command", "method_name": "configure_interface",
-                   "args": [if_id1, config1]}
-            self._server_handler.send_data_to_netns(config1["netns"], msg)
-            result = self._slave_server.wait_for_result(config1["netns"])
-            if result["result"] != True:
-                raise Exception("Configuration failed.")
-        else:
-            dev1.configure()
-        if config2["netns"] != None:
-            hwaddr = dev2.get_hwaddr()
-            self.set_if_netns(if_id2, config2["netns"])
-
-            msg = {"type": "command", "method_name": "configure_interface",
-                   "args": [if_id2, config2]}
-            self._server_handler.send_data_to_netns(config2["netns"], msg)
-            result = self._slave_server.wait_for_result(config2["netns"])
-            if result["result"] != True:
-                raise Exception("Configuration failed.")
-        else:
-            dev2.configure()
-        return dev_names
-
-    def deconfigure_if_pair(self, if_id1, if_id2):
-        dev1 = self._if_manager.get_mapped_device(if_id1)
-        dev2 = self._if_manager.get_mapped_device(if_id2)
-
-        if dev1.get_netns() == None:
-            dev1.deconfigure()
-        else:
-            netns = dev1.get_netns()
-
-            msg = {"type": "command", "method_name": "deconfigure_interface",
-                   "args": [if_id1]}
-            self._server_handler.send_data_to_netns(netns, msg)
-            result = self._slave_server.wait_for_result(netns)
-            if result["result"] != True:
-                raise Exception("Deconfiguration failed.")
-
-            self.return_if_netns(if_id1)
-
-        if dev2.get_netns() == None:
-            dev2.deconfigure()
-        else:
-            netns = dev2.get_netns()
-
-            msg = {"type": "command", "method_name": "deconfigure_interface",
-                   "args": [if_id2]}
-            self._server_handler.send_data_to_netns(netns, msg)
-            result = self._slave_server.wait_for_result(netns)
-            if result["result"] != True:
-                raise Exception("Deconfiguration failed.")
-
-            self.return_if_netns(if_id2)
-
-        dev1.destroy()
-        dev2.destroy()
-        dev1.del_configuration()
-        dev2.del_configuration()
-        return True
-
-    def deconfigure_interface(self, if_id):
-        device = self._if_manager.get_mapped_device(if_id)
-        if device is not None:
-            device.clear_configuration()
-        else:
-            logging.error("No device with id '%s' to deconfigure." % if_id)
-        return True
+    # def deconfigure_interface(self, if_id):
+        # device = self._if_manager.get_mapped_device(if_id)
+        # if device is not None:
+            # device.clear_configuration()
+        # else:
+            # logging.error("No device with id '%s' to deconfigure." % if_id)
+        # return True
 
     def start_packet_capture(self, filt):
         if not is_installed("tcpdump"):
@@ -448,80 +421,53 @@ class SlaveMethods:
 
         return int(remaining)
 
-    def run_command(self, command):
-        cmd = NetTestCommand(self._command_context, command,
-                                    self._resource_table, self._log_ctl)
+    def run_job(self, job):
+        job_instance = Job(job, self._log_ctl)
+        self._job_context.add_job(job_instance)
 
-        if self._command_context.get_cmd(cmd.get_id()) != None:
-            prev_cmd = self._command_context.get_cmd(cmd.get_id())
-            if not prev_cmd.get_result_sent():
-                if cmd.get_id() is None:
-                    raise Exception("Previous foreground command still "\
-                                    "running!")
-                else:
-                    raise Exception("Different command with id '%s' "\
-                                    "still running!" % cmd.get_id())
-            else:
-                self._command_context.del_cmd(cmd)
-        self._command_context.add_cmd(cmd)
-
-        res = cmd.run()
-        if not cmd.forked():
-            self._command_context.del_cmd(cmd)
-
-        if command["type"] == "config":
-            if res["passed"]:
-                self._update_system_config(res["res_data"]["options"],
-                                           command["persistent"])
-            else:
-                err = "Error occured while setting system "\
-                      "configuration (%s)" % res["res_data"]["err_msg"]
-                logging.error(err)
+        res = job_instance.run()
 
         return res
 
-    def kill_command(self, id):
-        cmd = self._command_context.get_cmd(id)
-        if cmd is not None:
-            if not cmd.get_result_sent():
-                cmd.kill(None)
-                result = cmd.get_result()
-                cmd.set_result_sent()
-                return result
-            else:
-                pass
-        else:
-            raise Exception("No command with id '%s'." % id)
+    def kill_job(self, job_id, signal):
+        job = self._job_context.get_job(job_id)
+
+        if job is None:
+            logging.error("No job %s found" % job_id)
+            return False
+
+        return job.kill(signal)
+
+    def kill_jobs(self):
+        logging.info("Killing all forked processes.")
+        self._job_context.cleanup()
+        return "Commands killed"
 
     def machine_cleanup(self):
         logging.info("Performing machine cleanup.")
-        self._command_context.cleanup()
+        self._job_context.cleanup()
 
         self.restore_system_config()
 
-        devs = self._if_manager.get_mapped_devices()
-        for if_id, dev in devs.iteritems():
-            peer = dev.get_peer()
-            if peer == None:
-                dev.clear_configuration()
-            else:
-                peer_if_index = peer.get_if_index()
-                peer_id = self._if_manager.get_id_by_if_index(peer_if_index)
-                self.deconfigure_if_pair(if_id, peer_id)
-
-        self._if_manager.deconfigure_all()
+        if self._if_manager is not None:
+            self._if_manager.deconfigure_all()
 
         for netns in self._net_namespaces.keys():
             self.del_namespace(netns)
         self._net_namespaces = {}
 
-        self._if_manager.clear_if_mapping()
+        for cls_name, cls in self._dynamic_classes.items():
+            delattr(Devices, cls_name)
+
+        for module_name, module in self._dynamic_modules.items():
+            del sys.modules[module_name]
+
+        self._dynamic_classes = {}
+        self._dynamic_modules = {}
+        self._if_manager = None
+        self._server_handler.set_if_manager(None)
         self._cache.del_old_entries()
         self._remove_capture_files()
-        return True
-
-    def clear_resource_table(self):
-        self._resource_table = {'module': {}, 'tools': {}}
         return True
 
     def has_resource(self, res_hash):
@@ -530,21 +476,12 @@ class SlaveMethods:
 
         return False
 
-    def map_resource(self, res_hash, res_type, res_name):
-        resource_location = self._cache.get_path(res_hash)
-
-        if not res_type in self._resource_table:
-            self._resource_table[res_type] = {}
-
-        self._resource_table[res_type][res_name] = resource_location
-        self._cache.renew_entry(res_hash)
-
-        return True
-
-    def add_resource_to_cache(self, file_hash, local_path, name,
-                                res_hash, res_type):
-        self._cache.add_cache_entry(file_hash, local_path, name, res_type)
-        return True
+    def add_resource_to_cache(self, res_type, local_path, name):
+        if res_type == "file":
+            self._cache.add_file_entry(local_path, name)
+            return True
+        else:
+            raise Exception("Unknown resource type")
 
     def start_copy_to(self, filepath=None):
         if filepath in self._copy_targets:
@@ -559,9 +496,9 @@ class SlaveMethods:
 
         return filepath
 
-    def copy_part_to(self, filepath, binary_data):
+    def copy_part_to(self, filepath, data):
         if self._copy_targets[filepath]:
-            self._copy_targets[filepath].write(binary_data.data)
+            self._copy_targets[filepath].write(data)
             return True
 
         return False
@@ -583,7 +520,7 @@ class SlaveMethods:
         return True
 
     def copy_part_from(self, filepath, buffsize):
-        data = Binary(self._copy_sources[filepath].read(buffsize))
+        data = self._copy_sources[filepath].read(buffsize)
         return data
 
     def finish_copy_from(self, filepath):
@@ -607,26 +544,27 @@ class SlaveMethods:
         logging.warning("====================================================")
         logging.warning("Enabling use of NetworkManager on controller request")
         logging.warning("====================================================")
-        val = lnst_config.get_option("environment", "use_nm")
-        lnst_config.set_option("environment", "use_nm", True)
+        val = self._slave_config.get_option("environment", "use_nm")
+        self._slave_config.set_option("environment", "use_nm", True)
         return val
 
     def disable_nm(self):
         logging.warning("=====================================================")
         logging.warning("Disabling use of NetworkManager on controller request")
         logging.warning("=====================================================")
-        val = lnst_config.get_option("environment", "use_nm")
-        lnst_config.set_option("environment", "use_nm", False)
+        val = self._slave_config.get_option("environment", "use_nm")
+        self._slave_config.set_option("environment", "use_nm", False)
         return val
 
     def restore_nm_option(self):
-        val = lnst_config.get_option("environment", "use_nm")
+        val = self._slave_config.get_option("environment", "use_nm")
         if val == self._bkp_nm_opt_val:
             return val
         logging.warning("=========================================")
         logging.warning("Restoring use_nm option to original value")
         logging.warning("=========================================")
-        lnst_config.set_option("environment", "use_nm", self._bkp_nm_opt_val)
+        self._slave_config.set_option("environment", "use_nm",
+                                      self._bkp_nm_opt_val)
         return val
 
     def add_namespace(self, netns):
@@ -724,40 +662,40 @@ class SlaveMethods:
             del self._net_namespaces[netns]
             return True
 
-    def set_if_netns(self, if_id, netns):
-        netns_pid = self._net_namespaces[netns]["pid"]
+    # def set_if_netns(self, if_id, netns):
+        # netns_pid = self._net_namespaces[netns]["pid"]
 
-        device = self._if_manager.get_mapped_device(if_id)
-        dev_name = device.get_name()
-        device.set_netns(netns)
-        hwaddr = device.get_hwaddr()
+        # device = self._if_manager.get_mapped_device(if_id)
+        # dev_name = device.get_name()
+        # device.set_netns(netns)
+        # hwaddr = device.get_hwaddr()
 
-        exec_cmd("ip link set %s netns %d" % (dev_name, netns_pid))
-        msg = {"type": "command", "method_name": "map_if_by_hwaddr",
-               "args": [if_id, hwaddr]}
-        self._server_handler.send_data_to_netns(netns, msg)
-        result = self._slave_server.wait_for_result(netns)
-        return result
+        # exec_cmd("ip link set %s netns %d" % (dev_name, netns_pid))
+        # msg = {"type": "command", "method_name": "map_if_by_hwaddr",
+               # "args": [if_id, hwaddr]}
+        # self._server_handler.send_data_to_netns(netns, msg)
+        # result = self._slave_server.wait_for_result(netns)
+        # return result
 
-    def return_if_netns(self, if_id):
-        device = self._if_manager.get_mapped_device(if_id)
-        if device.get_netns() == None:
-            dev_name = device.get_name()
-            ppid = os.getppid()
-            exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
-            self._if_manager.unmap_if(if_id)
-            return True
-        else:
-            netns = device.get_netns()
-            msg = {"type": "command", "method_name": "return_if_netns",
-                   "args": [if_id]}
-            self._server_handler.send_data_to_netns(netns, msg)
-            result = self._slave_server.wait_for_result(netns)
-            if result["result"] != True:
-                raise Exception("Return from netns failed.")
+    # def return_if_netns(self, if_id):
+        # device = self._if_manager.get_mapped_device(if_id)
+        # if device.get_netns() == None:
+            # dev_name = device.get_name()
+            # ppid = os.getppid()
+            # exec_cmd("ip link set %s netns %d" % (dev_name, ppid))
+            # self._if_manager.unmap_if(if_id)
+            # return True
+        # else:
+            # netns = device.get_netns()
+            # msg = {"type": "command", "method_name": "return_if_netns",
+                   # "args": [if_id]}
+            # self._server_handler.send_data_to_netns(netns, msg)
+            # result = self._slave_server.wait_for_result(netns)
+            # if result["result"] != True:
+                # raise Exception("Return from netns failed.")
 
-            device.set_netns(None)
-            return True
+            # device.set_netns(None)
+            # return True
 
     def add_br_vlan(self, if_id, br_vlan_info):
         dev = self._if_manager.get_mapped_device(if_id)
@@ -847,48 +785,8 @@ class SlaveMethods:
         brt.set_state(br_state_info)
         return True
 
-    def set_speed(self, if_id, speed):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.set_speed(speed)
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
-
-    def set_autoneg(self, if_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.set_autoneg()
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
-
-    def wait_interface_init(self):
-        self._if_manager.wait_interface_init()
-        return True
-
-    def slave_add(self, if_id, slave_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.slave_add(slave_id)
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
-
-    def slave_del(self, if_id, slave_id):
-        dev = self._if_manager.get_mapped_device(if_id)
-        if dev is not None:
-            dev.slave_del(slave_id)
-        else:
-            logging.error("Device with id '%s' not found." % if_id)
-            return False
-        return True
-
 class ServerHandler(ConnectionHandler):
-    def __init__(self, addr):
+    def __init__(self, addr, slave_config):
         super(ServerHandler, self).__init__()
         self._netns_con_mapping = {}
         try:
@@ -902,13 +800,34 @@ class ServerHandler(ConnectionHandler):
 
         self._netns = None
         self._c_socket = None
+        self._c_dev = None
 
         self._if_manager = None
 
-        self._security = lnst_config.get_section_values("security")
+        self._security = slave_config.get_section_values("security")
 
     def set_if_manager(self, if_manager):
         self._if_manager = if_manager
+        self._update_c_dev()
+
+    def _update_c_dev(self):
+        if self._c_dev:
+            self._c_dev.enable()
+            self._c_dev = None
+
+        if self._if_manager is not None:
+            ctl_socket = self.get_ctl_sock()
+            ctl_addr = ctl_socket._socket.getsockname()[0]
+            matched_dev = None
+            for dev in self._if_manager.get_devices():
+                for ip in dev.ips:
+                    if ip.addr == ctl_addr:
+                        matched_dev = dev
+                        break
+                if matched_dev:
+                    break
+            self._c_dev = matched_dev
+            matched_dev.disable()
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
@@ -932,9 +851,9 @@ class ServerHandler(ConnectionHandler):
 
     def set_ctl_sock(self, sock):
         if self._c_socket != None:
-            self._c_socket.close()
-            self._c_socket = None
+            self.close_c_sock()
         self._c_socket = sock
+        self._update_c_dev()
         self.add_connection(self._c_socket[1], self._c_socket[0])
 
     def close_s_sock(self):
@@ -946,9 +865,14 @@ class ServerHandler(ConnectionHandler):
         self.remove_connection(self._c_socket[0])
         self._c_socket = None
 
+        if self._c_dev:
+            self._c_dev.enable()
+            self._c_dev = None
+
     def check_connections(self):
         msgs = super(ServerHandler, self).check_connections()
-        if 'netlink' not in self._connection_mapping:
+        if 'netlink' not in self._connection_mapping and\
+                self._if_manager is not None:
             self._if_manager.reconnect_netlink()
             self.add_connection('netlink', self._if_manager.get_nl_socket())
         return msgs
@@ -970,7 +894,7 @@ class ServerHandler(ConnectionHandler):
         addr = self._c_socket[1]
         if self.get_connection(addr) == None:
             logging.info("Lost controller connection.")
-            self._c_socket = None
+            self.close_c_sock()
         return messages
 
     def get_messages_from_con(self, con_id):
@@ -1026,23 +950,72 @@ class ServerHandler(ConnectionHandler):
             self._connections.remove(con)
         self._netns_con_mapping = {}
 
+
+def device_to_deviceref(obj):
+    try:
+        Device = Devices.Device
+    except:
+        return obj
+
+    if isinstance(obj, Device):
+        dev_ref = DeviceRef(obj.if_index)
+        return dev_ref
+    elif isinstance(obj, dict):
+        new_dict = {}
+        for key, value in obj.items():
+            new_dict[key] = device_to_deviceref(value)
+        return new_dict
+    elif isinstance(obj, list):
+        new_list = []
+        for value in obj:
+            new_list.append(device_to_deviceref(value))
+        return new_list
+    elif isinstance(obj, tuple):
+        new_list = []
+        for value in obj:
+            new_list.append(device_to_deviceref(value))
+        return tuple(new_list)
+    else:
+        return obj
+
+def deviceref_to_device(if_manager, obj):
+    if isinstance(obj, DeviceRef):
+        dev = if_manager.get_device(obj.if_index)
+        return dev
+    elif isinstance(obj, dict):
+        new_dict = {}
+        for key, value in obj.items():
+            new_dict[key] = deviceref_to_device(if_manager, value)
+        return new_dict
+    elif isinstance(obj, list):
+        new_list = []
+        for value in obj:
+            new_list.append(deviceref_to_device(if_manager, value))
+        return new_list
+    elif isinstance(obj, tuple):
+        new_list = []
+        for value in obj:
+            new_list.append(deviceref_to_device(if_manager, value))
+        return tuple(new_list)
+    else:
+        return obj
+
 class NetTestSlave:
-    def __init__(self, log_ctl):
+    def __init__(self, log_ctl, slave_config):
+        self._slave_config = slave_config
         die_when_parent_die()
 
-        self._cmd_context = NetTestCommandContext()
-        port = lnst_config.get_option("environment", "rpcport")
+        self._job_context = JobContext()
+        port = slave_config.get_option("environment", "rpcport")
         logging.info("Using RPC port %d." % port)
-        self._server_handler = ServerHandler(("", port))
-        self._if_manager = InterfaceManager(self._server_handler)
-
-        self._server_handler.set_if_manager(self._if_manager)
+        self._server_handler = ServerHandler(("", port), slave_config)
 
         self._net_namespaces = {}
 
-        self._methods = SlaveMethods(self._cmd_context, log_ctl,
-                                     self._if_manager, self._net_namespaces,
-                                     self._server_handler, self)
+        self._methods = SlaveMethods(self._job_context, log_ctl,
+                                     self._net_namespaces,
+                                     self._server_handler, slave_config,
+                                     self)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)
@@ -1052,9 +1025,6 @@ class NetTestSlave:
 
         self._log_ctl = log_ctl
 
-        self._server_handler.add_connection('netlink',
-                                            self._if_manager.get_nl_socket())
-
     def run(self):
         while not self._finished:
             if self._server_handler.get_ctl_sock() == None:
@@ -1063,9 +1033,9 @@ class NetTestSlave:
                     logging.info("Waiting for connection.")
                     self._server_handler.accept_connection()
                 except (socket.error, SecSocketException):
+                    log_exc_traceback()
                     continue
-                self._log_ctl.set_connection(
-                                            self._server_handler.get_ctl_sock())
+                self._log_ctl.set_connection(self._server_handler.get_ctl_sock())
 
             msgs = self._server_handler.get_messages()
 
@@ -1092,24 +1062,29 @@ class NetTestSlave:
         if msg["type"] == "command":
             method = getattr(self._methods, msg["method_name"], None)
             if method != None:
+                if_manager = self._methods._if_manager
+                if if_manager is not None:
+                    args = deviceref_to_device(if_manager, msg["args"])
+                    kwargs = deviceref_to_device(if_manager, msg["kwargs"])
+                else:
+                    args = msg["args"]
+                    kwargs = msg["kwargs"]
+
                 try:
-                    result = method(*msg["args"])
-                except:
+                    result = method(*args, **kwargs)
+                except LnstError as e:
                     log_exc_traceback()
-                    type, value, tb = sys.exc_info()
-                    exc_trace = ''.join(traceback.format_exception(type,
-                                                                   value, tb))
-                    response = {"type": "exception", "Exception": value}
+                    response = {"type": "exception", "Exception": e}
 
                     self._server_handler.send_data_to_ctl(response)
                     return
 
-                if result != None:
-                    response = {"type": "result", "result": result}
-                    self._server_handler.send_data_to_ctl(response)
+                response = {"type": "result", "result": result}
+                response = device_to_deviceref(response)
+                self._server_handler.send_data_to_ctl(response)
             else:
-                err = "Method '%s' not supported." % msg["method_name"]
-                response = {"type": "error", "err": err}
+                err = LnstError("Method '%s' not supported." % msg["method_name"])
+                response = {"type": "exception", "Exception": err}
                 self._server_handler.send_data_to_ctl(response)
         elif msg["type"] == "log":
             logger = logging.getLogger()
@@ -1122,48 +1097,36 @@ class NetTestSlave:
             else:
                 logging.debug("Recieved an exception from foreground command")
             logging.debug(msg["Exception"])
-            cmd = self._cmd_context.get_cmd(msg["cmd_id"])
-            cmd.join()
-            self._cmd_context.del_cmd(cmd)
+            job = self._job_context.get_cmd(msg["job_id"])
+            job.join()
+            self._job_context.del_cmd(job)
             self._server_handler.send_data_to_ctl(msg)
-        elif msg["type"] == "result":
-            if msg["cmd_id"] == None:
-                del msg["cmd_id"]
-                self._server_handler.send_data_to_ctl(msg)
-                cmd = self._cmd_context.get_cmd(None)
-                cmd.join()
-                cmd.set_result_sent()
-            else:
-                cmd = self._cmd_context.get_cmd(msg["cmd_id"])
-                cmd.join()
-                del msg["cmd_id"]
+        elif msg["type"] == "job_finished":
+            job = self._job_context.get_job(msg["job_id"])
+            job.join()
 
-                cmd.set_result(msg["result"])
-                if cmd.finished():
-                    msg["result"] = cmd.get_result()
-                    self._server_handler.send_data_to_ctl(msg)
-                    cmd.set_result_sent()
+            job.set_finished(msg["result"])
+            self._server_handler.send_data_to_ctl(msg)
         elif msg["type"] == "netlink":
-            self._if_manager.handle_netlink_msgs(msg["data"])
+            if_manager = self._methods._if_manager
+            if if_manager is not None:
+                if_manager.handle_netlink_msgs(msg["data"])
         elif msg["type"] == "from_netns":
             self._server_handler.send_data_to_ctl(msg["data"])
         elif msg["type"] == "to_netns":
             netns = msg["netns"]
             try:
                 self._server_handler.send_data_to_netns(netns, msg["data"])
-            except:
+            except LnstError as e:
                 log_exc_traceback()
-                type, value, tb = sys.exc_info()
-                exc_trace = ''.join(traceback.format_exception(type,
-					   value, tb))
-                response = {"type": "exception", "Exception": value}
+                response = {"type": "exception", "Exception": e}
 
                 self._server_handler.send_data_to_ctl(response)
                 return
         else:
             raise Exception("Recieved unknown command")
 
-        pipes = self._cmd_context.get_read_pipes()
+        pipes = self._job_context.get_parent_pipes()
         self._server_handler.update_connections(pipes)
 
     def register_die_signal(self, signum):
