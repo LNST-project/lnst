@@ -19,7 +19,7 @@ from lnst.Devices.RemoteDevice import RemoteDevice
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
-    from lnst.Controller.VirtUtils import VirtNetCtl
+    from lnst.Devices.VirtNetCtl import VirtNetCtl
 
 class VirtualDevice(RemoteDevice):
     """Remote eth device created on the controller through libvirt
