@@ -12,19 +12,79 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import os
-from lnst.Controller.XmlParser import XmlParser
-from lnst.Controller.XmlProcessing import XmlProcessingError, XmlData
-from lnst.Controller.XmlProcessing import XmlCollection
+import sys
+from lxml import etree
+from lnst.Controller.Common import ControllerError
 
-class SlaveMachineError(XmlProcessingError):
-    pass
+class SlaveMachineParser(object):
+    def __init__(self, sm_path, ctl_config):
+        # locate the schema file
+        # try git path
+        dirname = os.path.dirname(sys.argv[0])
+        schema_path = os.path.join(dirname, "schema-sm.rng")
+        if not os.path.exists(schema_path):
+            # try configuration
+            res_dir = ctl_config.get_option("environment", "resource_dir")
+            schema_path = os.path.join(res_dir, "schema-sm.rng")
 
-class SlaveMachineParser(XmlParser):
-    def __init__(self, sm_path):
-        super(SlaveMachineParser, self).__init__("schema-sm.rng", sm_path)
+        if not os.path.exists(schema_path):
+            raise Exception("The schema file was not found. " + \
+                            "Your LNST installation is corrupt!")
+
+        self._path = sm_path
+        relaxng_doc = etree.parse(schema_path)
+        self._schema = etree.RelaxNG(relaxng_doc)
+
+    def parse(self):
+        try:
+            doc = self._parse(self._path)
+            self._remove_comments(doc)
+            self._schema.assertValid(doc)
+        except:
+            err = self._schema.error_log[0]
+            loc = {"file": os.path.basename(err.filename),
+                   "line": err.line, "col": err.column}
+            exc = XmlProcessingError(err.message)
+            exc.set_loc(loc)
+            raise exc
+
+        return self._process(doc)
+
+    def _parse(self, path):
+        try:
+            doc = etree.parse(path)
+        except etree.LxmlError as err:
+            # A workaround for cases when lxml (quite strangely)
+            # sets the filename to <string>.
+            if err.error_log[0].filename == "<string>":
+                filename = self._path
+            else:
+                filename = err.error_log[0].filename
+            loc = {"file": os.path.basename(filename),
+                   "line": err.error_log[0].line,
+                   "col": err.error_log[0].column}
+            exc = XmlProcessingError(err.error_log[0].message)
+            exc.set_loc(loc)
+            raise exc
+        except Exception as err:
+            loc = {"file": os.path.basename(self._path),
+                   "line": None,
+                   "col": None}
+            exc = XmlProcessingError(str(err))
+            exc.set_loc(loc)
+            raise exc
+
+        return doc
+
+    def _remove_comments(self, doc):
+        comments = doc.xpath('//comment()')
+        for c in comments:
+            p = c.getparent()
+            if p is not None:
+                p.remove(c)
 
     def _process(self, sm_tag):
-        sm = XmlData(sm_tag)
+        sm = {}
 
         # params
         params_tag = sm_tag.find("params")
@@ -35,7 +95,7 @@ class SlaveMachineParser(XmlParser):
         # interfaces
         interfaces_tag = sm_tag.find("interfaces")
         if interfaces_tag is not None and len(interfaces_tag) > 0:
-            sm["interfaces"] = XmlCollection(interfaces_tag)
+            sm["interfaces"] = []
             for eth_tag in interfaces_tag:
                 interface = self._process_interface(eth_tag)
                 sm["interfaces"].append(interface)
@@ -45,17 +105,17 @@ class SlaveMachineParser(XmlParser):
         return sm
 
     def _process_params(self, params_tag):
-        params = XmlCollection(params_tag)
+        params = []
         if params_tag is not None:
             for param_tag in params_tag:
-                param = XmlData(param_tag)
+                param = {}
                 param["name"] = self._get_attribute(param_tag, "name")
                 param["value"] = self._get_attribute(param_tag, "value")
                 params.append(param)
         return params
 
     def _process_interface(self, iface_tag):
-        iface = XmlData(iface_tag)
+        iface = {}
         iface["id"] = self._get_attribute(iface_tag, "id")
         iface["network"] = self._get_attribute(iface_tag, "label")
         iface["type"] = "eth"
@@ -69,7 +129,7 @@ class SlaveMachineParser(XmlParser):
         return iface
 
     def _process_security(self, sec_tag):
-        sec = XmlData(sec_tag)
+        sec = {}
 
         if sec_tag is None:
             sec["auth_type"] = "none"
@@ -95,3 +155,55 @@ class SlaveMachineParser(XmlParser):
             sec["pubkey_path"] = ""
 
         return sec
+
+    def _get_attribute(self, element, attr):
+        return element.attrib[attr].strip()
+
+class XmlProcessingError(ControllerError):
+    """ Exception thrown on parsing errors """
+
+    _filename = None
+    _line = None
+    _col = None
+
+    def __init__(self, msg, obj=None):
+        super(XmlProcessingError, self).__init__()
+        self._msg = msg
+
+        if obj is not None:
+            if hasattr(obj, "loc"):
+                self.set_loc(obj.loc)
+            elif hasattr(obj, "base") and obj.base != None:
+                loc = {}
+                loc["file"] = os.path.basename(obj.base)
+                if hasattr(obj, "sourceline"):
+                    loc["line"] = obj.sourceline
+                self.set_loc(loc)
+
+    def set_loc(self, loc):
+        self._filename = loc["file"]
+        self._line = loc["line"]
+        if "col" in loc:
+            self._col = loc["col"]
+
+    def __str__(self):
+        line = ""
+        col = ""
+        sep = ""
+        loc = ""
+        filename = "<unknown>"
+
+        if self._filename:
+            filename = self._filename
+
+        if self._line:
+            line = "%d" % self._line
+            sep = ":"
+
+        if self._col:
+            col = "%s%d" % (sep, self._col)
+
+        if self._line or self._col:
+            loc = "%s%s:" % (line, col)
+
+        return "Parser error: %s:%s %s" % (filename, loc, self._msg)
