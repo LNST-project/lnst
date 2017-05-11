@@ -77,12 +77,17 @@ class StrParam(Param):
 class IpParam(Param):
     @Param.val.setter
     def val(self, value):
+        #runtime import this because the Device class arrives on the Slave
+        #during recipe execution, not during Slave init
+        from lnst.Devices.Device import Device
         if isinstance(value, BaseIpAddress):
             self._val = value
         elif isinstance(value, str):
             self._val = IpAddress(value)
+        elif isinstance(value, Device):
+            self.val = value.ips[0]
         else:
-            raise ParamError("Value must be a BaseIpAddress or string object."
+            raise ParamError("Value must be a BaseIpAddress, string or Device object."
                              "Not {}".format(type(value)))
         self.set = True
 
