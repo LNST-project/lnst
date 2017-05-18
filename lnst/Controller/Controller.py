@@ -16,19 +16,17 @@ import os
 import sys
 import datetime
 import logging
-import socket
 from lnst.Common.Logs import LoggingCtl
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Utils import mkdir_p
-from lnst.Devices import VirtualDevice
+from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.Config import CtlConfig
 from lnst.Controller.MessageDispatcher import MessageDispatcher
 from lnst.Controller.SlavePoolManager import SlavePoolManager
 from lnst.Controller.MachineMapper import MachineMapper
 from lnst.Controller.Host import Hosts, Host
-from lnst.Controller.Requirements import DeviceReq
 from lnst.Controller.Recipe import BaseRecipe
 
 class Controller(object):

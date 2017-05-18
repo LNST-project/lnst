@@ -13,19 +13,11 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import logging
 import socket
-import os
 import sys
-import tempfile
 import signal
-from time import sleep
-from xmlrpclib import Binary
-from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.Utils import sha256sum
-from lnst.Common.Utils import wait_for, create_tar_archive
 from lnst.Common.Utils import check_process_running
 from lnst.Common.TestModule import BaseTestModule
-from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
-from lnst.Common.DeviceError import DeviceDeleted, DeviceNotFound
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
 from lnst.Devices import device_classes

@@ -13,7 +13,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import logging
 import signal
-import copy_reg
 from lnst.Common.JobError import JobError
 from lnst.Common.TestModule import BaseTestModule
 

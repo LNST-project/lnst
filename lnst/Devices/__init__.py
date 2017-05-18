@@ -9,7 +9,6 @@ from lnst.Devices.VxlanDevice import VxlanDevice
 from lnst.Devices.VtiDevice import VtiDevice, Vti6Device
 from lnst.Devices.VethDevice import VethDevice, PairedVethDevice
 from lnst.Devices.VethPair import VethPair
-from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Devices.RemoteDevice import RemoteDevice, remotedev_decorator
 
 device_classes = [

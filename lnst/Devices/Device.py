@@ -16,7 +16,7 @@ from abc import ABCMeta
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted
-from lnst.Common.IpAddress import Ip4Address, Ip6Address, IpAddress
+from lnst.Common.IpAddress import IpAddress
 
 try:
     from pyroute2.netlink.iproute import RTM_NEWLINK

@@ -13,7 +13,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 import copy
 from lnst.Common.Parameters import Parameters, Param
 from lnst.Controller.Requirements import _Requirements, HostReq
-from lnst.Controller.Host import Hosts, Host
 from lnst.Controller.Common import ControllerError
 
 class RecipeError(ControllerError):

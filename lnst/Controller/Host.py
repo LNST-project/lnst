@@ -12,9 +12,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import logging
-from lnst.Common.Colours import decorate_with_preset
 from lnst.Common.Parameters import Parameters
-from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Devices import Devices
 from lnst.Devices.VirtualDevice import VirtualDevice

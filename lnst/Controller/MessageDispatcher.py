@@ -15,7 +15,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import logging
-from lnst.Common.ConnectionHandler import send_data, recv_data
+from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Controller.Common import ControllerError

@@ -11,8 +11,6 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-import os
-import sys
 from lnst.Common.LnstError import LnstError
 
 class ControllerError(LnstError):
