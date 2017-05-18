@@ -51,6 +51,11 @@ Devices.__path__ = ["lnst.Devices"]
 
 sys.modules["lnst.Devices"] = Devices
 
+Tests = types.ModuleType("Tests")
+Tests.__path__ = ["lnst.Tests"]
+
+sys.modules["lnst.Tests"] = Tests
+
 class SlaveMethods:
     '''
     Exported xmlrpc methods
