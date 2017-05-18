@@ -36,11 +36,11 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     sw_if1_10 = sw.create_vlan(sw_if1, 10)
     sw_if2_10 = sw.create_vlan(sw_if2, 10)
-    sw_br = sw.create_bridge(slaves=[sw_if1_10, sw_if2_10], options=br_options)
+    sw_br = sw.create_bridge(slaves=[sw_if1_10, sw_if2_10])
 
     sw_if1_20 = sw.create_vlan(sw_if1, 20)
     sw_if2_21 = sw.create_vlan(sw_if2, 21)
-    sw.create_bridge(slaves=[sw_if1_20, sw_if2_21], options=br_options)
+    sw.create_bridge(slaves=[sw_if1_20, sw_if2_21])
 
     sleep(15)
 
