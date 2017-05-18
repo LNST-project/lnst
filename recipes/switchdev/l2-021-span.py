@@ -41,7 +41,7 @@ class MirredPort:
                             ingress_str))
         output = cmd.out()
         return re.findall("pref (\\d+) .* handle .*\n.* device %s" %
-                to_port.get_devname(), output, re.M)
+                to_port.get_devname(), output, re.M|re.S)
 
     def remove_mirror(self, to_port, ingress = False):
         prefs = self.get_mirrors(to_port, ingress)
