@@ -45,13 +45,14 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(m1_lag1_10, m2_lag1_20)
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "software")
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "hardware")
+    sw_lag1_10.set_br_learning(on=False, self=True)
 
     sleep(20)
 
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "software", False)
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "hardware", False)
 
-    # Disable learning and make sure FDB is not populated.
+    # Make sure FDB is not populated when learning is disabled.
     sw_lag1_10.set_br_learning(on=False, self=True)
     tl.ping_simple(m1_lag1_10, m2_lag1_20)
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "software", False)
@@ -80,6 +81,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(m1_lag1_10, m2_lag1_20)
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "software")
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "hardware")
+    sw_lag1_10.set_br_learning(on=False, self=True)
 
     sleep(20)
 
@@ -87,6 +89,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "hardware", False)
 
     # Disable learning_sync and make sure only hardware FDB is populated.
+    sw_lag1_10.set_br_learning(on=True, self=True)
     sw_lag1_10.set_br_learning_sync(on=False, self=True)
     tl.ping_simple(m1_lag1_10, m2_lag1_20)
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "software", False)
@@ -107,6 +110,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(m1_lag1_10, m2_lag1_20)
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "software")
     tl.check_fdb(sw_lag1_10, m1_lag1_10.get_hwaddr(), 0, "hardware")
+    sw_lag1_10.set_br_learning(on=False, self=True)
 
     sleep(20)
 
