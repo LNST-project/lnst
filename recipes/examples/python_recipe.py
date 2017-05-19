@@ -23,7 +23,8 @@ class MyRecipe(BaseRecipe):
         self.matched.m1.eth0.ip_add(IpAddress("192.168.1.1/24"))
         self.matched.m2.eth0.ip_add(IpAddress("192.168.1.2/24"))
         ping_job = self.matched.m1.run(IcmpPing(dst=self.matched.m2.eth0,
-                                                interval=0))
+                                                interval=0,
+                                                iface=self.matched.m1.eth0))
 
 ctl = Controller(debug=1)
 

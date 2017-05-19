@@ -1,7 +1,6 @@
 import re
 import logging
-from lnst.Devices import Device
-from lnst.Common.Parameters import IntParam, Param, FloatParam, IpParam
+from lnst.Common.Parameters import IntParam, FloatParam, IpParam, DeviceParam
 from lnst.Common.TestModule import BaseTestModule, TestModuleError
 from lnst.Common.ExecCmd import exec_cmd
 
@@ -10,29 +9,16 @@ class IcmpPing(BaseTestModule):
     dst = IpParam(mandatory=True)
     count = IntParam(default=10)
     interval = FloatParam(default=1.0)
-    iface = Param()
+    iface = DeviceParam()
     size = IntParam()
-
     limit_rate = IntParam(default=80)
-
-    def __init__(self, **kwargs):
-        super(IcmpPing, self).__init__(**kwargs)
-
-        if self.iface.set:
-            if not isinstance(self.iface.val, Device) and\
-               not isinstance(self.iface.val, str):
-                   raise TestModuleError("Invalid 'iface' parameter.")
 
     def _compose_cmd(self):
         cmd = "ping %s" % self.params.dst.val
         cmd += " -c %d" % self.params.count
         cmd += " -i %f" % self.params.interval
         if self.params.iface.set:
-            if isinstance(self.params.iface.val, str):
-                cmd += " -I %s" % self.params.iface
-            elif isinstance(self.params.iface.val, Device):
-                pass
-                # cmd += " -I %s" % iface.val.devname
+           cmd += " -I %s" % self.params.iface.val.name
         if self.params.size.set:
             cmd += " -s %d" % self.params.size
         return cmd
