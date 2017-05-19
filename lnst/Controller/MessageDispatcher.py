@@ -15,8 +15,11 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import logging
+import copy
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
+from lnst.Common.TestModule import BaseTestModule
+from lnst.Common.Parameters import Parameters, DeviceParam
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Controller.Common import ControllerError
 from lnst.Devices.RemoteDevice import RemoteDevice
@@ -64,6 +67,18 @@ def remote_device_to_deviceref(obj):
         for value in obj:
             new_list.append(remote_device_to_deviceref(value))
         return tuple(new_list)
+    elif isinstance(obj, DeviceParam):
+        new_param = DeviceParam()
+        new_param.val = remote_device_to_deviceref(obj.val)
+        return new_param
+    elif isinstance(obj, Parameters):
+        for param_name, param in obj:
+            setattr(obj, param_name, remote_device_to_deviceref(param))
+        return obj
+    elif isinstance(obj, BaseTestModule):
+        new_test = copy.deepcopy(obj)
+        new_test.params = remote_device_to_deviceref(new_test.params)
+        return new_test
     else:
         return obj
 

@@ -41,6 +41,8 @@ from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.LnstError import LnstError
 from lnst.Common.DeviceError import DeviceDeleted
 from lnst.Common.IpAddress import IpAddress
+from lnst.Common.TestModule import BaseTestModule
+from lnst.Common.Parameters import Parameters, DeviceParam
 from lnst.Slave.Job import Job, JobContext
 from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
@@ -1002,6 +1004,16 @@ def deviceref_to_device(if_manager, obj):
         for value in obj:
             new_list.append(deviceref_to_device(if_manager, value))
         return tuple(new_list)
+    elif isinstance(obj, DeviceParam):
+        obj.val = deviceref_to_device(if_manager, obj.val)
+        return obj
+    elif isinstance(obj, Parameters):
+        for param_name, param in obj:
+            deviceref_to_device(if_manager, param)
+        return obj
+    elif isinstance(obj, BaseTestModule):
+        deviceref_to_device(if_manager, obj.params)
+        return obj
     else:
         return obj
 

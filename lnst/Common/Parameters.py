@@ -14,6 +14,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.IpAddress import BaseIpAddress, IpAddress
 from lnst.Common.LnstError import LnstError
 
@@ -90,6 +91,24 @@ class IpParam(Param):
             raise ParamError("Value must be a BaseIpAddress, string or Device object."
                              "Not {}".format(type(value)))
         self.set = True
+
+class DeviceParam(Param):
+    @Param.val.setter
+    def val(self, value):
+        #runtime import this because the Device class arrives on the Slave
+        #during recipe execution, not during Slave init
+        from lnst.Devices.Device import Device
+        if isinstance(value, Device) or isinstance(value, DeviceRef):
+            self._val = value
+        else:
+            raise ParamError("Value must be a Device or DeviceRef object."
+                             "Not {}".format(type(value)))
+        self.set = True
+
+    def __deepcopy__(self, memo):
+        newone = type(self)()
+        newone.__dict__.update(self.__dict__)
+        return newone
 
 class Parameters(object):
     def __getattribute__(self, name):
