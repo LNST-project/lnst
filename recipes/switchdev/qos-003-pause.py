@@ -57,14 +57,18 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     tl.ping_simple(m1_if1, m2_if1)
 
-    packet_count = 40 * 10 ** 6
+    packet_count = 2 * 10 ** 6
     prio = randint(1, 7)
     # Make sure we get packet loss without PAUSE frames.
     _, tx_stats_t0 = get_stats(tl, sw_if1, sw_if2, prio)
-    tl.pktgen(m1_if1, m2_if1, m1_if1.get_mtu(), vlan_id=10, vlan_p=prio,
-              count=packet_count)
+    #tl.pktgen(m1_if1, m2_if1, m1_if1.get_mtu(), vlan_id=10, vlan_p=prio,
+    #          count=packet_count)
+    num_cpus = m1.get_num_cpus()
+    thread_option = ["vlan_p {}".format(prio)] * (num_cpus)
+    tl.pktgen(m1_if1, m2_if1, m1_if1.get_mtu(), thread_option=thread_option,
+                vlan_id=10, count=packet_count, flag="QUEUE_MAP_CPU")
     _, tx_stats_t1 = get_stats(tl, sw_if1, sw_if2, prio)
-    tl.check_stats(sw_if1, tx_stats_t1 - tx_stats_t0, packet_count,
+    tl.check_stats(sw_if1, tx_stats_t1 - tx_stats_t0, packet_count * (num_cpus ),
                    "tx prio {}".format(prio), fail=True)
 
     sw_if1.set_pause_on()
@@ -72,13 +76,16 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     for prio in range(1, 8):
         rx_stats_t0, tx_stats_t0 = get_stats(tl, sw_if1, sw_if2, prio)
-        tl.pktgen(m1_if1, m2_if1, m1_if1.get_mtu(), vlan_id=10, vlan_p=prio,
-                  count=packet_count)
+        #tl.pktgen(m1_if1, m2_if1, m1_if1.get_mtu(), vlan_id=10, vlan_p=prio,
+        #          count=packet_count)
+        thread_option = ["vlan_p {}".format(prio)] * (num_cpus)
+        tl.pktgen(m1_if1, m2_if1, m1_if1.get_mtu(), thread_option=thread_option,
+                    vlan_id=10, count=packet_count, flag="QUEUE_MAP_CPU")
         rx_stats_t1, tx_stats_t1 = get_stats(tl, sw_if1, sw_if2, prio)
 
-        tl.check_stats(sw_if1, rx_stats_t1 - rx_stats_t0, packet_count,
+        tl.check_stats(sw_if1, rx_stats_t1 - rx_stats_t0, packet_count * (num_cpus),
                        "rx prio {}".format(prio))
-        tl.check_stats(sw_if2, tx_stats_t1 - tx_stats_t0, packet_count,
+        tl.check_stats(sw_if2, tx_stats_t1 - tx_stats_t0, packet_count * (num_cpus),
                        "tx prio {}".format(prio))
 
 do_task(ctl, [ctl.get_host("machine1"),
