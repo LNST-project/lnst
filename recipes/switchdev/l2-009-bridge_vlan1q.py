@@ -37,7 +37,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_if1.add_br_vlan(20)
     sw_if2.add_br_vlan(20)
 
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
 

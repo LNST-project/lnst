@@ -100,7 +100,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw.create_bridge(slaves=[sw_if1, sw_if2], options={"vlan_filtering": 1})
     mirred_port = MirredPort(sw_if2)
 
-    sleep(15)
+    sleep(30)
 
     mirror_status = {"ingress": False, "egress": False }
     for i in range(10):

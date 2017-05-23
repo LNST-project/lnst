@@ -32,7 +32,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     br_options = {"vlan_filtering": 1, "ageing_time": 1000}
     sw_br = sw.create_bridge(slaves = [sw_lag1, sw_lag2], options=br_options)
 
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
     tl.ping_simple(m1_lag1, m2_lag1)
@@ -40,7 +40,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
     sw_lag1.set_br_learning(on=False, self=True)
 
-    sleep(20)
+    sleep(30)
 
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
@@ -76,7 +76,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
     sw_lag1.set_br_learning(on=False, self=True)
 
-    sleep(20)
+    sleep(30)
 
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
@@ -105,7 +105,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
     sw_lag1.set_br_learning(on=False, self=True)
 
-    sleep(20)
+    sleep(30)
 
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
@@ -117,7 +117,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
 
-    sleep(20)
+    sleep(30)
 
     # Make sure static entry is not aged out.
     tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)

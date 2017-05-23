@@ -44,7 +44,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_lag2_21 = sw.create_vlan(sw_lag2, 21)
     sw.create_bridge(slaves=[sw_lag1_20, sw_lag2_21])
 
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
 

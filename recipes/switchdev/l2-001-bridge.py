@@ -21,7 +21,7 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     sw.create_bridge(slaves=[sw_if1, sw_if2], options={"vlan_filtering": 1})
 
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
     tl.ping_simple(m1_if1, m2_if1)

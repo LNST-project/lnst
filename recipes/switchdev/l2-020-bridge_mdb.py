@@ -29,7 +29,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     m2_if.set_addresses(["192.168.101.11/24", "2002::2/64"])
     m3_if.set_addresses(["192.168.101.13/24", "2002::3/64"])
     m4_if.set_addresses(["192.168.101.14/24", "2002::4/64"])
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
     tl.iperf_mc(m1_if, [m2_if, m4_if], [m3_if], "239.255.1.3")

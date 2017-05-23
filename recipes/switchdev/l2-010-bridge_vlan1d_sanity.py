@@ -42,7 +42,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_if2_21 = sw.create_vlan(sw_if2, 21)
     sw.create_bridge(slaves=[sw_if1_20, sw_if2_21])
 
-    sleep(15)
+    sleep(30)
 
     tl = TestLib(ctl, aliases)
     tl.ping_simple(m1_if1, m2_if1)
@@ -53,7 +53,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_br.slave_del(sw_if1_10.get_id())
     sw_if1_10.reset(ip=test_ip(2, 3))
 
-    sleep(15)
+    sleep(30)
 
     tl.ping_simple(sw_if1_10, m1_if1_10)
 
