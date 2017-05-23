@@ -1,0 +1,33 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="if1" label="X" />
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="X" />
+                <eth id="if2" label="A" />
+                <eth id="if3" label="B" />
+                <eth id="if4" label="C" />
+                <eth id="if5" label="D" />
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <eth id="if2" label="B" />
+                <eth id="if3" label="C" />
+                <eth id="if4" label="D" />
+                <veth_pair>
+                    <veth id="veth0"/>
+                    <veth id="veth1" netns="nsif">
+                    </veth>
+                </veth_pair>
+            </interfaces>
+        </host>
+    </network>
+    <task python="l3-007-ecmp-maxsize.py" />
+</lnstrecipe>
