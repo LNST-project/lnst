@@ -286,7 +286,9 @@ class TestLib:
         if "dst_mac" not in kwargs.keys():
             pktgen_option.append("dst_mac %s" % if2.get_hwaddr())
         pktgen_option.append("pkt_size %s" % pkt_size)
-        pktgen_option.append("dst %s" % if2.get_ip(0))
+        if "dst" not in kwargs.keys() and "dst_min" not in kwargs.keys() and \
+           "dst_max" not in kwargs.keys():
+            pktgen_option.append("dst %s" % if2.get_ip(0))
         for arg, argval in kwargs.iteritems():
             if arg == "vlan_id":
                 pktgen_option.insert(0, "{} {}".format(arg, argval))
