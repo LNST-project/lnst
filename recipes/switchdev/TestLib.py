@@ -283,8 +283,9 @@ class TestLib:
             pktgen_option.append("clone_skb 0")
         if "delay" not in kwargs.keys():
             pktgen_option.append("delay 0")
+        if "dst_mac" not in kwargs.keys():
+            pktgen_option.append("dst_mac %s" % if2.get_hwaddr())
         pktgen_option.append("pkt_size %s" % pkt_size)
-        pktgen_option.append("dst_mac %s" % if2.get_hwaddr())
         pktgen_option.append("dst %s" % if2.get_ip(0))
         for arg, argval in kwargs.iteritems():
             if arg == "vlan_id":
