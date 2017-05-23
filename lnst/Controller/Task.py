@@ -318,6 +318,9 @@ class HostAPI(object):
         else:
             raise TaskError("No device with name '%s' found." % str(name))
 
+    def get_routes(self, routes_filter = "", netns = None):
+        return self._m.get_routes(routes_filter, netns)
+
     @deprecated
     def get_devname(self, if_id):
         """

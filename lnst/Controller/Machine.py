@@ -568,6 +568,10 @@ class Machine(object):
     def del_netns(self, netns):
         return self._rpc_call("del_namespace", netns)
 
+    def get_routes(self, routes_filter, ns):
+        routes = self._rpc_call_x(ns, "get_routes", routes_filter)
+        return routes
+
     def del_namespaces(self):
         for netns in self._namespaces:
             self.del_netns(netns)
