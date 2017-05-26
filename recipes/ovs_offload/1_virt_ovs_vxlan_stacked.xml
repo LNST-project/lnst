@@ -1,0 +1,86 @@
+<lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+        <alias name="mtu" value="1450" />
+        <alias name="net" value="77.77.77"/>
+        <alias name="vxlan_net" value="1.1.1"/>
+        <alias name="vxlan_net6" value="fc00:0:0:0"/>
+        <alias name="vxlan_key" value="100"/>
+        <alias name="vxlan_port" value="4789"/>
+    </define>
+    <network>
+        <host id="h1">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+                <param name="order" value="1"/>
+            </params>
+            <interfaces>
+                <eth id="if1" label="n1">
+                </eth>
+                <eth id="tap1" label="to_guest1"/>
+                <ovs_bridge id="br-pys">
+                    <addresses>
+                        <address value="{$net}.1/24"/>
+                    </addresses>
+                    <slaves>
+                        <slave id="if1"></slave>
+                    </slaves>
+                </ovs_bridge>
+                <ovs_bridge id="br-int">
+                    <slaves>
+                        <slave id="tap1"></slave>
+                    </slaves>
+                    <tunnel id="vxlan1" type="vxlan">
+                        <options>
+                            <option name="option:remote_ip" value="{$net}.2"/>
+                            <option name="option:key" value="{$vxlan_key}"/>
+                            <option name="option:dst_port" value="{$vxlan_port}"/>
+                        </options>
+                    </tunnel>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="test_host1">
+            <interfaces>
+                <eth id="if1" label="to_guest1">
+                    <addresses>
+                        <address value="{$vxlan_net}.1/24"/>
+                        <address value="{$vxlan_net6}::1/64"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="h2">
+            <params>
+                <param name="machine_type" value="baremetal"/>
+            </params>
+            <interfaces>
+                <eth id="if1" label="n1">
+                    <addresses>
+                        <address value="{$net}.2/24"/>
+                    </addresses>
+                </eth>
+                <ovs_bridge id="ovs2">
+		    <internal id="int0">
+                        <options>
+                            <option name="name" value="int0"/>
+                        </options>
+                        <addresses>
+                            <address value="{$vxlan_net}.2/24"/>
+                            <address value="{$vxlan_net6}::2/24"/>
+                        </addresses>
+                    </internal>
+                    <tunnel id="vxlan1" type="vxlan">
+                        <options>
+                            <option name="option:remote_ip" value="{$net}.1"/>
+                            <option name="option:key" value="{$vxlan_key}"/>
+                            <option name="option:dst_port" value="{$vxlan_port}"/>
+                        </options>
+                    </tunnel>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="1_virt_ovs_vxlan.py"/>
+</lnstrecipe>

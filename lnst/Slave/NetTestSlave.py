@@ -19,6 +19,7 @@ import datetime
 import socket
 import ctypes
 import multiprocessing
+import re
 from time import sleep, time
 from xmlrpclib import Binary
 from tempfile import NamedTemporaryFile
@@ -755,6 +756,63 @@ class SlaveMethods:
             self._server_handler.del_netns(netns)
             del self._net_namespaces[netns]
             return True
+
+    def get_routes(self, route_filter):
+        try:
+            route_output, _ = exec_cmd("ip route show %s" % route_filter)
+        except:
+            return {}
+
+        dc_routes = []
+        nh_routes = []
+        ip_re = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+        prefix_re = "^(" + ip_re + "(?:/\d{1,3})?)"
+
+        # parse directly connected routes
+        dc_route_re = prefix_re + " dev (\w+) (.*)"
+        dc_matchs = re.findall(dc_route_re, route_output, re.M)
+
+        for dc_match in dc_matchs:
+            dc_route = { "prefix" : dc_match[0],
+                         "dev"    : dc_match[1],
+                         "flags"  : dc_match[2] }
+            dc_routes.append(dc_route)
+
+        # parse nexthop routes
+        nh_re = " via (" + ip_re + ").*dev (\w+) (.*)"
+        nh_route_re = prefix_re + nh_re
+        nh_route_matchs = re.findall(nh_route_re, route_output, re.M)
+
+        for nh_route_match in nh_route_matchs:
+            nexthop = { "ip" : nh_route_match[1],
+                        "dev" : nh_route_match[2],
+                        "flags" : ""}
+            nh_route = {"prefix"  : nh_route_match[0],
+                        "nexthops": [ nexthop ],
+                        "flags"   : nh_route_match[3] }
+            nh_routes.append(nh_route)
+
+        # parse ECMP routes
+        ecmp_route_re = prefix_re + "(.*)\n((?:.*nexthop .*\n?)+)"
+        ecmp_matchs = re.findall(ecmp_route_re, route_output, re.M)
+
+        for ecmp_match in ecmp_matchs:
+            # parse each nexthop
+            nexthops = []
+            nh_matchs = re.findall(nh_re, ecmp_match[2])
+
+            for nh_match in nh_matchs:
+                nexthop = { "ip" : nh_match[0],
+                            "dev" : nh_match[1],
+                            "flags" : nh_match[2]}
+                nexthops.append(nexthop)
+
+            ecmp_route = {"prefix"  : ecmp_match[0],
+                          "nexthops": nexthops,
+                          "flags"   : ecmp_match[1] }
+            nh_routes.append(ecmp_route)
+
+        return dc_routes, nh_routes
 
     def set_if_netns(self, if_id, netns):
         netns_pid = self._net_namespaces[netns]["pid"]

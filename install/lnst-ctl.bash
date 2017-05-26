@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Bash completion script for lnst-ctl command
 # Author: Radek Pazdera <rpazdera@redhat.com>
 
@@ -14,15 +12,19 @@ _list_has_item()
 
 _lnst_ctl()
 {
-    local SHORT_OPTS="-a -A -c -d -h -m -o -p -x -v"
-    local LONG_OPTS="--define-alias --override-alias --config --debug \
-                     --help --no-colours --disable-pool-checks \
-                     --packet-capture --result --verbose"
+    local SHORT_OPTS="-a -A -c -C -d -h -m -o -p -r -u -x -v"
+    local LONG_OPTS="--define-alias --override-alias \
+                     --config --config-override \
+                     --debug --help --no-colours --disable-pool-checks \
+                     --packet-capture --pools --reduce-sync \
+                     --result --multi-match --verbose"
     local REQUIRE_ARG="-a --define-alias \
                        -A --override-alias \
                        -c --config \
-                       -x --result"
-    local ACTIONS="config_only match_setup run list_pools"
+                       -C --config-override \
+                       -x --result \
+                       --pools"
+    local ACTIONS="config_only match_setup run list_pools deconfigure"
 
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
@@ -31,11 +33,15 @@ _lnst_ctl()
     case "$prev" in
         -a|--define-alias) return 0 ;;
         -A|--override-alias) return 0 ;;
-        -c|--config)
+        -c|--config|-C|--config-override)
             _filedir
             return 0
             ;;
         -x|--result)
+            _filedir
+            return 0
+            ;;
+        --pools)
             _filedir
             return 0
             ;;

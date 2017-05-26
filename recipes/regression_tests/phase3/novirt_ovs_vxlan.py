@@ -53,8 +53,11 @@ if nperf_cpupin:
     h1.run("service irqbalance stop")
     h2.run("service irqbalance stop")
 
+    h1_phy = h1.get_interface("if1")
+    h2_phy = h2.get_interface("if1")
+
     # this will pin devices irqs to cpu #0
-    for m, d in [(h1, h1_nic), (h2, h2_nic)]:
+    for m, d in [(h1, h1_phy), (h2, h2_phy)]:
         pin_dev_irqs(m, d, 0)
 
 nperf_opts = ""

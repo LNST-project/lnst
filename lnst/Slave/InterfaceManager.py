@@ -563,7 +563,7 @@ class Device(object):
 
         for m_id in self._master["other"]:
             m_dev = self._if_manager.get_device(m_id)
-            if m_dev:
+            if m_dev and self._if_index not in m_dev.get_master()["other"]:
                 m_dev.clear_configuration()
 
         if self._conf != None and self._configured:
@@ -592,6 +592,9 @@ class Device(object):
                     master_dev.add_slave(self._if_index)
         elif if_index not in self._master["other"]:
             self._master["other"].append(if_index)
+
+    def get_master(self):
+        return self._master
 
     def del_master(self, if_index):
         if self._master["primary"] == if_index:
@@ -635,7 +638,7 @@ class Device(object):
 
         for m_id in self._master["other"]:
             m_dev = self._if_manager.get_device(m_id)
-            if m_dev:
+            if m_dev and self._if_index not in m_dev.get_master()["other"]:
                 m_dev.deconfigure()
 
         if self._conf != None and self._configured:
