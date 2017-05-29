@@ -1,5 +1,5 @@
 """
-Copyright 2016 Mellanox Technologies. All rights reserved.
+Copyright 2016-2017 Mellanox Technologies. All rights reserved.
 Licensed under the GNU General Public License, version 2 as
 published by the Free Software Foundation; see COPYING for details.
 """
@@ -469,3 +469,22 @@ class TestLib:
             err_msg = "got {} packets, expected {}".format(count, expected)
 
         return self.custom(iface.get_host(), desc, err_msg)
+
+class Qdisc:
+    def __init__(self, iface, handle, qdisc):
+        self._ifname = iface.get_devname()
+        self._machine = iface.get_host()
+        self._handle = handle
+        self.run("tc qdisc add dev %s handle %x: %s"
+                 % (self._ifname, self._handle, qdisc))
+
+    def filter_add(self, f):
+        self.run("tc filter add dev %s parent %x: %s"
+                 % (self._ifname, self._handle, f))
+
+    def flush(self):
+        self.run("tc filter del dev %s parent %x:"
+                 % (self._ifname, self._handle))
+
+    def run(self, command):
+        self._machine.run(command)
