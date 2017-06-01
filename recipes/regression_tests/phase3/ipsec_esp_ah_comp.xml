@@ -15,6 +15,7 @@
         <alias name="net_2" value="192.168.100"/>
         <alias name="net6_2" value="fc00:2::"/>
         <alias name="driver" value=""/>
+        <alias name="official_result" value="no" />
     </define>
     <network>
         <host id="machine1">

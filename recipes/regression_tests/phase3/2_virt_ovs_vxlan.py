@@ -1,3 +1,4 @@
+from lnst.Common.Utils import bool_it
 from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import perfrepo_baseline_to_dict
 from lnst.Controller.PerfRepoUtils import netperf_result_template
@@ -46,6 +47,7 @@ nperf_max_dev = ctl.get_alias("nperf_max_dev")
 nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 nperf_protocols = ctl.get_alias("nperf_protocols")
+official_result = bool_it(ctl.get_alias("official_result"))
 
 pr_comment = generate_perfrepo_comment([guest1, guest2, guest3, guest4],
                                        pr_user_comment)
@@ -173,7 +175,7 @@ if ipv in [ 'ipv4', 'both' ]:
 
         netperf_result_template(result_tcp, tcp_res_data)
         result_tcp.set_comment(pr_comment)
-        perf_api.save_result(result_tcp)
+        perf_api.save_result(result_tcp, official_result)
 
     if nperf_protocols.find("udp") > -1:
         # prepare PerfRepo result for udp
@@ -207,7 +209,7 @@ if ipv in [ 'ipv4', 'both' ]:
 
         netperf_result_template(result_udp, udp_res_data)
         result_udp.set_comment(pr_comment)
-        perf_api.save_result(result_udp)
+        perf_api.save_result(result_udp, official_result)
 if ipv in [ 'ipv6', 'both' ]:
     # prepare PerfRepo result for tcp ipv6
     if nperf_protocols.find("tcp") > -1:
@@ -241,7 +243,7 @@ if ipv in [ 'ipv6', 'both' ]:
 
         netperf_result_template(result_tcp, tcp_res_data)
         result_tcp.set_comment(pr_comment)
-        perf_api.save_result(result_tcp)
+        perf_api.save_result(result_tcp, official_result)
 
     if nperf_protocols.find("udp") > -1:
         #prepare PerfRepo result for udp ipv6
@@ -275,7 +277,7 @@ if ipv in [ 'ipv6', 'both' ]:
 
         netperf_result_template(result_udp, udp_res_data)
         result_udp.set_comment(pr_comment)
-        perf_api.save_result(result_udp)
+        perf_api.save_result(result_udp, official_result)
 
 if nperf_cpupin:
     host1.run("service irqbalance start")

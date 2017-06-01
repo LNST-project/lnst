@@ -10,6 +10,7 @@
         <alias name="nperf_num_parallel" value="2"/>
         <alias name="nperf_max_dev" value="20%"/>
         <alias name="mapping_file" value="active_backup_team_vs_round_robin_bond.mapping" />
+        <alias name="official_result" value="no" />
     </define>
     <network>
         <host id="testmachine1">

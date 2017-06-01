@@ -1,3 +1,4 @@
+from lnst.Common.Utils import bool_it
 from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import netperf_baseline_template
 from lnst.Controller.PerfRepoUtils import netperf_result_template
@@ -41,6 +42,7 @@ nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 offloads_alias = ctl.get_alias("offloads")
 nperf_protocols = ctl.get_alias("nperf_protocols")
+official_result = bool_it(ctl.get_alias("official_result"))
 
 sctp_default_msg_size = "16K"
 
@@ -284,7 +286,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_tcp, tcp_res_data)
             result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp)
+            perf_api.save_result(result_tcp, official_result)
 
         if nperf_protocols.find("udp") > -1 and ("gro", "off") not in setting:
             # prepare PerfRepo result for udp
@@ -314,7 +316,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp)
+            perf_api.save_result(result_udp, official_result)
 
         # prepare PerfRepo result for sctp
         # for SCTP only gso offload on/off
@@ -343,7 +345,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_sctp, sctp_res_data)
             result_sctp.set_comment(pr_comment)
-            perf_api.save_result(result_sctp)
+            perf_api.save_result(result_sctp, official_result)
 
         server_proc.intr()
     if ipv in [ 'ipv6', 'both' ]:
@@ -380,7 +382,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_tcp, tcp_res_data)
             result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp)
+            perf_api.save_result(result_tcp, official_result)
 
         if nperf_protocols.find("udp") > -1 and ("gro", "off") not in setting:
             # prepare PerfRepo result for udp
@@ -410,7 +412,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp)
+            perf_api.save_result(result_udp, official_result)
 
         # prepare PerfRepo result for sctp
         # for SCTP only gso offload on/off
@@ -439,7 +441,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_sctp, sctp_res_data)
             result_sctp.set_comment(pr_comment)
-            perf_api.save_result(result_sctp)
+            perf_api.save_result(result_sctp, official_result)
 
         server_proc.intr()
 
@@ -527,7 +529,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_tcp, tcp_res_data)
             result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp)
+            perf_api.save_result(result_tcp, official_result)
 
         if nperf_protocols.find("udp") > -1 and ("gro", "off") not in setting:
             # prepare PerfRepo result for udp
@@ -557,7 +559,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp)
+            perf_api.save_result(result_udp, official_result)
 
         # prepare PerfRepo result for sctp
         # for SCTP only gso offload on/off
@@ -586,7 +588,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_sctp, sctp_res_data)
             result_sctp.set_comment(pr_comment)
-            perf_api.save_result(result_sctp)
+            perf_api.save_result(result_sctp, official_result)
 
         server_proc.intr()
     if ipv in [ 'ipv6', 'both' ]:
@@ -623,7 +625,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_tcp, tcp_res_data)
             result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp)
+            perf_api.save_result(result_tcp, official_result)
 
         if nperf_protocols.find("udp") > -1 and ("gro", "off") not in setting:
             # prepare PerfRepo result for udp
@@ -653,7 +655,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp)
+            perf_api.save_result(result_udp, official_result)
 
         # prepare PerfRepo result for sctp
         # for SCTP only gso offload on/off
@@ -682,7 +684,7 @@ for setting in offload_settings:
 
             netperf_result_template(result_sctp, sctp_res_data)
             result_sctp.set_comment(pr_comment)
-            perf_api.save_result(result_sctp)
+            perf_api.save_result(result_sctp, official_result)
 
         server_proc.intr()
 

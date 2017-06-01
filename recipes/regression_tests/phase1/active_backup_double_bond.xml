@@ -14,6 +14,7 @@
         <alias name="mapping_file" value="active_backup_double_bond.mapping" />
         <alias name="net" value="192.168.0"/>
         <alias name="driver" value="ixgbe"/>
+        <alias name="official_result" value="no" />
     </define>
     <network>
         <host id="testmachine1">

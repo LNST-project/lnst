@@ -1,3 +1,4 @@
+from lnst.Common.Utils import bool_it
 from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import perfrepo_baseline_to_dict
 from lnst.Controller.PerfRepoUtils import netperf_result_template
@@ -60,6 +61,7 @@ nperf_max_dev = ctl.get_alias("nperf_max_dev")
 nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 ipsec_mode = ctl.get_alias("ipsec_mode")
+official_result = bool_it(ctl.get_alias("official_result"))
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
 
@@ -352,7 +354,7 @@ for ciph_alg, ciph_len in ciphers:
 
             netperf_result_template(result_tcp, tcp_res_data)
             result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp)
+            perf_api.save_result(result_tcp, official_result)
 
             # prepare PerfRepo result for udp
             result_udp = perf_api.new_result("udp_ipv4_id",
@@ -391,7 +393,7 @@ for ciph_alg, ciph_len in ciphers:
 
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp)
+            perf_api.save_result(result_udp, official_result)
 
         if ipv in [ 'ipv6', 'both']:
             configure_ipsec(ciph_alg,
@@ -502,7 +504,7 @@ for ciph_alg, ciph_len in ciphers:
 
             netperf_result_template(result_tcp, tcp_res_data)
             result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp)
+            perf_api.save_result(result_tcp, official_result)
 
             # prepare PerfRepo result for udp
             result_udp = perf_api.new_result("udp_ipv6_id",
@@ -541,7 +543,7 @@ for ciph_alg, ciph_len in ciphers:
 
             netperf_result_template(result_udp, udp_res_data)
             result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp)
+            perf_api.save_result(result_udp, official_result)
 
 m1.run("ip xfrm policy flush")
 m1.run("ip xfrm state flush")

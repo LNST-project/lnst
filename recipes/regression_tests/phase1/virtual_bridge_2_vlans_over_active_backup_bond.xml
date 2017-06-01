@@ -17,6 +17,7 @@
         <alias name="vlan20_net" value="192.168.20"/>
         <alias name="vlan20_tag" value="20"/>
         <alias name="driver" value="ixgbe"/>
+        <alias name="official_result" value="no" />
     </define>
     <network>
         <host id="host1">
