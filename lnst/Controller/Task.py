@@ -921,7 +921,7 @@ class PerfRepoAPI(object):
         result = PerfRepoResult(test, name, hash_ignore)
         return result
 
-    def save_result(self, result):
+    def save_result(self, result, official_result=False):
         if isinstance(result, Noop):
             return
         elif not self.connected():
@@ -931,9 +931,13 @@ class PerfRepoAPI(object):
                 logging.debug("PerfRepoResult with no result data, skipping "\
                               "send to PerfRepo.")
                 return
+
             h = result.generate_hash()
-            logging.debug("Adding hash '%s' as tag to result." % h)
-            result.add_tag(h)
+            if official_result:
+                logging.debug("Adding hash '%s' as tag to result." % h)
+                result.add_tag(h)
+            else:
+                logging.debug("Unofficial results - skipping hash tag.")
             logging.info("Sending TestExecution to PerfRepo.")
             try:
                 self._rest_api.testExecution_create(result.get_testExecution())
