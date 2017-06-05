@@ -1,0 +1,727 @@
+<lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+        <alias name="mtu" value="1450" />
+        <alias name="netperf_duration" value="60" />
+        <alias name="nperf_reserve" value="20" />
+        <alias name="nperf_confidence" value="99,5" />
+        <alias name="nperf_max_runs" value="5"/>
+        <alias name="nperf_num_parallel" value="4"/>
+        <alias name="nperf_debug" value="0"/>
+        <alias name="nperf_max_dev" value="20%"/>
+        <alias name="nperf_protocols" value="tcp udp"/>
+        <alias name="mapping_file" value="novirt_ovs_geneve.mapping" />
+        <alias name="net" value="192.168.2"/>
+        <alias name="geneve_net" value="192.168.111"/>
+        <alias name="geneve_net6" value="fc00:0:0:0"/>
+        <alias name="driver" value=""/>
+    </define>
+    <network>
+        <host id="test_host1">
+            <interfaces>
+                <eth id="if1" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                    <addresses>
+                        <address value="{$net}.1/24"/>
+                        <address value="{$net}.2/24"/>
+                        <address value="{$net}.3/24"/>
+                        <address value="{$net}.4/24"/>
+                        <address value="{$net}.5/24"/>
+                        <address value="{$net}.6/24"/>
+                        <address value="{$net}.7/24"/>
+                        <address value="{$net}.8/24"/>
+                        <address value="{$net}.9/24"/>
+                        <address value="{$net}.10/24"/>
+                        <address value="{$net}.11/24"/>
+                        <address value="{$net}.12/24"/>
+                        <address value="{$net}.13/24"/>
+                        <address value="{$net}.14/24"/>
+                        <address value="{$net}.15/24"/>
+                        <address value="{$net}.16/24"/>
+                    </addresses>
+                </eth>
+                <ovs_bridge id="ovs1">
+                    <internal id="int0">
+                        <addresses>
+                            <address value="{$geneve_net}.1/24"/>
+                            <address value="{$geneve_net6}::1/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="5"/>
+                            <option name="name" value="int0"/>
+                        </options>
+                    </internal>
+                    <internal id="int1">
+                        <addresses>
+                            <address value="{$geneve_net}.2/24"/>
+                            <address value="{$geneve_net6}::2/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="6"/>
+                            <option name="name" value="int1"/>
+                        </options>
+                    </internal>
+                    <internal id="int2">
+                        <addresses>
+                            <address value="{$geneve_net}.3/24"/>
+                            <address value="{$geneve_net6}::3/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="7"/>
+                            <option name="name" value="int2"/>
+                        </options>
+                    </internal>
+                    <internal id="int3">
+                        <addresses>
+                            <address value="{$geneve_net}.4/24"/>
+                            <address value="{$geneve_net6}::4/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="8"/>
+                            <option name="name" value="int3"/>
+                        </options>
+                    </internal>
+                    <internal id="int4">
+                        <addresses>
+                            <address value="{$geneve_net}.5/24"/>
+                            <address value="{$geneve_net6}::5/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="9"/>
+                            <option name="name" value="int4"/>
+                        </options>
+                    </internal>
+                    <internal id="int5">
+                        <addresses>
+                            <address value="{$geneve_net}.6/24"/>
+                            <address value="{$geneve_net6}::6/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="10"/>
+                            <option name="name" value="int5"/>
+                        </options>
+                    </internal>
+                    <internal id="int6">
+                        <addresses>
+                            <address value="{$geneve_net}.7/24"/>
+                            <address value="{$geneve_net6}::7/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="11"/>
+                            <option name="name" value="int6"/>
+                        </options>
+                    </internal>
+                    <internal id="int7">
+                        <addresses>
+                            <address value="{$geneve_net}.8/24"/>
+                            <address value="{$geneve_net6}::8/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="12"/>
+                            <option name="name" value="int7"/>
+                        </options>
+                    </internal>
+                    <internal id="int8">
+                        <addresses>
+                            <address value="{$geneve_net}.9/24"/>
+                            <address value="{$geneve_net6}::9/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="13"/>
+                            <option name="name" value="int8"/>
+                        </options>
+                    </internal>
+                    <internal id="int9">
+                        <addresses>
+                            <address value="{$geneve_net}.10/24"/>
+                            <address value="{$geneve_net6}::10/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="14"/>
+                            <option name="name" value="int9"/>
+                        </options>
+                    </internal>
+                    <internal id="int10">
+                        <addresses>
+                            <address value="{$geneve_net}.11/24"/>
+                            <address value="{$geneve_net6}::11/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="15"/>
+                            <option name="name" value="int10"/>
+                        </options>
+                    </internal>
+                    <internal id="int11">
+                        <addresses>
+                            <address value="{$geneve_net}.12/24"/>
+                            <address value="{$geneve_net6}::12/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="16"/>
+                            <option name="name" value="int11"/>
+                        </options>
+                    </internal>
+                    <internal id="int12">
+                        <addresses>
+                            <address value="{$geneve_net}.13/24"/>
+                            <address value="{$geneve_net6}::13/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="17"/>
+                            <option name="name" value="int12"/>
+                        </options>
+                    </internal>
+                    <internal id="int13">
+                        <addresses>
+                            <address value="{$geneve_net}.14/24"/>
+                            <address value="{$geneve_net6}::14/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="18"/>
+                            <option name="name" value="int13"/>
+                        </options>
+                    </internal>
+                    <internal id="int14">
+                        <addresses>
+                            <address value="{$geneve_net}.15/24"/>
+                            <address value="{$geneve_net6}::15/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="19"/>
+                            <option name="name" value="int14"/>
+                        </options>
+                    </internal>
+                    <internal id="int15">
+                        <addresses>
+                            <address value="{$geneve_net}.16/24"/>
+                            <address value="{$geneve_net6}::16/65"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="20"/>
+                            <option name="name" value="int15"/>
+                        </options>
+                    </internal>
+                    <tunnel id="geneve1" type="geneve">
+                        <options>
+                            <option name="name" value="geneve1"/>
+                            <option name="option:remote_ip" value="{$net}.20"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="30"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve2" type="geneve">
+                        <options>
+                            <option name="name" value="geneve2"/>
+                            <option name="option:remote_ip" value="{$net}.21"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="31"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve3" type="geneve">
+                        <options>
+                            <option name="name" value="geneve3"/>
+                            <option name="option:remote_ip" value="{$net}.22"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="32"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve4" type="geneve">
+                        <options>
+                            <option name="name" value="geneve4"/>
+                            <option name="option:remote_ip" value="{$net}.23"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="33"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve5" type="geneve">
+                        <options>
+                            <option name="name" value="geneve5"/>
+                            <option name="option:remote_ip" value="{$net}.24"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="34"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve6" type="geneve">
+                        <options>
+                            <option name="name" value="geneve6"/>
+                            <option name="option:remote_ip" value="{$net}.25"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="35"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve7" type="geneve">
+                        <options>
+                            <option name="name" value="geneve7"/>
+                            <option name="option:remote_ip" value="{$net}.26"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="36"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve8" type="geneve">
+                        <options>
+                            <option name="name" value="geneve8"/>
+                            <option name="option:remote_ip" value="{$net}.27"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="37"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve9" type="geneve">
+                        <options>
+                            <option name="name" value="geneve9"/>
+                            <option name="option:remote_ip" value="{$net}.28"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="38"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve10" type="geneve">
+                        <options>
+                            <option name="name" value="geneve10"/>
+                            <option name="option:remote_ip" value="{$net}.29"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="39"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve11" type="geneve">
+                        <options>
+                            <option name="name" value="geneve11"/>
+                            <option name="option:remote_ip" value="{$net}.30"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="40"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve12" type="geneve">
+                        <options>
+                            <option name="name" value="geneve12"/>
+                            <option name="option:remote_ip" value="{$net}.31"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="41"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve13" type="geneve">
+                        <options>
+                            <option name="name" value="geneve13"/>
+                            <option name="option:remote_ip" value="{$net}.32"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="42"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve14" type="geneve">
+                        <options>
+                            <option name="name" value="geneve14"/>
+                            <option name="option:remote_ip" value="{$net}.33"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="43"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve15" type="geneve">
+                        <options>
+                            <option name="name" value="geneve15"/>
+                            <option name="option:remote_ip" value="{$net}.34"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="44"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve16" type="geneve">
+                        <options>
+                            <option name="name" value="geneve16"/>
+                            <option name="option:remote_ip" value="{$net}.35"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="45"/>
+                        </options>
+                    </tunnel>
+                    <flow_entries>
+                        <entry>table=0,in_port=5,actions=set_field:100->tun_id,output:30</entry>
+                        <entry>table=0,in_port=6,actions=set_field:100->tun_id,output:31</entry>
+                        <entry>table=0,in_port=7,actions=set_field:100->tun_id,output:32</entry>
+                        <entry>table=0,in_port=8,actions=set_field:100->tun_id,output:33</entry>
+                        <entry>table=0,in_port=9,actions=set_field:100->tun_id,output:34</entry>
+                        <entry>table=0,in_port=10,actions=set_field:100->tun_id,output:35</entry>
+                        <entry>table=0,in_port=11,actions=set_field:100->tun_id,output:36</entry>
+                        <entry>table=0,in_port=12,actions=set_field:100->tun_id,output:37</entry>
+                        <entry>table=0,in_port=13,actions=set_field:100->tun_id,output:38</entry>
+                        <entry>table=0,in_port=14,actions=set_field:100->tun_id,output:39</entry>
+                        <entry>table=0,in_port=15,actions=set_field:100->tun_id,output:40</entry>
+                        <entry>table=0,in_port=16,actions=set_field:100->tun_id,output:41</entry>
+                        <entry>table=0,in_port=17,actions=set_field:100->tun_id,output:42</entry>
+                        <entry>table=0,in_port=18,actions=set_field:100->tun_id,output:43</entry>
+                        <entry>table=0,in_port=19,actions=set_field:100->tun_id,output:44</entry>
+                        <entry>table=0,in_port=20,actions=set_field:100->tun_id,output:45</entry>
+                        <entry>table=0,in_port=30,tun_id=100,actions=output:5</entry>
+                        <entry>table=0,in_port=31,tun_id=100,actions=output:6</entry>
+                        <entry>table=0,in_port=32,tun_id=100,actions=output:7</entry>
+                        <entry>table=0,in_port=33,tun_id=100,actions=output:8</entry>
+                        <entry>table=0,in_port=34,tun_id=100,actions=output:9</entry>
+                        <entry>table=0,in_port=35,tun_id=100,actions=output:10</entry>
+                        <entry>table=0,in_port=36,tun_id=100,actions=output:11</entry>
+                        <entry>table=0,in_port=37,tun_id=100,actions=output:12</entry>
+                        <entry>table=0,in_port=38,tun_id=100,actions=output:13</entry>
+                        <entry>table=0,in_port=39,tun_id=100,actions=output:14</entry>
+                        <entry>table=0,in_port=40,tun_id=100,actions=output:15</entry>
+                        <entry>table=0,in_port=41,tun_id=100,actions=output:16</entry>
+                        <entry>table=0,in_port=42,tun_id=100,actions=output:17</entry>
+                        <entry>table=0,in_port=43,tun_id=100,actions=output:18</entry>
+                        <entry>table=0,in_port=44,tun_id=100,actions=output:19</entry>
+                        <entry>table=0,in_port=45,tun_id=100,actions=output:20</entry>
+                        <entry>table=0,priority=100,actions=drop</entry>
+                    </flow_entries>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+        <host id="test_host2">
+            <interfaces>
+                <eth id="if1" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                    <addresses>
+                        <address value="{$net}.20/24"/>
+                        <address value="{$net}.21/24"/>
+                        <address value="{$net}.22/24"/>
+                        <address value="{$net}.23/24"/>
+                        <address value="{$net}.24/24"/>
+                        <address value="{$net}.25/24"/>
+                        <address value="{$net}.26/24"/>
+                        <address value="{$net}.27/24"/>
+                        <address value="{$net}.28/24"/>
+                        <address value="{$net}.29/24"/>
+                        <address value="{$net}.30/24"/>
+                        <address value="{$net}.31/24"/>
+                        <address value="{$net}.32/24"/>
+                        <address value="{$net}.33/24"/>
+                        <address value="{$net}.34/24"/>
+                        <address value="{$net}.35/24"/>
+                    </addresses>
+                </eth>
+                <ovs_bridge id="ovs2">
+                    <internal id="int0">
+                        <options>
+                            <option name="ofport_request" value="5"/>
+                            <option name="name" value="int0"/>
+                        </options>
+                        <addresses>
+                            <address value="{$geneve_net}.20/24"/>
+                            <address value="{$geneve_net6}::20/24"/>
+                        </addresses>
+                    </internal>
+                    <internal id="int1">
+                        <addresses>
+                            <address value="{$geneve_net}.21/24"/>
+                            <address value="{$geneve_net6}::21/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="6"/>
+                            <option name="name" value="int1"/>
+                        </options>
+                    </internal>
+                    <internal id="int2">
+                        <addresses>
+                            <address value="{$geneve_net}.22/24"/>
+                            <address value="{$geneve_net6}::22/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="7"/>
+                            <option name="name" value="int2"/>
+                        </options>
+                    </internal>
+                    <internal id="int3">
+                        <addresses>
+                            <address value="{$geneve_net}.23/24"/>
+                            <address value="{$geneve_net6}::23/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="8"/>
+                            <option name="name" value="int3"/>
+                        </options>
+                    </internal>
+                    <internal id="int4">
+                        <addresses>
+                            <address value="{$geneve_net}.24/24"/>
+                            <address value="{$geneve_net6}::24/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="9"/>
+                            <option name="name" value="int4"/>
+                        </options>
+                    </internal>
+                    <internal id="int5">
+                        <addresses>
+                            <address value="{$geneve_net}.25/24"/>
+                            <address value="{$geneve_net6}::25/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="10"/>
+                            <option name="name" value="int5"/>
+                        </options>
+                    </internal>
+                    <internal id="int6">
+                        <addresses>
+                            <address value="{$geneve_net}.26/24"/>
+                            <address value="{$geneve_net6}::26/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="11"/>
+                            <option name="name" value="int6"/>
+                        </options>
+                    </internal>
+                    <internal id="int7">
+                        <addresses>
+                            <address value="{$geneve_net}.27/24"/>
+                            <address value="{$geneve_net6}::27/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="12"/>
+                            <option name="name" value="int7"/>
+                        </options>
+                    </internal>
+                    <internal id="int8">
+                        <addresses>
+                            <address value="{$geneve_net}.28/24"/>
+                            <address value="{$geneve_net6}::28/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="13"/>
+                            <option name="name" value="int8"/>
+                        </options>
+                    </internal>
+                    <internal id="int9">
+                        <addresses>
+                            <address value="{$geneve_net}.29/24"/>
+                            <address value="{$geneve_net6}::29/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="14"/>
+                            <option name="name" value="int9"/>
+                        </options>
+                    </internal>
+                    <internal id="int10">
+                        <addresses>
+                            <address value="{$geneve_net}.30/24"/>
+                            <address value="{$geneve_net6}::30/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="15"/>
+                            <option name="name" value="int10"/>
+                        </options>
+                    </internal>
+                    <internal id="int11">
+                        <addresses>
+                            <address value="{$geneve_net}.31/24"/>
+                            <address value="{$geneve_net6}::31/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="16"/>
+                            <option name="name" value="int11"/>
+                        </options>
+                    </internal>
+                    <internal id="int12">
+                        <addresses>
+                            <address value="{$geneve_net}.32/24"/>
+                            <address value="{$geneve_net6}::32/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="17"/>
+                            <option name="name" value="int12"/>
+                        </options>
+                    </internal>
+                    <internal id="int13">
+                        <addresses>
+                            <address value="{$geneve_net}.33/24"/>
+                            <address value="{$geneve_net6}::33/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="18"/>
+                            <option name="name" value="int13"/>
+                        </options>
+                    </internal>
+                    <internal id="int14">
+                        <addresses>
+                            <address value="{$geneve_net}.34/24"/>
+                            <address value="{$geneve_net6}::34/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="19"/>
+                            <option name="name" value="int14"/>
+                        </options>
+                    </internal>
+                    <internal id="int15">
+                        <addresses>
+                            <address value="{$geneve_net}.35/24"/>
+                            <address value="{$geneve_net6}::35/64"/>
+                        </addresses>
+                        <options>
+                            <option name="ofport_request" value="20"/>
+                            <option name="name" value="int15"/>
+                        </options>
+                    </internal>
+                    <tunnel id="geneve1" type="geneve">
+                        <options>
+                            <option name="name" value="geneve1"/>
+                            <option name="option:remote_ip" value="{$net}.1"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="30"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve2" type="geneve">
+                        <options>
+                            <option name="name" value="geneve2"/>
+                            <option name="option:remote_ip" value="{$net}.2"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="31"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve3" type="geneve">
+                        <options>
+                            <option name="name" value="geneve3"/>
+                            <option name="option:remote_ip" value="{$net}.3"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="32"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve4" type="geneve">
+                        <options>
+                            <option name="name" value="geneve4"/>
+                            <option name="option:remote_ip" value="{$net}.4"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="33"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve5" type="geneve">
+                        <options>
+                            <option name="name" value="geneve5"/>
+                            <option name="option:remote_ip" value="{$net}.5"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="34"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve6" type="geneve">
+                        <options>
+                            <option name="name" value="geneve6"/>
+                            <option name="option:remote_ip" value="{$net}.6"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="35"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve7" type="geneve">
+                        <options>
+                            <option name="name" value="geneve7"/>
+                            <option name="option:remote_ip" value="{$net}.7"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="36"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve8" type="geneve">
+                        <options>
+                            <option name="name" value="geneve8"/>
+                            <option name="option:remote_ip" value="{$net}.8"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="37"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve9" type="geneve">
+                        <options>
+                            <option name="name" value="geneve9"/>
+                            <option name="option:remote_ip" value="{$net}.9"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="38"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve10" type="geneve">
+                        <options>
+                            <option name="name" value="geneve10"/>
+                            <option name="option:remote_ip" value="{$net}.10"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="39"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve11" type="geneve">
+                        <options>
+                            <option name="name" value="geneve11"/>
+                            <option name="option:remote_ip" value="{$net}.11"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="40"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve12" type="geneve">
+                        <options>
+                            <option name="name" value="geneve12"/>
+                            <option name="option:remote_ip" value="{$net}.12"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="41"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve13" type="geneve">
+                        <options>
+                            <option name="name" value="geneve13"/>
+                            <option name="option:remote_ip" value="{$net}.13"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="42"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve14" type="geneve">
+                        <options>
+                            <option name="name" value="geneve14"/>
+                            <option name="option:remote_ip" value="{$net}.14"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="43"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve15" type="geneve">
+                        <options>
+                            <option name="name" value="geneve15"/>
+                            <option name="option:remote_ip" value="{$net}.15"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="44"/>
+                        </options>
+                    </tunnel>
+                    <tunnel id="geneve16" type="geneve">
+                        <options>
+                            <option name="name" value="geneve16"/>
+                            <option name="option:remote_ip" value="{$net}.16"/>
+                            <option name="option:key" value="flow"/>
+                            <option name="ofport_request" value="45"/>
+                        </options>
+                    </tunnel>
+                    <flow_entries>
+                        <entry>table=0,in_port=5,actions=set_field:100->tun_id,output:30</entry>
+                        <entry>table=0,in_port=6,actions=set_field:100->tun_id,output:31</entry>
+                        <entry>table=0,in_port=7,actions=set_field:100->tun_id,output:32</entry>
+                        <entry>table=0,in_port=8,actions=set_field:100->tun_id,output:33</entry>
+                        <entry>table=0,in_port=9,actions=set_field:100->tun_id,output:34</entry>
+                        <entry>table=0,in_port=10,actions=set_field:100->tun_id,output:35</entry>
+                        <entry>table=0,in_port=11,actions=set_field:100->tun_id,output:36</entry>
+                        <entry>table=0,in_port=12,actions=set_field:100->tun_id,output:37</entry>
+                        <entry>table=0,in_port=13,actions=set_field:100->tun_id,output:38</entry>
+                        <entry>table=0,in_port=14,actions=set_field:100->tun_id,output:39</entry>
+                        <entry>table=0,in_port=15,actions=set_field:100->tun_id,output:40</entry>
+                        <entry>table=0,in_port=16,actions=set_field:100->tun_id,output:41</entry>
+                        <entry>table=0,in_port=17,actions=set_field:100->tun_id,output:42</entry>
+                        <entry>table=0,in_port=18,actions=set_field:100->tun_id,output:43</entry>
+                        <entry>table=0,in_port=19,actions=set_field:100->tun_id,output:44</entry>
+                        <entry>table=0,in_port=20,actions=set_field:100->tun_id,output:45</entry>
+                        <entry>table=0,in_port=30,tun_id=100,actions=output:5</entry>
+                        <entry>table=0,in_port=31,tun_id=100,actions=output:6</entry>
+                        <entry>table=0,in_port=32,tun_id=100,actions=output:7</entry>
+                        <entry>table=0,in_port=33,tun_id=100,actions=output:8</entry>
+                        <entry>table=0,in_port=34,tun_id=100,actions=output:9</entry>
+                        <entry>table=0,in_port=35,tun_id=100,actions=output:10</entry>
+                        <entry>table=0,in_port=36,tun_id=100,actions=output:11</entry>
+                        <entry>table=0,in_port=37,tun_id=100,actions=output:12</entry>
+                        <entry>table=0,in_port=38,tun_id=100,actions=output:13</entry>
+                        <entry>table=0,in_port=39,tun_id=100,actions=output:14</entry>
+                        <entry>table=0,in_port=40,tun_id=100,actions=output:15</entry>
+                        <entry>table=0,in_port=41,tun_id=100,actions=output:16</entry>
+                        <entry>table=0,in_port=42,tun_id=100,actions=output:17</entry>
+                        <entry>table=0,in_port=43,tun_id=100,actions=output:18</entry>
+                        <entry>table=0,in_port=44,tun_id=100,actions=output:19</entry>
+                        <entry>table=0,in_port=45,tun_id=100,actions=output:20</entry>
+                        <entry>table=0,priority=100,actions=drop</entry>
+                    </flow_entries>
+                </ovs_bridge>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="ovs_tunnels.py"/>
+</lnstrecipe>
