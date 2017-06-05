@@ -337,8 +337,8 @@ class Netperf(TestGeneric):
             threshold_unit_type = "bps"
         elif (self._testname == "TCP_RR" or self._testname == "UDP_RR" or
               self._testname == "SCTP_RR"):
-            pattern_rr =  "(\d*(\.\d*)?)\s*trans\.\/sec"
-            r1 = re.search(pattern_rr, threshold.lower())
+            pattern_rr =  "(\d*(\.\d*)?)\s*Trans\/sec"
+            r1 = re.search(pattern_rr, threshold)
             if r1 is None:
                 res_data["msg"] = "Invalid unit type in the "\
                                   "throughput option"
