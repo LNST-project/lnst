@@ -303,10 +303,7 @@ class Netperf(TestGeneric):
         # group(1) ... threshold value
         # group(3) ... threshold units
         # group(4) ... bytes/bits
-        if (self._testname == "TCP_STREAM" or
-            self._testname == "UDP_STREAM" or
-            self._testname == "SCTP_STREAM" or
-            self._testname == "SCTP_STREAM_MANY"):
+        if "STREAM" in self._testname:
             pattern_stream = "(\d*(\.\d*)?)\s*([ kmgtKMGT])(bits|bytes)\/sec"
             r1 = re.search(pattern_stream, threshold)
             if r1 is None:
@@ -335,8 +332,7 @@ class Netperf(TestGeneric):
             if threshold_unit_type == "bytes":
                 threshold_rate *= 8
             threshold_unit_type = "bps"
-        elif (self._testname == "TCP_RR" or self._testname == "UDP_RR" or
-              self._testname == "SCTP_RR"):
+        elif "RR" in self._testname:
             pattern_rr =  "(\d*(\.\d*)?)\s*Trans\/sec"
             r1 = re.search(pattern_rr, threshold)
             if r1 is None:
