@@ -71,9 +71,9 @@ class Netperf(TestGeneric):
             # for request response test transactions per seconds are used as unit
             if "RR" in self._testname:
                 cmd = "netperf -H %s -f x" % self._netperf_server
-            # else 10^0bits/s are used as unit
+            # else 10^3bits/s are used as unit
             else:
-                cmd = "netperf -H %s -f b" % self._netperf_server
+                cmd = "netperf -H %s -f k" % self._netperf_server
             if self._is_omni():
                 # -P 0 disables banner header of output
                 cmd += " -P 0"
@@ -209,12 +209,13 @@ class Netperf(TestGeneric):
         else:
             rate = float(throughput.group(1))
 
-        if throughput_units == "10^0bits/s":
+        if throughput_units == "10^3bits/s":
             res_val["unit"] = "bps"
+            res_val["rate"] = rate*1000
         elif throughput_units == "Trans/s":
             res_val["unit"] = "tps"
+            res_val["rate"] = rate
 
-        res_val["rate"] = rate
 
         if self._cpu_util is not None:
             if self._cpu_util == "local" or self._cpu_util == "both":
@@ -249,7 +250,7 @@ class Netperf(TestGeneric):
                 res_val["LOCAL_CPU_UTIL"] = float(r2.group(2))
                 res_val["REMOTE_CPU_UTIL"] = float(r2.group(3))
 
-        res_val["rate"] = rate
+        res_val["rate"] = rate*1000
         res_val["unit"] = "bps"
 
         return res_val
