@@ -100,7 +100,7 @@ class Netperf(TestGeneric):
                     supported_tests = ', '.join(self.supported_tests)
                     logging.warning("Only %s tests are now officialy supported "
                     "by LNST. You can use other tests, but test result may not "
-                    "be correct." % supported_test)
+                    "be correct." % supported_tests)
                 cmd += " -t %s" % self._testname
 
             if self._confidence is not None and self._num_parallel <= 1:
