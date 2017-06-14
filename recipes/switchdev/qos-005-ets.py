@@ -61,7 +61,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.lldp_ets_up2tc_set(sw_if2, [(p1, p1), (p2, p2)])
     tl.lldp_ets_tsa_set(sw_if2, [(p1, "ets"), (p2, "ets")],
                         [(p1, bw1), (p2, bw2)])
-    tl.lldp_pfc_set(sw_if1, prio=[], willing=False)
+    tl.lldp_pfc_set(sw_if2, prio=[], willing=False)
 
     # Make sure the flows are also separated at ingress.
     sw_if1.enable_lldp()
