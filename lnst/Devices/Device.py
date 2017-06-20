@@ -14,6 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import re
 import ethtool
 from abc import ABCMeta
+from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted
@@ -156,8 +157,6 @@ class Device(object):
         """
         return self._nl_msg['ifi_type']
 
-    #TODO add ifi_flags
-
     #TODO add setter
     @property
     def name(self):
@@ -181,12 +180,12 @@ class Device(object):
     def state(self):
         """state attribute
 
-        Returns string state of the device as reported by the kernel.
+        Returns list of strings representing the current state of the device
+        as reported by the kernel.
         """
-        #TODO check flags for admin up and lower up!!!
-        #TODO or expand this to check all possibilities?
-        #TODO also, add passive wait until lower up, with timeout
-        return self._nl_msg.get_attr("IFLA_OPERSTATE")
+        flags = self._nl_msg["flags"]
+        return [ifinfmsg.IFF_VALUES[i][4:].lower() for i in ifinfmsg.IFF_VALUES if flags & i]
+        #TODO add passive wait until lower up, with timeout
 
     @property
     def ips(self):
