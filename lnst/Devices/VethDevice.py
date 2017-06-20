@@ -30,7 +30,7 @@ class VethDevice(SoftDevice):
         if self._peer_name is None:
             self._peer_name = ifmanager.assign_name("peer_"+self._name_template)
 
-    def create(self):
+    def _create(self):
         exec_cmd("ip link add {name} type veth peer name {peer}".
                  format(name=self.name,
                         peer=self._peer_name))
@@ -49,7 +49,7 @@ class PairedVethDevice(VethDevice):
 
         self._peer_if_id = kwargs["peer_if_id"]
 
-    def create(self):
+    def _create(self):
         peer = self._if_manager.get_device(self._peer_if_id)
         me = peer.peer
         self._init_netlink(me._nl_msg)

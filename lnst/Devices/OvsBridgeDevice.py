@@ -32,10 +32,10 @@ class OvsBridgeDevice(SoftDevice):
 
             cls._type_initialized = True
 
-    def create(self):
+    def _create(self):
         exec_cmd("ovs-vsctl add-br %s" % self.name)
 
-    def destroy(self):
+    def _destroy(self):
         exec_cmd("ovs-vsctl del-br %s" % self.name)
 
     def port_add(self, dev, **kwargs):

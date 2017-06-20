@@ -16,7 +16,7 @@ from lnst.Devices.MasterDevice import MasterDevice
 class BondDevice(MasterDevice):
     _name_template = "t_bond"
 
-    def create(self):
+    def _create(self):
         exec_cmd("ip link add %s type bond" % self.name)
 
     def _get_bond_dir(self):

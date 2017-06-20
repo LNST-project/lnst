@@ -39,7 +39,7 @@ class TeamDevice(MasterDevice):
     def dbus(self):
         return self._dbus
 
-    def create(self):
+    def _create(self):
         teamd_config = prepare_json_str(self.config)
 
         exec_cmd("teamd -r -d -c \"%s\" -t %s %s" %\
@@ -47,7 +47,7 @@ class TeamDevice(MasterDevice):
                      self.name,
                      " -D" if self.dbus else ""))
 
-    def destroy(self):
+    def _destroy(self):
         exec_cmd("teamd -k -t %s" % self.name)
 
     def slave_add(self, dev, port_config=None):

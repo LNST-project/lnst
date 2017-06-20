@@ -229,7 +229,7 @@ class SlaveMethods:
         devices = self._if_manager.get_devices()
         for dev in devices:
             try:
-                dev.destroy()
+                dev._destroy()
             except DeviceDeleted:
                 pass
             self._if_manager.rescan_devices()
@@ -626,7 +626,7 @@ class SlaveMethods:
                 self._server_handler.clear_netns_connections()
 
                 self._if_manager.reconnect_netlink()
-                self._if_manager.clear_if_mapping()
+                # self._if_manager.clear_if_mapping()
                 self._server_handler.add_connection('netlink',
                                             self._if_manager.get_nl_socket())
 
@@ -819,11 +819,13 @@ class ServerHandler(ConnectionHandler):
 
     def _update_c_dev(self):
         if self._c_dev:
-            self._c_dev.enable()
+            self._c_dev._enable()
             self._c_dev = None
 
-        if self._if_manager is not None:
-            ctl_socket = self.get_ctl_sock()
+
+        ctl_socket = self.get_ctl_sock()
+        if isinstance(ctl_socket, SlaveSecSocket) and\
+           self._if_manager is not None:
             ctl_addr = ctl_socket._socket.getsockname()[0]
             matched_dev = None
             for dev in self._if_manager.get_devices():
@@ -834,7 +836,7 @@ class ServerHandler(ConnectionHandler):
                 if matched_dev:
                     break
             self._c_dev = matched_dev
-            matched_dev.disable()
+            matched_dev._disable()
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
@@ -851,9 +853,9 @@ class ServerHandler(ConnectionHandler):
         return self._c_socket
 
     def get_ctl_sock(self):
-        if self._c_socket != None:
+        try:
             return self._c_socket[0]
-        else:
+        except:
             return None
 
     def set_ctl_sock(self, sock):
@@ -873,7 +875,7 @@ class ServerHandler(ConnectionHandler):
         self._c_socket = None
 
         if self._c_dev:
-            self._c_dev.enable()
+            self._c_dev._enable()
             self._c_dev = None
 
     def check_connections(self):

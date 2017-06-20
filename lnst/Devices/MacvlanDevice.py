@@ -23,7 +23,7 @@ class MacvlanDevice(SoftDevice):
         self._mode = kwargs.get("mode", None)
         self._hwaddr = kwargs.get("hwaddr", None)
 
-    def create(self):
+    def _create(self):
         create_cmd = "ip link add link {} {}".format(self._real_dev.name,
                                                      self.name)
 

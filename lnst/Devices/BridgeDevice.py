@@ -16,7 +16,7 @@ from lnst.Devices.MasterDevice import MasterDevice
 class BridgeDevice(MasterDevice):
     _name_template = "t_br"
 
-    def create(self):
+    def _create(self):
         exec_cmd("ip link add dev {} type bridge".format(self._name))
 
     def _get_bridge_dir(self):

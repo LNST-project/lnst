@@ -30,6 +30,7 @@ class RemoteDevice(object):
         self.__dev_cls = dev_cls
         self.__dev_args = args
         self.__dev_kwargs = kwargs
+        self.__netns = None
 
         self.host = None
         self.if_index = None
@@ -50,6 +51,14 @@ class RemoteDevice(object):
     def _get_dev_cls(self):
         return self._dev_cls
 
+    @property
+    def netns(self):
+        return self.__netns
+
+    @netns.setter
+    def netns(self, value):
+        self.__netns = value
+
     def __getattr__(self, name):
         attr = getattr(self._dev_cls, name)
 
@@ -59,10 +68,11 @@ class RemoteDevice(object):
         if callable(attr):
             def dev_method(*args, **kwargs):
                 return self.host.rpc_call("dev_method", self.if_index,
-                                          name, args, kwargs)
+                                          name, args, kwargs, netns=self.netns)
             return dev_method
         else:
-            return self.host.rpc_call("dev_attr", self.if_index, name)
+            return self.host.rpc_call("dev_attr", self.if_index, name,
+                                      netns=self.netns)
 
     def __iter__(self):
         for x in dir(self._dev_cls):
