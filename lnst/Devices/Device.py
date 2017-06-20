@@ -147,10 +147,11 @@ class Device(object):
                 self._ip_addrs.remove(addr)
 
     @property
-    def ifi_type(self): #TODO delete?
-        """ifi_type attribute
+    def link_header_type(self):
+        """link_header_type attribute
 
-        Returns the integer type of the device as reported by the kernel.
+        Returns the integer type of the link layer header as reported by the
+        kernel. See ARPHRD constants in /usr/include/linux/if_arp.h.
         """
         return self._nl_msg['ifi_type']
 
@@ -237,7 +238,7 @@ class Device(object):
 
         Returns string name of the device driver based on an ethtool -i call
         """
-        if self.ifi_type == 772:  #loopback ifi type
+        if self.link_header_type == 772:  #loopback ifi type
             return 'loopback'
         out, _ = exec_cmd("ethtool -i %s" % self.name, False, False, False)
         match = re.search("^driver: (.*)$", out, re.MULTILINE)
@@ -344,7 +345,7 @@ class Device(object):
                    "hwaddr": self.hwaddr,
                    "name": self.name,
                    "ip_addrs": self.ips,
-                   "ifi_type": self.ifi_type,
+                   "link_header_type": self.link_header_type,
                    "state": self.state,
                    "master": self.master,
                    "mtu": self.mtu,
