@@ -12,6 +12,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import re
+import ethtool
 from abc import ABCMeta
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
@@ -155,7 +156,6 @@ class Device(object):
         """
         return self._nl_msg['ifi_type']
 
-    #TODO jbenc | interface type: IFLA_LINKINFO -> IFLA_INFO_KIND
     #TODO add ifi_flags
 
     #TODO add setter
@@ -236,15 +236,22 @@ class Device(object):
     def driver(self):
         """driver attribute
 
-        Returns string name of the device driver based on an ethtool -i call
+        Returns string name of the device driver as reported by the kernel.
+        Tries several methods to obtain the name.
         """
-        if self.link_header_type == 772:  #loopback ifi type
+        if self.link_header_type == 772:  # loopback header type
             return 'loopback'
-        out, _ = exec_cmd("ethtool -i %s" % self.name, False, False, False)
-        match = re.search("^driver: (.*)$", out, re.MULTILINE)
-        if match is not None:
-            return match.group(1)
-        else:
+        linkinfo = self._nl_msg.get_attr("IFLA_LINKINFO")
+        if linkinfo:
+            result = linkinfo.get_attr("IFLA_INFO_KIND")
+            if result and result != "unknown":
+                # pyroute2 tries to be too clever and second guesses the
+                # driver; when it fails, it fills in "unknown". We need to
+                # ignore it.
+                return result
+        try:
+            return ethtool.get_module(self.name)
+        except IOError:
             return None
 
     @property
