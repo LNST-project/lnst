@@ -89,7 +89,12 @@ class InterfaceManager(object):
                 self._server_handler.send_data_to_ctl(update_msg)
             else:
                 self._devices[dev['index']]._update_netlink(dev['netlink_msg'])
-                devices_to_remove.remove(dev['index'])
+                try:
+                    devices_to_remove.remove(dev['index'])
+                except ValueError:
+                    # we may have multiple updates for the same device, it's
+                    # okay not to find the device in devices_to_remove
+                    pass
 
             self._devices[dev['index']]._clear_ips()
             for addr_msg in dev['ip_addrs']:
