@@ -112,10 +112,7 @@ class Job(object):
 
         Not relevant yet as network namespaces aren't supported yet.
         """
-        if self._cmd is not None:
-            return self._cmd["netns"]
-        else:
-            return None
+        return self._netns
 
     @property
     def id(self):
