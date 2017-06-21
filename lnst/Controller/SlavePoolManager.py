@@ -28,7 +28,7 @@ from lnst.Common.Utils import check_process_running
 class PoolManagerError(ControllerError):
     pass
 
-class SlavePoolManager:
+class SlavePoolManager(object):
     """
     This class is responsible for managing test machines that
     are available at the controler and can be used for testing.
