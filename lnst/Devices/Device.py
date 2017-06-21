@@ -66,14 +66,9 @@ class Device(object):
     def _destroy(self):
         """Destroys the netdevice of the corresponding type
 
-        For the basic eth device it calls the destroy method of it's master
-        device (if there is one). Flushes the configured IP addresses and sets
-        the device 'down'.
+        For the basic eth device it just cleans up its configuration.
         """
-        if self.master:
-            self.master._destroy()
-        self.ip_flush()
-        self.down()
+        self.cleanup()
         return True
 
     def _enable(self):
@@ -115,6 +110,7 @@ class Device(object):
         self.if_index = nl_msg['index']
 
         self._nl_msg = nl_msg
+        self._store_cleanup_data()
 
     def _update_netlink(self, nl_msg):
         if self.if_index != nl_msg['index']:
@@ -148,6 +144,24 @@ class Device(object):
 
             if addr in self._ip_addrs:
                 self._ip_addrs.remove(addr)
+
+    def _store_cleanup_data(self):
+        """Stores initial configuration for later cleanup"""
+        self._orig_mtu = self.mtu
+
+    def cleanup(self):
+        """Cleans up the device configuration
+
+        Flushes the entire device configuration as appropriate for the given
+        device. That includes flushing IP addresses, resetting MTU to its
+        original value, removing the device from bridges, etc. Finally, the
+        device is set 'down'.
+        """
+        if self.master:
+            self.master = None
+        self.mtu = self._orig_mtu
+        self.ip_flush()
+        self.down()
 
     @property
     def link_header_type(self):
