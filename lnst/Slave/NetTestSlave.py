@@ -920,6 +920,7 @@ class ServerHandler(ConnectionHandler):
                 data = {"type": "from_netns",
                         "netns": self._netns,
                         "data": data}
+            data = device_to_deviceref(data)
             return send_data(self._c_socket[0], data)
         else:
             return False
