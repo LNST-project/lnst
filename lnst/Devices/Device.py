@@ -320,6 +320,7 @@ class Device(object):
         if addr not in self.ips:
             exec_cmd("ip addr add %s/%d dev %s" % (addr, addr.prefixlen,
                                                    self.name))
+        return ip
 
     def ip_del(self, addr):
         """remove an ip address
