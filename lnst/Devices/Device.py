@@ -237,11 +237,16 @@ class Device(object):
             dev -- accepts a Device object of the master object.
                 When None, removes the current master from the Device."""
         if isinstance(dev, Device):
-            exec_cmd("ip link set %s master %s" % (self.name, dev.name))
+            master_idx = dev.if_index
         elif dev is None:
-            exec_cmd("ip link set %s nomaster" % self.name)
+            master_idx = 0
         else:
             raise DeviceError("Invalid dev argument.")
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("set", index=self.if_index, master=master_idx)
+            except pyroute2.netlink.NetlinkError:
+                raise DeviceConfigValueError("Invalid master interface")
 
     @property
     def driver(self):
