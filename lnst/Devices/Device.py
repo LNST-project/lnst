@@ -71,7 +71,7 @@ class Device(object):
         the device 'down'.
         """
         if self.master:
-            self.master.destroy()
+            self.master._destroy()
         self.ip_flush()
         self.down()
         return True
