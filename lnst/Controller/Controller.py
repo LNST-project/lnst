@@ -16,7 +16,7 @@ import os
 import sys
 import datetime
 import logging
-from lnst.Common.Logs import LoggingCtl
+from lnst.Common.Logs import LoggingCtl, log_exc_traceback
 from lnst.Common.NetUtils import MacPool
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Utils import mkdir_p
@@ -120,8 +120,9 @@ class Controller(object):
             try:
                 recipe._set_hosts(self._hosts)
                 recipe.test()
-            except LnstError as exc:
+            except Exception as exc:
                 logging.error("Recipe execution terminated by unexpected exception")
+                log_exc_traceback()
                 raise
             finally:
                 recipe._set_hosts(None)
