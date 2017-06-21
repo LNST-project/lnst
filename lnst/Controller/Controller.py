@@ -137,11 +137,12 @@ class Controller(object):
         for m_id, m in match["machines"].items():
             machine = self._machines[m_id] = pool[m["target"]]
 
+            setattr(self._hosts, m_id, Host(machine))
+            host = getattr(self._hosts, m_id)
+
             machine.set_id(m_id)
             self._prepare_machine(machine)
 
-            setattr(self._hosts, m_id, Host(machine))
-            host = getattr(self._hosts, m_id)
             for if_id, i in m["interfaces"].items():
                 host._map_device(if_id, i)
 
