@@ -174,6 +174,10 @@ class SlaveMethods:
         dev = self._if_manager.get_device(if_index)
         return getattr(dev, name)
 
+    def dev_set_attr(self, if_index, name, value):
+        dev = self._if_manager.get_device(if_index)
+        return setattr(dev, name, value)
+
     def get_devices(self):
         self._if_manager.rescan_devices()
         devices = self._if_manager.get_devices()

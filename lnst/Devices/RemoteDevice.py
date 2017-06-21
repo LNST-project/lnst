@@ -35,6 +35,7 @@ class RemoteDevice(object):
         self.host = None
         self.if_index = None
         self.deleted = False
+        self._inited = True
 
     @property
     def _dev_cls(self):
@@ -60,6 +61,9 @@ class RemoteDevice(object):
         self.__netns = value
 
     def __getattr__(self, name):
+        if name == "_inited":
+            return False
+
         attr = getattr(self._dev_cls, name)
 
         if self.deleted:
@@ -74,6 +78,17 @@ class RemoteDevice(object):
         else:
             return self.host.rpc_call("dev_attr", self.if_index, name,
                                       netns=self.netns.nsname)
+
+    def __setattr__(self, name, value):
+        if not self._inited:
+            return super(RemoteDevice, self).__setattr__(name, value)
+
+        try:
+            getattr(self._dev_cls, name)
+            return self.host.rpc_call("dev_set_attr", self.if_index, name, value,
+                                      netns=self.netns)
+        except AttributeError:
+            return super(RemoteDevice, self).__setattr__(name, value)
 
     def __iter__(self):
         for x in dir(self._dev_cls):
