@@ -20,3 +20,9 @@ class DeviceDeleted(DeviceError):
 
 class DeviceNotFound(DeviceError):
     pass
+
+class DeviceConfigError(DeviceError):
+    pass
+
+class DeviceConfigValueError(DeviceConfigError):
+    pass

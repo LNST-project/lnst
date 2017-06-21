@@ -14,10 +14,11 @@ olichtne@redhat.com (Ondrej Lichtner)
 import re
 import ethtool
 from abc import ABCMeta
+import pyroute2
 from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Common.DeviceError import DeviceError, DeviceDeleted
+from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceConfigValueError
 from lnst.Common.IpAddress import IpAddress
 
 try:
@@ -195,14 +196,25 @@ class Device(object):
         """
         return self._ip_addrs
 
-    #TODO add setter
     @property
     def mtu(self):
         """mtu attribute
 
-        Returns integer mtu as reported by the kernel.
+        Returns integer MTU as reported by the kernel.
         """
         return self._nl_msg.get_attr("IFLA_MTU")
+
+    @mtu.setter
+    def mtu(self, value):
+        """set MTU of the interface
+
+        Args:
+            value -- the new MTU."""
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("set", index=self.if_index, mtu=value)
+            except pyroute2.netlink.NetlinkError:
+                raise DeviceConfigValueError("Invalid MTU value")
 
     @property
     def master(self):
