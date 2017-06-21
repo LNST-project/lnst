@@ -80,10 +80,15 @@ class Machine(object):
         self._device_database = {}
         self._tmp_device_database = []
 
+        self._root_ns = None
+
         self._init_connection()
 
     def set_id(self, new_id):
         self._id = new_id
+
+    def set_root_ns(self, ns):
+        self._root_ns = ns
 
     def get_id(self):
         return self._id
@@ -102,16 +107,22 @@ class Machine(object):
 
     def add_tmp_device(self, dev):
         self._tmp_device_database.append(dev)
+        dev.host = self
 
-    def create_remote_device(self, dev):
+    def remote_device_create(self, dev, netns=None):
         dev_clsname = dev._dev_cls.__name__
         dev_args = dev._dev_args
         dev_kwargs = dev._dev_kwargs
         ret = self.rpc_call("create_device", clsname=dev_clsname,
                                              args=dev_args,
-                                             kwargs=dev_kwargs)
+                                             kwargs=dev_kwargs,
+                                             netns=netns)
+        dev._host = self
         dev.if_index = ret["if_index"]
         self._device_database[ret["if_index"]] = dev
+
+    def remote_device_set_netns(self, dev, dst, src):
+        self.rpc_call("set_dev_netns", dev, dst, netns=src)
 
     def device_created(self, dev_data):
         if_index = dev_data["if_index"]
@@ -127,6 +138,7 @@ class Machine(object):
                 new_dev = RemoteDevice(Device)
                 new_dev.host = self
                 new_dev.if_index = if_index
+                new_dev.netns = self._root_ns
             else:
                 self._tmp_device_database.remove(new_dev)
 
@@ -236,6 +248,7 @@ class Machine(object):
             remote_dev = RemoteDevice(Device)
             remote_dev.host = self
             remote_dev.if_index = if_index
+            remote_dev.netns = self._root_ns
 
             self._device_database[if_index] = remote_dev
 
@@ -269,7 +282,10 @@ class Machine(object):
             return True
 
     def cleanup_devices(self):
+        for netns in self._namespaces:
+            self.rpc_call("destroy_devices", netns=netns)
         self.rpc_call("destroy_devices")
+
         for dev in self._device_database.values():
             if isinstance(dev, VirtualDevice):
                 dev.destroy()
@@ -301,13 +317,14 @@ class Machine(object):
                               # (iface.get_netns(), iface.get_host(), iface.get_id(),
                               # stats["tx_bytes"], stats["tx_packets"], stats["tx_dropped"]))
 
-            self.rpc_call("kill_jobs")
+
             for netns in self._namespaces:
                 self.rpc_call("kill_jobs", netns=netns)
+            self.rpc_call("kill_jobs")
 
             self.restore_system_config()
             self.cleanup_devices()
-            # self.del_namespaces()
+            self.del_namespaces()
             # self.restore_nm_option()
             self.rpc_call("bye")
         except:
@@ -360,7 +377,7 @@ class Machine(object):
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
-        return self.rpc_call("run_job", job._to_dict(), netns=job._netns)
+        return self.rpc_call("run_job", job._to_dict(), netns=job.netns)
 
     def wait_for_job(self, job, timeout):
         res = True
@@ -542,18 +559,18 @@ class Machine(object):
         return "[Machine hostname(%s) libvirt_domain(%s) interfaces(%d)]" % \
                (self._hostname, self._libvirt_domain, len(self._interfaces))
 
-    # def add_netns(self, netns):
-        # self._namespaces.append(netns)
-        # return self._rpc_call("add_namespace", netns)
+    def add_netns(self, netns):
+        self._namespaces.append(netns)
+        return self.rpc_call("add_namespace", netns)
 
-    # def del_netns(self, netns):
-        # return self._rpc_call("del_namespace", netns)
+    def del_netns(self, netns):
+        return self.rpc_call("del_namespace", netns)
 
-    # def del_namespaces(self):
-        # for netns in self._namespaces:
-            # self.del_netns(netns)
-        # self._namespaces = []
-        # return True
+    def del_namespaces(self):
+        for netns in self._namespaces:
+            self.del_netns(netns)
+        self._namespaces = []
+        return True
 
     def get_security(self):
         return self._security
