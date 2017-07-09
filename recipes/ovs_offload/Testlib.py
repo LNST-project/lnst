@@ -38,7 +38,7 @@ class Testlib:
             dev = nic
 
         # tc output
-        cmd = host.run("tc -s filter show dev %s parent ffff:" % dev)
+        cmd = host.run("tc -s filter show dev %s ingress" % dev)
         out = cmd.out().strip()
 
         if not out:
