@@ -49,7 +49,7 @@ sctp_default_msg_size = "16K"
 if offloads_alias is not None:
     offloads, offload_settings = parse_offloads(offloads_alias)
 else:
-    offloads = ["gro", "gso", "tso", "tx"]
+    offloads = ["gro", "gso", "tso", "tx", "rx"]
     offload_settings = [ [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
                          [("gro", "off"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "on")],
                          [("gro", "on"), ("gso", "off"),  ("tso", "off"), ("tx", "on"), ("rx", "on")],
