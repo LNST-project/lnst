@@ -42,7 +42,12 @@ class PerfRepoMapping(object):
         for line in lines:
             match = line_re.match(line)
             if match is not None and len(match.groups()) == 2:
-                res_dict[match.group(1)] = match.group(2)
+                h = match.group(1)
+                if h in res_dict:
+                    logging.warn("Duplicate entry found for hash: %s\n"
+                                 "\t %s = %s (previous)\n"
+                                 "\t %s (new)" % (h, h, res_dict[h], line))
+                res_dict[h] = match.group(2)
             else:
                 logging.warn("Skipping mapping line, invalid format:\n%s" %line)
         self._mapping = res_dict
