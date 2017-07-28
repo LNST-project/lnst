@@ -86,6 +86,7 @@ class IpParam(Param):
         elif isinstance(value, str):
             self._val = IpAddress(value)
         elif isinstance(value, Device):
+            #TODO if no IpAddress available give a better exception
             self.val = value.ips[0]
         else:
             raise ParamError("Value must be a BaseIpAddress, string or Device object."

@@ -27,6 +27,7 @@ except ImportError:
     from pyroute2.iproute import RTM_NEWADDR
     from pyroute2.iproute import RTM_DELADDR
 
+#TODO check string parameter values
 class Device(object):
     """The base Device class
 
@@ -42,7 +43,7 @@ class Device(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, if_manager):
-        self.if_index = None
+        self.if_index = None #TODO ifindex
         self._nl_msg = None
         self._devlink = None
         self._if_manager = if_manager
@@ -50,7 +51,6 @@ class Device(object):
         self._deleted = False
 
         self._ip_addrs = []
-        # TODO self._netns = None ???
 
     def create(self):
         """Creates a new netdevice of the corresponding type
@@ -147,13 +147,17 @@ class Device(object):
                 self._ip_addrs.remove(addr)
 
     @property
-    def ifi_type(self):
+    def ifi_type(self): #TODO delete?
         """ifi_type attribute
 
         Returns the integer type of the device as reported by the kernel.
         """
         return self._nl_msg['ifi_type']
 
+    #TODO jbenc | interface type: IFLA_LINKINFO -> IFLA_INFO_KIND
+    #TODO add ifi_flags
+
+    #TODO add setter
     @property
     def name(self):
         """name attribute
@@ -162,12 +166,14 @@ class Device(object):
         """
         return self._nl_msg.get_attr("IFLA_IFNAME")
 
+    #TODO add setter
     @property
     def hwaddr(self):
         """hwaddr attribute
 
         Returns string hardware address of the device as reported by the kernel.
         """
+        #TODO implement HwAddress object
         return normalize_hwaddr(self._nl_msg.get_attr("IFLA_ADDRESS"))
 
     @property
@@ -189,6 +195,7 @@ class Device(object):
         """
         return self._ip_addrs
 
+    #TODO add setter
     @property
     def mtu(self):
         """mtu attribute
@@ -284,6 +291,8 @@ class Device(object):
         Args:
             addr -- accepts a BaseIpAddress object
         """
+        #TODO support string addr
+        ip = IpAddress(addr)
         if addr not in self.ips:
             exec_cmd("ip addr add %s/%d dev %s" % (addr, addr.prefixlen,
                                                    self.name))
@@ -294,12 +303,14 @@ class Device(object):
         Args:
             addr -- accepts a BaseIpAddress object
         """
+        #TODO support string addr
         if addr in self.ips:
             exec_cmd("ip addr del %s/%d dev %s" % (addr, addr.prefixlen,
                                                    self.name))
 
     def ip_flush(self):
         """flush all ip addresses of the device"""
+        #TODO call flush instead
         for ip in self.ips:
             self.ip_del(ip)
 
@@ -311,21 +322,22 @@ class Device(object):
         """set device down"""
         exec_cmd("ip link set %s down" % self.name)
 
-    def route_add(self, dest):
-        """add specified route for this device
+    #TODO implement proper Route objects
+    # def route_add(self, dest):
+        # """add specified route for this device
 
-        Args:
-            dest -- string accepted by the "ip route add " command
-        """
-        exec_cmd("ip route add %s dev %s" % (dest, self.name))
+        # Args:
+            # dest -- string accepted by the "ip route add " command
+        # """
+        # exec_cmd("ip route add %s dev %s" % (dest, self.name))
 
-    def route_del(self, dest):
-        """remove specified route for this device
+    # def route_del(self, dest):
+        # """remove specified route for this device
 
-        Args:
-            dest -- string accepted by the "ip route del " command
-        """
-        exec_cmd("ip route del %s dev %s" % (dest, self.name))
+        # Args:
+            # dest -- string accepted by the "ip route del " command
+        # """
+        # exec_cmd("ip route del %s dev %s" % (dest, self.name))
 
     def _get_if_data(self):
         if_data = {"if_index": self.if_index,
