@@ -145,6 +145,10 @@ class InterfaceManager(object):
         else:
             return
 
+    def untrack_device(self, dev):
+        if dev.if_index in self._devices:
+            del self._devices[dev.if_index]
+
     def get_device(self, if_index):
         self.rescan_devices()
         if if_index in self._devices:
