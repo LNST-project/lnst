@@ -360,8 +360,12 @@ class Device(object):
         Args:
             speed -- string accepted by the 'ethtool -s dev speed ' command
         """
-        exec_cmd("ethtool -s %s speed %s autoneg off" % (self.name, speed))
+        exec_cmd("ethtool -s %s speed %s" % (self.name, speed))
 
-    def autoneg_set_on(self):
+    def autoneg_on(self):
         """enable automatic negotiation of speed for this device"""
         exec_cmd("ethtool -s %s autoneg on" % self.name)
+
+    def autoneg_off(self):
+        """disable automatic negotiation of speed for this device"""
+        exec_cmd("ethtool -s %s autoneg off" % self.name)
