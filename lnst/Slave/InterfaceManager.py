@@ -199,7 +199,7 @@ class InterfaceManager(object):
         devcls = self._device_classes[clsname]
 
         device = devcls(self, *args, **kwargs)
-        device.create()
+        device._create()
 
         devs = scan_netdevs()
         for dev in devs:

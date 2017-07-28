@@ -229,7 +229,7 @@ class SlaveMethods:
         devices = self._if_manager.get_devices()
         for dev in devices:
             try:
-                dev.destroy()
+                dev._destroy()
             except DeviceDeleted:
                 pass
             self._if_manager.rescan_devices()
@@ -814,7 +814,7 @@ class ServerHandler(ConnectionHandler):
 
     def _update_c_dev(self):
         if self._c_dev:
-            self._c_dev.enable()
+            self._c_dev._enable()
             self._c_dev = None
 
 
@@ -831,7 +831,7 @@ class ServerHandler(ConnectionHandler):
                 if matched_dev:
                     break
             self._c_dev = matched_dev
-            matched_dev.disable()
+            matched_dev._disable()
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
@@ -870,7 +870,7 @@ class ServerHandler(ConnectionHandler):
         self._c_socket = None
 
         if self._c_dev:
-            self._c_dev.enable()
+            self._c_dev._enable()
             self._c_dev = None
 
     def check_connections(self):

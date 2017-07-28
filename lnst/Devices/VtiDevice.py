@@ -46,7 +46,7 @@ class _BaseVtiDevice(SoftDevice):
     def vti_type(self):
         raise NotImplementedError
 
-    def create(self):
+    def _create(self):
         exec_cmd("ip link add {name} type {type}{local}{remote}{key}{device}".
                  format(name=self.name,
                         type=self.vti_type,

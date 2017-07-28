@@ -43,9 +43,10 @@ class SoftDevice(Device):
         except:
             return self._name
 
-    def create(self):
+    def _create(self):
+        #TODO virtual method
         msg = "Classes derived from SoftDevice MUST define a create method."
         raise DeviceError(msg)
 
-    def destroy(self):
+    def _destroy(self):
         exec_cmd("ip link del dev %s" % self.name)

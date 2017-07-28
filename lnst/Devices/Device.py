@@ -52,7 +52,7 @@ class Device(object):
 
         self._ip_addrs = []
 
-    def create(self):
+    def _create(self):
         """Creates a new netdevice of the corresponding type
 
         Method to be implemented by derived classes where applicable.
@@ -60,7 +60,7 @@ class Device(object):
         msg = "Can't create a hardware ethernet device."
         raise DeviceError(msg)
 
-    def destroy(self):
+    def _destroy(self):
         """Destroys the netdevice of the corresponding type
 
         For the basic eth device it calls the destroy method of it's master
@@ -73,11 +73,11 @@ class Device(object):
         self.down()
         return True
 
-    def enable(self):
+    def _enable(self):
         """Enables the Device object"""
         self._enabled = True
 
-    def disable(self):
+    def _disable(self):
         """Disables the Device object
 
         When a Device object is disabled, any calls to it's methods will result

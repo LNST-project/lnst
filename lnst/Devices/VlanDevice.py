@@ -30,6 +30,6 @@ class VlanDevice(SoftDevice):
     def vlan_id(self):
         return self._vlan_id
 
-    def create(self):
+    def _create(self):
         exec_cmd("ip link add link %s %s type vlan id %d" %\
                  (self.real_dev.name, self.name, self.vlan_id))

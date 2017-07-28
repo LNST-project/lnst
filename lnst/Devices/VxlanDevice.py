@@ -49,7 +49,7 @@ class VxlanDevice(SoftDevice):
     def dst_port(self):
         return self._dst_port
 
-    def create(self):
+    def _create(self):
         dev_param = "dev %s" % self.real_dev.name if self.real_dev else ""
 
         if self.group_ip:
