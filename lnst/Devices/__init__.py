@@ -25,15 +25,6 @@ device_classes = [
         ("BondDevice", BondDevice),
         ("TeamDevice", TeamDevice)]
 
-class Devices(object):
-    def __init__(self, host):
-        self._host = host
-
-    def __iter__(self):
-        for x in self._host._device_database.values():
-            if isinstance(x, RemoteDevice):
-                yield x
-
 for name, cls in device_classes:
     globals()[name] = remotedev_decorator(cls)
 
