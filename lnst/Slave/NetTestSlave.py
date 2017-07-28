@@ -585,7 +585,12 @@ class SlaveMethods:
                 self._net_namespaces[netns] = {"pid": pid,
                                                "pipe": read_pipe}
                 self._server_handler.add_netns(netns, read_pipe)
-                return None
+
+                result = self._slave_server.wait_for_result(netns)
+                if result["result"] != True:
+                    raise Exception("Namespace creation failed")
+
+                return True
             elif pid == 0:
                 self._slave_server.set_netns_sighandlers()
                 #create new network namespace
@@ -625,17 +630,14 @@ class SlaveMethods:
                 self._server_handler.clear_connections()
                 self._server_handler.clear_netns_connections()
 
-                self._if_manager.reconnect_netlink()
-                self._if_manager.clear_if_mapping()
-                self._server_handler.add_connection('netlink',
-                                            self._if_manager.get_nl_socket())
-
                 self._server_handler.set_netns(netns)
                 self._server_handler.set_ctl_sock((write_pipe, "root_netns"))
 
                 self._log_ctl.disable_logging()
                 self._log_ctl.set_origin_name(netns)
                 self._log_ctl.set_connection(write_pipe)
+
+                self.init_if_manager()
 
                 logging.debug("Created network namespace %s" % netns)
                 return True
@@ -669,20 +671,13 @@ class SlaveMethods:
             del self._net_namespaces[netns]
             return True
 
-    # def set_if_netns(self, if_id, netns):
-        # netns_pid = self._net_namespaces[netns]["pid"]
-
-        # device = self._if_manager.get_mapped_device(if_id)
-        # dev_name = device.get_name()
-        # device.set_netns(netns)
-        # hwaddr = device.get_hwaddr()
-
-        # exec_cmd("ip link set %s netns %d" % (dev_name, netns_pid))
-        # msg = {"type": "command", "method_name": "map_if_by_hwaddr",
-               # "args": [if_id, hwaddr]}
-        # self._server_handler.send_data_to_netns(netns, msg)
-        # result = self._slave_server.wait_for_result(netns)
-        # return result
+    def set_dev_netns(self, dev, dst):
+        exec_cmd("ip link set %s netns %s" % (dev.name, dst))
+        self._if_manager.untrack_device(dev)
+        dev._deleted = True
+        self._if_manager.rescan_devices()
+        #TODO check if device appeared in the destination namespace
+        return True
 
     # def return_if_netns(self, if_id):
         # device = self._if_manager.get_mapped_device(if_id)
@@ -822,8 +817,10 @@ class ServerHandler(ConnectionHandler):
             self._c_dev.enable()
             self._c_dev = None
 
-        if self._if_manager is not None:
-            ctl_socket = self.get_ctl_sock()
+
+        ctl_socket = self.get_ctl_sock()
+        if isinstance(ctl_socket, SlaveSecSocket) and\
+           self._if_manager is not None:
             ctl_addr = ctl_socket._socket.getsockname()[0]
             matched_dev = None
             for dev in self._if_manager.get_devices():
@@ -851,9 +848,9 @@ class ServerHandler(ConnectionHandler):
         return self._c_socket
 
     def get_ctl_sock(self):
-        if self._c_socket != None:
+        try:
             return self._c_socket[0]
-        else:
+        except:
             return None
 
     def set_ctl_sock(self, sock):
