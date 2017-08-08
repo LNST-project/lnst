@@ -120,6 +120,7 @@ TEST_MODULES = [
          "test_modules/Icmp6Ping.py",
          "test_modules/IcmpPing.py",
          "test_modules/Iperf.py",
+         "test_modules/Iperf3.py",
          "test_modules/Multicast.py",
          "test_modules/NetCat.py",
          "test_modules/Netperf.py",
