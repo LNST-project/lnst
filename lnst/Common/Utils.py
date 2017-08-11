@@ -98,7 +98,7 @@ def bool_it(val):
     return True if int_it(val) else False
 
 def md5sum(file_path, block_size=2**20):
-    md5 = hashlib.md5(usedforsecurity=False)
+    md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         while True:
             data = f.read(block_size)
