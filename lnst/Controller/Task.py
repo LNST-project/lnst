@@ -589,6 +589,9 @@ class HostAPI(object):
     def disable_service(self, service):
         return self._m.disable_service(service)
 
+    def restart_service(self, service):
+        return self._m.restart_service(service)
+
     def get_num_cpus(self):
         return self._m.get_num_cpus()
 

@@ -1015,8 +1015,7 @@ class SlaveMethods:
         stdout, _ = exec_cmd("pidof systemd", die_on_err=False)
         return len(stdout) != 0
 
-    def _configure_service(self, service, start=True):
-        action = "start" if start else "stop"
+    def _configure_service(self, service, action):
         if self._is_systemd():
             exec_cmd("systemctl {} {}".format(action, service))
         else:
@@ -1024,10 +1023,13 @@ class SlaveMethods:
         return True
 
     def enable_service(self, service):
-        return self._configure_service(service)
+        return self._configure_service(service, "start")
 
     def disable_service(self, service):
-        return self._configure_service(service, start=False)
+        return self._configure_service(service, "stop")
+
+    def restart_service(self, service):
+        return self._configure_service(service, "restart")
 
     def get_num_cpus(self):
         return int(os.sysconf('SC_NPROCESSORS_ONLN'))

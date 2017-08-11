@@ -636,10 +636,10 @@ class Machine(object):
             return False
         return self._rpc_call("disable_service", service)
 
-    def disable_services(self):
-        for service in self._services:
-            self.disable_service(service)
-        return True
+    def restart_service(self, service):
+        if service not in self._services:
+            self._services.append(service)
+        return self._rpc_call("restart_service", service)
 
     def get_num_cpus(self):
         return self._rpc_call("get_num_cpus")
