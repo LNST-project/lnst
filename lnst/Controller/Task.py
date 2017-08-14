@@ -592,6 +592,9 @@ class HostAPI(object):
     def restart_service(self, service):
         return self._m.restart_service(service)
 
+    def copy_file_to_machine(self, local_path, remote_path=None, netns=None):
+        return self._m.copy_file_to_machine(local_path, remote_path, netns)
+
     def get_num_cpus(self):
         return self._m.get_num_cpus()
 
