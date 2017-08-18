@@ -138,7 +138,7 @@ class Namespace(object):
             pass
 
         if isinstance(value, RemoteDevice):
-            if value.if_index is not None:
+            if value.ifindex is not None:
                 old_ns = value.netns
                 old_ns._unset(value)
                 self._host.remote_device_set_netns(value, self.nsname,

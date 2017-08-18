@@ -55,4 +55,4 @@ class PairedVethDevice(VethDevice):
         self._init_netlink(me._nl_msg)
         self._ip_addrs = deepcopy(me._ip_addrs)
 
-        self._if_manager.replace_dev(self.if_index, self)
+        self._if_manager.replace_dev(self.ifindex, self)

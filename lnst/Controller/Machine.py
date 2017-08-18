@@ -118,15 +118,15 @@ class Machine(object):
                                              kwargs=dev_kwargs,
                                              netns=netns)
         dev._host = self
-        dev.if_index = ret["if_index"]
-        self._device_database[ret["if_index"]] = dev
+        dev.ifindex = ret["ifindex"]
+        self._device_database[ret["ifindex"]] = dev
 
     def remote_device_set_netns(self, dev, dst, src):
         self.rpc_call("set_dev_netns", dev, dst, netns=src)
 
     def device_created(self, dev_data):
-        if_index = dev_data["if_index"]
-        if if_index not in self._device_database:
+        ifindex = dev_data["ifindex"]
+        if ifindex not in self._device_database:
             new_dev = None
             if len(self._tmp_device_database) > 0:
                 for dev in self._tmp_device_database:
@@ -137,35 +137,35 @@ class Machine(object):
             if new_dev is None:
                 new_dev = RemoteDevice(Device)
                 new_dev.host = self
-                new_dev.if_index = if_index
+                new_dev.ifindex = ifindex
                 new_dev.netns = self._root_ns
             else:
                 self._tmp_device_database.remove(new_dev)
 
-                new_dev.if_index = dev_data["if_index"]
+                new_dev.ifindex = dev_data["ifindex"]
 
-            self._device_database[if_index] = new_dev
+            self._device_database[ifindex] = new_dev
 
     def device_delete(self, dev_data):
-        if dev_data["if_index"] in self._device_database:
-            self._device_database[dev_data["if_index"]].deleted = True
+        if dev_data["ifindex"] in self._device_database:
+            self._device_database[dev_data["ifindex"]].deleted = True
 
-    def dev_db_get_if_index(self, if_index):
-        if if_index in self._device_database:
-            return self._device_database[if_index]
+    def dev_db_get_ifindex(self, ifindex):
+        if ifindex in self._device_database:
+            return self._device_database[ifindex]
         else:
             return None
 
     def dev_db_get_name(self, dev_name):
         #TODO move these to Slave to optimize quering for each device
-        for if_index, dev in self._device_database.iteritems():
+        for ifindex, dev in self._device_database.iteritems():
             if dev.get_name() == dev_name:
                 return dev
         return None
 
     def get_dev_by_hwaddr(self, hwaddr):
         #TODO move these to Slave to optimize quering for each device
-        for if_index, dev in self._device_database.iteritems():
+        for ifindex, dev in self._device_database.iteritems():
             if dev.hwaddr == hwaddr:
                 return dev
         return None
@@ -244,13 +244,13 @@ class Machine(object):
         self.rpc_call("init_if_manager")
 
         devices = self.rpc_call("get_devices")
-        for if_index, dev in devices.items():
+        for ifindex, dev in devices.items():
             remote_dev = RemoteDevice(Device)
             remote_dev.host = self
-            remote_dev.if_index = if_index
+            remote_dev.ifindex = ifindex
             remote_dev.netns = self._root_ns
 
-            self._device_database[if_index] = remote_dev
+            self._device_database[ifindex] = remote_dev
 
     def _send_device_classes(self):
         classes = []

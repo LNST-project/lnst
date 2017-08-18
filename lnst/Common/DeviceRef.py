@@ -15,5 +15,5 @@ class DeviceRef(object):
 
     Used in Controller-Slave commucation protocol.
     """
-    def __init__(self, if_index):
-        self.if_index = int(if_index)
+    def __init__(self, ifindex):
+        self.ifindex = int(ifindex)

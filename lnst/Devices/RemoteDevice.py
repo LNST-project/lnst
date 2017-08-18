@@ -33,7 +33,7 @@ class RemoteDevice(object):
         self.__netns = None
 
         self.host = None
-        self.if_index = None
+        self.ifindex = None
         self.deleted = False
         self._inited = True
 
@@ -71,12 +71,12 @@ class RemoteDevice(object):
 
         if callable(attr):
             def dev_method(*args, **kwargs):
-                return self.host.rpc_call("dev_method", self.if_index,
+                return self.host.rpc_call("dev_method", self.ifindex,
                                           name, args, kwargs,
                                           netns=self.netns.nsname)
             return dev_method
         else:
-            return self.host.rpc_call("dev_attr", self.if_index, name,
+            return self.host.rpc_call("dev_attr", self.ifindex, name,
                                       netns=self.netns.nsname)
 
     def __setattr__(self, name, value):
@@ -85,7 +85,7 @@ class RemoteDevice(object):
 
         try:
             getattr(self._dev_cls, name)
-            return self.host.rpc_call("dev_set_attr", self.if_index, name, value,
+            return self.host.rpc_call("dev_set_attr", self.ifindex, name, value,
                                       netns=self.netns)
         except AttributeError:
             return super(RemoteDevice, self).__setattr__(name, value)
@@ -112,7 +112,7 @@ class PairedRemoteDevice(RemoteDevice):
     @property
     def _dev_kwargs(self):
         ret = super(PairedRemoteDevice, self)._dev_kwargs
-        ret["peer_if_id"] = self._peer.if_index
+        ret["peer_if_id"] = self._peer.ifindex
         return ret
 
 #register the RemoteDevice class as implementing the interface of the Device

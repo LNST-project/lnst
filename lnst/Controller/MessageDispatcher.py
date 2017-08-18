@@ -26,7 +26,7 @@ from lnst.Devices.RemoteDevice import RemoteDevice
 
 def deviceref_to_remote_device(machine, obj):
     if isinstance(obj, DeviceRef):
-        dev = machine.dev_db_get_if_index(obj.if_index)
+        dev = machine.dev_db_get_ifindex(obj.ifindex)
         return dev
     elif isinstance(obj, dict):
         new_dict = {}
@@ -51,7 +51,7 @@ def deviceref_to_remote_device(machine, obj):
 
 def remote_device_to_deviceref(obj):
     if isinstance(obj, RemoteDevice):
-        return DeviceRef(obj.if_index)
+        return DeviceRef(obj.ifindex)
     elif isinstance(obj, dict):
         new_dict = {}
         for key, value in obj.items():

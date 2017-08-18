@@ -164,18 +164,18 @@ class SlaveMethods:
                                             self._if_manager.get_nl_socket())
         return True
 
-    def dev_method(self, if_index, name, args, kwargs):
-        dev = self._if_manager.get_device(if_index)
+    def dev_method(self, ifindex, name, args, kwargs):
+        dev = self._if_manager.get_device(ifindex)
         method = getattr(dev, name)
 
         return method(*args, **kwargs)
 
-    def dev_attr(self, if_index, name):
-        dev = self._if_manager.get_device(if_index)
+    def dev_attr(self, ifindex, name):
+        dev = self._if_manager.get_device(ifindex)
         return getattr(dev, name)
 
-    def dev_set_attr(self, if_index, name, value):
-        dev = self._if_manager.get_device(if_index)
+    def dev_set_attr(self, ifindex, name, value):
+        dev = self._if_manager.get_device(ifindex)
         return setattr(dev, name, value)
 
     def get_devices(self):
@@ -183,12 +183,12 @@ class SlaveMethods:
         devices = self._if_manager.get_devices()
         result = {}
         for device in devices:
-            result[device.if_index] = device._get_if_data()
+            result[device.ifindex] = device._get_if_data()
         return result
 
-    def get_device(self, if_index):
+    def get_device(self, ifindex):
         self._if_manager.rescan_devices()
-        device = self._if_manager.get_device(if_index)
+        device = self._if_manager.get_device(ifindex)
         if device:
             return device._get_if_data()
         else:
@@ -258,7 +258,7 @@ class SlaveMethods:
         dev =  self._if_manager.create_device(clsname, args, kwargs)
         if dev is None:
             raise Exception("Device creation failed")
-        return {"if_index": dev.if_index, "name": dev.name}
+        return {"ifindex": dev.ifindex, "name": dev.name}
 
     # def create_if_pair(self, if_id1, config1, if_id2, config2):
         # dev_names = self._if_manager.create_device_pair(if_id1, config1,
@@ -374,7 +374,7 @@ class SlaveMethods:
         if self._packet_captures == None:
             return True
 
-        for if_index, pcap in self._packet_captures.iteritems():
+        for ifindex, pcap in self._packet_captures.iteritems():
             pcap.stop()
 
         self._packet_captures.clear()
@@ -967,7 +967,7 @@ def device_to_deviceref(obj):
         return obj
 
     if isinstance(obj, Device):
-        dev_ref = DeviceRef(obj.if_index)
+        dev_ref = DeviceRef(obj.ifindex)
         return dev_ref
     elif isinstance(obj, dict):
         new_dict = {}
@@ -989,7 +989,7 @@ def device_to_deviceref(obj):
 
 def deviceref_to_device(if_manager, obj):
     if isinstance(obj, DeviceRef):
-        dev = if_manager.get_device(obj.if_index)
+        dev = if_manager.get_device(obj.ifindex)
         return dev
     elif isinstance(obj, dict):
         new_dict = {}

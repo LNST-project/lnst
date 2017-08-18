@@ -46,7 +46,7 @@ class Device(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, if_manager):
-        self.if_index = None #TODO ifindex
+        self.ifindex = None
         self._nl_msg = None
         self._devlink = None
         self._if_manager = if_manager
@@ -107,25 +107,25 @@ class Device(object):
         self._devlink = devlink_port_data
 
     def _init_netlink(self, nl_msg):
-        self.if_index = nl_msg['index']
+        self.ifindex = nl_msg['index']
 
         self._nl_msg = nl_msg
         self._store_cleanup_data()
 
     def _update_netlink(self, nl_msg):
-        if self.if_index != nl_msg['index']:
-            msg = "if_index of netlink message (%s) doesn't match "\
-                  "the device's (%s)." % (nl_msg['index'], self.if_index)
+        if self.ifindex != nl_msg['index']:
+            msg = "ifindex of netlink message (%s) doesn't match "\
+                  "the device's (%s)." % (nl_msg['index'], self.ifindex)
             raise DeviceError(msg)
 
         if nl_msg['header']['type'] == RTM_NEWLINK:
-            if self.if_index != nl_msg['index']:
+            if self.ifindex != nl_msg['index']:
                 raise DeviceError("RTM_NEWLINK message passed to incorrect "\
                                   "Device object.")
 
             self._nl_msg = nl_msg
         elif nl_msg['header']['type'] == RTM_NEWADDR:
-            if self.if_index != nl_msg['index']:
+            if self.ifindex != nl_msg['index']:
                 raise DeviceError("RTM_NEWADDR message passed to incorrect "\
                                   "Device object.")
 
@@ -135,7 +135,7 @@ class Device(object):
             if addr not in self._ip_addrs:
                 self._ip_addrs.append(addr)
         elif nl_msg['header']['type'] == RTM_DELADDR:
-            if self.if_index != nl_msg['index']:
+            if self.ifindex != nl_msg['index']:
                 raise DeviceError("RTM_DELADDR message passed to incorrect "\
                                   "Device object.")
 
@@ -226,7 +226,7 @@ class Device(object):
             value -- the new MTU."""
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.if_index, mtu=value)
+                ipr.link("set", index=self.ifindex, mtu=value)
             except pyroute2.netlink.NetlinkError:
                 raise DeviceConfigValueError("Invalid MTU value")
 
@@ -237,9 +237,9 @@ class Device(object):
         Returns Device object of the master device or None when the device has
         no master.
         """
-        master_if_index = self._nl_msg.get_attr("IFLA_MASTER")
-        if master_if_index is not None:
-            return self._if_manager.get_device(master_if_index)
+        master_ifindex = self._nl_msg.get_attr("IFLA_MASTER")
+        if master_ifindex is not None:
+            return self._if_manager.get_device(master_ifindex)
         else:
             return None
 
@@ -251,14 +251,14 @@ class Device(object):
             dev -- accepts a Device object of the master object.
                 When None, removes the current master from the Device."""
         if isinstance(dev, Device):
-            master_idx = dev.if_index
+            master_idx = dev.ifindex
         elif dev is None:
             master_idx = 0
         else:
             raise DeviceError("Invalid dev argument.")
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.if_index, master=master_idx)
+                ipr.link("set", index=self.ifindex, master=master_idx)
             except pyroute2.netlink.NetlinkError:
                 raise DeviceConfigValueError("Invalid master interface")
 
@@ -379,7 +379,7 @@ class Device(object):
         # exec_cmd("ip route del %s dev %s" % (dest, self.name))
 
     def _get_if_data(self):
-        if_data = {"if_index": self.if_index,
+        if_data = {"ifindex": self.ifindex,
                    "hwaddr": self.hwaddr,
                    "name": self.name,
                    "ip_addrs": self.ips,

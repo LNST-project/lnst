@@ -44,7 +44,7 @@ class InterfaceManager(object):
     def __init__(self, server_handler):
         self._device_classes = {}
 
-        self._devices = {} #if_index to device
+        self._devices = {} #ifindex to device
 
         self._nl_socket = IPRSocket()
         self._nl_socket.bind(groups=NL_GROUPS)
@@ -101,14 +101,14 @@ class InterfaceManager(object):
                 self._devices[dev['index']]._update_netlink(addr_msg)
         for i in devices_to_remove:
             dev_name = self._devices[i].name
-            logging.debug("Deleting Device with if_index %d, name %s because "\
+            logging.debug("Deleting Device with ifindex %d, name %s because "\
                           "it doesn't exist anymore." % (i, dev_name))
 
             self._devices[i]._deleted = True
             del self._devices[i]
 
             del_msg = {"type": "dev_deleted",
-                       "if_index": i}
+                       "ifindex": i}
             self._server_handler.send_data_to_ctl(del_msg)
 
         self._dl_manager.rescan_ports()
@@ -145,19 +145,19 @@ class InterfaceManager(object):
                 del self._devices[msg['index']]
 
                 del_msg = {"type": "dev_deleted",
-                           "if_index": msg['index']}
+                           "ifindex": msg['index']}
                 self._server_handler.send_data_to_ctl(del_msg)
         else:
             return
 
     def untrack_device(self, dev):
-        if dev.if_index in self._devices:
-            del self._devices[dev.if_index]
+        if dev.ifindex in self._devices:
+            del self._devices[dev.ifindex]
 
-    def get_device(self, if_index):
+    def get_device(self, ifindex):
         self.rescan_devices()
-        if if_index in self._devices:
-            return self._devices[if_index]
+        if ifindex in self._devices:
+            return self._devices[ifindex]
         else:
             raise DeviceNotFound()
 
