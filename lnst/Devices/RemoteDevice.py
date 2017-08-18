@@ -86,7 +86,7 @@ class RemoteDevice(object):
         try:
             getattr(self._dev_cls, name)
             return self.host.rpc_call("dev_set_attr", self.ifindex, name, value,
-                                      netns=self.netns)
+                                      netns=self.netns.nsname)
         except AttributeError:
             return super(RemoteDevice, self).__setattr__(name, value)
 
