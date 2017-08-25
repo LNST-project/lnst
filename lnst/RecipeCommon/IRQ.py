@@ -24,6 +24,15 @@ def pin_dev_irqs(machine, device, cpu):
                     % device.get_devname())
     res = pi.get_result()
     intrs = res["res_data"]["stdout"]
+    split = intrs.split('\n')
+    if len(split) == 1 and split[0] == '':
+        # try to get interrupts from msi_irqs directory
+        pi = machine.run("dev_irqs=/sys/class/net/%s/device/msi_irqs; "
+                         "[ -d $dev_irqs ] && ls -1 $dev_irqs"
+                        % device.get_devname())
+        res = pi.get_result()
+        intrs = res["res_data"]["stdout"]
+
     for intr in intrs.split('\n'):
         try:
             int(intr)
