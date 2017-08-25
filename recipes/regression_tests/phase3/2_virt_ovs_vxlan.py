@@ -73,7 +73,7 @@ if nperf_cpupin:
     h2_if = host2.get_interface("if1")
 
     #this will pin devices irqs to cpu #0
-    for m, d in [(host1, h1_if), (host2, h2_if), (guest1, g1_nic), (guest2, g2_nic), (guest3, g3_nic), (guest4, g4_nic)]:
+    for m, d in [(host1, h1_if), (host2, h2_if)]:
         pin_dev_irqs(m, d, 0)
 
 nperf_opts = ""

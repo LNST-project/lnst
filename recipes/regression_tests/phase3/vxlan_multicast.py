@@ -56,7 +56,6 @@ test_if3.set_mtu(mtu)
 if nperf_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")
-    g1.run("service irqbalance stop")
 
     m1_phy1 = m1.get_interface("eth1")
     m2_phy1 = m2.get_interface("eth1")
