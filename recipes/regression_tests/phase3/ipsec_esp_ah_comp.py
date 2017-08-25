@@ -498,7 +498,7 @@ for ciph_alg, ciph_len in ciphers:
                                                 "debug": nperf_debug,
                                                 "max_deviation": nperf_max_dev,
                                                 "msg_size" : nperf_msg_size,
-                                                "netperf_opts" : nperf_opts + "-6"},
+                                                "netperf_opts" : nperf_opts + " -6"},
                                    baseline = baseline,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
@@ -537,7 +537,7 @@ for ciph_alg, ciph_len in ciphers:
                                                 "debug": nperf_debug,
                                                 "max_deviation": nperf_max_dev,
                                                 "msg_size" : nperf_msg_size,
-                                                "netperf_opts" : nperf_opts + "-6"},
+                                                "netperf_opts" : nperf_opts + " -6"},
                                    baseline = baseline,
                                    timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
