@@ -40,9 +40,9 @@ from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.LnstError import LnstError
 from lnst.Common.DeviceError import DeviceDeleted
-from lnst.Common.IpAddress import IpAddress
 from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Parameters import Parameters, DeviceParam
+from lnst.Common.IpAddress import ipaddress
 from lnst.Slave.Job import Job, JobContext
 from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
@@ -747,7 +747,7 @@ class ServerHandler(ConnectionHandler):
             matched_dev = None
             for dev in self._if_manager.get_devices():
                 for ip in dev.ips:
-                    if ip.addr == ctl_addr:
+                    if str(ip) == ctl_addr:
                         matched_dev = dev
                         break
                 if matched_dev:

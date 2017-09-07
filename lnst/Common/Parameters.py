@@ -15,7 +15,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 from lnst.Common.DeviceRef import DeviceRef
-from lnst.Common.IpAddress import BaseIpAddress, IpAddress
+from lnst.Common.IpAddress import ipaddress
 from lnst.Common.LnstError import LnstError
 
 class ParamError(LnstError):
@@ -78,20 +78,12 @@ class StrParam(Param):
 class IpParam(Param):
     @Param.val.setter
     def val(self, value):
-        #runtime import this because the Device class arrives on the Slave
-        #during recipe execution, not during Slave init
-        from lnst.Devices.Device import Device
-        if isinstance(value, BaseIpAddress):
-            self._val = value
-        elif isinstance(value, str):
-            self._val = IpAddress(value)
-        elif isinstance(value, Device):
-            #TODO if no IpAddress available give a better exception
-            self.val = value.ips[0]
-        else:
-            raise ParamError("Value must be a BaseIpAddress, string or Device object."
-                             "Not {}".format(type(value)))
-        self.set = True
+        try:
+            self._val = ipaddress(value)
+            self.set = True
+        except:
+            raise ParamError("Value must be a BaseIpAddress, string or Device object. Not {}".
+                             format(type(value)))
 
 class DeviceParam(Param):
     @Param.val.setter

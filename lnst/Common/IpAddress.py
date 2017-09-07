@@ -11,8 +11,11 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import re
-from socket import inet_pton, AF_INET, AF_INET6
+from socket import inet_pton, inet_ntop, AF_INET, AF_INET6
 from lnst.Common.LnstError import LnstError
+
+#TODO create various generators for IPNetworks and IPaddresses in the same
+#network
 
 class BaseIpAddress(object):
     def __init__(self, addr):
@@ -21,7 +24,7 @@ class BaseIpAddress(object):
         self.family = None
 
     def __str__(self):
-        return str(self.addr)
+        return str(inet_ntop(self.family, self.addr))
 
     def __eq__(self, other):
         if self.addr != other.addr or\
@@ -53,7 +56,7 @@ class Ip4Address(BaseIpAddress):
             raise LnstError("Invalid IPv4 format.")
 
         try:
-            inet_pton(AF_INET, addr)
+            addr = inet_pton(AF_INET, addr)
         except:
             raise LnstError("Invalid IPv4 format.")
 
@@ -78,22 +81,29 @@ class Ip6Address(BaseIpAddress):
             raise LnstError("Invalid IPv6 format.")
 
         try:
-            type(inet_pton(AF_INET6, addr))
+            addr = inet_pton(AF_INET6, addr)
         except:
             raise LnstError("Invalid IPv6 format.")
 
         return addr, prefixlen
 
-def IpAddress(addr):
+def ipaddress(addr):
     """Factory method to create a BaseIpAddress object"""
+    #runtime import this because the Device class arrives on the Slave
+    #during recipe execution, not during Slave init
+    from lnst.Devices.Device import Device
     if isinstance(addr, BaseIpAddress):
         return addr
-    #TODO add switches for host, interface etc...
     elif isinstance(addr, str):
         try:
             return Ip4Address(addr)
         except:
             return Ip6Address(addr)
+    elif isinstance(addr, Device):
+        try:
+            return addr.ips[0]
+        except IndexError:
+            raise LnstError("No usable Ip Addresses on the provided Device.")
     else:
         raise LnstError("Value must be a BaseIpAddress or string object."
                         "Not {}".format(type(addr)))
