@@ -48,6 +48,10 @@ from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
 from lnst.Slave.SlaveSecSocket import SlaveSecSocket, SecSocketException
 
+# maximum time the server should block on select -- forces frequent Netlink
+# checks
+MAX_SERVER_HANG = 5
+
 Devices = types.ModuleType("Devices")
 Devices.__path__ = ["lnst.Devices"]
 
@@ -793,8 +797,8 @@ class ServerHandler(ConnectionHandler):
             self._c_dev._enable()
             self._c_dev = None
 
-    def check_connections(self):
-        msgs = super(ServerHandler, self).check_connections()
+    def check_connections(self, timeout=None):
+        msgs = super(ServerHandler, self).check_connections(timeout=timeout)
         if 'netlink' not in self._connection_mapping and\
                 self._if_manager is not None:
             self._if_manager.reconnect_netlink()
@@ -802,7 +806,7 @@ class ServerHandler(ConnectionHandler):
         return msgs
 
     def get_messages(self):
-        messages = self.check_connections()
+        messages = self.check_connections(timeout=MAX_SERVER_HANG)
 
         #push ctl messages to the end of message queue, this ensures that
         #update messages are handled first
@@ -828,7 +832,7 @@ class ServerHandler(ConnectionHandler):
             connection = self._netns_con_mapping[con_id]
         else:
             raise Exception("Unknown connection id '%s'." % con_id)
-        return self._check_connections([connection])
+        return self._check_connections([connection], timeout=None)
 
     def send_data_to_ctl(self, data):
         if self._c_socket != None:

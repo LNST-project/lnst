@@ -50,19 +50,19 @@ class ConnectionHandler(object):
         self._connections = []
         self._connection_mapping = {}
 
-    def check_connections(self):
-        return self._check_connections(self._connections)
+    def check_connections(self, timeout=None):
+        return self._check_connections(self._connections, timeout)
 
-    def check_connections_by_id(self, connection_ids):
+    def check_connections_by_id(self, connection_ids, timeout=None):
         connections = []
         for con_id in connection_ids:
             connections.append(self._connection_mapping[con_id])
-        return self._check_connections(connections)
+        return self._check_connections(connections, timeout)
 
-    def _check_connections(self, connections):
+    def _check_connections(self, connections, timeout):
         requests = []
         try:
-            rl, wl, xl = select.select(connections, [], [])
+            rl, wl, xl = select.select(connections, [], [], timeout)
         except select.error:
             return []
         for f in rl:
