@@ -14,6 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import re
 import select
+import socket
 import logging
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
@@ -75,6 +76,19 @@ class InterfaceManager(object):
     def get_nl_socket(self):
         return self._nl_socket
 
+    def get_netlink_messages(self):
+        try:
+            rl, wl, xl = select.select([self._nl_socket], [], [], 0)
+            f = rl[0]
+            return f.get()
+        except IndexError:
+            return []
+        except select.error:
+            return []
+        except socket.error:
+            self.reconnect_netlink()
+            return []
+
     def rescan_devices(self):
         devices_to_remove = self._devices.keys()
         devs = scan_netdevs()
@@ -116,7 +130,9 @@ class InterfaceManager(object):
             dl_port = self._dl_manager.get_port(device.name)
             device._set_devlink(dl_port)
 
-    def handle_netlink_msgs(self, msgs):
+    def handle_netlink_msgs(self):
+        msgs = self.get_netlink_messages()
+
         for msg in msgs:
             self._handle_netlink_msg(msg)
 

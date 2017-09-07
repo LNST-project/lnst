@@ -164,8 +164,6 @@ class SlaveMethods:
 
         self._if_manager.rescan_devices()
         self._server_handler.set_if_manager(self._if_manager)
-        self._server_handler.add_connection('netlink',
-                                            self._if_manager.get_nl_socket())
         return True
 
     def dev_method(self, ifindex, name, args, kwargs):
@@ -798,11 +796,9 @@ class ServerHandler(ConnectionHandler):
             self._c_dev = None
 
     def check_connections(self, timeout=None):
+        if self._if_manager is not None:
+            self._if_manager.handle_netlink_msgs()
         msgs = super(ServerHandler, self).check_connections(timeout=timeout)
-        if 'netlink' not in self._connection_mapping and\
-                self._if_manager is not None:
-            self._if_manager.reconnect_netlink()
-            self.add_connection('netlink', self._if_manager.get_nl_socket())
         return msgs
 
     def get_messages(self):
@@ -1046,10 +1042,6 @@ class NetTestSlave:
 
             job.set_finished(msg["result"])
             self._server_handler.send_data_to_ctl(msg)
-        elif msg["type"] == "netlink":
-            if_manager = self._methods._if_manager
-            if if_manager is not None:
-                if_manager.handle_netlink_msgs(msg["data"])
         elif msg["type"] == "from_netns":
             self._server_handler.send_data_to_ctl(msg["data"])
         elif msg["type"] == "to_netns":

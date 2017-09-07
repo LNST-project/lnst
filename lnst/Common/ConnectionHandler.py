@@ -30,10 +30,7 @@ def send_data(s, data):
     return True
 
 def recv_data(s):
-    if isinstance(s, IPRSocket):
-        msg = s.get()
-        data = {"type": "netlink", "data": msg}
-    elif isinstance(s, SecureSocket):
+    if isinstance(s, SecureSocket):
         try:
             data = s.recv_msg()
         except SecSocketException:
