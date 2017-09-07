@@ -260,89 +260,6 @@ class SlaveMethods:
             raise Exception("Device creation failed")
         return {"ifindex": dev.ifindex, "name": dev.name}
 
-    # def create_if_pair(self, if_id1, config1, if_id2, config2):
-        # dev_names = self._if_manager.create_device_pair(if_id1, config1,
-                                                        # if_id2, config2)
-        # dev1 = self._if_manager.get_mapped_device(if_id1)
-        # dev2 = self._if_manager.get_mapped_device(if_id2)
-
-        # while dev1.get_if_index() == None and dev2.get_if_index() == None:
-            # msgs = self._server_handler.get_messages_from_con('netlink')
-            # for msg in msgs:
-                # self._if_manager.handle_netlink_msgs(msg[1]["data"])
-
-        # if config1["netns"] != None:
-            # hwaddr = dev1.get_hwaddr()
-            # self.set_if_netns(if_id1, config1["netns"])
-
-            # msg = {"type": "command", "method_name": "configure_interface",
-                   # "args": [if_id1, config1]}
-            # self._server_handler.send_data_to_netns(config1["netns"], msg)
-            # result = self._slave_server.wait_for_result(config1["netns"])
-            # if result["result"] != True:
-                # raise Exception("Configuration failed.")
-        # else:
-            # dev1.configure()
-        # if config2["netns"] != None:
-            # hwaddr = dev2.get_hwaddr()
-            # self.set_if_netns(if_id2, config2["netns"])
-
-            # msg = {"type": "command", "method_name": "configure_interface",
-                   # "args": [if_id2, config2]}
-            # self._server_handler.send_data_to_netns(config2["netns"], msg)
-            # result = self._slave_server.wait_for_result(config2["netns"])
-            # if result["result"] != True:
-                # raise Exception("Configuration failed.")
-        # else:
-            # dev2.configure()
-        # return dev_names
-
-    # def deconfigure_if_pair(self, if_id1, if_id2):
-        # dev1 = self._if_manager.get_mapped_device(if_id1)
-        # dev2 = self._if_manager.get_mapped_device(if_id2)
-
-        # if dev1.get_netns() == None:
-            # dev1.deconfigure()
-        # else:
-            # netns = dev1.get_netns()
-
-            # msg = {"type": "command", "method_name": "deconfigure_interface",
-                   # "args": [if_id1]}
-            # self._server_handler.send_data_to_netns(netns, msg)
-            # result = self._slave_server.wait_for_result(netns)
-            # if result["result"] != True:
-                # raise Exception("Deconfiguration failed.")
-
-            # self.return_if_netns(if_id1)
-
-        # if dev2.get_netns() == None:
-            # dev2.deconfigure()
-        # else:
-            # netns = dev2.get_netns()
-
-            # msg = {"type": "command", "method_name": "deconfigure_interface",
-                   # "args": [if_id2]}
-            # self._server_handler.send_data_to_netns(netns, msg)
-            # result = self._slave_server.wait_for_result(netns)
-            # if result["result"] != True:
-                # raise Exception("Deconfiguration failed.")
-
-            # self.return_if_netns(if_id2)
-
-        # dev1.destroy()
-        # dev2.destroy()
-        # dev1.del_configuration()
-        # dev2.del_configuration()
-        # return True
-
-    # def deconfigure_interface(self, if_id):
-        # device = self._if_manager.get_mapped_device(if_id)
-        # if device is not None:
-            # device.clear_configuration()
-        # else:
-            # logging.error("No device with id '%s' to deconfigure." % if_id)
-        # return True
-
     def start_packet_capture(self, filt):
         if not is_installed("tcpdump"):
             raise Exception("Can't start packet capture, tcpdump not available")
@@ -820,7 +737,6 @@ class ServerHandler(ConnectionHandler):
         if self._c_dev:
             self._c_dev._enable()
             self._c_dev = None
-
 
         ctl_socket = self.get_ctl_sock()
         if isinstance(ctl_socket, SlaveSecSocket) and\
