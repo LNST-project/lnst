@@ -50,7 +50,8 @@ class InterfaceManager(object):
         self._nl_socket = IPRSocket()
         self._nl_socket.bind(groups=NL_GROUPS)
 
-        self._dl_manager = DevlinkManager()
+        #TODO split DevlinkManager away from the InterfaceManager
+        #self._dl_manager = DevlinkManager()
 
         self._server_handler = server_handler
 
@@ -125,10 +126,10 @@ class InterfaceManager(object):
                        "ifindex": i}
             self._server_handler.send_data_to_ctl(del_msg)
 
-        self._dl_manager.rescan_ports()
-        for device in self._devices.values():
-            dl_port = self._dl_manager.get_port(device.name)
-            device._set_devlink(dl_port)
+        # self._dl_manager.rescan_ports()
+        # for device in self._devices.values():
+            # dl_port = self._dl_manager.get_port(device.name)
+            # device._set_devlink(dl_port)
 
     def handle_netlink_msgs(self):
         msgs = self.get_netlink_messages()
@@ -136,10 +137,10 @@ class InterfaceManager(object):
         for msg in msgs:
             self._handle_netlink_msg(msg)
 
-        self._dl_manager.rescan_ports()
-        for device in self._devices.values():
-            dl_port = self._dl_manager.get_port(device.name)
-            device._set_devlink(dl_port)
+        # self._dl_manager.rescan_ports()
+        # for device in self._devices.values():
+            # dl_port = self._dl_manager.get_port(device.name)
+            # device._set_devlink(dl_port)
 
     def _handle_netlink_msg(self, msg):
         if msg['header']['type'] in [RTM_NEWLINK, RTM_NEWADDR, RTM_DELADDR]:
