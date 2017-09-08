@@ -13,7 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import logging
 from time import sleep
 from lnst.Common.Utils import check_process_running
-from lnst.Common.NetUtils import normalize_hwaddr
+from lnst.Common.HWAddress import hwaddress
 from lnst.Devices.Device import Device, DeviceError
 from lnst.Devices.RemoteDevice import RemoteDevice
 
@@ -66,7 +66,7 @@ class VirtualDevice(RemoteDevice):
         else:
             mac_pool = self.host.get_mac_pool()
             while True:
-                hwaddr = normalize_hwaddr(mac_pool.get_addr())
+                hwaddr = hwaddress(mac_pool.get_addr())
                 if not self.host.get_dev_by_hwaddr(hwaddr):
                     self.orig_hwaddr = hwaddr
                     break
