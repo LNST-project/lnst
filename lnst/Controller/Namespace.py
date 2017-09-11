@@ -160,7 +160,7 @@ class Namespace(object):
                     value.host = self._host
                     value.netns = self
                     self._host.add_tmp_device(value)
-                    value.create()
+                    value._create()
                     self._host.wait_for_tmp_devices(DEFAULT_TIMEOUT)
                 else:
                     value.host = self._host

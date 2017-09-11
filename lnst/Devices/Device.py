@@ -16,10 +16,13 @@ import ethtool
 from abc import ABCMeta
 import pyroute2
 from pyroute2.netlink.rtnl import ifinfmsg
+from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceConfigValueError
-from lnst.Common.IpAddress import IpAddress
+from lnst.Common.DeviceError import DeviceError, DeviceDeleted
+from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
+from lnst.Common.IpAddress import ipaddress
+from lnst.Common.HWAddress import hwaddress
 
 try:
     from pyroute2.netlink.iproute import RTM_NEWLINK
@@ -30,7 +33,6 @@ except ImportError:
     from pyroute2.iproute import RTM_NEWADDR
     from pyroute2.iproute import RTM_DELADDR
 
-#TODO check string parameter values
 class Device(object):
     """The base Device class
 
@@ -63,7 +65,7 @@ class Device(object):
         msg = "Can't create a hardware ethernet device."
         raise DeviceError(msg)
 
-    def _destroy(self):
+    def destroy(self):
         """Destroys the netdevice of the corresponding type
 
         For the basic eth device it just cleans up its configuration.
@@ -129,7 +131,7 @@ class Device(object):
                 raise DeviceError("RTM_NEWADDR message passed to incorrect "\
                                   "Device object.")
 
-            addr = IpAddress(nl_msg.get_attr('IFA_ADDRESS'))
+            addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'))
             addr.prefixlen = nl_msg["prefixlen"]
 
             if addr not in self._ip_addrs:
@@ -139,29 +141,76 @@ class Device(object):
                 raise DeviceError("RTM_DELADDR message passed to incorrect "\
                                   "Device object.")
 
-            addr = IpAddress(nl_msg.get_attr('IFA_ADDRESS'))
+            addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'))
             addr.prefixlen = nl_msg["prefixlen"]
 
             if addr in self._ip_addrs:
                 self._ip_addrs.remove(addr)
 
+    def _get_if_data(self):
+        if_data = {"ifindex": self.ifindex,
+                   "hwaddr": self.hwaddr,
+                   "name": self.name,
+                   "ip_addrs": self.ips,
+                   "link_header_type": self.link_header_type,
+                   "state": self.state,
+                   "master": self.master,
+                   "mtu": self.mtu,
+                   "driver": self.driver,
+                   "devlink": self._devlink}
+        return if_data
+
+    def _clear_tc_qdisc(self):
+        exec_cmd("tc qdisc replace dev %s root pfifo" % self.name)
+        out, _ = exec_cmd("tc filter show dev %s" % self.name)
+        ingress_handles = re.findall("ingress (\\d+):", out)
+        for ingress_handle in ingress_handles:
+            exec_cmd("tc qdisc del dev %s handle %s: ingress" %
+                     (self.name, ingress_handle))
+        out, _ = exec_cmd("tc qdisc show dev %s" % self.name)
+        ingress_qdiscs = re.findall("qdisc ingress (\\w+):", out)
+        if len(ingress_qdiscs) != 0:
+                exec_cmd("tc qdisc del dev %s ingress" % self.name)
+
+    def _clear_tc_filters(self):
+        out, _ = exec_cmd("tc filter show dev %s" % self.name)
+        egress_prefs = re.findall("pref (\\d+) .* handle", out)
+
+        for egress_pref in egress_prefs:
+            exec_cmd("tc filter del dev %s pref %s" % (self.name, egress_pref))
+
     def _store_cleanup_data(self):
         """Stores initial configuration for later cleanup"""
         self._orig_mtu = self.mtu
+        self._orig_name = self.name
+        self._orig_hwaddr = self.hwaddr
+
+    def _restore_original_data(self):
+        """Restores initial configuration from stored values"""
+        if self.mtu != self._orig_mtu:
+            self.mtu = self._orig_mtu
+
+        if self.name != self._orig_name:
+            self.name = self._orig_name
+
+        if self.hwaddr != self._orig_hwaddr:
+            self.hwaddr = self._orig_hwaddr
 
     def cleanup(self):
         """Cleans up the device configuration
 
         Flushes the entire device configuration as appropriate for the given
-        device. That includes flushing IP addresses, resetting MTU to its
-        original value, removing the device from bridges, etc. Finally, the
-        device is set 'down'.
+        device. That includes setting the device 'down', flushing IP addresses
+        and resetting device properties (MTU, name, etc.) to their original
+        values.
         """
         if self.master:
             self.master = None
-        self.mtu = self._orig_mtu
-        self.ip_flush()
         self.down()
+        self.ip_flush()
+        self._clear_tc_qdisc()
+        self._clear_tc_filters()
+        self._restore_original_data()
 
     @property
     def link_header_type(self):
@@ -172,7 +221,6 @@ class Device(object):
         """
         return self._nl_msg['ifi_type']
 
-    #TODO add setter
     @property
     def name(self):
         """name attribute
@@ -181,15 +229,49 @@ class Device(object):
         """
         return self._nl_msg.get_attr("IFLA_IFNAME")
 
-    #TODO add setter
+    @name.setter
+    def name(self, new_name):
+        """set name of the interface
+
+        Args:
+            new_name -- the new name of the interface.
+        """
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("set", index=self.ifindex, IFLA_IFNAME=new_name)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigValueError("Invalid name value")
+            else:
+                return self.name
+
     @property
     def hwaddr(self):
-        """hwaddr attribute
+        """hwaddr attribute getter
 
-        Returns string hardware address of the device as reported by the kernel.
+        Returns a HWAddress object representing the hardware address of the
+        device as reported by the kernel.
         """
-        #TODO implement HwAddress object
-        return normalize_hwaddr(self._nl_msg.get_attr("IFLA_ADDRESS"))
+        return hwaddress(self._nl_msg.get_attr("IFLA_ADDRESS"))
+
+    @hwaddr.setter
+    def hwaddr(self, addr):
+        """hwaddr attribute setter
+
+        Args:
+            addr -- an address accepted by the hwaddress factory method
+        """
+        addr = hwaddress(addr)
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("set", index=self.ifindex, IFLA_ADDRESS=str(addr))
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigValueError("Invalid hw address value")
+            else:
+                return self.hwaddr
 
     @property
     def state(self):
@@ -226,8 +308,10 @@ class Device(object):
             value -- the new MTU."""
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.ifindex, mtu=value)
+                ipr.link("set", index=self.ifindex, IFLA_MTU=value)
+                self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
                 raise DeviceConfigValueError("Invalid MTU value")
 
     @property
@@ -258,8 +342,10 @@ class Device(object):
             raise DeviceError("Invalid dev argument.")
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.ifindex, master=master_idx)
+                ipr.link("set", index=self.ifindex, IFLA_MASTER=master_idx)
+                self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
                 raise DeviceConfigValueError("Invalid master interface")
 
     @property
@@ -303,65 +389,98 @@ class Device(object):
     def _clear_ips(self):
         self._ip_addrs = []
 
-    def _clear_tc_qdisc(self):
-        exec_cmd("tc qdisc replace dev %s root pfifo" % self.name)
-        out, _ = exec_cmd("tc filter show dev %s" % self.name)
-        ingress_handles = re.findall("ingress (\\d+):", out)
-        for ingress_handle in ingress_handles:
-            exec_cmd("tc qdisc del dev %s handle %s: ingress" %
-                     (self.name, ingress_handle))
-        out, _ = exec_cmd("tc qdisc show dev %s" % self.name)
-        ingress_qdiscs = re.findall("qdisc ingress (\\w+):", out)
-        if len(ingress_qdiscs) != 0:
-                exec_cmd("tc qdisc del dev %s ingress" % self.name)
-
-    def _clear_tc_filters(self):
-        out, _ = exec_cmd("tc filter show dev %s" % self.name)
-        egress_prefs = re.findall("pref (\\d+) .* handle", out)
-
-        for egress_pref in egress_prefs:
-            exec_cmd("tc filter del dev %s pref %s" % (self.name,
-                     egress_pref))
-
     def ip_add(self, addr):
         """add an ip address
 
         Args:
-            addr -- accepts a BaseIpAddress object
+            addr -- an address accepted by the ipaddress factory method
         """
-        #TODO support string addr
-        ip = IpAddress(addr)
-        if addr not in self.ips:
-            exec_cmd("ip addr add %s/%d dev %s" % (addr, addr.prefixlen,
-                                                   self.name))
+        ip = ipaddress(addr)
+        if ip not in self.ips:
+            with pyroute2.IPRoute() as ipr:
+                try:
+                    ipr.addr("add", index=self.ifindex, address=str(ip),
+                             mask=ip.prefixlen)
+                    self._if_manager.handle_netlink_msgs()
+                except pyroute2.netlink.NetlinkError:
+                    log_exc_traceback()
+                    raise DeviceConfigValueError("Invalid IP address")
         return ip
 
     def ip_del(self, addr):
         """remove an ip address
 
         Args:
-            addr -- accepts a BaseIpAddress object
+            addr -- an address accepted by the ipaddress factory method
         """
-        #TODO support string addr
-        if addr in self.ips:
-            exec_cmd("ip addr del %s/%d dev %s" % (addr, addr.prefixlen,
-                                                   self.name))
+        ip = ipaddress(addr)
+        if ip in self.ips:
+            with pyroute2.IPRoute() as ipr:
+                try:
+                    ipr.addr("del", index=self.ifindex, address=str(ip),
+                             mask=ip.prefixlen)
+                    self._if_manager.handle_netlink_msgs()
+                except pyroute2.netlink.NetlinkError:
+                    log_exc_traceback()
+                    raise DeviceConfigValueError("Invalid IP address")
 
     def ip_flush(self):
         """flush all ip addresses of the device"""
-        #TODO call flush instead
-        for ip in self.ips:
-            self.ip_del(ip)
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.flush_addr(index=self.ifindex)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("IP address flush failed")
 
     def up(self):
         """set device up"""
-        exec_cmd("ip link set %s up" % self.name)
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("set", index=self.ifindex, state="up")
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Setting link up failed.")
 
     def down(self):
         """set device down"""
-        exec_cmd("ip link set %s down" % self.name)
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("set", index=self.ifindex, state="down")
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Setting link down failed.")
+
+    #TODO looks like python ethtool module doesn't support these so we'll keep
+    #exec_cmd for now...
+    def speed_set(self, speed):
+        """set the device speed
+
+        Also disables automatic speed negotiation
+
+        Args:
+            speed -- string accepted by the 'ethtool -s dev speed ' command
+        """
+        try:
+            int(speed)
+        except:
+            raise DeviceConfigValueError("Invalid link speed value %s" %
+                                         str(speed))
+        exec_cmd("ethtool -s %s speed %d" % (self.name, speed))
+
+    def autoneg_on(self):
+        """enable automatic negotiation of speed for this device"""
+        exec_cmd("ethtool -s %s autoneg on" % self.name)
+
+    def autoneg_off(self):
+        """disable automatic negotiation of speed for this device"""
+        exec_cmd("ethtool -s %s autoneg off" % self.name)
 
     #TODO implement proper Route objects
+    #consider the same as with tc?
     # def route_add(self, dest):
         # """add specified route for this device
 
@@ -377,34 +496,3 @@ class Device(object):
             # dest -- string accepted by the "ip route del " command
         # """
         # exec_cmd("ip route del %s dev %s" % (dest, self.name))
-
-    def _get_if_data(self):
-        if_data = {"ifindex": self.ifindex,
-                   "hwaddr": self.hwaddr,
-                   "name": self.name,
-                   "ip_addrs": self.ips,
-                   "link_header_type": self.link_header_type,
-                   "state": self.state,
-                   "master": self.master,
-                   "mtu": self.mtu,
-                   "driver": self.driver,
-                   "devlink": self._devlink}
-        return if_data
-
-    def speed_set(self, speed):
-        """set the device speed
-
-        Also disables automatic speed negotiation
-
-        Args:
-            speed -- string accepted by the 'ethtool -s dev speed ' command
-        """
-        exec_cmd("ethtool -s %s speed %s" % (self.name, speed))
-
-    def autoneg_on(self):
-        """enable automatic negotiation of speed for this device"""
-        exec_cmd("ethtool -s %s autoneg on" % self.name)
-
-    def autoneg_off(self):
-        """disable automatic negotiation of speed for this device"""
-        exec_cmd("ethtool -s %s autoneg off" % self.name)

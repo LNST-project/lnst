@@ -288,7 +288,7 @@ class Machine(object):
 
         for dev in self._device_database.values():
             if isinstance(dev, VirtualDevice):
-                dev.destroy()
+                dev._destroy()
         self._device_database = {}
 
     def cleanup(self):

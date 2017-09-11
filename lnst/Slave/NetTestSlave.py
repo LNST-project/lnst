@@ -235,8 +235,8 @@ class SlaveMethods:
         devices = self._if_manager.get_devices()
         for dev in devices:
             try:
-                dev._destroy()
-            except DeviceDeleted:
+                dev.destroy()
+            except DeviceDeleted, DeviceConfigValueError:
                 pass
             self._if_manager.rescan_devices()
 
