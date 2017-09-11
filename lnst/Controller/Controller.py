@@ -126,8 +126,6 @@ class Controller(object):
                 raise
             finally:
                 recipe._set_hosts(None)
-                for machine in self._machines.values():
-                    machine.restore_system_config()
                 self._cleanup_slaves()
 
     def _map_match(self, match, requested):
