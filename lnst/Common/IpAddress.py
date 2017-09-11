@@ -109,4 +109,4 @@ def ipaddress(addr):
             raise LnstError("No usable Ip Addresses on the provided Device.")
     else:
         raise LnstError("Value must be a BaseIpAddress or string object."
-                        "Not {}".format(type(addr)))
+                        " Not {}".format(type(addr)))

@@ -95,7 +95,7 @@ class DeviceParam(Param):
             self._val = value
         else:
             raise ParamError("Value must be a Device or DeviceRef object."
-                             "Not {}".format(type(value)))
+                             " Not {}".format(type(value)))
         self.set = True
 
     def __deepcopy__(self, memo):

@@ -54,4 +54,4 @@ def hwaddress(addr):
         return HWAddress(addr)
     else:
         raise LnstError("Value must be a HWAddress or string object."
-                        "Not {}".format(type(addr)))
+                        " Not {}".format(type(addr)))
