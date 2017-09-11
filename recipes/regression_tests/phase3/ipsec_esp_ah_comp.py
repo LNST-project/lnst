@@ -332,6 +332,7 @@ for ciph_alg, ciph_len in ciphers:
             result_tcp.set_parameter('cipher_len', ciph_len)
             result_tcp.set_parameter('hash_alg', hash_alg)
             result_tcp.set_parameter('msg_size', nperf_msg_size)
+            result_tcp.set_parameter('ipsec_mode', ipsec_mode)
 
             baseline = perf_api.get_baseline_of_result(result_tcp)
             baseline = perfrepo_baseline_to_dict(baseline)
@@ -372,6 +373,7 @@ for ciph_alg, ciph_len in ciphers:
             result_udp.set_parameter('cipher_len', ciph_len)
             result_udp.set_parameter('hash_alg', hash_alg)
             result_udp.set_parameter('msg_size', nperf_msg_size)
+            result_udp.set_parameter('ipsec_mode', ipsec_mode)
 
             baseline = perf_api.get_baseline_of_result(result_udp)
             baseline = perfrepo_baseline_to_dict(baseline)
@@ -482,6 +484,7 @@ for ciph_alg, ciph_len in ciphers:
             result_tcp.set_parameter('cipher_len', ciph_len)
             result_tcp.set_parameter('hash_alg', hash_alg)
             result_tcp.set_parameter('msg_size', nperf_msg_size)
+            result_tcp.set_parameter('ipsec_mode', ipsec_mode)
 
             baseline = perf_api.get_baseline_of_result(result_tcp)
             baseline = perfrepo_baseline_to_dict(baseline)
@@ -522,6 +525,7 @@ for ciph_alg, ciph_len in ciphers:
             result_udp.set_parameter('cipher_len', ciph_len)
             result_udp.set_parameter('hash_alg', hash_alg)
             result_udp.set_parameter('msg_size', nperf_msg_size)
+            result_udp.set_parameter('ipsec_mode', ipsec_mode)
 
             baseline = perf_api.get_baseline_of_result(result_udp)
             baseline = perfrepo_baseline_to_dict(baseline)
