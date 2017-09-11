@@ -30,6 +30,9 @@ class HWAddress(object):
                 return False
         return True
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def _parse_addr(self, addr):
         tmp_list = addr.split(':')
         if len(tmp_list) != 6:

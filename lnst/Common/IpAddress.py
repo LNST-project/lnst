@@ -33,6 +33,9 @@ class BaseIpAddress(object):
         else:
             return True
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @staticmethod
     def _parse_addr(addr):
         raise NotImplementedError()
