@@ -10,13 +10,16 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import pyroute2
 from copy import deepcopy
-from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.DeviceError import DeviceConfigError
 from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class VethDevice(SoftDevice):
     _name_template = "veth"
+    _link_type = "veth"
 
     def __init__(self, ifmanager, *args, **kwargs):
         super(VethDevice, self).__init__(ifmanager, args, kwargs)
@@ -31,9 +34,15 @@ class VethDevice(SoftDevice):
             self._peer_name = ifmanager.assign_name("peer_"+self._name_template)
 
     def _create(self):
-        exec_cmd("ip link add {name} type veth peer name {peer}".
-                 format(name=self.name,
-                        peer=self._peer_name))
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("add", IFLA_IFNAME=self.name,
+                         IFLA_INFO_KIND=self._link_type,
+                         VETH_INFO_PEER=self._peer_name)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Creating link %s failed." % self.name)
 
     @property
     def peer(self):

@@ -10,12 +10,14 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Common.ExecCmd import exec_cmd
-from lnst.Devices.Device import DeviceError
+import pyroute2
+from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.DeviceError import DeviceError, DeviceConfigError
 from lnst.Devices.SoftDevice import SoftDevice
 
 class VxlanDevice(SoftDevice):
     _name_template = "t_vxlan"
+    _link_type = "vxlan"
 
     def __init__(self, ifmanager, *args, **kwargs):
         super(VxlanDevice, self).__init__(ifmanager, args, kwargs)
@@ -28,6 +30,9 @@ class VxlanDevice(SoftDevice):
 
         if self.group_ip is None and self.remote_ip is None:
             raise DeviceError("group or remote must be specified for vxlan")
+
+        if self.group_ip is not None and self.remote_ip is not None:
+            raise DeviceError("group and remote cannot both be specified for vxlan")
 
     @property
     def real_dev(self):
@@ -50,16 +55,23 @@ class VxlanDevice(SoftDevice):
         return self._dst_port
 
     def _create(self):
-        dev_param = "dev %s" % self.real_dev.name if self.real_dev else ""
+        with pyroute2.IPRoute() as ipr:
+            try:
+                kwargs = {"IFLA_VXLAN_ID": self.vxlan_id,
+                          "IFLA_VXLAN_PORT": self.dst_port}
 
-        if self.group_ip:
-            group_or_remote = "group %s" % self.group_ip
-        elif self.remote_ip:
-            group_or_remote = "remote %s" % self.remote_ip
+                if self.real_dev:
+                    kwargs["IFLA_VXLAN_LINK"] = self._real_dev.ifindex
 
-        exec_cmd("ip link add %s type vxlan id %d %s %s dstport %d"
-                                % (self.name,
-                                   self.vxlan_id,
-                                   dev_param,
-                                   group_or_remote,
-                                   self.dstport))
+                if self.group_ip:
+                    kwargs["IFLA_VXLAN_GROUP"] = self.group_ip
+                elif self.remote_ip:
+                    kwargs["IFLA_VXLAN_GROUP"] = self.remote_ip
+
+                ipr.link("add", IFLA_IFNAME=self.name,
+                         IFLA_INFO_KIND=self._link_type, **kwargs)
+
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Creating link %s failed." % self.name)

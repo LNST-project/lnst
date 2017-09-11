@@ -10,16 +10,14 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Common.ExecCmd import exec_cmd
-from lnst.Common.DeviceError import DeviceError
+import pyroute2
+from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.DeviceError import DeviceError, DeviceConfigError
 from lnst.Devices.Device import Device
 
 class SoftDevice(Device):
     _name_template = "soft_dev"
-
-    _modulename = ""
-    _moduleparams = ""
-    _type_initialized = False
+    _link_type = ""
 
     def __init__(self, ifmanager, *args, **kwargs):
         super(SoftDevice, self).__init__(ifmanager)
@@ -27,14 +25,6 @@ class SoftDevice(Device):
         self._name = kwargs.get("name", None)
         if self._name is None:
             self._name = ifmanager.assign_name(self._name_template)
-
-        self._type_init()
-
-    @classmethod
-    def _type_init(cls):
-        if cls._modulename and not cls._type_initialized:
-            exec_cmd("modprobe %s %s" % (cls._modulename, cls._moduleparams))
-            cls._type_initialized = True
 
     @property
     def name(self):
@@ -44,9 +34,21 @@ class SoftDevice(Device):
             return self._name
 
     def _create(self):
-        #TODO virtual method
-        msg = "Classes derived from SoftDevice MUST define a create method."
-        raise DeviceError(msg)
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("add", IFLA_IFNAME=self.name,
+                         IFLA_INFO_KIND=self._link_type)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Creating link %s failed." % self.name)
 
-    def _destroy(self):
-        exec_cmd("ip link del dev %s" % self.name)
+    def destroy(self):
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("del", index=self.ifindex)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Deleting link %s failed." % self.name)
+        return True

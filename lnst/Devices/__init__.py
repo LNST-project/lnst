@@ -1,4 +1,5 @@
-from lnst.Devices.Device import Device, DeviceError
+from lnst.Common.DeviceError import DeviceError
+from lnst.Devices.Device import Device
 from lnst.Devices.BridgeDevice import BridgeDevice
 from lnst.Devices.OvsBridgeDevice import OvsBridgeDevice
 from lnst.Devices.BondDevice import BondDevice

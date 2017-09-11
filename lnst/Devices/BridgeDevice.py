@@ -15,19 +15,18 @@ from lnst.Devices.MasterDevice import MasterDevice
 
 class BridgeDevice(MasterDevice):
     _name_template = "t_br"
+    _link_type = "bridge"
 
-    def _create(self):
-        exec_cmd("ip link add dev {} type bridge".format(self._name))
+    # def _get_bridge_dir(self):
+        # return "/sys/class/net/%s/bridge" % self.name
 
-    def _get_bridge_dir(self):
-        return "/sys/class/net/%s/bridge" % self.name
+    #TODO redo to work with pyroute - select which options are interesing as
+    # properties?
+    # def set_option(self, option, value):
+        # exec_cmd('echo "%s" > %s/%s' % (value,
+                                        # self._get_bridge_dir(),
+                                        # option))
 
-    def set_option(self, option, value):
-        #TODO redo to work with iproute
-        exec_cmd('echo "%s" > %s/%s' % (value,
-                                        self._get_bridge_dir(),
-                                        option))
-
-    def set_options(self, options):
-        for option, value in options:
-            self.set_option(option, value)
+    # def set_options(self, options):
+        # for option, value in options:
+            # self.set_option(option, value)

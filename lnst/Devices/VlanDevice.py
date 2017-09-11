@@ -10,11 +10,14 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Common.ExecCmd import exec_cmd
+import pyroute2
+from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.DeviceError import DeviceConfigError
 from lnst.Devices.SoftDevice import SoftDevice
 
 class VlanDevice(SoftDevice):
     _name_template = "t_vlan"
+    _link_type = "vlan"
 
     def __init__(self, ifmanager, *args, **kwargs):
         super(VlanDevice, self).__init__(ifmanager, args, kwargs)
@@ -31,5 +34,13 @@ class VlanDevice(SoftDevice):
         return self._vlan_id
 
     def _create(self):
-        exec_cmd("ip link add link %s %s type vlan id %d" %\
-                 (self.real_dev.name, self.name, self.vlan_id))
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("add", IFLA_IFNAME=self.name,
+                         IFLA_INFO_KIND=self._link_type,
+                         IFLA_INFO_LINK=self.real_dev.ifindex,
+                         IFLA_VLAN_ID=self.vlan_id)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Creating link %s failed." % self.name)

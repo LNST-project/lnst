@@ -14,7 +14,8 @@ import logging
 from time import sleep
 from lnst.Common.Utils import check_process_running
 from lnst.Common.HWAddress import hwaddress
-from lnst.Devices.Device import Device, DeviceError
+from lnst.Common.DeviceError import DeviceError
+from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
 
 # conditional support for libvirt
@@ -56,7 +57,7 @@ class VirtualDevice(RemoteDevice):
 
         return super(VirtualDevice, self)._match_update_data(data)
 
-    def create(self):
+    def _create(self):
         domain_ctl = self.host.get_domain_ctl()
 
         if self.orig_hwaddr:
@@ -90,7 +91,7 @@ class VirtualDevice(RemoteDevice):
         # newly created device
         sleep(1)
 
-    def destroy(self):
+    def _destroy(self):
         logging.info("Destroying virtual device with hwaddr='%s' on machine %s",
                      self.orig_hwaddr, self.host.get_id())
 

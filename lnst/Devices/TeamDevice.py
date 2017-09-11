@@ -22,6 +22,7 @@ def prepare_json_str(json_str):
     json_str = re.sub('\s+', ' ', json_str)
     return json_str
 
+#TODO rework with pyroute2? don't know how json and teamd works with that...
 class TeamDevice(MasterDevice):
     _name_template = "t_team"
 
@@ -47,7 +48,7 @@ class TeamDevice(MasterDevice):
                      self.name,
                      " -D" if self.dbus else ""))
 
-    def _destroy(self):
+    def destroy(self):
         exec_cmd("teamd -k -t %s" % self.name)
 
     def slave_add(self, dev, port_config=None):

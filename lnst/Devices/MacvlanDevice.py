@@ -10,11 +10,14 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Common.ExecCmd import exec_cmd
+import pyroute2
+from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.DeviceError import DeviceConfigError
 from lnst.Devices.SoftDevice import SoftDevice
 
 class MacvlanDevice(SoftDevice):
     _name_template = "t_macvlan"
+    _link_type = "macvlan"
 
     def __init__(self, ifmanager, *args, **kwargs):
         super(MacvlanDevice, self).__init__(ifmanager, args, kwargs)
@@ -24,15 +27,14 @@ class MacvlanDevice(SoftDevice):
         self._hwaddr = kwargs.get("hwaddr", None)
 
     def _create(self):
-        create_cmd = "ip link add link {} {}".format(self._real_dev.name,
-                                                     self.name)
-
-        if self._hwaddr is not None:
-            create_cmd += " address {}".format(self._hwaddr)
-
-        if self._mode is not None:
-            create_cmd += " mode {}".format(self._mode)
-
-        create_cmd += " type macvlan"
-
-        exec_cmd(create_cmd)
+        with pyroute2.IPRoute() as ipr:
+            try:
+                ipr.link("add", IFLA_IFNAME=self.name,
+                         IFLA_INFO_KIND=self._link_type,
+                         IFLA_INFO_LINK=self._real_dev.ifindex,
+                         IFLA_MACVLAN_MODE=self._mode,
+                         IFLA_MACVLAN_MACADDR=self._hwaddr)
+                self._if_manager.handle_netlink_msgs()
+            except pyroute2.netlink.NetlinkError:
+                log_exc_traceback()
+                raise DeviceConfigError("Creating link %s failed." % self.name)

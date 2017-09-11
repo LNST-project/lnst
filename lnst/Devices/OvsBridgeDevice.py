@@ -11,18 +11,21 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Devices.Device import Device, DeviceError
+from lnst.Common.DeviceError import DeviceError
+from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class OvsBridgeDevice(SoftDevice):
     _name_template = "t_ovsbr"
 
-    _modulename = "openvswitch"
+    def __init__(self, ifmanager, *args, **kwargs):
+        super(OvsBridgeDevice, self).__init__(ifmanager)
+        self._type_init()
 
     @classmethod
     def _type_init(cls):
         if not cls._type_initialized:
-            super(OvsBridgeDevice, cls)._type_init()
+            exec_cmd("modprobe %s %s" % ("openvswitch", cls._moduleparams))
 
             exec_cmd("mkdir -p /var/run/openvswitch/")
             exec_cmd("ovsdb-server --detach --pidfile "\
@@ -35,7 +38,7 @@ class OvsBridgeDevice(SoftDevice):
     def _create(self):
         exec_cmd("ovs-vsctl add-br %s" % self.name)
 
-    def _destroy(self):
+    def destroy(self):
         exec_cmd("ovs-vsctl del-br %s" % self.name)
 
     def port_add(self, dev, **kwargs):
