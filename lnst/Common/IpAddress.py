@@ -27,6 +27,13 @@ class BaseIpAddress(object):
         return str(inet_ntop(self.family, self.addr))
 
     def __eq__(self, other):
+        try:
+            # checks the type of the other object and also accepts comparisons
+            # with compatible objects
+            other = ipaddress(other)
+        except:
+            return False
+
         if self.addr != other.addr or\
            self.prefixlen != other.prefixlen:
             return False

@@ -22,6 +22,13 @@ class HWAddress(object):
         return ":".join(hex_list)
 
     def __eq__(self, other):
+        try:
+            # checks the type of the other object and also accepts comparisons
+            # with compatible objects
+            other = hwaddress(other)
+        except:
+            return False
+
         if len(other.addr) != len(self.addr):
             return False
 
