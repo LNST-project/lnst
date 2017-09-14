@@ -2,6 +2,21 @@ This TODO document contains features and larger items that still need or we want
 them to be implemented in Python Recipes, with notes where relevant.
 
 * finalisation of the Device API
+    * port to pyroute2 pushed upstream
+    * adjust based on experiments with porting recipes
+
+* disable all Devices by default and enable only those that are in the machine
+  xml, also think about having an API for manual control
+    - statistics during deconfiguration also for just these devices
+        - bulk slave method, remove autodump at deconfiguration, make this
+          manual
+
+* go through master to check for bugs that can be backported
+    - e.g. c54a38eafea6e9e784cddd14deaac0e3abb4b5f7
+    - look for more
+
+* RPM:
+    * add python-ethtool as dependency
 
 * support for custom device classes (not necessarily located in the
   lnst.Devices package)
