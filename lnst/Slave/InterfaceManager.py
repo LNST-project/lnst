@@ -102,6 +102,8 @@ class InterfaceManager(object):
                 update_msg = {"type": "dev_created",
                               "dev_data": device._get_if_data()}
                 self._server_handler.send_data_to_ctl(update_msg)
+
+                device._disable()
             else:
                 self._devices[dev['index']]._update_netlink(dev['netlink_msg'])
                 try:
@@ -154,6 +156,8 @@ class InterfaceManager(object):
                 update_msg = {"type": "dev_created",
                               "dev_data": dev._get_if_data()}
                 self._server_handler.send_data_to_ctl(update_msg)
+
+                dev._disable()
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['index'] in self._devices:
                 dev = self._devices[msg['index']]

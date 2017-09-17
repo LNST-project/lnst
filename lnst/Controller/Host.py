@@ -58,6 +58,7 @@ class Host(Namespace):
         hwaddr = how["hwaddr"]
         dev = self._host.get_dev_by_hwaddr(hwaddr)
         self._objects[dev_id] = dev
+        dev._enable()
 
     def _custom_setattr(self, name, value):
         if not super(Host, self)._custom_setattr(name, value):
