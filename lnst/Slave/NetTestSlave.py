@@ -39,7 +39,8 @@ from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.LnstError import LnstError
-from lnst.Common.DeviceError import DeviceDeleted
+from lnst.Common.DeviceError import DeviceDeleted, DeviceDisabled
+from lnst.Common.DeviceError import DeviceConfigValueError
 from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Parameters import Parameters, DeviceParam
 from lnst.Common.IpAddress import ipaddress
@@ -236,7 +237,7 @@ class SlaveMethods:
         for dev in devices:
             try:
                 dev.destroy()
-            except DeviceDeleted, DeviceConfigValueError:
+            except (DeviceDisabled, DeviceDeleted, DeviceConfigValueError):
                 pass
             self._if_manager.rescan_devices()
 
@@ -725,7 +726,6 @@ class ServerHandler(ConnectionHandler):
 
         self._netns = None
         self._c_socket = None
-        self._c_dev = None
 
         self._if_manager = None
 
@@ -733,27 +733,6 @@ class ServerHandler(ConnectionHandler):
 
     def set_if_manager(self, if_manager):
         self._if_manager = if_manager
-        self._update_c_dev()
-
-    def _update_c_dev(self):
-        if self._c_dev:
-            self._c_dev._enable()
-            self._c_dev = None
-
-        ctl_socket = self.get_ctl_sock()
-        if isinstance(ctl_socket, SlaveSecSocket) and\
-           self._if_manager is not None:
-            ctl_addr = ctl_socket._socket.getsockname()[0]
-            matched_dev = None
-            for dev in self._if_manager.get_devices():
-                for ip in dev.ips:
-                    if str(ip) == ctl_addr:
-                        matched_dev = dev
-                        break
-                if matched_dev:
-                    break
-            self._c_dev = matched_dev
-            matched_dev._disable()
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
@@ -779,7 +758,6 @@ class ServerHandler(ConnectionHandler):
         if self._c_socket != None:
             self.close_c_sock()
         self._c_socket = sock
-        self._update_c_dev()
         self.add_connection(self._c_socket[1], self._c_socket[0])
 
     def close_s_sock(self):
@@ -790,10 +768,6 @@ class ServerHandler(ConnectionHandler):
         self._c_socket[0].close()
         self.remove_connection(self._c_socket[0])
         self._c_socket = None
-
-        if self._c_dev:
-            self._c_dev._enable()
-            self._c_dev = None
 
     def check_connections(self, timeout=None):
         if self._if_manager is not None:
