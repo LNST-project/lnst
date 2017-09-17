@@ -19,7 +19,7 @@ from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Common.DeviceError import DeviceError, DeviceDeleted
+from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.HWAddress import hwaddress
@@ -89,21 +89,34 @@ class Device(object):
         self._enabled = False
 
     def __getattribute__(self, name):
-        what = object.__getattribute__(self, name)
+        what = super(Device, self).__getattribute__(name)
 
-        if object.__getattribute__(self, "_deleted"):
-            raise DeviceDeleted()
+        if super(Device, self).__getattribute__("_deleted"):
+            raise DeviceDeleted("Device was deleted.")
 
         if not callable(what):
             return what
         else:
-            if (object.__getattribute__(self, "_enabled") or
-                    name in ["enable", "disable"]):
+            if (super(Device, self).__getattribute__("_enabled") or
+                    name[0] == "_"):
                 return what
+            elif not super(Device, self).__getattribute__("_enabled"):
+                raise DeviceDisabled("Can't call methods on a disabled device.")
+
+    def __setattr__(self, name, value):
+        try:
+            if getattr(self, "_deleted"):
+                raise DeviceDeleted("Device was deleted.")
+        except:
+            pass
+
+        try:
+            if not getattr(self, "_enabled") and name[0] != "_":
+                raise DeviceDisabled("Can't set attributes for a disabled device.")
             else:
-                def noop(*args, **kwargs):
-                    pass
-                return noop
+                return super(Device, self).__setattr__(name, value)
+        except:
+            return super(Device, self).__setattr__(name, value)
 
     def _set_devlink(self, devlink_port_data):
         self._devlink = devlink_port_data
