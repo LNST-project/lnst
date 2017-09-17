@@ -5,7 +5,7 @@ Performs a simple ping between two hosts.
 """
 
 from lnst.Common.Parameters import IpParam
-from lnst.Common.IpAddress import IpAddress
+from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import Controller
 from lnst.Controller import BaseRecipe
 from lnst.Controller import HostReq, DeviceReq
@@ -20,8 +20,8 @@ class MyRecipe(BaseRecipe):
     m2.eth0 = DeviceReq(label="net1")
 
     def test(self):
-        self.matched.m1.eth0.ip_add(IpAddress("192.168.1.1/24"))
-        self.matched.m2.eth0.ip_add(IpAddress("192.168.1.2/24"))
+        self.matched.m1.eth0.ip_add(ipaddress("192.168.1.1/24"))
+        self.matched.m2.eth0.ip_add(ipaddress("192.168.1.2/24"))
         ping_job = self.matched.m1.run(IcmpPing(dst=self.matched.m2.eth0,
                                                 interval=0,
                                                 iface=self.matched.m1.eth0))
