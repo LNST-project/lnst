@@ -18,6 +18,9 @@ class DeviceError(LnstError):
 class DeviceDeleted(DeviceError):
     pass
 
+class DeviceDisabled(DeviceError):
+    pass
+
 class DeviceNotFound(DeviceError):
     pass
 
