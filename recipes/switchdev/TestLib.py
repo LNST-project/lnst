@@ -9,35 +9,18 @@ jiri@mellanox.com (Jiri Pirko)
 idosch@mellanox.com (Ido Schimmel)
 """
 
+from lnst.Tests import IcmpPing
 from time import sleep
 import logging
 
 class TestLib:
-    def __init__(self, ctl, aliases):
-        self._ctl = ctl
-        self._ipv = aliases["ipv"]
-        self._mtu = int(aliases["mtu"])
-        if "netperf_duration" in aliases:
-            self._netperf_duration = int(aliases["netperf_duration"])
-        if "netperf_num_parallel" in aliases:
-            self._netperf_num_parallel = int(aliases["netperf_num_parallel"])
-        if "mc_low_thershold" in aliases:
-            self._mc_low_thershold = int(aliases["mc_low_thershold"])
-        else:
-            self._mc_low_thershold = 1000
-        if "mc_high_thershold" in aliases:
-            self._mc_high_thershold = int(aliases["mc_high_thershold"])
-        else:
-            self._mc_high_thershold = 10000000
-        if "mc_speed" in aliases:
-            self._mc_speed = int(aliases["mc_speed"])
-        else:
-            self._mc_speed = 1000
+    def __init__(self, mtu):
+        self._mtu = mtu
 
     def _generate_default_desc(self, if1, ifs):
-        ret = "from %s->%s to " % (if1.get_host().get_id(), if1.get_id())
+        ret = "from %s->%s to " % (if1.netns.hostid, if1.name)
         for i in ifs:
-            ret += "%s->%s" % (i.get_host().get_id(), i.get_id())
+            ret += "%s->%s" % (i.netns.hostid, i.name)
             if i != ifs[-1]:
                 ret += ", "
         return ret
@@ -79,33 +62,14 @@ class TestLib:
         if not desc:
             desc = self._generate_default_desc(if1, [if2])
 
-        if1.set_mtu(self._mtu)
-        if2.set_mtu(self._mtu)
+        if1.mtu = self._mtu
+        if2.mtu = self._mtu
 
-        m1 = if1.get_host()
-        m1.sync_resources(modules=["Icmp6Ping", "IcmpPing"])
+        m1 = if1.netns
 
-        ping_mod = self._ctl.get_module("IcmpPing",
-                                        options={
-                                        "addr": if2.get_ip(0),
-                                        "count": count,
-                                        "interval": interval,
-                                        "iface" : if1.get_devname(),
-                                        "limit_rate": limit_rate})
-
-        ping_mod6 = self._ctl.get_module("Icmp6Ping",
-                                         options={
-                                         "addr": if2.get_ip(1),
-                                         "count": count,
-                                         "interval": interval,
-                                         "iface" : if1.get_ip(1),
-                                         "limit_rate": limit_rate})
-
-        if self._ipv in [ 'ipv6', 'both' ]:
-            m1.run(ping_mod6, fail_expected=fail_expected, desc=desc, netns=if1.get_netns())
-
-        if self._ipv in [ 'ipv4', 'both' ]:
-            m1.run(ping_mod, fail_expected=fail_expected, desc=desc, netns=if1.get_netns())
+        ping_job = m1.run(IcmpPing(dst=if2.ips[0], count=count,
+                                   interval=interval, iface=if1,
+                                   limit_rate=limit_rate), desc=desc)
 
     def _get_netperf_srv_mod(self, if1, is_ipv6):
         if is_ipv6:
@@ -170,9 +134,11 @@ class TestLib:
             self._run_netperf(if1, if2, testname, True, desc)
 
     def netperf_tcp(self, if1, if2, desc=None):
+        return # not supported yet
         self._netperf(if1, if2, "TCP_STREAM", desc)
 
     def netperf_udp(self, if1, if2, desc=None):
+        return # not supported yet
         self._netperf(if1, if2, "UDP_STREAM", desc)
 
     def _get_iperf_srv_mod(self, mc_group):
