@@ -25,7 +25,6 @@ def normalize_hwaddr(hwaddr):
 
 def scan_netdevs():
     scan = []
-    ipr = IPRoute()
 
     with IPRoute() as ipr:
         for part in ipr.get_links():
