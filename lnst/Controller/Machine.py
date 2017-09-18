@@ -304,17 +304,6 @@ class Machine(object):
             return
 
         try:
-            #dump statistics
-            for dev in self._device_database.values():
-                stats = dev.link_stats
-                nsname = dev.netns.nsname if dev.netns.nsname else 'root'
-                logging.debug("%s:%s:%s: RX:\t bytes: %d\t packets: %d\t dropped: %d" %
-                              (nsname, self._id, dev.name,
-                              stats["rx_bytes"], stats["rx_packets"], stats["rx_dropped"]))
-                logging.debug("%s:%s:%s: TX:\t bytes: %d\t packets: %d\t dropped: %d" %
-                              (nsname, self._id, dev.name,
-                              stats["tx_bytes"], stats["tx_packets"], stats["tx_dropped"]))
-
             for netns in self._namespaces:
                 self.rpc_call("kill_jobs", netns=netns)
             self.rpc_call("kill_jobs")
