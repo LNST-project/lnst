@@ -72,7 +72,6 @@ class ResourceCache(object):
     def _save_index(self):
         with open(self.index_path, "w") as f:
             json.dump(self._index, f)
-            logging.debug("Resource cache index commited")
 
     @property
     def index_path(self):
