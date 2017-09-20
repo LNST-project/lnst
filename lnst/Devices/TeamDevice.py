@@ -58,4 +58,4 @@ class TeamDevice(MasterDevice):
                      dev.name,
                      prepare_json_str(port_config)))
 
-        dev.master_set(self)
+        dev.master = self

@@ -27,7 +27,7 @@ class MasterDevice(SoftDevice):
         return ret
 
     def slave_add(self, dev):
-        dev.master_set(self)
+        dev.master = self
 
     def slave_del(self, dev):
-        dev.master_set(None)
+        dev.master = None
