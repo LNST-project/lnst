@@ -36,8 +36,7 @@ class SoftDevice(Device):
     def _create(self):
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("add", IFLA_IFNAME=self.name,
-                         IFLA_INFO_KIND=self._link_type)
+                ipr.link("add", ifname=self.name, kind=self._link_type)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()

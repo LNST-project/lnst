@@ -36,9 +36,11 @@ class VethDevice(SoftDevice):
     def _create(self):
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("add", IFLA_IFNAME=self.name,
-                         IFLA_INFO_KIND=self._link_type,
-                         VETH_INFO_PEER=self._peer_name)
+                data = {"attrs": [["VETH_INFO_PEER", self._peer_name]]}
+                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
+                                      ["IFLA_INFO_DATA", data]]}
+                ipr.link("add", ifname=self.name, link=self._real_dev.ifindex,
+                         IFLA_LINKINFO=linkinfo)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()

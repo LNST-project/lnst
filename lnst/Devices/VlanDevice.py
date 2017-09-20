@@ -36,10 +36,11 @@ class VlanDevice(SoftDevice):
     def _create(self):
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("add", IFLA_IFNAME=self.name,
-                         IFLA_INFO_KIND=self._link_type,
-                         IFLA_INFO_LINK=self.real_dev.ifindex,
-                         IFLA_VLAN_ID=self.vlan_id)
+                data = {"attrs": [["IFLA_VLAN_ID", self._vlan_id]]}
+                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
+                                      ["IFLA_INFO_DATA", data]]}
+                ipr.link("add", ifname=self.name, link=self._real_dev.ifindex,
+                         IFLA_LINKINFO=linkinfo)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()

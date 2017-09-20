@@ -57,19 +57,27 @@ class VxlanDevice(SoftDevice):
     def _create(self):
         with pyroute2.IPRoute() as ipr:
             try:
-                kwargs = {"IFLA_VXLAN_ID": self.vxlan_id,
-                          "IFLA_VXLAN_PORT": self.dst_port}
+                data = {"attrs": [["IFLA_VXLAN_ID", self.vxlan_id],
+                                  ["IFLA_VXLAN_PORT", self.dst_port]]}
 
                 if self.real_dev:
-                    kwargs["IFLA_VXLAN_LINK"] = self._real_dev.ifindex
+                    data["attrs"].append(["IFLA_VXLAN_LINK",
+                                          self._real_dev.ifindex])
 
                 if self.group_ip:
-                    kwargs["IFLA_VXLAN_GROUP"] = self.group_ip
+                    data["attrs"].append(["IFLA_VXLAN_GROUP", self.group_ip])
+
                 elif self.remote_ip:
-                    kwargs["IFLA_VXLAN_GROUP"] = self.remote_ip
+                    data["attrs"].append(["IFLA_VXLAN_GROUP", self.remote_ip])
 
                 ipr.link("add", IFLA_IFNAME=self.name,
                          IFLA_INFO_KIND=self._link_type, **kwargs)
+
+                data = {"attrs": [["IFLA_MACVLAN_MODE", self._mode],
+                                  ["IFLA_MACVLAN_MACADDR", self._hwaddr]]}
+                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
+                                      ["IFLA_INFO_DATA", data]]}
+                ipr.link("add", ifname=self.name, IFLA_LINKINFO=linkinfo)
 
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:

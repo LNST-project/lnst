@@ -251,7 +251,7 @@ class Device(object):
         """
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.ifindex, IFLA_IFNAME=new_name)
+                ipr.link("set", index=self.ifindex, ifname=new_name)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()
@@ -278,7 +278,7 @@ class Device(object):
         addr = hwaddress(addr)
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.ifindex, IFLA_ADDRESS=str(addr))
+                ipr.link("set", index=self.ifindex, address=str(addr))
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()
@@ -321,7 +321,7 @@ class Device(object):
             value -- the new MTU."""
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.ifindex, IFLA_MTU=value)
+                ipr.link("set", index=self.ifindex, mtu=value)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()
@@ -355,7 +355,7 @@ class Device(object):
             raise DeviceError("Invalid dev argument.")
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("set", index=self.ifindex, IFLA_MASTER=master_idx)
+                ipr.link("set", index=self.ifindex, master=master_idx)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()

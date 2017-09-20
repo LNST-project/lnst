@@ -29,11 +29,12 @@ class MacvlanDevice(SoftDevice):
     def _create(self):
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.link("add", IFLA_IFNAME=self.name,
-                         IFLA_INFO_KIND=self._link_type,
-                         IFLA_INFO_LINK=self._real_dev.ifindex,
-                         IFLA_MACVLAN_MODE=self._mode,
-                         IFLA_MACVLAN_MACADDR=self._hwaddr)
+                data = {"attrs": [["IFLA_MACVLAN_MODE", self._mode],
+                                  ["IFLA_MACVLAN_MACADDR", self._hwaddr]]}
+                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
+                                      ["IFLA_INFO_DATA", data]]}
+                ipr.link("add", ifname=self.name, link=self._real_dev.ifindex,
+                         IFLA_LINKINFO=linkinfo)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()
