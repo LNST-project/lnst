@@ -402,12 +402,7 @@ class Device(object):
     def _clear_ips(self):
         self._ip_addrs = []
 
-    def ip_add(self, addr):
-        """add an ip address
-
-        Args:
-            addr -- an address accepted by the ipaddress factory method
-        """
+    def _ip_add_one(self, addr):
         ip = ipaddress(addr)
         if ip not in self.ips:
             with pyroute2.IPRoute() as ipr:
@@ -418,14 +413,23 @@ class Device(object):
                 except pyroute2.netlink.NetlinkError:
                     log_exc_traceback()
                     raise DeviceConfigValueError("Invalid IP address")
-        return ip
 
-    def ip_del(self, addr):
-        """remove an ip address
+    def ip_add(self, addr):
+        """add an ip address or a list of ip addresses
 
         Args:
             addr -- an address accepted by the ipaddress factory method
+                    or a list of addresses accepted by the ipaddress
+                    factory method
         """
+
+        if isinstance(addr, list):
+            for oneaddr in addr:
+                self._ip_add_one(oneaddr)
+        else:
+            self._ip_add_one(addr)
+
+    def _ip_del_one(self, addr):
         ip = ipaddress(addr)
         if ip in self.ips:
             with pyroute2.IPRoute() as ipr:
@@ -436,6 +440,20 @@ class Device(object):
                 except pyroute2.netlink.NetlinkError:
                     log_exc_traceback()
                     raise DeviceConfigValueError("Invalid IP address")
+
+    def ip_del(self, addr):
+        """remove an ip address or a list of ip addresses
+
+        Args:
+            addr -- an address accepted by the ipaddress factory method
+                    or a list of addresses accepted by the ipaddress
+                    factory method
+        """
+        if isinstance(addr, list):
+            for oneaddr in addr:
+                self._ip_del_one(oneaddr)
+        else:
+            self._ip_del_one(addr)
 
     def ip_flush(self):
         """flush all ip addresses of the device"""
