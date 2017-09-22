@@ -1,5 +1,5 @@
 """
-Defines the Host class that represents the API for the root namespace of a
+Defines the Host class that represents the API for the init namespace of a
 slave machine.
 
 Copyright 2017 Red Hat, Inc.
@@ -29,43 +29,43 @@ class Hosts(object):
                 yield val
 
 class Host(Namespace):
-    """Namespace derived class for the root namespace
+    """Namespace derived class for the init namespace
 
     Should not be created by the tester, instead it's automatically created
     by the LNST Controller before the 'test' method of a recipe is called.
 
     In addition to the base Namespace class it allows for assignment of a
     NetNamespace instance to create a new network namespace on the host."""
-    def __init__(self, host, **kwargs):
-        super(Host, self).__init__(host)
+    def __init__(self, machine, **kwargs):
+        super(Host, self).__init__(machine)
         self.params = Parameters()
-        self.params._from_dict(self._host._slave_desc)
+        self.params._from_dict(self._machine._slave_desc)
 
-        self._host.set_root_ns(self)
+        self._machine.set_initns(self)
 
     @property
     def namespaces(self):
         """List of network namespaces available on the machine
 
-        Does not include the root namespace (self)."""
+        Does not include the init namespace (self)."""
         ret = []
-        for x in self._host._objects.values():
+        for x in self._machine._objects.values():
             if isinstance(x, NetNamespace):
                 ret.append(x)
         return ret
 
     def _map_device(self, dev_id, how):
         hwaddr = how["hwaddr"]
-        dev = self._host.get_dev_by_hwaddr(hwaddr)
+        dev = self._machine.get_dev_by_hwaddr(hwaddr)
         self._objects[dev_id] = dev
         dev._enable()
 
     def _custom_setattr(self, name, value):
         if not super(Host, self)._custom_setattr(name, value):
             if isinstance(value, NetNamespace):
-                self._host.add_netns(value.nsname)
+                self._machine.add_netns(value.name)
                 self._objects[name] = value
-                value._host = self._host
+                value._machine = self._machine
                 return True
             else:
                 return False

@@ -1,6 +1,6 @@
 """
 Defines the abstract class Namespace that represents the base of both the
-Host (root namespace) and NetNamespace (other network namespaces) classes. It
+Host (init namespace) and NetNamespace (other network namespaces) classes. It
 defines the tester facing APIs which should be mostly identical for both, with
 slight differences. The Namespace class should never be instantiated on it's
 own, only the derived classes should be created.
@@ -39,30 +39,34 @@ class Namespace(object):
     __metaclass__ = ABCMeta
 
     #TODO add packet capture options
-    def __init__(self, host):
+    def __init__(self, machine):
         #storage for mapped objects (Devices, Namespaces...)
         self._objects = {}
-        self._nsname = None
+        self._name = None
 
-        self._host = host
+        self._machine = machine
         self.jobs = None #TODO
+
+    @property
+    def initns(self):
+        return self._machine._initns
 
     @property
     def devices(self):
         """List of devices available in the Namespace"""
         ret = []
-        for x in self._host._device_database.values():
+        for x in self._machine._device_database.values():
             if isinstance(x, Device) and x.netns == self:
                 ret.append(x)
         return ret
 
     @property
-    def nsname(self):
+    def name(self):
         """The name of the Namespace
 
-        returns None for the root namespace
+        returns None for the init namespace
         returns a string name for any other namespace"""
-        return self._nsname
+        return self._name
 
     def run(self, what, bg=False, fail=False, timeout=DEFAULT_TIMEOUT,
             json=False, desc=None):
@@ -90,11 +94,11 @@ class Namespace(object):
             the Job object will be automatically updated.
         """
 
-        job = Job(self._host, what, expect=not fail, json=json,
-                  netns=self.nsname, desc=desc)
+        job = Job(self._machine, what, expect=not fail, json=json,
+                  netns=self.name, desc=desc)
 
         try:
-            self._host.run_job(job)
+            self._machine.run_job(job)
 
             if not bg:
                 if not job.wait(timeout):
@@ -141,8 +145,8 @@ class Namespace(object):
             if value.ifindex is not None:
                 old_ns = value.netns
                 old_ns._unset(value)
-                self._host.remote_device_set_netns(value, self.nsname,
-                                                   old_ns.nsname)
+                self._machine.remote_device_set_netns(value, self.name,
+                                                      old_ns.name)
                 value.netns = self
                 self._objects[name] = value
                 return True
@@ -154,18 +158,18 @@ class Namespace(object):
                     # msg = "Creating VirtualDevices in recipe execution is "\
                           # "not supported right now."
                     # raise HostError(msg)
-                    if self.nsname is not None:
+                    if self.name is not None:
                         raise HostError("Can't create VirtualDevice in a netns")
 
-                    value.host = self._host
+                    value._machine = self._machine
                     value.netns = self
-                    self._host.add_tmp_device(value)
+                    self._machine.add_tmp_device(value)
                     value._create()
-                    self._host.wait_for_tmp_devices(DEFAULT_TIMEOUT)
+                    self._machine.wait_for_tmp_devices(DEFAULT_TIMEOUT)
                 else:
-                    value.host = self._host
+                    value._machine = self._machine
                     value.netns = self
-                    self._host.remote_device_create(value, netns=self.nsname)
+                    self._machine.remote_device_create(value, netns=self.name)
 
             self._objects[name] = value
             return True
@@ -196,3 +200,6 @@ class Namespace(object):
             return True
         else:
             return False
+
+    def __str__(self):
+        return str(self.name)

@@ -58,21 +58,21 @@ class VirtualDevice(RemoteDevice):
         return super(VirtualDevice, self)._match_update_data(data)
 
     def _create(self):
-        domain_ctl = self.host.get_domain_ctl()
+        domain_ctl = self._machine.get_domain_ctl()
 
         if self.orig_hwaddr:
-            if self.host.get_dev_by_hwaddr(self.orig_hwaddr):
+            if self._machine.get_dev_by_hwaddr(self.orig_hwaddr):
                 msg = "Device with hwaddr %s already exists" % self.orig_hwaddr
                 raise DeviceError(msg)
         else:
-            mac_pool = self.host.get_mac_pool()
+            mac_pool = self._machine.get_mac_pool()
             while True:
                 hwaddr = hwaddress(mac_pool.get_addr())
-                if not self.host.get_dev_by_hwaddr(hwaddr):
+                if not self._machine.get_dev_by_hwaddr(hwaddr):
                     self.orig_hwaddr = hwaddr
                     break
 
-        bridges = self.host.get_network_bridges()
+        bridges = self._machine.get_network_bridges()
         if self.network in bridges:
             net_ctl = bridges[self.network]
         else:
@@ -82,7 +82,7 @@ class VirtualDevice(RemoteDevice):
         net_name = net_ctl.get_name()
 
         logging.info("Creating virtual device with hwaddr='%s' on machine %s",
-                     self.orig_hwaddr, self.host.get_id())
+                     self.orig_hwaddr, self._machine.get_id())
 
         domain_ctl.attach_interface(self.orig_hwaddr,
                                     net_name,
@@ -93,7 +93,7 @@ class VirtualDevice(RemoteDevice):
 
     def _destroy(self):
         logging.info("Destroying virtual device with hwaddr='%s' on machine %s",
-                     self.orig_hwaddr, self.host.get_id())
+                     self.orig_hwaddr, self._machine.get_id())
 
-        domain_ctl = self.host.get_domain_ctl()
+        domain_ctl = self._machine.get_domain_ctl()
         domain_ctl.detach_interface(self.orig_hwaddr)

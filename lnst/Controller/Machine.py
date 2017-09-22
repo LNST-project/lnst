@@ -80,15 +80,15 @@ class Machine(object):
         self._device_database = {}
         self._tmp_device_database = []
 
-        self._root_ns = None
+        self._initns = None
 
         self._init_connection()
 
     def set_id(self, new_id):
         self._id = new_id
 
-    def set_root_ns(self, ns):
-        self._root_ns = ns
+    def set_initns(self, ns):
+        self._initns = ns
 
     def get_id(self):
         return self._id
@@ -107,7 +107,7 @@ class Machine(object):
 
     def add_tmp_device(self, dev):
         self._tmp_device_database.append(dev)
-        dev.host = self
+        dev._machine = self
 
     def remote_device_create(self, dev, netns=None):
         dev_clsname = dev._dev_cls.__name__
@@ -117,7 +117,7 @@ class Machine(object):
                                              args=dev_args,
                                              kwargs=dev_kwargs,
                                              netns=netns)
-        dev._host = self
+        dev._machine = self
         dev.ifindex = ret["ifindex"]
         self._device_database[ret["ifindex"]] = dev
 
@@ -136,9 +136,9 @@ class Machine(object):
 
             if new_dev is None:
                 new_dev = RemoteDevice(Device)
-                new_dev.host = self
+                new_dev._machine = self
                 new_dev.ifindex = ifindex
-                new_dev.netns = self._root_ns
+                new_dev.netns = self._initns
             else:
                 self._tmp_device_database.remove(new_dev)
 
@@ -246,9 +246,9 @@ class Machine(object):
         devices = self.rpc_call("get_devices")
         for ifindex, dev in devices.items():
             remote_dev = RemoteDevice(Device)
-            remote_dev.host = self
+            remote_dev._machine = self
             remote_dev.ifindex = ifindex
-            remote_dev.netns = self._root_ns
+            remote_dev.netns = self._initns
 
             self._device_database[ifindex] = remote_dev
 

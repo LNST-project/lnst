@@ -32,7 +32,7 @@ class RemoteDevice(object):
         self.__dev_kwargs = kwargs
         self.__netns = None
 
-        self.host = None
+        self._machine = None
         self.ifindex = None
         self.deleted = False
         self._inited = True
@@ -53,6 +53,10 @@ class RemoteDevice(object):
         return self._dev_cls
 
     @property
+    def host(self):
+        return self._machine._initns
+
+    @property
     def netns(self):
         return self.__netns
 
@@ -71,13 +75,13 @@ class RemoteDevice(object):
 
         if callable(attr):
             def dev_method(*args, **kwargs):
-                return self.host.rpc_call("dev_method", self.ifindex,
-                                          name, args, kwargs,
-                                          netns=self.netns.nsname)
+                return self._machine.rpc_call("dev_method", self.ifindex,
+                                              name, args, kwargs,
+                                              netns=self.netns.name)
             return dev_method
         else:
-            return self.host.rpc_call("dev_attr", self.ifindex, name,
-                                      netns=self.netns.nsname)
+            return self._machine.rpc_call("dev_attr", self.ifindex, name,
+                                          netns=self.netns.name)
 
     def __setattr__(self, name, value):
         if not self._inited:
@@ -85,8 +89,8 @@ class RemoteDevice(object):
 
         try:
             getattr(self._dev_cls, name)
-            return self.host.rpc_call("dev_set_attr", self.ifindex, name, value,
-                                      netns=self.netns.nsname)
+            return self._machine.rpc_call("dev_set_attr", self.ifindex, name, value,
+                                          netns=self.netns.name)
         except AttributeError:
             return super(RemoteDevice, self).__setattr__(name, value)
 
