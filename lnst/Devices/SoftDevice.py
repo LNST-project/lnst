@@ -46,7 +46,7 @@ class SoftDevice(Device):
         with pyroute2.IPRoute() as ipr:
             try:
                 ipr.link("del", index=self.ifindex)
-                self._if_manager.handle_netlink_msgs()
+                self._if_manager.rescan_devices()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()
                 raise DeviceConfigError("Deleting link %s failed." % self.name)
