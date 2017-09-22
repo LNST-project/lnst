@@ -80,17 +80,23 @@ class InterfaceManager(object):
     def get_netlink_messages(self):
         try:
             rl, wl, xl = select.select([self._nl_socket], [], [], 0)
-            f = rl[0]
+            try:
+                f = rl[0]
+            except:
+                return []
             return f.get()
-        except IndexError:
-            return []
-        except select.error:
+        except (IndexError, select.error):
             return []
         except socket.error:
             self.reconnect_netlink()
             return []
 
     def rescan_devices(self):
+        #since we're rescanning all devices we need to dump all the messages
+        #currently in the Queue of the nl socket - so we don't later update
+        #devices with outdated messages
+        self.get_netlink_messages()
+
         devices_to_remove = self._devices.keys()
         devs = scan_netdevs()
         for dev in devs:
