@@ -21,7 +21,7 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
-from lnst.Common.DeviceError import DeviceNotFound
+from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError
 from lnst.Common.InterfaceManagerError import InterfaceManagerError
 from lnst.Slave.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
@@ -230,7 +230,10 @@ class InterfaceManager(object):
     def create_device(self, clsname, args=[], kwargs={}):
         devcls = self._device_classes[clsname]
 
-        device = devcls(self, *args, **kwargs)
+        try:
+            device = devcls(self, *args, **kwargs)
+        except KeyError as e:
+            raise DeviceConfigError("%s is a mandatory argument" % e)
         device._create()
 
         devs = scan_netdevs()
