@@ -33,8 +33,9 @@ def do_task(ctl, hosts, ifaces, aliases):
     m1_if, m2_if, m3_if, m4_if, sw_if1, sw_if2, sw_if3, sw_if4 = ifaces
 
     # Create a bridge
-    sw_br = sw.create_bridge(slaves=[sw_if1, sw_if2, sw_if3, sw_if4],
-        options={"vlan_filtering": 1})
+    sw_ports = [sw_if1, sw_if2, sw_if3, sw_if4]
+    sw_br = sw.create_bridge(slaves=sw_ports, options={"vlan_filtering": 1,
+                                                       "multicast_querier": 1})
 
     m1_if.set_addresses(test_ip(1,1))
     m2_if.set_addresses(test_ip(1, 2))
@@ -44,6 +45,7 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     tl = TestLib(ctl, aliases)
 
+    tl.check_cpu_traffic(sw_ports, test=False)
     for iface in [m1_if, m2_if, m3_if, m4_if]:
         iface.enable_multicast()
 
@@ -52,6 +54,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     test_standard_mutlicast(tl, m2_if, [m3_if, m4_if, m1_if], [], mcgrp(5))
     for iface in [m1_if, m2_if, m3_if, m4_if]:
         iface.disable_multicast()
+    tl.check_cpu_traffic(sw_ports)
 
 do_task(ctl, [ctl.get_host("machine1"),
               ctl.get_host("machine2"),

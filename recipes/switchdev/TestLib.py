@@ -260,6 +260,23 @@ class TestLib:
                    ["shouldn't", "should"][expect])
             self.custom(iface.get_host(), "iperf_mc", err_str)
 
+    def check_cpu_traffic(self, ifaces, thershold = 100, test = True):
+        err = False
+        for iface in ifaces:
+            stats = iface.link_cpu_ifstat()
+            if not test:
+                continue
+
+            # Check tx only, since in rx case it is hard to distinguish between
+            # offloading error and "legal" cpu traps.
+            if stats["tx_packets"] > thershold:
+                err = True
+                self.custom(iface.get_host(),  "cpu traffic",
+                            "%s sent too much data (%d packets)" % \
+                            (stats["devname"], stats["tx_packets"]))
+        if not err:
+            self.custom(iface.get_host(),  "cpu traffic", "")
+
     def pktgen(self, if1, if2, pkt_size, desc=None, thread_option=[], **kwargs):
         if1.set_mtu(self._mtu)
         m1 = if1.get_host()
