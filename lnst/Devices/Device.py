@@ -91,23 +91,29 @@ class Device(object):
     def __getattribute__(self, name):
         what = super(Device, self).__getattribute__(name)
 
-        if super(Device, self).__getattribute__("_deleted"):
-            raise DeviceDeleted("Device was deleted.")
+        try:
+            if super(Device, self).__getattribute__("_deleted"):
+                raise DeviceDeleted("Device was deleted.")
+        except AttributeError:
+            pass
 
-        if not callable(what):
-            return what
-        else:
-            if (super(Device, self).__getattribute__("_enabled") or
-                    name[0] == "_"):
+        try:
+            if not callable(what):
                 return what
-            elif not super(Device, self).__getattribute__("_enabled"):
-                raise DeviceDisabled("Can't call methods on a disabled device.")
+            else:
+                if (super(Device, self).__getattribute__("_enabled") or
+                        name[0] == "_"):
+                    return what
+                elif not super(Device, self).__getattribute__("_enabled"):
+                    raise DeviceDisabled("Can't call methods on a disabled device.")
+        except AttributeError:
+            return what
 
     def __setattr__(self, name, value):
         try:
             if getattr(self, "_deleted"):
                 raise DeviceDeleted("Device was deleted.")
-        except:
+        except AttributeError:
             pass
 
         try:
@@ -115,7 +121,7 @@ class Device(object):
                 raise DeviceDisabled("Can't set attributes for a disabled device.")
             else:
                 return super(Device, self).__setattr__(name, value)
-        except:
+        except AttributeError:
             return super(Device, self).__setattr__(name, value)
 
     def _set_devlink(self, devlink_port_data):
