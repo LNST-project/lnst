@@ -52,6 +52,10 @@ class Namespace(object):
         return self._machine._initns
 
     @property
+    def hostid(self):
+        return self._machine.get_id()
+
+    @property
     def devices(self):
         """List of devices available in the Namespace"""
         ret = []
