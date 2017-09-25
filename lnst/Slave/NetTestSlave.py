@@ -1031,6 +1031,24 @@ class SlaveMethods:
             return False
         return True
 
+    def set_mcast_flood(self, if_id, on):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.set_mcast_flood(on)
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
+    def set_mcast_router(self, if_id, state):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.set_mcast_router(state)
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        return True
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()

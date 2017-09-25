@@ -797,3 +797,16 @@ class Device(object):
     def set_pause_off(self):
         exec_cmd("ethtool -A %s rx off tx off autoneg off" % self._name,
                  die_on_err=False)
+
+    def set_mcast_flood(self, on = True):
+        cmd = "ip link set dev %s type bridge_slave mcast_flood " % self._name
+        if on:
+            cmd += "on"
+        else:
+            cmd += "off"
+        exec_cmd(cmd)
+
+    def set_mcast_router(self, state):
+        cmd = "ip link set dev %s type bridge_slave mcast_router %d" % \
+                   (self._name, state)
+        exec_cmd(cmd)

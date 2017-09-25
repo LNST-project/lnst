@@ -700,6 +700,12 @@ class InterfaceAPI(object):
     def set_br_state(_self, state, self=False, master=False):
         _self._if.set_br_state({"state": state, "self": self, "master": master})
 
+    def set_mcast_flood(self, on):
+        return self._if.set_mcast_flood(on)
+
+    def set_mcast_router(self, state):
+        return self._if.set_mcast_router(state)
+
     def set_speed(self, speed):
         return self._if.set_speed(speed)
 
