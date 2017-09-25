@@ -13,29 +13,22 @@ olichtne@redhat.com (Ondrej Lichtner)
 import pyroute2
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.DeviceError import DeviceConfigError
+from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class MacvlanDevice(SoftDevice):
     _name_template = "t_macvlan"
     _link_type = "macvlan"
 
+    _link_map = dict(SoftDevice._link_map)
+    _link_map.update({"realdev": "IFLA_LINK"})
+
+    _linkinfo_data_map = {"mode": "IFLA_MACVLAN_MODE"}
+
     def __init__(self, ifmanager, *args, **kwargs):
-        super(MacvlanDevice, self).__init__(ifmanager, args, kwargs)
+        if not isinstance(kwargs["realdev"], Device):
+            raise DeviceConfigError("Invalid value for realdev argument.")
 
-        self._real_dev = kwargs["realdev"]
-        self._mode = kwargs.get("mode", None)
-        self._hwaddr = kwargs.get("hwaddr", None)
+        kwargs["realdev"] = kwargs["realdev"].ifindex
 
-    def _create(self):
-        with pyroute2.IPRoute() as ipr:
-            try:
-                data = {"attrs": [["IFLA_MACVLAN_MODE", self._mode],
-                                  ["IFLA_MACVLAN_MACADDR", self._hwaddr]]}
-                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
-                                      ["IFLA_INFO_DATA", data]]}
-                ipr.link("add", ifname=self.name, link=self._real_dev.ifindex,
-                         IFLA_LINKINFO=linkinfo)
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigError("Creating link %s failed." % self.name)
+        super(MacvlanDevice, self).__init__(ifmanager, *args, **kwargs)

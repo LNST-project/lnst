@@ -20,7 +20,7 @@ from lnst.Devices.SoftDevice import SoftDevice
 
 class _BaseVtiDevice(SoftDevice):
     def __init__(self, ifmanager, *args, **kwargs):
-        super(_BaseVtiDevice, self).__init__(ifmanager, args, kwargs)
+        super(_BaseVtiDevice, self).__init__(ifmanager, *args, **kwargs)
 
         self._key = int(kwargs["key"])
 
@@ -35,10 +35,10 @@ class _BaseVtiDevice(SoftDevice):
         self._device = kwargs.get("dev", None)
 
         if self._device is not None and not isinstance(self._device, Device):
-            raise DeviceError("dev parameter must be a Device object.")
+            raise DeviceConfigError("dev parameter must be a Device object.")
 
         if self.local is None and self.remote is None:
-            raise DeviceError("One of local/remote MUST be defined.")
+            raise DeviceConfigError("One of local/remote MUST be defined.")
 
     def _restore_original_data(self):
         """Restores initial configuration from stored values"""
@@ -65,31 +65,8 @@ class _BaseVtiDevice(SoftDevice):
     def vti_type(self):
         raise NotImplementedError()
 
-    # TODO this method is tested as not working, maybe pyroute2 support is
-    # missing...
-    # def _create(self):
-        # with pyroute2.IPRoute() as ipr:
-            # try:
-                # kwargs = {}
-                # if self.local:
-                    # kwargs["IFLA_VTI_LOCAL"] = str(self.local)
-
-                # if self.remote:
-                    # kwargs["IFLA_VTI_REMOTE"] = str(self.remote)
-
-                # if self.device:
-                    # kwargs["IFLA_VTI_LINK"] = self.device.ifindex
-
-                # ipr.link("add", IFLA_IFNAME=self.name,
-                         # IFLA_INFO_KIND=self._link_type,
-                         # IFLA_VTI_IKEY=self.key,
-                         # IFLA_VTI_OKEY=self.key,
-                         # **kwargs)
-                # self._if_manager.handle_netlink_msgs()
-            # except pyroute2.netlink.NetlinkError:
-                # log_exc_traceback()
-                # raise DeviceConfigError("Creating link %s failed." % self.name)
-
+    # TODO netlink configuration as implemented in the SoftDevice class
+    # doesn't seem to work - pyroute2 support is probably missing
     def _create(self):
         exec_cmd("ip link add {name} type {type}{local}{remote}{key}{device}".
                  format(name=self.name,

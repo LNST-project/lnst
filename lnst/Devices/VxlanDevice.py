@@ -13,73 +13,65 @@ olichtne@redhat.com (Ondrej Lichtner)
 import pyroute2
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.DeviceError import DeviceError, DeviceConfigError
+from lnst.Common.IpAddress import ipaddress
+from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class VxlanDevice(SoftDevice):
     _name_template = "t_vxlan"
     _link_type = "vxlan"
 
+    _linkinfo_data_map = {"vxlan_id": "IFLA_VXLAN_ID",
+                          "dst_port": "IFLA_VXLAN_PORT",
+                          "realdev": "IFLA_VXLAN_LINK",
+                          "group_ip": "IFLA_VXLAN_GROUP",
+                          "remote_ip": "IFLA_VXLAN_GROUP"}
+
     def __init__(self, ifmanager, *args, **kwargs):
-        super(VxlanDevice, self).__init__(ifmanager, args, kwargs)
+        try:
+            kwargs["vxlan_id"] = int(kwargs["vxlan_id"])
+        except:
+            raise DeviceConfigError("Invalid value for vxlan_id argument.")
 
-        self._vxlan_id = int(kwargs["vxlan_id"])
-        self._real_dev = kwargs.get("real_dev", None)
-        self._group_ip = kwargs.get("group_ip", None)
-        self._remote_ip = kwargs.get("remote_ip", None)
-        self._dstport = int(kwargs.get("dst_port", 0))
+        if "realdev" in kwargs:
+            if not isinstance(kwargs["realdev"], Device):
+                raise DeviceConfigError("Invalid value for realdev argument.")
 
-        if self.group_ip is None and self.remote_ip is None:
-            raise DeviceError("group or remote must be specified for vxlan")
+            kwargs["realdev"] = kwargs["realdev"].ifindex
 
-        if self.group_ip is not None and self.remote_ip is not None:
+        if "group_ip" in kwargs and "remote_ip" in kwargs:
             raise DeviceError("group and remote cannot both be specified for vxlan")
 
-    @property
-    def real_dev(self):
-        return self._real_dev
+        if "group_ip" in kwargs:
+            kwargs["group_ip"] = str(ipaddress(kwargs.get("group_ip")))
+        elif "remote_ip" in kwargs:
+            kwargs["remote_ip"] = str(ipaddress(kwargs.get("remote_ip")))
+        else:
+            raise DeviceError("group or remote must be specified for vxlan")
 
-    @property
-    def vxlan_id(self):
-        return self._vxlan_id
+        try:
+            kwargs["dst_port"] = int(kwargs.get("dst_port",0))
+        except:
+            raise DeviceConfigError("Invalid value for dst_port argument.")
 
-    @property
-    def group_ip(self):
-        return self._group_ip
+        super(VxlanDevice, self).__init__(ifmanager, *args, **kwargs)
 
-    @property
-    def remote_ip(self):
-        return self._remote_ip
+    # @property
+    # def real_dev(self):
+        # return self._real_dev
 
-    @property
-    def dst_port(self):
-        return self._dst_port
+    # @property
+    # def vxlan_id(self):
+        # return self._vxlan_id
 
-    def _create(self):
-        with pyroute2.IPRoute() as ipr:
-            try:
-                data = {"attrs": [["IFLA_VXLAN_ID", self.vxlan_id],
-                                  ["IFLA_VXLAN_PORT", self.dst_port]]}
+    # @property
+    # def group_ip(self):
+        # return self._group_ip
 
-                if self.real_dev:
-                    data["attrs"].append(["IFLA_VXLAN_LINK",
-                                          self._real_dev.ifindex])
+    # @property
+    # def remote_ip(self):
+        # return self._remote_ip
 
-                if self.group_ip:
-                    data["attrs"].append(["IFLA_VXLAN_GROUP", self.group_ip])
-
-                elif self.remote_ip:
-                    data["attrs"].append(["IFLA_VXLAN_GROUP", self.remote_ip])
-
-                ipr.link("add", IFLA_IFNAME=self.name,
-                         IFLA_INFO_KIND=self._link_type, **kwargs)
-
-                data = {"attrs": [["IFLA_MACVLAN_MODE", self._mode],
-                                  ["IFLA_MACVLAN_MACADDR", self._hwaddr]]}
-                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
-                                      ["IFLA_INFO_DATA", data]]}
-                ipr.link("add", ifname=self.name, IFLA_LINKINFO=linkinfo)
-
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigError("Creating link %s failed." % self.name)
+    # @property
+    # def dst_port(self):
+        # return self._dst_port

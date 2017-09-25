@@ -27,7 +27,7 @@ class TeamDevice(MasterDevice):
     _name_template = "t_team"
 
     def __init__(self, ifmanager, *args, **kwargs):
-        super(TeamDevice, self).__init__(ifmanager, args, kwargs)
+        super(TeamDevice, self).__init__(ifmanager, *args, **kwargs)
 
         self._config = kwargs.get("config", None)
         self._dbus = not bool_it(kwargs.get("disable_dbus", False))

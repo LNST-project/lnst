@@ -21,30 +21,27 @@ class VethDevice(SoftDevice):
     _name_template = "veth"
     _link_type = "veth"
 
+    _link_map = {"name": "IFLA_IFNAME"}
+    _linkinfo_data_map = {"peer_name": "VETH_INFO_PEER"}
+
     def __init__(self, ifmanager, *args, **kwargs):
-        super(VethDevice, self).__init__(ifmanager, args, kwargs)
+        if "name" not in kwargs:
+            kwargs["name"] = ifmanager.assign_name(self._name_template)
 
-        self._name = kwargs.get("name", None)
-        self._peer_name = kwargs.get("peer_name", None)
+        if "peer_name" not in kwargs:
+            kwargs["peer_name"] = ifmanager.assign_name("peer_"+self._name_template)
 
-        if self._name is None:
-            self._name = ifmanager.assign_name(self._name_template)
+        super(VethDevice, self).__init__(ifmanager, *args, **kwargs)
 
-        if self._peer_name is None:
-            self._peer_name = ifmanager.assign_name("peer_"+self._name_template)
-
-    def _create(self):
-        with pyroute2.IPRoute() as ipr:
-            try:
-                data = {"attrs": [["VETH_INFO_PEER", self._peer_name]]}
-                linkinfo = {"attrs": [["IFLA_INFO_KIND", self._link_type],
-                                      ["IFLA_INFO_DATA", data]]}
-                ipr.link("add", ifname=self.name, link=self._real_dev.ifindex,
-                         IFLA_LINKINFO=linkinfo)
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigError("Creating link %s failed." % self.name)
+    def _parse_linkinfo_data(self, **kwargs):
+        data = {"attrs": []}
+        for key, nl_attr in self._linkinfo_data_map.items():
+            if key in kwargs:
+                val = kwargs.pop(key)
+                if key == "peer_name":
+                    val = {"attrs": [("IFLA_IFNAME", val)]}
+                data["attrs"].append((nl_attr, val))
+        return data
 
     @property
     def peer(self):
