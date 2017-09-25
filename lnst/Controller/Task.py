@@ -610,6 +610,9 @@ class InterfaceAPI(object):
     def link_stats(self):
         return self._if.link_stats()
 
+    def link_cpu_ifstat(self):
+        return self._if.link_cpu_ifstat()
+
     def set_link_up(self):
         return self._if.set_link_up()
 

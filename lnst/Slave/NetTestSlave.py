@@ -194,6 +194,13 @@ class SlaveMethods:
             return {}
         return dev.get_if_data()
 
+    def link_cpu_ifstat(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is None:
+            logging.error("Device with id '%s' not found." % if_id)
+            return {}
+        return dev.link_cpu_ifstat()
+
     def link_stats(self, if_id):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is None:

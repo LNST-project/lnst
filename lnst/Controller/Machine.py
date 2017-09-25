@@ -783,6 +783,11 @@ class Interface(object):
                                           self._id)
         return stats
 
+    def link_cpu_ifstat(self):
+        stats = self._machine._rpc_call_x(self._netns, "link_cpu_ifstat",
+                                          self._id)
+        return stats
+
     def set_addresses(self, ips):
         self._addresses = ips
         self._machine._rpc_call_x(self._netns, "set_addresses",
