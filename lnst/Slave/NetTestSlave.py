@@ -937,6 +937,24 @@ class SlaveMethods:
         brt.set_state(br_state_info)
         return True
 
+    def set_br_mcast_snooping(self, if_id, set_on = True):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.set_mcast_snooping(set_on)
+        return True
+
+    def set_br_mcast_querier(self, if_id, set_on = True):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if not dev:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+        brt = BridgeTool(dev.get_name())
+        brt.set_mcast_querier(set_on)
+        return True
+
     def set_speed(self, if_id, speed):
         dev = self._if_manager.get_mapped_device(if_id)
         if dev is not None:

@@ -966,6 +966,14 @@ class Interface(object):
         self._machine._rpc_call_x(self._netns, "set_br_state", self._id,
                                   br_state_info)
 
+    def set_br_mcast_snooping(self, set_on):
+        self._machine._rpc_call_x(self._netns, "set_br_mcast_snooping",
+                                  self._id, set_on)
+
+    def set_br_mcast_querier(self, set_on):
+        self._machine._rpc_call_x(self._netns, "set_br_mcast_querier", self._id,
+                                  set_on)
+
     def set_mcast_flood(self, on):
         self._machine._rpc_call_x(self._netns, "set_mcast_flood", self._id, on)
 

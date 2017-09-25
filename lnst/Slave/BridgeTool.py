@@ -117,3 +117,13 @@ class BridgeTool:
         if br_state_info["master"]:
             cmd += " master"
         exec_cmd(cmd)
+
+    def set_mcast_snooping(self, set_on = True):
+        cmd = "ip link set %s type bridge mcast_snooping %d" % (self._dev_name,
+                                                                set_on)
+        exec_cmd(cmd)
+
+    def set_mcast_querier(self, set_on = True):
+        cmd = "ip link set %s type bridge mcast_querier %d" % (self._dev_name,
+                                                                set_on)
+        exec_cmd(cmd)

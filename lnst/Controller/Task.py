@@ -700,6 +700,12 @@ class InterfaceAPI(object):
     def set_br_state(_self, state, self=False, master=False):
         _self._if.set_br_state({"state": state, "self": self, "master": master})
 
+    def set_br_mcast_snooping(_self, set_on = True):
+        _self._if.set_br_mcast_snooping(set_on)
+
+    def set_br_mcast_querier(_self, set_on = True):
+        _self._if.set_br_mcast_querier(set_on)
+
     def set_mcast_flood(self, on):
         return self._if.set_mcast_flood(on)
 
