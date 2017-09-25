@@ -201,75 +201,64 @@ class TestLib:
         }
         return self._ctl.get_module("Iperf", options = modules_options)
 
-    def iperf_mc(self, sender, listeners, bridged, mc_group, desc=None):
+    def iperf_mc_listen(self, listener, mc_group):
+        host = listener.get_host()
+        srv_m = self._get_iperf_srv_mod(mc_group)
+        proc = host.run(srv_m, bg=True, netns=listener.get_netns())
+        return proc
+
+    def iperf_mc(self, sender, recivers, mc_group, desc=None):
         if not desc:
-            desc = self._generate_default_desc(sender, listeners)
+            desc = self._generate_default_desc(sender, recivers)
 
         sender.set_mtu(self._mtu)
-        sender.enable_multicast()
-        map(lambda i:i.enable_multicast(), listeners + bridged)
-        map(lambda i:i.set_mtu(self._mtu), listeners + bridged)
+        map(lambda i:i.set_mtu(self._mtu), recivers)
 
         sender_host = sender.get_host()
-        listeners_host = map(lambda i:i.get_host(), listeners)
-        bridged_host = map(lambda i:i.get_host(), bridged)
+        recivers_host = map(lambda i:i.get_host(), recivers)
 
         map(lambda i:i.sync_resources(modules=["Iperf"]),
-            listeners_host + bridged_host)
+            recivers_host)
 
         duration = self._netperf_duration
         speed = self._mc_speed
 
         # read link-stats
-        sender_stats = sender.link_stats()
-        listeners_stats = map(lambda i:i.link_stats(), listeners)
-        bridged_stats = map(lambda i:i.link_stats(), bridged)
-
-        # Run iperf server for all listeners
-        srv_m = self._get_iperf_srv_mod(mc_group)
-        s_procs = map(lambda i:i[0].run(srv_m, bg=True, netns=i[1].get_netns()),
-                      zip(listeners_host, listeners))
-        self._ctl.wait(2)
+        sender_stats_before = sender.link_stats()
+        recivers_stats_before = map(lambda i:i.link_stats(), recivers)
 
         # An send traffic to all listeners but bridged
         cli_m = self._get_iperf_cli_mod(mc_group, duration, speed)
         sender_host.run(cli_m, timeout=duration + 10, desc=desc,
                         netns=sender.get_netns())
-        map(lambda i:i.intr(), s_procs)
-        map(lambda i:i.disable_multicast(), listeners + bridged)
-        sender.disable_multicast()
 
         # re-read link-stats
-        sender_stats1 = sender.link_stats()
-        listeners_stats1 = map(lambda i:i.link_stats(), listeners)
-        bridged_stats1 = map(lambda i:i.link_stats(), bridged)
+        sender_stats_after = sender.link_stats()
+        recivers_stats_after = map(lambda i:i.link_stats(), recivers)
 
-        # Check that listeners got multi cast traffic
-        tx = sender_stats1["tx_bytes"] - sender_stats["tx_bytes"]
-        rx = map(lambda i:i[1]["rx_bytes"] - i[0]["rx_bytes"],
-                 zip(listeners_stats, listeners_stats1))
-        err = filter(lambda i:i[0] < self._mc_high_thershold, zip(rx, listeners))
-        err_str = map(lambda i:("Traffic isn't received for %s:%s count %d" %
-                               (i[1].get_host().get_id(), i[1].get_id(), i[0]),
-                               i[1]), err)
-        for i in err_str:
-            self.custom(i[1].get_host(), "iperf_mc", i[0])
-        for i in zip(rx, listeners):
+        # Check that who got multi cast traffic
+        tx = sender_stats_after["tx_bytes"] - sender_stats_before["tx_bytes"]
+        rx = map(lambda i,l:i["rx_bytes"] - l["rx_bytes"],
+                 recivers_stats_after, recivers_stats_before)
+        recivers_result = [rate > self._mc_high_thershold for rate in rx]
+        for i in zip(rx, recivers):
             logging.info("Measured traffic on %s:%s is %dMb, bytes lost %d (%d%%)" %
                          (i[1].get_host().get_id(), i[1].get_id(),
                           i[0] / 1000000,
                           max(tx - i[0], 0),
                           (max(tx - i[0], 0) * 100) / tx))
+        return recivers_result
 
-        # Check that only listeners got traffic
-        rx = map(lambda i:i[1]["rx_bytes"] - i[0]["rx_bytes"],
-                 zip(bridged_stats, bridged_stats1))
-        err = filter(lambda i:i[0] > self._mc_low_thershold, zip(rx, bridged))
-        err_str = map(lambda i:("Received unwanted traffic for %s:%s count %d" %
-                               (i[1].get_host().get_id(), i[1].get_id(), i[0]),
-                               i[1]), err)
-        for i in err_str:
-            self.custom(i[1].get_host(), "iperf_mc", i[0])
+    def mc_ipref_compare_result(self, ifaces, results, expected):
+        err_indices = [i for i in range(len(results))
+                       if results[i] != expected[i]]
+        for i in err_indices:
+            iface, result, expect = ifaces[i], results[i], expected[i]
+            err_str = "interface %s in %s %s traffic, when it %s get" % \
+                  (iface.get_id(), iface.get_host().get_id(), \
+                   ["didn't get", "got"][result], \
+                   ["shouldn't", "should"][expect])
+            self.custom(iface.get_host(), "iperf_mc", err_str)
 
     def pktgen(self, if1, if2, pkt_size, desc=None, thread_option=[], **kwargs):
         if1.set_mtu(self._mtu)
