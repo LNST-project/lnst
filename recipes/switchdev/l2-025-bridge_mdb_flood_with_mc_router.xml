@@ -1,0 +1,70 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <veth_pair>
+                    <veth id="veth0"/>
+                    <veth id="veth1" netns="nsif1">
+                    </veth>
+                </veth_pair>
+                <bridge id="brif1">
+                    <slaves>
+                        <slave id="if1"/>
+                        <slave id="veth0"/>
+                    </slaves>
+                </bridge>
+                <eth id="if2" label="B" />
+                <veth_pair>
+                    <veth id="veth2"/>
+                    <veth id="veth3" netns="nsif2">
+                    </veth>
+                </veth_pair>
+                <bridge id="brif2">
+                    <slaves>
+                        <slave id="if2"/>
+                        <slave id="veth2"/>
+                    </slaves>
+                </bridge>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="if1" label="C" />
+                <veth_pair>
+                    <veth id="veth0"/>
+                    <veth id="veth1" netns="nsif1">
+                    </veth>
+                </veth_pair>
+                <bridge id="brif1">
+                    <slaves>
+                        <slave id="if1"/>
+                        <slave id="veth0"/>
+                    </slaves>
+                </bridge>
+                <eth id="if2" label="D" />
+                <veth_pair>
+                    <veth id="veth2"/>
+                    <veth id="veth3" netns="nsif2">
+                    </veth>
+                </veth_pair>
+                <bridge id="brif2">
+                    <slaves>
+                        <slave id="if2"/>
+                        <slave id="veth2"/>
+                    </slaves>
+                </bridge>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <eth id="if2" label="B" />
+                <eth id="if3" label="C" />
+                <eth id="if4" label="D" />
+            </interfaces>
+        </host>
+    </network>
+    <task python="l2-025-bridge_mdb_flood_with_mc_router.py" />
+</lnstrecipe>
