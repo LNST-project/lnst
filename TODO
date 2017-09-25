@@ -5,11 +5,15 @@ them to be implemented in Python Recipes, with notes where relevant.
     * port to pyroute2 pushed upstream
     * adjust based on experiments with porting recipes
 
-* disable all Devices by default and enable only those that are in the machine
-  xml, also think about having an API for manual control
-    - statistics during deconfiguration also for just these devices
-        - bulk slave method, remove autodump at deconfiguration, make this
-          manual
+* Params should be just self.params.x, also x in self.params should tell us if
+  it was set or not --> implement def __contains__(self, item)
+
+* fix git version check - if git not installed raise Exception/report error
+
+* https://pastebin.com/JmXaaAvv + https://pastebin.com/PpG1RCYY - netlink sockets leaking?
+    * possibly fixed
+
+* API for "first" ip in list limited by selector
 
 * go through master to check for bugs that can be backported
     - e.g. c54a38eafea6e9e784cddd14deaac0e3abb4b5f7
@@ -86,3 +90,26 @@ them to be implemented in Python Recipes, with notes where relevant.
 * test tools - concept from old XML LNST, we should think of some kind of an
   equivalent. I think the new sync mechanism could be exported as an API to the
   tester and that could help with that
+
+
+
+
+
+
+
+
+
+============== DONE ==============
+* rootns rename to initns
+
+* Netnamespace.name instead of nsname
+
+* RemoteDevice.host to _host -> Machine object shouldn't be accessible
+    .host should be the initns on the machine
+    str(Host/Namespace) == str(Host/Namespace.name)
+
+* disable all Devices by default and enable only those that are in the machine
+  xml, also think about having an API for manual control
+    - statistics during deconfiguration also for just these devices
+        - bulk slave method, remove autodump at deconfiguration, make this
+          manual
