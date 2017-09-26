@@ -12,6 +12,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 from lnst.Common.Parameters import Parameters
+from lnst.Controller.Common import ControllerError
 from lnst.Controller.Namespace import Namespace
 from lnst.Controller.NetNamespace import NetNamespace
 
@@ -57,8 +58,12 @@ class Host(Namespace):
     def _map_device(self, dev_id, how):
         hwaddr = how["hwaddr"]
         dev = self._machine.get_dev_by_hwaddr(hwaddr)
-        self._objects[dev_id] = dev
-        dev._enable()
+        if dev:
+            self._objects[dev_id] = dev
+            dev._enable()
+        else:
+            raise ControllerError("Device with macaddr {} not found on {}."
+                                  .format(hwaddr, self.hostid))
 
     def _custom_setattr(self, name, value):
         if not super(Host, self)._custom_setattr(name, value):

@@ -116,8 +116,8 @@ class Controller(object):
             i += 1
 
             self._print_match_description(match)
-            self._map_match(match, req)
             try:
+                self._map_match(match, req)
                 recipe._set_hosts(self._hosts)
                 recipe.test()
             except Exception as exc:
