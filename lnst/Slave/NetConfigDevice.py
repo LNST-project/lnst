@@ -333,6 +333,7 @@ class NetConfigDeviceVxlan(NetConfigDeviceGeneric):
         vxlan_id = int(get_option(config, "id"))
         group_ip = get_option(config, "group_ip")
         remote_ip = get_option(config, "remote_ip")
+        extra = get_option(config, "extra") or ''
 
         if group_ip:
             group_or_remote = "group %s" % group_ip
@@ -347,12 +348,13 @@ class NetConfigDeviceVxlan(NetConfigDeviceGeneric):
         else:
             dstport = int(dstport)
 
-        exec_cmd("ip link add %s type vxlan id %d %s %s dstport %d"
+        exec_cmd("ip link add %s type vxlan id %d %s %s dstport %d %s"
                                 % (dev_name,
                                    vxlan_id,
                                    dev_param,
                                    group_or_remote,
-                                   dstport))
+                                   dstport,
+                                   extra))
 
     def destroy(self):
         dev_name = self._dev_config["name"]
