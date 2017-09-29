@@ -151,6 +151,7 @@ class Controller(object):
                                                  driver=dev.params.driver,
                                                  hwaddr=dev.params.hwaddr)
                     setattr(host, name, new_virt_dev)
+                    new_virt_dev._enable()
 
     def _prepare_machine(self, machine):
         self._log_ctl.add_slave(machine.get_id())
