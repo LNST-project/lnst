@@ -21,7 +21,9 @@ class MyRecipe(BaseRecipe):
 
     def test(self):
         self.matched.m1.eth0.ip_add(ipaddress("192.168.1.1/24"))
+        self.matched.m1.eth0.up()
         self.matched.m2.eth0.ip_add(ipaddress("192.168.1.2/24"))
+        self.matched.m2.eth0.up()
         ping_job = self.matched.m1.run(IcmpPing(dst=self.matched.m2.eth0,
                                                 interval=0,
                                                 iface=self.matched.m1.eth0))
