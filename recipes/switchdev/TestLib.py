@@ -476,6 +476,33 @@ class TestLib:
 
         return self.custom(iface.get_host(), desc, err_msg)
 
+    def expect_mr_notif(self, sw, notif_type, source_ip = None,
+                        source_vif = None, group_ip = None, none_ok = False):
+        notif = sw.mroute_get_notif()
+        if notif == {}:
+            if not none_ok:
+                self.custom(sw, "mr_notif", \
+                            "No mroute notification - the packet did not arrive to the kernel")
+            return None
+
+        if notif["notif_type"] != notif_type:
+            self.custom(sw, "mr_notif",
+                        "Got notification of wrong type %d != %d" % \
+                            (notif_type, notif["notif_type"]))
+        if source_ip and notif["source_ip"] != str(source_ip):
+            self.custom(sw, "mr_notif",
+                        "Got notification with wrong source IP '%s' != '%s'" %
+                        (source_ip, notif["source_ip"]))
+        if group_ip and notif["group_ip"] != str(group_ip):
+            self.custom(sw, "mr_notif",
+                        "Got notification with wrong group IP %s != %s" %
+                        (group_ip, notif["group_ip"]))
+        if source_vif and notif["source_vif"] != source_vif:
+            self.custom(sw, "mr_notif",
+                        "Got notification with wrong source VIF: %d != %d" % \
+                            (source_vif, notif["source_vif"]))
+        return notif
+
 class Qdisc:
     def __init__(self, iface, handle, qdisc):
         self._ifname = iface.get_devname()
