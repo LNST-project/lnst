@@ -28,10 +28,21 @@ class BaseTestModule(object):
     It also implements the __init__ method that should be called by the derived
     classes as it implements Parameter checking.
 
-    Derived classes can define the test parameters by assigning 'Param'
-    instances to class attributes, these will be parsed during initialization
-    and copied to the self.params instance attribute and loaded with values
-    provided to the __init__ method. This will also check mandatory attributes.
+    Derived classes can define test parameters by assigning 'Param' instances
+    to class attributes, these will be parsed during initialization (this
+    includes type checking and checks for mandatory parameters) and provided
+    through the self.params object in the BaseTestModule object instance (for
+    use during test execution) e.g.:
+
+    class MyTest(BaseTestModule):
+        int_param = IntParam(mandatory=True)
+        optional_param = IntParam()
+        def run(self):
+            x = self.params.int_param
+            if "optional_param" in self.params:
+                x += self.params.optional_param
+
+    MyTest(int_param=2, optional_param=3)
     """
     def __init__(self, **kwargs):
         """

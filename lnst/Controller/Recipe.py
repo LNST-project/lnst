@@ -39,6 +39,18 @@ class BaseRecipe(object):
         You can define your own __init__ method to implement more complex
         Parameter checking if needed, but you MUST call the base __init__
         method first.
+        Example:
+        MyRecipe(BaseRecipe):
+            int_param = IntParam(mandatory=True)
+            optional_param = IntParam()
+
+            def test(self):
+                x = self.params.int_param
+                if "optional_param" in self.params:
+                    x += self.params.optional_param
+
+        MyRecipe(int_param = 2, optional_param = 3)
+
     * Test definition - this is done by defining the test() method, in this
         method the tester has direct access to mapped LNST slave Hosts, can
         manipulate them and implement his tests.
