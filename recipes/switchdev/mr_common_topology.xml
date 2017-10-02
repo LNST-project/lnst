@@ -1,0 +1,78 @@
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="if1" label="A">
+                    <addresses>
+                        <address value="192.168.1.1/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if2" label="B">
+                    <addresses>
+                        <address value="192.168.2.1/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="if1" label="C">
+                    <addresses>
+                        <address value="192.168.2.2/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if2" label="D">
+                    <addresses>
+                        <address value="192.168.3.2/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if3" label="E">
+                    <addresses>
+                        <address value="192.168.4.2/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if4" label="F">
+                    <addresses>
+                        <address value="192.168.5.2/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="A">
+                    <addresses>
+                        <address value="192.168.1.10/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if2" label="B"/>
+                <eth id="if3" label="C"/>
+                <bridge id="br0">
+                    <addresses>
+                        <address value="192.168.2.10/24"/>
+                    </addresses>
+                    <slaves>
+                        <slave id="if2"/>
+                        <slave id="if3"/>
+                    </slaves>
+                    <options>
+			<option name="vlan_filtering" value="1"/>
+                    </options>
+                </bridge>
+                <eth id="if4" label="D">
+                    <addresses>
+                        <address value="192.168.3.10/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if5" label="E">
+                    <addresses>
+                        <address value="192.168.4.10/24"/>
+                    </addresses>
+                </eth>
+                <eth id="if6" label="F">
+                    <addresses>
+                        <address value="192.168.5.10/24"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
