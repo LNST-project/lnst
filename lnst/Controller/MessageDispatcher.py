@@ -67,10 +67,6 @@ def remote_device_to_deviceref(obj):
         for value in obj:
             new_list.append(remote_device_to_deviceref(value))
         return tuple(new_list)
-    elif isinstance(obj, DeviceParam):
-        new_param = DeviceParam()
-        new_param.val = remote_device_to_deviceref(obj.val)
-        return new_param
     elif isinstance(obj, Parameters):
         for param_name, param in obj:
             setattr(obj, param_name, remote_device_to_deviceref(param))

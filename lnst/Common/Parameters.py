@@ -14,6 +14,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import copy
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.LnstError import LnstError
@@ -22,129 +23,89 @@ class ParamError(LnstError):
     pass
 
 class Param(object):
-    def __init__(self, mandatory=False, default=None):
+    def __init__(self, mandatory=False, **kwargs):
         self.mandatory = mandatory
-        self.default = default
-        self._val = None
-        self.set = False
-        if self.default:
-            self.val = self.default
+        if "default" in kwargs:
+            self.default = kwargs["default"]
 
-    @property
-    def val(self):
-        return self._val
-
-    @val.setter
-    def val(self, value):
-        self._val = value
-        self.set = True
-
-    def __str__(self):
-        return str(self.val)
+    def type_check(self, value):
+        return value
 
 class IntParam(Param):
-    @Param.val.setter
-    def val(self, value):
+    def type_check(self, value):
         try:
-            self._val = int(value)
-        except:
+            return int(value)
+        except ValueError:
             raise ParamError("Value must be a valid integer")
-        self.set = True
-
-    def __int__(self):
-        return self.val
 
 class FloatParam(Param):
-    @Param.val.setter
-    def val(self, value):
+    def type_check(self, value):
         try:
-            self._val = float(value)
-        except:
+            return float(value)
+        except ValueError:
             raise ParamError("Value must be a valid float")
-        self.set = True
-
-    def __float__(self):
-        return self.val
 
 class StrParam(Param):
-    @Param.val.setter
-    def val(self, value):
+    def type_check(self, value):
         try:
-            self._val = str(value)
-        except:
+            return str(value)
+        except ValueError:
             raise ParamError("Value must be a string")
-        self.set = True
 
 class IpParam(Param):
-    @Param.val.setter
-    def val(self, value):
+    def type_check(self, value):
         try:
-            self._val = ipaddress(value)
-            self.set = True
-        except:
-            raise ParamError("Value must be a BaseIpAddress, string or Device object. Not {}".
-                             format(type(value)))
+            return ipaddress(value)
+        except ValueError:
+            raise ParamError("Value must be a BaseIpAddress, string ip address or a Device object. Not {}"
+                             .format(type(value)))
 
 class DeviceParam(Param):
-    @Param.val.setter
-    def val(self, value):
+    def type_check(self, value):
         #runtime import this because the Device class arrives on the Slave
         #during recipe execution, not during Slave init
         from lnst.Devices.Device import Device
         if isinstance(value, Device) or isinstance(value, DeviceRef):
-            self._val = value
+            return value
         else:
             raise ParamError("Value must be a Device or DeviceRef object."
                              " Not {}".format(type(value)))
-        self.set = True
-
-    def __deepcopy__(self, memo):
-        newone = type(self)()
-        newone.__dict__.update(self.__dict__)
-        return newone
 
 class Parameters(object):
-    def __getattribute__(self, name):
-        """
-        Overriding the default __getattribute__ method is important for being
-        able to deepcopy a Parameters object while also allowing to return None
-        for undefined Parameter names. This is because the copy module relies
-        on an exception being raised for certain private attributes and
-        returning None would break it.
-        """
-        if name[:2] == "__" or name[:1] == "_":
+    def __init__(self):
+        self._attrs = {}
+
+    def __getattr__(self, name):
+        if name == "_attrs":
             return object.__getattribute__(self, name)
 
         try:
+            return self._attrs[name]
+        except KeyError:
             return object.__getattribute__(self, name)
-        except:
-            return None
+
+    def __setattr__(self, name, val):
+        if name == "_attrs":
+            super(Parameters, self).__setattr__(name, val)
+        else:
+            self._attrs[name] = val
+
+    def __contains__(self, name):
+        return name in self._attrs
 
     def __iter__(self):
-        for attr in dir(self):
-            val = getattr(self, attr)
-            if isinstance(val, Param):
-                yield (attr, val)
+        for attr, val in self._attrs.items():
+            yield (attr, val)
 
     def _to_dict(self):
-        res = {}
-        for name, param in self:
-            res[name] = str(param.val)
-        return res
+        return copy.deepcopy(self._attrs)
 
     def _from_dict(self, d):
         for name, val in d.items():
-            if isinstance(val, Param):
-                setattr(self, name, val)
-            else:
-                new_param = StrParam()
-                new_param.val = val
-                setattr(self, name, new_param)
+            setattr(self, name, copy.deepcopy(val))
 
     def __str__(self):
         result = ""
-        for attr in dir(self):
-            val = getattr(self, attr)
-            if isinstance(val, Param):
-                result += "%s = %s\n" % (attr, str(val))
+        for attr, val in self._attrs.items():
+            result += "%s = %s\n" % (attr, str(val))
         return result

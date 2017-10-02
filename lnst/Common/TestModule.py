@@ -42,21 +42,26 @@ class BaseTestModule(object):
         """
         #by defaults loads the params into self.params - no checks pseudocode:
         self.params = Parameters()
-        for x in dir(self):
-            val = getattr(self, x)
-            if isinstance(val, Param):
-                setattr(self.params, x, copy.deepcopy(val))
 
-        for name, val in kwargs.items():
-            try:
-                param = getattr(self.params, name)
-            except:
+        for name in dir(self):
+            param = getattr(self, name)
+            if isinstance(param, Param):
+                if name in kwargs:
+                    val = kwargs.pop(name)
+                    val = param.type_check(val)
+                    setattr(self.params, name, val)
+                else:
+                    try:
+                        val = copy.deepcopy(param.default)
+                        setattr(self.params, name, val)
+                    except AttributeError:
+                        if param.mandatory:
+                            raise TestModuleError("Parameter {} is mandatory"
+                                                  .format(name))
+
+        if len(kwargs):
+            for name in kwargs.keys():
                 raise TestModuleError("Unknown parameter {}".format(name))
-            param.val = val
-
-        for name, param in self.params:
-            if param.mandatory and not param.set:
-                raise TestModuleError("Parameter {} is mandatory".format(name))
 
         self._res_data = None
 

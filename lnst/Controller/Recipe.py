@@ -76,18 +76,22 @@ class BaseRecipe(object):
             if isinstance(val, HostReq):
                 setattr(self.req, attr, copy.deepcopy(val))
             elif isinstance(val, Param):
-                setattr(self.params, attr, copy.deepcopy(val))
+                if attr in kwargs:
+                    param_val = kwargs.pop(attr)
+                    param_val = val.type_check(param_val)
+                    setattr(self.params, attr, param_val)
+                else:
+                    try:
+                        param_val = copy.deepcopy(val.default)
+                        setattr(self.params, attr, param_val)
+                    except AttributeError:
+                        if val.mandatory:
+                            raise RecipeError("Parameter {} is mandatory"
+                                              .format(attr))
 
-        for name, val in kwargs.items():
-            try:
-                param = getattr(self.params, name)
-                param.val = val
-            except:
-                raise RecipeError("Unknown parameter {}".format(name))
-
-        for name, param in self.params:
-            if param.mandatory and not param.set:
-                raise RecipeError("Parameter {} is mandatory".format(name))
+        if len(kwargs):
+            for key in kwargs.keys():
+                raise RecipeError("Unknown parameter {}".format(key))
 
     def _set_hosts(self, hosts):
         self.matched = hosts

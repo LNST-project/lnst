@@ -14,12 +14,13 @@ class IcmpPing(BaseTestModule):
     limit_rate = IntParam(default=80)
 
     def _compose_cmd(self):
-        cmd = "ping %s" % self.params.dst.val
+        cmd = "ping %s" % self.params.dst
         cmd += " -c %d" % self.params.count
         cmd += " -i %f" % self.params.interval
-        if self.params.iface.set:
-           cmd += " -I %s" % self.params.iface.val.name
-        if self.params.size.set:
+        if "iface" in self.params:
+           cmd += " -I %s" % self.params.iface.name
+
+        if "size" in self.params:
             cmd += " -s %d" % self.params.size
         return cmd
 

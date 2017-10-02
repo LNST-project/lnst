@@ -21,7 +21,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import Parameters, Param
+from lnst.Common.Parameters import Parameters
 
 class RequirementError(LnstError):
     pass
@@ -46,9 +46,7 @@ class HostReq(object):
         for name, val in kwargs.items():
             if name == "params":
                 raise RequirementError("'params' is a reserved keyword.")
-            p = Param()
-            p.val = val
-            setattr(self.params, name, p)
+            setattr(self.params, name, val)
 
     def __iter__(self):
         for x in dir(self):
@@ -86,9 +84,7 @@ class DeviceReq(object):
         for name, val in kwargs.items():
             if name == "params":
                 raise RequirementError("'params' is a reserved keyword.")
-            p = Param()
-            p.val = val
-            setattr(self.params, name, p)
+            setattr(self.params, name, val)
 
     def _to_dict(self):
         res = {'network': self.label,

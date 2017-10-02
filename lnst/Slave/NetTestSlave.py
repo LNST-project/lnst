@@ -896,15 +896,12 @@ def deviceref_to_device(if_manager, obj):
         for value in obj:
             new_list.append(deviceref_to_device(if_manager, value))
         return tuple(new_list)
-    elif isinstance(obj, DeviceParam):
-        obj.val = deviceref_to_device(if_manager, obj.val)
-        return obj
     elif isinstance(obj, Parameters):
         for param_name, param in obj:
-            deviceref_to_device(if_manager, param)
+            setattr(obj, param_name, deviceref_to_device(if_manager, param))
         return obj
     elif isinstance(obj, BaseTestModule):
-        deviceref_to_device(if_manager, obj.params)
+        obj.params = deviceref_to_device(if_manager, obj.params)
         return obj
     else:
         return obj
