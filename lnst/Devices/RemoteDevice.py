@@ -37,6 +37,17 @@ class RemoteDevice(object):
         self.deleted = False
         self._inited = True
 
+    def __deepcopy__(self, memo):
+        newone = type(self)(self.__dev_cls,
+                            list(self.__dev_args),
+                            dict(self.__dev_kwargs))
+        newone.__netns = self.__netns
+        newone._machine = self._machine
+        newone.ifindex = int(self.ifindex)
+        newone.deleted = bool(self.deleted)
+        newone._inited = bool(self._inited)
+        return newone
+
     @property
     def _dev_cls(self):
         return self.__dev_cls
