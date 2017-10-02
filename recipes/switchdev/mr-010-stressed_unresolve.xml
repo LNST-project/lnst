@@ -1,0 +1,5 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <xi:include href="mr_common_topology.xml" />
+    <task python="mr-010-stressed_unresolve.py" />
+</lnstrecipe>
