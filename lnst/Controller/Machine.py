@@ -149,6 +149,47 @@ class Machine(object):
                 return dev
         return None
 
+    def mroute_init(self, table_id):
+        return self._rpc_call("mroute_init", table_id)
+
+    def mroute_finish(self, table_id):
+        return self._rpc_call("mroute_finish", table_id)
+
+    def mroute_pim_init(self, table_id):
+        return self._rpc_call("mroute_pim_init", table_id)
+
+    def mroute_pim_finish(self, table_id):
+        return self._rpc_call("mroute_pim_init", True, table_id)
+
+    def mroute_add_vif_reg(self, vif_id, table_id):
+        return self._rpc_call("mroute_add_vif_reg", vif_id, table_id)
+
+    def mroute_del_vif_reg(self, vif_id, table_id):
+        return self._rpc_call("mroute_del_vif_reg", vif_id, table_id)
+
+    def mroute_add_mfc(self, group, source, source_vif, out_vifs, table_id):
+        return self._rpc_call("mroute_add_mfc",  group, source, source_vif,
+                              out_vifs, table_id)
+
+    def mroute_add_mfc_proxy(self, group, source, source_vif, out_vifs,
+                             table_id):
+        return self._rpc_call("mroute_add_mfc",  group, source, source_vif,
+                              out_vifs, True, table_id)
+
+    def mroute_del_mfc(self, group, source, source_vif, table_id):
+        return self._rpc_call("mroute_del_mfc",  group, source, source_vif,
+                              table_id)
+
+    def mroute_del_mfc_proxy(self, group, source, source_vif, table_id):
+        return self._rpc_call("mroute_del_mfc",  group, source, source_vif,
+                              True, table_id)
+
+    def mroute_get_notif(self, table_id):
+        return self._rpc_call("mroute_get_notif", table_id)
+
+    def mroute_table(self, index):
+        return self._rpc_call("mroute_table", index)
+
     #
     # Factory methods for constructing interfaces on this machine. The
     # types of interfaces are explained with the classes below.
@@ -809,6 +850,14 @@ class Interface(object):
         self._routes+= [(dest, nhs, ipv6)]
         self._machine._rpc_call_x(self._netns, "add_nhs_route",
                                   self._id, dest, nhs, ipv6)
+
+    def mroute_add_vif(self, vif_index, table_id):
+        return self._machine._rpc_call_x(self._netns, "mroute_add_vif",
+                                         self._id, vif_index, table_id)
+
+    def mroute_del_vif(self, vif_index, table_id):
+        return self._machine._rpc_call_x(self._netns, "mroute_del_vif",
+                                         self._id, vif_index, table_id)
 
     def del_nhs_route(self, dest, nhs, ipv6 = False):
         for i, val in enumerate(self._routes):
