@@ -2,6 +2,7 @@ from time import sleep
 from lnst.Controller.Task import ctl
 from lnst.Common.Consts import MROUTE
 import copy
+import random
 
 # The topology used is:
 #
@@ -203,3 +204,28 @@ class MrouteTest:
 
         if test:
             self.test_fwd(mroute["group"], self.vif2port[mroute["ivif"]], [])
+
+    def _random_evifs(self, ivif, starg):
+        vifs = self.vif2port.keys()
+        evifs = [evif for evif in vifs
+                 if random.choice([True, False]) and evif != ivif]
+        if starg:
+            evifs += [ivif]
+        return evifs
+
+    def random_mroute_add(self, group, starg, ivif = None, test = True):
+        vifs = self.vif2port.keys()
+
+        if not ivif:
+            ivif = random.choice(vifs)
+        evifs = self._random_evifs(ivif, starg)
+        if starg:
+            source = "0.0.0.0"
+        else:
+            if self.vif2port[ivif] != "pimreg":
+                source_port = self.sw_mach_conn[self.vif2port[ivif]][0]
+                source = str(source_port.get_ip(0))
+            else:
+                source = "1.2.3.4"
+
+        return self.mroute_create(source, group, ivif, evifs, test)
