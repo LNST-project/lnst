@@ -5,9 +5,6 @@ them to be implemented in Python Recipes, with notes where relevant.
     * port to pyroute2 pushed upstream
     * adjust based on experiments with porting recipes
 
-* Params should be just self.params.x, also x in self.params should tell us if
-  it was set or not --> implement def __contains__(self, item)
-
 * fix git version check - if git not installed raise Exception/report error
 
 * https://pastebin.com/JmXaaAvv + https://pastebin.com/PpG1RCYY - netlink sockets leaking?
@@ -113,3 +110,6 @@ them to be implemented in Python Recipes, with notes where relevant.
     - statistics during deconfiguration also for just these devices
         - bulk slave method, remove autodump at deconfiguration, make this
           manual
+
+* Params should be just self.params.x, also x in self.params should tell us if
+  it was set or not --> implement def __contains__(self, item)
