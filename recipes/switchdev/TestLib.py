@@ -207,6 +207,16 @@ class TestLib:
         proc = host.run(srv_m, bg=True, netns=listener.get_netns())
         return proc
 
+    def _get_iperf_cli_mod_packets(self, mc_group, num, speed, size = 100):
+        modules_options = {
+            "role" : "client",
+            "iperf_server" : mc_group,
+            "duration" : 1,
+            "iperf_opts" : "-u -l %d -n %d -b %dmb -T 100" %
+                            (size, size * num, speed)
+        }
+        return self._ctl.get_module("Iperf", options = modules_options)
+
     def iperf_mc(self, sender, recivers, mc_group, desc=None):
         if not desc:
             desc = self._generate_default_desc(sender, recivers)
