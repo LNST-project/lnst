@@ -243,7 +243,7 @@ class ModuleJob(GenericJob):
     def run(self):
         try:
             self._result["passed"] = self._what["module"].run()
-            self._result["res_data"] = self._what["module"].get_res_data()
+            self._result["res_data"] = self._what["module"]._get_res_data()
         except Exception as e:
             self._result["passed"] = False
             self._result["res_data"] = {"exception": str(e)}
