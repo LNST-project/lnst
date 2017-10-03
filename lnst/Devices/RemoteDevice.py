@@ -11,6 +11,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+from copy import deepcopy
 from lnst.Devices.Device import Device
 from lnst.Common.DeviceError import DeviceDeleted
 
@@ -39,13 +40,13 @@ class RemoteDevice(object):
 
     def __deepcopy__(self, memo):
         newone = type(self)(self.__dev_cls,
-                            list(self.__dev_args),
-                            dict(self.__dev_kwargs))
+                            deepcopy(self.__dev_args, memo),
+                            deepcopy(self.__dev_kwargs, memo))
         newone.__netns = self.__netns
         newone._machine = self._machine
-        newone.ifindex = int(self.ifindex)
-        newone.deleted = bool(self.deleted)
-        newone._inited = bool(self._inited)
+        newone.ifindex = deepcopy(self.ifindex, memo)
+        newone.deleted = deepcopy(self.deleted, memo)
+        newone._inited = deepcopy(self._inited, memo)
         return newone
 
     @property
