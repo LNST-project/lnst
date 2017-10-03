@@ -148,8 +148,8 @@ class Controller(object):
                 req_host = getattr(requested, m_id)
                 for name, dev in req_host:
                     new_virt_dev = VirtualDevice(network=dev.label,
-                                                 driver=dev.params.driver,
-                                                 hwaddr=dev.params.hwaddr)
+                                    driver=getattr(dev.params, "driver", None),
+                                    hwaddr=getattr(dev.params, "hwaddr", None))
                     setattr(host, name, new_virt_dev)
                     new_virt_dev._enable()
 
