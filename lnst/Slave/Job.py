@@ -17,6 +17,7 @@ import signal
 import logging
 import multiprocessing
 from lnst.Common.JobError import JobError
+from lnst.Common.TestModule import TestModuleError
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.Logs import log_exc_traceback
@@ -105,16 +106,18 @@ class Job(object):
         result = {}
         try:
             self._job_cls.run()
-        except:
+            job_result = self._job_cls.get_result()
+        except Exception as e:
             log_exc_traceback()
-            type, value, tb = sys.exc_info()
-            data = {"Exception": "%s" % value}
-            # self._job_cls.set_fail(data)
+            job_result = {}
+            job_result["passed"] = False
+            job_result["type"] = "exception"
+            job_result["res_data"] = self._job_cls.get_result()
+            job_result["res_data"]["exception"] = e
         finally:
-            res_data = self._job_cls.get_result()
             result["type"] = "job_finished"
             result["job_id"] = self._id
-            result["result"] = res_data
+            result["result"] = job_result
 
         send_data(self._child_pipe, result)
         self._child_pipe.close()
@@ -145,7 +148,7 @@ class GenericJob(object):
         self._what = what
         self._result = {"passed": False,
                         "res_data": None,
-                        "msg": None}
+                        "type": "result"}
 
     def run(self):
         raise JobError("Method run must be defined.")
@@ -244,8 +247,8 @@ class ModuleJob(GenericJob):
         try:
             self._result["passed"] = self._what["module"].run()
             self._result["res_data"] = self._what["module"]._get_res_data()
-        except Exception as e:
+        except TestModuleError as e:
+            log_exc_traceback()
             self._result["passed"] = False
-            self._result["res_data"] = {"exception": str(e)}
-            # self._result["res_data"] = {"stdout": e.get_stdout(),
-                                        # "stderr": e.get_stderr()}
+            self._result["type"] = "module_exception"
+            self._result["res_data"] = {"exception": e}
