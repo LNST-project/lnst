@@ -31,7 +31,7 @@ class BaseRecipe(object):
         Example:
         m1 = HostReq(arch="x86_64")
         m1.eth0 = DeviceReq(driver="ixgbe")
-    * Parameter definition (optional) - you can define paramaters of you Recipe
+    * Parameter definition (optional) - you can define paramaters of your Recipe
         by defining class attributes of the Param type (or inherited). These
         parameters can then be accessed from the test() method to change it's
         behaviour. Parameter validity (type) is checked during the
