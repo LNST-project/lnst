@@ -30,7 +30,7 @@ class BaseRecipe(object):
         of the HostReq object.
         Example:
         m1 = HostReq(arch="x86_64")
-        m1.eth0 = DeviceReq(hwaddr="52:54:00:12:34:56")
+        m1.eth0 = DeviceReq(driver="ixgbe")
     * Parameter definition (optional) - you can define paramaters of you Recipe
         by defining class attributes of the Param type (or inherited). These
         parameters can then be accessed from the test() method to change it's
