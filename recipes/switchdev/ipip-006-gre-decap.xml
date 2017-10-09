@@ -1,0 +1,136 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <define>
+        <alias name="onet1" value="192.168.1"/>
+        <alias name="onet2" value="192.168.2"/>
+        <alias name="o6net1" value="2002:1"/>
+        <alias name="o6net2" value="2002:2"/>
+        <alias name="unet" value="192.168.99"/>
+    </define>
+    <network>
+        <host id="machine1">
+            <params/>
+            <interfaces>
+                <eth id="if1" label="A" />
+                <vlan id="if1.10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="if1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$onet1}.33/24" />
+                        <address value="{$o6net1}::33/64" />
+                    </addresses>
+                </vlan>
+                <vlan id="if1.20">
+                    <options>
+                        <option name="vlan_tci" value="20" />
+                    </options>
+                    <slaves>
+                        <slave id="if1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$onet2}.99/24" />
+                        <address value="{$o6net2}::99/64" />
+                    </addresses>
+                </vlan>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <params/>
+            <interfaces>
+                <eth id="if1" label="B" />
+                <vlan id="if1.10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="if1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$unet}.2/24" />
+                    </addresses>
+                </vlan>
+                <vlan id="if1.20">
+                    <options>
+                        <option name="vlan_tci" value="20" />
+                    </options>
+                    <slaves>
+                        <slave id="if1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$onet2}.33/32" />
+                        <address value="{$o6net2}::33/64" />
+                    </addresses>
+                </vlan>
+                <dummy id="d1">
+                    <addresses>
+                        <address value="1.2.3.5/32" />
+                    </addresses>
+                </dummy>
+                <gre id="gre1">
+                    <options>
+                        <option name="local_ip" value="1.2.3.5"/>
+                        <option name="remote_ip" value="1.2.3.4"/>
+                    </options>
+                </gre>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <vlan id="if1.10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="if1"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$onet1}.1/24" />
+                        <address value="{$o6net1}::1/64" />
+                    </addresses>
+                </vlan>
+                <vlan id="if1.20">
+                    <options>
+                        <option name="vlan_tci" value="20" />
+                    </options>
+                    <slaves>
+                        <slave id="if1"/>
+                    </slaves>
+                </vlan>
+
+                <eth id="if2" label="B" />
+                <vlan id="if2.10">
+                    <options>
+                        <option name="vlan_tci" value="10" />
+                    </options>
+                    <slaves>
+                        <slave id="if2"/>
+                    </slaves>
+                    <addresses>
+                        <address value="{$unet}.1/24" />
+                    </addresses>
+                </vlan>
+                <vlan id="if2.20">
+                    <options>
+                        <option name="vlan_tci" value="20" />
+                    </options>
+                    <slaves>
+                        <slave id="if2"/>
+                    </slaves>
+                </vlan>
+
+                <bridge id="br">
+                    <slaves>
+                        <slave id="if1.20"/>
+                        <slave id="if2.20"/>
+                    </slaves>
+                </bridge>
+            </interfaces>
+        </host>
+    </network>
+    <task python="ipip-006-gre-decap.py" />
+</lnstrecipe>
