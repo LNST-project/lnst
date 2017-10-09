@@ -188,7 +188,7 @@ class RecipeParser(XmlParser):
             opts = self._process_options(opts_tag)
             if len(opts) > 0:
                 iface["options"] = opts
-        elif iface["type"] in ["vxlan", "gre"]:
+        elif iface["type"] in ["vxlan", "gre", "ipip"]:
             # real_dev of the interface
             slaves_tag = iface_tag.find("slaves")
             if slaves_tag is not  None and len(slaves_tag) > 1:

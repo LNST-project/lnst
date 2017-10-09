@@ -159,6 +159,35 @@ class NetConfigDeviceGre(NetConfigDeviceGeneric):
         dev_name = self._dev_config["name"]
         exec_cmd("ip link del %s" % dev_name)
 
+class NetConfigDeviceIpIp(NetConfigDeviceGeneric):
+    _modulename = "ipip"
+
+    def create(self):
+        config = self._dev_config
+        dev_name = config["name"]
+        params = []
+
+        slaves = get_slaves(config)
+        if len(slaves) == 1:
+            ul_id = slaves[0]
+            ul_name = self._if_manager.get_mapped_device(ul_id).get_name()
+            params.append(" dev %s" % ul_name)
+
+        v = get_option(config, "local_ip")
+        if v is not None:
+            params.append(" local %s" % v)
+
+        v = get_option(config, "remote_ip")
+        if v is not None:
+            params.append(" remote %s" % v)
+
+        exec_cmd("ip tunnel add name %s mode ipip%s"
+                 % (dev_name, "".join(params)))
+
+    def destroy(self):
+        dev_name = self._dev_config["name"]
+        exec_cmd("ip link del %s" % dev_name)
+
 class NetConfigDeviceLoopback(NetConfigDeviceGeneric):
     def configure(self):
         config = self._dev_config
@@ -824,6 +853,7 @@ type_class_mapping = {
     "vxlan": NetConfigDeviceVxlan,
     "dummy": NetConfigDeviceDummy,
     "gre": NetConfigDeviceGre,
+    "ipip": NetConfigDeviceIpIp,
 }
 
 def NetConfigDevice(dev_config, if_manager):

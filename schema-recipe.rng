@@ -142,6 +142,7 @@
                             <ref name="vxlan"/>
                             <ref name="dummy"/>
                             <ref name="gre"/>
+                            <ref name="ipip"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -364,6 +365,13 @@
 
     <define name="gre">
         <element name="gre">
+            <attribute name="id"/>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="ipip">
+        <element name="ipip">
             <attribute name="id"/>
             <ref name="softdevice"/>
         </element>
