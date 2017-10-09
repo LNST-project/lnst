@@ -72,8 +72,6 @@ class SoftDevice(Device):
         with pyroute2.IPRoute() as ipr:
             try:
                 kwargs = self._generic_create_kwargs()
-                from pprint import pprint
-                pprint(kwargs)
                 ipr.link("add", **kwargs)
                 self._if_manager.handle_netlink_msgs()
             except Exception as e:
