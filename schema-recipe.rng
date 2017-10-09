@@ -141,6 +141,7 @@
                             <ref name="lo"/>
                             <ref name="vxlan"/>
                             <ref name="dummy"/>
+                            <ref name="gre"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -356,6 +357,13 @@
 
     <define name="dummy">
         <element name="dummy">
+            <attribute name="id"/>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="gre">
+        <element name="gre">
             <attribute name="id"/>
             <ref name="softdevice"/>
         </element>

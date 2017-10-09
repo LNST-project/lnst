@@ -536,6 +536,36 @@ class HostAPI(object):
 
         return self._add_iface("vxlan", if_id, netns, ip, options, slaves)
 
+    def create_gre(self, ttl=None, tos=None,
+                   key=None, ikey=None, okey=None,
+                   seq=None, iseq=None, oseq=None,
+                   csum=None, icsum=None, ocsum=None,
+                   ul_iface=None,
+                   local_ip=None, remote_ip=None,
+                   if_id=None, netns=None, ip=None, options={}):
+
+        for v, itag, iv, otag, ov in [(key, "ikey", ikey, "okey", okey),
+                                      (seq, "iseq", iseq, "oseq", oseq),
+                                      (csum, "icsum", icsum, "ocsum", ocsum)]:
+            if v is not None:
+                if iv is not None and iv != v:
+                    raise TaskError("%s is overspecified" % itag)
+                if ov is not None and ov != v:
+                    raise TaskError("%s is overspecified" % otag)
+
+        options.update({"ttl": ttl, "tos": tos,
+                        "key": key, "ikey": ikey, "okey": okey,
+                        "seq": seq, "iseq": iseq, "oseq": oseq,
+                        "csum": csum, "icsum": icsum, "ocsum": ocsum,
+                        "local_ip": local_ip, "remote_ip": remote_ip})
+
+        if ul_iface is not None:
+            slaves = [ul_iface]
+        else:
+            slaves = []
+
+        return self._add_iface("gre", if_id, netns, ip, options, slaves)
+
     def create_dummy(self, if_id=None, netns=None, ip=None):
         return self._add_iface("dummy", if_id, netns, ip, {}, [])
 
