@@ -17,6 +17,10 @@ class BridgeDevice(MasterDevice):
     _name_template = "t_br"
     _link_type = "bridge"
 
+    _linkinfo_data_map = {"ageing_time": "IFLA_BR_AGEING_TIME",
+                          "stp_state": "IFLA_BR_STP_STATE",
+                          "vlan_filtering": "IFLA_BR_VLAN_FILTERING"}
+
     # def _get_bridge_dir(self):
         # return "/sys/class/net/%s/bridge" % self.name
 
