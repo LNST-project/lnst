@@ -249,6 +249,17 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
         self._dev_config["slaves"].remove(slave_id)
         self._add_rm_port("del", slave_id)
 
+class NetConfigDeviceDummy(NetConfigDeviceGeneric):
+    _modulename = ""
+
+    def create(self):
+        dev_name = self._dev_config["name"]
+        exec_cmd("ip link add %s type dummy" % dev_name)
+
+    def destroy(self):
+        dev_name = self._dev_config["name"]
+        exec_cmd("ip link del %s" % dev_name)
+
 class NetConfigDeviceMacvlan(NetConfigDeviceGeneric):
     _modulename = "macvlan"
 
@@ -776,7 +787,8 @@ type_class_mapping = {
     "vti": NetConfigDeviceVti,
     "vti6": NetConfigDeviceVti6,
     "lo": NetConfigDeviceLoopback,
-    "vxlan": NetConfigDeviceVxlan
+    "vxlan": NetConfigDeviceVxlan,
+    "dummy": NetConfigDeviceDummy,
 }
 
 def NetConfigDevice(dev_config, if_manager):

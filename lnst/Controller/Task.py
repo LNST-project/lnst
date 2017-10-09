@@ -536,6 +536,9 @@ class HostAPI(object):
 
         return self._add_iface("vxlan", if_id, netns, ip, options, slaves)
 
+    def create_dummy(self, if_id=None, netns=None, ip=None):
+        return self._add_iface("dummy", if_id, netns, ip, {}, [])
+
     def enable_service(self, service):
         return self._m.enable_service(service)
 
