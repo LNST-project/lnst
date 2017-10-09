@@ -1,0 +1,12 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <define>
+        <alias name="onet1" value="192.168.1"/>
+        <alias name="onet2" value="192.168.2"/>
+        <alias name="o6net1" value="2002:1"/>
+        <alias name="o6net2" value="2002:2"/>
+        <alias name="unet" value="192.168.99"/>
+    </define>
+    <xi:include href="ipip_common_topology.xml" />
+    <task python="ipip-007-gre-migration.py" />
+</lnstrecipe>
