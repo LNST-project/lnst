@@ -7,9 +7,6 @@ them to be implemented in Python Recipes, with notes where relevant.
 
 * fix git version check - if git not installed raise Exception/report error
 
-* https://pastebin.com/JmXaaAvv + https://pastebin.com/PpG1RCYY - netlink sockets leaking?
-    * possibly fixed
-
 * API for "first" ip in list limited by selector
 
 * go through master to check for bugs that can be backported
@@ -113,3 +110,5 @@ them to be implemented in Python Recipes, with notes where relevant.
 
 * Params should be just self.params.x, also x in self.params should tell us if
   it was set or not --> implement def __contains__(self, item)
+
+* netlink sockets leaking
