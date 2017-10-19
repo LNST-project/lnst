@@ -129,7 +129,9 @@ TEST_MODULES = [
          "test_modules/PktgenTx.py",
          "test_modules/LinkNeg.py",
          "test_modules/Custom.py",
-         "test_modules/TCPConnection.py"]
+         "test_modules/TCPConnection.py",
+         "test_modules/TRexServer.py",
+         "test_modules/TRexClient.py"]
     )
 ]
 
