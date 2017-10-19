@@ -1,0 +1,139 @@
+Topology:
+
+                                    switch
+                                  +--------+
+                                  |        |
+      +---------------------------+<------>+---------------------------+
+      |                           |        |                           |
+      |           +---------------+<------>+---------------+           |
+      |           |               |        |               |           |
+      |           |               +--------+               |           |
+      |           |                                        |           |
+      |           |                                        |           |
+   +--+--+     +--+--+                                  +--+--+     +--+--+
++--| eth1|-----| eth2|---+                           +--| eth1|-----| eth2|---+
+|  +-----+     +-----+   |                           |  +-----+     +-----+   |
+|   dpdk        dpdk     |                           |    dpdk        dpdk    |
+|                        |                           |     |           |      |
+|  +------------------+  |                           |     |           |      |
+|  |TRex pkt generator|  |                           | +---+-----------+----+ |
+|  +------------------+  |                           | | nic1        nic2   | |
+|                        |                           | |   ^           ^    | |
+|         host1          |                           | |   |  ovs br0  |    | |
+|                        |                           | |   v           v    | |
+|                        |                           | | g_nic1     g_nic2  | |
+|                        |                           | +---+-----------+----+ |
+|                        |                           |     |   host2   |      |
+|                        |                           |     |           |      |
+|                        |                           |     |           |      |
+|                        |                           |  +--+---+    +--+---+  |
++------------------------+                           +--|vhost1|----|vhost2|--+
+                                                        +--+---+    +--+---+
+                                                           |           |
+                                                         +-+-+       +-+-+
+                                                     +---+eth+-------|eth|---+
+                                                     |   +---+       +---+   |
+                                                     |     <----------->     |
+                                                     |        testpmd        |
+                                                     |                       |
+                                                     |        guest1         |
+                                                     +-----------------------+
+
+Recipe parameters:
+    <trex_dir> -> where TRex is installed so LNST can import it, MUST be defined by user
+    <guest_virtname> -> libvirt name of the guest so that LNST can manipulate it's xml definition, MUST be defined by user
+    <guest_hostname> -> hostname of the guest, will be used by LNST to ssh into the guest, MUST be defined by user
+    <guest_username> -> username of the guest, will be used by LNST to ssh into the guest, MUST be defined by user, MUST have root privileges
+    <guest_password> -> password of the user, will be used by LNST to ssh into the guest, MUST be defined by user
+    <guest_cpus> -> host cpus that are reserved for the guest, will be used to add vcpupin definition to the guest xml
+    <guest_mem_amount> -> how much memory the guest is externally configured with, used when changing the guest xml default="16777216"
+    <driver> -> based on this we select the eth1 and eth2 nics
+    <host1_dpdk_cores> -> which cores are used by TRex for stream generation on the dpdk nics default="2,3,4"
+    <host2_dpdk_cores> -> used for pmd-cpu-mask ovs option default="0x1E"
+    <guest_dpdk_cores> -> used by testpmd for use with dpdk nics default="0x6"
+    <nr_hugepages> -> the number of 2MB hugepages that we reserve during the test default="2048"
+    <socket_mem> -> used for the dpdk-socket-mem ovs option default="2048"
+    <pkt_size> = integer size of the generated datagrams, default 64
+    <test_runs> = number of TRex stream generation runs, default 5
+    <test_duration> = how long each stream generation is in seconds, default 60
+
+Host #1 description:
+    Two ethernet devices bound to the vfio-pci driver for dpdk use
+    The TRex generator is configured to generate 2 streams
+    The streams are created with scapy as UDP datagrams:
+        src_mac  = host1.{eth1, eth2}.mac
+        dst_mac  = host2.{eth1, eth2}.mac
+        src_ip   = 192.168.1.{1, 3}
+        dst_ip   = 192.168.1.{2, 4}
+        src_port = any
+        dst_port = any
+        data = padding so that the entire length of the datagram == <pkt_size>
+    TRex then generates 2 streams using 100% on each port and measures the rx
+    rate in pps on both ports.
+    The measured rx rates for each ports are added together and a standard
+    deviation and average from <runs> iterations is calculated.
+    In PerfRepo we store the result as:
+        rx_rate = average summed rx rate of both ports in pps
+        rx_rate_min = rx_rate - 2*std_deviation
+        rx_rate_max = rx_rate + 2*std_deviation
+        rx_rate_deviation = 2*std_deviation
+        port0_rate = average rx rate of the first port in pps
+        port1_rate = average rx rate of the second port in pps
+
+Host #2 description:
+    Two ethernet devices bound to the vfio-pci driver for dpdk use
+    Two vhostuser ports created by the guest host - the guest being the
+        vhostuser server and ovs as the vhostuser client
+    OvS bridge br0 configured with 4 ports:
+        eth1 == port 11, named "nic1"
+        eth2 == port 12, named "nic2"
+        vhost1 == port 21, named "guest_nic1"
+        vhost2 == port 22, named "guest_nic2"
+    and following flows:
+        in_port=11,action=21
+        in_port=21,action=11
+        in_port=12,action=22
+        in_port=22,action=12
+
+Guest description:
+    Configured with 2 vhostuser nics in server mode. These are created to
+    mirror the mac addresses of the eth1 and eth2 nics of Host2. This is to
+    ensure that the generated traffic goes through the specified path on the
+    lab switch.
+    Runs a single testpmd process with the following configuration:
+        -c <guest_dpdk_cores>
+        -n 4 --socket-mem 1024,0 --
+        -i --eth-peer=0,{hw1} --eth-peer=1,{hw2}
+        --forward-mode=mac
+    where hw1 == host1.eth1.hw_address and hw2 == host1.eth2.hw_address
+Test name:
+    ovs-dpdk-pvp.py
+
+PerfRepo integration:
+    First, preparation in PerfRepo is required - you need to create Test objects
+    through the web interface that properly describe the individual Netperf
+    tests that this recipe runs. Don't forget to also add appropriate metrics.
+    For this test they're:
+    * rx_rate
+    * rx_rate_min
+    * rx_rate_max
+    * rx_rate_deviation
+    * port0_rate
+    * port0_rate
+
+    After that, to enable support for PerfRepo you need to create the file
+    ovs-dpdk-pvp.mapping and define the following id mappings:
+    ovs_dpdk_pvp_2streams_id
+
+    To enable result comparison agains baselines you need to create a Report in
+    PerfRepo that will store the baseline. Set up the Report to only contain results
+    with the same hash tag and then add a new mapping to the mapping file, with
+    this format:
+    <some_hash> = <report_id>
+
+    The hash value is automatically generated during test execution and added
+    to each result stored in PerfRepo. To get the Report id you need to open
+    that report in our browser and find if in the URL.
+
+    When running this recipe you should also define the 'product_name' alias
+    (e.g. RHEL7) in order to tag the result object in PerfRepo.

@@ -1,0 +1,60 @@
+<lnstrecipe>
+    <define>
+        <alias name="mapping_file" value="ovs-dpdk-pvp.mapping" />
+        <alias name="driver" value=""/>
+        <alias name="official_result" value="no" />
+        <alias name="host1_dpdk_cores" value="2,3,4" />
+        <alias name="host2_dpdk_cores" value="0x1E" />
+        <alias name="guest_dpdk_cores" value="0x6" />
+        <alias name="nr_hugepages" value="2048" />
+        <alias name="socket_mem" value="2048" />
+        <alias name="trex_dir" value="" />
+        <alias name="guest_mem_amount" value="16777216" />
+        <alias name="guest_virtname" value="" />
+        <alias name="guest_hostname" value="" />
+        <alias name="guest_username" value="" />
+        <alias name="guest_password" value="" />
+        <alias name="guest_cpus" value="" />
+        <alias name="pkt_size" value="64" />
+        <alias name="test_duration" value="60" />
+        <alias name="test_runs" value="5" />
+    </define>
+    <network>
+        <host id="host1">
+            <params>
+                <param name="with_guest" value="no"/>
+            </params>
+            <interfaces>
+                <eth id="if1" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
+                <eth id="if2" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="host2">
+            <params>
+                <param name="with_guest" value="yes"/>
+            </params>
+            <interfaces>
+                <eth id="if1" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
+                <eth id="if2" label="n1">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="ovs-dpdk-pvp.py"/>
+</lnstrecipe>
