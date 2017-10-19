@@ -332,7 +332,7 @@ class NetTestCommandGeneric(object):
                 if type(value) == dict:
                     formatted_data += level*4*" " + str(key) + ":\n"
                     formatted_data += self.format_res_data(value, level+1)
-                if type(value) == list:
+                elif type(value) == list:
                     formatted_data += level*4*" " + str(key) + ":\n"
                     for i in range(0, len(value)):
                         formatted_data += (level+1)*4*" " +\
