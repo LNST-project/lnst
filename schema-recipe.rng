@@ -140,6 +140,9 @@
                             <ref name="vti6"/>
                             <ref name="lo"/>
                             <ref name="vxlan"/>
+                            <ref name="dummy"/>
+                            <ref name="gre"/>
+                            <ref name="ipip"/>
                         </choice>
                     </zeroOrMore>
                 </element>
@@ -348,6 +351,27 @@
 
     <define name="vxlan">
         <element name="vxlan">
+            <attribute name="id"/>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="dummy">
+        <element name="dummy">
+            <attribute name="id"/>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="gre">
+        <element name="gre">
+            <attribute name="id"/>
+            <ref name="softdevice"/>
+        </element>
+    </define>
+
+    <define name="ipip">
+        <element name="ipip">
             <attribute name="id"/>
             <ref name="softdevice"/>
         </element>

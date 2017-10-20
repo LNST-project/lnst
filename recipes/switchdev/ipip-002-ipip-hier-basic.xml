@@ -1,0 +1,57 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <define>
+        <alias name="onet1" value="192.168.1"/>
+        <alias name="onet2" value="192.168.2"/>
+        <alias name="o6net1" value="2002:1"/>
+        <alias name="o6net2" value="2002:2"/>
+        <alias name="unet" value="192.168.99"/>
+    </define>
+    <network>
+        <host id="machine1">
+            <params/>
+            <interfaces>
+                <eth id="if1" label="A">
+                    <addresses>
+                        <address value="{$onet1}.33/24" />
+                        <address value="{$o6net1}::33/64" />
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <params/>
+            <interfaces>
+                <eth id="if1" label="B">
+                    <addresses>
+                        <address value="{$unet}.2/24" />
+                    </addresses>
+                </eth>
+                <dummy id="d1">
+                    <addresses>
+                        <address value="1.2.3.5/32" />
+                        <address value="{$onet2}.33/32" />
+                        <address value="{$o6net2}::33/62" />
+                    </addresses>
+                </dummy>
+
+                <ipip id="ipip1">
+                    <addresses>
+                        <address value="{$onet2}.1/32" />
+                    </addresses>
+                    <options>
+                        <option name="local_ip" value="1.2.3.5"/>
+                        <option name="remote_ip" value="1.2.3.4"/>
+                    </options>
+                </ipip>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="A" />
+                <eth id="if2" label="B" />
+            </interfaces>
+        </host>
+    </network>
+    <task python="ipip-002-ipip-hier-basic.py" />
+</lnstrecipe>

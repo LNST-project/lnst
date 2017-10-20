@@ -781,7 +781,8 @@ class SlaveMethods:
         dc_routes = []
         nh_routes = []
         ip_re = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
-        prefix_re = "^(" + ip_re + "(?:/\d{1,3})?)"
+        ip6_re = "(?:(?:[\da-f]{1,4}:)*|:)(?::|(?:[\da-f]{1,4})|(?::[\da-f]{1,4})*)"
+        prefix_re = "^((?:local )?" + "(?:%s|%s)" % (ip_re, ip6_re) + "(?:/\d{1,3})?)"
 
         # parse directly connected routes
         dc_route_re = prefix_re + " dev (\w+) (.*)"

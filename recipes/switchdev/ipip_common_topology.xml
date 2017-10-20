@@ -1,0 +1,58 @@
+<network>
+    <host id="machine1">
+        <params/>
+        <interfaces>
+            <eth id="if1" label="A">
+                <addresses>
+                    <address value="{$onet1}.33/24" />
+                    <address value="{$o6net1}::33/64" />
+                </addresses>
+            </eth>
+        </interfaces>
+    </host>
+    <host id="machine2">
+        <params/>
+        <interfaces>
+            <eth id="if1" label="B">
+                <addresses>
+                    <address value="{$unet}.2/24" />
+                </addresses>
+            </eth>
+            <dummy id="d1">
+                <addresses>
+                    <address value="1.2.3.5/32" />
+                    <address value="{$onet2}.33/32" />
+                    <address value="{$o6net2}::33/128" />
+                </addresses>
+            </dummy>
+            <gre id="gre1">
+                <options>
+                    <option name="local_ip" value="1.2.3.5"/>
+                    <option name="remote_ip" value="1.2.3.4"/>
+                </options>
+            </gre>
+            <gre id="gre2">
+                <options>
+                    <option name="local_ip" value="1.2.3.5"/>
+                    <option name="remote_ip" value="1.2.3.4"/>
+                    <option name="ikey" value="1111" />
+                    <option name="okey" value="2222" />
+                </options>
+            </gre>
+            <gre id="gre3">
+                <options>
+                    <option name="local_ip" value="1.2.3.5"/>
+                    <option name="remote_ip" value="1.2.3.4"/>
+                    <option name="key" value="3333" />
+                    <option name="csum" value="True" />
+                </options>
+            </gre>
+        </interfaces>
+    </host>
+    <host id="switch">
+        <interfaces>
+            <eth id="if1" label="A" />
+            <eth id="if2" label="B" />
+        </interfaces>
+    </host>
+</network>

@@ -7,6 +7,7 @@ published by the Free Software Foundation; see COPYING for details.
 __author__ = """
 jiri@mellanox.com (Jiri Pirko)
 idosch@mellanox.com (Ido Schimmel)
+petrm@mellanox.com (Petr Machata)
 """
 
 from time import sleep
@@ -531,3 +532,154 @@ class Qdisc:
 
     def run(self, command):
         self._machine.run(command)
+
+class vrf:
+    """A context manager that creates a VRF on enter, and destroys it on exit.
+    Returns a string name of the newly-allocated VRF. Use with a ``with``
+    statement::
+
+        with vrf(machine) as v:
+            # Do stuff with v.
+            pass
+    """
+
+    counter = iter(range(1000))
+    def __init__(self, sw):
+        """Args:
+            sw: The machine to create the VRF on.
+        """
+        self._id = self.__class__.counter.next()
+        self._sw = sw
+
+    def _dev(self):
+        return "vrf%d" % self._id
+
+    def __enter__(self):
+        tab = 1000 + self._id
+        self._sw.run("ip l add name %s type vrf table %d" % (self._dev(), tab))
+        self._sw.run("ip l set dev %s up" % self._dev())
+        return self._dev()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._sw.run("ip l del dev %s" % self._dev())
+
+class dummy:
+    """A context manager that creates a dummy device on enter, and destroys it on
+    exit. Returns the dummy device created. Use with a ``with`` statement::
+
+        with dummy(machine) as d:
+            # Do stuff with d.
+            pass
+    """
+
+    def __init__(self, sw, vrf_name=None, **kwargs):
+        """Args:
+            sw: The machine to create the dummy on.
+            vrf_name: (Optional) name of VRF to put this device in.
+            **kwargs: Arbitrary arguments that are passed to sw.create_dummy.
+        """
+        self._sw = sw
+        self._vrf_name = vrf_name
+        self._d_opts = kwargs
+        self._d = None
+
+    def _ulfwdroute(self, op):
+        self._sw.run("ip r %s tab %d 1.2.3.5/32 via %s"
+               % (op, self._vrf_u_tab, ipv4(test_ip(99, 2, []))))
+
+    def __enter__(self):
+        self._d = self._sw.create_dummy(**self._d_opts)
+        if self._vrf_name is not None:
+            self._sw.run("ip l set dev %s master %s"
+                         % (self._d.get_devname(), self._vrf_name))
+        return self._d
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._d is not None:
+            self._d.destroy()
+
+class tunnel:
+    """A base class for context managers that create tunnel devices on enter, and
+    destroy them on exit. Returns the netdevice created. Use with a ``with``
+    statement::
+
+        with sometunnel(machine, bound) as t:
+            # Do stuff with t.
+            pass
+    """
+
+    def __init__(self, sw, d, vrf_name=None, **kwargs):
+        """Args:
+            sw: The machine to create the tunnel on.
+            d: A bound device of the tunnel. May be ``None``.
+            vrf_name: (Optional) name of VRF to put this device in.
+            **kwargs: Arbitrary arguments that are passed to the function that
+                creates the tunnel in question, as documented at subclasses.
+        """
+        self._sw = sw
+        self._d = d
+        self._vrf_name = vrf_name
+        self._opts = kwargs
+
+        self._dev = None
+
+    def _create(self, ul_iface, ip, opts):
+        raise NotImplementedError()
+
+    def __enter__(self):
+        self._dev = self._create(self._d, self._opts)
+        if self._vrf_name is not None:
+            self._sw.run("ip link set dev %s vrf %s"
+                         % (self._dev.get_devname(), self._vrf_name))
+
+        return self._dev
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._dev is not None:
+            if self._d is not None:
+                self._dev.slave_del(self._d.get_id())
+            self._dev.destroy()
+
+class gre(tunnel):
+    """A context manager that creates a GRE netdevice on enter and destroys it on
+    exit. See ``tunnel`` for more details. This calls ``Task.create_gre`` to
+    actually create the tunnel."""
+    def _create(self, ul_iface, opts):
+        return self._sw.create_gre(ul_iface=ul_iface, **opts)
+
+class ipip(tunnel):
+    """A context manager that creates an IPIP netdevice on enter and destroys it on
+    exit. See ``tunnel`` for more details. This calls ``Task.create_ipip`` to
+    actually create the tunnel."""
+    def _create(self, ul_iface, opts):
+        return self._sw.create_ipip(ul_iface=ul_iface, **opts)
+
+class route:
+    """A context manager that inserts a route on enter and removes it on exit. Use
+    with a ``with`` statement::
+
+        with route(machine, vrf, "192.168.2.0/24 via 192.168.1.1"):
+            # Test that the router behaves as expected.
+            pass
+    """
+
+    def __init__(self, sw, vrf_name, route):
+        """Args:
+            sw: The machine to create the tunnel on.
+            vrf_name: Name of VRF to put this device in. May be ``None``.
+            route: The route to add.
+        """
+        self._sw = sw
+        self._vrf = vrf_name
+        self._route = route
+
+    def do(self, op):
+        vrf_arg = " vrf " + self._vrf if self._vrf is not None else ""
+        self._sw.run("ip route %s%s %s" % (op, vrf_arg, self._route))
+
+    def __enter__(self):
+        self.do("add")
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.do("del")
