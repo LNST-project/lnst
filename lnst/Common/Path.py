@@ -20,10 +20,7 @@ def get_path_class(root, path):
         if path.startswith('http'):
             return HttpPath(root, path)
         else:
-            if os.access(path, os.R_OK):
-                return FilePath(None, os.path.realpath(path))
-            else:
-                raise Exception("Path does not exist \"%s\"!" % path)
+            return FilePath(None, os.path.realpath(path))
 
     if root.startswith('http'):
         return HttpPath(root, path)
