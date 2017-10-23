@@ -1,0 +1,60 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+	<xi:include href="default_aliases.xml" />
+	<define>
+		<alias name="ipv" value="ipv4" />
+		<alias name="subnet0" value="192.168.100" />
+		<alias name="subnet1" value="192.168.101" />
+		<alias name="subnet2" value="192.168.102" />
+		<alias name="subnet3" value="192.168.103" />
+		<alias name="weight0" value="45" />
+		<alias name="weight1" value="11" />
+	</define>
+    <network>
+        <host id="machine1">
+            <params/>
+            <interfaces>
+				<eth id="if1" label="A">
+					<addresses>
+						<address>{$subnet0}.2/24</address>
+					</addresses>
+				</eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <params/>
+            <interfaces>
+				<eth id="if1" label="B">
+					<addresses>
+						<address>{$subnet1}.2/24</address>
+					</addresses>
+				</eth>
+				<eth id="if2" label="C">
+					<addresses>
+						<address>{$subnet2}.2/24</address>
+						<address>{$subnet3}.1/24</address>
+					</addresses>
+				</eth>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+				<eth id="if1" label="A">
+					<addresses>
+						<address>{$subnet0}.1/24</address>
+					</addresses>
+				</eth>
+				<eth id="if2" label="B">
+					<addresses>
+						<address>{$subnet1}.1/24</address>
+					</addresses>
+				</eth>
+				<eth id="if3" label="C">
+					<addresses>
+						<address>{$subnet2}.1/24</address>
+					</addresses>
+				</eth>
+            </interfaces>
+        </host>
+    </network>
+    <task python="l3-011-nexthop4-weights.py" />
+</lnstrecipe>
