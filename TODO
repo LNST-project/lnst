@@ -64,6 +64,13 @@ them to be implemented in Python Recipes, with notes where relevant.
 
 * Ip address/network generators
 
+* wait/sleep method that cycles handles ctl <-> slave communication in the
+  background
+
+* Current machine configuration dump describing the "full"(relevant?)
+  configuration of a host. We need this for PerfRepo integration to generate
+  hashes, but it should also be useful just in general...
+
 * breakpoints in tests
     * we want the ability to stop in the middle of the test so we can manually
       enter the test systems
