@@ -30,9 +30,9 @@ Topology:
 +------------------------+                           +--|vhost1|----|vhost2|--+
                                                         +--+---+    +--+---+
                                                            |           |
-                                                         +-+-+       +-+-+
-                                                     +---+eth+-------|eth|---+
-                                                     |   +---+       +---+   |
+                                                         +--+--+     +--+--+
+                                                     +---+ eth1+-----| eth2|-+
+                                                     |   +-----+     +-----+ |
                                                      |     <----------->     |
                                                      |        testpmd        |
                                                      |                       |
@@ -58,9 +58,35 @@ Recipe parameters:
     <test_duration> = how long each stream generation is in seconds, default 60
 
 Host #1 description:
-    Two ethernet devices bound to the vfio-pci driver for dpdk use
-    The TRex generator is configured to generate 2 streams
-    The streams are created with scapy as UDP datagrams:
+    Provisioning requirements before recipe execution:
+        * Test was designed for RHEL7 x86_64 Server version >= 7.4 GA release
+        * after installation, the following options are added to the
+          kernel command line:
+                isolcpus=1,2,3,4 intel_iommu=on default_hugepagesz=2M hugepagesz=2M hugepages=2048
+        * packages installed on top of the default installation:
+            wget gcc make vim tcpdump pciutils glibc-headers tar bzip2 git numactl-devel gzip PyYAML tmux NetworkManager-team python-paramiko python-netifaces driverctl
+        * dpdk version 17.08 is installed
+        * trex version 2.28 is installed to <trex_dir>
+
+    * After matching the selected nics are configured with ipv4 addresses:
+        192.168.1.1/24 to eth1
+        192.168.1.3/24 to eth2
+    * And a parallel ping is sent from each nic to addresses of Host #2:
+        192.168.1.2/24 from eth1
+        192.168.1.4/24 from eth2
+
+        count=100, interval=0.1 and we only check if at least 20% of
+        packets passed.
+        This should teach the lab switch between the two hosts the proper mac
+        address-port mapping
+
+    * irqbalance service is stopped and all irqs are boud to CPU0
+    * The number of hugepages is set to <nr_hugepages> using the sysfs interface
+    * eth1 and eth2 are bound to the vfio-pci driver using driverctl for dpdk use
+    * when Host2 and Guest configuration is finished we configure the TRex
+      server
+    * The TRex generator is configured to generate 2 streams
+      the streams are created with scapy as UDP datagrams:
         src_mac  = host1.{eth1, eth2}.mac
         dst_mac  = host2.{eth1, eth2}.mac
         src_ip   = 192.168.1.{1, 3}
@@ -68,44 +94,130 @@ Host #1 description:
         src_port = any
         dst_port = any
         data = padding so that the entire length of the datagram == <pkt_size>
-    TRex then generates 2 streams using 100% on each port and measures the rx
-    rate in pps on both ports.
-    The measured rx rates for each ports are added together and a standard
-    deviation and average from <runs> iterations is calculated.
-    In PerfRepo we store the result as:
-        rx_rate = average summed rx rate of both ports in pps
-        rx_rate_min = rx_rate - 2*std_deviation
-        rx_rate_max = rx_rate + 2*std_deviation
-        rx_rate_deviation = 2*std_deviation
-        port0_rate = average rx rate of the first port in pps
-        port1_rate = average rx rate of the second port in pps
+    * TRex then generates 2 streams using 100% on each port and measures the rx
+      rate in pps on both ports.
+      The measured rx rates for each ports are added together and a standard
+      deviation and average from <runs> iterations is calculated.
+      In PerfRepo we store the result as:
+          rx_rate = average summed rx rate of both ports in pps
+          rx_rate_min = rx_rate - 2*std_deviation
+          rx_rate_max = rx_rate + 2*std_deviation
+          rx_rate_deviation = 2*std_deviation
+          port0_rate = average rx rate of the first port in pps
+          port1_rate = average rx rate of the second port in pps
 
 Host #2 description:
-    Two ethernet devices bound to the vfio-pci driver for dpdk use
-    Two vhostuser ports created by the guest host - the guest being the
-        vhostuser server and ovs as the vhostuser client
-    OvS bridge br0 configured with 4 ports:
+    Provisioning requirements before recipe execution:
+        * Test was designed for RHEL7 x86_64 Server version >= 7.4 GA release
+        * after installation, the following options are added to the kernel command
+          line:
+          isolcpus=1,2,3,4,5,6,7,8 intel_iommu=on default_hugepagesz=2M hugepagesz=2M hugepages=2048
+        * packages installed on top of the default installation:
+            wget gcc make yum-utils autoconf automake libtool vim pciutils rpmdevtools glibc-headers numactl-devel gzip libhugetlbfs-utils tmux qemu-kvm-rhev python-paramiko python-netifaces driverctl
+
+          qemu version must be >=2.3.0, in our setup this is provided by
+          qemu-kv-rhev which available in RHV-4.0 repositories
+        * guest is installed via libvirt (handled by beaker), using 16G of ram and
+          4CPUs, mapped to host cpus 5,6,7,8, more info in Guest provisioning
+        * openvswitch is installed as software under test
+        * dpdk version 17.08 is installed
+
+    * After matching the selected nics are configured with ipv4 addresses:
+        192.168.1.2/24 to eth1
+        192.168.1.4/24 to eth2
+    * And a parallel ping is sent from each nic to addresses of Host #1:
+        192.168.1.1/24 from eth1
+        192.168.1.3/24 from eth2
+
+        count=100, interval=0.1 and we only check if at least 20% of
+        packets passed.
+        This should teach the lab switch between the two hosts the proper mac
+        address-port mapping
+
+    * irqbalance service is stopped and all irqs are boud to CPU0
+    * The number of hugepages is set to <nr_hugepages> using the sysfs interface
+    * openvswitch service is started and configured to enable/use dpdk
+
+    * eth1 and eth2 are bound to the vfio-pci driver using driverctl for dpdk
+      use (in an ovs bridge)
+    * an ovs bridge is created and eth1 and eth2 nics are added as dpdk ports
+    * Guest1 is managed using virsh and the guest XML is edited:
+        * we add 2 vhostuser ports where qemu is in server mode
+        * these nics use the original hw addresses of eth1 and eth2 Host2 nics
+        * additionally under <cpu> we add:
+        <numa>
+            <cell id="0" cpus="0" memory=guest_mem_amount unit="KiB" memAccess="shared"/>
+        </numa>
+        where guest_mem_amount is a parameter <guest_mem_amount>
+        It's important to note that the hosts in our lab don't use numa, adding
+        this is only required because of the memAccess="shared" attribute for
+        some reason the vhostuser nics don't work without it.
+        * Finally we add:
+        <cputune>
+            <vcpupin vcpu="0" cpuset="5"/>
+            <vcpupin vcpu="1" cpuset="6"/>
+            <vcpupin vcpu="2" cpuset="7"/>
+            <vcpupin vcpu="3" cpuset="7"/>
+        </cputune>
+        To permanently pin the guest cpus to the specific host cpus.
+        
+    * the two vhostuser ports are added to the ovs bridge as ports in vhostuser
+      client mode
+    * ovs bridge br0 is therefore configured with 4 ports:
         eth1 == port 11, named "nic1"
         eth2 == port 12, named "nic2"
         vhost1 == port 21, named "guest_nic1"
         vhost2 == port 22, named "guest_nic2"
-    and following flows:
+    * Guest is started
+    * The following flows are added to the ovs bridge
         in_port=11,action=21
         in_port=21,action=11
         in_port=12,action=22
         in_port=22,action=12
 
 Guest description:
-    Configured with 2 vhostuser nics in server mode. These are created to
-    mirror the mac addresses of the eth1 and eth2 nics of Host2. This is to
-    ensure that the generated traffic goes through the specified path on the
-    lab switch.
-    Runs a single testpmd process with the following configuration:
+    Provisioning requirements before recipe execution:
+        * Test was designed for RHEL7 x86_64 Server version >= 7.4 GA release
+          installation is handled by beaker and the default kickstart is used,
+          except for setting a root password that will be provided to LNST via
+          <guest_password>
+        * guest args passed to beaker are:
+            --ram=16384 --vcpus=4 --cpuset=5,6,7,8 --file-size=8 --hvm --kvm
+        * after installation, the following options are added to the kernel command
+          line:
+            default_hugepagesz=2M hugepagesz=2M hugepages=2048 intel_iommu=on iommu=pt
+        * packages installed on top of the default installation:
+            wget gcc make vim tcpdump pciutils glibc-headers tar bzip2 numactl-devel gzip libhugetlbfs-utils tmux python-paramiko python-netifaces driverctl
+        * dpdk version 17.08 is installed
+        * after this point the guest is managed by lnst, this includes changes to
+          the libvirt guest XML description
+
+    * irqbalance service is stopped and all irqs are boud to CPU0
+    * The 2 vhostuser nics are identified by their mac addresses - copied from
+      the Host #2 nics that are currently dpdk ports in an ovs bridge. This is
+      to ensure that the generated traffic goes through the specified path on
+      the lab switch.
+    * The number of hugepages is set to <nr_hugepages> using the sysfs interface
+    * eth1 and eth2 (vhostuser nics) are bound to the vfio-pci driver using
+      driverctl for dpdk use (testpmd)
+        * this is slightly different in the guest compared to the Hosts:
+            modprobe -r vfio_iommu_type1
+            modprobe -r vfio
+            modprobe vfio enable_unsafe_noiommu_mode=1
+            modprobe vfio-pci
+            driverctl set-override vfio-pci <nic_pci>
+    * Runs a single testpmd process with the following configuration:
         -c <guest_dpdk_cores>
+        -w {g_nic1_pci} -w {g_nic2_pci}
         -n 4 --socket-mem 1024,0 --
         -i --eth-peer=0,{hw1} --eth-peer=1,{hw2}
         --forward-mode=mac
-    where hw1 == host1.eth1.hw_address and hw2 == host1.eth2.hw_address
+      where hw1 == host1.eth1.hw_address and hw2 == host1.eth2.hw_address
+      and g_nic1_pci, g_nic2_pci are the pci addresses of the two vhostuser
+      nics
+    * "start tx_first" is sent to testpmd to send some initial packets into the
+      whole pvp setup
+    
 Test name:
     ovs-dpdk-pvp.py
 
