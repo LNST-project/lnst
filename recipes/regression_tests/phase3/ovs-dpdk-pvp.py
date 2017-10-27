@@ -142,7 +142,7 @@ for i in pings:
 
 h1.run("service irqbalance stop")
 h2.run("service irqbalance stop")
-# this will pin devices irqs to cpu #0
+# this will pin all irqs to cpu #0
 h1.run("MASK=1; for i in `ls -d /proc/irq/[0-9]*` ; do echo $MASK > ${i}/smp_affinity ; done")
 h2.run("MASK=1; for i in `ls -d /proc/irq/[0-9]*` ; do echo $MASK > ${i}/smp_affinity ; done")
 
@@ -167,37 +167,29 @@ h2.restart_service("openvswitch")
 # Host1 bind NICs to vfio-pci
 #============================================
 
-devbind_out = h1.run("dpdk-devbind -s")
-devbind_status = devbind_out.get_result()["res_data"]["stdout"]
-nic1_search = re.search("^(\S+) .*if=%s drv=(\S+).*$" % h1_nic1.get_devname(), devbind_status, flags=re.MULTILINE)
-nic2_search = re.search("^(\S+) .*if=%s drv=(\S+).*$" % h1_nic2.get_devname(), devbind_status, flags=re.MULTILINE)
+h1_nic1_out = h1.run("ethtool -i %s" % h1_nic1.get_devname()).get_result()["res_data"]["stdout"]
+h1_nic2_out = h1.run("ethtool -i %s" % h1_nic2.get_devname()).get_result()["res_data"]["stdout"]
 
-h1_nic1_pci = nic1_search.group(1)
-h1_nic1_drv = nic1_search.group(2)
-h1_nic2_pci = nic2_search.group(1)
-h1_nic2_drv = nic2_search.group(2)
+h1_nic1_pci = re.search("^bus-info: (\S+)$", h1_nic1_out, re.MULTILINE).group(1)
+h1_nic2_pci = re.search("^bus-info: (\S+)$", h1_nic2_out, re.MULTILINE).group(1)
 
 h1.run("modprobe vfio-pci")
-h1.run("dpdk-devbind --force -b vfio-pci %s" % h1_nic1_pci)
-h1.run("dpdk-devbind --force -b vfio-pci %s" % h1_nic2_pci)
+h1.run("driverctl set-override %s vfio-pci" % h1_nic1_pci)
+h1.run("driverctl set-override %s vfio-pci" % h1_nic2_pci)
 
 #============================================
 # Host2 bind NICs to vfio-pci
 #============================================
 
-devbind_out = h2.run("dpdk-devbind -s")
-devbind_status = devbind_out.get_result()["res_data"]["stdout"]
-nic1_search = re.search("^(\S+) .*if=%s drv=(\S+).*$" % h2_nic1.get_devname(), devbind_status, flags=re.MULTILINE)
-nic2_search = re.search("^(\S+) .*if=%s drv=(\S+).*$" % h2_nic2.get_devname(), devbind_status, flags=re.MULTILINE)
+h2_nic1_out = h2.run("ethtool -i %s" % h2_nic1.get_devname()).get_result()["res_data"]["stdout"]
+h2_nic2_out = h2.run("ethtool -i %s" % h2_nic2.get_devname()).get_result()["res_data"]["stdout"]
 
-h2_nic1_pci = nic1_search.group(1)
-h2_nic1_drv = nic1_search.group(2)
-h2_nic2_pci = nic2_search.group(1)
-h2_nic2_drv = nic2_search.group(2)
+h2_nic1_pci = re.search("^bus-info: (\S+)$", h2_nic1_out, re.MULTILINE).group(1)
+h2_nic2_pci = re.search("^bus-info: (\S+)$", h2_nic2_out, re.MULTILINE).group(1)
 
 h2.run("modprobe vfio-pci")
-h2.run("dpdk-devbind --force -b vfio-pci %s" % h2_nic1_pci)
-h2.run("dpdk-devbind --force -b vfio-pci %s" % h2_nic2_pci)
+h2.run("driverctl set-override %s vfio-pci" % h2_nic1_pci)
+h2.run("driverctl set-override %s vfio-pci" % h2_nic2_pci)
 
 #============================================
 # Host2 add DPDK NICs as openvswitch ports
@@ -289,28 +281,24 @@ run_ssh_command_on_guest("service irqbalance stop", guest, h2, guest_virtname)
 run_ssh_command_on_guest("MASK=1; for i in `ls -d /proc/irq/[0-9]*` ; do echo $MASK > ${i}/smp_affinity ; done", guest, h2, guest_virtname)
 
 g_nic1_search = run_ssh_command_on_guest("grep -i %s /sys/class/net/*/address" % str(h2_nic1.get_hwaddr()), guest, h2, guest_virtname)
-g_nic1_re = re.search("/sys/class/net/(.*)/address", g_nic1_search)
-g_nic1_name = g_nic1_re.group(1)
+g_nic1_name = re.search("/sys/class/net/(.*)/address", g_nic1_search).group(1)
 
 g_nic2_search = run_ssh_command_on_guest("grep -i %s /sys/class/net/*/address" % str(h2_nic2.get_hwaddr()), guest, h2, guest_virtname)
-g_nic2_re = re.search("/sys/class/net/(.*)/address", g_nic2_search)
-g_nic2_name = g_nic2_re.group(1)
+g_nic2_name = re.search("/sys/class/net/(.*)/address", g_nic2_search).group(1)
 
-g_devbind_out = run_ssh_command_on_guest("dpdk-devbind -s", guest, h2, guest_virtname)
-g_nic1_search = re.search("^(\S+) .*if=%s drv=(\S+).*$" % g_nic1_name, g_devbind_out, flags=re.MULTILINE)
-g_nic2_search = re.search("^(\S+) .*if=%s drv=(\S+).*$" % g_nic2_name, g_devbind_out, flags=re.MULTILINE)
-g_nic1_pci = g_nic1_search.group(1)
-g_nic1_drv = g_nic1_search.group(2)
-g_nic2_pci = g_nic2_search.group(1)
-g_nic2_drv = g_nic2_search.group(2)
+g_nic1_out = run_ssh_command_on_guest("ethtool -i %s" % g_nic1_name, guest, h2, guest_virtname)
+g_nic2_out = run_ssh_command_on_guest("ethtool -i %s" % g_nic2_name, guest, h2, guest_virtname)
+
+g_nic1_pci = re.search("^bus-info: (\S+)$", g_nic1_out, re.MULTILINE).group(1)
+g_nic2_pci = re.search("^bus-info: (\S+)$", g_nic2_out, re.MULTILINE).group(1)
 
 run_ssh_command_on_guest("echo -n %d >/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages" % nr_hugepages, guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe -r vfio_iommu_type1", guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe -r vfio", guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe vfio enable_unsafe_noiommu_mode=1", guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe vfio-pci", guest, h2, guest_virtname)
-run_ssh_command_on_guest("dpdk-devbind --force -b vfio-pci %s" % g_nic1_pci, guest, h2, guest_virtname)
-run_ssh_command_on_guest("dpdk-devbind --force -b vfio-pci %s" % g_nic2_pci, guest, h2, guest_virtname)
+run_ssh_command_on_guest("driverctl set-override %s vfio-pci" % g_nic1_pci, guest, h2, guest_virtname)
+run_ssh_command_on_guest("driverctl set-override %s vfio-pci" % g_nic2_pci, guest, h2, guest_virtname)
 
 
 testpmd_shell = guest.get_transport().open_session()
@@ -453,8 +441,8 @@ run_ssh_command_on_guest("echo \"stop\" > /tmp/testpmd_stdio", guest, h2, guest_
 run_ssh_command_on_guest("echo \"quit\" > /tmp/testpmd_stdio", guest, h2, guest_virtname)
 run_ssh_command_on_guest("rm -rf /tmp/testpmd_stdio", guest, h2, guest_virtname)
 
-run_ssh_command_on_guest("dpdk-devbind --force -b %s %s" % (g_nic1_drv, g_nic1_pci), guest, h2, guest_virtname)
-run_ssh_command_on_guest("dpdk-devbind --force -b %s %s" % (g_nic2_drv, g_nic2_pci), guest, h2, guest_virtname)
+run_ssh_command_on_guest("driverctl unset-override %s" % g_nic1_pci, guest, h2, guest_virtname)
+run_ssh_command_on_guest("driverctl unset-override %s" % g_nic2_pci, guest, h2, guest_virtname)
 
 run_ssh_command_on_guest("service irqbalance start", guest, h2, guest_virtname)
 
@@ -467,18 +455,18 @@ h2.run("ovs-vsctl del-port br0 nic1")
 h2.run("ovs-vsctl del-port br0 nic2")
 h2.run("ovs-vsctl del-br br0")
 
-h2.run("virsh destroy %s || true" % guest_virtname)
+h2.run("virsh shutdown %s || true" % guest_virtname)
 
 #required to free up the bus so that we can return the devices to the original
 #driver should be possible to remove this for OVS version >= 2.8 TODO
 h2.restart_service("openvswitch")
-h2.run("dpdk-devbind --force -b %s %s & sleep 1; systemctl restart openvswitch" % (h2_nic1_drv, h2_nic1_pci))
-h2.run("dpdk-devbind --force -b %s %s & sleep 1; systemctl restart openvswitch" % (h2_nic2_drv, h2_nic2_pci))
+h2.run("driverctl unset-override %s & sleep 1; systemctl restart openvswitch" % h2_nic1_pci)
+h2.run("driverctl unset-override %s & sleep 1; systemctl restart openvswitch" % h2_nic2_pci)
 
 h2.run("virsh define %s" % original_guest_xml_path)
 
-h1.run("dpdk-devbind --force -b %s %s &" % (h1_nic1_drv, h1_nic1_pci))
-h1.run("dpdk-devbind --force -b %s %s &" % (h1_nic2_drv, h1_nic2_pci))
+h1.run("driverctl unset-override %s &" % h1_nic1_pci)
+h1.run("driverctl unset-override %s &" % h1_nic2_pci)
 
 h1.run("service irqbalance start")
 h2.run("service irqbalance start")
