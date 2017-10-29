@@ -97,7 +97,8 @@ def do_task(ctl, hosts, ifaces, aliases):
     m2_if1.reset(ip=["192.168.101.11/24", "2002::2/64"])
     sw_if3.set_link_up()
     m2_if2.set_link_up()
-    sw.create_bridge(slaves=[sw_if1, sw_if2], options={"vlan_filtering": 1})
+    sw.create_bridge(slaves=[sw_if1, sw_if2], options={"vlan_filtering": 1,
+                                                       "multicast_querier": 1})
     mirred_port = MirredPort(sw_if2)
 
     sleep(30)

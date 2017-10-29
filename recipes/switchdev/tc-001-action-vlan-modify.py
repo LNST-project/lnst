@@ -19,7 +19,8 @@ def do_task(ctl, hosts, ifaces, aliases):
     m1_if1_85 = m1.create_vlan(m1_if1, 85, ip=["192.168.101.10/24", "2002::1/64"])
     m2_if1_65 = m2.create_vlan(m2_if1, 65, ip=["192.168.101.11/24", "2002::2/64"])
 
-    sw_br1 = sw.create_bridge(slaves=[sw_if1, sw_if2], options={"vlan_filtering": 1})
+    sw_br1 = sw.create_bridge(slaves=[sw_if1, sw_if2], options={"vlan_filtering": 1,
+                                                                "multicast_snooping": 0})
     sw_if1.add_br_vlan(85)
     sw_if2.add_br_vlan(65)
 

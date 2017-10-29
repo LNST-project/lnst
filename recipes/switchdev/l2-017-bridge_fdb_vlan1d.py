@@ -27,7 +27,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_if2_20 = sw.create_vlan(sw_if2, 20)
 
     # Ageing time is 10 seconds.
-    br_options = {"vlan_filtering": 0, "ageing_time": 1000}
+    br_options = {"vlan_filtering": 0, "ageing_time": 1000, "multicast_querier": 1}
     sw_br = sw.create_bridge(slaves = [sw_if1_10, sw_if2_20], options=br_options)
 
     sleep(30)

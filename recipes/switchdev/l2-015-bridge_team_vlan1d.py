@@ -33,16 +33,18 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     sw_lag1 = sw.create_team(slaves=[sw_if1, sw_if2], config=team_config)
     sw_lag2 = sw.create_team(slaves=[sw_if3, sw_if4], config=team_config)
-    br_options = {"vlan_filtering": 1}
+    br_options = {"vlan_filtering": 1, "multicast_querier": 1}
     sw_br1 = sw.create_bridge(slaves=[sw_lag1, sw_lag2], options=br_options)
 
     sw_lag1_10 = sw.create_vlan(sw_lag1, 10)
     sw_lag2_10 = sw.create_vlan(sw_lag2, 10)
-    sw_br2 = sw.create_bridge(slaves=[sw_lag1_10, sw_lag2_10])
+    sw_br2 = sw.create_bridge(slaves=[sw_lag1_10, sw_lag2_10],
+                              options={"multicast_querier": 1})
 
     sw_lag1_20 = sw.create_vlan(sw_lag1, 20)
     sw_lag2_21 = sw.create_vlan(sw_lag2, 21)
-    sw_br3 = sw.create_bridge(slaves=[sw_lag1_20, sw_lag2_21])
+    sw_br3 = sw.create_bridge(slaves=[sw_lag1_20, sw_lag2_21],
+                              options={"multicast_querier": 1})
 
     sleep(30)
 

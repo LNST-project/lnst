@@ -31,7 +31,8 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_lag2 = sw.create_team(slaves=[sw_if3, sw_if4],
                              config=team_config)
 
-    sw.create_bridge(slaves=[sw_lag1, sw_lag2], options={"vlan_filtering": 1})
+    sw.create_bridge(slaves=[sw_lag1, sw_lag2], options={"vlan_filtering": 1,
+                                                         "multicast_querier": 1})
 
     sleep(30)
 

@@ -29,7 +29,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     sw_lag2 = sw.create_team(slaves=[sw_if3, sw_if4], config=team_config)
 
     # Ageing time is 10 seconds.
-    br_options = {"vlan_filtering": 1, "ageing_time": 1000}
+    br_options = {"vlan_filtering": 1, "ageing_time": 1000, "multicast_querier": 1}
     sw_br = sw.create_bridge(slaves = [sw_lag1, sw_lag2], options=br_options)
 
     sleep(30)
