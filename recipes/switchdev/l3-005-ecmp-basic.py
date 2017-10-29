@@ -13,15 +13,6 @@ from TestLib import TestLib
 from time import sleep
 import ecmp_common
 
-def test_ip(major, minor, prefix=[24,64]):
-    return ["192.168.1%d.%d%s" % (major, minor,
-            "/" + str(prefix[0]) if len(prefix) > 0 else ""),
-            "2002:%d::%d%s" % (major, minor,
-            "/" + str(prefix[1]) if len(prefix) > 1 else "")]
-
-def ipv4(test_ip):
-    return test_ip[0]
-
 def do_task(ctl, hosts, ifaces, aliases):
     m1, sw, m2 = hosts
     m1_if1, sw_if1, sw_if2, sw_if3, m2_if1, m2_if2, m2_if3, m3_if1 = ifaces
@@ -30,6 +21,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     ecmp_m_ifaces = [m2_if1, m2_if2]
 
     m2.config("/proc/sys/net/ipv4/ip_forward", "1")
+    m2.config("/proc/sys/net/ipv6/conf/all/forwarding", "1")
 
     ecmp_common.create_topology(m1_if1, sw_if1, ecmp_sw_ifaces, ecmp_m_ifaces,
                                 m2_if3, m3_if1)

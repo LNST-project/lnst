@@ -14,6 +14,9 @@ def test_ip(major, minor, prefix=[24,64]):
 def ipv4(test_ip):
     return test_ip[0]
 
+def ipv6(test_ip):
+    return test_ip[1]
+
 def test_traffic(tl, from_if, to_if, ecmp_in_if, ecmp_ifaces, expected = 1.,
                  errmsg = "ecmp traffic"):
     reciever_thresh = 0.9 * PKTGEN_ROUNDS * PKTGEN_COUNT * expected
@@ -105,3 +108,10 @@ def create_topology(from_if, ecmp_in_if, ecmp_tx_ifaces, ecmp_rx_ifaces,
     ecmp_out_if.add_nhs_route(ipv4(test_ip(1,0)),
                               [str(i.get_ip(0)) for i in ecmp_tx_ifaces])
     to_if.add_nhs_route(ipv4(test_ip(1,0)), [str(ecmp_out_if.get_ip(0))])
+
+    from_if.add_nhs_route(ipv6(test_ip(2,0)), [str(ecmp_in_if.get_ip(1))])
+    ecmp_in_if.add_nhs_route(ipv6(test_ip(2,0)),
+                             [str(ipv6(nh_addr)) for nh_addr in nh_addrs])
+    ecmp_out_if.add_nhs_route(ipv6(test_ip(1,0)),
+                              [str(i.get_ip(1)) for i in ecmp_tx_ifaces])
+    to_if.add_nhs_route(ipv6(test_ip(1,0)), [str(ecmp_out_if.get_ip(1))])

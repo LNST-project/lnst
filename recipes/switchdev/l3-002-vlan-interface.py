@@ -21,6 +21,9 @@ def test_ip(major, minor, prefix=[24,64]):
 def ipv4(test_ip):
     return test_ip[0]
 
+def ipv6(test_ip):
+    return test_ip[1]
+
 def do_task(ctl, hosts, ifaces, aliases):
     m1, m2, sw = hosts
     m1_if1, m2_if1, sw_if1, sw_if2 = ifaces
@@ -36,6 +39,9 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     m1_if1_10.add_nhs_route(ipv4(test_ip(2,0)), [ipv4(test_ip(1,2,[]))]);
     m2_if1_10.add_nhs_route(ipv4(test_ip(1,0)), [ipv4(test_ip(2,2,[]))]);
+
+    m1_if1.add_nhs_route(ipv6(test_ip(2,0)), [ipv6(test_ip(1,2,[]))], ipv6=True);
+    m2_if1.add_nhs_route(ipv6(test_ip(1,0)), [ipv6(test_ip(2,2,[]))], ipv6=True);
 
     sleep(30)
 

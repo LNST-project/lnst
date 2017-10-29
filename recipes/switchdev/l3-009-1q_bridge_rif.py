@@ -29,6 +29,9 @@ def test_ip(major, minor, prefix=[24,64]):
 def ipv4(test_ip):
     return test_ip[0]
 
+def ipv6(test_ip):
+    return test_ip[1]
+
 def do_task(ctl, hosts, ifaces, aliases):
     """
     Create the following topology:
@@ -84,6 +87,10 @@ def do_task(ctl, hosts, ifaces, aliases):
     m1_if1.add_nhs_route(ipv4(test_ip(2, 0)), [str(sw_br_v10.get_ip(0))])
     m2_if1.add_nhs_route(ipv4(test_ip(2, 0)), [str(sw_br_v10.get_ip(0))])
     m3_if1.add_nhs_route(ipv4(test_ip(1, 0)), [str(sw_if2.get_ip(0))])
+
+    m1_if1.add_nhs_route(ipv6(test_ip(2, 0)), [str(sw_br_v10.get_ip(1))], ipv6=True)
+    m2_if1.add_nhs_route(ipv6(test_ip(2, 0)), [str(sw_br_v10.get_ip(1))], ipv6=True)
+    m3_if1.add_nhs_route(ipv6(test_ip(1, 0)), [str(sw_if2.get_ip(1))], ipv6=True)
 
     sleep(30)
     tl = TestLib(ctl, aliases)
