@@ -802,10 +802,10 @@ class SlaveMethods:
         for nh_route_match in nh_route_matchs:
             nexthop = { "ip" : nh_route_match[1],
                         "dev" : nh_route_match[2],
-                        "flags" : ""}
+                        "flags" : nh_route_match[3]}
             nh_route = {"prefix"  : nh_route_match[0],
                         "nexthops": [ nexthop ],
-                        "flags"   : nh_route_match[3] }
+                        "flags" : ""}
             nh_routes.append(nh_route)
 
         # parse ECMP routes

@@ -40,9 +40,9 @@ def do_task(ctl, hosts, ifaces, aliases):
     if len(nh_routes) != 1:
         tl.custom(sw, "route", "could not find the ecmp route")
 
-    route_flags = nh_routes[0]["flags"]
-    if "offload" not in route_flags:
-        tl.custom(sw, "route", "ecmp route is not offloaded")
+    for nh in nh_routes[0]["nexthops"]:
+        if "offload" not in nh["flags"]:
+            tl.custom(sw, "route", "ecmp route is not offloaded")
 
 do_task(ctl, [ctl.get_host("machine1"),
               ctl.get_host("switch"),

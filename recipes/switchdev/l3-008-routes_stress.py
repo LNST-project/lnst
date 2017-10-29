@@ -97,7 +97,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     dc_routes, nh_routes = sw.get_routes()
     offloaded_routes_num = 0
     for nh_route in nh_routes:
-        if "offload" in nh_route["flags"]:
+        if "offload" in nh_route["nexthops"][0]["flags"]:
             offloaded_routes_num += 1
 
     if offloaded_routes_num < ROUTES_COUNT:
