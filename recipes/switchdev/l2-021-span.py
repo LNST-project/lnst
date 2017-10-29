@@ -21,24 +21,22 @@ class MirredPort:
         self.mirred_port = mirred_port
         self.mach = mach
 
-        mach.run("tc qdisc replace dev %s handle 0: root prio" % devname)
-        mach.run("tc qdisc add dev %s handle ffff: ingress" % devname)
+        mach.run("tc qdisc add dev %s clsact" % devname)
         self.pref = [1, 1]
 
     def create_mirror(self, to_port, ingress = False):
-        ingress_str = "ingress" if ingress else ""
-        qdisc_handle = "ffff" if ingress else "0"
+        ingress_str = "ingress" if ingress else "egress"
         from_dev = self.mirred_port.get_devname()
         to_dev = to_port.get_devname()
 
-        self.mach.run("tc filter add dev %s parent %s: pref %d matchall \
+        self.mach.run("tc filter add dev %s %s pref %d matchall \
                        skip_sw action mirred egress mirror dev %s" % (from_dev,
-                       qdisc_handle, self.pref[ingress], to_dev))
+                       ingress_str, self.pref[ingress], to_dev))
         self.pref[ingress] += 1
 
     def remove_mirror(self, to_port, ingress = False):
         from_dev = self.mirred_port.get_devname()
-        ingress_str = "ingress" if ingress else ""
+        ingress_str = "ingress" if ingress else "egress"
         self.pref[ingress] -= 1
         self.mach.run("tc filter del dev %s pref %d %s" % (from_dev,
                       self.pref[ingress], ingress_str))
