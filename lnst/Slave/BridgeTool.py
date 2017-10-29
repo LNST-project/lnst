@@ -83,8 +83,10 @@ class BridgeTool:
                 self = True if re.match(r'.*\s+self', line) else False
                 master = True if re.match(r'.*\s+master', line) else False
                 offload = True if re.match(r'.*\s+offload', line) else False
+                extern_learn = True if re.match(r'.*\s+extern_learn', line) else False
                 br_fdb_info = {"hwaddr": hwaddr, "vlan_id": vlan_id,
-                               "self": self, "master": master, "offload": offload}
+                               "self": self, "master": master, "offload": offload,
+                               "extern_learn": extern_learn}
                 br_fdb_info_list.append(br_fdb_info)
         return br_fdb_info_list
 
