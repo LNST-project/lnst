@@ -36,103 +36,61 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     tl = TestLib(ctl, aliases)
     tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software")
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
-    sw_lag1.set_br_learning(on=False, self=True)
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, True)
+    sw_lag1.set_br_learning(on=False, master=True)
 
     sleep(30)
 
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, True, False)
 
     # Make sure FDB is not populated when learning is disabled.
-    sw_lag1.set_br_learning(on=False, self=True)
+    sw_lag1.set_br_learning(on=False, master=True)
     tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, True, False)
 
     # Disable flooding and make sure ping fails.
-    sw_lag1.set_br_flooding(on=False, self=True)
+    sw_lag1.set_br_flooding(on=False, master=True)
     tl.ping_simple(m1_lag1, m2_lag1, fail_expected=True)
 
-    # Set a static FDB entry and make sure ping works again.
-    sw_lag1.add_br_fdb(str(m1_lag1.get_hwaddr()), self=True, vlan_tci=1)
+    # Set a static FDB entry and make sure ping works again. Also check
+    # its offloaded
+    sw_lag1.add_br_fdb(str(m1_lag1.get_hwaddr()), master=True, vlan_tci=1)
     tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, False)
 
     # Remove static FDB entry. Ping should fail.
-    sw_lag1.del_br_fdb(str(m1_lag1.get_hwaddr()), self=True, vlan_tci=1)
+    sw_lag1.del_br_fdb(str(m1_lag1.get_hwaddr()), master=True, vlan_tci=1)
     tl.ping_simple(m1_lag1, m2_lag1, fail_expected=True)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, False, False)
 
-    # Enable learning_sync and make sure both FDBs are populated.
-    sw_lag1.set_br_learning(on=True, self=True)
-    sw_lag1.set_br_flooding(on=True, self=True)
-    sw_lag1.set_br_learning_sync(on=True, self=True)
+    # Enable learning and flooading and make sure ping works again.
+    sw_lag1.set_br_learning(on=True, master=True)
+    sw_lag1.set_br_flooding(on=True, master=True)
     tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software")
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
-    sw_lag1.set_br_learning(on=False, self=True)
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, True)
+    sw_lag1.set_br_learning(on=False, master=True)
 
     sleep(30)
 
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, True, False)
 
-    # Disable learning_sync and make sure only hardware FDB is populated.
-    sw_lag1.set_br_learning(on=True, self=True)
-    sw_lag1.set_br_learning_sync(on=False, self=True)
+    # Insert a static FDB entry. Ping should work.
+    sw_lag1.add_br_fdb(str(m1_lag1.get_hwaddr()), master=True, vlan_tci=1)
     tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
-
-    # Remove port from bridge and add it back. Disable flooding and learning
-    # and make sure ping doesn't work. Note that port must be removed from
-    # bridge when the FDB entry exists only in the hardware table. Otherwise,
-    # bridge code will flush it himself, instead of driver.
-    sw_br.slave_del(sw_lag1.get_id())
-    sw_br.slave_add(sw_lag1.get_id())    # Enables learning sync by default.
-    sw_lag1.set_br_learning(on=False, self=True)
-    sw_lag1.set_br_flooding(on=False, self=True)
-    tl.ping_simple(m1_lag1, m2_lag1, fail_expected=True)
-
-    # Enable learning and make sure ping works again.
-    sw_lag1.set_br_learning(on=True, self=True)
-    tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software")
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
-    sw_lag1.set_br_learning(on=False, self=True)
-
-    sleep(30)
-
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware", False)
-
-    # Insert a static FDB entry and disable learning sync. Ping should work.
-    sw_lag1.add_br_fdb(str(m1_lag1.get_hwaddr()), self=True, vlan_tci=1)
-    sw_lag1.set_br_learning_sync(on=False, self=True)
-    tl.ping_simple(m1_lag1, m2_lag1)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, False)
 
     sleep(30)
 
     # Make sure static entry is not aged out.
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, "hardware")
+    tl.check_fdb(sw_lag1, m1_lag1.get_hwaddr(), 1, True, False)
 
-    # Remove port from bridge and add it back. Disable flooding and learning
-    # and make sure ping doesn't work. Note that port must be removed from
-    # bridge when the FDB entry exists only in the hardware table. Otherwise,
-    # bridge code will flush it himself, instead of driver. Unlike the
-    # previous case, here we check if the driver correctly removes the static
-    # entry.
+    # Remove port from bridge and add it back. The static entry added
+    # before should be flushed. Disable flooding and learning and make
+    # sure ping doesn't work.
     sw_br.slave_del(sw_lag1.get_id())
     sw_br.slave_add(sw_lag1.get_id())
-    sw_lag1.set_br_learning(on=False, self=True)
-    sw_lag1.set_br_flooding(on=False, self=True)
+    sw_lag1.set_br_learning(on=False, master=True)
+    sw_lag1.set_br_flooding(on=False, master=True)
     tl.ping_simple(m1_lag1, m2_lag1, fail_expected=True)
 
 do_task(ctl, [ctl.get_host("machine1"),

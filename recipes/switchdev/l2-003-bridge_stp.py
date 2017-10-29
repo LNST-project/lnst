@@ -36,43 +36,37 @@ def do_task(ctl, hosts, ifaces, aliases):
     # populated.
     sw_if1.set_br_state(0)
     tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, True, True, False)
 
     # Set STP state to LISTENING and make sure ping fails and FDB is not
     # populated.
     sw_if1.set_br_state(1)
     tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, True, True, False)
 
     # Set STP state to LEARNING and make sure ping fails, but FDB *is*
     # populated.
     sw_if1.set_br_state(2)
     tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "software")
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "hardware")
+    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, True, True)
 
     sleep(30)
 
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, True, True, False)
 
     # Set STP state to FORWARDING and make sure ping works and FDB is
     # populated.
     sw_if1.set_br_state(3)
     tl.ping_simple(m1_if1, m2_if1)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "software")
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "hardware")
+    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, True, True)
 
     sleep(30)
 
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "software", False)
-    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, "hardware", False)
+    tl.check_fdb(sw_if1, m1_if1.get_hwaddr(), 1, True, True, False)
 
     # Make sure that even with a static FDB record we don't get traffic
     # when state is DISABLED, LEARNING or LISTENING.
-    sw_if2.add_br_fdb(str(m2_if1.get_hwaddr()), self=True, vlan_tci=1)
+    sw_if2.add_br_fdb(str(m2_if1.get_hwaddr()), master=True, vlan_tci=1)
     sw_if1.set_br_state(0)
     tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
     sw_if1.set_br_state(1)
@@ -81,7 +75,7 @@ def do_task(ctl, hosts, ifaces, aliases):
     tl.ping_simple(m1_if1, m2_if1, fail_expected=True)
 
     # Cleanup
-    sw_if2.del_br_fdb(str(m2_if1.get_hwaddr()), self=True, vlan_tci=1)
+    sw_if2.del_br_fdb(str(m2_if1.get_hwaddr()), master=True, vlan_tci=1)
 
 do_task(ctl, [ctl.get_host("machine1"),
               ctl.get_host("machine2"),

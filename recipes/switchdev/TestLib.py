@@ -333,20 +333,29 @@ class TestLib:
         custom_mod = self._ctl.get_module("Custom", options=options)
         m1.run(custom_mod, desc=desc)
 
-    def check_fdb(self, iface, hwaddr, vlan_id, rec_type, find=True):
+    def check_fdb(self, iface, hwaddr, vlan_id, offload, extern_learn, find=True):
         fdb_table = iface.get_br_fdbs()
 
-        rec = "offload" if rec_type == "software" else "self"
         found = False
+        err_arg = None
         for fdb in fdb_table:
-            if (fdb["hwaddr"] == str(hwaddr) and fdb["vlan_id"] == vlan_id and
-                fdb[rec]):
-                found = True
+            if not (fdb["hwaddr"] == str(hwaddr) and fdb["vlan_id"] == vlan_id):
+                continue
+            if (offload and not fdb["offload"]):
+                err_arg = "offload"
+                continue
+            if (extern_learn and not fdb["extern_learn"]):
+                err_arg = "extern_learn"
+                continue
+            found = True
 
         if found and not find:
-            err_msg = "found %s record when shouldn't" % rec_type
+            if err_arg is None:
+                err_msg = "didn't find record when should've"
+            else:
+                err_msg = "found %s record when shouldn't" % err_arg
         elif find and not found:
-            err_msg = "didn't find %s record when should've" % rec_type
+            err_msg = "didn't find %s record when should've" % err_arg
         else:
             err_msg = ""
 
