@@ -107,7 +107,7 @@ class TestLib:
                                          "addr": if2.get_ip(1),
                                          "count": count,
                                          "interval": interval,
-                                         "iface" : if1.get_ip(1),
+                                         "iface" : if1.get_devname(),
                                          "limit_rate": limit_rate})
 
         if self._ipv in [ 'ipv6', 'both' ]:
