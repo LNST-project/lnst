@@ -736,7 +736,7 @@ class Device(object):
 
     def set_addresses(self, ips):
         self._conf.set_addresses(ips)
-        exec_cmd("ip addr flush %s" % self._name)
+        exec_cmd("ip addr flush %s scope global" % self._name)
         for address in ips:
             exec_cmd("ip addr add %s dev %s" % (address, self._name))
 
