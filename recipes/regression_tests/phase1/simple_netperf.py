@@ -204,6 +204,14 @@ if nperf_msg_size is not None:
     netperf_cli_udp6.update_options({"msg_size" : nperf_msg_size})
     netperf_cli_sctp6.update_options({"msg_size" : nperf_msg_size})
 
+# if we will run SCTP test make sure the SCTP will go out through the test
+# interfaces only
+if nperf_protocols.find("sctp") > -1:
+    m1.run("iptables -I OUTPUT ! -o %s -p sctp -j DROP" %
+            m1_testiface.get_devname())
+    m2.run("iptables -I OUTPUT ! -o %s -p sctp -j DROP" %
+            m2_testiface.get_devname())
+
 ctl.wait(15)
 
 for setting in offload_settings:
@@ -402,3 +410,9 @@ m2.run("ethtool -K %s %s" % (m2_testiface.get_devname(), dev_features))
 if nperf_cpupin:
     m1.run("service irqbalance start")
     m2.run("service irqbalance start")
+
+if nperf_protocols.find("sctp") > -1:
+    m1.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
+            m1_testiface.get_devname())
+    m2.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
+            m2_testiface.get_devname())
