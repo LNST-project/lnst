@@ -241,15 +241,15 @@ for setting in offload_settings:
 
     # Ping test
     for vlan1 in vlans:
-        m1_vlan1 = m1.get_interface(vlan1)
+        m1_vlan1_if = m1.get_interface(vlan1)
         for vlan2 in vlans:
-            m2_vlan2 = m2.get_interface(vlan2)
+            m2_vlan2_if = m2.get_interface(vlan2)
 
-            ping_mod.update_options({"addr": m2_vlan2.get_ip(0),
-                                     "iface": m1_vlan1.get_devname()})
+            ping_mod.update_options({"addr": m2_vlan2_if.get_ip(0),
+                                     "iface": m1_vlan1_if.get_devname()})
 
-            ping_mod6.update_options({"addr": m2_vlan2.get_ip(1),
-                                      "iface": m1_vlan1.get_ip(1)})
+            ping_mod6.update_options({"addr": m2_vlan2_if.get_ip(1),
+                                      "iface": m1_vlan1_if.get_ip(1)})
 
             if vlan1 == vlan2:
                 # These tests should pass
