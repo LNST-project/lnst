@@ -20,6 +20,9 @@ from lnst.Devices import VtiDevice
 from lnst.Devices import VxlanDevice
 
 from lnst.Tests import IcmpPing
+from lnst.Tests.Netperf import Netperf, Netserver
+
+import signal
 
 class MyRecipe(BaseRecipe):
     m1 = HostReq()
@@ -37,6 +40,19 @@ class MyRecipe(BaseRecipe):
                                                 interval=0,
                                                 iface=self.matched.m1.eth0))
 
+        netserver_job = self.matched.m1.run(Netserver(bind=self.matched.m1.eth0),
+                                            bg=True)
+
+        netperf_job = self.matched.m2.run(Netperf(server=self.matched.m1.eth0,
+                                                  duration=1,
+                                                  confidence="99,5",
+                                                  runs="5",
+                                                  debug=0,
+                                                  max_deviation={'type':"percent",
+                                                                 'value':20.0},
+                                                  testname="TCP_STREAM"))
+
+        netserver_job.kill(signal=signal.SIGINT)
 
         #examples of how to create soft devices
         self.matched.m1.eth0.down()
