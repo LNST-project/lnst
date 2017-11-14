@@ -1,0 +1,58 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+	<xi:include href="default_aliases.xml" />
+	<define>
+		<alias name="ipv" value="ipv6" />
+		<alias name="subnet0" value="2001:0db8" />
+		<alias name="subnet1" value="2001:1db8" />
+		<alias name="subnet2" value="2001:2db8" />
+		<alias name="subnet3" value="2001:3db8" />
+	</define>
+    <network>
+        <host id="machine1">
+            <params/>
+            <interfaces>
+				<eth id="if1" label="A">
+					<addresses>
+						<address>{$subnet0}::2/32</address>
+					</addresses>
+				</eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <params/>
+            <interfaces>
+				<eth id="if1" label="B">
+					<addresses>
+						<address>{$subnet1}::2/32</address>
+					</addresses>
+				</eth>
+				<eth id="if2" label="C">
+					<addresses>
+						<address>{$subnet2}::2/32</address>
+						<address>{$subnet3}::1/32</address>
+					</addresses>
+				</eth>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+				<eth id="if1" label="A">
+					<addresses>
+						<address>{$subnet0}::1/32</address>
+					</addresses>
+				</eth>
+				<eth id="if2" label="B">
+					<addresses>
+						<address>{$subnet1}::1/32</address>
+					</addresses>
+				</eth>
+				<eth id="if3" label="C">
+					<addresses>
+						<address>{$subnet2}::1/32</address>
+					</addresses>
+				</eth>
+            </interfaces>
+        </host>
+    </network>
+    <task python="l3-013-ipv6-multipath-hash.py" />
+</lnstrecipe>
