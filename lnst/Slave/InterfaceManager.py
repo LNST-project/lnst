@@ -15,6 +15,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import re
 import select
 import logging
+import ethtool
 from lnst.Slave.NetConfigDevice import NetConfigDevice
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
@@ -839,3 +840,16 @@ class Device(object):
         cmd = "ip link set dev %s type bridge_slave mcast_router %d" % \
                    (self._name, state)
         exec_cmd(cmd)
+
+    def get_coalesce(self):
+        try:
+            return ethtool.get_coalesce(self._name)
+        except IOError as e:
+            logging.error("Failed to get coalesce settings: %s", e)
+            return {}
+
+    def set_coalesce(self, cdata):
+        try:
+            ethtool.set_coalesce(self._name, cdata)
+        except IOError as e:
+            logging.error("Failed to set coalesce settings: %s", e)
