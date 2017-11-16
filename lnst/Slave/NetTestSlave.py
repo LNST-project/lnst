@@ -1206,6 +1206,23 @@ class SlaveMethods:
         res["data"] = notif[28:]
         return res
 
+    def get_coalesce(self, if_id):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            return dev.get_coalesce()
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return None
+
+    def set_coalesce(self, if_id, cdata):
+        dev = self._if_manager.get_mapped_device(if_id)
+        if dev is not None:
+            dev.set_coalesce(cdata)
+            return True
+        else:
+            logging.error("Device with id '%s' not found." % if_id)
+            return False
+
 class ServerHandler(ConnectionHandler):
     def __init__(self, addr):
         super(ServerHandler, self).__init__()
