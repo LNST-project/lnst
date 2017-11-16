@@ -845,6 +845,18 @@ class InterfaceAPI(object):
     def mroute_del_vif(self, vif_index, table_id=None):
         return self._if.mroute_del_vif(vif_index, table_id)
 
+    def get_coalesce(self):
+        return self._if.get_coalesce()
+
+    def set_coalesce(self, cdata):
+        return self._if.set_coalesce(cdata)
+
+    def save_coalesce(self):
+        return self._if.save_coalesce()
+
+    def restore_coalesce(self):
+        return self._if.restore_coalesce()
+
 class ModuleAPI(object):
     """ An API class representing a module. """
 
