@@ -677,6 +677,7 @@ class Interface(object):
         self._driver = None
         self._devlink = None
         self._routes = []
+        self._cdata = None
 
     def get_id(self):
         return self._id
@@ -1073,6 +1074,23 @@ class Interface(object):
 
     def set_pause_off(self):
         return self._machine._rpc_call_x(self._netns, "set_pause_off", self._id)
+
+    def get_coalesce(self):
+        return self._machine._rpc_call_x(self._netns, "get_coalesce", self._id)
+
+    def set_coalesce(self, cdata):
+        return self._machine._rpc_call_x(self._netns, "set_coalesce",
+                    self._id, cdata)
+
+    def save_coalesce(self):
+        self._cdata = self.get_coalesce()
+        return self._cdata
+
+    def restore_coalesce(self):
+        self.set_coalesce(self._cdata)
+        self._cdata = None
+        return None
+
 
 class StaticInterface(Interface):
     """ Static interface
