@@ -19,8 +19,8 @@ product_name = ctl.get_alias("product_name")
 m1 = ctl.get_host("machine1")
 m2 = ctl.get_host("machine2")
 
-m1.sync_resources(modules=["Netperf"])
-m2.sync_resources(modules=["Netperf"])
+m1.sync_resources(modules=["Netperf", "Custom"])
+m2.sync_resources(modules=["Netperf", "Custom"])
 
 # ------
 # TESTS
@@ -63,6 +63,19 @@ m2_testiface = m2.get_interface("testiface")
 
 m1_testiface.set_mtu(mtu)
 m2_testiface.set_mtu(mtu)
+
+coalesce_status = ctl.get_module('Custom')
+
+for d in [ m1_testiface, m2_testiface ]:
+    # disable any interrupt coalescing settings
+    cdata = d.save_coalesce()
+    cdata['use_adaptive_tx_coalesce'] = 0
+    cdata['use_adaptive_rx_coalesce'] = 0
+    if not d.set_coalesce(cdata):
+        coalesce_status.set_options({'fail': True,
+                                     'msg': "Failed to set coalesce options"\
+                                            " on device %s" % d.get_devname()})
+        d.get_host().run(coalesce_status)
 
 if nperf_cpupin:
     m1.run("service irqbalance stop")
@@ -416,3 +429,7 @@ if nperf_protocols.find("sctp") > -1:
             m1_testiface.get_devname())
     m2.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
             m2_testiface.get_devname())
+
+for d in [ m1_testiface, m2_testiface ]:
+    # restore any interrupt coalescing settings
+    d.restore_coalesce()

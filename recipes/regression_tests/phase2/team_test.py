@@ -19,8 +19,9 @@ product_name = ctl.get_alias("product_name")
 m1 = ctl.get_host("testmachine1")
 m2 = ctl.get_host("testmachine2")
 
-m1.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
-m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf"])
+m1.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf", "Custom"])
+m2.sync_resources(modules=["IcmpPing", "Icmp6Ping", "Netperf", "Custom"])
+
 
 # ------
 # TESTS
@@ -62,20 +63,33 @@ test_if1.set_mtu(mtu)
 test_if2 = m2.get_interface("test_if")
 test_if2.set_mtu(mtu)
 
+m1_phy1 = m1.get_interface("eth1")
+m1_phy2 = m1.get_interface("eth2")
+dev_list = [(m1, m1_phy1), (m1, m1_phy2)]
+
+if test_if2.get_type() in [ "team", "bond" ]:
+    m2_phy1 = m2.get_interface("eth1")
+    m2_phy2 = m2.get_interface("eth2")
+    dev_list.extend([(m2, m2_phy1), (m2, m2_phy2)])
+else:
+    dev_list.append((m2, test_if2))
+
+coalesce_status = ctl.get_module('Custom')
+
+for _, d in dev_list:
+    # disable any interrupt coalescing settings
+    cdata = d.save_coalesce()
+    cdata['use_adaptive_tx_coalesce'] = 0
+    cdata['use_adaptive_rx_coalesce'] = 0
+    if not d.set_coalesce(cdata):
+        coalesce_status.set_options({'fail': True,
+                                     'msg': "Failed to set coalesce options"\
+                                            " on device %s" % d.get_devname()})
+        d.get_host().run(coalesce_status)
+
 if nperf_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")
-
-    m1_phy1 = m1.get_interface("eth1")
-    m1_phy2 = m1.get_interface("eth2")
-    dev_list = [(m1, m1_phy1), (m1, m1_phy2)]
-
-    if test_if2.get_type() in [ "team", "bond" ]:
-        m2_phy1 = m2.get_interface("eth1")
-        m2_phy2 = m2.get_interface("eth2")
-        dev_list.extend([(m2, m2_phy1), (m2, m2_phy2)])
-    else:
-        dev_list.append((m2, test_if2))
 
     # this will pin devices irqs to cpu #0
     for m, d in dev_list:
@@ -712,3 +726,7 @@ if nperf_protocols.find("sctp") > -1:
             test_if1.get_devname())
     m2.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
             test_if2.get_devname())
+
+for _, d in dev_list:
+    # restore any interrupt coalescing settings
+    d.restore_coalesce()
