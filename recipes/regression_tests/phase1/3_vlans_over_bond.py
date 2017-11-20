@@ -364,6 +364,9 @@ for setting in offload_settings:
             for offload in setting:
                 result_sctp.set_parameter(offload[0], offload[1])
 
+            if nperf_msg_size is not None:
+                result_sctp.set_parameter("nperf_msg_size", nperf_msg_size)
+
             result_sctp.set_parameter('netperf_server_on_vlan', vlans[0])
             result_sctp.set_parameter('netperf_client_on_vlan', vlans[0])
             result_sctp.add_tag(product_name)
@@ -457,6 +460,9 @@ for setting in offload_settings:
                                                   'redhat_release'])
             for offload in setting:
                 result_sctp.set_parameter(offload[0], offload[1])
+
+            if nperf_msg_size is not None:
+                result_sctp.set_parameter("nperf_msg_size", nperf_msg_size)
 
             result_sctp.set_parameter('netperf_server_on_vlan', vlans[0])
             result_sctp.set_parameter('netperf_client_on_vlan', vlans[0])
