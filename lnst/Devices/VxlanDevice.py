@@ -21,57 +21,77 @@ class VxlanDevice(SoftDevice):
     _name_template = "t_vxlan"
     _link_type = "vxlan"
 
-    _linkinfo_data_map = {"vxlan_id": "IFLA_VXLAN_ID",
-                          "dst_port": "IFLA_VXLAN_PORT",
-                          "realdev": "IFLA_VXLAN_LINK",
-                          "group_ip": "IFLA_VXLAN_GROUP",
-                          "remote_ip": "IFLA_VXLAN_GROUP"}
+    _mandatory_opts = ["vxlan_id"]
 
     def __init__(self, ifmanager, *args, **kwargs):
-        try:
-            kwargs["vxlan_id"] = int(kwargs["vxlan_id"])
-        except:
-            raise DeviceConfigError("Invalid value for vxlan_id argument.")
-
-        if "realdev" in kwargs:
-            if not isinstance(kwargs["realdev"], Device):
-                raise DeviceConfigError("Invalid value for realdev argument.")
-
-            kwargs["realdev"] = kwargs["realdev"].ifindex
-
-        if "group_ip" in kwargs and "remote_ip" in kwargs:
+        if "group" in kwargs and "remote" in kwargs:
             raise DeviceError("group and remote cannot both be specified for vxlan")
 
-        if "group_ip" in kwargs:
-            kwargs["group_ip"] = str(ipaddress(kwargs.get("group_ip")))
-        elif "remote_ip" in kwargs:
-            kwargs["remote_ip"] = str(ipaddress(kwargs.get("remote_ip")))
-        else:
-            raise DeviceError("group or remote must be specified for vxlan")
-
-        try:
-            kwargs["dst_port"] = int(kwargs.get("dst_port",0))
-        except:
-            raise DeviceConfigError("Invalid value for dst_port argument.")
+        if "group" not in kwargs and "remote" not in kwargs:
+            raise DeviceError("One of group or remote must be specified for vxlan")
 
         super(VxlanDevice, self).__init__(ifmanager, *args, **kwargs)
 
-    # @property
-    # def real_dev(self):
-        # return self._real_dev
+    @property
+    def realdev(self):
+        if self._nl_msg is None:
+            return None
 
-    # @property
-    # def vxlan_id(self):
-        # return self._vxlan_id
+        if_id = int(self._get_linkinfo_data_attr("IFLA_VXLAN_LINK"))
+        return self._if_manager.get_device(if_id)
 
-    # @property
-    # def group_ip(self):
-        # return self._group_ip
+    @realdev.setter
+    def realdev(self, val):
+        if not isinstance(val, Device):
+            raise DeviceConfigError("realdev value must be a Device object.")
 
-    # @property
-    # def remote_ip(self):
-        # return self._remote_ip
+        self._set_linkinfo_data_attr("IFLA_VXLAN_ID", val.ifindex)
+        self._nl_sync("set")
 
-    # @property
-    # def dst_port(self):
-        # return self._dst_port
+    @property
+    def vxlan_id(self):
+        try:
+            return int(self._get_linkinfo_data_attr("IFLA_VXLAN_ID"))
+        except:
+            return None
+
+    @vxlan_id.setter
+    def vxlan_id(self, val):
+        if int(val) < 0 or int(val) > 16777215:
+            raise DeviceConfigError("Invalid value, must be 0-16777215.")
+
+        self._set_linkinfo_data_attr("IFLA_VXLAN_ID", int(val))
+        self._nl_sync("set")
+
+    @property
+    def group(self):
+        try:
+            return ipaddress(self._get_linkinfo_data_attr("IFLA_VXLAN_GROUP"))
+        except:
+            return None
+
+    @group.setter
+    def group(self, val):
+        self._set_linkinfo_data_attr("IFLA_VXLAN_GROUP", str(ipaddress(val)))
+        self._nl_sync("set")
+
+    @property
+    def remote(self):
+        try:
+            return ipaddress(self._get_linkinfo_data_attr("IFLA_VXLAN_GROUP"))
+        except:
+            return None
+
+    @remote.setter
+    def remote(self, val):
+        self._set_linkinfo_data_attr("IFLA_VXLAN_GROUP", str(ipaddress(val)))
+        self._nl_sync("set")
+
+    @property
+    def dst_port(self):
+        return int(self._get_linkinfo_data_attr("IFLA_VXLAN_PORT"))
+
+    @dst_port.setter
+    def dst_port(self, val):
+        self._set_linkinfo_data_attr("IFLA_VXLAN_PORT", int(val))
+        self._nl_sync("set")

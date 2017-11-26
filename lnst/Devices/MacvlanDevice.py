@@ -20,15 +20,26 @@ class MacvlanDevice(SoftDevice):
     _name_template = "t_macvlan"
     _link_type = "macvlan"
 
-    _link_map = dict(SoftDevice._link_map)
-    _link_map.update({"realdev": "IFLA_LINK"})
+    _mandatory_opts = ["realdev"]
 
-    _linkinfo_data_map = {"mode": "IFLA_MACVLAN_MODE"}
+    @property
+    def realdev(self):
+        idx = self._nl_msg.get_attr("IFLA_LINK")
+        return self._if_manager.get_device(idx)
 
-    def __init__(self, ifmanager, *args, **kwargs):
-        if not isinstance(kwargs["realdev"], Device):
-            raise DeviceConfigError("Invalid value for realdev argument.")
+    @realdev.setter
+    def realdev(self, val):
+        if not isinstance(val, Device):
+            raise DeviceConfigError("Value must be a Device object.")
 
-        kwargs["realdev"] = kwargs["realdev"].ifindex
+        self._update_attr(val.ifindex, "IFLA_LINK")
+        self._nl_sync("set")
 
-        super(MacvlanDevice, self).__init__(ifmanager, *args, **kwargs)
+    @property
+    def mode(self):
+        return str(self._get_linkinfo_data_attr("IFLA_MACVLAN_MODE"))
+
+    @mode.setter
+    def mode(self, val):
+        self._set_linkinfo_data_attr("IFLA_MACVLAN_MODE", str(val))
+        self._nl_sync("set")

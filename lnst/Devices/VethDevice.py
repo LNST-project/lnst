@@ -18,30 +18,17 @@ from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class VethDevice(SoftDevice):
-    _name_template = "veth"
+    _name_template = "lveth"
     _link_type = "veth"
 
-    _link_map = {"name": "IFLA_IFNAME"}
-    _linkinfo_data_map = {"peer_name": "VETH_INFO_PEER"}
-
     def __init__(self, ifmanager, *args, **kwargs):
-        if "name" not in kwargs:
-            kwargs["name"] = ifmanager.assign_name(self._name_template)
-
         if "peer_name" not in kwargs:
-            kwargs["peer_name"] = ifmanager.assign_name("peer_"+self._name_template)
+            if "name" in kwargs:
+                kwargs["peer_name"] = ifmanager.assign_name("peer_"+kwargs["name"])
+            else:
+                kwargs["peer_name"] = ifmanager.assign_name("peer_"+self._name_template)
 
         super(VethDevice, self).__init__(ifmanager, *args, **kwargs)
-
-    def _parse_linkinfo_data(self, **kwargs):
-        data = {"attrs": []}
-        for key, nl_attr in self._linkinfo_data_map.items():
-            if key in kwargs:
-                val = kwargs.pop(key)
-                if key == "peer_name":
-                    val = {"attrs": [("IFLA_IFNAME", val)]}
-                data["attrs"].append((nl_attr, val))
-        return data
 
     @property
     def peer(self):
@@ -50,6 +37,22 @@ class VethDevice(SoftDevice):
 
         peer_if_id = self._nl_msg.get_attr("IFLA_LINK")
         return self._if_manager.get_device(peer_if_id)
+
+    @property
+    def peer_name(self):
+        if self.peer:
+            return self.peer.name
+        else:
+            return None
+
+    @peer_name.setter
+    def peer_name(self, val):
+        if self.peer:
+            self.peer.name = val
+        else:
+            self._update_attr(str(val), "IFLA_LINKINFO", "IFLA_INFO_DATA",
+                    "VETH_INFO_PEER", "IFLA_IFNAME")
+            self._nl_sync("set")
 
 class PairedVethDevice(VethDevice):
     def __init__(self, ifmanager, *args, **kwargs):

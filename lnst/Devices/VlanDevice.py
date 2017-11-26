@@ -20,37 +20,35 @@ class VlanDevice(SoftDevice):
     _name_template = "t_vlan"
     _link_type = "vlan"
 
-    _link_map = dict(SoftDevice._link_map)
-    _link_map.update({"realdev": "IFLA_LINK"})
-
-    _linkinfo_data_map = {"vlan_id": "IFLA_VLAN_ID"}
-
-    def __init__(self, ifmanager, *args, **kwargs):
-        if not isinstance(kwargs["realdev"], Device):
-            raise DeviceConfigError("Invalid value for realdev argument.")
-
-        kwargs["realdev"] = kwargs["realdev"].ifindex
-
-        try:
-            kwargs["vlan_id"] = int(kwargs["vlan_id"])
-        except ValueError:
-            raise DeviceConfigError("Invalid value for vlan_id argument.")
-
-        super(VlanDevice, self).__init__(ifmanager, *args, **kwargs)
+    _mandatory_opts = ["realdev", "vlan_id"]
 
     @property
-    def real_dev(self):
+    def realdev(self):
         if self._nl_msg is None:
             return None
 
         if_id = self._nl_msg.get_attr("IFLA_LINK")
         return self._if_manager.get_device(if_id)
 
+    @realdev.setter
+    def realdev(self, val):
+        if not isinstance(val, Device):
+            raise DeviceConfigError("realdev value must be a Device object.")
+
+        self._update_attr(val.ifindex, "IFLA_LINK")
+        self._nl_sync("set")
+
     @property
     def vlan_id(self):
-        if self._nl_msg is None:
+        try:
+            return int(self._get_linkinfo_data_attr("IFLA_VLAN_ID"))
+        except:
             return None
 
-        linkinfo = self._nl_msg.get_attr("IFLA_LINKINFO")
-        infodata = linkinfo.getattr("IFLA_INFO_DATA")
-        return infodata.getattr("IFLA_VLAN_ID")
+    @vlan_id.setter
+    def vlan_id(self, val):
+        if int(val) < 1 or int(val) > 4095:
+            raise DeviceConfigError("Invalid value, must be 1-4095.")
+
+        self._set_linkinfo_data_attr("IFLA_VLAN_ID", int(val))
+        self._nl_sync("set")

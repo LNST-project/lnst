@@ -13,8 +13,10 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import re
 import ethtool
-from abc import ABCMeta
 import pyroute2
+import logging
+import pprint
+from abc import ABCMeta
 from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.NetUtils import normalize_hwaddr
@@ -57,21 +59,66 @@ class Device(object):
 
         self._ip_addrs = []
 
-    def _create(self):
-        """Creates a new netdevice of the corresponding type
+        self._nl_update = {}
+        self._bulk_enabled = False
 
-        Method to be implemented by derived classes where applicable.
-        """
-        msg = "Can't create a hardware ethernet device."
-        raise DeviceError(msg)
+    def _set_nl_attr(self, msg, value, name):
+        msg[name] = value
 
-    def destroy(self):
-        """Destroys the netdevice of the corresponding type
+    def _set_nested_nl_attr(self, msg, value, *args):
+        if len(args) == 1:
+            self._set_nl_attr(msg, value, args[0])
+        elif len(args) > 1:
+            if args[0] not in msg:
+                msg[args[0]] = {"attrs": {}}
+            elif not isinstance(msg[args[0]], dict) or "attrs" not in msg[args[0]]:
+                raise DeviceError("Error constructing nested nl msg.")
 
-        For the basic eth device it just cleans up its configuration.
-        """
-        self.cleanup()
-        return True
+            attrs = msg[args[0]]["attrs"]
+            self._set_nested_nl_attr(attrs, value, *args[1:])
+        else:
+            raise DeviceError("Error constructing nested nl msg.")
+
+    def _update_attr(self, value, *args):
+        self._set_nested_nl_attr(self._nl_update, value, *args)
+
+    def _process_nested_nl_attrs(self, msg):
+        ret = {}
+        for k, v in msg.items():
+            if isinstance(v, dict):
+                processed = self._process_nested_nl_attrs(v["attrs"])
+                ret[k] = {"attrs": processed.items()}
+            else:
+                ret[k] = v
+        return ret
+
+    def _nl_sync(self, op, ipr_attrs=None, bulk=False):
+        if self._bulk_enabled and not bulk:
+            return
+
+        if ipr_attrs is None:
+            attrs = self._process_nested_nl_attrs(self._nl_update)
+        else:
+            attrs = self._process_nested_nl_attrs(ipr_attrs)
+
+        with pyroute2.IPRoute() as ipr:
+            try:
+                pretty_attrs = pprint.pformat(attrs)
+                logging.debug("Performing Netlink operation {}, data:".format(op))
+                logging.debug("{}".format(pretty_attrs))
+
+                if op == "add":
+                    ipr.link(op, **attrs)
+                else:
+                    ipr.link(op, index=self.ifindex, **attrs)
+                self._if_manager.rescan_devices()
+            except Exception as e:
+                log_exc_traceback()
+                raise DeviceConfigError("Operation {} on link {} failed: {}"
+                        .format(op, self.name, str(e)))
+
+        if ipr_attrs is None:
+            self._nl_update = {}
 
     def _enable(self):
         """Enables the Device object"""
@@ -119,10 +166,10 @@ class Device(object):
         try:
             if not getattr(self, "_enabled") and name[0] != "_":
                 raise DeviceDisabled("Can't set attributes for a disabled device.")
-            else:
-                return super(Device, self).__setattr__(name, value)
         except AttributeError:
-            return super(Device, self).__setattr__(name, value)
+            pass
+
+        return super(Device, self).__setattr__(name, value)
 
     def _set_devlink(self, devlink_port_data):
         self._devlink = devlink_port_data
@@ -179,6 +226,16 @@ class Device(object):
                    "devlink": self._devlink}
         return if_data
 
+    def _vars(self):
+        ret = {}
+        for k in dir(self):
+            if k[0] == '_':
+                continue
+            v = getattr(self, k)
+            if not callable(v):
+                ret[k] = v
+        return ret
+
     def _clear_tc_qdisc(self):
         exec_cmd("tc qdisc replace dev %s root pfifo" % self.name)
         out, _ = exec_cmd("tc filter show dev %s" % self.name)
@@ -214,6 +271,22 @@ class Device(object):
 
         if self.hwaddr != self._orig_hwaddr:
             self.hwaddr = self._orig_hwaddr
+
+    def _create(self):
+        """Creates a new netdevice of the corresponding type
+
+        Method to be implemented by derived classes where applicable.
+        """
+        msg = "Can't create a hardware ethernet device."
+        raise DeviceError(msg)
+
+    def destroy(self):
+        """Destroys the netdevice of the corresponding type
+
+        For the basic eth device it just cleans up its configuration.
+        """
+        self.cleanup()
+        return True
 
     def cleanup(self):
         """Cleans up the device configuration
@@ -255,15 +328,8 @@ class Device(object):
         Args:
             new_name -- the new name of the interface.
         """
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.link("set", index=self.ifindex, ifname=new_name)
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigValueError("Invalid name value")
-            else:
-                return self.name
+        self._update_attr(new_name, "IFLA_IFNAME")
+        self._nl_sync("set")
 
     @property
     def hwaddr(self):
@@ -282,15 +348,8 @@ class Device(object):
             addr -- an address accepted by the hwaddress factory method
         """
         addr = hwaddress(addr)
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.link("set", index=self.ifindex, address=str(addr))
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigValueError("Invalid hw address value")
-            else:
-                return self.hwaddr
+        self._update_attr(str(addr), "IFLA_ADDRESS")
+        self._nl_sync("set")
 
     @property
     def state(self):
@@ -325,13 +384,8 @@ class Device(object):
 
         Args:
             value -- the new MTU."""
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.link("set", index=self.ifindex, mtu=value)
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigValueError("Invalid MTU value")
+        self._update_attr(int(value), "IFLA_MTU")
+        self._nl_sync("set")
 
     @property
     def master(self):
@@ -359,13 +413,9 @@ class Device(object):
             master_idx = 0
         else:
             raise DeviceError("Invalid dev argument.")
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.link("set", index=self.ifindex, master=master_idx)
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigValueError("Invalid master interface")
+
+        self._update_attr(master_idx, "IFLA_MASTER")
+        self._nl_sync("set")
 
     @property
     def driver(self):

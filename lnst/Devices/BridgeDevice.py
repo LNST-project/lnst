@@ -17,20 +17,29 @@ class BridgeDevice(MasterDevice):
     _name_template = "t_br"
     _link_type = "bridge"
 
-    _linkinfo_data_map = {"ageing_time": "IFLA_BR_AGEING_TIME",
-                          "stp_state": "IFLA_BR_STP_STATE",
-                          "vlan_filtering": "IFLA_BR_VLAN_FILTERING"}
+    @property
+    def ageing_time(self):
+        return int(self._get_linkinfo_data_attr("IFLA_BR_AGEING_TIME"))
 
-    # def _get_bridge_dir(self):
-        # return "/sys/class/net/%s/bridge" % self.name
+    @ageing_time.setter
+    def ageing_time(self, val):
+        self._set_linkinfo_data_attr("IFLA_BR_AGEING_TIME", int(val))
+        self._nl_sync("set")
 
-    #TODO redo to work with pyroute - select which options are interesing as
-    # properties?
-    # def set_option(self, option, value):
-        # exec_cmd('echo "%s" > %s/%s' % (value,
-                                        # self._get_bridge_dir(),
-                                        # option))
+    @property
+    def stp_state(self):
+        return int(self._get_linkinfo_data_attr("IFLA_BR_STP_STATE"))
 
-    # def set_options(self, options):
-        # for option, value in options:
-            # self.set_option(option, value)
+    @stp_state.setter
+    def stp_state(self, val):
+        self._set_linkinfo_data_attr("IFLA_BR_STP_STATE", int(val))
+        self._nl_sync("set")
+
+    @property
+    def vlan_filtering(self):
+        return bool(self._get_linkinfo_data_attr("IFLA_BR_VLAN_FILTERING"))
+
+    @vlan_filtering.setter
+    def vlan_filtering(self, val):
+        self._set_linkinfo_data_attr("IFLA_BR_VLAN_FILTERING", bool(val))
+        self._nl_sync("set")

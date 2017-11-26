@@ -76,6 +76,9 @@ class RemoteDevice(object):
     def netns(self, value):
         self.__netns = value
 
+    def __dir__(self):
+        return dir(self._dev_cls)
+
     def __getattr__(self, name):
         if name == "_inited":
             return False

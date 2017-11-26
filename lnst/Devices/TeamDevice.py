@@ -48,6 +48,11 @@ class TeamDevice(MasterDevice):
                      self.name,
                      " -D" if self.dbus else ""))
 
+        retry = 0
+        while self._nl_msg is None and retry < 5:
+            retry += 1
+            self._if_manager.rescan_devices()
+
     def destroy(self):
         exec_cmd("teamd -k -t %s" % self.name)
 
