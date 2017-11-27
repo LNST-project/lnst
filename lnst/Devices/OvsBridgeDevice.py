@@ -10,6 +10,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+from lnst.Common.Utils import check_process_running
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceError
 from lnst.Devices.Device import Device
@@ -27,11 +28,13 @@ class OvsBridgeDevice(SoftDevice):
         if not cls._type_initialized:
             exec_cmd("modprobe %s %s" % ("openvswitch", cls._moduleparams))
 
-            exec_cmd("mkdir -p /var/run/openvswitch/")
-            exec_cmd("ovsdb-server --detach --pidfile "\
-                     "--remote=punix:/var/run/openvswitch/db.sock",
-                     die_on_err=False)
-            exec_cmd("ovs-vswitchd --detach --pidfile", die_on_err=False)
+            if not check_process_running("ovsdb-server"):
+                exec_cmd("mkdir -p /var/run/openvswitch/")
+                exec_cmd("ovsdb-server --detach --pidfile "\
+                         "--remote=punix:/var/run/openvswitch/db.sock",
+                         die_on_err=False)
+            if not check_process_running("ovs-vswitchd"):
+                exec_cmd("ovs-vswitchd --detach --pidfile", die_on_err=False)
 
             cls._type_initialized = True
 
