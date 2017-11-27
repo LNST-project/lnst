@@ -13,6 +13,13 @@ them to be implemented in Python Recipes, with notes where relevant.
 
 * wait/sleep method that cycles handles ctl <-> slave communication in the
   background
+    * should include wait for condition functionality, e.g. wait for Device
+      LOWER_UP. jpirko also wants to be able to associate this with timestamps,
+      e.g. - wait for LOWER_UP that's been in effect for at least 5 seconds. So
+      if the device isn't LOWER_UP it will wait for that to happen and then
+      wait for 5 seconds, or if the device has been LOWER_UP for e.g. 3
+      seconds, we will wait for additional 2 seconds, however if it has been up
+      for e.g. 8 seconds the wait will return immediatelly.
 
 * Results implementation
     * Result objects should be stored in a transparent way and there should be
@@ -94,6 +101,7 @@ them to be implemented in Python Recipes, with notes where relevant.
   equivalent. I think the new sync mechanism could be exported as an API to the
   tester and that could help with that
 
+* malformed cache -> delete and create new
 
 
 
