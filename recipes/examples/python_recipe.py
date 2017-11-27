@@ -10,6 +10,15 @@ from lnst.Controller import Controller
 from lnst.Controller import BaseRecipe
 from lnst.Controller import HostReq, DeviceReq
 
+from lnst.Devices import BondDevice
+from lnst.Devices import BridgeDevice
+from lnst.Devices import TeamDevice
+from lnst.Devices import MacvlanDevice
+from lnst.Devices import VethPair
+from lnst.Devices import VlanDevice
+from lnst.Devices import VtiDevice
+from lnst.Devices import VxlanDevice
+
 from lnst.Tests import IcmpPing
 
 class MyRecipe(BaseRecipe):
@@ -27,6 +36,67 @@ class MyRecipe(BaseRecipe):
         ping_job = self.matched.m1.run(IcmpPing(dst=self.matched.m2.eth0,
                                                 interval=0,
                                                 iface=self.matched.m1.eth0))
+
+
+        #examples of how to create soft devices
+        self.matched.m1.eth0.down()
+
+        m1 = self.matched.m1
+        eth0 = m1.eth0
+
+        #Bonding
+        m1.bond = BondDevice(mode="active-backup", name="my_bond0")
+        m1.bond.slave_add(eth0)
+        m1.bond.up()
+        m1.run("ip a")
+        m1.bond.destroy()
+
+        #Bridging
+        m1.br = BridgeDevice()
+        m1.br.slave_add(eth0)
+        m1.br.up()
+        m1.run("ip a")
+        m1.br.destroy()
+
+        #Teaming
+        m1.team = TeamDevice()
+        m1.team.slave_add(eth0)
+        m1.team.up()
+        m1.run("ip a")
+        m1.team.destroy()
+
+        #VethPair
+        m1.veth0, m1.veth1 = VethPair()
+        m1.veth0.up()
+        m1.veth1.up()
+        m1.run("ip a")
+        m1.veth0.destroy()
+
+        #Macvlan
+        m1.mvlan = MacvlanDevice(realdev=eth0)
+        m1.mvlan.up()
+        m1.run("ip a")
+        m1.mvlan.destroy()
+
+        #Vlan
+        eth0.up()
+        m1.vlan = VlanDevice(realdev=eth0, vlan_id=123)
+        m1.vlan.up()
+        m1.run("ip a")
+        m1.vlan.destroy()
+        eth0.down()
+
+        #Vti
+        m1.vti = VtiDevice(local="1.2.3.4", ikey=123, okey=321)
+        m1.vti.up()
+        m1.run("ip a")
+        m1.vti.destroy()
+
+        #Vxlan
+        m1.vxlan0 = VxlanDevice(vxlan_id=123, remote='1.2.3.4')
+        m1.vxlan0.up()
+        self.matched.m1.run("ip a")
+        m1.vxlan0.destroy()
 
 ctl = Controller(debug=1)
 
