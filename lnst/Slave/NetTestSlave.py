@@ -148,13 +148,21 @@ class SlaveMethods:
 
         setattr(Devices, cls_name, cls)
 
-    def load_cached_module(self, module_name, res_hash):
-        self._cache.renew_entry(res_hash)
-        if module_name in self._dynamic_modules:
+    def _load_cached_module(self, minfo):
+        self._cache.renew_entry(minfo["res_hash"])
+        if minfo["name"] in self._dynamic_modules:
             return
-        module_path = self._cache.get_path(res_hash)
-        module = imp.load_source(module_name, module_path)
-        self._dynamic_modules[module_name] = module
+        module_path = self._cache.get_path(minfo["res_hash"])
+        module = imp.load_source(minfo["name"], module_path)
+        self._dynamic_modules[minfo["name"]] = module
+
+    def load_cached_module(self, minfos):
+        if isinstance(minfos, list):
+            for minfo in minfos:
+                self._load_cached_module(minfo)
+        elif isinstance(minfos, dict):
+            minfo = minfos
+            self._load_cached_module(minfo)
 
     def init_if_manager(self):
         self._if_manager = InterfaceManager(self._server_handler)
@@ -401,11 +409,20 @@ class SlaveMethods:
         self._remove_capture_files()
         return True
 
-    def has_resource(self, res_hash):
+    def _has_resource(self, res_hash):
         if self._cache.query(res_hash):
             return True
-
         return False
+
+    def has_resource(self, res_hashes):
+        if isinstance(res_hashes, list):
+            retvals = []
+            for res_hash in res_hashes:
+                retvals.append(self._has_resource(res_hash))
+            return retvals
+        elif isinstance(res_hashes, str):
+            res_hash = res_hashes
+            return self._has_resource(res_hash)
 
     def add_resource_to_cache(self, res_type, local_path, name):
         if res_type == "file":

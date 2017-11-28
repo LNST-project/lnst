@@ -257,18 +257,17 @@ class Machine(object):
         for cls_name, cls in device_classes:
             classes.extend(reversed(self._get_base_classes(cls)))
 
+        minfos = []
         for cls in classes:
             if cls is object:
                 continue
-            module_name = cls.__module__
-            module = sys.modules[module_name]
-            filename = module.__file__
+            name = cls.__module__
+            if any(minfo['name'] == name for minfo in minfos):
+                continue
+            minfos.append(self._get_module_info(name))
 
-            if filename[-3:] == "pyc":
-                filename = filename[:-1]
-
-            res_hash = self.sync_resource(module_name, filename)
-            self.rpc_call("load_cached_module", module_name, res_hash)
+        self.sync_resources(minfos)
+        self.rpc_call("load_cached_module", minfos)
 
         for cls_name, cls in device_classes:
             module_name = cls.__module__
@@ -348,15 +347,9 @@ class Machine(object):
             for cls in reversed(classes):
                 if cls is object or cls is BaseTestModule:
                     continue
-                m_name = cls.__module__
-                m = sys.modules[m_name]
-                filename = m.__file__
-                if filename[-3:] == "pyc":
-                    filename = filename[:-1]
-
-                res_hash = self.sync_resource(m_name, filename)
-
-                self.rpc_call("load_cached_module", m_name, res_hash)
+                minfo = self._get_module_info(cls.__module__)
+                self.sync_resource(minfo)
+                self.rpc_call("load_cached_module", minfo)
 
         logging.info("Host %s executing job %d: %s" %
                      (self._id, job.id, str(job)))
@@ -518,19 +511,48 @@ class Machine(object):
         local_file.close()
         self.rpc_call("finish_copy_from", remote_path)
 
-    def sync_resource(self, res_name, file_path):
-        digest = sha256sum(file_path)
+    def _get_module_info(self, name):
+        module = sys.modules[name]
+        filepath = module.__file__
 
-        if not self.rpc_call("has_resource", digest):
-            msg = "Transfering %s to machine %s as '%s'" % (file_path,
-                                                            self.get_id(),
-                                                            res_name)
-            logging.debug(msg)
+        if filepath[-3:] == "pyc":
+            filepath = filepath[:-1]
 
-            remote_path = self.copy_file_to_machine(file_path)
-            self.rpc_call("add_resource_to_cache",
-                           "file", remote_path, res_name)
-        return digest
+        res_hash = sha256sum(filepath)
+
+        return {"name": name, "filepath": filepath, "res_hash": res_hash}
+
+    def _sync_resource(self, minfo):
+        if minfo["has_resource"]:
+            return
+        msg = "Transfering %s to machine %s as '%s'" % (minfo["filepath"],
+                                                        self.get_id(),
+                                                        minfo["name"])
+        logging.debug(msg)
+        remote_path = self.copy_file_to_machine(minfo["filepath"])
+        self.rpc_call("add_resource_to_cache", "file",
+                      remote_path, minfo["name"])
+
+    def sync_resource(self, minfo):
+        minfo["has_resource"] = self.rpc_call("has_resource",
+                                              minfo["res_hash"])
+        self._sync_resource(minfo)
+
+    def sync_resources(self, minfos):
+        res_hashes = list(map(lambda minfo: minfo["res_hash"], minfos))
+
+        # To avoid asking per-resource, ask for all resources in one call.
+        has_resources = self.rpc_call("has_resource", res_hashes)
+
+        from pprint import pprint
+        pprint(has_resources)
+        minfos = list(map(lambda minfo, has_resource:
+                          dict(minfo.items() + {"has_resource": has_resource}.items()),
+                          minfos, has_resources))
+        pprint(minfos)
+
+        for minfo in minfos:
+            self._sync_resource(minfo)
 
     # def enable_nm(self):
         # return self._rpc_call("enable_nm")
