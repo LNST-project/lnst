@@ -1,0 +1,51 @@
+<lnstrecipe>
+    <define>
+        <alias name="ipv" value="both" />
+        <alias name="mtu" value="1500" />
+        <alias name="netperf_duration" value="60" />
+        <alias name="nperf_reserve" value="20" />
+        <alias name="nperf_confidence" value="99,5" />
+        <alias name="nperf_max_runs" value="5"/>
+        <alias name="nperf_num_parallel" value="1"/>
+        <alias name="nperf_debug" value="0"/>
+        <alias name="nperf_max_dev" value="20%"/>
+        <alias name="mapping_file" value="ipsec_esp_aead.mapping"/>
+        <alias name="net_1" value="192.168.99"/>
+        <alias name="net6_1" value="fc00:1::"/>
+        <alias name="net_2" value="192.168.100"/>
+        <alias name="net6_2" value="fc00:2::"/>
+        <alias name="driver" value=""/>
+        <alias name="official_result" value="no" />
+    </define>
+    <network>
+        <host id="machine1">
+            <interfaces>
+                <eth id="eth" label="localnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                    <addresses>
+                        <address value="{$net_1}.1/24"/>
+                        <address value="{$net6_1}1/64"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <interfaces>
+                <eth id="eth" label="localnet">
+                    <params>
+                        <param name="driver" value="{$driver}"/>
+                    </params>
+                    <addresses>
+                        <address value="{$net_2}.1/24"/>
+                        <address value="{$net6_2}1/64"/>
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+
+    <task python="ipsec_esp_aead.py"/>
+
+</lnstrecipe>

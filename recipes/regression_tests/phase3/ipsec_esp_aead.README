@@ -1,0 +1,90 @@
+Topology:
+
+                         switch
+                        +------+
+                        |      |
+                        |      |
+          +-------------+      +-------------+
+          |             |      |             |
+          |             |      |             |
+          |             +------+             |
+          |                                  |
+          |                                  |
+        +-+--+                             +-+--+
++-------|eth1|------+              +-------|eth1|------+
+|       +-+--+      |              |       +-+--+      |
+|                   |              |                   |
+|                   |              |                   |
+|                   |              |                   |
+|                   |              |                   |
+|                   |              |                   |
+|       host1       |              |       host2       |
+|                   |              |                   |
+|                   |              |                   |
+|                   |              |                   |
++-------------------+              +-------------------+
+
+Number of hosts: 2
+Host #1 description:
+  One ethernet device configured with ip addresses:
+    192.168.99.1/24
+    fc00:1::1/64
+
+Host #2 description:
+  One ethernet device configured with ip addresses:
+    192.168.100.1/24
+    fc00:2::1/64
+
+Test name:
+  ipsec_esp_aead.py
+Test description:
+  Ping:
+    + count: 10
+    + interval: 0.1s
+    + between ipsec encrypted ethernet interfaces headers check expecting PASS
+    + between ipsec encrypted ethernet interfaces compression check expecting PASS
+  Ping6:
+    + count: 10
+    + interval: 0.1s
+    + between ipsec encrypted ethernet interfaces headers check expecting PASS
+    + between ipsec encrypted ethernet interfaces compression check expecting PASS
+  Netperf:
+    + duration: 60s
+    + TCP_STREAM and UDP_STREAM
+    + ipv4 and ipv6
+    + between ipsec encrypted ethernet interfaces
+  IPsec
+    + tested with esp AEAD
+    + tested with algorithm rfc4106(gcm(aes))
+    + key length - 160bit
+    + IV length - 96bit
+
+PerfRepo integration:
+    First, preparation in PerfRepo is required - you need to create Test objects
+    through the web interface that properly describe the individual Netperf
+    tests that this recipe runs. Don't forget to also add appropriate metrics.
+    For these Netperf tests it's always:
+    * throughput
+    * throughput_min
+    * throughput_max
+    * throughput_deviation
+
+    After that, to enable support for PerfRepo you need to create the file
+    vxlan_remote.mapping and define the following id mappings:
+    tcp_ipv4_id -> to store ipv4 TCP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+    tcp_ipv6_id -> to store ipv6 TCP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+    udp_ipv4_id -> to store ipv4 UDP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+    udp_ipv6_id -> to store ipv4 UDP_STREAM Netperf test results, maps to TestUid of a PerfRepo Test object
+
+    To enable result comparison agains baselines you need to create a Report in
+    PerfRepo that will store the baseline. Set up the Report to only contain results
+    with the same hash tag and then add a new mapping to the mapping file, with
+    this format:
+    <some_hash> = <report_id>
+
+    The hash value is automatically generated during test execution and added
+    to each result stored in PerfRepo. To get the Report id you need to open
+    that report in our browser and find if in the URL.
+
+    When running this recipe you should also define the 'product_name' alias
+    (e.g. RHEL7) in order to tag the result object in PerfRepo.
