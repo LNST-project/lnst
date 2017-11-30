@@ -15,6 +15,7 @@
         <alias name="net" value="192.168.0"/>
         <alias name="driver" value="ixgbe"/>
         <alias name="official_result" value="no" />
+        <alias name="adaptive_coalescing_off" value="no"/>
     </define>
     <network>
         <host id="testmachine1">
