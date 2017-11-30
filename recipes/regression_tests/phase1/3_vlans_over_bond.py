@@ -46,6 +46,7 @@ pr_user_comment = ctl.get_alias("perfrepo_comment")
 offloads_alias = ctl.get_alias("offloads")
 nperf_protocols = ctl.get_alias("nperf_protocols")
 official_result = bool_it(ctl.get_alias("official_result"))
+adaptive_coalescing_off = bool_it(ctl.get_alias("adaptive_coalescing_off"))
 
 sctp_default_msg_size = "16K"
 
@@ -73,18 +74,19 @@ for vlan in vlans:
     vlan_if2 = m2.get_interface(vlan)
     vlan_if2.set_mtu(mtu)
 
-coalesce_status = ctl.get_module('Custom')
+if adaptive_coalescing_off:
+    coalesce_status = ctl.get_module('Custom')
 
-for d in [ m1_phy1, m1_phy2, m2_phy1 ]:
-    # disable any interrupt coalescing settings
-    cdata = d.save_coalesce()
-    cdata['use_adaptive_tx_coalesce'] = 0
-    cdata['use_adaptive_rx_coalesce'] = 0
-    if not d.set_coalesce(cdata):
-        coalesce_status.set_options({'fail': True,
-                                     'msg': "Failed to set coalesce options"\
-                                            " on device %s" % d.get_devname()})
-        d.get_host().run(coalesce_status)
+    for d in [ m1_phy1, m1_phy2, m2_phy1 ]:
+        # disable any interrupt coalescing settings
+        cdata = d.save_coalesce()
+        cdata['use_adaptive_tx_coalesce'] = 0
+        cdata['use_adaptive_rx_coalesce'] = 0
+        if not d.set_coalesce(cdata):
+            coalesce_status.set_options({'fail': True,
+                                         'msg': "Failed to set coalesce options"\
+                                                " on device %s" % d.get_devname()})
+            d.get_host().run(coalesce_status)
 
 if nperf_cpupin:
     # this will pin devices irqs to cpu #0
@@ -500,6 +502,7 @@ if nperf_protocols.find("sctp") > -1:
     m2.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
             m2_vlan1.get_devname())
 
-for d in [ m1_phy1, m1_phy2, m2_phy1 ]:
-    # restore any interrupt coalescing settings
-    d.restore_coalesce()
+if adaptive_coalescing_off:
+    for d in [ m1_phy1, m1_phy2, m2_phy1 ]:
+        # restore any interrupt coalescing settings
+        d.restore_coalesce()

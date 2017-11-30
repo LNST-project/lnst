@@ -44,6 +44,7 @@ pr_user_comment = ctl.get_alias("perfrepo_comment")
 offloads_alias = ctl.get_alias("offloads")
 nperf_protocols = ctl.get_alias("nperf_protocols")
 official_result = bool_it(ctl.get_alias("official_result"))
+adaptive_coalescing_off = bool_it(ctl.get_alias("adaptive_coalescing_off"))
 
 sctp_default_msg_size = "16K"
 
@@ -74,18 +75,19 @@ if test_if2.get_type() in [ "team", "bond" ]:
 else:
     dev_list.append((m2, test_if2))
 
-coalesce_status = ctl.get_module('Custom')
+if adaptive_coalescing_off:
+    coalesce_status = ctl.get_module('Custom')
 
-for _, d in dev_list:
-    # disable any interrupt coalescing settings
-    cdata = d.save_coalesce()
-    cdata['use_adaptive_tx_coalesce'] = 0
-    cdata['use_adaptive_rx_coalesce'] = 0
-    if not d.set_coalesce(cdata):
-        coalesce_status.set_options({'fail': True,
-                                     'msg': "Failed to set coalesce options"\
-                                            " on device %s" % d.get_devname()})
-        d.get_host().run(coalesce_status)
+    for _, d in dev_list:
+        # disable any interrupt coalescing settings
+        cdata = d.save_coalesce()
+        cdata['use_adaptive_tx_coalesce'] = 0
+        cdata['use_adaptive_rx_coalesce'] = 0
+        if not d.set_coalesce(cdata):
+            coalesce_status.set_options({'fail': True,
+                                         'msg': "Failed to set coalesce options"\
+                                                " on device %s" % d.get_devname()})
+            d.get_host().run(coalesce_status)
 
 if nperf_cpupin:
     m1.run("service irqbalance stop")
@@ -739,6 +741,7 @@ if nperf_protocols.find("sctp") > -1:
     m2.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
             test_if2.get_devname())
 
-for _, d in dev_list:
-    # restore any interrupt coalescing settings
-    d.restore_coalesce()
+if adaptive_coalescing_off:
+    for _, d in dev_list:
+        # restore any interrupt coalescing settings
+        d.restore_coalesce()
