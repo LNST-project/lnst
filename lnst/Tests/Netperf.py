@@ -502,6 +502,16 @@ class Netperf(BaseTestModule):
             return (False, res_data)
 
         res_val = False
+        res_data["msg"] = "Measured rate was %.2f +-%.2f %s" %\
+                                            (rate_pretty["rate"],
+                                             rate_dev_pretty["rate"],
+                                             rate_pretty["unit"])
+        if rate > 0.0:
+            res_val = True
+        else:
+            res_val = False
+            return (res_val, res_data)
+
         if "max_deviation" in self.params:
             if self.params.max_deviation["type"] == "percent":
                 percentual_deviation = (rate_deviation / rate) * 100
@@ -556,15 +566,6 @@ class Netperf(BaseTestModule):
                                    threshold_dev_pretty["rate"],
                                    threshold_pretty["unit"])
                 return (res_val, res_data)
-        else:
-            if rate > 0.0:
-                res_val = True
-            else:
-                res_val = False
-            res_data["msg"] = "Measured rate was %.2f +-%.2f %s" %\
-                                                (rate_pretty["rate"],
-                                                 rate_dev_pretty["rate"],
-                                                 rate_pretty["unit"])
         return (res_val, res_data)
 
     def run(self):
