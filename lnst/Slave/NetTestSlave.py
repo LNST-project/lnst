@@ -578,6 +578,10 @@ class SlaveMethods:
             libc = ctypes.CDLL(libc_name)
             netns_path = "/var/run/netns/" + netns
 
+            netns_pid = self._net_namespaces[netns]["pid"]
+            os.kill(netns_pid, signal.SIGUSR1)
+            os.waitpid(netns_pid, 0)
+
             # Remove named namespace
             try:
                 libc.umount2(netns_path, MNT_DETACH)
@@ -585,9 +589,6 @@ class SlaveMethods:
             except:
                 logging.warning("Unable to remove named namespace %s." % netns_path)
 
-            netns_pid = self._net_namespaces[netns]["pid"]
-            os.kill(netns_pid, signal.SIGUSR1)
-            os.waitpid(netns_pid, 0)
             logging.debug("Network namespace %s removed." % netns)
 
             self._net_namespaces[netns]["pipe"].close()
