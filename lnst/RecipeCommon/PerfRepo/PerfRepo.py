@@ -80,7 +80,7 @@ class PerfRepoAPI(object):
         self._rest_api = None
         self._mapping = None
 
-    def connect_PerfRepo(self):
+    def connect_PerfRepo(self, max_retries=3):
         if not self.connected():
             #TODO: store credentials in config or not
             #if self._url is None:
@@ -97,7 +97,7 @@ class PerfRepoAPI(object):
             if not self._password:
                 logging.warn("No PerfRepo password specified in config file")
             if self._url and self._username and self._password:
-                self.connect(self._url, self._username, self._password)
+                self.connect(self._url, self._username, self._password, max_retries)
 
             path = Path(None, self._mapping_file_path)
             self.load_mapping(path)
@@ -126,9 +126,10 @@ class PerfRepoAPI(object):
         else:
             return False
 
-    def connect(self, url, username, password):
+    def connect(self, url, username, password, max_retries):
         if PerfRepoRESTAPI is not None:
             self._rest_api = PerfRepoRESTAPI(url, username, password)
+            self._rest_api.set_retries(max_retries)
             if not self._rest_api.connected():
                 self._rest_api = None
         else:
