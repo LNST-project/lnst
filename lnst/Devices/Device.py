@@ -237,7 +237,7 @@ class Device(object):
         return ret
 
     def _clear_tc_qdisc(self):
-        exec_cmd("tc qdisc replace dev %s root pfifo" % self.name)
+        exec_cmd("tc qdisc del dev %s root" % self.name, die_on_err=False)
         out, _ = exec_cmd("tc filter show dev %s" % self.name)
         ingress_handles = re.findall("ingress (\\d+):", out)
         for ingress_handle in ingress_handles:
