@@ -83,12 +83,10 @@ class Netperf(BaseTestModule):
         super(Netperf, self).__init__(**kwargs)
 
         if self.params.testname not in self._supported_tests:
-            msg = ("Only TCP_STREAM, TCP_RR, UDP_STREAM, "
-                   "UDP_RR, SCTP_STREAM, SCTP_STREAM_MANY and SCTP_RR tests "
-                   "are now officialy supported by LNST. You "
-                   "can use other tests, but test result may not be correct.")
-            logging.error(msg)
-            raise TestModuleError(msg)
+            supported_tests = ', '.join(self._supported_tests)
+            logging.warning("Only %s tests are now officialy supported "
+                    "by LNST. You can use other tests, but test result may not "
+                    "be correct." % supported_tests)
 
         if "confidence" in self.params:
             tmp = self.params.confidence.split(",")
