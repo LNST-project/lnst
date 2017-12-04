@@ -196,7 +196,7 @@ class PerfRepoAPI(object):
                 logging.debug("No mapping defined for hash '%s'" % h)
                 logging.debug("If you want to create a new report and set "\
                               "this result as the baseline run this command:")
-                cmd = "perfrepo report create"
+                cmd = "perfrepo-cli report create"
                 cmd += " name REPORTNAME"
 
                 test = result.get_test()
