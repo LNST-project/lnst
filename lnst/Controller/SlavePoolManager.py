@@ -15,6 +15,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import logging
 import os
+import errno
 import re
 import socket
 import select
@@ -133,8 +134,21 @@ class SlavePoolManager(object):
                 s.settimeout(0)
                 try:
                     s.connect((hostname, port))
-                except:
-                    pass
+                except socket.error as msg:
+                    # if the error is other than EINPROGRESS, e.g. the stack
+                    # could not resolve name, the machine should become unavailable
+                    try:
+                        en = msg.errno
+                    except AttributeError:
+                        en = 0
+
+                    if en != errno.EINPROGRESS:
+                        pool[m_id]["available"] = False
+                        s.close()
+                        logging.debug("Bypassing machine '%s' (%s)" %
+                            (m_id, msg))
+                        continue
+
                 check_sockets[s] = m_id
 
             while len(check_sockets) > 0:
