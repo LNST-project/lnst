@@ -511,11 +511,11 @@ class Device(object):
         else:
             self._ip_del_one(addr)
 
-    def ip_flush(self):
+    def ip_flush(self, scope=0):
         """flush all ip addresses of the device"""
         with pyroute2.IPRoute() as ipr:
             try:
-                ipr.flush_addr(index=self.ifindex)
+                ipr.flush_addr(index=self.ifindex, scope=scope)
                 self._if_manager.handle_netlink_msgs()
             except pyroute2.netlink.NetlinkError:
                 log_exc_traceback()
