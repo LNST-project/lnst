@@ -4,12 +4,10 @@ them to be implemented in Python Recipes, with notes where relevant.
 * finalisation of the Device API
     * reimplementation of properties and Device creation
     * Device::destroy log warning and don't do cleanup?
+    * Device::destroy rename to delete or rename DeviceDeleted exception to
+      Destroyed?
 
 * fix git version check - if git not installed raise Exception/report error
-
-* go through master to check for bugs that can be backported
-    - e.g. c54a38eafea6e9e784cddd14deaac0e3abb4b5f7
-    - look for more
 
 * wait/sleep method that cycles handles ctl <-> slave communication in the
   background
@@ -77,6 +75,8 @@ them to be implemented in Python Recipes, with notes where relevant.
       require newer versions)
 
 * Port test_modules
+    * Netperf needs to be resynced with the legacy version there are some
+      features and bugfixes missing from the currently ported version
 
 * Ip address/network generators
 
@@ -129,3 +129,5 @@ them to be implemented in Python Recipes, with notes where relevant.
   it was set or not --> implement def __contains__(self, item)
 
 * netlink sockets leaking
+
+* go through master to check for bugs that can be backported
