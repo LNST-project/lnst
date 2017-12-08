@@ -80,7 +80,7 @@ class PerfRepoAPI(object):
         self._rest_api = None
         self._mapping = None
 
-    def connect_PerfRepo(self):
+    def connect_PerfRepo(self, max_retries=3):
         if not self.connected():
             #TODO: store credentials in config or not
             #if self._url is None:
@@ -97,7 +97,7 @@ class PerfRepoAPI(object):
             if not self._password:
                 logging.warn("No PerfRepo password specified in config file")
             if self._url and self._username and self._password:
-                self.connect(self._url, self._username, self._password)
+                self.connect(self._url, self._username, self._password, max_retries)
 
             path = Path(None, self._mapping_file_path)
             self.load_mapping(path)
@@ -126,9 +126,10 @@ class PerfRepoAPI(object):
         else:
             return False
 
-    def connect(self, url, username, password):
+    def connect(self, url, username, password, max_retries):
         if PerfRepoRESTAPI is not None:
             self._rest_api = PerfRepoRESTAPI(url, username, password)
+            self._rest_api.set_retries(max_retries)
             if not self._rest_api.connected():
                 self._rest_api = None
         else:
@@ -146,9 +147,17 @@ class PerfRepoAPI(object):
         logging.debug("Test key '%s' mapped to id '%s'" % (mapping_key,
                                                            mapping_id))
 
-        test = self._rest_api.test_get_by_id(mapping_id, log=False)
+        try:
+            test = self._rest_api.test_get_by_id(mapping_id, log=False)
+        except Exception as e:
+            test = None
+            logging.error(str(e))
         if test is None:
-            test = self._rest_api.test_get_by_uid(mapping_id, log=False)
+            try:
+                test = self._rest_api.test_get_by_uid(mapping_id, log=False)
+            except Exception as e:
+                test = None
+                logging.error(str(e))
 
         if test is not None:
             test_url = self._rest_api.get_obj_url(test)
@@ -176,14 +185,18 @@ class PerfRepoAPI(object):
             logging.debug("Adding hash '%s' as tag to result." % h)
             result.add_tag(h)
             logging.info("Sending TestExecution to PerfRepo.")
-            self._rest_api.testExecution_create(result.get_testExecution())
+            try:
+                self._rest_api.testExecution_create(result.get_testExecution())
+            except Exception as e:
+                logging.error(str(e))
+                return
 
             report_id = self._mapping.get_id(h)
             if not report_id and result.get_testExecution().get_id() is not None:
                 logging.debug("No mapping defined for hash '%s'" % h)
                 logging.debug("If you want to create a new report and set "\
                               "this result as the baseline run this command:")
-                cmd = "perfrepo report create"
+                cmd = "perfrepo-cli report create"
                 cmd += " name REPORTNAME"
 
                 test = result.get_test()
@@ -207,7 +220,11 @@ class PerfRepoAPI(object):
         if report_id is None or not self.connected():
             return Noop()
 
-        report = self._rest_api.report_get_by_id(report_id, log=False)
+        try:
+            report = self._rest_api.report_get_by_id(report_id, log=False)
+        except Exception as e:
+            report = None
+            logging.error(str(e))
         if report is None:
             logging.debug("No report with id %s found!" % report_id)
             return Noop()
@@ -222,11 +239,19 @@ class PerfRepoAPI(object):
             return Noop()
 
         baseline_exec_id = baseline["execId"]
-        baseline_testExec = self._rest_api.testExecution_get(baseline_exec_id,
-                                                             log=False)
+        try:
+            baseline_testExec = self._rest_api.testExecution_get(baseline_exec_id,
+                                                                 log=False)
+        except Exception as e:
+            baseline_testExec = None
+            logging.error(str(e))
 
-        logging.debug("TestExecution of baseline: %s" %\
-                        self._rest_api.get_obj_url(baseline_testExec))
+        if baseline_testExec is not None:
+            logging.debug("TestExecution of baseline: %s" %\
+                            self._rest_api.get_obj_url(baseline_testExec))
+        else:
+            logging.debug("Couldn't get TestExecution of baseline.")
+            return Noop()
         return PerfRepoBaseline(baseline_testExec)
 
     def get_baseline_of_result(self, result):

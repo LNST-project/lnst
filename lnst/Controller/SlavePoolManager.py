@@ -15,6 +15,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import logging
 import os
+import errno
 import re
 import socket
 import select
@@ -133,8 +134,21 @@ class SlavePoolManager(object):
                 s.settimeout(0)
                 try:
                     s.connect((hostname, port))
-                except:
-                    pass
+                except socket.error as msg:
+                    # if the error is other than EINPROGRESS, e.g. the stack
+                    # could not resolve name, the machine should become unavailable
+                    try:
+                        en = msg.errno
+                    except AttributeError:
+                        en = 0
+
+                    if en != errno.EINPROGRESS:
+                        pool[m_id]["available"] = False
+                        s.close()
+                        logging.debug("Bypassing machine '%s' (%s)" %
+                            (m_id, msg))
+                        continue
+
                 check_sockets[s] = m_id
 
             while len(check_sockets) > 0:
@@ -233,11 +247,20 @@ class SlavePoolManager(object):
                 if_id = iface["id"]
                 iface_spec = self._process_iface_xml_data(m_id, iface)
 
-                if if_id not in machine_spec["interfaces"]:
-                    machine_spec["interfaces"][if_id] = iface_spec
-                else:
+                # validity check, MAC and id must be unique
+                if if_id in machine_spec["interfaces"]:
                     msg = "Duplicate interface id '%s'." % if_id
                     raise PoolManagerError(msg, iface)
+
+                if_hwaddr = iface_spec["params"]["hwaddr"]
+                hwaddr_dups = [ k for k, v in machine_spec["interfaces"].iteritems()\
+                                if v["params"]["hwaddr"] == if_hwaddr ]
+                if len(hwaddr_dups) > 0:
+                    msg = "Duplicate MAC address %s for interface '%s' and '%s'."\
+                          % (if_hwaddr, if_id, hwaddr_dups[0])
+                    raise PoolManagerError(msg, iface)
+
+                machine_spec["interfaces"][if_id] = iface_spec
         else:
             if "libvirt_domain" not in machine_spec["params"]:
                 msg = "Machine '%s' has no testing interfaces. " \

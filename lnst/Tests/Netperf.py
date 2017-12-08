@@ -83,12 +83,10 @@ class Netperf(BaseTestModule):
         super(Netperf, self).__init__(**kwargs)
 
         if self.params.testname not in self._supported_tests:
-            msg = ("Only TCP_STREAM, TCP_RR, UDP_STREAM, "
-                   "UDP_RR, SCTP_STREAM, SCTP_STREAM_MANY and SCTP_RR tests "
-                   "are now officialy supported by LNST. You "
-                   "can use other tests, but test result may not be correct.")
-            logging.error(msg)
-            raise TestModuleError(msg)
+            supported_tests = ', '.join(self._supported_tests)
+            logging.warning("Only %s tests are now officialy supported "
+                    "by LNST. You can use other tests, but test result may not "
+                    "be correct." % supported_tests)
 
         if "confidence" in self.params:
             tmp = self.params.confidence.split(",")
@@ -502,6 +500,16 @@ class Netperf(BaseTestModule):
             return (False, res_data)
 
         res_val = False
+        res_data["msg"] = "Measured rate was %.2f +-%.2f %s" %\
+                                            (rate_pretty["rate"],
+                                             rate_dev_pretty["rate"],
+                                             rate_pretty["unit"])
+        if rate > 0.0:
+            res_val = True
+        else:
+            res_val = False
+            return (res_val, res_data)
+
         if "max_deviation" in self.params:
             if self.params.max_deviation["type"] == "percent":
                 percentual_deviation = (rate_deviation / rate) * 100
@@ -556,15 +564,6 @@ class Netperf(BaseTestModule):
                                    threshold_dev_pretty["rate"],
                                    threshold_pretty["unit"])
                 return (res_val, res_data)
-        else:
-            if rate > 0.0:
-                res_val = True
-            else:
-                res_val = False
-            res_data["msg"] = "Measured rate was %.2f +-%.2f %s" %\
-                                                (rate_pretty["rate"],
-                                                 rate_dev_pretty["rate"],
-                                                 rate_pretty["unit"])
         return (res_val, res_data)
 
     def run(self):
