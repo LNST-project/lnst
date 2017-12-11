@@ -44,6 +44,7 @@ from lnst.Common.DeviceError import DeviceConfigValueError
 from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Parameters import Parameters, DeviceParam
 from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Version import lnst_version
 from lnst.Slave.Job import Job, JobContext
 from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
@@ -104,7 +105,7 @@ class SlaveMethods:
         r_release, _ = exec_cmd("cat /etc/redhat-release", False, False, False)
         slave_desc["kernel_release"] = k_release.strip()
         slave_desc["redhat_release"] = r_release.strip()
-        slave_desc["lnst_version"] = self._slave_config.version
+        slave_desc["lnst_version"] = lnst_version
 
         return ("hello", slave_desc)
 

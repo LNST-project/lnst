@@ -18,6 +18,7 @@ import signal
 from lnst.Common.Utils import sha256sum
 from lnst.Common.Utils import check_process_running
 from lnst.Common.TestModule import BaseTestModule
+from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
 from lnst.Devices import device_classes
@@ -216,19 +217,19 @@ class Machine(object):
             raise MachineError(msg)
 
         slave_version = slave_desc["lnst_version"]
-        slave_is_git = self.is_git_version(slave_version)
-        ctl_version = self._ctl_config.version
-        ctl_is_git = self.is_git_version(ctl_version)
-        if slave_version != ctl_version:
-            if ctl_is_git and slave_is_git:
-                msg = "Controller and Slave '%s' git versions are different"\
-                                                                    % hostname
+
+        if lnst_version != slave_version:
+            if lnst_version.is_git_version:
+                msg = ("Controller ({}) and Slave '{}' ({}) versions "
+                       "are different".format(lnst_version, hostname,
+                                              slave_version))
                 logging.warning(len(msg)*"=")
                 logging.warning(msg)
                 logging.warning(len(msg)*"=")
             else:
-                msg = "Controller and Slave '%s' versions are not compatible!"\
-                                                                    % hostname
+                msg = ("Controller ({}) and Slave '{}' ({}) versions "
+                       "are not compatible!".format(lnst_version, hostname,
+                                                    slave_version))
                 raise MachineError(msg)
 
         self._slave_desc = slave_desc

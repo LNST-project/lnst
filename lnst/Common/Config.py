@@ -17,7 +17,6 @@ import subprocess
 from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_mac_address
 from lnst.Common.Colours import get_preset_conf
-from lnst.Common.Version import LNSTMajorVersion
 from lnst.Common.LnstError import LnstError
 
 DefaultRPCPort = 9999
@@ -31,34 +30,10 @@ class Config():
 
     def __init__(self):
         self._options = dict()
-        self.version = self._get_version()
         self._init_options()
 
     def _init_options(self):
         raise NotImplementedError()
-
-    def _get_version(self):
-        # Check if I'm in git
-        cwd = os.getcwd()
-        abspath = os.path.abspath(__file__)
-        dname = os.path.dirname(abspath)
-        os.chdir(dname)
-        with open(os.devnull, 'w') as null:
-            cmd = ['git', 'rev-parse', 'HEAD']
-            try:
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=null)
-                data = proc.communicate()
-            except:
-                os.chdir(cwd)
-                return LNSTMajorVersion
-            # git command passed
-            if data[0] != '':
-                version = data[0].strip()
-            # git command failed
-            else:
-                version = LNSTMajorVersion
-        os.chdir(cwd)
-        return version
 
     def colours_scheme(self):
         self._options['colours'] = dict()
