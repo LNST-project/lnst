@@ -8,7 +8,7 @@ Licensed under the GNU General Public License, version 2 as
 published by the Free Software Foundation; see COPYING for details.
 """
 
-__autor__ = """
+__author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 

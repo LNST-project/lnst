@@ -6,7 +6,7 @@ Licensed under the GNU General Public License, version 2 as
 published by the Free Software Foundation; see COPYING for details.
 """
 
-__autor__ = """
+__author__ = """
 jzupka@redhat.com (Jiri Zupka)
 """
 import pty, os, termios, time, signal, re, select
