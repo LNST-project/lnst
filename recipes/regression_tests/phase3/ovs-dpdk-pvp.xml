@@ -18,6 +18,7 @@
         <alias name="pkt_size" value="64" />
         <alias name="test_duration" value="60" />
         <alias name="test_runs" value="5" />
+        <alias name="max_dev" value="10%"/>
     </define>
     <network>
         <host id="host1">

@@ -28,7 +28,7 @@ def run_ssh_command_on_bg_channel(command, channel, host, guest_name=""):
     desc = "%s running in bg: %s" % (guest_name, command)
     host.run(custom_mod, desc=desc)
 
-def compare_results(host, result, baseline):
+def compare_results(host, result, baseline, max_dev):
     avg1 = result.get_value("rx_rate").get_result()
     dev1 = result.get_value("rx_rate_deviation").get_result()
     interval1 = (avg1 - dev1, avg1 + dev1)
@@ -38,16 +38,43 @@ def compare_results(host, result, baseline):
     interval2 = (avg2 - dev2, avg2 + dev2)
 
     if interval1[1] < interval2[0]:
-        desc = "Measured rate %.2f +-%.2f pps is lower "\
-                "than threshold %.2f +-%.2f pps"% (avg1, dev1, avg2, dev2)
+        desc = ("Measured rate {:.2f} +-{:.2f} pps is lower "
+                "than threshold {:.2f} +-{:.2f} pps".
+                format(avg1, dev1, avg2, dev2))
         custom_mod = ctl.get_module("Custom", options = {"fail": True})
     else:
-        desc = "Measured rate %.2f +-%.2f pps is higher "\
-                "than threshold %.2f +-%.2f pps"% (avg1, dev1, avg2, dev2)
+        desc = ("Measured rate {:.2f} +-{:.2f} pps is higher "
+                "than threshold {:.2f} +-{:.2f} pps".
+                format(avg1, dev1, avg2, dev2))
         custom_mod = ctl.get_module("Custom")
 
     host.run(custom_mod, desc=desc)
 
+def report_result(host, result, max_dev):
+    avg = result.get_value("rx_rate").get_result()
+    dev = result.get_value("rx_rate_deviation").get_result()
+
+    desc = "Measured rate is {:.2f} +-{:.2f} pps".format(avg, dev)
+    fail = False
+    if re.match("\d+%", max_dev):
+        if ((float(dev) / avg) * 100)  > int(max_dev[:-1]):
+            desc = ("Measured rate {:.2f} +-{:.2f} pps has bigger "
+                    "deviation than allowed (+-{})".
+                    format(avg, dev, max_dev))
+            fail = True
+    elif re.match("\d+", max_dev):
+        if dev > int(max_dev):
+            desc = ("Measured rate {:.2f} +-{:.2f} pps has bigger "
+                    "deviation than allowed (+-{} pps)".
+                    format(avg, dev, max_dev))
+            fail = True
+    elif max_dev == None:
+        pass
+    else:
+        raise Exception("Unsupported format for max_dev argument.")
+
+    custom_mod = ctl.get_module("Custom", options={"fail": fail})
+    host.run(custom_mod, desc=desc)
 
 # ------
 # SETUP
@@ -93,6 +120,7 @@ trex_dir = ctl.get_alias("trex_dir")
 pkt_size = int(ctl.get_alias("pkt_size"))
 test_duration = int(ctl.get_alias("test_duration"))
 test_runs = int(ctl.get_alias("test_runs"))
+max_dev = ctl.get_alias("max_dev")
 
 pr_comment = generate_perfrepo_comment([h1, h2], pr_user_comment)
 pr_comment += "\n<BR>DPDK version: {}".format(dpdk_version)
@@ -430,8 +458,9 @@ baseline = perf_api.get_baseline_of_result(pr_result)
 pr_result.set_comment(pr_comment)
 perf_api.save_result(pr_result, official_result)
 
+report_result(h1, pr_result.get_testExecution(), max_dev)
 if not isinstance(baseline, Noop):
-    compare_results(h1, pr_result.get_testExecution(), baseline.get_texec())
+    compare_results(h1, pr_result.get_testExecution(), baseline.get_texec(), max_dev)
 
 #============================================
 # Configuration cleanup
