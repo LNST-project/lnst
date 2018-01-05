@@ -234,6 +234,9 @@ class SlaveMethods:
         return matched
 
     def destroy_devices(self):
+        if self._if_manager is None:
+            return
+
         devices = self._if_manager.get_devices()
         for dev in devices:
             try:
