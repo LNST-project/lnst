@@ -93,18 +93,14 @@ class MessageDispatcher(ConnectionHandler):
 
     def send_message(self, machine, data):
         soc = self.get_connection(machine)
-
-        if data["type"] == "command":
-            data["args"] = remote_device_to_deviceref(data["args"])
-            data["kwargs"] = remote_device_to_deviceref(data["kwargs"])
+        data = remote_device_to_deviceref(data)
 
         if send_data(soc, data) == False:
             msg = "Connection error from slave %s" % machine.get_id()
             raise ConnectionError(msg)
 
-    def wait_for_result(self, machine):
-        wait = True
-        while wait:
+        result = None
+        while True:
             connected_slaves = self._connection_mapping.keys()
 
             messages = self.check_connections()
@@ -113,12 +109,11 @@ class MessageDispatcher(ConnectionHandler):
 
             for msg in messages:
                 if msg[1]["type"] == "result" and msg[0] == machine:
-                    wait = False
-                    result = msg[1]["result"]
-
-                    machine = self._machines[machine]
-                    result = deviceref_to_remote_device(machine,
-                                                        result)
+                    if result is not None:
+                        msg = ("Multiple result messages from the same slave "
+                               "'{}'".format(machine.get_id()))
+                        raise ConnectionError(msg)
+                    result = msg[1]
                 else:
                     self._process_message(msg)
 
@@ -129,21 +124,29 @@ class MessageDispatcher(ConnectionHandler):
                       " disconnected from the controller."
                 raise ConnectionError(msg)
 
-        return result
+            if result is not None:
+                return deviceref_to_remote_device(machine, result["result"])
 
-    def wait_for_finish(self, machine, job_id):
+    def wait_for_job_finish(self, job):
+        def condition_check():
+            return job.finished
+        self.wait_for_condition(condition_check)
+        return True
+
+    def wait_for_condition(self, condition_check):
         wait = True
         while wait:
             connected_slaves = self._connection_mapping.keys()
 
-            messages = self.check_connections()
+            messages = self.check_connections(timeout=1)
 
             remaining_slaves = self._connection_mapping.keys()
 
             for msg in messages:
                 self._process_message(msg)
-                if msg[1]["type"] == "job_finished" and msg[0] == machine:
-                    wait = False
+                wait = wait and not condition_check()
+
+            wait = wait and not condition_check()
 
             if connected_slaves != remaining_slaves:
                 disconnected_slaves = set(connected_slaves) -\

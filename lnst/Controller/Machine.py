@@ -189,10 +189,7 @@ class Machine(object):
                    "args": args,
                    "kwargs": kwargs}
 
-        self._msg_dispatcher.send_message(self, msg)
-        result = self._msg_dispatcher.wait_for_result(self)
-
-        return result
+        return self._msg_dispatcher.send_message(self, msg)
 
     def _init_connection(self):
         """ Initialize the slave connection
@@ -382,7 +379,11 @@ class Machine(object):
             elif timeout == 0:
                 logging.info("Waiting for Job %d on Host %s." %
                              (job.id, self._id))
-            result = self._msg_dispatcher.wait_for_finish(self, job.id)
+
+            def condition():
+                return job.finished
+
+            self._msg_dispatcher.wait_for_condition(condition)
         except MachineError as exc:
             logging.error(str(exc))
             res = False
@@ -405,8 +406,10 @@ class Machine(object):
                 logging.info("Waiting for Device creation on Host %s." %
                              (self._id))
 
-            while len(self._tmp_device_database) > 0:
-                result = self._msg_dispatcher.handle_messages()
+            def condition():
+                return len(self._tmp_device_database) <= 0
+
+            self._msg_dispatcher.wait_for_condition(condition)
         except MachineError as exc:
             logging.error(str(exc))
             res = False
