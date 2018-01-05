@@ -14,6 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import os
 import sys
+import time
 import datetime
 import logging
 from lnst.Common.Logs import LoggingCtl, log_exc_traceback
@@ -127,6 +128,17 @@ class Controller(object):
                 raise
             finally:
                 self._cleanup_slaves()
+
+    def wait(self, sec):
+        finish_time = time.time() + sec
+        logging.info("Suspending recipe execution for {} seconds, "
+                     "messages from slaves will still be processed.".
+                     format(sec))
+
+        def condition():
+            return time.time() > finish_time
+
+        self._msg_dispatcher.wait_for_condition(condition)
 
     def _map_match(self, match, requested):
         self._machines = {}
