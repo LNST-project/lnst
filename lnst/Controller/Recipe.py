@@ -80,7 +80,7 @@ class BaseRecipe(object):
             Next, the copied objects are loaded with values from kwargs
             and checked if mandatory Parameters have values.
         """
-        self.matched = None
+        self._ctl = None
         self.req = _Requirements()
         self.params = Parameters()
         for attr in dir(self):
@@ -105,8 +105,18 @@ class BaseRecipe(object):
             for key in kwargs.keys():
                 raise RecipeError("Unknown parameter {}".format(key))
 
-    def _set_hosts(self, hosts):
-        self.matched = hosts
+    @property
+    def ctl(self):
+        return self._ctl
+
+    @property
+    def matched(self):
+        if self.ctl is None:
+            return None
+        return self.ctl._hosts
+
+    def _set_ctl(self, ctl):
+        self._ctl = ctl
 
     def test(self):
         """Method to be implemented by the Tester"""

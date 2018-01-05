@@ -104,6 +104,8 @@ class Controller(object):
         if not isinstance(recipe, BaseRecipe):
             raise ControllerError("recipe argument must be a BaseRecipe instance.")
 
+        recipe._set_ctl(self)
+
         req = recipe.req
 
         self._mapper.set_pools(self._pools.get_pools())
@@ -118,14 +120,12 @@ class Controller(object):
             self._print_match_description(match)
             try:
                 self._map_match(match, req)
-                recipe._set_hosts(self._hosts)
                 recipe.test()
             except Exception as exc:
                 logging.error("Recipe execution terminated by unexpected exception")
                 log_exc_traceback()
                 raise
             finally:
-                recipe._set_hosts(None)
                 self._cleanup_slaves()
 
     def _map_match(self, match, requested):
