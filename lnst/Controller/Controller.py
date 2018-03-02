@@ -29,7 +29,7 @@ from lnst.Controller.SlavePoolManager import SlavePoolManager
 from lnst.Controller.MachineMapper import MachineMapper
 from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Host import Hosts, Host
-from lnst.Controller.Recipe import BaseRecipe
+from lnst.Controller.Recipe import BaseRecipe, RecipeRun
 
 class Controller(object):
     """The LNST Controller class
@@ -123,6 +123,7 @@ class Controller(object):
                 logging.info(line)
             try:
                 self._map_match(match, req)
+                recipe._init_run(RecipeRun(match))
                 recipe.test()
             except Exception as exc:
                 logging.error("Recipe execution terminated by unexpected exception")

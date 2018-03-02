@@ -14,6 +14,7 @@ import copy
 from lnst.Common.Parameters import Parameters, Param
 from lnst.Controller.Requirements import _Requirements, HostReq
 from lnst.Controller.Common import ControllerError
+from lnst.Controller.RecipeResults import BaseResult, Result
 
 class RecipeError(ControllerError):
     """Exception thrown by the BaseRecipe class"""
@@ -81,6 +82,7 @@ class BaseRecipe(object):
             and checked if mandatory Parameters have values.
         """
         self._ctl = None
+        self.runs = []
         self.req = _Requirements()
         self.params = Parameters()
         for attr in dir(self):
@@ -121,3 +123,40 @@ class BaseRecipe(object):
     def test(self):
         """Method to be implemented by the Tester"""
         raise NotImplementedError("Method test must be defined by a child class.")
+
+    def _init_run(self, run):
+        self.runs.append(run)
+
+    @property
+    def current_run(self):
+        if len(self.runs) > 0:
+            return self.runs[-1]
+        else:
+            return None
+
+    def add_result(self, success, description="", data=None):
+        self.current_run.add_result(Result(success, description, data))
+
+class RecipeRun(object):
+    def __init__(self, match, desc=None):
+        self._match = match
+        self._desc = desc
+        self._results = []
+
+    def add_result(self, result):
+        if not isinstance(result, BaseResult):
+            raise RecipeError("result must be a BaseActionResult instance.")
+
+        self._results.append(result)
+
+    @property
+    def match(self):
+        return self._match
+
+    @property
+    def description(self):
+        return self._desc
+
+    @property
+    def results(self):
+        return self._results
