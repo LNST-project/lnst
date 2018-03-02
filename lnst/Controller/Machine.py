@@ -70,6 +70,8 @@ class Machine(object):
             self._port = ctl_config.get_option('environment', 'rpcport')
 
         self._msg_dispatcher = msg_dispatcher
+
+        self._recipe = None
         self._mac_pool = None
 
         self._interfaces = []
@@ -231,12 +233,14 @@ class Machine(object):
 
         self._slave_desc = slave_desc
 
-    def set_recipe(self, recipe_name):
+    def set_recipe(self, recipe):
         """ Reserves the machine for the specified recipe
 
         Also sends Device classes from the controller and initializes the
         InterfaceManager on the Slave and builds the device database.
         """
+        self._recipe = recipe
+        recipe_name = recipe.__class__.__name__
         self.rpc_call("set_recipe", recipe_name)
         self._send_device_classes()
         self.rpc_call("init_if_manager")

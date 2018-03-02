@@ -122,7 +122,7 @@ class Controller(object):
             for line in format_match_description(match).split('\n'):
                 logging.info(line)
             try:
-                self._map_match(match, req)
+                self._map_match(match, req, recipe)
                 recipe._init_run(RecipeRun(match))
                 recipe.test()
             except Exception as exc:
@@ -143,7 +143,7 @@ class Controller(object):
 
         self._msg_dispatcher.wait_for_condition(condition)
 
-    def _map_match(self, match, requested):
+    def _map_match(self, match, requested, recipe):
         self._machines = {}
         self._hosts = Hosts()
         pool = self._pools.get_machine_pool(match["pool_name"])
@@ -154,7 +154,7 @@ class Controller(object):
             host = getattr(self._hosts, m_id)
 
             machine.set_id(m_id)
-            self._prepare_machine(machine)
+            self._prepare_machine(machine, recipe)
 
             for if_id, i in m["interfaces"].items():
                 host._map_device(if_id, i)
@@ -168,13 +168,12 @@ class Controller(object):
                     setattr(host, name, new_virt_dev)
                     new_virt_dev._enable()
 
-    def _prepare_machine(self, machine):
+    def _prepare_machine(self, machine, recipe):
         self._log_ctl.add_slave(machine.get_id())
         machine.set_mac_pool(self._mac_pool)
         machine.set_network_bridges(self._network_bridges)
 
-        recipe_name = os.path.basename(sys.argv[0])
-        machine.set_recipe(recipe_name)
+        machine.set_recipe(recipe)
 
     def _cleanup_slaves(self):
         if self._machines == None:
