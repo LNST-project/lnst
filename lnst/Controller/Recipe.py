@@ -111,14 +111,14 @@ class BaseRecipe(object):
     def ctl(self):
         return self._ctl
 
+    def _set_ctl(self, ctl):
+        self._ctl = ctl
+
     @property
     def matched(self):
         if self.ctl is None:
             return None
         return self.ctl._hosts
-
-    def _set_ctl(self, ctl):
-        self._ctl = ctl
 
     def test(self):
         """Method to be implemented by the Tester"""
