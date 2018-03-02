@@ -98,8 +98,7 @@ class Namespace(object):
             the Job object will be automatically updated.
         """
 
-        job = Job(self._machine, what, expect=not fail, json=json,
-                  netns=self.name, desc=desc)
+        job = Job(self, what, expect=not fail, json=json, desc=desc)
 
         try:
             self._machine.run_job(job)

@@ -26,13 +26,12 @@ class Job(object):
         job = m1.run("ls ~/")
         print job.stdout
     """
-    def __init__(self, host, what,
-                 expect=True, json=False, netns=None, desc=None):
-        self._host = host
+    def __init__(self, namespace, what,
+                 expect=True, json=False, desc=None):
         self._what = what
         self._expect = expect
         self._json = json
-        self._netns = netns
+        self._netns = namespace
         self._desc = desc
 
         self._res = None
@@ -45,6 +44,32 @@ class Job(object):
             raise JobError("Unable to run '%s'" % str(what))
 
         self._id = None
+
+    @property
+    def id(self):
+        """id of the job
+
+        Used internally by the Machine class to identify results coming
+        from the slave.
+        TODO make private?
+        """
+        return self._id
+
+    @id.setter
+    def id(self, val):
+        if self._id is not None:
+            raise Exception("Id already set")
+        self._id = val
+
+    @property
+    def host(self):
+        """the initial namespace of the host the job is running on"""
+        return self._netns.initns
+
+    @property
+    def netns(self):
+        """network namespace the Job is running in"""
+        return self._netns
 
     @property
     def stdout(self):
@@ -109,30 +134,6 @@ class Job(object):
         else:
             return False
 
-    @property
-    def netns(self):
-        """name of the network namespace the Job is running in
-
-        Not relevant yet as network namespaces aren't supported yet.
-        """
-        return self._netns
-
-    @property
-    def id(self):
-        """id of the job
-
-        Used internally by the Machine class to identify results coming
-        from the slave.
-        TODO make private?
-        """
-        return self._id
-
-    @id.setter
-    def id(self, val):
-        if self._id is not None:
-            raise Exception("Id already set")
-        self._id = val
-
     def wait(self, timeout=0):
         """waits for the Job to finish for the specified amount of time
 
@@ -150,7 +151,7 @@ class Job(object):
             return True
         if timeout < 0:
             raise JobError("Negative timeout value not allowed.")
-        return self._host.wait_for_job(self, timeout)
+        return self._netns._machine.wait_for_job(self, timeout)
 
     def kill(self, signal=signal.SIGKILL):
         """send specified signal to the remotely running Job process
@@ -164,8 +165,8 @@ class Job(object):
             False if an exception was raised while sending the signal.
         """
         logging.info("Sending signal {} to job {} on host {}".format(signal,
-                     self._id, self._host.get_id()))
-        return self._host.kill(self, signal)
+                     self._id, self._netns.hostid))
+        return self._netns._machine.kill(self, signal)
 
     def _to_dict(self):
         d = {"job_id": self._id,

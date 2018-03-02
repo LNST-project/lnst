@@ -366,7 +366,7 @@ class Machine(object):
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
-        res = self.rpc_call("run_job", job._to_dict(), netns=job.netns)
+        res = self.rpc_call("run_job", job._to_dict(), netns=job.netns.name)
 
         self._recipe.current_run.add_result(JobStartResult(job, res))
         return res
@@ -436,7 +436,7 @@ class Machine(object):
         if job.id not in self._jobs:
             raise MachineError("No job '%s' running on Machine %s" %
                                (job.id(), self._id))
-        return self.rpc_call("kill_job", job.id, signal, netns=job.netns)
+        return self.rpc_call("kill_job", job.id, signal, netns=job.netns.name)
 
     def get_hostname(self):
         """ Get hostname/ip of the machine
