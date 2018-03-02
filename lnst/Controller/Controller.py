@@ -27,6 +27,7 @@ from lnst.Controller.Config import CtlConfig
 from lnst.Controller.MessageDispatcher import MessageDispatcher
 from lnst.Controller.SlavePoolManager import SlavePoolManager
 from lnst.Controller.MachineMapper import MachineMapper
+from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Host import Hosts, Host
 from lnst.Controller.Recipe import BaseRecipe
 
@@ -118,7 +119,8 @@ class Controller(object):
                                      expand="match_%d" % i)
             i += 1
 
-            self._print_match_description(match)
+            for line in format_match_description(match).split('\n'):
+                logging.info(line)
             try:
                 self._map_match(match, req)
                 recipe.test()
@@ -218,14 +220,3 @@ class Controller(object):
                 config.load_config(gitcfg)
 
             return config
-
-    def _print_match_description(self, match):
-        logging.info("Pool match description:")
-        if match["virtual"]:
-            logging.info("  Setup is using virtual machines.")
-        for m_id, m in sorted(match["machines"].iteritems()):
-            logging.info("  host \"%s\" uses \"%s\"" % (m_id, m["target"]))
-            for if_id, match in m["interfaces"].iteritems():
-                pool_id = match["target"]
-                logging.info("    interface \"%s\" matched to \"%s\"" %\
-                                            (if_id, pool_id))

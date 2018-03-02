@@ -16,6 +16,19 @@ from lnst.Controller.Common import ControllerError
 class MapperError(ControllerError):
     pass
 
+def format_match_description(match):
+    output = []
+    output.append("Pool match description:")
+    if match["virtual"]:
+        output.append("  Setup is using virtual machines.")
+    for m_id, m in sorted(match["machines"].iteritems()):
+        output.append("  host \"{}\" uses \"{}\"".format(m_id, m["target"]))
+        for if_id, match in m["interfaces"].iteritems():
+            pool_id = match["target"]
+            output.append("    interface \"{}\" matched to \"{}\"".
+                          format(if_id, pool_id))
+    return "\n".join(output)
+
 class MachineMapper(object):
     """Implements a matching algorithm that maps requirements to available hosts
 
