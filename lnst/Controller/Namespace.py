@@ -36,8 +36,6 @@ class Namespace(object):
         m1.bond0 = Bond() # to create a new bond device
         m1.run("ip a") # to run a shell command"""
 
-    __metaclass__ = ABCMeta
-
     #TODO add packet capture options
     def __init__(self, machine):
         #storage for mapped objects (Devices, Namespaces...)
