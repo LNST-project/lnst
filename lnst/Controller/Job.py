@@ -88,10 +88,13 @@ class Job(object):
     def passed(self):
         """Indicates whether or not the Job passed
 
+        The return value is True or False based on if the Job was expected to
+        pass or fail.
+
         Type: Boolean
         """
         try:
-            return self._res["passed"]
+            return self._res["passed"] == self._expect
         except:
             return False
 
