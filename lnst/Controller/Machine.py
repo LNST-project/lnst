@@ -21,6 +21,7 @@ from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
+from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
@@ -365,7 +366,10 @@ class Machine(object):
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
-        return self.rpc_call("run_job", job._to_dict(), netns=job.netns)
+        res = self.rpc_call("run_job", job._to_dict(), netns=job.netns)
+
+        self._recipe.current_run.add_result(JobStartResult(job, res))
+        return res
 
     def wait_for_job(self, job, timeout):
         res = True
@@ -426,6 +430,7 @@ class Machine(object):
         job_id = msg["job_id"]
         job = self._jobs[job_id]
         job._res = msg["result"]
+        self._recipe.current_run.add_result(JobFinishResult(job))
 
     def kill(self, job, signal):
         if job.id not in self._jobs:
