@@ -226,8 +226,8 @@ h2.run("driverctl set-override %s vfio-pci" % h2_nic2_pci)
 h2.restart_service("openvswitch")
 
 h2.run("ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev")
-h2.run("ovs-vsctl add-port br0 nic1 -- set interface nic1 type=dpdk ofport_request=11 options:dpdk-devargs=%s" % h2_nic1_pci)
-h2.run("ovs-vsctl add-port br0 nic2 -- set interface nic2 type=dpdk ofport_request=12 options:dpdk-devargs=%s" % h2_nic2_pci)
+h2.run("ovs-vsctl add-port br0 dpdk0 -- set interface dpdk0 type=dpdk ofport_request=11 options:dpdk-devargs=%s" % h2_nic1_pci)
+h2.run("ovs-vsctl add-port br0 dpdk1 -- set interface dpdk1 type=dpdk ofport_request=12 options:dpdk-devargs=%s" % h2_nic2_pci)
 
 #============================================
 # Host2 configure Guest with vhostuser NICs
@@ -480,8 +480,8 @@ guest.close()
 h2.run("ovs-ofctl del-flows br0")
 h2.run("ovs-vsctl del-port br0 guest_nic2")
 h2.run("ovs-vsctl del-port br0 guest_nic1")
-h2.run("ovs-vsctl del-port br0 nic1")
-h2.run("ovs-vsctl del-port br0 nic2")
+h2.run("ovs-vsctl del-port br0 dpdk0")
+h2.run("ovs-vsctl del-port br0 dpdk1")
 h2.run("ovs-vsctl del-br br0")
 
 h2.run("virsh shutdown %s || true" % guest_virtname)
