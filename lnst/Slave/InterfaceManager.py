@@ -407,7 +407,15 @@ class Device(object):
             self.set_master(nl_msg.get_attr("IFLA_MASTER"), primary=True)
             self._mtu = nl_msg.get_attr("IFLA_MTU")
 
-            link = nl_msg.get_attr("IFLA_LINK")
+            if nl_msg.get_nested("IFLA_LINKINFO", "IFLA_INFO_KIND") == "vxlan":
+                link = nl_msg.get_nested("IFLA_LINKINFO", "IFLA_INFO_DATA",
+                                         "IFLA_VXLAN_LINK")
+            elif nl_msg.get_nested("IFLA_LINKINFO", "IFLA_INFO_KIND") == "vti":
+                link = nl_msg.get_nested("IFLA_LINKINFO", "IFLA_INFO_DATA",
+                                         "IFLA_VTI_LINK")
+            else:
+                link = nl_msg.get_attr("IFLA_LINK")
+
             if link != None:
                 # IFLA_LINK is an index of device that's closer to physical
                 # interface in the stack, e.g. index of eth0 for eth0.100
