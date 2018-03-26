@@ -4,6 +4,7 @@ This is an example python recipe that can be run as an executable script.
 Performs a simple ping between two hosts.
 """
 
+import logging
 from lnst.Common.Parameters import IpParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import Controller
@@ -23,6 +24,9 @@ from lnst.Tests import IcmpPing
 from lnst.Tests.Netperf import Netperf, Netserver
 
 import signal
+
+
+from lnst.Controller.RunSummaryFormatter import RunSummaryFormatter
 
 class MyRecipe(BaseRecipe):
     m1 = HostReq()
@@ -118,3 +122,7 @@ ctl = Controller(debug=1)
 
 r = MyRecipe()
 ctl.run(r, allow_virt=True)
+
+summary_fmt = RunSummaryFormatter()
+for run in r.runs:
+    logging.info(summary_fmt.format_run(run))
