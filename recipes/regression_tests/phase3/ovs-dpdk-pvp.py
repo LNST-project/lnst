@@ -38,13 +38,16 @@ def compare_results(host, result, baseline, max_dev):
     interval2 = (avg2 - dev2, avg2 + dev2)
 
     if interval1[1] < interval2[0]:
-        desc = ("Measured rate {:.2f} +-{:.2f} pps is lower "
-                "than threshold {:.2f} +-{:.2f} pps".
+        desc = ("Measured rate {:.2f} +-{:.2f} pps is lower than threshold {:.2f} +-{:.2f} pps".
+                format(avg1, dev1, avg2, dev2))
+        custom_mod = ctl.get_module("Custom", options = {"fail": True})
+    elif interval1[0] > interval2[1]:
+        desc = ("Measured rate {:.2f} +-{:.2f} pps is much higher than threshold {:.2f} +-{:.2f} pps\n"
+                "This could indicate a low baseline or a problem with the setup".
                 format(avg1, dev1, avg2, dev2))
         custom_mod = ctl.get_module("Custom", options = {"fail": True})
     else:
-        desc = ("Measured rate {:.2f} +-{:.2f} pps is higher "
-                "than threshold {:.2f} +-{:.2f} pps".
+        desc = ("Measured rate {:.2f} +-{:.2f} pps matches the threshold {:.2f} +-{:.2f} pps".
                 format(avg1, dev1, avg2, dev2))
         custom_mod = ctl.get_module("Custom")
 
