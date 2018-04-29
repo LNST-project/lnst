@@ -14,7 +14,8 @@ from lnst.Controller.Task import ctl
 from TestLib import route
 
 def ping_test(tl, m1, sw, addr, m1_if1, gre,
-              require_fastpath=True, fail_expected=False, count=100,
+              require_fastpath=True, require_slowpath=False,
+              fail_expected=False, count=100,
               ipv6=False, ttl=None):
     limit = int(0.9 * count)
     if gre is not None:
@@ -41,6 +42,9 @@ def ping_test(tl, m1, sw, addr, m1_if1, gre,
             # path. All the data plane traffic should go through fast path.
             tl.custom(sw, "ipip",
                       "Too many packets (%d) observed at GRE netdevice" % delta)
+        if require_slowpath and delta < count:
+            tl.custom(sw, "ipip",
+                      "Too few packets (%d) observed at GRE netdevice" % delta)
 
 def ipv4(test_ip):
     return test_ip[0]
