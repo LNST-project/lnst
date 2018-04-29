@@ -15,18 +15,21 @@ from TestLib import route
 
 def ping_test(tl, m1, sw, addr, m1_if1, gre,
               require_fastpath=True, fail_expected=False, count=100,
-              ipv6=False):
+              ipv6=False, ttl=None):
     limit = int(0.9 * count)
     if gre is not None:
         before_stats = gre.link_stats()["rx_packets"]
+    options = {
+        "addr": addr,
+        "count": count,
+        "interval": 0.2,
+        "iface" : m1_if1.get_devname(),
+        "limit_rate": limit,
+    }
+    if ttl is not None:
+        options["ttl"] = ttl
     ping_mod = ctl.get_module("IcmpPing" if not ipv6 else "Icmp6Ping",
-                                options={
-                                    "addr": addr,
-                                    "count": count,
-                                    "interval": 0.2,
-                                    "iface" : m1_if1.get_devname(),
-                                    "limit_rate": limit,
-                                })
+                              options)
     m1.run(ping_mod, fail_expected=fail_expected)
 
     if not fail_expected and gre is not None:
