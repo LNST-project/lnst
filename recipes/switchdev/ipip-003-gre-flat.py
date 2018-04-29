@@ -26,8 +26,6 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     vrf_None = None
     tl = TestLib(ctl, aliases)
-    sw_if1.reset(ip=test_ip(1, 1))
-    sw_if2.reset(ip=test_ip(99,1))
 
     logging.info("=== Flat configuration in non-default VRF")
     with encap_route(m2, vrf_None, 1, "gre1", ip=ipv4), \

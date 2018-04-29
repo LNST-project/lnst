@@ -26,8 +26,6 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     vrf_None = None
     tl = TestLib(ctl, aliases)
-    sw_if1.reset(ip=test_ip(1, 1))
-    sw_if2.reset(ip=test_ip(99,1))
 
     # Check the behavior when two tunnels with conflicting local addresses are
     # used.

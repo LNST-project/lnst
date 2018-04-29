@@ -25,8 +25,6 @@ def do_task(ctl, hosts, ifaces, aliases):
 
     vrf_None = None
     tl = TestLib(ctl, aliases)
-    sw_if1.reset(ip=test_ip(1, 2))
-    sw_if2.reset(ip=test_ip(99,1))
 
     # Test that non-IPIP traffic gets to slow path.
     with dummy(sw, vrf_None, ip=["1.2.3.4/32"]) as d, \
