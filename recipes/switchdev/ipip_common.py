@@ -19,7 +19,7 @@ def ping_test(tl, m1, sw, addr, m1_if1, gre,
               ipv6=False, ttl=None):
     limit = int(0.9 * count)
     if gre is not None:
-        before_stats = gre.link_stats()["rx_packets"]
+        before_stats = gre.link_stats()
     options = {
         "addr": addr,
         "count": count,
@@ -34,17 +34,24 @@ def ping_test(tl, m1, sw, addr, m1_if1, gre,
     m1.run(ping_mod, fail_expected=fail_expected)
 
     if not fail_expected and gre is not None:
-        after_stats = gre.link_stats()["rx_packets"]
+        after_stats = gre.link_stats()
 
-        delta = after_stats - before_stats
-        if require_fastpath and delta > 10:
-            # Allow a few packets of control plane traffic to go through slow
-            # path. All the data plane traffic should go through fast path.
-            tl.custom(sw, "ipip",
-                      "Too many packets (%d) observed at GRE netdevice" % delta)
-        if require_slowpath and delta < count:
-            tl.custom(sw, "ipip",
-                      "Too few packets (%d) observed at GRE netdevice" % delta)
+        def checkstat(key):
+            delta = after_stats[key] - before_stats[key]
+            if require_fastpath and delta > 10:
+                # Allow a few packets of control plane traffic to go through
+                # slow path. All the data plane traffic should go through fast
+                # path.
+                tl.custom(sw, "ipip",
+                          "Too many %s (%d) observed at tunnel netdevice"
+                          % (key, delta))
+            if require_slowpath and delta < count:
+                tl.custom(sw, "ipip",
+                          "Too few %s (%d) observed at tunnel netdevice"
+                          % (key, delta))
+
+        checkstat("rx_packets")
+        checkstat("tx_packets")
 
 def ipv4(test_ip):
     return test_ip[0]
