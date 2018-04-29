@@ -36,6 +36,29 @@ def do_task(ctl, hosts, ifaces, aliases):
         sw_if2.reset()
         add_forward_route(sw, vrf_u, "1.2.3.5")
 
+        logging.info("--- remote change")
+        with encap_route(m2, vrf_None, 1, "gre1", ip=ipv4), \
+             encap_route(m2, vrf_None, 1, "gre1", ip=ipv6), \
+             gre(sw, d, vrf_o,
+                 tos="inherit",
+                 local_ip="1.2.3.4",
+                 remote_ip="1.2.3.7") as g, \
+             encap_route(sw, vrf_o, 2, g, ip=ipv4), \
+             encap_route(sw, vrf_o, 2, g, ip=ipv6):
+
+            sleep(15)
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True, ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True)
+
+            sw.run("ip t change name %s remote 1.2.3.5" % g.get_devname())
+
+            sleep(5)
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g)
+
         logging.info("--- local change")
         with encap_route(m2, vrf_None, 1, "gre1", ip=ipv4), \
              encap_route(m2, vrf_None, 1, "gre1", ip=ipv6), \
