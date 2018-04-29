@@ -30,11 +30,100 @@ def do_task(ctl, hosts, ifaces, aliases):
     logging.info("=== Hierarchical configuration, 'ip t change'")
     with vrf(sw) as vrf_u, \
          vrf(sw) as vrf_o, \
+         vrf(sw) as vrf3, \
          dummy(sw, vrf_u, ip=["1.2.3.4/32"]) as d:
         connect_host_ifaces(sw, sw_if1, vrf_o, sw_if2, vrf_u)
         sw_if1.reset()
         sw_if2.reset()
         add_forward_route(sw, vrf_u, "1.2.3.5")
+
+        logging.info("--- create tunnel with a down underlay")
+        d.set_link_down()
+        with encap_route(m2, vrf_None, 1, "gre1", ip=ipv4), \
+             encap_route(m2, vrf_None, 1, "gre1", ip=ipv6), \
+             gre(sw, d, vrf_o,
+                 tos="inherit",
+                 local_ip="1.2.3.4",
+                 remote_ip="1.2.3.5") as g, \
+             encap_route(sw, vrf_o, 2, g, ip=ipv4), \
+             encap_route(sw, vrf_o, 2, g, ip=ipv6):
+
+            sleep(15)
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      count=100, fail_expected=True, ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g,
+                      count=100, fail_expected=True)
+
+        d.set_link_up()
+
+        logging.info("--- change of bound device")
+        with encap_route(m2, vrf_None, 1, "gre1", ip=ipv4), \
+             encap_route(m2, vrf_None, 1, "gre1", ip=ipv6), \
+             dummy(sw, vrf3, ip=["1.2.3.4/32"]) as d2, \
+             gre(sw, d2, vrf_o,
+                 tos="inherit",
+                 local_ip="1.2.3.4",
+                 remote_ip="1.2.3.5") as g, \
+             encap_route(sw, vrf_o, 2, g, ip=ipv4), \
+             encap_route(sw, vrf_o, 2, g, ip=ipv6):
+
+            sleep(15)
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True, ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True)
+
+            sw.run("ip t change name %s dev %s"
+                   % (g.get_devname(), d.get_devname()))
+
+            sleep(5)
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g)
+
+            logging.info("--- bound device up/down")
+            # Now change back to `d2', set `d' down and change to it again.
+            # Traffic shouldn't flow.
+            # There's a complementary test in ipip-006 to make sure that
+            # decap-only flow still works even if bound device is down.
+            sw.run("ip t change name %s dev %s"
+                   % (g.get_devname(), d2.get_devname()))
+            d.set_link_down()
+            sleep(5)
+
+            sw.run("ip t change name %s dev %s"
+                   % (g.get_devname(), d.get_devname()))
+
+            sleep(5)
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True, ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True)
+
+            # Set `d' up while it's the bound device. Traffic should flow again.
+            d.set_link_up()
+            sleep(5)
+
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g)
+
+            # Set `d' down while it's the bound device.
+            d.set_link_down()
+            sleep(5)
+
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True, ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g,
+                      count=25, fail_expected=True)
+
+            # Set `d' back up again to make sure it's stable.
+            d.set_link_up()
+            sleep(5)
+
+            ping_test(tl, m1, sw, ipv6(test_ip(2, 33, [])), m1_if1, g,
+                      ipv6=True)
+            ping_test(tl, m1, sw, ipv4(test_ip(2, 33, [])), m1_if1, g)
 
         logging.info("--- remote change")
         with encap_route(m2, vrf_None, 1, "gre1", ip=ipv4), \
