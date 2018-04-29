@@ -73,3 +73,19 @@ def add_forward_route(m, vrf, remote_ip, via=ipv4(test_ip(99, 2, []))):
 def connect_host_ifaces(sw, if_o, vrf_o, if_u, vrf_u):
     sw.run("ip l set dev %s master %s" % (if_o.get_devname(), vrf_o))
     sw.run("ip l set dev %s master %s" % (if_u.get_devname(), vrf_u))
+
+def refresh_addrs(m, iface):
+    # A device loses IPv6 address when changing VRF, which we normally work
+    # around with doing a reset of the device. But for VLAN devices, reset
+    # removes and recreates them in default VRF. So instead reset the addresses
+    # by hand.
+    m.run("ip a flush dev %s" % iface.get_devname())
+
+    # Down/up cycle to get a new link-local address so that IPv6 neighbor
+    # discovery works.
+    m.run("ip l set dev %s down" % iface.get_devname())
+    m.run("ip l set dev %s up" % iface.get_devname())
+
+    # Now reassign the fixed addresses.
+    for ip, mask in iface.get_ips().get_val():
+        m.run("ip a add dev %s %s/%s" % (iface.get_devname(), ip, mask))

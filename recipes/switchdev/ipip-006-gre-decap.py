@@ -12,25 +12,9 @@ from lnst.Controller.Task import ctl
 from TestLib import TestLib, vrf, dummy, gre
 from ipip_common import ping_test, encap_route, \
                         add_forward_route, connect_host_ifaces, \
-                        test_ip, ipv4, ipv6
+                        test_ip, ipv4, ipv6, refresh_addrs
 from time import sleep
 import logging
-
-def refresh_addrs(m, iface):
-    # A device loses IPv6 address when changing VRF, which we normally work
-    # around with doing a reset of the device. But for VLAN devices, reset
-    # removes and recreates them in default VRF. So instead reset the addresses
-    # by hand.
-    m.run("ip a flush dev %s" % iface.get_devname())
-
-    # Down/up cycle to get a new link-local address so that IPv6 neighbor
-    # discovery works.
-    m.run("ip l set dev %s down" % iface.get_devname())
-    m.run("ip l set dev %s up" % iface.get_devname())
-
-    # Now reassign the fixed addresses.
-    for ip, mask in iface.get_ips().get_val():
-        m.run("ip a add dev %s %s/%s" % (iface.get_devname(), ip, mask))
 
 def do_task(ctl, hosts, ifaces, aliases):
     m1, m2, sw = hosts
