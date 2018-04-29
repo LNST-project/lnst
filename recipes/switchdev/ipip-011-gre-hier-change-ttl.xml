@@ -1,0 +1,88 @@
+<lnstrecipe xmlns:xi="http://www.w3.org/2003/XInclude">
+    <xi:include href="default_aliases.xml" />
+    <define>
+        <alias name="onet1" value="192.168.1"/>
+        <alias name="onet2" value="192.168.2"/>
+        <alias name="o6net1" value="2002:1"/>
+        <alias name="o6net2" value="2002:2"/>
+        <alias name="unet1" value="192.168.99"/>
+        <alias name="unet2" value="192.168.88"/>
+        <alias name="unet3" value="192.168.77"/>
+    </define>
+    <network>
+        <host id="machine1">
+            <params/>
+            <interfaces>
+                <eth id="if1" label="A">
+                    <addresses>
+                        <address value="{$onet1}.33/24" />
+                        <address value="{$o6net1}::33/64" />
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="machine2">
+            <params/>
+            <interfaces>
+                <dummy id="md">
+                    <addresses>
+                        <address value="1.2.3.5/32" />
+                        <address value="{$onet2}.33/32" />
+                        <address value="{$o6net2}::33/128" />
+                    </addresses>
+                </dummy>
+                <gre id="mg">
+                    <options>
+                        <option name="local_ip" value="1.2.3.5"/>
+                        <option name="remote_ip" value="1.2.3.4"/>
+                    </options>
+                </gre>
+                <veth_pair>
+                    <veth id="v4">
+                        <addresses>
+                            <address value="{$unet3}.2/24" />
+                        </addresses>
+                    </veth>
+                    <veth id="v3" netns="ns2">
+                        <addresses>
+                            <address value="{$unet3}.1/24" />
+                        </addresses>
+                    </veth>
+                </veth_pair>
+                <veth_pair>
+                    <veth id="v2" netns="ns2">
+                        <addresses>
+                            <address value="{$unet2}.2/24" />
+                        </addresses>
+                    </veth>
+                    <veth id="v1" netns="ns1">
+                        <addresses>
+                            <address value="{$unet2}.1/24" />
+                        </addresses>
+                    </veth>
+                </veth_pair>
+                <eth id="if1" label="B" netns="ns1">
+                    <addresses>
+                        <address value="{$unet1}.2/24" />
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+        <host id="switch">
+            <interfaces>
+                <eth id="if1" label="A">
+                    <addresses>
+                        <address value="192.168.1.1/24" />
+                        <address value="2002:1::1/64" />
+                    </addresses>
+                </eth>
+                <eth id="if2" label="B">
+                    <addresses>
+                        <address value="192.168.99.1/24" />
+                    </addresses>
+                </eth>
+            </interfaces>
+        </host>
+    </network>
+    <task python="ipip-011-gre-hier-change-ttl.py" />
+</lnstrecipe>
