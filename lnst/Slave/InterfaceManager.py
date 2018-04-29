@@ -345,6 +345,12 @@ class InterfaceManager(object):
             return self.assign_name_generic("t_ip6vti")
         elif dev_type == "vxlan":
             return self.assign_name_generic("vxlan")
+        elif dev_type == "gre":
+            return self.assign_name_generic("gre_")
+        elif dev_type == "ipip":
+            return self.assign_name_generic("ipip_")
+        elif dev_type == "dummy":
+            return self.assign_name_generic("dummy_")
         else:
             return self.assign_name_generic("dev")
 
