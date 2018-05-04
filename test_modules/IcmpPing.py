@@ -31,6 +31,9 @@ class IcmpPing(TestGeneric):
         size = self.get_opt("size")
         if size:
             cmd += " -s %s" % size
+        ttl = self.get_opt("ttl")
+        if ttl:
+            cmd += " -t %s" % ttl
         return cmd
 
     def run(self):

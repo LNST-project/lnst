@@ -48,8 +48,17 @@
         </host>
         <host id="switch">
             <interfaces>
-                <eth id="if1" label="A" />
-                <eth id="if2" label="B" />
+                <eth id="if1" label="A">
+                    <addresses>
+                        <address value="{$onet1}.1/24" />
+                        <address value="{$o6net1}::1/64" />
+                    </addresses>
+                </eth>
+                <eth id="if2" label="B">
+                    <addresses>
+                        <address value="{$unet}.1/24" />
+                    </addresses>
+                </eth>
             </interfaces>
         </host>
     </network>

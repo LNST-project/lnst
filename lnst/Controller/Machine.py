@@ -746,7 +746,7 @@ class Interface(object):
 
     def add_slave(self, iface):
         self._slaves[iface.get_id()] = iface
-        if self._type in ["vlan", "vxlan"]:
+        if self._type in ["vlan", "vxlan", "gre", "ipip"]:
             iface.add_master(self, primary=False)
         else:
             iface.add_master(self)
