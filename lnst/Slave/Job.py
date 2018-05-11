@@ -49,7 +49,7 @@ class JobContext(object):
 
     def _kill_all_jobs(self):
         for id in self._dict:
-            self._dict[id].kill(signal=signal.SIGKILL)
+            self._dict[id].kill(sig=signal.SIGKILL)
 
     def cleanup(self):
         logging.debug("Cleaning up leftover processes.")
@@ -124,10 +124,11 @@ class Job(object):
 
     def kill(self, signal=signal.SIGKILL):
         if self._finished:
+            logging.debug("Job finished before sending the signal")
             return True
         try:
             logging.debug("Sending signal %s to pid %d" % (signal, self._pid))
-            os.kill(self._pid, signal)
+            os.killpg(self._pid, signal)
             return True
         except OSError as exc:
             logging.error(str(exc))
