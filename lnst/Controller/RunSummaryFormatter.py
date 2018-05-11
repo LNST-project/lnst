@@ -17,14 +17,16 @@ from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Recipe import BaseRecipe, RecipeRun
 from lnst.Controller.RecipeResults import BaseResult, JobResult, Result
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
+from lnst.Controller.RecipeResults import ResultLevel
 
 class RunFormatterException(ControllerError):
     pass
 
 class RunSummaryFormatter(object):
-    def __init__(self):
+    def __init__(self, level=ResultLevel.IMPORTANT):
         #TODO changeable format?
         self._format = ""
+        self._level = level
 
     def _format_success(self, success):
         if success:
@@ -75,12 +77,14 @@ class RunSummaryFormatter(object):
 
         output_lines.extend(format_match_description(run.match).split('\n'))
 
+        filtered_results = [res for res in run.results if
+                            res.success == False or res.level <= self._level]
         overall_result = True
-        for i, res in enumerate(run.results):
+        for i, res in enumerate(filtered_results):
             overall_result = overall_result and res.success
 
             try:
-                next_res = run.results[i+1]
+                next_res = filtered_results[i+1]
                 if (isinstance(res, JobStartResult) and
                     isinstance(next_res, JobFinishResult) and
                     res.job.host == next_res.job.host and
