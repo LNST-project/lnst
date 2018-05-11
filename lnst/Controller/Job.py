@@ -189,7 +189,7 @@ class Job(object):
             attrs.append("command(%s)" % self._what)
 
         if self._netns is not None:
-            attrs.append("netns(%s)" % self._netns)
+            attrs.append("netns(%s)" % self._netns.name)
 
         if not self._expect:
             attrs.append("expecting FAIL")

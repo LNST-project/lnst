@@ -146,8 +146,7 @@ class Namespace(object):
             if value.ifindex is not None:
                 old_ns = value.netns
                 old_ns._unset(value)
-                self._machine.remote_device_set_netns(value, self.name,
-                                                      old_ns.name)
+                self._machine.remote_device_set_netns(value, self, old_ns)
                 value.netns = self
                 self._objects[name] = value
                 return True
@@ -170,7 +169,7 @@ class Namespace(object):
                 else:
                     value._machine = self._machine
                     value.netns = self
-                    self._machine.remote_device_create(value, netns=self.name)
+                    self._machine.remote_device_create(value, netns=self)
 
             self._objects[name] = value
             return True

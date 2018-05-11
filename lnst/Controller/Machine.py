@@ -126,7 +126,7 @@ class Machine(object):
         self._device_database[ret["ifindex"]] = dev
 
     def remote_device_set_netns(self, dev, dst, src):
-        self.rpc_call("set_dev_netns", dev, dst, netns=src)
+        self.rpc_call("set_dev_netns", dev, dst.name, netns=src)
 
     def device_created(self, dev_data):
         ifindex = dev_data["ifindex"]
@@ -175,11 +175,11 @@ class Machine(object):
         return None
 
     def rpc_call(self, method_name, *args, **kwargs):
-        if "netns" in kwargs and kwargs["netns"] is not None:
+        if kwargs.get("netns") in self._namespaces:
             netns = kwargs["netns"]
             del kwargs["netns"]
             msg = {"type": "to_netns",
-                   "netns": netns,
+                   "netns": netns.name,
                    "data": {"type": "command",
                             "method_name": method_name,
                             "args": args,
@@ -366,7 +366,7 @@ class Machine(object):
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
-        res = self.rpc_call("run_job", job._to_dict(), netns=job.netns.name)
+        res = self.rpc_call("run_job", job._to_dict(), netns=job.netns)
 
         self._recipe.current_run.add_result(JobStartResult(job, res))
         return res
@@ -436,7 +436,7 @@ class Machine(object):
         if job.id not in self._jobs:
             raise MachineError("No job '%s' running on Machine %s" %
                                (job.id(), self._id))
-        return self.rpc_call("kill_job", job.id, signal, netns=job.netns.name)
+        return self.rpc_call("kill_job", job.id, signal, netns=job.netns)
 
     def get_hostname(self):
         """ Get hostname/ip of the machine
