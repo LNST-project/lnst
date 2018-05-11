@@ -14,6 +14,12 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import time
+from enum import IntEnum
+
+class ResultLevel(IntEnum):
+    IMPORTANT = 1
+    NORMAL = 2
+    DEBUG = 3
 
 class BaseResult(object):
     """Base class for storing result data
@@ -38,6 +44,10 @@ class BaseResult(object):
     @property
     def data(self):
         return None
+
+    @property
+    def level(self):
+        return ResultLevel.DEBUG
 
 class JobResult(BaseResult):
     """Base class for storing result data of Jobs
