@@ -22,6 +22,7 @@ from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.Job import Job
+from lnst.Controller.RecipeResults import ResultLevel
 
 class HostError(ControllerError):
     pass
@@ -71,7 +72,7 @@ class Namespace(object):
         return self._name
 
     def run(self, what, bg=False, fail=False, timeout=DEFAULT_TIMEOUT,
-            json=False, desc=None):
+            json=False, desc=None, job_level=ResultLevel.DEBUG):
         """
         Args:
             what (mandatory) -- what should be run on the host. Can be either a
@@ -96,7 +97,8 @@ class Namespace(object):
             the Job object will be automatically updated.
         """
 
-        job = Job(self, what, expect=not fail, json=json, desc=desc)
+        job = Job(self, what, expect=not fail, json=json, desc=desc,
+                  level=job_level)
 
         try:
             self._machine.run_job(job)
