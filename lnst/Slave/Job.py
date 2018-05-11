@@ -122,13 +122,22 @@ class Job(object):
         send_data(self._child_pipe, result)
         self._child_pipe.close()
 
-    def kill(self, signal=signal.SIGKILL):
+    def kill(self, sig=signal.SIGKILL):
         if self._finished:
             logging.debug("Job finished before sending the signal")
             return True
         try:
-            logging.debug("Sending signal %s to pid %d" % (signal, self._pid))
-            os.killpg(self._pid, signal)
+            logging.debug("Sending signal %s to pid %d" % (sig, self._pid))
+            os.killpg(self._pid, sig)
+
+            if sig == signal.SIGKILL:
+                self.set_finished(dict(type = "job_finished",
+                                       job_id = self._id,
+                                       result = dict(passed = False,
+                                                     res_data = "Job killed",
+                                                     type = "result")))
+
+                send_data(self._child_pipe, self.get_result())
             return True
         except OSError as exc:
             logging.error(str(exc))
