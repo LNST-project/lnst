@@ -15,6 +15,7 @@ import logging
 import signal
 from lnst.Common.JobError import JobError
 from lnst.Common.TestModule import BaseTestModule
+from lnst.Controller.RecipeResults import ResultLevel
 
 class Job(object):
     """Tester facing Job API
@@ -27,12 +28,14 @@ class Job(object):
         print job.stdout
     """
     def __init__(self, namespace, what,
-                 expect=True, json=False, desc=None):
+                 expect=True, json=False, desc=None,
+                 level=ResultLevel.DEBUG):
         self._what = what
         self._expect = expect
         self._json = json
         self._netns = namespace
         self._desc = desc
+        self._level = level
 
         self._res = None
 
@@ -108,6 +111,14 @@ class Job(object):
             return self._res["res_data"]
         except:
             return None
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        self._level = value
 
     @property
     def passed(self):

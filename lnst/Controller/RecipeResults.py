@@ -62,6 +62,10 @@ class JobResult(BaseResult):
     def job(self):
         return self._job
 
+    @BaseResult.level.getter
+    def level(self):
+        return self.job.level
+
 class JobStartResult(JobResult):
     """Generated automatically when a Job is succesfully started on a slave"""
     @BaseResult.short_desc.getter
@@ -74,7 +78,7 @@ class JobFinishResult(JobResult):
     success depends on the Job passed value and returns the data returned as
     a result of the Job."""
     def __init__(self, job):
-        super(JobFinishResult, self).__init__(job, True)
+        super(JobFinishResult, self).__init__(job, None)
 
     @BaseResult.success.getter
     def success(self):
