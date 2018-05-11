@@ -97,11 +97,13 @@ class Result(BaseResult):
 
     Will be created when the tester calls the Recipe interface for adding
     results."""
-    def __init__(self, success, short_desc="", data=None):
+    def __init__(self, success, short_desc="", data=None,
+                 level=ResultLevel.IMPORTANT):
         super(Result, self).__init__(success)
 
         self._short_desc = short_desc
         self._data = data
+        self._level = level
 
     @BaseResult.short_desc.getter
     def short_desc(self):
@@ -110,3 +112,7 @@ class Result(BaseResult):
     @BaseResult.data.getter
     def data(self):
         return self._data
+
+    @BaseResult.level.getter
+    def level(self):
+        return self._level
