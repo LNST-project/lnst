@@ -12,7 +12,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Tests.IcmpPing import IcmpPing
+from lnst.Tests.Ping import Ping
 from lnst.Tests.Iperf import IperfClient, IperfServer
 
 #TODO add support for test classes from lnst-ctl.conf
