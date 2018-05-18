@@ -521,6 +521,21 @@ class Device(object):
                 log_exc_traceback()
                 raise DeviceConfigError("IP address flush failed")
 
+    def ips_filter(self, **selectors):
+        result = []
+        for addr in self.ips:
+            match = True
+            for selector, value in selectors.items():
+                try:
+                    if getattr(addr, selector) != value:
+                        match = False
+                        break
+                except:
+                    match = False
+            if match:
+                result.append(addr)
+        return result
+
     def up(self):
         """set device up"""
         with pyroute2.IPRoute() as ipr:
