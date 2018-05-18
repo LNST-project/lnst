@@ -15,8 +15,9 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import copy
+import re
 from lnst.Common.DeviceRef import DeviceRef
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import BaseIpAddress
 from lnst.Common.LnstError import LnstError
 
 class ParamError(LnstError):
@@ -52,13 +53,34 @@ class StrParam(Param):
         except ValueError:
             raise ParamError("Value must be a string")
 
+class BoolParam(Param):
+    def type_check(self, value):
+        if isinstance(value, bool):
+            return value
+        else:
+            raise ParamError("Value must be a boolean")
+
 class IpParam(Param):
     def type_check(self, value):
-        try:
-            return ipaddress(value)
-        except ValueError:
-            raise ParamError("Value must be a BaseIpAddress, string ip address or a Device object. Not {}"
-                             .format(type(value)))
+        if isinstance(value, BaseIpAddress):
+            return value
+        else:
+            raise ParamError("Value must be a BaseIpAddress object")
+
+class HostnameParam(Param):
+    def type_check(self, value):
+        if isinstance(value, BaseIpAddress):
+            return value
+
+        if len(value) > 255:
+            raise ParamError("Value must be a BaseIpAddress object or a valid hostname")
+
+        hostname_re = ("^([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9])"
+                       "(\.([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9]))*$")
+        if re.match(hostname_re, value, re.IGNORECASE):
+            return value
+        else:
+            raise ParamError("Value must be a BaseIpAddress object or a valid hostname")
 
 class DeviceParam(Param):
     def type_check(self, value):
@@ -70,6 +92,26 @@ class DeviceParam(Param):
         else:
             raise ParamError("Value must be a Device or DeviceRef object."
                              " Not {}".format(type(value)))
+
+class DeviceOrIpParam(Param):
+    def type_check(self, value):
+        #runtime import this because the Device class arrives on the Slave
+        #during recipe execution, not during Slave init
+        from lnst.Devices.Device import Device
+        if (isinstance(value, Device) or isinstance(value, DeviceRef) or
+            isinstance(value, BaseIpAddress)):
+            return value
+        else:
+            raise ParamError("Value must be a Device, DeviceRef or BaseIpAddress object."
+                             " Not {}".format(type(value)))
+
+class DictParam(Param):
+    def type_check(self, value):
+        if not isinstance(value, dict):
+            raise ParamError("Value must be a Dictionary. Not {}"
+                             .format(type(value)))
+        else:
+            return value
 
 class Parameters(object):
     def __init__(self):
