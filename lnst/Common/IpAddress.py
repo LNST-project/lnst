@@ -99,9 +99,6 @@ class Ip6Address(BaseIpAddress):
 
 def ipaddress(addr):
     """Factory method to create a BaseIpAddress object"""
-    #runtime import this because the Device class arrives on the Slave
-    #during recipe execution, not during Slave init
-    from lnst.Devices.Device import Device
     if isinstance(addr, BaseIpAddress):
         return addr
     elif isinstance(addr, str):
@@ -109,11 +106,6 @@ def ipaddress(addr):
             return Ip4Address(addr)
         except:
             return Ip6Address(addr)
-    elif isinstance(addr, Device):
-        try:
-            return addr.ips[0]
-        except IndexError:
-            raise LnstError("No usable Ip Addresses on the provided Device.")
     else:
         raise LnstError("Value must be a BaseIpAddress or string object."
                         " Not {}".format(type(addr)))
