@@ -7,8 +7,6 @@ them to be implemented in Python Recipes, with notes where relevant.
     * Device::destroy rename to delete or rename DeviceDeleted exception to
       Destroyed?
 
-* fix git version check - if git not installed raise Exception/report error
-
 * wait/sleep method that cycles handles ctl <-> slave communication in the
   background
     * should include wait for condition functionality, e.g. wait for Device
@@ -18,43 +16,11 @@ them to be implemented in Python Recipes, with notes where relevant.
       wait for 5 seconds, or if the device has been LOWER_UP for e.g. 3
       seconds, we will wait for additional 2 seconds, however if it has been up
       for e.g. 8 seconds the wait will return immediatelly.
+    * currently supporting waiting on condition (a method) on the controller,
+      possible next work is to expand this to the slave as well (problems with
+      object references)
 
-* Results implementation
-    * Result objects should be stored in a transparent way and there should be
-      a way to access and export them in different ways, default being the
-      Result summary at the end of stdout logs.
-    * Summary format proposal (copied from the api description document):
-        Since I've changed how Job execution is handled, I've also wrote down a
-        proposal to change how we log Recipe results - the RESULTS SUMMARY logs at the
-        end of a recipe run. I haven't started working on it yet, I've just wrote an
-        example on paper which I'm copying here. Any comments are appreciated.
-
-        RESULTS SUMMARY:
-        Host m1 Job 1    XYZ       PASS/FAIL
-                          Formatted results:
-                            ...
-        Host m2 Job 1    XYZ        started
-        Host m1 Job 3    XYZ        PASS/FAIL
-                          Formatted results:
-                            ...
-        Host m2 Job 1    XYZ        PASS/FAIL
-                          Formatted results:
-                            ...
-        Custom summary record....   (optional PASS/FAIL)
-                            ... optional additional data
-                            ... i still need to figure out how this will look like
-
-        The main difference to the old results summary is that Jobs have numerical ids
-        that are unique per host, and you ALWAYS see the id (previously only background
-        commands had ids). Since all Jobs "run in background" this will make matching
-        "started" "finished" logs easier. There also won't be any more "kill cmd" "intr
-        cmd" logs here since these commands don't exist anymore.
-
-        Since "all Jobs are in background" it means that in reality all of them
-        generate a "started" and "finished" log, however, if these are in a direct
-        sequence after each other they get shortened to just the PASS/FAIL log. This
-        will also be true for background commands if there were no results to report
-        between their start and finish.
+* netlink descriptive error logging - ask jbenc
 
 * Current machine configuration dump describing the "full"(relevant?)
   configuration of a host. We need this for PerfRepo integration to generate
@@ -66,8 +32,6 @@ them to be implemented in Python Recipes, with notes where relevant.
   * currently only files/classes in lnst.Devices package are synchronized as
     Device classes, but we have the capability to sync arbitrary python code so
     this shouldn't be too big a problem
-
-* API for "first" ip in list limited by selector
 
 * RPM:
     * add python-ethtool as dependency
@@ -131,3 +95,46 @@ them to be implemented in Python Recipes, with notes where relevant.
 * netlink sockets leaking
 
 * go through master to check for bugs that can be backported
+
+* fix git version check - if git not installed raise Exception/report error
+    version checks are now implemented differently
+
+* Results implementation
+    * Result objects should be stored in a transparent way and there should be
+      a way to access and export them in different ways, default being the
+      Result summary at the end of stdout logs.
+    * Summary format proposal (copied from the api description document):
+        Since I've changed how Job execution is handled, I've also wrote down a
+        proposal to change how we log Recipe results - the RESULTS SUMMARY logs at the
+        end of a recipe run. I haven't started working on it yet, I've just wrote an
+        example on paper which I'm copying here. Any comments are appreciated.
+
+        RESULTS SUMMARY:
+        Host m1 Job 1    XYZ       PASS/FAIL
+                          Formatted results:
+                            ...
+        Host m2 Job 1    XYZ        started
+        Host m1 Job 3    XYZ        PASS/FAIL
+                          Formatted results:
+                            ...
+        Host m2 Job 1    XYZ        PASS/FAIL
+                          Formatted results:
+                            ...
+        Custom summary record....   (optional PASS/FAIL)
+                            ... optional additional data
+                            ... i still need to figure out how this will look like
+
+        The main difference to the old results summary is that Jobs have numerical ids
+        that are unique per host, and you ALWAYS see the id (previously only background
+        commands had ids). Since all Jobs "run in background" this will make matching
+        "started" "finished" logs easier. There also won't be any more "kill cmd" "intr
+        cmd" logs here since these commands don't exist anymore.
+
+        Since "all Jobs are in background" it means that in reality all of them
+        generate a "started" and "finished" log, however, if these are in a direct
+        sequence after each other they get shortened to just the PASS/FAIL log. This
+        will also be true for background commands if there were no results to report
+        between their start and finish.
+
+* API for "first" ip in list limited by selector
+    added ips_filter method to Device class
