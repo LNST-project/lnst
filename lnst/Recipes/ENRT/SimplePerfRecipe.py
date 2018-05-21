@@ -1,0 +1,75 @@
+
+from lnst.Common.LnstError import LnstError
+from lnst.Common.Parameters import IntParam, Param, StrParam, BoolParam
+from lnst.Common.IpAddress import ipaddress, AF_INET, AF_INET6
+
+from lnst.Controller import HostReq, DeviceReq
+
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+
+class SimplePerfRecipe(BaseEnrtRecipe):
+    m1 = HostReq()
+    m1.eth0 = DeviceReq(label="net1")
+
+    m2 = HostReq()
+    m2.eth0 = DeviceReq(label="net1")
+
+    offload_combinations = Param(default=(
+        dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
+        dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
+        dict(gro="on", gso="off", tso="off", tx="on", rx="on"),
+        dict(gro="on", gso="on", tso="off", tx="off", rx="on"),
+        dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
+
+    def test_wide_configuration(self):
+        m1, m2 = self.matched.m1, self.matched.m2
+
+        configuration = EnrtConfiguration()
+        configuration.endpoint1 = m1.eth0
+        configuration.endpoint2 = m2.eth0
+
+        if "mtu" in self.params:
+            m1.eth0.mtu = self.params.mtu
+            m2.eth0.mtu = self.params.mtu
+
+        #TODO redo
+        # configuration.saved_coalescing_state = dict(
+                # m1_if = dict(tx = m1.eth0.adaptive_tx_coalescing,
+                             # rx = m1.eth0.adaptive_rx_coalescing),
+                # m2_if = dict(tx = m2.eth0.adaptive_tx_coalescing,
+                             # rx = m2.eth0.adaptive_rx_coalescing))
+
+        # m1.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
+        # m1.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
+        # m2.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
+        # m2.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
+
+        m1.eth0.ip_add(ipaddress("192.168.101.1/24"))
+        m1.eth0.ip_add(ipaddress("fc00::1/64"))
+        m1.eth0.up()
+
+        m2.eth0.ip_add(ipaddress("192.168.101.2/24"))
+        m2.eth0.ip_add(ipaddress("fc00::2/64"))
+        m2.eth0.up()
+
+        #TODO better service handling through HostAPI
+        m1.run("service irqbalance stop")
+        m2.run("service irqbalance stop")
+        for m in self.matched:
+            for dev in m.devices:
+                self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
+
+        return configuration
+
+    def test_wide_deconfiguration(self, config):
+        m1, m2 = self.matched.m1, self.matched.m2
+
+        #TODO better service handling through HostAPI
+        m1.run("service irqbalance start")
+        m2.run("service irqbalance start")
+
+        # redo
+        # m1.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["m1_if"]["tx"]
+        # m1.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["m1_if"]["rx"]
+        # m2.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["m2_if"]["tx"]
+        # m2.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["m2_if"]["rx"]
