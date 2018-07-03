@@ -25,21 +25,15 @@ from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError, DeviceDel
 from lnst.Common.InterfaceManagerError import InterfaceManagerError
 from lnst.Slave.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
-from pyroute2.netlink.rtnl import RTNLGRP_IPV4_IFADDR
-from pyroute2.netlink.rtnl import RTNLGRP_IPV6_IFADDR
-from pyroute2.netlink.rtnl import RTNLGRP_LINK
-try:
-    from pyroute2.netlink.iproute import RTM_NEWLINK
-    from pyroute2.netlink.iproute import RTM_DELLINK
-    from pyroute2.netlink.iproute import RTM_NEWADDR
-    from pyroute2.netlink.iproute import RTM_DELADDR
-except ImportError:
-    from pyroute2.iproute import RTM_NEWLINK
-    from pyroute2.iproute import RTM_DELLINK
-    from pyroute2.iproute import RTM_NEWADDR
-    from pyroute2.iproute import RTM_DELADDR
+from pyroute2.netlink.rtnl import RTMGRP_IPV4_IFADDR
+from pyroute2.netlink.rtnl import RTMGRP_IPV6_IFADDR
+from pyroute2.netlink.rtnl import RTMGRP_LINK
+from pyroute2.netlink.rtnl import RTM_NEWLINK
+from pyroute2.netlink.rtnl import RTM_DELLINK
+from pyroute2.netlink.rtnl import RTM_NEWADDR
+from pyroute2.netlink.rtnl import RTM_DELADDR
 
-NL_GROUPS = RTNLGRP_IPV4_IFADDR | RTNLGRP_IPV6_IFADDR | RTNLGRP_LINK
+NL_GROUPS = RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR | RTMGRP_LINK
 
 class InterfaceManager(object):
     def __init__(self, server_handler):
