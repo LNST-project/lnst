@@ -33,6 +33,7 @@ nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
+netdev_cpupin = ctl.get_alias("netdev_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
@@ -79,12 +80,12 @@ if adaptive_coalescing_off:
                                                 " on device %s" % d.get_devname()})
             d.get_host().run(coalesce_status)
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")
 
     for m, d in [ (m1, m1_testiface), (m2, m2_testiface) ]:
-        pin_dev_irqs(m, d, 0)
+        pin_dev_irqs(m, d, netdev_cpupin)
 
 p_opts = "-L %s" % (m2_testiface.get_ip(0))
 if nperf_cpupin and nperf_mode != "multi":
@@ -428,7 +429,7 @@ for offload in offloads:
 m1.run("ethtool -K %s %s" % (m1_testiface.get_devname(), dev_features))
 m2.run("ethtool -K %s %s" % (m2_testiface.get_devname(), dev_features))
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance start")
     m2.run("service irqbalance start")
 

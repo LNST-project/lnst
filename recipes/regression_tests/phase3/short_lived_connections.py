@@ -30,6 +30,7 @@ nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
+netdev_cpupin = ctl.get_alias("netdev_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
@@ -45,12 +46,12 @@ m2_testiface.set_mtu(mtu)
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")
 
     for m, d in [ (m1, m1_testiface), (m2, m2_testiface) ]:
-        pin_dev_irqs(m, d, 0)
+        pin_dev_irqs(m, d, netdev_cpupin)
 
 p_opts = "-L %s" % (m2_testiface.get_ip(0))
 
@@ -162,6 +163,6 @@ for size in ["1K,1K", "5K,5K", "7K,7K", "10K,10K", "12K,12K"]:
 
     srv_proc.intr()
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance start")
     m2.run("service irqbalance start")

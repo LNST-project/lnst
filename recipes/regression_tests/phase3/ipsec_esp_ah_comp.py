@@ -54,6 +54,7 @@ nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
+netdev_cpupin = ctl.get_alias("netdev_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
@@ -113,15 +114,15 @@ if (res.get_result()["res_data"]["stdout"].find("iproute-2") != -1):
 else:
     m2_key=""
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")
 
     dev_list = [(m1, m1_if), (m2, m2_if)]
 
-    # this will pin devices irqs to cpu #0
+    # this will pin devices irqs to cpu specified by netdev_cpupin alias
     for m, d in dev_list:
-        pin_dev_irqs(m, d, 0)
+        pin_dev_irqs(m, d, netdev_cpupin)
 
 nperf_opts = ""
 if nperf_cpupin and nperf_num_parallel == 1:
@@ -554,6 +555,6 @@ m1.run("ip xfrm state flush")
 m2.run("ip xfrm policy flush")
 m2.run("ip xfrm state flush")
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance start")
     m2.run("service irqbalance start")

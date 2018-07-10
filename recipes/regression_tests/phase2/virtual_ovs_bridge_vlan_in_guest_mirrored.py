@@ -35,6 +35,7 @@ netperf_duration = int(ctl.get_alias("netperf_duration"))
 nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
+netdev_cpupin = ctl.get_alias("netdev_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
@@ -67,12 +68,13 @@ h2_nic = h2.get_interface("nic")
 g1_guestnic = g1.get_interface("guestnic")
 g2_guestnic = g2.get_interface("guestnic")
 
-h1.run("service irqbalance stop")
-h2.run("service irqbalance stop")
+if netdev_cpupin:
+    # this will pin devices irqs to cpu specified by netdev_cpupin alias
+    h1.run("service irqbalance stop")
+    h2.run("service irqbalance stop")
 
-# this will pin devices irqs to cpu #0
-for m, d in [ (h1, h1_nic), (h2, h2_nic) ]:
-    pin_dev_irqs(m, d, 0)
+    for m, d in [ (h1, h1_nic), (h2, h2_nic) ]:
+        pin_dev_irqs(m, d, netdev_cpupin)
 
 ping_mod = ctl.get_module("IcmpPing",
                            options={
@@ -467,5 +469,6 @@ g1.run("ethtool -K %s %s" % (g1_guestnic.get_devname(), dev_features))
 h2.run("ethtool -K %s %s" % (h2_nic.get_devname(), dev_features))
 g2.run("ethtool -K %s %s" % (g2_guestnic.get_devname(), dev_features))
 
-h1.run("service irqbalance start")
-h2.run("service irqbalance start")
+if netdev_cpupin:
+    h1.run("service irqbalance start")
+    h2.run("service irqbalance start")

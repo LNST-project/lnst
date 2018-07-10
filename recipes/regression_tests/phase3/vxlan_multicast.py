@@ -35,6 +35,7 @@ nperf_reserve = int(ctl.get_alias("nperf_reserve"))
 nperf_confidence = ctl.get_alias("nperf_confidence")
 nperf_max_runs = int(ctl.get_alias("nperf_max_runs"))
 nperf_cpupin = ctl.get_alias("nperf_cpupin")
+netdev_cpupin = ctl.get_alias("netdev_cpupin")
 nperf_cpu_util = ctl.get_alias("nperf_cpu_util")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
@@ -53,7 +54,7 @@ test_if2.set_mtu(mtu)
 test_if3 = g1.get_interface("test_if")
 test_if3.set_mtu(mtu)
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")
 
@@ -61,9 +62,9 @@ if nperf_cpupin:
     m2_phy1 = m2.get_interface("eth1")
     dev_list = [(m1, m1_phy1), (m2, m2_phy1)]
 
-    # this will pin devices irqs to cpu #0
+    # this will pin devices irqs to cpu specified by netdev_cpupin alias
     for m, d in dev_list:
-        pin_dev_irqs(m, d, 0)
+        pin_dev_irqs(m, d, netdev_cpupin)
 
 nperf_opts = ""
 if nperf_cpupin and nperf_num_parallel == 1:
@@ -250,6 +251,6 @@ if ipv in [ 'ipv6', 'both' ]:
         result_udp.set_comment(pr_comment)
         perf_api.save_result(result_udp, official_result)
 
-if nperf_cpupin:
+if netdev_cpupin:
     m1.run("service irqbalance start")
     m2.run("service irqbalance start")
