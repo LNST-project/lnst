@@ -5,10 +5,9 @@ import signal
 import time
 import subprocess
 from lnst.Common.Parameters import IntParam, IpParam, StrParam, Param
-from lnst.Common.TestModule import BaseTestModule, TestModuleError
 from lnst.Common.ShellProcess import ShellProcess
 from lnst.Common.Utils import is_installed, std_deviation
-
+from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 class Netserver(BaseTestModule):
     bind = IpParam(mandatory=True)

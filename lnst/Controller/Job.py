@@ -14,7 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import logging
 import signal
 from lnst.Common.JobError import JobError
-from lnst.Common.TestModule import BaseTestModule
+from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Controller.RecipeResults import ResultLevel
 
 class Job(object):

@@ -18,11 +18,11 @@ import logging
 import copy
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
-from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Parameters import Parameters, DeviceParam
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Controller.Common import ControllerError
 from lnst.Devices.RemoteDevice import RemoteDevice
+from lnst.Tests.BaseTestModule import BaseTestModule
 
 def deviceref_to_remote_device(machine, obj):
     if isinstance(obj, DeviceRef):

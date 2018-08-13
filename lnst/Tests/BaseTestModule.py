@@ -10,12 +10,20 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import time
 import copy
+import signal
 from lnst.Common.Parameters import Parameters, Param
 from lnst.Common.LnstError import LnstError
 
+from lnst.Common.Logs import log_exc_traceback
+
 class TestModuleError(LnstError):
     """Exception used by BaseTestModule and derived classes"""
+    pass
+
+class InterruptException(TestModuleError):
+    """Exception used to handle SIGINT waiting"""
     pass
 
 class BaseTestModule(object):
@@ -78,6 +86,18 @@ class BaseTestModule(object):
 
     def run(self):
         raise NotImplementedError("Method 'run' MUST be defined")
+
+    def wait_for_interrupt(self):
+        def handler(signum, frame):
+            raise InterruptException()
+
+        try:
+            old_handler = signal.signal(signal.SIGINT, handler)
+            signal.pause()
+        except InterruptException:
+            pass
+        finally:
+            signal.signal(signal.SIGINT, old_handler)
 
     def _get_res_data(self):
         return self._res_data

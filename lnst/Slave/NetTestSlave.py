@@ -41,7 +41,6 @@ from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.LnstError import LnstError
 from lnst.Common.DeviceError import DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigValueError
-from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Parameters import Parameters, DeviceParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.Version import lnst_version
@@ -889,6 +888,11 @@ def device_to_deviceref(obj):
         return obj
 
 def deviceref_to_device(if_manager, obj):
+    try:
+        from lnst.Tests.BaseTestModule import BaseTestModule
+    except:
+        BaseTestModule = None
+
     if isinstance(obj, DeviceRef):
         dev = if_manager.get_device(obj.ifindex)
         return dev
@@ -911,7 +915,7 @@ def deviceref_to_device(if_manager, obj):
         for param_name, param in obj:
             setattr(obj, param_name, deviceref_to_device(if_manager, param))
         return obj
-    elif isinstance(obj, BaseTestModule):
+    elif BaseTestModule is not None and isinstance(obj, BaseTestModule):
         obj.params = deviceref_to_device(if_manager, obj.params)
         return obj
     else:

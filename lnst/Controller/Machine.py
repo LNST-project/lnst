@@ -17,7 +17,6 @@ import sys
 import signal
 from lnst.Common.Utils import sha256sum
 from lnst.Common.Utils import check_process_running
-from lnst.Common.TestModule import BaseTestModule
 from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
@@ -26,6 +25,7 @@ from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Devices.VirtualDevice import VirtualDevice
+from lnst.Tests.BaseTestModule import BaseTestModule
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):

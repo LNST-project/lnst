@@ -5,10 +5,10 @@ import signal
 import time
 import subprocess
 import json
-from lnst.Common.TestModule import BaseTestModule, TestModuleError
 from lnst.Common.Parameters import IntParam, IpParam, StrParam, Param, BoolParam
 from lnst.Common.Parameters import HostnameParam
 from lnst.Common.Utils import is_installed
+from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 class IperfBase(BaseTestModule):
     def run(self):
