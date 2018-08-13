@@ -469,6 +469,14 @@ class Device(object):
         """
         return self._nl_msg.get_attr("IFLA_STATS64")
 
+    @property
+    def bus_info(self):
+        try:
+            return ethtool.get_businfo(self.name)
+        except IOError as e:
+            log_exc_traceback()
+            return ""
+
     def _clear_ips(self):
         self._ip_addrs = []
 
