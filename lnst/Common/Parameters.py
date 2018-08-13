@@ -132,6 +132,9 @@ class Parameters(object):
         else:
             self._attrs[name] = val
 
+    def __delattr__(self, name):
+        del self._attrs[name]
+
     def __contains__(self, name):
         return name in self._attrs
 
