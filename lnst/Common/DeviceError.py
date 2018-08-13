@@ -27,5 +27,8 @@ class DeviceNotFound(DeviceError):
 class DeviceConfigError(DeviceError):
     pass
 
+class DeviceReadOnly(DeviceError):
+    pass
+
 class DeviceConfigValueError(DeviceConfigError):
     pass
