@@ -17,7 +17,6 @@ import signal
 import logging
 import multiprocessing
 from lnst.Common.JobError import JobError
-from lnst.Common.TestModule import TestModuleError
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.Logs import log_exc_traceback
@@ -257,7 +256,7 @@ class ModuleJob(GenericJob):
         try:
             self._result["passed"] = self._what["module"].run()
             self._result["res_data"] = self._what["module"]._get_res_data()
-        except TestModuleError as e:
+        except Exception as e:
             log_exc_traceback()
             self._result["passed"] = False
             self._result["type"] = "module_exception"
