@@ -62,6 +62,8 @@ class Device(object):
         self._nl_update = {}
         self._bulk_enabled = False
 
+        self._cleanup_data = None
+
     def _set_nl_attr(self, msg, value, name):
         msg[name] = value
 
@@ -178,7 +180,6 @@ class Device(object):
         self.ifindex = nl_msg['index']
 
         self._nl_msg = nl_msg
-        self._store_cleanup_data()
 
     def _update_netlink(self, nl_msg):
         if self.ifindex != nl_msg['index']:
@@ -255,22 +256,32 @@ class Device(object):
         for egress_pref in egress_prefs:
             exec_cmd("tc filter del dev %s pref %s" % (self.name, egress_pref))
 
-    def _store_cleanup_data(self):
+    def store_cleanup_data(self):
         """Stores initial configuration for later cleanup"""
-        self._orig_mtu = self.mtu
-        self._orig_name = self.name
-        self._orig_hwaddr = self.hwaddr
+        if self._cleanup_data:
+            logging.debug("Previous cleanup data present, possible deconfigration failure in the past?")
 
-    def _restore_original_data(self):
+        self._cleanup_data = {
+                "mtu": self.mtu,
+                "name": self.name,
+                "hwaddr": self.hwaddr}
+
+    def restore_original_data(self):
         """Restores initial configuration from stored values"""
-        if self.mtu != self._orig_mtu:
-            self.mtu = self._orig_mtu
+        if not self._cleanup_data:
+            logging.debug("No cleanup data present")
+            return
 
-        if self.name != self._orig_name:
-            self.name = self._orig_name
+        if self.mtu != self._cleanup_data["mtu"]:
+            self.mtu = self._cleanup_data["mtu"]
 
-        if self.hwaddr != self._orig_hwaddr:
-            self.hwaddr = self._orig_hwaddr
+        if self.name != self._cleanup_data["name"]:
+            self.name = self._cleanup_data["name"]
+
+        if self.hwaddr != self._cleanup_data["hwaddr"]:
+            self.hwaddr = self._cleanup_data["hwaddr"]
+
+        self._cleanup_data = None
 
     def _create(self):
         """Creates a new netdevice of the corresponding type
@@ -302,7 +313,7 @@ class Device(object):
         self.ip_flush()
         self._clear_tc_qdisc()
         self._clear_tc_filters()
-        self._restore_original_data()
+        self.restore_original_data()
 
     @property
     def link_header_type(self):

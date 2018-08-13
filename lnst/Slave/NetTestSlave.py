@@ -129,6 +129,12 @@ class SlaveMethods:
                 logging.warning("Usage of NM is disabled!")
             logging.warning("=============================================")
 
+        for device in self._if_manager.get_devices():
+            try:
+                device.store_cleanup_data()
+            except DeviceDisabled:
+                pass
+
         return True
 
     def bye(self):
