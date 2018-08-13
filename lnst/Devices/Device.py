@@ -182,6 +182,9 @@ class Device(object):
         self._nl_msg = nl_msg
 
     def _update_netlink(self, nl_msg):
+        if getattr(self, "_deleted"):
+            raise DeviceDeleted("Device was deleted.")
+
         if self.ifindex != nl_msg['index']:
             msg = "ifindex of netlink message (%s) doesn't match "\
                   "the device's (%s)." % (nl_msg['index'], self.ifindex)
