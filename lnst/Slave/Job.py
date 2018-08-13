@@ -48,7 +48,8 @@ class JobContext(object):
 
     def _kill_all_jobs(self):
         for id in self._dict:
-            self._dict[id].kill(sig=signal.SIGKILL)
+            if not self._dict[id]._finished:
+                self._dict[id].kill(sig=signal.SIGKILL)
 
     def cleanup(self):
         logging.debug("Cleaning up leftover processes.")
