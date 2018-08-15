@@ -23,7 +23,7 @@ def format_match_description(match):
         output.append("  Setup is using virtual machines.")
     for m_id, m in sorted(match["machines"].iteritems()):
         output.append("  host \"{}\" uses \"{}\"".format(m_id, m["target"]))
-        for if_id, match in m["interfaces"].iteritems():
+        for if_id, match in sorted(m["interfaces"].iteritems()):
             pool_id = match["target"]
             output.append("    interface \"{}\" matched to \"{}\"".
                           format(if_id, pool_id))
