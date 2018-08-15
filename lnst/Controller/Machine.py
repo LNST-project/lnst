@@ -295,11 +295,6 @@ class Machine(object):
             self.rpc_call("destroy_devices", netns=netns)
         self.rpc_call("destroy_devices")
 
-        for dev in self._device_database.values():
-            if isinstance(dev, VirtualDevice):
-                dev._destroy()
-        self._device_database = {}
-
     def cleanup(self):
         """ Clean the machine up
 

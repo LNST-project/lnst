@@ -183,10 +183,19 @@ class Controller(object):
             return
 
         for m_id, machine in self._machines.iteritems():
-            machine.cleanup()
-            #clean-up slave logger
-            self._log_ctl.remove_slave(m_id)
-            machine.set_mapped(False)
+            try:
+                machine.cleanup()
+            except:
+                #TODO report errors during deconfiguration as FAIL!!
+                log_exc_traceback()
+            finally:
+                for dev in machine._device_database.values():
+                    if isinstance(dev, VirtualDevice):
+                        dev._destroy()
+
+                #clean-up slave logger
+                self._log_ctl.remove_slave(m_id)
+                machine.set_mapped(False)
 
         self._machines.clear()
 
