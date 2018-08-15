@@ -262,12 +262,6 @@ class SlavePoolManager(object):
                     raise PoolManagerError(msg, iface)
 
                 machine_spec["interfaces"][if_id] = iface_spec
-        else:
-            if "libvirt_domain" not in machine_spec["params"]:
-                msg = "Machine '%s' has no testing interfaces. " \
-                      "This setup is supported only for virtual slaves." \
-                      % m_id
-                raise PoolManagerError(msg, machine_xml_data)
 
         machine_spec["security"] = machine_xml_data["security"]
 
