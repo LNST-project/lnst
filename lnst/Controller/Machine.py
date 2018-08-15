@@ -240,17 +240,12 @@ class Machine(object):
 
         self._slave_desc = slave_desc
 
-    def set_recipe(self, recipe):
-        """ Reserves the machine for the specified recipe
-
-        Also sends Device classes from the controller and initializes the
-        InterfaceManager on the Slave and builds the device database.
-        """
-        self._recipe = recipe
-        recipe_name = recipe.__class__.__name__
-        self.rpc_call("set_recipe", recipe_name)
+    def prepare_machine(self):
+        self.rpc_call("prepare_machine")
         self._send_device_classes()
         self.rpc_call("init_if_manager")
+
+        self._device_database = {}
 
         devices = self.rpc_call("get_devices")
         for ifindex, dev in devices.items():
@@ -260,6 +255,11 @@ class Machine(object):
             remote_dev.netns = self._initns
 
             self._device_database[ifindex] = remote_dev
+
+    def start_recipe(self, recipe):
+        self._recipe = recipe
+        recipe_name = recipe.__class__.__name__
+        self.rpc_call("start_recipe", recipe_name)
 
     def _send_device_classes(self):
         classes = []

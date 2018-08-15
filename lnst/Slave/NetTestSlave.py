@@ -108,13 +108,15 @@ class SlaveMethods:
 
         return ("hello", slave_desc)
 
-    def set_recipe(self, recipe_name):
+    def prepare_machine(self):
         self.machine_cleanup()
         self.restore_nm_option()
 
         self._cache.del_old_entries()
         self.reset_file_transfers()
+        return True
 
+    def start_recipe(self, recipe_name):
         date = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self._log_ctl.set_recipe(recipe_name, expand=date)
         sleep(1)

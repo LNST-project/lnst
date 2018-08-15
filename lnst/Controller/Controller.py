@@ -154,8 +154,8 @@ class Controller(object):
             host = getattr(self._hosts, m_id)
 
             machine.set_id(m_id)
-            self._prepare_machine(machine, recipe)
             machine.set_mapped(True)
+            self._prepare_machine(machine)
 
             for if_id, i in m["interfaces"].items():
                 host._map_device(if_id, i)
@@ -169,12 +169,14 @@ class Controller(object):
                     setattr(host, name, new_virt_dev)
                     new_virt_dev._enable()
 
-    def _prepare_machine(self, machine, recipe):
+            machine.start_recipe(recipe)
+
+    def _prepare_machine(self, machine):
         self._log_ctl.add_slave(machine.get_id())
         machine.set_mac_pool(self._mac_pool)
         machine.set_network_bridges(self._network_bridges)
 
-        machine.set_recipe(recipe)
+        machine.prepare_machine()
 
     def _cleanup_slaves(self):
         if self._machines == None:
