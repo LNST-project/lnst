@@ -21,6 +21,7 @@ from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
+from lnst.Controller.SlaveObject import SlaveObject
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
@@ -505,6 +506,13 @@ class Machine(object):
             self.rpc_call("add_resource_to_cache",
                            "file", remote_path, res_name)
         return digest
+
+    def init_remote_class(self, cls, *args, **kwargs):
+        module_name = cls.__module__
+        cls_name = cls.__name__
+        obj_ref = self.rpc_call("init_cls", cls_name, module_name, args, kwargs)
+
+        return SlaveObject(self, cls, obj_ref)
 
     # def enable_nm(self):
         # return self._rpc_call("enable_nm")

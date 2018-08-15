@@ -76,3 +76,8 @@ class Host(Namespace):
                 return False
         else:
             return True
+
+    def init_class(self, cls, *args, **kwargs):
+        self._machine.send_class(cls)
+
+        return self._machine.init_remote_class(cls, *args, **kwargs)
