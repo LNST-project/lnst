@@ -24,8 +24,6 @@ from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
-from lnst.Devices.VirtualDevice import VirtualDevice
-from lnst.Tests.BaseTestModule import BaseTestModule
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
@@ -262,14 +260,23 @@ class Machine(object):
         self.rpc_call("start_recipe", recipe_name)
 
     def _send_device_classes(self):
-        classes = []
         for cls_name, cls in device_classes:
-            classes.extend(reversed(self._get_base_classes(cls)))
+            self.send_class(cls)
 
-        for cls in classes:
-            if cls is object:
-                continue
+        for cls_name, cls in device_classes:
             module_name = cls.__module__
+            self.rpc_call("map_device_class", cls_name, module_name)
+
+    def send_class(self, cls):
+        classes = [cls]
+        classes.extend(self._get_base_classes(cls))
+
+        for cls in reversed(classes):
+            module_name = cls.__module__
+
+            if module_name == "__builtin__":
+                continue
+
             module = sys.modules[module_name]
             filename = module.__file__
 
@@ -278,10 +285,6 @@ class Machine(object):
 
             res_hash = self.sync_resource(module_name, filename)
             self.rpc_call("load_cached_module", module_name, res_hash)
-
-        for cls_name, cls in device_classes:
-            module_name = cls.__module__
-            self.rpc_call("map_device_class", cls_name, module_name)
 
     def is_git_version(self, version):
         try:
@@ -342,21 +345,7 @@ class Machine(object):
         self._jobs[job.id] = job
 
         if job._type == "module":
-            classes = [job._what]
-            classes.extend(self._get_base_classes(job._what.__class__))
-
-            for cls in reversed(classes):
-                if cls is object or cls is BaseTestModule:
-                    continue
-                m_name = cls.__module__
-                m = sys.modules[m_name]
-                filename = m.__file__
-                if filename[-3:] == "pyc":
-                    filename = filename[:-1]
-
-                res_hash = self.sync_resource(m_name, filename)
-
-                self.rpc_call("load_cached_module", m_name, res_hash)
+            self.send_class(job._what.__class__)
 
         logging.info("Host %s executing job %d: %s" %
                      (self._id, job.id, str(job)))
