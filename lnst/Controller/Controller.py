@@ -155,6 +155,7 @@ class Controller(object):
 
             machine.set_id(m_id)
             self._prepare_machine(machine, recipe)
+            machine.set_mapped(True)
 
             for if_id, i in m["interfaces"].items():
                 host._map_device(if_id, i)
@@ -183,6 +184,7 @@ class Controller(object):
             machine.cleanup()
             #clean-up slave logger
             self._log_ctl.remove_slave(m_id)
+            machine.set_mapped(False)
 
         self._machines.clear()
 

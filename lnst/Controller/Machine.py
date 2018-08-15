@@ -49,6 +49,7 @@ class Machine(object):
                  libvirt_domain=None, rpcport=None, security=None):
         self._id = m_id
         self._hostname = hostname
+        self._mapped = False
         self._ctl_config = ctl_config
         self._slave_desc = None
         self._connection = None
@@ -96,6 +97,12 @@ class Machine(object):
 
     def get_id(self):
         return self._id
+
+    def set_mapped(self, new_value):
+        self._mapped = new_value
+
+    def get_mapped(self):
+        return self._mapped
 
     def get_configuration(self):
         configuration = {}
