@@ -63,6 +63,11 @@ Tests.__path__ = ["lnst.Tests"]
 
 sys.modules["lnst.Tests"] = Tests
 
+RecipeCommon = types.ModuleType("RecipeCommon")
+RecipeCommon.__path__ = ["lnst.RecipeCommon"]
+
+sys.modules["lnst.RecipeCommon"] = RecipeCommon
+
 class SlaveMethods:
     '''
     Exported xmlrpc methods
