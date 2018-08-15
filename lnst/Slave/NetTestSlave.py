@@ -93,6 +93,7 @@ class SlaveMethods:
 
         self._dynamic_modules = {}
         self._dynamic_classes = {}
+        self._dynamic_objects = {}
 
         self._bkp_nm_opt_val = slave_config.get_option("environment", "use_nm")
 
@@ -169,6 +170,16 @@ class SlaveMethods:
         module = imp.load_source(module_name, module_path)
         self._dynamic_modules[module_name] = module
 
+    def init_cls(self, cls_name, module_name, args, kwargs):
+        module = self._dynamic_modules[module_name]
+        cls = getattr(module, cls_name)
+
+        self._dynamic_classes["{}.{}".format(module_name, cls_name)] = cls
+
+        new_obj = cls(*args, **kwargs)
+        self._dynamic_objects[id(new_obj)] = new_obj
+        return id(new_obj)
+
     def init_if_manager(self):
         self._if_manager = InterfaceManager(self._server_handler)
         for cls_name in dir(Devices):
@@ -179,6 +190,37 @@ class SlaveMethods:
         self._if_manager.rescan_devices()
         self._server_handler.set_if_manager(self._if_manager)
         return True
+
+    def obj_method(self, obj_ref, name, args, kwargs):
+        try:
+            obj = self._dynamic_objects[obj_ref]
+            method = getattr(obj, name)
+            return method(*args, **kwargs)
+        except LnstError:
+            raise
+        except Exception as exc:
+            log_exc_traceback()
+            raise LnstError(exc)
+
+    def obj_getattr(self, obj_ref, name):
+        try:
+            obj = self._dynamic_objects[obj_ref]
+            return getattr(obj, name)
+        except LnstError:
+            raise
+        except Exception as exc:
+            log_exc_traceback()
+            raise LnstError(exc)
+
+    def obj_setattr(self, obj_ref, name, value):
+        try:
+            obj = self._dynamic_objects[obj_ref]
+            return setattr(obj, name, value)
+        except LnstError:
+            raise
+        except Exception as exc:
+            log_exc_traceback()
+            raise LnstError(exc)
 
     def dev_method(self, ifindex, name, args, kwargs):
         dev = self._if_manager.get_device(ifindex)
@@ -403,12 +445,18 @@ class SlaveMethods:
             self.del_namespace(netns)
         self._net_namespaces = {}
 
-        for cls_name, cls in self._dynamic_classes.items():
-            delattr(Devices, cls_name)
+        for obj_id, obj in self._dynamic_objects.items():
+            del obj
+
+        for cls_name in dir(Devices):
+            cls = getattr(Devices, cls_name)
+            if isclass(cls):
+                delattr(Devices, cls_name)
 
         for module_name, module in self._dynamic_modules.items():
             del sys.modules[module_name]
 
+        self._dynamic_objects = {}
         self._dynamic_classes = {}
         self._dynamic_modules = {}
         self._if_manager = None
