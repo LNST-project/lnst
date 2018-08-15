@@ -16,6 +16,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import logging
 import copy
+import signal
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
 from lnst.Common.Parameters import Parameters, DeviceParam
@@ -81,6 +82,13 @@ def remote_device_to_deviceref(obj):
 class ConnectionError(ControllerError):
     pass
 
+class WaitTimeoutError(ControllerError):
+    pass
+
+def _timeout_handler(signum, frame):
+    msg = "Timeout expired"
+    raise WaitTimeoutError(msg)
+
 class MessageDispatcher(ConnectionHandler):
     def __init__(self, log_ctl):
         super(MessageDispatcher, self).__init__()
@@ -104,9 +112,6 @@ class MessageDispatcher(ConnectionHandler):
             connected_slaves = self._connection_mapping.keys()
 
             messages = self.check_connections()
-
-            remaining_slaves = self._connection_mapping.keys()
-
             for msg in messages:
                 if msg[1]["type"] == "result" and msg[0] == machine:
                     if result is not None:
@@ -117,61 +122,69 @@ class MessageDispatcher(ConnectionHandler):
                 else:
                     self._process_message(msg)
 
+            remaining_slaves = self._connection_mapping.keys()
             if connected_slaves != remaining_slaves:
-                disconnected_slaves = set(connected_slaves) -\
-                                      set(remaining_slaves)
-                msg = "Slaves " + str(list(disconnected_slaves)) + \
-                      " disconnected from the controller."
-                raise ConnectionError(msg)
+                self._handle_disconnects(set(connected_slaves)-
+                                         set(remaining_slaves))
 
             if result is not None:
                 return deviceref_to_remote_device(machine, result["result"])
 
-    def wait_for_job_finish(self, job):
-        def condition_check():
-            return job.finished
-        self.wait_for_condition(condition_check)
-        return True
+    def wait_for_condition(self, condition_check, timeout=0):
+        res = True
+        prev_handler = signal.signal(signal.SIGALRM, _timeout_handler)
 
-    def wait_for_condition(self, condition_check):
-        wait = True
-        while wait:
-            connected_slaves = self._connection_mapping.keys()
+        def condition_wrapper():
+            res = condition_check()
+            if res:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, prev_handler)
+                logging.debug("Condition passed, disabling timeout alarm")
+            return res
 
-            messages = self.check_connections(timeout=1)
+        try:
+            signal.alarm(timeout)
 
-            remaining_slaves = self._connection_mapping.keys()
+            wait = True
+            while wait:
+                connected_slaves = self._connection_mapping.keys()
+                messages = self.check_connections(timeout=1)
+                for msg in messages:
+                    try:
+                        self._process_message(msg)
+                        wait = wait and not condition_wrapper()
+                    except WaitTimeoutError as exc:
+                        logging.error("Waiting for condition timed out!")
+                        res = False
+                        wait = False
 
-            for msg in messages:
-                self._process_message(msg)
-                wait = wait and not condition_check()
+                wait = wait and not condition_wrapper()
 
-            wait = wait and not condition_check()
+                remaining_slaves = self._connection_mapping.keys()
+                if connected_slaves != remaining_slaves:
+                    self._handle_disconnects(set(connected_slaves)-
+                                             set(remaining_slaves))
+        except WaitTimeoutError as exc:
+            logging.error("Waiting for condition timed out!")
+            res = False
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, prev_handler)
 
-            if connected_slaves != remaining_slaves:
-                disconnected_slaves = set(connected_slaves) -\
-                                      set(remaining_slaves)
-                msg = "Slaves " + str(list(disconnected_slaves)) + \
-                      " disconnected from the controller."
-                raise ConnectionError(msg)
-        return True
+        return res
 
     def handle_messages(self):
         connected_slaves = self._connection_mapping.keys()
 
         messages = self.check_connections()
 
-        remaining_slaves = self._connection_mapping.keys()
-
         for msg in messages:
             self._process_message(msg)
 
+        remaining_slaves = self._connection_mapping.keys()
         if connected_slaves != remaining_slaves:
-            disconnected_slaves = set(connected_slaves) -\
-                                  set(remaining_slaves)
-            msg = "Slaves " + str(list(disconnected_slaves)) + \
-                  " disconnected from the controller."
-            raise ConnectionError(msg)
+            self._handle_disconnects(set(connected_slaves)-
+                                     set(remaining_slaves))
         return True
 
     def _process_message(self, message):
@@ -194,6 +207,21 @@ class MessageDispatcher(ConnectionHandler):
             machine.job_finished(message[1])
         else:
             msg = "Unknown message type: %s" % message[1]["type"]
+            raise ConnectionError(msg)
+
+    def _handle_disconnects(self, disconnected_slaves):
+        disconnected_slaves = set(disconnected_slaves)
+        for slave in list(disconnected_slaves):
+            if not slave.get_mapped():
+                logging.warn("Slave {} soft-disconnected from the "
+                             "controller.".format(slave.get_id()))
+                disconnected_slaves.remove(slave)
+
+        if len(disconnected_slaves) > 0:
+            disconnected_names = [x.get_id()
+                    for x in disconnected_slaves]
+            msg = "Slaves " + str(list(disconnected_names)) + \
+                  " hard-disconnected from the controller."
             raise ConnectionError(msg)
 
     def disconnect_slave(self, machine):

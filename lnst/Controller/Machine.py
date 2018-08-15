@@ -330,10 +330,6 @@ class Machine(object):
             self.cleanup_devices()
             raise
 
-    def _timeout_handler(self, signum, frame):
-        msg = "Timeout expired on machine %s" % self.get_id()
-        raise MachineError(msg)
-
     def _get_base_classes(self, cls):
         new_bases = [cls] + list(cls.__bases__)
         bases = []
@@ -379,59 +375,34 @@ class Machine(object):
         return res
 
     def wait_for_job(self, job, timeout):
-        res = True
         if job.id not in self._jobs:
             raise MachineError("No job '%s' running on Machine %s" %
                                (job.id, self._id))
 
-        prev_handler = signal.signal(signal.SIGALRM, self._timeout_handler)
-        signal.alarm(timeout)
+        if timeout > 0:
+            logging.info("Waiting for Job %d on Host %s for %d seconds." %
+                         (job.id, self._id, timeout))
+        elif timeout == 0:
+            logging.info("Waiting for Job %d on Host %s." %
+                         (job.id, self._id))
 
-        try:
-            if timeout > 0:
-                logging.info("Waiting for Job %d on Host %s for %d seconds." %
-                             (job.id, self._id, timeout))
-            elif timeout == 0:
-                logging.info("Waiting for Job %d on Host %s." %
-                             (job.id, self._id))
+        def condition():
+            return job.finished
 
-            def condition():
-                return job.finished
-
-            self._msg_dispatcher.wait_for_condition(condition)
-        except MachineError as exc:
-            logging.error(str(exc))
-            res = False
-
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, prev_handler)
-
-        return res
+        return self._msg_dispatcher.wait_for_condition(condition, timeout)
 
     def wait_for_tmp_devices(self, timeout):
-        res = False
-        prev_handler = signal.signal(signal.SIGALRM, self._timeout_handler)
-        signal.alarm(timeout)
+        if timeout > 0:
+            logging.info("Waiting for Device creation Host %s for %d seconds." %
+                         (self._id, timeout))
+        elif timeout == 0:
+            logging.info("Waiting for Device creation on Host %s." %
+                         (self._id))
 
-        try:
-            if timeout > 0:
-                logging.info("Waiting for Device creation Host %s for %d seconds." %
-                             (self._id, timeout))
-            elif timeout == 0:
-                logging.info("Waiting for Device creation on Host %s." %
-                             (self._id))
+        def condition():
+            return len(self._tmp_device_database) <= 0
 
-            def condition():
-                return len(self._tmp_device_database) <= 0
-
-            self._msg_dispatcher.wait_for_condition(condition)
-        except MachineError as exc:
-            logging.error(str(exc))
-            res = False
-
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, prev_handler)
-        return res
+        return self._msg_dispatcher.wait_for_condition(condition, timeout)
 
     def job_finished(self, msg):
         job_id = msg["job_id"]
