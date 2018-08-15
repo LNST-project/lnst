@@ -87,8 +87,6 @@ class Machine(object):
 
         self._initns = None
 
-        self._init_connection()
-
     def set_id(self, new_id):
         self._id = new_id
 
@@ -201,7 +199,7 @@ class Machine(object):
 
         return self._msg_dispatcher.send_message(self, msg)
 
-    def _init_connection(self):
+    def init_connection(self, timeout=None):
         """ Initialize the slave connection
 
         This will connect to the Slave, get it's description (should be
@@ -212,7 +210,8 @@ class Machine(object):
         m_id = self._id
 
         logging.info("Connecting to RPC on machine %s (%s)", m_id, hostname)
-        connection = CtlSecSocket(socket.create_connection((hostname, port)))
+        connection = CtlSecSocket(socket.create_connection((hostname, port),
+                                                           timeout))
         connection.handshake(self._security)
 
         self._msg_dispatcher.add_slave(self, connection)
