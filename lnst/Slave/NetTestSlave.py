@@ -152,7 +152,7 @@ class SlaveMethods:
         module = self._dynamic_modules[module_name]
         cls = getattr(module, cls_name)
 
-        self._dynamic_classes[cls_name] = cls
+        self._dynamic_classes["{}.{}".format(module_name, cls_name)] = cls
 
         setattr(Devices, cls_name, cls)
 
