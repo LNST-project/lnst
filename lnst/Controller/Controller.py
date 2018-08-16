@@ -30,6 +30,7 @@ from lnst.Controller.MachineMapper import MachineMapper
 from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Host import Hosts, Host
 from lnst.Controller.Recipe import BaseRecipe, RecipeRun
+from lnst.Controller.RecipeControl import RecipeControl
 
 class Controller(object):
     """The LNST Controller class
@@ -106,7 +107,8 @@ class Controller(object):
         if not isinstance(recipe, BaseRecipe):
             raise ControllerError("recipe argument must be a BaseRecipe instance.")
 
-        recipe._set_ctl(self)
+        recipe_ctl = RecipeControl(self, recipe)
+        recipe._set_ctl(recipe_ctl)
 
         req = recipe.req
 
@@ -132,16 +134,6 @@ class Controller(object):
             finally:
                 self._cleanup_slaves()
 
-    def wait(self, sec):
-        finish_time = time.time() + sec
-        logging.info("Suspending recipe execution for {} seconds, "
-                     "messages from slaves will still be processed.".
-                     format(sec))
-
-        def condition():
-            return time.time() > finish_time
-
-        self._msg_dispatcher.wait_for_condition(condition)
 
     def _map_match(self, match, requested, recipe):
         self._machines = {}

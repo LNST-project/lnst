@@ -118,7 +118,7 @@ class BaseRecipe(object):
     def matched(self):
         if self.ctl is None:
             return None
-        return self.ctl._hosts
+        return self.ctl.hosts
 
     def test(self):
         """Method to be implemented by the Tester"""
