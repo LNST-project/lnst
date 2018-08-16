@@ -20,13 +20,45 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import copy
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import Parameters
+from lnst.Common.Parameters import Parameters, Param
 
 class RequirementError(LnstError):
     pass
 
-class HostReq(object):
+class RecipeParam(Param):
+    def __init__(self, name, mandatory=False, **kwargs):
+        self.name = name
+        super(RecipeParam, self).__init__(mandatory, **kwargs)
+
+class BaseReq(object):
+    def __init__(self, **kwargs):
+        self.params = Parameters()
+        for name, val in kwargs.items():
+            if name == "params":
+                raise RequirementError("'params' is a reserved keyword.")
+            setattr(self.params, name, val)
+
+    def reinit_with_params(self, recipe_params):
+        for name, val in self.params:
+            if isinstance(val, RecipeParam):
+                if val.name in recipe_params:
+                    new_val = getattr(recipe_params, val.name)
+                    setattr(self.params, name, new_val)
+                else:
+                    try:
+                        new_val = copy.deepcopy(val.default)
+                        setattr(self.params, name, new_val)
+                    except AttributeError:
+                        if val.mandatory:
+                            raise RequirementError(
+                                    "Recipe parameter {} is mandatory for Recipe Requirements parameter {}"
+                                    .format(val.name, name))
+                        else:
+                            delattr(self.params, name)
+
+class HostReq(BaseReq):
     """Specifies a Slave machine requirement
 
     To define a Host requirement you assign a HostReq instance to a class
@@ -41,12 +73,11 @@ class HostReq(object):
             which can define their parameter values based on the implementation
             of the SlaveMachineParser
     """
-    def __init__(self, **kwargs):
-        self.params = Parameters()
-        for name, val in kwargs.items():
-            if name == "params":
-                raise RequirementError("'params' is a reserved keyword.")
-            setattr(self.params, name, val)
+    def reinit_with_params(self, recipe_params):
+        super(HostReq, self).reinit_with_params(recipe_params)
+
+        for name, dev_req in self:
+            dev_req.reinit_with_params(recipe_params)
 
     def __iter__(self):
         for x in dir(self):
@@ -61,7 +92,7 @@ class HostReq(object):
         res['params'] = self.params._to_dict()
         return res
 
-class DeviceReq(object):
+class DeviceReq(BaseReq):
     """Specifies an Ethernet Device requirement
 
     To define a Device requirement you assign a DeviceReq instance to a HostReq
@@ -80,11 +111,7 @@ class DeviceReq(object):
     """
     def __init__(self, label, **kwargs):
         self.label = label
-        self.params = Parameters()
-        for name, val in kwargs.items():
-            if name == "params":
-                raise RequirementError("'params' is a reserved keyword.")
-            setattr(self.params, name, val)
+        super(DeviceReq, self).__init__(**kwargs)
 
     def _to_dict(self):
         res = {'network': self.label,

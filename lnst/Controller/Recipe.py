@@ -87,9 +87,7 @@ class BaseRecipe(object):
         self.params = Parameters()
         for attr in dir(self):
             val = getattr(self, attr)
-            if isinstance(val, HostReq):
-                setattr(self.req, attr, copy.deepcopy(val))
-            elif isinstance(val, Param):
+            if isinstance(val, Param):
                 if attr in kwargs:
                     param_val = kwargs.pop(attr)
                     param_val = val.type_check(param_val)
@@ -102,6 +100,13 @@ class BaseRecipe(object):
                         if val.mandatory:
                             raise RecipeError("Parameter {} is mandatory"
                                               .format(attr))
+
+        for attr in dir(self):
+            val = getattr(self, attr)
+            if isinstance(val, HostReq):
+                new_val = copy.deepcopy(val)
+                new_val.reinit_with_params(self.params)
+                setattr(self.req, attr, new_val)
 
         if len(kwargs):
             for key in kwargs.keys():
