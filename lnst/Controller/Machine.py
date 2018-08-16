@@ -55,7 +55,7 @@ class Machine(object):
         self._system_config = {}
         self._security = security
         self._security["identity"] = ctl_config.get_option("security",
-                                                            "identity")
+                                                           "identity")
         self._security["privkey"] = ctl_config.get_option("security",
                                                            "privkey")
 
@@ -166,14 +166,14 @@ class Machine(object):
 
     def dev_db_get_name(self, dev_name):
         #TODO move these to Slave to optimize quering for each device
-        for ifindex, dev in self._device_database.iteritems():
+        for dev in self._device_database.values():
             if dev.get_name() == dev_name:
                 return dev
         return None
 
     def get_dev_by_hwaddr(self, hwaddr):
         #TODO move these to Slave to optimize quering for each device
-        for ifindex, dev in self._device_database.iteritems():
+        for dev in self._device_database.values():
             if dev.hwaddr == hwaddr:
                 return dev
         return None
