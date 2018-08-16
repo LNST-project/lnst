@@ -150,7 +150,7 @@ class Controller(object):
             self._prepare_machine(machine)
 
             for if_id, i in m["interfaces"].items():
-                host._map_device(if_id, i)
+                host.map_device(if_id, i)
 
             if match["virtual"]:
                 req_host = getattr(requested, m_id)

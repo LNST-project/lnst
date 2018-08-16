@@ -55,7 +55,8 @@ class Host(Namespace):
                 ret.append(x)
         return ret
 
-    def _map_device(self, dev_id, how):
+    def map_device(self, dev_id, how):
+        #TODO if this is supposed to be public it should be better than dict["hwaddr"]!!!!
         hwaddr = how["hwaddr"]
         dev = self._machine.get_dev_by_hwaddr(hwaddr)
         if dev:
