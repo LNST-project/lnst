@@ -56,9 +56,17 @@ class RunSummaryFormatter(object):
                         output.extend(nest_res)
             elif isinstance(data, list):
                 for i, v in enumerate(data):
-                    output.append("{pref}item {i}:".format(pref=level*prefix,
-                                                           i=i))
-                    output.extend(self._format_data(v, level=level+1))
+                    formatted_v = self._format_data(v, level=level+1)
+
+                    if len(formatted_v) == 1:
+                        output.append("{pref}item {i}: {value}".format(
+                            pref=level*prefix,
+                            i=i,
+                            value=formatted_v[0].lstrip()))
+                    else:
+                        output.append("{pref}item {i}:".format(
+                            pref=level*prefix, i=i))
+                        output.extend(formatted_v)
             else:
                 for line in str(data).split('\n'):
                     output.append("{pref}{val}".format(pref=level*prefix,
