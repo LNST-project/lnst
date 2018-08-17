@@ -22,7 +22,7 @@ import re
 import gzip
 import os
 from time import gmtime, strftime
-from distutils.core import setup
+from setuptools import setup, find_packages
 from lnst.Common.Version import lnst_version
 
 def process_template(template_path, values):
@@ -104,8 +104,6 @@ For detailed description of the architecture of LNST please refer to
 project website <https://fedorahosted.org/lnst>.
 """
 
-PACKAGES = ["lnst", "lnst.Common", "lnst.Controller", "lnst.Slave",
-            "lnst.RecipeCommon", "lnst.Recipes", "lnst.Devices", "lnst.Tests" ]
 SCRIPTS = ["lnst-ctl", "lnst-slave", "lnst-pool-wizard"]
 
 RECIPE_FILES = []
@@ -192,6 +190,6 @@ setup(name="lnst",
     long_description=LONG_DESC,
     platforms=["linux"],
     license=["GNU GPLv2"],
-    packages=PACKAGES,
+    packages=find_packages(),
     scripts=SCRIPTS,
     data_files=DATA_FILES)
