@@ -8,7 +8,7 @@ class PerfStatMixin(object):
 
     @property
     def std_deviation(self):
-        return std_deviation([i.value for i in self])
+        return std_deviation([i.average for i in self])
 
 class PerfInterval(PerfStatMixin):
     def __init__(self, value, duration, unit):
