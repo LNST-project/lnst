@@ -165,9 +165,9 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
             server_bind = server_nic.ips_filter(family=family)[0]
 
             yield PingConf(client = client_netns,
-                            client_bind = client_bind,
-                            destination = server_netns,
-                            destination_address = server_bind)
+                           client_bind = client_bind,
+                           destination = server_netns,
+                           destination_address = server_bind)
 
     def generate_perf_configurations(self, main_config, sub_config):
         client_nic = main_config.endpoint1
