@@ -13,7 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 from copy import deepcopy
 from lnst.Devices.Device import Device
-from lnst.Common.DeviceError import DeviceDeleted
+from lnst.Common.DeviceError import DeviceDeleted, DeviceReadOnly
 
 def remotedev_decorator(cls):
     def func(*args, **kwargs):
@@ -36,6 +36,10 @@ class RemoteDevice(object):
         self._machine = None
         self.ifindex = None
         self.deleted = False
+
+        self._cache = {}
+        self._cached = False
+
         self._inited = True
 
     def __deepcopy__(self, memo):
@@ -48,6 +52,20 @@ class RemoteDevice(object):
         newone.deleted = deepcopy(self.deleted, memo)
         newone._inited = deepcopy(self._inited, memo)
         return newone
+
+    def enable_readonly_cache(self):
+        self._cache = {}
+        for name, val in self:
+            self._cache[name] = val
+        self._cached = True
+
+    def disable_readonly_cache(self):
+        self._cache = {}
+        self._cached = False
+
+    def update_readonly_cache(self):
+        self.disable_readonly_cache()
+        self.enable_readonly_cache()
 
     @property
     def _dev_cls(self):
@@ -85,16 +103,22 @@ class RemoteDevice(object):
 
         attr = getattr(self._dev_cls, name)
 
-        if self.deleted:
+        if self.deleted and not self._cached:
             raise DeviceDeleted("This device was deleted on the slave and does not exist anymore.")
 
         if callable(attr):
+            if self._cached:
+                raise DeviceReadOnly("Can't call methods when in ReadOnly cache mode.")
+
             def dev_method(*args, **kwargs):
                 return self._machine.rpc_call("dev_method", self.ifindex,
                                               name, args, kwargs,
                                               netns=self.netns)
             return dev_method
         else:
+            if self._cached:
+                return self._cache[name]
+
             return self._machine.rpc_call("dev_attr", self.ifindex, name,
                                           netns=self.netns)
 
@@ -104,6 +128,10 @@ class RemoteDevice(object):
 
         try:
             getattr(self._dev_cls, name)
+
+            if self._cached:
+                raise DeviceReadOnly("Can't set attributes when in ReadOnly cache mode.")
+
             return self._machine.rpc_call("dev_set_attr", self.ifindex, name, value,
                                           netns=self.netns)
         except AttributeError:
