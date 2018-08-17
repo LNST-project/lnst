@@ -244,6 +244,7 @@ class InterfaceManager(object):
         except KeyError as e:
             raise DeviceConfigError("%s is a mandatory argument" % e)
         device._create()
+        device._bulk_enabled = False
 
         devs = scan_netdevs()
         for dev in devs:
