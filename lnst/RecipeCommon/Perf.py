@@ -4,17 +4,17 @@ from lnst.RecipeCommon.PerfResult import MultiRunPerf
 class PerfConf(object):
     def __init__(self,
                  perf_tool,
-                 client, client_bind,
-                 server, server_bind,
                  test_type,
+                 generator, generator_bind,
+                 receiver, receiver_bind,
                  msg_size, duration, iterations, streams):
         self._perf_tool = perf_tool
-        self._client = client
-        self._client_bind = client_bind
-        self._server = server
-        self._server_bind = server_bind
-
         self._test_type = test_type
+
+        self._generator = generator
+        self._generator_bind = generator_bind
+        self._receiver = receiver
+        self._receiver_bind = receiver_bind
 
         self._msg_size = msg_size
         self._duration = duration
@@ -26,20 +26,20 @@ class PerfConf(object):
         return self._perf_tool
 
     @property
-    def client(self):
-        return self._client
+    def generator(self):
+        return self._generator
 
     @property
-    def client_bind(self):
-        return self._client_bind
+    def generator_bind(self):
+        return self._generator_bind
 
     @property
-    def server(self):
-        return self._server
+    def receiver(self):
+        return self._receiver
 
     @property
-    def server_bind(self):
-        return self._server_bind
+    def receiver_bind(self):
+        return self._receiver_bind
 
     @property
     def test_type(self):
@@ -68,15 +68,17 @@ class PerfMeasurementTool(object):
 
 class PerfTestAndEvaluate(BaseRecipe):
     def perf_test(self, perf_conf):
-        client_measurements = MultiRunPerf()
-        server_measurements = MultiRunPerf()
+        generator_measurements = MultiRunPerf()
+        receiver_measurements = MultiRunPerf()
         for i in range(perf_conf.iterations):
-            client, server = perf_conf.perf_tool.perf_measure(perf_conf)
+            tx, rx = perf_conf.perf_tool.perf_measure(perf_conf)
 
-            client_measurements.append(client)
-            server_measurements.append(server)
+            if tx:
+                generator_measurements.append(tx)
+            if rx:
+                receiver_measurements.append(rx)
 
-        return client_measurements, server_measurements
+        return generator_measurements, receiver_measurements
 
     def perf_evaluate_and_report(self, perf_conf, results, baseline):
         self.perf_evaluate(perf_conf, results, baseline)
@@ -84,31 +86,35 @@ class PerfTestAndEvaluate(BaseRecipe):
         self.perf_report(perf_conf, results, baseline)
 
     def perf_evaluate(self, perf_conf, results, baseline):
-        client, server = results
+        generator, receiver = results
 
-        if client.average > 0:
-            self.add_result(True, "Client reported non-zero throughput")
+        if generator.average > 0:
+            self.add_result(True, "Generator reported non-zero throughput")
         else:
-            self.add_result(False, "Client reported zero throughput")
+            self.add_result(False, "Generator reported zero throughput")
 
-        if server.average > 0:
-            self.add_result(True, "Server reported non-zero throughput")
+        if receiver.average > 0:
+            self.add_result(True, "Receiver reported non-zero throughput")
         else:
-            self.add_result(False, "Server reported zero throughput")
+            self.add_result(False, "Receiver reported zero throughput")
 
 
     def perf_report(self, perf_conf, results, baseline):
-        client, server = results
+        generator, receiver = results
 
-        self.add_result(True,
-                        "Client measured throughput: {tput} +-{deviation} {unit} per second"
-                            .format(tput=client.average,
-                                    deviation=client.std_deviation,
-                                    unit=client.unit),
-                        data = client)
-        self.add_result(True,
-                        "Server measured throughput: {tput} +-{deviation} {unit} per second"
-                            .format(tput=server.average,
-                                    deviation=server.std_deviation,
-                                    unit=server.unit),
-                        data = server)
+        self.add_result(
+                True,
+                "Generator measured throughput: {tput} +-{deviation}({percentage:.2}%) {unit} per second"
+                .format(tput=generator.average,
+                        deviation=generator.std_deviation,
+                        percentage=(generator.std_deviation/generator.average) * 100,
+                        unit=generator.unit),
+                data = generator)
+        self.add_result(
+                True,
+                "Receiver measured throughput: {tput} +-{deviation}({percentage:.2}%) {unit} per second"
+                .format(tput=receiver.average,
+                        deviation=receiver.std_deviation,
+                        percentage=(receiver.std_deviation/receiver.average) * 100,
+                        unit=receiver.unit),
+                data = receiver)

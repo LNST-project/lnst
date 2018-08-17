@@ -186,11 +186,11 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
 
             for perf_test in self.params.perf_tests:
                 yield PerfConf(perf_tool = self.params.perf_tool,
-                               client = client_netns,
-                               client_bind = client_bind,
-                               server = server_netns,
-                               server_bind = server_bind,
                                test_type = perf_test,
+                               generator = client_netns,
+                               generator_bind = client_bind,
+                               receiver = server_netns,
+                               receiver_bind = server_bind,
                                msg_size = self.params.perf_msg_size,
                                duration = self.params.perf_duration,
                                iterations = self.params.perf_iterations,
