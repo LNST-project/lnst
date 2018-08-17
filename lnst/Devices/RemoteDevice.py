@@ -119,7 +119,7 @@ class RemoteDevice(object):
             if self._cached:
                 return self._cache[name]
 
-            return self._machine.rpc_call("dev_attr", self.ifindex, name,
+            return self._machine.rpc_call("dev_getattr", self.ifindex, name,
                                           netns=self.netns)
 
     def __setattr__(self, name, value):
@@ -132,7 +132,7 @@ class RemoteDevice(object):
             if self._cached:
                 raise DeviceReadOnly("Can't set attributes when in ReadOnly cache mode.")
 
-            return self._machine.rpc_call("dev_set_attr", self.ifindex, name, value,
+            return self._machine.rpc_call("dev_setattr", self.ifindex, name, value,
                                           netns=self.netns)
         except AttributeError:
             return super(RemoteDevice, self).__setattr__(name, value)

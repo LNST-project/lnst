@@ -174,11 +174,11 @@ class SlaveMethods:
 
         return method(*args, **kwargs)
 
-    def dev_attr(self, ifindex, name):
+    def dev_getattr(self, ifindex, name):
         dev = self._if_manager.get_device(ifindex)
         return getattr(dev, name)
 
-    def dev_set_attr(self, ifindex, name, value):
+    def dev_setattr(self, ifindex, name, value):
         dev = self._if_manager.get_device(ifindex)
         return setattr(dev, name, value)
 
