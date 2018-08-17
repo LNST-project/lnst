@@ -21,7 +21,7 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
-from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError
+from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError, DeviceDeleted
 from lnst.Common.InterfaceManagerError import InterfaceManagerError
 from lnst.Slave.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
@@ -123,6 +123,12 @@ class InterfaceManager(object):
             for addr_msg in dev['ip_addrs']:
                 self._devices[dev['index']]._update_netlink(addr_msg)
         for i in devices_to_remove:
+            if i not in self._devices:
+                #TODO
+                #this is a workaround fix for when the device to remove was
+                #already removed indirectly by the previous update loop
+                #the fix works for now but should be refactored at some point
+                continue
             dev_name = self._devices[i].name
             logging.debug("Deleting Device with ifindex %d, name %s because "\
                           "it doesn't exist anymore." % (i, dev_name))
@@ -153,7 +159,10 @@ class InterfaceManager(object):
     def _handle_netlink_msg(self, msg):
         if msg['header']['type'] in [RTM_NEWLINK, RTM_NEWADDR, RTM_DELADDR]:
             if msg['index'] in self._devices:
-                self._devices[msg['index']]._update_netlink(msg)
+                try:
+                    self._devices[msg['index']]._update_netlink(msg)
+                except DeviceDeleted:
+                    return
             elif msg['header']['type'] == RTM_NEWLINK:
                 dev = self._device_classes["Device"](self)
                 dev._init_netlink(msg)
