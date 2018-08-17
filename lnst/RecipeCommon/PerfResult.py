@@ -28,6 +28,14 @@ class PerfInterval(PerfStatMixin):
     def unit(self):
         return self._unit
 
+    @property
+    def std_deviation(self):
+        return 0
+
+    def __str__(self):
+        return "{} {} in {} seconds".format(
+                self.value, self.unit, self.duration)
+
 class PerfList(list):
     _sub_type = None
 
