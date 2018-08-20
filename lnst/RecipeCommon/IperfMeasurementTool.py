@@ -13,7 +13,7 @@ class IperfMeasurementTool(PerfMeasurementTool):
     def perf_measure(perf_conf):
         _iperf_duration_overhead = 5
 
-        server_params = dict(bind = ipaddress(perf_conf.server_bind),
+        server_params = dict(bind = ipaddress(perf_conf.receiver_bind),
                              oneoff = True)
 
         client_params = dict(server = server_params["bind"],
@@ -34,8 +34,8 @@ class IperfMeasurementTool(PerfMeasurementTool):
         server = IperfServer(**server_params)
         client = IperfClient(**client_params)
 
-        server_host = perf_conf.server
-        client_host = perf_conf.client
+        server_host = perf_conf.receiver
+        client_host = perf_conf.generator
         result = None
         try:
             server_job = server_host.run(server, bg=True,
