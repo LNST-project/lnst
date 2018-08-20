@@ -4,6 +4,7 @@ import subprocess
 from lnst.Common.Parameters import IntParam, FloatParam, IpParam, DeviceOrIpParam
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.Utils import is_installed
+from lnst.Common.IpAddress import Ip6Address
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 class Ping(BaseTestModule):
@@ -16,6 +17,8 @@ class Ping(BaseTestModule):
 
     def _compose_cmd(self):
         cmd = "ping %s" % self.params.dst
+        if isinstance(self.params.dst, Ip6Address):
+            cmd += " -6"
         cmd += " -c %d" % self.params.count
         cmd += " -i %f" % self.params.interval
         if "interface" in self.params:
