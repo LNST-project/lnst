@@ -47,7 +47,8 @@ class PingTestAndEvaluate(BaseRecipe):
         client = ping_config.client
         destination = ping_config.destination
 
-        ping = Ping(self._generate_ping_kwargs(ping_config))
+        kwargs = self._generate_ping_kwargs(ping_config)
+        ping = Ping(**kwargs)
 
         ping_job = client.run(ping)
         return ping_job.result
