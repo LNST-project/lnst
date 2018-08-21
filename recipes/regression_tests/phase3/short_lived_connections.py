@@ -38,6 +38,7 @@ nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
+official_result = bool_it(ctl.get_alias("official_result"))
 adaptive_coalescing_off = bool_it(ctl.get_alias("adaptive_coalescing_off"))
 
 m1_testiface = m1.get_interface("testiface")
@@ -152,7 +153,7 @@ for size in ["1K,1K", "5K,5K", "7K,7K", "10K,10K", "12K,12K"]:
 
     netperf_result_template(result_tcp_rr, tcp_rr_res_data, test_type="RR")
     result_tcp_rr.set_comment(pr_comment)
-    perf_api.save_result(result_tcp_rr)
+    perf_api.save_result(result_tcp_rr, official_result)
 
     # prepare PerfRepo result for tcp_crr
     result_tcp_crr = perf_api.new_result("tcp_crr_id",
@@ -175,7 +176,7 @@ for size in ["1K,1K", "5K,5K", "7K,7K", "10K,10K", "12K,12K"]:
 
     netperf_result_template(result_tcp_crr, tcp_crr_res_data, test_type="RR")
     result_tcp_crr.set_comment(pr_comment)
-    perf_api.save_result(result_tcp_crr)
+    perf_api.save_result(result_tcp_crr, official_result)
 
     srv_proc.intr()
 
