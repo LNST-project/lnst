@@ -1,3 +1,4 @@
+from lnst.Common.Utils import bool_it
 from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import netperf_baseline_template
 from lnst.Controller.PerfRepoUtils import netperf_result_template
@@ -37,6 +38,7 @@ nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
+adaptive_coalescing_off = bool_it(ctl.get_alias("adaptive_coalescing_off"))
 
 m1_testiface = m1.get_interface("testiface")
 m2_testiface = m2.get_interface("testiface")
@@ -45,6 +47,20 @@ m1_testiface.set_mtu(mtu)
 m2_testiface.set_mtu(mtu)
 
 pr_comment = generate_perfrepo_comment([m1, m2], pr_user_comment)
+
+if adaptive_coalescing_off:
+    coalesce_status = ctl.get_module('Custom')
+
+    for d in [ m1_testiface, m2_testiface ]:
+        # disable any interrupt coalescing settings
+        cdata = d.save_coalesce()
+        cdata['use_adaptive_tx_coalesce'] = 0
+        cdata['use_adaptive_rx_coalesce'] = 0
+        if not d.set_coalesce(cdata):
+            coalesce_status.set_options({'fail': True,
+                                         'msg': "Failed to set coalesce options"\
+                                                " on device %s" % d.get_devname()})
+            d.get_host().run(coalesce_status)
 
 if netdev_cpupin:
     m1.run("service irqbalance stop")
@@ -166,3 +182,8 @@ for size in ["1K,1K", "5K,5K", "7K,7K", "10K,10K", "12K,12K"]:
 if netdev_cpupin:
     m1.run("service irqbalance start")
     m2.run("service irqbalance start")
+
+if adaptive_coalescing_off:
+    for d in [ m1_testiface, m2_testiface ]:
+        # restore any interrupt coalescing settings
+        d.restore_coalesce()

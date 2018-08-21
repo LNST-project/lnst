@@ -12,6 +12,7 @@
         <alias name="mapping_file" value="short_lived_connections.mapping" />
         <alias name="net" value="192.168.101" />
         <alias name="driver" value="ixgbe" />
+        <alias name="adaptive_coalescing_off" value="no"/>
     </define>
     <network>
         <host id="machine1">
