@@ -275,6 +275,10 @@ cpu = guest_xml.find("cpu")
 numa = ET.SubElement(cpu, 'numa')
 ET.SubElement(numa, 'cell', id='0', cpus='0', memory=guest_mem_amount, unit='KiB', memAccess='shared')
 
+memoryBacking = ET.SubElement(guest_xml, "memoryBacking")
+hugepages = ET.SubElement(memoryBacking, "hugepages")
+ET.SubElement(hugepages, "page", size="2", unit="M", nodeset="0")
+
 cputune = ET.SubElement(guest_xml, "cputune")
 for i, cpu_id in enumerate(guest_cpus.split(',')):
     ET.SubElement(cputune, "vcpupin", vcpu=str(i), cpuset=str(cpu_id))

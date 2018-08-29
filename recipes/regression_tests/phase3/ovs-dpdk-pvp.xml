@@ -7,7 +7,7 @@
         <alias name="host2_dpdk_cores" value="0x1E" />
         <alias name="guest_testpmd_cores" value="0x7" />
         <alias name="guest_dpdk_cores" value="0x6" />
-        <alias name="nr_hugepages" value="2048" />
+        <alias name="nr_hugepages" value="13000" />
         <alias name="socket_mem" value="2048" />
         <alias name="trex_dir" value="" />
         <alias name="guest_mem_amount" value="16777216" />
