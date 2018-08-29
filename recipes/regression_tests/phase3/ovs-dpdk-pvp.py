@@ -119,6 +119,7 @@ guest_hostname = ctl.get_alias("guest_hostname")
 guest_username = ctl.get_alias("guest_username")
 guest_password = ctl.get_alias("guest_password")
 guest_cpus = ctl.get_alias("guest_cpus")
+guest_emulatorpin = ctl.get_alias("guest_emulatorpin")
 trex_dir = ctl.get_alias("trex_dir")
 pkt_size = int(ctl.get_alias("pkt_size"))
 test_duration = int(ctl.get_alias("test_duration"))
@@ -276,6 +277,8 @@ ET.SubElement(numa, 'cell', id='0', cpus='0', memory=guest_mem_amount, unit='KiB
 cputune = ET.SubElement(guest_xml, "cputune")
 for i, cpu_id in enumerate(guest_cpus.split(',')):
     ET.SubElement(cputune, "vcpupin", vcpu=str(i), cpuset=str(cpu_id))
+
+ET.SubElement(cputune, "emulatorpin", cpuset=guest_emulatorpin)
 
 updated_guest_xml = NamedTemporaryFile("w+b", delete=False)
 updated_guest_xml.write(ET.tostring(guest_xml))

@@ -14,7 +14,8 @@
         <alias name="guest_hostname" value="" />
         <alias name="guest_username" value="" />
         <alias name="guest_password" value="" />
-        <alias name="guest_cpus" value="" />
+        <alias name="guest_cpus" value="5,6,7,8" />
+        <alias name="guest_emulatorpin" value="9"/>
         <alias name="pkt_size" value="64" />
         <alias name="test_duration" value="60" />
         <alias name="test_runs" value="5" />
