@@ -149,17 +149,17 @@ ctl.wait(5)
 ping_opts = {"count": 100, "interval": 0.1, "limit_rate": 20}
 
 pings = []
-pings.append(ping((h1, h1_nic1, 0, {"scope": 0}),
+pings.append(ping((h1, h1_nic1),
                   (h2, h2_nic1, 0, {"scope": 0}),
                   options=ping_opts, bg=True))
-pings.append(ping((h1, h1_nic2, 0, {"scope": 0}),
+pings.append(ping((h1, h1_nic2),
                   (h2, h2_nic2, 0, {"scope": 0}),
                   options=ping_opts, bg=True))
 
-pings.append(ping((h2, h2_nic1, 0, {"scope": 0}),
+pings.append(ping((h2, h2_nic1),
                   (h1, h1_nic1, 0, {"scope": 0}),
                   options=ping_opts, bg=True))
-pings.append(ping((h2, h2_nic2, 0, {"scope": 0}),
+pings.append(ping((h2, h2_nic2),
                   (h1, h1_nic2, 0, {"scope": 0}),
                   options=ping_opts, bg=True))
 
