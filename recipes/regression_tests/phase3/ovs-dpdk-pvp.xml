@@ -5,6 +5,7 @@
         <alias name="official_result" value="no" />
         <alias name="host1_dpdk_cores" value="2,3,4" />
         <alias name="host2_dpdk_cores" value="0x1E" />
+        <alias name="guest_testpmd_cores" value="0x7" />
         <alias name="guest_dpdk_cores" value="0x6" />
         <alias name="nr_hugepages" value="2048" />
         <alias name="socket_mem" value="2048" />

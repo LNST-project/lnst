@@ -110,6 +110,7 @@ official_result = bool_it(ctl.get_alias("official_result"))
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 host1_dpdk_cores = ctl.get_alias("host1_dpdk_cores")
 host2_dpdk_cores = ctl.get_alias("host2_dpdk_cores")
+guest_testpmd_cores = ctl.get_alias("guest_testpmd_cores")
 guest_dpdk_cores = ctl.get_alias("guest_dpdk_cores")
 nr_hugepages = int(ctl.get_alias("nr_hugepages"))
 socket_mem = int(ctl.get_alias("socket_mem"))
@@ -340,9 +341,11 @@ testpmd_shell = guest.get_transport().open_session()
 testpmd_cmd = ("testpmd -c {coremask} "
                       "-w {pci1} -w {pci2} "
                       "-n 4 --socket-mem 1024,0 -- "
+                      "--coremask {pmd_coremask} "
                       "-i --eth-peer=0,{hw1} --eth-peer=1,{hw2} "
                       "--forward-mode=mac").format(
-                          coremask=guest_dpdk_cores,
+                          coremask=guest_testpmd_cores,
+                          pmd_coremask=guest_dpdk_cores,
                           pci1=g_nic1_pci, pci2=g_nic2_pci,
                           hw1=h1_nic1.get_hwaddr(), hw2=h1_nic2.get_hwaddr())
 
