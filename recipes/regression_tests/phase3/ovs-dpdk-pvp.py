@@ -109,6 +109,7 @@ else:
 official_result = bool_it(ctl.get_alias("official_result"))
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 host1_dpdk_cores = ctl.get_alias("host1_dpdk_cores")
+host2_dpdk_lcores = ctl.get_alias("host2_dpdk_lcores")
 host2_dpdk_cores = ctl.get_alias("host2_dpdk_cores")
 guest_testpmd_cores = ctl.get_alias("guest_testpmd_cores")
 guest_dpdk_cores = ctl.get_alias("guest_dpdk_cores")
@@ -193,6 +194,7 @@ h2.config("/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages", nr_hugepages
 h2.enable_service("openvswitch")
 h2.run("ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true")
 h2.run("ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem=%d" % socket_mem)
+h2.run("ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-lcore-mask=%s" % host2_dpdk_lcores)
 h2.run("ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=%s" % host2_dpdk_cores)
 h2.restart_service("openvswitch")
 
