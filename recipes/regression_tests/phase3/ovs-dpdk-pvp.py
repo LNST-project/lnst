@@ -4,6 +4,7 @@ import paramiko
 import logging
 from tempfile import NamedTemporaryFile
 from lnst.Common.Utils import bool_it, std_deviation, dict_to_dot, Noop
+from lnst.Common.Logs import log_exc_traceback
 from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import perfrepo_baseline_to_dict
 from lnst.RecipeCommon.ModuleWrap import ping
@@ -298,7 +299,19 @@ h2.run("virsh start %s" % guest_virtname)
 #============================================
 # Host2 wait for guest start
 #============================================
-ctl.wait(60)
+
+guest = paramiko.SSHClient()
+guest.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+tries = 60
+while tries:
+    logging.info("Connecting to guest, %d tries remaining" % tries)
+    tries -= 1
+    try:
+        guest.connect(guest_hostname, username=guest_username, password=guest_password)
+        break
+    except paramiko.ssh_exception.NoValidConnectionsError as e:
+        logging.debug(str(e))
+        ctl.wait(5)
 
 #============================================
 # Host2 add openvswitch flows between DPDK NICs and Guest NICs
@@ -313,10 +326,6 @@ h2.run("ovs-ofctl add-flow br0 in_port=22,action=12")
 #============================================
 # Guest configure DPDK for vhostuser nics
 #============================================
-
-guest = paramiko.SSHClient()
-guest.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-guest.connect(guest_hostname, username=guest_username, password=guest_password)
 
 run_ssh_command_on_guest("service irqbalance stop", guest, h2, guest_virtname)
 run_ssh_command_on_guest("MASK=1; for i in `ls -d /proc/irq/[0-9]*` ; do echo $MASK > ${i}/smp_affinity ; done", guest, h2, guest_virtname)
