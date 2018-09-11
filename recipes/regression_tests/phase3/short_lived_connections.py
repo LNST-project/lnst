@@ -37,6 +37,7 @@ nperf_mode = ctl.get_alias("nperf_mode")
 nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
+nperf_tests = ctl.get_alias("nperf_tests")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 official_result = bool_it(ctl.get_alias("official_result"))
 adaptive_coalescing_off = bool_it(ctl.get_alias("adaptive_coalescing_off"))
@@ -112,73 +113,74 @@ netperf_srv = ctl.get_module("Netperf",
 
 ctl.wait(15)
 
+# start netperf server
+srv_proc = m1.run(netperf_srv, bg=True)
+ctl.wait(2)
+
 for size in ["1K,1K", "5K,5K", "7K,7K", "10K,10K", "12K,12K"]:
+    if 'TCP_RR' in nperf_tests.split():
+        netperf_cli_tcp_rr.update_options({"testoptions": "-r %s" % size})
+        netperf_cli_tcp_crr.update_options({"testoptions": "-r %s" % size})
 
-    netperf_cli_tcp_rr.update_options({"testoptions": "-r %s" % size})
-    netperf_cli_tcp_crr.update_options({"testoptions": "-r %s" % size})
+        if nperf_mode == "multi":
+            netperf_cli_tcp_rr.unset_option("confidence")
+            netperf_cli_tcp_crr.unset_option("confidence")
 
-    if nperf_mode == "multi":
-        netperf_cli_tcp_rr.unset_option("confidence")
-        netperf_cli_tcp_crr.unset_option("confidence")
+            netperf_cli_tcp_rr.update_options({"num_parallel": nperf_num_parallel})
+            netperf_cli_tcp_crr.update_options({"num_parallel": nperf_num_parallel})
 
-        netperf_cli_tcp_rr.update_options({"num_parallel": nperf_num_parallel})
-        netperf_cli_tcp_crr.update_options({"num_parallel": nperf_num_parallel})
+            # we have to use multiqueue qdisc to get appropriate data
+            m1.run("tc qdisc replace dev %s root mq" % m1_testiface.get_devname())
+            m2.run("tc qdisc replace dev %s root mq" % m2_testiface.get_devname())
 
-        # we have to use multiqueue qdisc to get appropriate data
-        m1.run("tc qdisc replace dev %s root mq" % m1_testiface.get_devname())
-        m2.run("tc qdisc replace dev %s root mq" % m2_testiface.get_devname())
+        # prepare PerfRepo result for tcp_rr
+        result_tcp_rr = perf_api.new_result("tcp_rr_id",
+                                            "tcp_rr_result",
+                                            hash_ignore=[
+                                                'kernel_release',
+                                                'redhat_release'])
+        result_tcp_rr.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp_rr.add_tag("multithreaded")
+            result_tcp_rr.set_parameter('num_parallel', nperf_num_parallel)
 
-    # Netperf test
-    srv_proc = m1.run(netperf_srv, bg=True)
-    ctl.wait(2)
+        result_tcp_rr.set_parameter("rr_size", size)
 
-    # prepare PerfRepo result for tcp_rr
-    result_tcp_rr = perf_api.new_result("tcp_rr_id",
-                                        "tcp_rr_result",
-                                        hash_ignore=[
-                                            'kernel_release',
-                                            'redhat_release'])
-    result_tcp_rr.add_tag(product_name)
-    if nperf_mode == "multi":
-        result_tcp_rr.add_tag("multithreaded")
-        result_tcp_rr.set_parameter('num_parallel', nperf_num_parallel)
+        baseline = perf_api.get_baseline_of_result(result_tcp_rr)
+        netperf_baseline_template(netperf_cli_tcp_rr, baseline, test_type="RR")
 
-    result_tcp_rr.set_parameter("rr_size", size)
+        tcp_rr_res_data = m2.run(netperf_cli_tcp_rr,
+                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-    baseline = perf_api.get_baseline_of_result(result_tcp_rr)
-    netperf_baseline_template(netperf_cli_tcp_rr, baseline, test_type="RR")
+        netperf_result_template(result_tcp_rr, tcp_rr_res_data, test_type="RR")
+        result_tcp_rr.set_comment(pr_comment)
+        perf_api.save_result(result_tcp_rr, official_result)
 
-    tcp_rr_res_data = m2.run(netperf_cli_tcp_rr,
-                          timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+    if 'TCP_CRR' in nperf_tests.split():
+        # prepare PerfRepo result for tcp_crr
+        result_tcp_crr = perf_api.new_result("tcp_crr_id",
+                                             "tcp_crr_result",
+                                             hash_ignore=[
+                                                 'kernel_release',
+                                                 'redhat_release'])
+        result_tcp_crr.add_tag(product_name)
+        if nperf_mode == "multi":
+            result_tcp_crr.add_tag("multithreaded")
+            result_tcp_crr.set_parameter('num_parallel', nperf_num_parallel)
 
-    netperf_result_template(result_tcp_rr, tcp_rr_res_data, test_type="RR")
-    result_tcp_rr.set_comment(pr_comment)
-    perf_api.save_result(result_tcp_rr, official_result)
+        result_tcp_crr.set_parameter("rr_size", size)
 
-    # prepare PerfRepo result for tcp_crr
-    result_tcp_crr = perf_api.new_result("tcp_crr_id",
-                                         "tcp_crr_result",
-                                         hash_ignore=[
-                                             'kernel_release',
-                                             'redhat_release'])
-    result_tcp_crr.add_tag(product_name)
-    if nperf_mode == "multi":
-        result_tcp_crr.add_tag("multithreaded")
-        result_tcp_crr.set_parameter('num_parallel', nperf_num_parallel)
+        baseline = perf_api.get_baseline_of_result(result_tcp_crr)
+        netperf_baseline_template(netperf_cli_tcp_crr, baseline, test_type="RR")
 
-    result_tcp_crr.set_parameter("rr_size", size)
+        tcp_crr_res_data = m2.run(netperf_cli_tcp_crr,
+                              timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-    baseline = perf_api.get_baseline_of_result(result_tcp_crr)
-    netperf_baseline_template(netperf_cli_tcp_crr, baseline, test_type="RR")
+        netperf_result_template(result_tcp_crr, tcp_crr_res_data, test_type="RR")
+        result_tcp_crr.set_comment(pr_comment)
+        perf_api.save_result(result_tcp_crr, official_result)
 
-    tcp_crr_res_data = m2.run(netperf_cli_tcp_crr,
-                          timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
-
-    netperf_result_template(result_tcp_crr, tcp_crr_res_data, test_type="RR")
-    result_tcp_crr.set_comment(pr_comment)
-    perf_api.save_result(result_tcp_crr, official_result)
-
-    srv_proc.intr()
+srv_proc.intr()
 
 if netdev_cpupin:
     m1.run("service irqbalance start")
