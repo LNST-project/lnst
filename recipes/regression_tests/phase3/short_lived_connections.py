@@ -38,6 +38,7 @@ nperf_num_parallel = int(ctl.get_alias("nperf_num_parallel"))
 nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
 nperf_tests = ctl.get_alias("nperf_tests")
+nperf_sizes = ctl.get_alias("nperf_sizes")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
 official_result = bool_it(ctl.get_alias("official_result"))
 adaptive_coalescing_off = bool_it(ctl.get_alias("adaptive_coalescing_off"))
@@ -117,7 +118,7 @@ ctl.wait(15)
 srv_proc = m1.run(netperf_srv, bg=True)
 ctl.wait(2)
 
-for size in ["1K,1K", "5K,5K", "7K,7K", "10K,10K", "12K,12K"]:
+for size in nperf_sizes.split():
     if 'TCP_RR' in nperf_tests.split():
         netperf_cli_tcp_rr.update_options({"testoptions": "-r %s" % size})
         netperf_cli_tcp_crr.update_options({"testoptions": "-r %s" % size})
