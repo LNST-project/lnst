@@ -325,10 +325,10 @@ class NetTestCommandGeneric(object):
         formatted_data = ""
         if res_data:
             max_key_len = 0
-            for key in res_data.keys():
+            for key in list(res_data.keys()):
                 if len(key) > max_key_len:
                     max_key_len = len(key)
-            for key, value in res_data.iteritems():
+            for key, value in list(res_data.items()):
                 if type(value) == dict:
                     formatted_data += level*4*" " + str(key) + ":\n"
                     formatted_data += self.format_res_data(value, level+1)
@@ -347,13 +347,13 @@ class NetTestCommandGeneric(object):
         return formatted_data
 
     def _check_res_data(self, res_data):
-        name_start_char = u":A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF"\
-                          u"\u0370-\u037D\u037F-\u1FFF\u200C-\u200D"\
-                          u"\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF"\
-                          u"\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
-        name_char = name_start_char + u"\-\.0-9\xB7\u0300-\u036F\u203F-\u2040"
-        name = u"[%s]([%s])*$" % (name_start_char, name_char)
-        char_data = u"[^<&]*"
+        name_start_char = ":A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\\u02FF"\
+                          "\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D"\
+                          "\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF"\
+                          "\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\U00010000-\\U000EFFFF"
+        name_char = name_start_char + "\-\.0-9\xB7\\u0300-\\u036F\\u203F-\\u2040"
+        name = "[%s]([%s])*$" % (name_start_char, name_char)
+        char_data = "[^<&]*"
         if isinstance(res_data, dict):
             for key in res_data:
                 if not re.match(name, key, re.UNICODE):

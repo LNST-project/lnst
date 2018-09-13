@@ -15,7 +15,7 @@ import re
 import sys
 import copy
 from lxml import etree
-from urllib2 import urlopen
+from urllib.request import urlopen
 from lnst.Common.Config import lnst_config
 from lnst.Controller.XmlTemplates import XmlTemplates
 from lnst.Controller.XmlProcessing import XmlProcessingError
@@ -124,7 +124,7 @@ class XmlParser(object):
         return self._template_proc.expand_functions(text)
 
     def _get_content(self, element):
-        text = etree.tostring(element, method="text").strip()
+        text = etree.tostring(element, method="text", encoding="unicode").strip()
         return self._template_proc.expand_functions(text)
 
     def _expand_xinclude(self, elem, base_url=""):

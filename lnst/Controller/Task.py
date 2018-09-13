@@ -45,7 +45,7 @@ class ControllerAPI(object):
         self._perf_repo_api = PerfRepoAPI()
 
         self._hosts = {}
-        for host_id, host in hosts.iteritems():
+        for host_id, host in hosts.items():
             self._hosts[host_id] = HostAPI(self, host_id, host)
 
     def _run_command(self, command):
@@ -161,20 +161,20 @@ class ControllerAPI(object):
     def get_configuration(self):
         machines = self._ctl._machines
         configuration = {}
-        for m_id, m in machines.items():
+        for m_id, m in list(machines.items()):
             configuration["machine_"+m_id] = m.get_configuration()
         return configuration
 
     def get_mapping(self):
         match = self._ctl.get_pool_match()
         mapping = []
-        for m_id, m in match["machines"].iteritems():
+        for m_id, m in match["machines"].items():
             machine = {}
             machine["id"] = m_id
             machine["pool_id"] = m["target"]
             machine["hostname"] = m["hostname"]
             machine["interface"] = []
-            for i_id, i in m["interfaces"].iteritems():
+            for i_id, i in m["interfaces"].items():
                 interface = {}
                 interface["id"] = i_id
                 interface["pool_id"] = i["target"]
@@ -253,7 +253,7 @@ class HostAPI(object):
         bg_id = None
         cmd["netns"] = None
 
-        for arg, argval in kwargs.iteritems():
+        for arg, argval in kwargs.items():
             if arg == "bg" and argval == True:
                 self._bg_id_seq += 1
                 cmd["bg_id"] = bg_id = self._bg_id_seq
@@ -864,7 +864,7 @@ class ModuleAPI(object):
         self._name = module_name
 
         self._opts = {}
-        for opt, val in options.iteritems():
+        for opt, val in options.items():
             self._opts[opt] = []
             if type(val) == list:
                 for v in val:
@@ -877,7 +877,7 @@ class ModuleAPI(object):
 
     def set_options(self, options):
         self._opts = {}
-        for opt, val in options.iteritems():
+        for opt, val in options.items():
             self._opts[opt] = []
             if type(val) == list:
                 for v in val:
@@ -886,7 +886,7 @@ class ModuleAPI(object):
                 self._opts[opt].append({"value": str(val)})
 
     def update_options(self, options):
-        for opt, val in options.iteritems():
+        for opt, val in options.items():
             self._opts[opt] = []
             if type(val) == list:
                 for v in val:

@@ -61,7 +61,7 @@ class Multicast(TestGeneric):
 
         cmd  = "./{0} ".format(setup)
 
-        for optname, optval in opts.iteritems():
+        for optname, optval in list(opts.items()):
             if optval != None:
                 cmd += "--{0} \"{1}\" ".format(optname, optval)
 

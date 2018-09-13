@@ -52,7 +52,7 @@ def name_to_fg_colour(name):
     """ Convert name to foreground colour code.
         Returns None if the colour name isn't supported. """
 
-    if not COLOURS.has_key(name):
+    if name not in COLOURS:
         return None
 
     return COLOURS[name]
@@ -61,7 +61,7 @@ def name_to_bg_colour(name):
     """ Convert name to background color code.
         Returns None if the colour name isn't supported. """
 
-    if not COLOURS.has_key(name):
+    if name not in COLOURS:
         return None
 
     return COLOURS[name] + 10
@@ -136,7 +136,7 @@ def decorate_string(string, fg_colour=None, bg_colour=None, bold=False):
                     raise Exception(msg)
             else:
                 # Standard definition
-                if colour_def in COLOURS.keys():
+                if colour_def in list(COLOURS.keys()):
                     if fg:
                         colour = name_to_fg_colour(colour_def)
                     else:
@@ -165,7 +165,7 @@ def strip_colours(text):
 
 def get_preset_conf(preset_name):
     preset = PRESETS[preset_name]
-    return map(lambda s: "default" if s == None else str(s), preset)
+    return ["default" if s == None else str(s) for s in preset]
 
 def load_presets_from_config(lnst_config):
     for preset_name in PRESETS:
@@ -178,12 +178,12 @@ def load_presets_from_config(lnst_config):
 
         if fg == "default":
             fg = None
-        elif not re.match(extended_re, fg) and fg not in COLOURS.keys():
+        elif not re.match(extended_re, fg) and fg not in list(COLOURS.keys()):
             raise Exception("Colour '%s' not supported" % fg)
 
         if bg == "default":
             bg = None
-        elif not re.match(extended_re, bg) and bg not in COLOURS.keys():
+        elif not re.match(extended_re, bg) and bg not in list(COLOURS.keys()):
             raise Exception("Colour '%s' not supported" % bg)
 
         PRESETS[preset_name] = [fg, bg, bool_it(bf)]

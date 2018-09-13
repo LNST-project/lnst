@@ -79,7 +79,7 @@ class InterfaceManager(object):
         self._id_mapping = {}
 
     def get_id_by_if_index(self, if_index):
-        for if_id, index in self._id_mapping.iteritems():
+        for if_id, index in self._id_mapping.items():
             if if_index == index:
                 return if_id
         return None
@@ -97,12 +97,12 @@ class InterfaceManager(object):
         return self._nl_socket
 
     def rescan_devices(self):
-        devices_to_remove = self._devices.keys()
+        devices_to_remove = list(self._devices.keys())
         devs = scan_netdevs()
         for dev in devs:
             if dev['index'] not in self._devices:
                 device = None
-                for if_id, d in self._tmp_mapping.items():
+                for if_id, d in list(self._tmp_mapping.items()):
                     d_cfg = d.get_conf_dict()
                     if d_cfg["name"] == dev["name"]:
                         device = d
@@ -134,7 +134,7 @@ class InterfaceManager(object):
             del self._devices[i]
 
         self._dl_manager.rescan_ports()
-        for device in self._devices.values():
+        for device in list(self._devices.values()):
             dl_port = self._dl_manager.get_port(device.get_name())
             device.set_devlink(dl_port)
 
@@ -143,7 +143,7 @@ class InterfaceManager(object):
             self._handle_netlink_msg(msg)
 
         self._dl_manager.rescan_ports()
-        for device in self._devices.values():
+        for device in list(self._devices.values()):
             dl_port = self._dl_manager.get_port(device.get_name())
             device.set_devlink(dl_port)
 
@@ -152,14 +152,14 @@ class InterfaceManager(object):
             if msg['index'] in self._devices:
                 update_msg = self._devices[msg['index']].update_netlink(msg)
                 if update_msg != None:
-                    for if_id, if_index in self._id_mapping.iteritems():
+                    for if_id, if_index in self._id_mapping.items():
                         if if_index == msg['index']:
                             update_msg["if_id"] = if_id
                             break
                     self._server_handler.send_data_to_ctl(update_msg)
             elif msg['header']['type'] == RTM_NEWLINK:
                 dev = None
-                for if_id, d in self._tmp_mapping.items():
+                for if_id, d in list(self._tmp_mapping.items()):
                     d_cfg = d.get_conf_dict()
                     if d_cfg["name"] == msg.get_attr("IFLA_IFNAME"):
                         dev = d
@@ -172,7 +172,7 @@ class InterfaceManager(object):
                 self._devices[msg['index']] = dev
 
                 if update_msg != None:
-                    for if_id, if_index in self._id_mapping.iteritems():
+                    for if_id, if_index in self._id_mapping.items():
                         if if_index == msg['index']:
                             update_msg["if_id"] = if_id
                             break
@@ -202,7 +202,7 @@ class InterfaceManager(object):
 
     def get_mapped_devices(self):
         ret = {}
-        for if_id, if_index in self._id_mapping.iteritems():
+        for if_id, if_index in self._id_mapping.items():
             ret[if_id] = self._devices[if_index]
         for if_id in self._tmp_mapping:
             ret[if_id] = self._tmp_mapping[if_id]
@@ -215,20 +215,20 @@ class InterfaceManager(object):
             return None
 
     def get_devices(self):
-        return self._devices.values()
+        return list(self._devices.values())
 
     def get_device_by_hwaddr(self, hwaddr):
-        for dev in self._devices.values():
+        for dev in list(self._devices.values()):
             if dev.get_hwaddr() == hwaddr:
                 return dev
         return None
 
     def get_device_by_params(self, params):
         matched = None
-        for dev in self._devices.values():
+        for dev in list(self._devices.values()):
             matched = dev
             dev_data = dev.get_if_data()
-            for key, value in params.iteritems():
+            for key, value in params.items():
                 if key not in dev_data or dev_data[key] != value:
                     matched = None
                     break
@@ -239,7 +239,7 @@ class InterfaceManager(object):
         return matched
 
     def deconfigure_all(self):
-        for dev in self._devices.itervalues():
+        for dev in self._devices.values():
             dev.clear_configuration()
 
     def create_device_from_config(self, if_id, config):
@@ -288,10 +288,10 @@ class InterfaceManager(object):
 
     def _is_name_used(self, name):
         self.rescan_devices()
-        for device in self._devices.itervalues():
+        for device in self._devices.values():
             if name == device.get_name():
                 return True
-        for device in self._tmp_mapping.itervalues():
+        for device in self._tmp_mapping.values():
             if name == device.get_name():
                 return True
         return False
@@ -487,7 +487,7 @@ class Device(object):
     def find_addrs(self, addr_spec):
         ret = []
         for addr in self._ip_addrs:
-            if addr_spec.items() <= addr.items():
+            if list(addr_spec.items()) <= list(addr.items()):
                 ret.append(addr)
         return ret
 
@@ -703,7 +703,7 @@ class Device(object):
             if (line.split()[0] == 'vf'):
                 break
             if (line.split()[0] == "RX:"):
-                rx_stats = map(int, lines.next().split())
+                rx_stats = list(map(int, next(lines).split()))
                 stats.update({"rx_bytes"  : rx_stats[0],
                               "rx_packets": rx_stats[1],
                               "rx_errors" : rx_stats[2],
@@ -711,7 +711,7 @@ class Device(object):
                               "rx_overrun": rx_stats[4],
                               "rx_mcast"  : rx_stats[5]})
             if (line.split()[0] == "TX:"):
-                tx_stats = map(int, lines.next().split())
+                tx_stats = list(map(int, next(lines).split()))
                 stats.update({"tx_bytes"  : tx_stats[0],
                               "tx_packets": tx_stats[1],
                               "tx_errors" : tx_stats[2],
@@ -742,7 +742,7 @@ class Device(object):
             stats_data[i] = stats_data[i].replace("K",  "000")
             stats_data[i] = stats_data[i].replace("M", "000000")
 
-        stats_data = map(int, stats_data)
+        stats_data = list(map(int, stats_data))
         stats["rx_packets"] = stats_data[0]
         stats["tx_packets"] = stats_data[2]
         stats["rx_bytes"] = stats_data[4]

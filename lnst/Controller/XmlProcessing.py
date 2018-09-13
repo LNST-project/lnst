@@ -75,8 +75,8 @@ class XmlDataIterator:
     def __iter__(self):
         return self
 
-    def next(self):
-        n = self._iterator.next()
+    def __next__(self):
+        n = next(self._iterator)
 
         # For normal iterators
         if type(n) == XmlTemplateString:
@@ -165,20 +165,20 @@ class XmlData(dict):
         return XmlDataIterator(it)
 
     def iteritems(self):
-        it = super(XmlData, self).iteritems()
+        it = iter(super(XmlData, self).items())
         return XmlDataIterator(it)
 
     def iterkeys(self):
-        it = super(XmlData, self).iterkeys()
+        it = iter(super(XmlData, self).keys())
         return XmlDataIterator(it)
 
     def itervalues(self):
-        it = super(XmlData, self).itervalues()
+        it = iter(super(XmlData, self).values())
         return XmlDataIterator(it)
 
     def to_dict(self):
         new_dict = dict()
-        for key, value in self.iteritems():
+        for key, value in self.items():
             if isinstance(value, XmlData):
                 new_val = value.to_dict()
             elif isinstance(value, XmlCollection):

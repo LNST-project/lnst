@@ -16,7 +16,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import os
-import cPickle
+import pickle
 import hashlib
 import hmac
 from lnst.Common.Utils import not_imported
@@ -43,11 +43,11 @@ def bit_length(i):
     except AttributeError:
         return len(bin(i)) - 2
 
-DH_GROUP["q"] = (DH_GROUP["p"]-1)/2
-DH_GROUP["q_size"] = bit_length(DH_GROUP["q"])/8
+DH_GROUP["q"] = (DH_GROUP["p"]-1)//2
+DH_GROUP["q_size"] = bit_length(DH_GROUP["q"])//8
 if bit_length(DH_GROUP["q"])%8:
     DH_GROUP["q_size"] += 1
-DH_GROUP["p_size"] = bit_length(DH_GROUP["p"])/8
+DH_GROUP["p_size"] = bit_length(DH_GROUP["p"])//8
 if bit_length(DH_GROUP["p"])%8:
     DH_GROUP["p_size"] += 1
 
@@ -63,11 +63,11 @@ SRP_GROUP = {"p": int("0xAC6BDB41324A9A9BF166DE5E1389582FAF72B6651987EE07FC"
                       "DE236D525F54759B65E372FCD68EF20FA7111F9E4AFF73", 16),
              "g": 2}
 
-SRP_GROUP["q"] = (SRP_GROUP["p"]-1)/2
-SRP_GROUP["q_size"] = bit_length(SRP_GROUP["q"])/8
+SRP_GROUP["q"] = (SRP_GROUP["p"]-1)//2
+SRP_GROUP["q_size"] = bit_length(SRP_GROUP["q"])//8
 if bit_length(SRP_GROUP["q"])%8:
     SRP_GROUP["q_size"] += 1
-SRP_GROUP["p_size"] = bit_length(SRP_GROUP["p"])/8
+SRP_GROUP["p_size"] = bit_length(SRP_GROUP["p"])//8
 if bit_length(SRP_GROUP["p"])%8:
     SRP_GROUP["p_size"] += 1
 
@@ -150,14 +150,14 @@ class SecureSocket(object):
                                 "seq_num": 0}
 
     def send_msg(self, msg):
-        pickled_msg = cPickle.dumps(msg)
+        pickled_msg = pickle.dumps(msg)
         return self.send(pickled_msg)
 
     def recv_msg(self):
         pickled_msg = self.recv()
-        if pickled_msg == "":
+        if pickled_msg == b"":
             raise SecSocketException("Disconnected")
-        msg = cPickle.loads(pickled_msg)
+        msg = pickle.loads(pickled_msg)
         return msg
 
     def _add_mac_sign(self, data):
@@ -165,22 +165,26 @@ class SecureSocket(object):
             return data
         cryptography_imports()
 
-        msg = str(self._current_write_spec["seq_num"]) + str(len(data)) + data
+        msg = (bytes(str(self._current_write_spec["seq_num"]).encode('ascii'))
+               + bytes(str(len(data)).encode('ascii'))
+               + data)
         signature = hmac.new(self._current_write_spec["mac_key"],
                              msg,
                              hashlib.sha256)
         signed_msg = {"data": data,
                       "signature": signature.digest()}
-        return cPickle.dumps(signed_msg)
+        return pickle.dumps(signed_msg)
 
     def _del_mac_sign(self, signed_data):
         if not self._current_read_spec["mac_key"]:
             return signed_data
         cryptography_imports()
 
-        signed_msg = cPickle.loads(signed_data)
+        signed_msg = pickle.loads(signed_data)
         data = signed_msg["data"]
-        msg = str(self._current_read_spec["seq_num"]) + str(len(data)) + data
+        msg = (bytes(str(self._current_read_spec["seq_num"]).encode('ascii'))
+               + bytes(str(len(data)).encode('ascii'))
+               + data)
 
         signature = hmac.new(self._current_read_spec["mac_key"],
                              msg,
@@ -195,9 +199,9 @@ class SecureSocket(object):
             return data
         cryptography_imports()
 
-        block_size = algorithms.AES.block_size/8
+        block_size = algorithms.AES.block_size//8
         pad_length = block_size - (len(data) % block_size)
-        pad_char = ("%02x" % pad_length).decode("hex")
+        pad_char = bytes([pad_length])
         padding = pad_length * pad_char
 
         padded_data = data+padding
@@ -208,9 +212,9 @@ class SecureSocket(object):
             return data
         cryptography_imports()
 
-        pad_length = int(data[-1].encode("hex"), 16)
+        pad_length = ord(data[-1])
         for char in data[-pad_length]:
-            if int(char.encode("hex"), 16) != pad_length:
+            if ord(char) != pad_length:
                 return None
 
         return data[:-pad_length]
@@ -220,7 +224,7 @@ class SecureSocket(object):
             return data
         cryptography_imports()
 
-        iv = os.urandom(algorithms.AES.block_size/8)
+        iv = os.urandom(algorithms.AES.block_size//8)
         mode = modes.CBC(iv)
         key = self._current_write_spec["enc_key"]
         cipher = Cipher(algorithms.AES(key), mode, default_backend())
@@ -231,14 +235,14 @@ class SecureSocket(object):
         encrypted_msg = {"iv": iv,
                          "enc_data": encrypted_data}
 
-        return cPickle.dumps(encrypted_msg)
+        return pickle.dumps(encrypted_msg)
 
     def _del_encrypt(self, data):
         if not self._current_read_spec["enc_key"]:
             return data
         cryptography_imports()
 
-        encrypted_msg = cPickle.loads(data)
+        encrypted_msg = pickle.loads(data)
         encrypted_data = encrypted_msg["enc_data"]
 
         iv = encrypted_msg["iv"]
@@ -276,27 +280,28 @@ class SecureSocket(object):
     def send(self, data):
         protected_data = self._protect_data(data)
 
-        transmit_data = str(len(protected_data)) + " " + protected_data
+        transmit_data = bytes(str(len(protected_data)).encode('ascii')) + b" " + protected_data
 
         return self._socket.sendall(transmit_data)
 
     def recv(self):
-        length = ""
+        length = b""
         while True:
             c = self._socket.recv(1)
-            if c == ' ':
-                length = int(length)
+
+            if c == b' ':
+                length = int(length.decode('ascii'))
                 break
-            elif c == "":
-                return ""
+            elif c == b"":
+                return b""
             else:
                 length += c
-        data = ""
 
+        data = b""
         while len(data) < length:
             c = self._socket.recv(length - len(data))
-            if c == "":
-                return ""
+            if c == b"":
+                return b""
             else:
                 data += c
 
@@ -307,7 +312,7 @@ class SecureSocket(object):
 
     def _handle_internal(self, orig_msg):
         try:
-            msg = cPickle.loads(orig_msg)
+            msg = pickle.loads(orig_msg)
         except:
             return orig_msg
         if "type" in msg and msg["type"] == "change_cipher_spec":
@@ -348,7 +353,7 @@ class SecureSocket(object):
 
     def p_SHA256(self, secret, seed, length):
         prev_a = seed
-        result = ""
+        result = b""
         while len(result) < length:
             a = hmac.new(secret, msg=prev_a, digestmod=hashlib.sha256)
             prev_a = a.digest()
@@ -372,7 +377,7 @@ class SecureSocket(object):
             raise SecSocketException("Socket without a role!")
         cryptography_imports()
 
-        aes_keysize = max(algorithms.AES.key_sizes)/8
+        aes_keysize = max(algorithms.AES.key_sizes)//8
         mac_keysize = hashlib.sha256().block_size
 
         prf_seq = self.PRF(self._master_secret,

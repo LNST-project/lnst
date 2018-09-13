@@ -136,7 +136,7 @@ class MacPool(AddressPool):
         return bs
 
     def _byte_string_to_addr(self, byte_string):
-        return ':'.join(map(lambda x: "%02x" % x, byte_string))
+        return ':'.join(["%02x" % x for x in byte_string])
 
 
 class IpPool(AddressPool):

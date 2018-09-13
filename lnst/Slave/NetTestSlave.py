@@ -22,7 +22,7 @@ import multiprocessing
 import re
 import struct
 from time import sleep, time
-from xmlrpclib import Binary
+from xmlrpc.client import Binary
 from tempfile import NamedTemporaryFile
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.PacketCapture import PacketCapture
@@ -181,7 +181,7 @@ class SlaveMethods:
             dev_data = dev.get_if_data()
             entry = {"name": dev.get_name(),
                      "hwaddr": dev.get_hwaddr()}
-            for key, value in params.iteritems():
+            for key, value in params.items():
                 if key not in dev_data or dev_data[key] != value:
                     entry = None
                     break
@@ -405,7 +405,7 @@ class SlaveMethods:
             raise Exception("Can't start packet capture, tcpdump not available")
 
         files = {}
-        for if_id, dev in self._if_manager.get_mapped_devices().iteritems():
+        for if_id, dev in self._if_manager.get_mapped_devices().items():
             if dev.get_netns() != None:
                 continue
             dev_name = dev.get_name()
@@ -431,7 +431,7 @@ class SlaveMethods:
         if self._packet_captures == None:
             return True
 
-        for if_index, pcap in self._packet_captures.iteritems():
+        for if_index, pcap in self._packet_captures.items():
             pcap.stop()
 
         self._packet_captures.clear()
@@ -439,7 +439,7 @@ class SlaveMethods:
         return True
 
     def _remove_capture_files(self):
-        for key, name in self._capture_files.iteritems():
+        for key, name in self._capture_files.items():
             logging.debug("Removing temporary packet capture file %s", name)
             os.unlink(name)
 
@@ -462,7 +462,7 @@ class SlaveMethods:
 
     def restore_system_config(self):
         logging.info("Restoring system configuration")
-        for option, values in self._system_config.iteritems():
+        for option, values in self._system_config.items():
             try:
                 cmd_str = "echo \"%s\" >%s" % (values["initial_val"], option)
                 (stdout, stderr) = exec_cmd(cmd_str)
@@ -538,7 +538,7 @@ class SlaveMethods:
         logging.info("Performing machine cleanup.")
         self._command_context.cleanup()
 
-        for mroute_soc in self.mroute_sockets.values():
+        for mroute_soc in list(self.mroute_sockets.values()):
             mroute_soc.close()
             del mroute_soc
         self.mroute_sockets = {}
@@ -546,7 +546,7 @@ class SlaveMethods:
         self.restore_system_config()
 
         devs = self._if_manager.get_mapped_devices()
-        for if_id, dev in devs.iteritems():
+        for if_id, dev in devs.items():
             peer = dev.get_peer()
             if peer == None:
                 dev.clear_configuration()
@@ -557,7 +557,7 @@ class SlaveMethods:
 
         self._if_manager.deconfigure_all()
 
-        for netns in self._net_namespaces.keys():
+        for netns in list(self._net_namespaces.keys()):
             self.del_namespace(netns)
         self._net_namespaces = {}
 
@@ -641,11 +641,11 @@ class SlaveMethods:
         return False
 
     def reset_file_transfers(self):
-        for file_handle in self._copy_targets.itervalues():
+        for file_handle in self._copy_targets.values():
             file_handle.close()
         self._copy_targets = {}
 
-        for file_handle in self._copy_sources.itervalues():
+        for file_handle in self._copy_sources.values():
             file_handle.close()
         self._copy_sources = {}
 
@@ -1086,7 +1086,7 @@ class SlaveMethods:
         return True
 
     def mroute_operation(self, op_type, op, table_id):
-        if not self.mroute_sockets.has_key(table_id):
+        if table_id not in self.mroute_sockets:
             logging.error("mroute %s table was not init", table_id)
             return False
         try:
@@ -1098,7 +1098,7 @@ class SlaveMethods:
 
     def mroute_init(self, table_id):
         logging.debug("Initializing mroute socket")
-        if not self.mroute_sockets.has_key(table_id):
+        if table_id not in self.mroute_sockets:
             self.mroute_sockets[table_id] = socket.socket(socket.AF_INET,
                                                           socket.SOCK_RAW,
                                                           socket.IPPROTO_IGMP)
@@ -1157,7 +1157,7 @@ class SlaveMethods:
                       (source, group, str(out_vifs)))
 
         ttls = [0] * MROUTE.MAX_VIF
-        for vif, ttl in out_vifs.items():
+        for vif, ttl in list(out_vifs.items()):
             if vif >= MROUTE.MAX_VIF:
                 logging.error("ilegal VIF was asked")
                 return False
@@ -1183,7 +1183,7 @@ class SlaveMethods:
         return self.mroute_operation(op_type, mfc_struct, table_id)
 
     def mroute_get_notif(self, table_id):
-        if not self.mroute_sockets.has_key(table_id):
+        if table_id not in self.mroute_sockets:
             logging.error("mroute table %s was not init", table_id)
             return False
         try:
@@ -1340,7 +1340,7 @@ class ServerHandler(ConnectionHandler):
         self._netns_con_mapping = {}
 
     def update_connections(self, connections):
-        for key, connection in connections.iteritems():
+        for key, connection in connections.items():
             self.remove_connection_by_id(key)
             self.add_connection(key, connection)
 
@@ -1392,21 +1392,23 @@ class NetTestSlave:
                                             self._if_manager.get_nl_socket())
 
     def run(self):
-        while not self._finished:
-            if self._server_handler.get_ctl_sock() == None:
-                self._log_ctl.cancel_connection()
-                try:
-                    logging.info("Waiting for connection.")
-                    self._server_handler.accept_connection()
-                except (socket.error, SecSocketException):
-                    continue
-                self._log_ctl.set_connection(
-                                            self._server_handler.get_ctl_sock())
+        while True:
+            try:
+                if self._server_handler.get_ctl_sock() is None:
+                    self._log_ctl.cancel_connection()
+                    try:
+                        logging.info("Waiting for connection.")
+                        self._server_handler.accept_connection()
+                    except (socket.error, SecSocketException):
+                        continue
+                    self._log_ctl.set_connection(self._server_handler.get_ctl_sock())
 
-            msgs = self._server_handler.get_messages()
+                msgs = self._server_handler.get_messages()
 
-            for msg in msgs:
-                self._process_msg(msg[1])
+                for msg in msgs:
+                    self._process_msg(msg[1])
+            except:
+                break
 
         self._methods.machine_cleanup()
 
@@ -1507,7 +1509,7 @@ class NetTestSlave:
 
     def _signal_die_handler(self, signum, frame):
         logging.info("Caught signal %d -> dying" % signum)
-        self._finished = True
+        raise Exception("Recieved interrupt to system call")
 
     def _parent_resend_signal_handler(self, signum, frame):
         logging.info("Caught signal %d -> resending to parent" % signum)

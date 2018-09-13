@@ -11,8 +11,9 @@ jtluka@redhat.com (Jan Tluka)
 """
 
 import os
-from urlparse import urljoin
-from urllib2 import urlopen, HTTPError
+from urllib.parse import urljoin
+from urllib.request import urlopen
+from urllib.error import HTTPError
 from tempfile import NamedTemporaryFile
 
 def get_path_class(root, path):

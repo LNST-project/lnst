@@ -17,7 +17,7 @@ import os
 import tempfile
 import signal
 from time import sleep
-from xmlrpclib import Binary
+from xmlrpc.client import Binary
 from functools import wraps
 from lnst.Common.Config import lnst_config
 from lnst.Common.NetUtils import normalize_hwaddr
@@ -144,7 +144,7 @@ class Machine(object):
             del self._device_database[update_msg["if_index"]]
 
     def dev_db_get_name(self, dev_name):
-        for if_index, dev in self._device_database.iteritems():
+        for if_index, dev in self._device_database.items():
             if dev.get_name() == dev_name:
                 return dev
         return None
@@ -308,7 +308,7 @@ class Machine(object):
         self._slave_desc = slave_desc
 
         devices = self._rpc_call("get_devices")
-        for if_index, dev in devices.items():
+        for if_index, dev in list(devices.items()):
             self._device_database[if_index] = Device(dev, self)
 
         for iface in self._interfaces:
@@ -552,8 +552,8 @@ class Machine(object):
     def sync_resources(self, required):
         self._rpc_call("clear_resource_table")
 
-        for res_type, resources in required.iteritems():
-            for res_name, res in resources.iteritems():
+        for res_type, resources in required.items():
+            for res_name, res in resources.items():
                 has_resource = self._rpc_call("has_resource", res["hash"])
                 if not has_resource:
                     msg = "Transfering %s %s to machine %s" % \
@@ -889,7 +889,7 @@ class Interface(object):
                   "network_label": self._network,
                   "type": self._type,
                   "addresses": self._addresses,
-                  "slaves": self._slaves.keys(),
+                  "slaves": list(self._slaves.keys()),
                   "options": self._options,
                   "slave_options": self._slave_options,
                   "master": None,
@@ -1422,9 +1422,19 @@ class Device(object):
 
     @pre_call_decorate
     def get_ip_addrs(self, selector={}):
-        return [ip["addr"]
-                for ip in self._ip_addrs
-                    if selector.items() <= ip.items()]
+        result = []
+        for addr in self._ip_addrs:
+            match = True
+            for sel_item, value in selector.items():
+                try:
+                    if addr.get(sel_item, None) != value:
+                        match = False
+                        break
+                except:
+                    match = False
+            if match:
+                result.append(addr.get('addr'))
+        return result
 
     @pre_call_decorate
     def get_ip_addr(self, num, selector={}):

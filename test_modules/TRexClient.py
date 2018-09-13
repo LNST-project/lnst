@@ -19,7 +19,7 @@ class TRexClient(TestGeneric):
         super(TRexClient, self).__init__(command)
 
         self._trex_path = self.get_mopt("trex_path")
-        self._ports = map(int, self.get_multi_mopt("ports"))
+        self._ports = list(map(int, self.get_multi_mopt("ports")))
 
         self._src_macs = []
         self._dst_macs = []
@@ -42,7 +42,7 @@ class TRexClient(TestGeneric):
         for res in results:
             new_results.append({})
             new_res = new_results[-1]
-            for key, data in res.items():
+            for key, data in list(res.items()):
                 if key in self._ports:
                     new_res["port_"+str(key)] = data
                 else:

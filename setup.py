@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 Install script for lnst
 
@@ -34,7 +34,7 @@ def process_template(template_path, values):
     t = open(template_path, "r")
     f = open(file_path, "w")
     template = t.read()
-    for var, value in values.iteritems():
+    for var, value in values.items():
         template = template.replace("@%s@" % var, value)
     f.write(template)
     f.close()

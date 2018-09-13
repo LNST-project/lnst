@@ -239,7 +239,7 @@ class XmlTemplates:
         """
         defs = {}
         for level in self._definitions:
-            for name, val in level.iteritems():
+            for name, val in level.items():
                 defs[name] = val
 
         return defs
@@ -255,7 +255,7 @@ class XmlTemplates:
     def set_aliases(self, defined, overriden):
         """ Set aliases defined or overriden from CLI """
 
-        for name, value in defined.iteritems():
+        for name, value in defined.items():
             self.define_alias(name, value)
 
         self._overriden_aliases = overriden
@@ -325,7 +325,7 @@ class XmlTemplates:
         if element.tail != None:
             element.tail = self.expand_aliases(element.tail)
 
-        for name, value in element.attrib.iteritems():
+        for name, value in element.attrib.items():
             element.set(name, self.expand_aliases(value))
 
         if element.tag == "define":

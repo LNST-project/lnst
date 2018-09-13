@@ -65,7 +65,7 @@ class ResourceCache(object):
             header = "# hash                           " \
                      "last_used  type   name         path\n"
             f.write(header)
-            for entry_hash, entry in self._entries.iteritems():
+            for entry_hash, entry in list(self._entries.items()):
                 values = (entry_hash, entry["last_used"], entry["type"],
                             entry["name"], entry["path"])
                 line = "%s %d %s %s %s\n" % values
@@ -137,7 +137,7 @@ class ResourceCache(object):
 
         rm = []
         now = time.time()
-        for entry_hash, entry in self._entries.iteritems():
+        for entry_hash, entry in list(self._entries.items()):
             if entry["last_used"] <= (now - self._expiration_period):
                 rm.append(entry_hash)
 

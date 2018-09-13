@@ -218,10 +218,7 @@ class NmConfigDeviceGeneric(object):
             except:
                 #IPv6 conversion into a 16 byte array
                 tmp = socket.inet_pton(socket.AF_INET6, ip)
-                ip = []
-                for i in tmp:
-                    ip.append(ord(i))
-                ip = dbus.Array(ip, signature='y')
+                ip = dbus.Array(tmp, signature='y')
                 def_gateway = dbus.Array([0]*16, signature='y')
                 ipv6s.append(tuple([ip,
                                     dbus.UInt32(mask),

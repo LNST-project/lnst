@@ -487,7 +487,7 @@ class Netperf(TestGeneric):
                 results.append(result)
                 rates.append(results[-1]["rate"])
 
-        if results > 1:
+        if len(results) > 1:
             res_data["results"] = results
 
         if len(rates) > 0:

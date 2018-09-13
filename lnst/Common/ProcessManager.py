@@ -9,18 +9,18 @@ published by the Free Software Foundation; see COPYING for details.
 __autor__ = """
 jzupka@redhat.com (Jiri Zupka)
 """
-import os, signal, thread, logging
+import os, signal, _thread, logging
 
 class ProcessManager:
     class SubProcess:
         def __init__(self, pid, handler):
             self.pid = pid
-            self.lock = thread.allocate_lock()
+            self.lock = _thread.allocate_lock()
             self.lock.acquire()
             self.handler = handler
             self.enabled = True
             self.status = None
-            thread.start_new_thread(self.waitpid, (self.pid, self.lock,
+            _thread.start_new_thread(self.waitpid, (self.pid, self.lock,
                                                    self.handler))
 
         def isAlive(self):
@@ -45,12 +45,12 @@ class ProcessManager:
                         logging.error(''.join(traceback.format_exception(type, value, tb)))
                         os.kill(os.getpid(), signal.SIGTERM)
                 else:
-                    print "Process pid %s exit with exitcode %s" % (pid, status)
+                    print("Process pid %s exit with exitcode %s" % (pid, status))
                 ProcessManager.lock.release()
-            thread.exit()
+            _thread.exit()
 
     pids = {}
-    lock = thread.allocate_lock()
+    lock = _thread.allocate_lock()
     std_waitpid = None
 
     @classmethod
@@ -86,7 +86,7 @@ class ProcessManager:
             return pid, status
 
 
-lock = thread.allocate_lock()
+lock = _thread.allocate_lock()
 lock.acquire()
 if os.waitpid != ProcessManager.waitpid:
     ProcessManager.std_waitpid = os.waitpid

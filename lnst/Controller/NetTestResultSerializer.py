@@ -94,10 +94,10 @@ class NetTestResultSerializer:
                                          "Setup is using virtual machines.",
                                          ""))
 
-                for m_id, m in sorted(match["machines"].iteritems()):
+                for m_id, m in sorted(match["machines"].items()):
                     output_pairs.append((4*" " + "host \"%s\" uses \"%s\"" %\
                                         (m_id, m["target"]), ""))
-                    for if_id, pool_if in m["interfaces"].iteritems():
+                    for if_id, pool_if in m["interfaces"].items():
                         pool_id = pool_if["target"]
                         if "driver" in pool_if:
                             driver = pool_if["driver"]
@@ -227,12 +227,12 @@ class NetTestResultSerializer:
                 else:
                     match_el.setAttribute("virtual", "false")
 
-                for m_id, m in match["machines"].iteritems():
+                for m_id, m in match["machines"].items():
                     m_el = doc.createElement("m_match")
                     m_el.setAttribute("host_id", str(m_id))
                     m_el.setAttribute("pool_id", str(m["target"]))
 
-                    for if_id, pool_id in m["interfaces"].iteritems():
+                    for if_id, pool_id in m["interfaces"].items():
                         if_el = doc.createElement("if_match")
                         if_el.setAttribute("if_id", str(if_id))
                         if_el.setAttribute("pool_if_id", str(pool_id))

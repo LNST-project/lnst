@@ -386,16 +386,16 @@ class RecipeParser(XmlParser):
             distribution = False
             valid_distributions = ["normal", "uniform", "pareto", "paretonormal"]
             for opt in options:
-                if "time" in opt.values():
+                if "time" in list(opt.values()):
                     valid = True
-                elif "distribution" in opt.values():
+                elif "distribution" in list(opt.values()):
                     if opt["value"] not in valid_distributions:
                         raise RecipeError("netem: invalid distribution type", netem_tag)
                     else:
                         distribution = True
-                elif "jitter" in opt.values():
+                elif "jitter" in list(opt.values()):
                     jitter =  True
-                elif "correlation" in opt.values():
+                elif "correlation" in list(opt.values()):
                     correlation = True
             if not jitter:
                 if correlation or distribution:
@@ -404,22 +404,22 @@ class RecipeParser(XmlParser):
                 raise RecipeError("netem: time option is mandatory for <delay>", netem_tag)
         elif netem_op == "loss":
             for opt in options:
-                if "percent" in opt.values():
+                if "percent" in list(opt.values()):
                     return
             raise RecipeError("netem: percent option is mandatory for <loss>", netem_tag)
         elif netem_op == "duplication":
             for opt in options:
-                if "percent" in opt.values():
+                if "percent" in list(opt.values()):
                     return
             raise RecipeError("netem: percent option is mandatory for <duplication>", netem_tag)
         elif netem_op == "corrupt":
             for opt in options:
-                if "percent" in opt.values():
+                if "percent" in list(opt.values()):
                     return
             raise RecipeError("netem: percent option is mandatory for <corrupt>", netem_tag)
         elif netem_op == "reordering":
             for opt in options:
-                if "percent" in opt.values():
+                if "percent" in list(opt.values()):
                     return
             raise RecipeError("netem: percent option is mandatory for <reordering>", netem_tag)
 
