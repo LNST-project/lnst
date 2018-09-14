@@ -137,42 +137,15 @@ h1_nic2 = h1.get_interface("if2")
 h2_nic1 = h2.get_interface("if1")
 h2_nic2 = h2.get_interface("if2")
 
-
-#============================================
-# WARMP UP - teach switch about mac addresses
-#============================================
+#=================================================
+# Keep ip address configuration for hash stability
+#=================================================
 
 h1_nic1.set_addresses(["192.168.1.1/24"])
 h1_nic2.set_addresses(["192.168.1.3/24"])
 
 h2_nic1.set_addresses(["192.168.1.2/24"])
 h2_nic2.set_addresses(["192.168.1.4/24"])
-
-ctl.wait(5)
-
-ping_opts = {"count": 100, "interval": 0.1, "limit_rate": 20}
-
-pings = []
-pings.append(ping((h1, h1_nic1),
-                  (h2, h2_nic1, 0, {"scope": 0}),
-                  options=ping_opts, bg=True))
-pings.append(ping((h1, h1_nic2),
-                  (h2, h2_nic2, 0, {"scope": 0}),
-                  options=ping_opts, bg=True))
-
-pings.append(ping((h2, h2_nic1),
-                  (h1, h1_nic1, 0, {"scope": 0}),
-                  options=ping_opts, bg=True))
-pings.append(ping((h2, h2_nic2),
-                  (h1, h1_nic2, 0, {"scope": 0}),
-                  options=ping_opts, bg=True))
-
-for i in pings:
-    i.wait()
-
-#============================================
-# WARMP UP END
-#============================================
 
 
 h1.run("service irqbalance stop")
