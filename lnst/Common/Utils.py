@@ -271,12 +271,8 @@ def dict_to_dot(original_dict, prefix=""):
 def std_deviation(values):
     if len(values) <= 0:
         return 0.0
-    s1 = 0.0
-    s2 = 0.0
-    for val in values:
-        s1 += val
-        s2 += val**2
-    return (math.sqrt(len(values)*s2 - s1**2))/len(values)
+    avg = sum(values) / float(len(values))
+    return math.sqrt(sum([(float(i) - avg)**2 for i in values])/len(values))
 
 def deprecated(func):
     """
