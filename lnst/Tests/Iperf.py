@@ -6,7 +6,7 @@ import time
 import subprocess
 import json
 from lnst.Common.Parameters import IntParam, IpParam, StrParam, Param, BoolParam
-from lnst.Common.Parameters import HostnameParam
+from lnst.Common.Parameters import HostnameOrIpParam
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
@@ -53,7 +53,7 @@ class IperfBase(BaseTestModule):
         return True
 
 class IperfServer(IperfBase):
-    bind = HostnameParam()
+    bind = IpParam()
     port = IntParam()
     cpu_bind = IntParam()
     opts = StrParam()
@@ -86,7 +86,7 @@ class IperfServer(IperfBase):
 
 
 class IperfClient(IperfBase):
-    server = HostnameParam(mandatory=True)
+    server = HostnameOrIpParam(mandatory=True)
     duration = IntParam(default=10)
     udp = BoolParam(default=False)
     sctp = BoolParam(default=False)

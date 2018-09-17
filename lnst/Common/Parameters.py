@@ -17,7 +17,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import copy
 import re
 from lnst.Common.DeviceRef import DeviceRef
-from lnst.Common.IpAddress import BaseIpAddress
+from lnst.Common.IpAddress import BaseIpAddress, ipaddress
 from lnst.Common.LnstError import LnstError
 
 class ParamError(LnstError):
@@ -62,25 +62,32 @@ class BoolParam(Param):
 
 class IpParam(Param):
     def type_check(self, value):
-        if isinstance(value, BaseIpAddress):
-            return value
-        else:
+        try:
+            return ipaddress(value)
+        except LnstError:
             raise ParamError("Value must be a BaseIpAddress object")
 
 class HostnameParam(Param):
     def type_check(self, value):
-        if isinstance(value, BaseIpAddress):
-            return value
-
-        if len(value) > 255:
-            raise ParamError("Value must be a BaseIpAddress object or a valid hostname")
+        if not isinstance(value, str) or len(value) > 255:
+            raise ParamError("Value must be a valid hostname string")
 
         hostname_re = ("^([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9])"
                        "(\.([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9]))*$")
         if re.match(hostname_re, value, re.IGNORECASE):
             return value
         else:
-            raise ParamError("Value must be a BaseIpAddress object or a valid hostname")
+            raise ParamError("Value must be a valid hostname string")
+
+class HostnameOrIpParam(IpParam, HostnameParam):
+    def type_check(self, value):
+        try:
+            return IpParam.type_check(self, value)
+        except:
+            try:
+                return HostnameParam.type_check(self, value)
+            except:
+                raise ParamError("Value must be a valid hostname string, ipaddress string or a BaseIpAddress object.")
 
 class DeviceParam(Param):
     def type_check(self, value):

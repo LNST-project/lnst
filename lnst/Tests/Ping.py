@@ -1,7 +1,7 @@
 import re
 import logging
 import subprocess
-from lnst.Common.Parameters import IntParam, FloatParam, IpParam, DeviceOrIpParam
+from lnst.Common.Parameters import IntParam, FloatParam, HostnameOrIpParam, DeviceOrIpParam
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.Utils import is_installed
 from lnst.Common.IpAddress import Ip6Address
@@ -9,7 +9,7 @@ from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 class Ping(BaseTestModule):
     """Port of old IcmpPing test modules"""
-    dst = IpParam(mandatory=True)
+    dst = HostnameOrIpParam(mandatory=True)
     count = IntParam(default=10)
     interval = FloatParam(default=1.0)
     interface = DeviceOrIpParam(mandatory=False)
