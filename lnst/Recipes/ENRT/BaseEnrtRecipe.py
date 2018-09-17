@@ -68,6 +68,8 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on")))
 
+    driver = StrParam(default="ixgbe")
+
     adaptive_coalescing = BoolParam(default=True)
 
     mtu = IntParam(mandatory=False)

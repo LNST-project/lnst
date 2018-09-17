@@ -1,18 +1,17 @@
-
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import IntParam, Param, StrParam, BoolParam
 from lnst.Common.IpAddress import ipaddress, AF_INET, AF_INET6
 
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 
 class SimplePerfRecipe(BaseEnrtRecipe):
     m1 = HostReq()
-    m1.eth0 = DeviceReq(label="net1")
+    m1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     m2 = HostReq()
-    m2.eth0 = DeviceReq(label="net1")
+    m2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
