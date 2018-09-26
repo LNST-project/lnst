@@ -95,18 +95,6 @@ if nperf_msg_size is None:
 if ipsec_mode is None:
     ipsec_mode = "transport"
 
-res = m1.run("rpm -qa iproute", save_output=True)
-if (res.get_result()["res_data"]["stdout"].find("iproute-2") != -1):
-    m1_key="0x"
-else:
-    m1_key=""
-
-res = m2.run("rpm -qa iproute", save_output=True)
-if (res.get_result()["res_data"]["stdout"].find("iproute-2") != -1):
-    m2_key="0x"
-else:
-    m2_key=""
-
 if netdev_cpupin:
     m1.run("service irqbalance stop")
     m2.run("service irqbalance stop")

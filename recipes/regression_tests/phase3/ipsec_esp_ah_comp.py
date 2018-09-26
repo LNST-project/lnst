@@ -3,10 +3,9 @@ from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import perfrepo_baseline_to_dict
 from lnst.Controller.PerfRepoUtils import netperf_result_template
 
-from lnst.RecipeCommon.ModuleWrap import ping, ping6, netperf
+from lnst.RecipeCommon.ModuleWrap import netperf
 from lnst.RecipeCommon.IRQ import pin_dev_irqs
 from lnst.RecipeCommon.PerfRepo import generate_perfrepo_comment
-import re
 
 # ---------------------------
 # ALGORITHM AND CIPHER CONFIG
