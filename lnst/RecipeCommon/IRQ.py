@@ -11,6 +11,7 @@ __author__ = """
 jtluka@redhat.com (Jan Tluka)
 """
 
+import re
 
 '''
 Pins all device IRQs to specified cpu on machine.
@@ -33,9 +34,22 @@ def pin_dev_irqs(machine, device, cpu):
         res = pi.get_result()
         intrs = res["res_data"]["stdout"]
 
+    # save all /proc/irq/ entries
+    cmd = machine.run("ls -1 /proc/irq/ 2>/dev/null || true")
+    res = cmd.get_result()
+    proc_irq = res["res_data"]["stdout"]
+
     for intr in intrs.split('\n'):
         try:
             int(intr)
         except:
             continue
-        machine.config("/proc/irq/%s/smp_affinity_list" % intr.strip(), cpu)
+
+        # some drivers list all _available_ MSI interrupts under msi_irqs
+        # even for driver parts that are not loaded (in case of converged
+        # network adapters) and these interrupts are not visible under
+        # /proc/irq and make LNST report failure so we need to check if the
+        # interrupt is available first
+
+        if re.search("^%s$" % intr.strip(), proc_irq, re.MULTILINE) is not None:
+            machine.config("/proc/irq/%s/smp_affinity_list" % intr.strip(), cpu)
