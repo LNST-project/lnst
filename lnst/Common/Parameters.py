@@ -120,6 +120,24 @@ class DictParam(Param):
         else:
             return value
 
+class ListParam(Param):
+    def __init__(self, type=None, **kwargs):
+        self._type = type
+        super(ListParam, self).__init__(**kwargs)
+
+    def type_check(self, value):
+        if not isinstance(value, list):
+            raise ParamError("Value must be a List. Not {}".format(type(value)))
+
+        if self._type is not None:
+            for item in value:
+                try:
+                    self._type.type_check(item)
+                except ParamError as e:
+                    raise ParamError("Value {} failed type check:\n{}"
+                                     .format(str(e)))
+        return value
+
 class Parameters(object):
     def __init__(self):
         self._attrs = {}
