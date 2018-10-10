@@ -36,12 +36,6 @@ def _ip(cmd):
     except ExecCmdFail as err:
         raise VirtUtilsError("ip command error: %s" % err)
 
-def _brctl(cmd):
-    try:
-        exec_cmd("brctl %s" % cmd)
-    except ExecCmdFail as err:
-        raise VirtUtilsError("brctl error: %s" % err)
-
 def _iptables(cmd):
     try:
         exec_cmd("iptables %s" % cmd)
