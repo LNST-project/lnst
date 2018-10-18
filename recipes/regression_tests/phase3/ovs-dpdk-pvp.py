@@ -103,6 +103,8 @@ if tmp:
 else:
     dpdk_version = "unknown"
 
+ovs_rpm_version = h2.run("rpm -qf `which ovs-vswitchd` || true").get_result()["res_data"]["stdout"]
+
 # ------
 # TESTS
 # ------
@@ -131,6 +133,7 @@ max_dev = ctl.get_alias("max_dev")
 
 pr_comment = generate_perfrepo_comment([h1, h2], pr_user_comment)
 pr_comment += "\n<BR>DPDK version: {}".format(dpdk_version)
+pr_comment += "\n<BR/>OvS rpm version: {}".format(ovs_rpm_version)
 
 h1_nic1 = h1.get_interface("if1")
 h1_nic2 = h1.get_interface("if2")
