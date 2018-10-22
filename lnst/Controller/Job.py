@@ -66,6 +66,10 @@ class Job(object):
         self._id = val
 
     @property
+    def what(self):
+        return self._what
+
+    @property
     def host(self):
         """the initial namespace of the host the job is running on"""
         return self._netns.initns
