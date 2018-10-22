@@ -11,6 +11,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+from lnst.Common.Utils import indent
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.MachineMapper import format_match_description
@@ -102,10 +103,12 @@ class RunSummaryFormatter(object):
             except IndexError:
                 pass
 
-            output_lines.append("{res} {src}\t{desc}".format(
+            output_lines.append("{res} {src}{desc}".format(
                 res = self._format_success(res.success),
                 src = self._format_source(res),
-                desc = res.description)
+                desc = ("\t{}".format(res.description)
+                    if res.description.count('\n') == 0
+                    else "\n{}".format(indent(res.description, 4)))))
 
             if res.data_level <= self._level:
                 output_lines.extend(self._format_data(res.data))
