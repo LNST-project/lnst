@@ -80,8 +80,13 @@ class Namespace(object):
         returns a string name for any other namespace"""
         return self._name
 
-    def run(self, what, bg=False, fail=False, timeout=DEFAULT_TIMEOUT,
-            json=False, desc=None, job_level=ResultLevel.DEBUG):
+    def prepare_job(self, what, fail=False, json=False, desc=None,
+                    job_level=ResultLevel.DEBUG):
+        return Job(self, what, expect=not fail, json=json, desc=desc,
+                   level=job_level)
+
+    def run(self, what, fail=False, json=False, desc=None,
+            job_level=ResultLevel.DEBUG, bg=False, timeout=DEFAULT_TIMEOUT):
         """
         Args:
             what (mandatory) -- what should be run on the host. Can be either a
@@ -105,27 +110,8 @@ class Namespace(object):
             running Job remotely and when the result data arrives from the Slave
             the Job object will be automatically updated.
         """
-
-        job = Job(self, what, expect=not fail, json=json, desc=desc,
-                  level=job_level)
-
-        try:
-            self._machine.run_job(job)
-
-            if not bg:
-                if not job.wait(timeout):
-                    logging.debug("Killing timed-out job")
-                    job.kill()
-        except:
-            raise
-        finally:
-            pass
-            #TODO check expect result here
-            # if bg=True:
-            #     add "job started" result
-            # else:
-            #     add job result
-
+        job = self.prepare_job(what, fail, json, desc, job_level)
+        job.start(bg, timeout)
         return job
 
     def __getattr__(self, name):

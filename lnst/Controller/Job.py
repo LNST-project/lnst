@@ -146,6 +146,15 @@ class Job(object):
         else:
             return False
 
+    def start(self, bg=False, timeout=DEFAULT_TIMEOUT):
+        self._netns._machine.run_job(self)
+
+        if not bg:
+            if not self.wait(timeout):
+                logging.debug("Killing timed-out job")
+                self.kill()
+        return self
+
     def wait(self, timeout=DEFAULT_TIMEOUT):
         """waits for the Job to finish for the specified amount of time
 
