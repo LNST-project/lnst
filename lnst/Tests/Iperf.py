@@ -128,6 +128,8 @@ class IperfClient(IperfBase):
 
         if "parallel" in self.params:
             parallel = "-P {:d}".format(self.params.parallel)
+        else:
+            parallel = ""
 
         if self.params.udp:
             test = "--udp"
