@@ -1,11 +1,7 @@
 import logging
-import errno
-import re
-import signal
-import time
 import subprocess
 import json
-from lnst.Common.Parameters import IntParam, IpParam, StrParam, Param, BoolParam
+from lnst.Common.Parameters import IntParam, IpParam, StrParam, BoolParam
 from lnst.Common.Parameters import HostnameOrIpParam
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
