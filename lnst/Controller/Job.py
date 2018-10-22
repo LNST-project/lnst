@@ -14,6 +14,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import logging
 import signal
 from lnst.Common.JobError import JobError
+from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Controller.RecipeResults import ResultLevel
 
@@ -145,13 +146,14 @@ class Job(object):
         else:
             return False
 
-    def wait(self, timeout=0):
+    def wait(self, timeout=DEFAULT_TIMEOUT):
         """waits for the Job to finish for the specified amount of time
 
         Args:
             timeout -- integer value indicating how long to wait for.
-                Default is 0, means wait forever. Don't use for infinitelly
-                running Jobs.
+                Default is DEFAULT_TIMEOUT.
+                Use zero to wait forever. Don't use for infinitelly running
+                jobs...
                 If non-zero LNST uses a timed SIGALARM signal to return from
                 this method.
         Returns:
