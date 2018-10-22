@@ -102,7 +102,7 @@ class RunSummaryFormatter(object):
             except IndexError:
                 pass
 
-            output_lines.append("{res}\t{src}\t{desc}".format(
+            output_lines.append("{res} {src}\t{desc}".format(
                 res = self._format_success(res.success),
                 src = self._format_source(res),
                 desc = res.short_desc))
