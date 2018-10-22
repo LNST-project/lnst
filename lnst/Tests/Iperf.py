@@ -105,6 +105,10 @@ class IperfClient(IperfBase):
         if self.params.udp and self.params.sctp:
             raise TestModuleError("Parameters udp and sctp are mutually exclusive!")
 
+    def runtime_estimate(self):
+        _duration_overhead = 5
+        return (self.params.duration + _duration_overhead)
+
     def _compose_cmd(self):
         port = ""
 
