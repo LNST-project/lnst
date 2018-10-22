@@ -139,8 +139,10 @@ class BaseRecipe(object):
         else:
             return None
 
-    def add_result(self, success, description="", data=None):
-        self.current_run.add_result(Result(success, description, data))
+    def add_result(self, success, description="", data=None,
+                   level=None, data_level=None):
+        self.current_run.add_result(Result(success, description, data,
+                                           level, data_level))
 
 class RecipeRun(object):
     def __init__(self, match, desc=None):

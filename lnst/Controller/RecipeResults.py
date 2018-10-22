@@ -49,6 +49,10 @@ class BaseResult(object):
     def level(self):
         return ResultLevel.DEBUG
 
+    @property
+    def data_level(self):
+        return ResultLevel.DEBUG
+
 class JobResult(BaseResult):
     """Base class for storing result data of Jobs
 
@@ -65,6 +69,10 @@ class JobResult(BaseResult):
     @BaseResult.level.getter
     def level(self):
         return self.job.level
+
+    @BaseResult.data_level.getter
+    def data_level(self):
+        return self.job.level+1
 
 class JobStartResult(JobResult):
     """Generated automatically when a Job is succesfully started on a slave"""
@@ -98,12 +106,17 @@ class Result(BaseResult):
     Will be created when the tester calls the Recipe interface for adding
     results."""
     def __init__(self, success, short_desc="", data=None,
-                 level=ResultLevel.IMPORTANT):
+                 level=None, data_level=None):
         super(Result, self).__init__(success)
 
         self._short_desc = short_desc
         self._data = data
-        self._level = level
+        self._level = (level
+                if isinstance(level, ResultLevel)
+                else ResultLevel.IMPORTANT)
+        self._data_level = (data_level
+                if isinstance(data_level, ResultLevel)
+                else ResultLevel.IMPORTANT+1)
 
     @BaseResult.short_desc.getter
     def short_desc(self):
@@ -116,3 +129,7 @@ class Result(BaseResult):
     @BaseResult.level.getter
     def level(self):
         return self._level
+
+    @BaseResult.data_level.getter
+    def data_level(self):
+        return self._data_level

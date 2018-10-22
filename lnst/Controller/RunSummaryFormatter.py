@@ -107,7 +107,8 @@ class RunSummaryFormatter(object):
                 src = self._format_source(res),
                 desc = res.short_desc))
 
-            output_lines.extend(self._format_data(res.data))
+            if res.data_level <= self._level:
+                output_lines.extend(self._format_data(res.data))
 
         output_lines.append("Overall result of this Run: {}".
                             format(self._format_success(overall_result)))
