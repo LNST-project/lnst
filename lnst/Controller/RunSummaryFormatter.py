@@ -105,7 +105,7 @@ class RunSummaryFormatter(object):
             output_lines.append("{res} {src}\t{desc}".format(
                 res = self._format_success(res.success),
                 src = self._format_source(res),
-                desc = res.short_desc))
+                desc = res.description)
 
             if res.data_level <= self._level:
                 output_lines.extend(self._format_data(res.data))

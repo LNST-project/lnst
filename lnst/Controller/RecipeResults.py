@@ -38,7 +38,7 @@ class BaseResult(object):
         return self._success
 
     @property
-    def short_desc(self):
+    def description(self):
         return "Short description of result if relevant"
 
     @property
@@ -76,8 +76,8 @@ class JobResult(BaseResult):
 
 class JobStartResult(JobResult):
     """Generated automatically when a Job is succesfully started on a slave"""
-    @BaseResult.short_desc.getter
-    def short_desc(self):
+    @BaseResult.description.getter
+    def description(self):
         return "Job started: {}".format(str(self.job))
 
 class JobFinishResult(JobResult):
@@ -92,8 +92,8 @@ class JobFinishResult(JobResult):
     def success(self):
         return self._job.passed
 
-    @BaseResult.short_desc.getter
-    def short_desc(self):
+    @BaseResult.description.getter
+    def description(self):
         return "Job finished: {}".format(str(self.job))
 
     @BaseResult.data.getter
@@ -105,11 +105,11 @@ class Result(BaseResult):
 
     Will be created when the tester calls the Recipe interface for adding
     results."""
-    def __init__(self, success, short_desc="", data=None,
+    def __init__(self, success, description="", data=None,
                  level=None, data_level=None):
         super(Result, self).__init__(success)
 
-        self._short_desc = short_desc
+        self._description = description
         self._data = data
         self._level = (level
                 if isinstance(level, ResultLevel)
@@ -118,9 +118,9 @@ class Result(BaseResult):
                 if isinstance(data_level, ResultLevel)
                 else ResultLevel.IMPORTANT+1)
 
-    @BaseResult.short_desc.getter
-    def short_desc(self):
-        return self._short_desc
+    @BaseResult.description.getter
+    def description(self):
+        return self._description
 
     @BaseResult.data.getter
     def data(self):
