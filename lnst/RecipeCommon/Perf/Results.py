@@ -10,7 +10,20 @@ class PerfStatMixin(object):
     def std_deviation(self):
         return std_deviation([i.average for i in self])
 
-class PerfInterval(PerfStatMixin):
+class PerfResult(PerfStatMixin):
+    @property
+    def value(self):
+        raise NotImplementedError()
+
+    @property
+    def duration(self):
+        raise NotImplementedError()
+
+    @property
+    def unit(self):
+        raise NotImplementedError()
+
+class PerfInterval(PerfResult):
     def __init__(self, value, duration, unit):
         self._value = value
         self._duration = duration
@@ -33,20 +46,13 @@ class PerfInterval(PerfStatMixin):
         return 0
 
     def __str__(self):
-        return "{} {} in {} seconds".format(
-                self.value, self.unit, self.duration)
+        return "{:.2f} {} in {:.2f} seconds".format(
+                float(self.value), self.unit, float(self.duration))
 
 class PerfList(list):
-    _sub_type = None
-
     def __init__(self, iterable=[]):
-        unit = None
-
         for i, item in enumerate(iterable):
-            if not isinstance(item, self._sub_type):
-                raise LnstError("{} only accepts {} objects."
-                                .format(self.__class__.__name__,
-                                        self._sub_type.__name__))
+            self._validate_item_type(item)
 
             if i == 0:
                 unit = item.unit
@@ -57,13 +63,16 @@ class PerfList(list):
         super(PerfList, self).__init__(iterable)
 
     def _validate_item(self, item):
-        if not isinstance(item, self._sub_type):
-            raise LnstError("{} only accepts {} objects."
-                            .format(self.__class__.__name__,
-                                    self._sub_type.__name__))
+        self._validate_item_type(item)
 
         if len(self) > 0 and item.unit != self[0].unit:
             raise LnstError("PerfList items must have the same unit.")
+
+    def _validate_item_type(self, item):
+        if (not isinstance(item, PerfInterval) and
+            not isinstance(item, PerfList)):
+            raise LnstError("{} only accepts PerfInterval or PerfList objects."
+                            .format(self.__class__.__name__))
 
     def append(self, item):
         self._validate_item(item)
@@ -104,9 +113,7 @@ class PerfList(list):
 
         super(PerfList, self).__setslice__(i, j, iterable)
 
-class StreamPerf(PerfList, PerfStatMixin):
-    _sub_type = PerfInterval
-
+class SequentialPerfResult(PerfResult, PerfList):
     @property
     def value(self):
         return sum([i.value for i in self])
@@ -122,9 +129,7 @@ class StreamPerf(PerfList, PerfStatMixin):
         else:
             return None
 
-class MultiStreamPerf(PerfList, PerfStatMixin):
-    _sub_type = StreamPerf
-
+class ParallelPerfResult(PerfResult, PerfList):
     @property
     def value(self):
         return sum([i.value for i in self])
@@ -132,24 +137,6 @@ class MultiStreamPerf(PerfList, PerfStatMixin):
     @property
     def duration(self):
         return max([i.duration for i in self])
-
-    @property
-    def unit(self):
-        if len(self) > 0:
-            return self[0].unit
-        else:
-            return None
-
-class MultiRunPerf(PerfList, PerfStatMixin):
-    _sub_type = MultiStreamPerf
-
-    @property
-    def value(self):
-        return sum([i.value for i in self])
-
-    @property
-    def duration(self):
-        return sum([i.duration for i in self])
 
     @property
     def unit(self):

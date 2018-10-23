@@ -6,7 +6,8 @@ from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Controller.Recipe import BaseRecipe
 
 from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
-from lnst.RecipeCommon.Perf import PerfTestAndEvaluate, PerfConf
+from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
+from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.IperfMeasurementTool import IperfMeasurementTool
 
 class EnrtConfiguration(object):
@@ -61,7 +62,7 @@ class EnrtSubConfiguration(object):
     def offload_settings(self, value):
         self._offload_settings = value
 
-class BaseEnrtRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
+class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     ip_versions = Param(default=("ipv4", "ipv6"))
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
 
@@ -101,7 +102,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
             for perf_config in self.generate_perf_configurations(main_config,
                                                                  sub_config):
                 result = self.perf_test(perf_config)
-                self.perf_evaluate_and_report(perf_config, result, baseline=None)
+                self.perf_report_and_evaluate(result)
 
             self.remove_sub_configuration(main_config, sub_config)
 
@@ -187,16 +188,9 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
             server_bind = server_nic.ips_filter(family=family)[0]
 
             for perf_test in self.params.perf_tests:
-                yield PerfConf(perf_tool = self.params.perf_tool,
-                               test_type = perf_test,
-                               generator = client_netns,
-                               generator_bind = client_bind,
-                               receiver = server_netns,
-                               receiver_bind = server_bind,
-                               msg_size = self.params.perf_msg_size,
-                               duration = self.params.perf_duration,
-                               iterations = self.params.perf_iterations,
-                               streams = self.params.perf_streams)
+                yield PerfRecipeConf(
+                        measurements=[ ],
+                        iterations=self.params.perf_iterations)
 
     def _pin_dev_interrupts(self, dev, cpu):
         netns = dev.netns
