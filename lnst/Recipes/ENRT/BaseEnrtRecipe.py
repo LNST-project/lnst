@@ -1,4 +1,3 @@
-
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import AF_INET, AF_INET6
@@ -8,7 +7,9 @@ from lnst.Controller.Recipe import BaseRecipe
 from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
-from lnst.RecipeCommon.IperfMeasurementTool import IperfMeasurementTool
+from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
+from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement
+from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 
 class EnrtConfiguration(object):
     def __init__(self):
@@ -79,14 +80,16 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
 
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
-    perf_streams = IntParam(default=1)
+    perf_parallel_streams = IntParam(default=1)
     perf_msg_size = IntParam(default=123)
 
     perf_usr_comment = StrParam(default="")
 
     perf_max_deviation = IntParam(default=10) #TODO required?
 
-    perf_tool = Param(default=IperfMeasurementTool)
+    net_perf_tool = Param(default=IperfFlowMeasurement)
+
+    cpu_perf_tool = Param(default=StatCPUMeasurement)
 
     def test(self):
         main_config = self.test_wide_configuration()
@@ -188,8 +191,22 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
             server_bind = server_nic.ips_filter(family=family)[0]
 
             for perf_test in self.params.perf_tests:
+                flow = PerfFlow(
+                        type = perf_test,
+                        generator = client_netns,
+                        generator_bind = client_bind,
+                        receiver = server_netns,
+                        receiver_bind = server_bind,
+                        msg_size = self.params.perf_msg_size,
+                        duration = self.params.perf_duration,
+                        parallel_streams = self.params.perf_parallel_streams)
+
+                flow_measurement = self.params.net_perf_tool([flow])
                 yield PerfRecipeConf(
-                        measurements=[ ],
+                        measurements=[
+                            self.params.cpu_perf_tool([client_netns, server_netns]),
+                            flow_measurement
+                            ],
                         iterations=self.params.perf_iterations)
 
     def _pin_dev_interrupts(self, dev, cpu):
