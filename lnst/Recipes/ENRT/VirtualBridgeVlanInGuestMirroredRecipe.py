@@ -12,11 +12,11 @@ from lnst.Devices import BridgeDevice
 class VirtualBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch")
-    host1.eth1 = DeviceReq(label="to_guest1")
+    host1.tap0 = DeviceReq(label="to_guest1")
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch")
-    host2.eth1 = DeviceReq(label="to_guest2")
+    host2.tap0 = DeviceReq(label="to_guest2")
 
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest1")
@@ -35,16 +35,16 @@ class VirtualBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
         host1, host2, guest1, guest2 = self.matched.host1, self.matched.host2, self.matched.guest1, self.matched.guest2
 
         host1.eth0.down()
-        host1.eth1.down()
+        host1.tap0.down()
         host1.br0 = BridgeDevice()
         host1.br0.slave_add(host1.eth0)
-        host1.br0.slave_add(host1.eth1)
+        host1.br0.slave_add(host1.tap0)
 
         host2.eth0.down()
-        host2.eth1.down()
+        host2.tap0.down()
         host2.br0 = BridgeDevice()
         host2.br0.slave_add(host2.eth0)
-        host2.br0.slave_add(host2.eth1)
+        host2.br0.slave_add(host2.tap0)
 
         guest1.eth0.down()
         guest1.vlan1 = VlanDevice(realdev=guest1.eth0, vlan_id=10)
@@ -75,10 +75,10 @@ class VirtualBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
         guest2.vlan1.ip_add(ipaddress(net_addr6_1 + "::4/64"))
 
         host1.eth0.up()
-        host1.eth1.up()
+        host1.tap0.up()
         host1.br0.up()
         host2.eth0.up()
-        host2.eth1.up()
+        host2.tap0.up()
         host2.br0.up()
         guest1.eth0.up()
         guest1.vlan1.up()

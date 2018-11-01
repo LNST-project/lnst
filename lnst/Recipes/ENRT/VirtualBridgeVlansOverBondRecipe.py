@@ -14,14 +14,14 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch")
     host1.eth1 = DeviceReq(label="to_switch")
-    host1.eth2 = DeviceReq(label="to_guest1")
-    host1.eth3 = DeviceReq(label="to_guest2")
+    host1.tap0 = DeviceReq(label="to_guest1")
+    host1.tap1 = DeviceReq(label="to_guest2")
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch")
     host2.eth1 = DeviceReq(label="to_switch")
-    host2.eth2 = DeviceReq(label="to_guest3")
-    host2.eth3 = DeviceReq(label="to_guest4")
+    host2.tap0 = DeviceReq(label="to_guest3")
+    host2.tap1 = DeviceReq(label="to_guest4")
 
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest1")

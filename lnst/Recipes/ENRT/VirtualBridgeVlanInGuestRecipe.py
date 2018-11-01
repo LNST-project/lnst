@@ -12,7 +12,7 @@ from lnst.Devices import BridgeDevice
 class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch")
-    host1.eth1 = DeviceReq(label="to_guest")
+    host1.tap0 = DeviceReq(label="to_guest")
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch")
@@ -31,10 +31,10 @@ class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         host1, host2, guest1 = self.matched.host1, self.matched.host2, self.matched.guest1
 
         host1.eth0.down()
-        host1.eth1.down()
+        host1.tap0.down()
         host1.br0 = BridgeDevice()
         host1.br0.slave_add(host1.eth0)
-        host1.br0.slave_add(host1.eth1)
+        host1.br0.slave_add(host1.tap0)
 
         host2.eth0.down()
         host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=10)
@@ -63,7 +63,7 @@ class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         guest1.vlan1.ip_add(ipaddress(net_addr6_1 + "::3/64"))
 
         host1.eth0.up()
-        host1.eth1.up()
+        host1.tap0.up()
         host1.br0.up()
         host2.eth0.up()
         host2.vlan1.up()
