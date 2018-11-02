@@ -18,7 +18,7 @@ class VirtualOvsBridgeVlanInGuestRecipe(BaseEnrtRecipe):
     host2.eth0 = DeviceReq(label="to_switch")
 
     guest1 = HostReq()
-    guest1.tap0 = DeviceReq(label="to_guest")
+    guest1.eth0 = DeviceReq(label="to_guest")
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
@@ -39,8 +39,8 @@ class VirtualOvsBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         host2.eth0.down()
         host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=10)
 
-        guest1.tap0.down()
-        guest1.vlan1 = VlanDevice(realdev=guest1.tap0, vlan_id=10)
+        guest1.eth0.down()
+        guest1.vlan1 = VlanDevice(realdev=guest1.eth0, vlan_id=10)
 
         #Due to limitations in the current EnrtConfiguration
         #class, a single vlan test pair is chosen
@@ -66,7 +66,7 @@ class VirtualOvsBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         host1.br0.up()
         host2.eth0.up()
         host2.vlan1.up()
-        guest1.tap0.up()
+        guest1.eth0.up()
         guest1.vlan1.up()
 
         #TODO better service handling through HostAPI

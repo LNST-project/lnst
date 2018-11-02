@@ -25,16 +25,16 @@ class VirtualOvsBridgeVlansOverBondRecipe(BaseEnrtRecipe):
     host2.tap1 = DeviceReq(label="to_guest4")
 
     guest1 = HostReq()
-    guest1.tap0 = DeviceReq(label="to_guest1")
+    guest1.eth0 = DeviceReq(label="to_guest1")
 
     guest2 = HostReq()
-    guest2.tap0 = DeviceReq(label="to_guest2")
+    guest2.eth0 = DeviceReq(label="to_guest2")
 
     guest3 = HostReq()
-    guest3.tap0 = DeviceReq(label="to_guest3")
+    guest3.eth0 = DeviceReq(label="to_guest3")
 
     guest4 = HostReq()
-    guest4.tap0 = DeviceReq(label="to_guest4")
+    guest4.eth0 = DeviceReq(label="to_guest4")
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
@@ -71,27 +71,27 @@ class VirtualOvsBridgeVlansOverBondRecipe(BaseEnrtRecipe):
 
         host2.br0.bond_add("bond_host2", (host2.eth1, host2.eth2), bond_mode=self.params.bonding_mode)
 
-        guest1.tap0.down()
+        guest1.eth0.down()
 
-        guest2.tap0.down()
+        guest2.eth0.down()
 
-        guest3.tap0.down()
+        guest3.eth0.down()
 
-        guest4.tap0.down()
+        guest4.eth0.down()
 
         #Due to limitations in the current EnrtConfiguration
         #class, a single vlan test pair is chosen
         configuration = EnrtConfiguration()
-        configuration.endpoint1 = guest1.tap0
-        configuration.endpoint2 = guest3.tap0
+        configuration.endpoint1 = guest1.eth0
+        configuration.endpoint2 = guest3.eth0
 
         if "mtu" in self.params:
             host1.br0.mtu = self.params.mtu
             host2.br0.mtu = self.params.mtu
-            guest1.tap0.mtu = self.params.mtu
-            guest2.tap0.mtu = self.params.mtu
-            guest3.tap0.mtu = self.params.mtu
-            guest4.tap0.mtu = self.params.mtu
+            guest1.eth0.mtu = self.params.mtu
+            guest2.eth0.mtu = self.params.mtu
+            guest3.eth0.mtu = self.params.mtu
+            guest4.eth0.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"
@@ -116,10 +116,10 @@ class VirtualOvsBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         host2.tap0.up()
         host2.tap1.up()
         host2.br0.up()
-        guest1.tap0.up()
-        guest2.tap0.up()
-        guest3.tap0.up()
-        guest4.tap0.up()
+        guest1.eth0.up()
+        guest2.eth0.up()
+        guest3.eth0.up()
+        guest4.eth0.up()
 
         #TODO better service handling through HostAPI
         host1.run("service irqbalance stop")
