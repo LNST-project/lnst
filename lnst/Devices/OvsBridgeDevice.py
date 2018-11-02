@@ -25,18 +25,7 @@ class OvsBridgeDevice(SoftDevice):
 
     @classmethod
     def _type_init(cls):
-        if not cls._type_initialized:
-            exec_cmd("modprobe %s %s" % ("openvswitch", cls._moduleparams))
-
-            if not check_process_running("ovsdb-server"):
-                exec_cmd("mkdir -p /var/run/openvswitch/")
-                exec_cmd("ovsdb-server --detach --pidfile "\
-                         "--remote=punix:/var/run/openvswitch/db.sock",
-                         die_on_err=False)
-            if not check_process_running("ovs-vswitchd"):
-                exec_cmd("ovs-vswitchd --detach --pidfile", die_on_err=False)
-
-            cls._type_initialized = True
+        exec_cmd("systemctl start openvswitch.service", die_on_err=False)
 
     def _create(self):
         exec_cmd("ovs-vsctl add-br %s" % self.name)
