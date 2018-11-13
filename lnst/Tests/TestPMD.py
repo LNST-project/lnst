@@ -7,6 +7,7 @@ from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 class TestPMD(BaseTestModule):
     coremask = StrParam(mandatory=True)
+    pmd_coremask = StrParam(mandatory=True)
 
     #TODO make ListParam
     nics = Param(mandatory=True)
@@ -19,7 +20,8 @@ class TestPMD(BaseTestModule):
         for nic in self.params.nics:
             testpmd_args.extend(["-w", nic])
 
-        testpmd_args.extend(["--", "-i", "--forward-mode", "mac"])
+        testpmd_args.extend(["--", "-i", "--forward-mode", "mac",
+                             "--coremask", self.params.pmd_coremask])
 
         for i, mac in enumerate(self.params.peer_macs):
             testpmd_args.extend(["--eth-peer", "{},{}".format(i, mac)])
@@ -29,6 +31,7 @@ class TestPMD(BaseTestModule):
 
     def run(self):
         cmd = self.format_command()
+        logging.debug("Running command \"{}\" as subprocess".format(cmd))
         process = subprocess.Popen(cmd, shell=True,
                                    stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
