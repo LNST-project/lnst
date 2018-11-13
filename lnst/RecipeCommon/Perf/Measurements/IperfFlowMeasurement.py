@@ -8,6 +8,7 @@ from lnst.Controller.RecipeResults import ResultLevel
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
+from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowTest
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
 
@@ -133,25 +134,3 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         else:
             cpu_percent = job.result["data"]["end"]["cpu_utilization_percent"]["host_total"]
             return PerfInterval(cpu_percent, 1, "cpu_percent")
-
-class NetworkFlowTest(object):
-    def __init__(self, flow, server_job, client_job):
-        self._flow = flow
-        self._server_job = server_job
-        self._client_job = client_job
-
-    @property
-    def flow(self):
-        return self._flow
-
-    @property
-    def server_job(self):
-        return self._server_job
-
-    @property
-    def client_job(self):
-        return self._client_job
-
-    @property
-    def duration(self):
-        return self._flow.duration

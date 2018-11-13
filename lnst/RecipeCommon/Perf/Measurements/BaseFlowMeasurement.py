@@ -52,6 +52,24 @@ class Flow(object):
     def parallel_streams(self):
         return self._parallel_streams
 
+class NetworkFlowTest(object):
+    def __init__(self, flow, server_job, client_job):
+        self._flow = flow
+        self._server_job = server_job
+        self._client_job = client_job
+
+    @property
+    def flow(self):
+        return self._flow
+
+    @property
+    def server_job(self):
+        return self._server_job
+
+    @property
+    def client_job(self):
+        return self._client_job
+
 class FlowMeasurementResults(object):
     def __init__(self, flow):
         self._flow = flow
