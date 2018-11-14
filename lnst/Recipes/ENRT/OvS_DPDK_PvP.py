@@ -10,8 +10,12 @@ from lnst.Common.IpAddress import ipaddress
 from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
 from lnst.Tests import Ping
 from lnst.Tests.TestPMD import TestPMD
-from lnst.RecipeCommon.Perf import PerfTestAndEvaluate, PerfConf
-from lnst.RecipeCommon.TRexMeasurementTool import TRexMeasurementTool
+
+from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
+from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
+from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
+from lnst.RecipeCommon.Perf.Measurements import TRexFlowMeasurement
+from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 
 from lnst.RecipeCommon.LibvirtControl import LibvirtControl
 
@@ -43,7 +47,7 @@ class PvPTestConf(object):
         self.dut = self.DUTConf()
         self.guest = self.GuestConf()
 
-class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
+class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
     m1 = HostReq()
     m1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     m1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -71,6 +75,8 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
 
     dev_intr_cpu = IntParam(default=0)
 
+
+    cpu_perf_tool = Param(default=StatCPUMeasurement)
 
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
@@ -132,7 +138,7 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
 
             perf_config = self.generate_perf_config(config)
             result = self.perf_test(perf_config)
-            self.perf_evaluate_and_report(perf_config, result, baseline=None)
+            self.perf_report_and_evaluate(result)
         finally:
             self.test_wide_deconfiguration(config)
 
@@ -175,18 +181,32 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
         return config
 
     def generate_perf_config(self, config):
-        conf = PerfConf(
-                perf_tool = TRexMeasurementTool(self.params.trex_dir),
-                test_type = "pvp_loop_rate",
+        flows = []
+        for src_nic, dst_nic in zip(config.generator.nics, config.dut.nics):
+            src_bind = dict(mac_addr=src_nic.hwaddr,
+                            pci_addr=src_nic.bus_info,
+                            ip_addr=src_nic.ips[0])
+            dst_bind = dict(mac_addr=dst_nic.hwaddr,
+                            pci_addr=dst_nic.bus_info,
+                            ip_addr=dst_nic.ips[0])
+            flows.append(PerfFlow(
+                type = "pvp_loop_rate",
                 generator = config.generator.host,
-                generator_bind = config.generator.nics,
+                generator_bind = src_bind,
                 receiver = config.dut.host,
-                receiver_bind = config.dut.nics,
+                receiver_bind = dst_bind,
                 msg_size = self.params.perf_msg_size,
                 duration = self.params.perf_duration,
-                iterations = self.params.perf_iterations,
-                streams = self.params.perf_streams)
-        return conf
+                parallel_streams = self.params.perf_streams))
+
+        return PerfRecipeConf(
+                measurements=[
+                    self.params.cpu_perf_tool([config.generator.host,
+                                               config.dut.host,
+                                               config.guest.host]),
+                    TRexFlowMeasurement(flows, self.params.trex_dir)
+                    ],
+                iterations=self.params.perf_iterations)
 
     def test_wide_deconfiguration(self, config):
         try:
@@ -358,7 +378,7 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
         guest_ip_job = host.run("gethostip -d {}".format(guest_conf.name))
         guest_ip = guest_ip_job.stdout.strip()
 
-        guest = self.ctl.connect_host(guest_ip, timeout=60)
+        guest = self.ctl.connect_host(guest_ip, timeout=60, machine_id="guest1")
         guest_conf.host = guest
 
         for i, nic in enumerate(guest_conf.vhost_nics):

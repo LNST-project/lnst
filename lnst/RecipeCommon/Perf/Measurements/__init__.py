@@ -1,3 +1,4 @@
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import Flow
 from lnst.RecipeCommon.Perf.Measurements.IperfFlowMeasurement import IperfFlowMeasurement
+from lnst.RecipeCommon.Perf.Measurements.TRexFlowMeasurement import TRexFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.StatCPUMeasurement import StatCPUMeasurement
