@@ -60,12 +60,13 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
     guest_cpus = StrParam(mandatory=True)
     guest_emulatorpin_cpu = StrParam(mandatory=True)
     guest_dpdk_cores = StrParam(mandatory=True)
+    guest_testpmd_cores = StrParam(mandatory=True)
     guest_mem_size = IntParam(default=16777216)
 
     host1_dpdk_cores = StrParam(mandatory=True)
     host2_pmd_cores = StrParam(mandatory=True)
     host2_l_cores = StrParam(mandatory=True)
-    nr_hugepages = IntParam(default=2048)
+    nr_hugepages = IntParam(default=13000)
     socket_mem = IntParam(default=2048)
 
     dev_intr_cpu = IntParam(default=0)
@@ -164,7 +165,8 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
 
         config.guest.testpmd = guest.run(
                 TestPMD(
-                    coremask=self.params.guest_dpdk_cores,
+                    coremask=self.params.guest_testpmd_cores,
+                    pmd_coremask=self.params.guest_dpdk_cores,
                     nics=[nic.bus_info for nic in config.guest.nics],
                     peer_macs=[nic.hwaddr for nic in config.generator.nics]),
                 bg=True)
@@ -317,6 +319,10 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfTestAndEvaluate):
         ET.SubElement(cputune,
                       "emulatorpin",
                       cpuset=str(self.params.guest_emulatorpin_cpu))
+
+        memoryBacking = ET.SubElement(guest_xml, "memoryBacking")
+        hugepages = ET.SubElement(memoryBacking, "hugepages")
+        ET.SubElement(hugepages, "page", size="2", unit="M", nodeset="0")
 
         return guest_xml
 
