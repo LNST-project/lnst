@@ -45,8 +45,7 @@ class StatCPUMeasurement(BaseCPUMeasurement):
                 job.wait()
         finally:
             for job in jobs:
-                if not job.finished:
-                    job.kill()
+                job.kill()
 
         self._running_measurements = []
         self._finished_measurements = jobs

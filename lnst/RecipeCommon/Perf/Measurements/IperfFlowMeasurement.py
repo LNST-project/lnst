@@ -44,10 +44,8 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
                 flow.server_job.wait(timeout=5)
         finally:
             for flow in test_flows:
-                if not flow.server_job.finished:
-                    flow.server_job.kill()
-                if not flow.client_job.finished:
-                    flow.client_job.kill()
+                flow.server_job.kill()
+                flow.client_job.kill()
 
         self._running_measurements = []
         self._finished_measurements = test_flows

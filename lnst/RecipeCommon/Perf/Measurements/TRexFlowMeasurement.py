@@ -46,10 +46,8 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
                 test.server_job.wait(5)
         finally:
             for test in tests:
-                if not test.server_job.finished:
-                    test.server_job.kill()
-                if not test.client_job.finished:
-                    test.client_job.kill()
+                test.server_job.kill()
+                test.client_job.kill()
 
         self._running_measurements = []
         self._finished_measurements = tests

@@ -400,7 +400,7 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
             return
 
         testpmd = guest_conf.testpmd
-        if testpmd and not testpmd.finished:
+        if testpmd:
             testpmd.kill(signal.SIGINT)
             testpmd.wait()
 
