@@ -50,8 +50,8 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         for m, n in [(host1, 10),(host2, 10)]:
             m.eth0.down()
             m.eth1.down()
-            m.eth2.down()
-            m.eth3.down()
+            m.tap0.down()
+            m.tap1.down()
             m.bond = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
             m.bond.slave_add(m.eth0)
             m.bond.slave_add(m.eth1)
@@ -59,10 +59,10 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
             m.vlan2 = VlanDevice(realdev=m.bond, vlan_id=2*n)
             m.br0 = BridgeDevice()
             m.br0.slave_add(m.vlan1)
-            m.br0.slave_add(m.eth2)
+            m.br0.slave_add(m.tap0)
             m.br1 = BridgeDevice()
             m.br1.slave_add(m.vlan2)
-            m.br1.slave_add(m.eth3)
+            m.br1.slave_add(m.tap1)
 
         for m in (guest1, guest2, guest3, guest4):
             m.eth0.down()
@@ -100,8 +100,8 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         for m, g1, g2 in [(host1, guest1, guest2), (host2, guest3, guest4)]:
             m.eth0.up()
             m.eth1.up()
-            m.eth2.up()
-            m.eth3.up()
+            m.tap0.up()
+            m.tap1.up()
             m.bond.up()
             m.vlan1.up()
             m.vlan2.up()
