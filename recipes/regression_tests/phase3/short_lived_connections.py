@@ -112,6 +112,17 @@ netperf_srv = ctl.get_module("Netperf",
                                   "bind" : m1_testiface.get_ip(0)
                                   })
 
+if nperf_mode == "multi":
+    netperf_cli_tcp_rr.unset_option("confidence")
+    netperf_cli_tcp_crr.unset_option("confidence")
+
+    netperf_cli_tcp_rr.update_options({"num_parallel": nperf_num_parallel})
+    netperf_cli_tcp_crr.update_options({"num_parallel": nperf_num_parallel})
+
+    # we have to use multiqueue qdisc to get appropriate data
+    m1.run("tc qdisc replace dev %s root mq" % m1_testiface.get_devname())
+    m2.run("tc qdisc replace dev %s root mq" % m2_testiface.get_devname())
+
 ctl.wait(15)
 
 # start netperf server
@@ -121,17 +132,6 @@ ctl.wait(2)
 for size in nperf_sizes.split():
     if 'TCP_RR' in nperf_tests.split():
         netperf_cli_tcp_rr.update_options({"testoptions": "-r %s" % size})
-
-        if nperf_mode == "multi":
-            netperf_cli_tcp_rr.unset_option("confidence")
-            netperf_cli_tcp_crr.unset_option("confidence")
-
-            netperf_cli_tcp_rr.update_options({"num_parallel": nperf_num_parallel})
-            netperf_cli_tcp_crr.update_options({"num_parallel": nperf_num_parallel})
-
-            # we have to use multiqueue qdisc to get appropriate data
-            m1.run("tc qdisc replace dev %s root mq" % m1_testiface.get_devname())
-            m2.run("tc qdisc replace dev %s root mq" % m2_testiface.get_devname())
 
         # prepare PerfRepo result for tcp_rr
         result_tcp_rr = perf_api.new_result("tcp_rr_id",
