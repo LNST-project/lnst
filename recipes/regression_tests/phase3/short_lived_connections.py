@@ -121,7 +121,6 @@ ctl.wait(2)
 for size in nperf_sizes.split():
     if 'TCP_RR' in nperf_tests.split():
         netperf_cli_tcp_rr.update_options({"testoptions": "-r %s" % size})
-        netperf_cli_tcp_crr.update_options({"testoptions": "-r %s" % size})
 
         if nperf_mode == "multi":
             netperf_cli_tcp_rr.unset_option("confidence")
@@ -158,6 +157,8 @@ for size in nperf_sizes.split():
         perf_api.save_result(result_tcp_rr, official_result)
 
     if 'TCP_CRR' in nperf_tests.split():
+        netperf_cli_tcp_crr.update_options({"testoptions": "-r %s" % size})
+
         # prepare PerfRepo result for tcp_crr
         result_tcp_crr = perf_api.new_result("tcp_crr_id",
                                              "tcp_crr_result",
