@@ -12,6 +12,8 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import re
 from socket import inet_pton, inet_ntop, AF_INET, AF_INET6
+from binascii import hexlify
+import socket
 from lnst.Common.LnstError import LnstError
 
 #TODO create various generators for IPNetworks and IPaddresses in the same
@@ -77,6 +79,7 @@ class Ip6Address(BaseIpAddress):
         super(Ip6Address, self).__init__(addr)
 
         self.family = AF_INET6
+        self.link_local = self.is_link_local()
 
     @staticmethod
     def _parse_addr(addr):
@@ -96,6 +99,10 @@ class Ip6Address(BaseIpAddress):
             raise LnstError("Invalid IPv6 format.")
 
         return addr, prefixlen
+
+    def is_link_local(self):
+        left_half = hexlify(socket.inet_pton(socket.AF_INET6, str(self)))[:16]
+        return left_half == 'fe80000000000000'
 
 def ipaddress(addr):
     """Factory method to create a BaseIpAddress object"""
