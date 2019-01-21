@@ -7,11 +7,17 @@ jprochaz@redhat.com (Jiri Prochazka)
 """
 
 import logging
-import errno
 import re
+import signal
+import errno
 from lnst.Common.TestsCommon import TestGeneric
 from lnst.Common.ShellProcess import ShellProcess
 from lnst.Common.Utils import std_deviation, is_installed, int_it
+
+class InterruptException(Exception):
+    """Exception used to handle SIGINT waiting"""
+    pass
+
 
 class Netperf(TestGeneric):
 
@@ -384,10 +390,21 @@ class Netperf(TestGeneric):
         logging.debug("running as server...")
         server = ShellProcess(cmd)
         try:
-            server.wait()
-        except OSError as e:
-            if e.errno == errno.EINTR:
-                server.kill()
+            self.wait_for_interrupt()
+        except InterruptException:
+            server.kill()
+
+    def wait_for_interrupt(self):
+        def handler(signum, frame):
+            raise InterruptException()
+
+        try:
+            old_handler = signal.signal(signal.SIGINT, handler)
+            signal.pause()
+        except InterruptException:
+            pass
+        finally:
+            signal.signal(signal.SIGINT, old_handler)
 
     def _pretty_rate(self, rate, unit=None):
         pretty_rate = {}
@@ -502,7 +519,7 @@ class Netperf(TestGeneric):
             rate_deviation = 2*res_data["std_deviation"]
         elif len(rates) == 1 and self._confidence is not None:
             result = results[0]
-            rate_deviation = rate * (result["confidence"][1] / 100)
+            rate_deviation = rate * (int(result["confidence"][1]) / 100)
         else:
             rate_deviation = 0.0
 

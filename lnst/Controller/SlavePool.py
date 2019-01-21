@@ -451,7 +451,7 @@ class SetupMapper(object):
             self._pool = self._pools[self._pool_name]
 
         self._unmatched_pool_machines = []
-        for p_id, p_machine in sorted(iter(self._pool.items()), reverse=True):
+        for p_id, p_machine in sorted(self._pool.items(), reverse=True):
             if self._virtual_matching:
                 if "libvirt_domain" in p_machine["params"]:
                     self._unmatched_pool_machines.append(p_id)
@@ -516,7 +516,7 @@ class SetupMapper(object):
                                      self._pool_name)
 
                         self._unmatched_pool_machines = []
-                        for p_id, p_machine in sorted(iter(self._pool.items()), reverse=True):
+                        for p_id, p_machine in sorted(self._pool.items(), reverse=True):
                             if self._virtual_matching:
                                 if "libvirt_domain" in p_machine["params"]:
                                     self._unmatched_pool_machines.append(p_id)

@@ -1259,9 +1259,9 @@ class PerfRepoResult(object):
         params = self._testExecution.get_parameters()
 
         sha1 = hashlib.sha1()
-        sha1.update(self._testExecution.get_testUid())
+        sha1.update((self._testExecution.get_testUid()).encode("utf-8"))
         for i in sorted(tags):
-            sha1.update(i)
+            sha1.update(i.encode("utf-8"))
         for i in sorted(params, key=lambda x: x[0]):
             skip = False
             for j in ignore:
@@ -1270,8 +1270,8 @@ class PerfRepoResult(object):
                     break
             if skip:
                 continue
-            sha1.update(i[0])
-            sha1.update(str(i[1]))
+            sha1.update(i[0].encode("utf-8"))
+            sha1.update(str(i[1]).encode("utf-8"))
         return sha1.hexdigest()
 
 class PerfRepoBaseline(object):

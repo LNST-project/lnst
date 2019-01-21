@@ -14,7 +14,7 @@ from lnst.RecipeCommon.PerfRepo import generate_perfrepo_comment
 #lenth param is in bits
 def generate_key(length):
     key = "0x"
-    key = key + (length/8) * "0b"
+    key = key + (int(length/8)) * "0b"
     return key
 
 algorithm = []

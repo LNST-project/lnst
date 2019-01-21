@@ -43,6 +43,11 @@ from lnst.Slave.InterfaceManager import InterfaceManager
 from lnst.Slave.BridgeTool import BridgeTool
 from lnst.Slave.SlaveSecSocket import SlaveSecSocket, SecSocketException
 
+class SystemCallException(Exception):
+    """Exception used to handle SIGINT waiting for system calls"""
+    pass
+
+
 class SlaveMethods:
     '''
     Exported xmlrpc methods
@@ -1407,7 +1412,7 @@ class NetTestSlave:
 
                 for msg in msgs:
                     self._process_msg(msg[1])
-            except:
+            except SystemCallException:
                 break
 
         self._methods.machine_cleanup()
@@ -1509,7 +1514,7 @@ class NetTestSlave:
 
     def _signal_die_handler(self, signum, frame):
         logging.info("Caught signal %d -> dying" % signum)
-        raise Exception("Recieved interrupt to system call")
+        raise SystemCallException()
 
     def _parent_resend_signal_handler(self, signum, frame):
         logging.info("Caught signal %d -> resending to parent" % signum)

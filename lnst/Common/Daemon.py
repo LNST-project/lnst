@@ -25,7 +25,7 @@ class Daemon:
 
     def _read_pid(self):
         try:
-            handle = file(self._pidfile, "r")
+            handle = open(self._pidfile, "r")
             pid = int(handle.read().strip())
             handle.close()
         except IOError:
@@ -33,7 +33,7 @@ class Daemon:
         return pid
 
     def _write_pid(self, pid):
-        handle = file(self._pidfile, "w")
+        handle = open(self._pidfile, "w")
         handle.write("%s\n" % str(pid))
         handle.close()
         self._pid_written = True
@@ -86,9 +86,9 @@ class Daemon:
         sys.stdout.flush()
         sys.stderr.flush()
 
-        si = file("/dev/null", 'r')
-        so = file("/dev/null", 'a+')
-        se = file("/dev/null", 'a+', 0)
+        si = open("/dev/null", 'r')
+        so = open("/dev/null", 'a+')
+        se = open("/dev/null", 'a+', 0)
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
