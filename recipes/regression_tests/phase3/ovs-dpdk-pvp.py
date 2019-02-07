@@ -399,7 +399,10 @@ run_ssh_command_on_guest("mkfifo /tmp/testpmd_stdio", guest, h2, guest_virtname)
 run_ssh_command_on_bg_channel("tail -f /tmp/testpmd_stdio | {}".format(testpmd_cmd),
         testpmd_shell, h2, guest_virtname)
 
+ctl.wait(20)
 run_ssh_command_on_guest("echo \"start tx_first\" > /tmp/testpmd_stdio", guest, h2, guest_virtname)
+
+ctl.wait(20)
 
 trex_client_mod = ctl.get_module("TRexClient",
         options=trex_client_conf)
