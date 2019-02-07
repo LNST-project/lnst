@@ -487,11 +487,10 @@ h2.run("ovs-vsctl del-br br0")
 
 h2.run("virsh shutdown %s || true" % guest_virtname)
 
-#required to free up the bus so that we can return the devices to the original
-#driver should be possible to remove this for OVS version >= 2.8 TODO
-h2.restart_service("openvswitch")
-h2.run("driverctl unset-override %s & sleep 1; systemctl restart openvswitch" % h2_nic1_pci)
-h2.run("driverctl unset-override %s & sleep 1; systemctl restart openvswitch" % h2_nic2_pci)
+h2.disable_service("openvswitch")
+ctl.wait(5)
+h2.run("driverctl unset-override %s" % h2_nic1_pci)
+h2.run("driverctl unset-override %s" % h2_nic2_pci)
 
 h2.run("virsh define %s" % original_guest_xml_path)
 
