@@ -18,6 +18,7 @@ from lnst.Slave.NetConfigCommon import get_slaves, get_option, get_slave_option
 from lnst.Slave.NetConfigCommon import parse_netem, get_slave_options
 from lnst.Common.Utils import bool_it
 from lnst.Common.Utils import check_process_running
+from lnst.Common.Utils import is_installed
 from lnst.Slave.NmConfigDevice import type_class_mapping as nm_type_class_mapping
 from lnst.Slave.NmConfigDevice import is_nm_managed
 
@@ -267,7 +268,8 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
     _modulename = "bridge"
 
     def _add_rm_bridge(self, prefix):
-        exec_cmd("brctl %sbr %s " % (prefix, self._dev_config["name"]))
+        exec_cmd("ip link %s %s type bridge " % (prefix,
+                                                 self._dev_config["name"]))
 
     def _get_bridge_dir(self):
         return "/sys/class/net/%s/bridge" % self._dev_config["name"]
@@ -282,14 +284,28 @@ class NetConfigDeviceBridge(NetConfigDeviceGeneric):
                                             self._get_bridge_dir(),
                                             option))
 
-    def _add_rm_port(self, prefix, slave_id):
+    def _add_rm_port_iproute(self, action, slave_id):
         port_name = self._if_manager.get_mapped_device(slave_id).get_name()
-        exec_cmd("brctl %sif %s %s" % (prefix, self._dev_config["name"],
+        if action == "add":
+            exec_cmd("ip link set %s master %s" % (port_name,
+                                                   self._dev_config["name"]))
+        elif action == "del":
+            exec_cmd("ip link set %s nomaster" % port_name)
+
+    def _add_rm_port_brctl(self, action, slave_id):
+        port_name = self._if_manager.get_mapped_device(slave_id).get_name()
+        exec_cmd("brctl %sif %s %s" % (action, self._dev_config["name"],
                                        port_name))
 
-    def _add_rm_ports(self, prefix):
+    def _add_rm_port(self, action, slave_id):
+        if is_installed("brctl"):
+            self._add_rm_port_brctl(action, slave_id)
+        else:
+            self._add_rm_port_iproute(action, slave_id)
+
+    def _add_rm_ports(self, action):
         for slave_id in get_slaves(self._dev_config):
-            self._add_rm_port(prefix, slave_id)
+            self._add_rm_port(action, slave_id)
 
     def create(self):
         self._add_rm_bridge("add")

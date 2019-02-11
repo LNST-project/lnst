@@ -50,8 +50,13 @@ pr_user_comment = ctl.get_alias("perfrepo_comment")
 nperf_protocols = ctl.get_alias("nperf_protocols")
 official_result = bool_it(ctl.get_alias("official_result"))
 
+h1_ovs_rpm_version = host1.run("rpm -qf `which ovs-vswitchd` || true").get_result()["res_data"]["stdout"]
+h2_ovs_rpm_version = host2.run("rpm -qf `which ovs-vswitchd` || true").get_result()["res_data"]["stdout"]
+
 pr_comment = generate_perfrepo_comment([guest1, guest2, guest3, guest4],
                                        pr_user_comment)
+pr_comment += "\n<BR/>Host1 OvS rpm version: {}".format(h1_ovs_rpm_version)
+pr_comment += "\n<BR/>Host2 OvS rpm version: {}".format(h2_ovs_rpm_version)
 
 g1_nic = guest1.get_interface("if1")
 g2_nic = guest2.get_interface("if1")

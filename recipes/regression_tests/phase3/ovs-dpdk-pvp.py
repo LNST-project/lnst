@@ -103,6 +103,8 @@ if tmp:
 else:
     dpdk_version = "unknown"
 
+ovs_rpm_version = h2.run("rpm -qf `which ovs-vswitchd` || true").get_result()["res_data"]["stdout"]
+
 # ------
 # TESTS
 # ------
@@ -115,6 +117,7 @@ host2_dpdk_cores = ctl.get_alias("host2_dpdk_cores")
 guest_testpmd_cores = ctl.get_alias("guest_testpmd_cores")
 guest_dpdk_cores = ctl.get_alias("guest_dpdk_cores")
 nr_hugepages = int(ctl.get_alias("nr_hugepages"))
+guest_nr_hugepages = int(ctl.get_alias("guest_nr_hugepages"))
 socket_mem = int(ctl.get_alias("socket_mem"))
 guest_mem_amount = ctl.get_alias("guest_mem_amount")
 guest_virtname = ctl.get_alias("guest_virtname")
@@ -131,6 +134,7 @@ max_dev = ctl.get_alias("max_dev")
 
 pr_comment = generate_perfrepo_comment([h1, h2], pr_user_comment)
 pr_comment += "\n<BR>DPDK version: {}".format(dpdk_version)
+pr_comment += "\n<BR/>OvS rpm version: {}".format(ovs_rpm_version)
 
 h1_nic1 = h1.get_interface("if1")
 h1_nic2 = h1.get_interface("if2")
@@ -315,7 +319,7 @@ g_nic2_out = run_ssh_command_on_guest("ethtool -i %s" % g_nic2_name, guest, h2, 
 g_nic1_pci = re.search("^bus-info: (\S+)$", g_nic1_out, re.MULTILINE).group(1)
 g_nic2_pci = re.search("^bus-info: (\S+)$", g_nic2_out, re.MULTILINE).group(1)
 
-run_ssh_command_on_guest("echo -n %d >/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages" % nr_hugepages, guest, h2, guest_virtname)
+run_ssh_command_on_guest("echo -n %d >/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages" % guest_nr_hugepages, guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe -r vfio_iommu_type1", guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe -r vfio", guest, h2, guest_virtname)
 run_ssh_command_on_guest("modprobe vfio enable_unsafe_noiommu_mode=1", guest, h2, guest_virtname)
@@ -395,7 +399,10 @@ run_ssh_command_on_guest("mkfifo /tmp/testpmd_stdio", guest, h2, guest_virtname)
 run_ssh_command_on_bg_channel("tail -f /tmp/testpmd_stdio | {}".format(testpmd_cmd),
         testpmd_shell, h2, guest_virtname)
 
+ctl.wait(20)
 run_ssh_command_on_guest("echo \"start tx_first\" > /tmp/testpmd_stdio", guest, h2, guest_virtname)
+
+ctl.wait(20)
 
 trex_client_mod = ctl.get_module("TRexClient",
         options=trex_client_conf)
@@ -483,11 +490,10 @@ h2.run("ovs-vsctl del-br br0")
 
 h2.run("virsh shutdown %s || true" % guest_virtname)
 
-#required to free up the bus so that we can return the devices to the original
-#driver should be possible to remove this for OVS version >= 2.8 TODO
-h2.restart_service("openvswitch")
-h2.run("driverctl unset-override %s & sleep 1; systemctl restart openvswitch" % h2_nic1_pci)
-h2.run("driverctl unset-override %s & sleep 1; systemctl restart openvswitch" % h2_nic2_pci)
+h2.disable_service("openvswitch")
+ctl.wait(5)
+h2.run("driverctl unset-override %s" % h2_nic1_pci)
+h2.run("driverctl unset-override %s" % h2_nic2_pci)
 
 h2.run("virsh define %s" % original_guest_xml_path)
 

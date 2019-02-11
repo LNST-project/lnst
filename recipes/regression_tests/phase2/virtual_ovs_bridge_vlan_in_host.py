@@ -58,7 +58,10 @@ else:
                          [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
                          [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
 
+h1_ovs_rpm_version = h1.run("rpm -qf `which ovs-vswitchd` || true").get_result()["res_data"]["stdout"]
+
 pr_comment = generate_perfrepo_comment([h1, g1, h2], pr_user_comment)
+pr_comment += "\n<BR/>Host1 OvS rpm version: {}".format(h1_ovs_rpm_version)
 
 h2_vlan10 = h2.get_interface("vlan10")
 g1_guestnic = g1.get_interface("guestnic")

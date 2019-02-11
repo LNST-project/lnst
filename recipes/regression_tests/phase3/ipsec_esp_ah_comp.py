@@ -3,10 +3,9 @@ from lnst.Controller.Task import ctl
 from lnst.Controller.PerfRepoUtils import perfrepo_baseline_to_dict
 from lnst.Controller.PerfRepoUtils import netperf_result_template
 
-from lnst.RecipeCommon.ModuleWrap import ping, ping6, netperf
+from lnst.RecipeCommon.ModuleWrap import netperf
 from lnst.RecipeCommon.IRQ import pin_dev_irqs
 from lnst.RecipeCommon.PerfRepo import generate_perfrepo_comment
-import re
 
 # ---------------------------
 # ALGORITHM AND CIPHER CONFIG
@@ -61,6 +60,7 @@ nperf_debug = ctl.get_alias("nperf_debug")
 nperf_max_dev = ctl.get_alias("nperf_max_dev")
 nperf_msg_size = ctl.get_alias("nperf_msg_size")
 pr_user_comment = ctl.get_alias("perfrepo_comment")
+nperf_protocols = ctl.get_alias("nperf_protocols")
 ipsec_mode = ctl.get_alias("ipsec_mode")
 official_result = bool_it(ctl.get_alias("official_result"))
 
@@ -318,85 +318,86 @@ for ciph_alg, ciph_len in ciphers:
             dump.intr()
 
             # prepare PerfRepo result for tcp
-            result_tcp = perf_api.new_result("tcp_ipv4_id",
-                                             "tcp_ipv4_result",
-                                             hash_ignore=[
-                                                 r'kernel_release',
-                                                 r'redhat_release'])
-            result_tcp.add_tag(product_name)
+            if nperf_protocols.find("tcp") > -1:
+                result_tcp = perf_api.new_result("tcp_ipv4_id",
+                                                 "tcp_ipv4_result",
+                                                 hash_ignore=[
+                                                     r'kernel_release',
+                                                     r'redhat_release'])
+                result_tcp.add_tag(product_name)
 
-            if nperf_num_parallel > 1:
-                result_tcp.add_tag("multithreaded")
-                result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+                if nperf_num_parallel > 1:
+                    result_tcp.add_tag("multithreaded")
+                    result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
-            result_tcp.set_parameter('cipher_alg', ciph_alg)
-            result_tcp.set_parameter('cipher_len', ciph_len)
-            result_tcp.set_parameter('hash_alg', hash_alg)
-            result_tcp.set_parameter('msg_size', nperf_msg_size)
-            result_tcp.set_parameter('ipsec_mode', ipsec_mode)
+                result_tcp.set_parameter('cipher_alg', ciph_alg)
+                result_tcp.set_parameter('cipher_len', ciph_len)
+                result_tcp.set_parameter('hash_alg', hash_alg)
+                result_tcp.set_parameter('msg_size', nperf_msg_size)
+                result_tcp.set_parameter('ipsec_mode', ipsec_mode)
 
-            baseline = perf_api.get_baseline_of_result(result_tcp)
-            baseline = perfrepo_baseline_to_dict(baseline)
+                baseline = perf_api.get_baseline_of_result(result_tcp)
+                baseline = perfrepo_baseline_to_dict(baseline)
 
+                tcp_res_data = netperf((m1, m1_if, 0, {"scope": 0}),
+                                       (m2, m2_if, 0, {"scope": 0}),
+                                       client_opts={"duration" : netperf_duration,
+                                                    "testname" : "TCP_STREAM",
+                                                    "confidence" : nperf_confidence,
+                                                    "num_parallel" : nperf_num_parallel,
+                                                    "cpu_util" : nperf_cpu_util,
+                                                    "runs": nperf_max_runs,
+                                                    "debug": nperf_debug,
+                                                    "max_deviation": nperf_max_dev,
+                                                    "msg_size" : nperf_msg_size,
+                                                    "netperf_opts": nperf_opts},
+                                       baseline = baseline,
+                                       timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            tcp_res_data = netperf((m1, m1_if, 0, {"scope": 0}),
-                                   (m2, m2_if, 0, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "TCP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "msg_size" : nperf_msg_size,
-                                                "netperf_opts": nperf_opts},
-                                   baseline = baseline,
-                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
-
-            netperf_result_template(result_tcp, tcp_res_data)
-            result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp, official_result)
+                netperf_result_template(result_tcp, tcp_res_data)
+                result_tcp.set_comment(pr_comment)
+                perf_api.save_result(result_tcp, official_result)
 
             # prepare PerfRepo result for udp
-            result_udp = perf_api.new_result("udp_ipv4_id",
-                                             "udp_ipv4_result",
-                                             hash_ignore=[
-                                                 r'kernel_release',
-                                                 r'redhat_release'])
-            result_udp.add_tag(product_name)
+            if nperf_protocols.find("udp") > -1:
+                result_udp = perf_api.new_result("udp_ipv4_id",
+                                                 "udp_ipv4_result",
+                                                 hash_ignore=[
+                                                     r'kernel_release',
+                                                     r'redhat_release'])
+                result_udp.add_tag(product_name)
 
-            if nperf_num_parallel > 1:
-                result_udp.add_tag("multithreaded")
-                result_udp.set_parameter('num_parallel', nperf_num_parallel)
+                if nperf_num_parallel > 1:
+                    result_udp.add_tag("multithreaded")
+                    result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
-            result_udp.set_parameter('cipher_alg', ciph_alg)
-            result_udp.set_parameter('cipher_len', ciph_len)
-            result_udp.set_parameter('hash_alg', hash_alg)
-            result_udp.set_parameter('msg_size', nperf_msg_size)
-            result_udp.set_parameter('ipsec_mode', ipsec_mode)
+                result_udp.set_parameter('cipher_alg', ciph_alg)
+                result_udp.set_parameter('cipher_len', ciph_len)
+                result_udp.set_parameter('hash_alg', hash_alg)
+                result_udp.set_parameter('msg_size', nperf_msg_size)
+                result_udp.set_parameter('ipsec_mode', ipsec_mode)
 
-            baseline = perf_api.get_baseline_of_result(result_udp)
-            baseline = perfrepo_baseline_to_dict(baseline)
+                baseline = perf_api.get_baseline_of_result(result_udp)
+                baseline = perfrepo_baseline_to_dict(baseline)
 
-            udp_res_data = netperf((m1, m1_if, 0, {"scope": 0}),
-                                   (m2, m2_if, 0, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "UDP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "msg_size" : nperf_msg_size,
-                                                "netperf_opts": nperf_opts},
-                                   baseline = baseline,
-                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+                udp_res_data = netperf((m1, m1_if, 0, {"scope": 0}),
+                                       (m2, m2_if, 0, {"scope": 0}),
+                                       client_opts={"duration" : netperf_duration,
+                                                    "testname" : "UDP_STREAM",
+                                                    "confidence" : nperf_confidence,
+                                                    "num_parallel" : nperf_num_parallel,
+                                                    "cpu_util" : nperf_cpu_util,
+                                                    "runs": nperf_max_runs,
+                                                    "debug": nperf_debug,
+                                                    "max_deviation": nperf_max_dev,
+                                                    "msg_size" : nperf_msg_size,
+                                                    "netperf_opts": nperf_opts},
+                                       baseline = baseline,
+                                       timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            netperf_result_template(result_udp, udp_res_data)
-            result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp, official_result)
+                netperf_result_template(result_udp, udp_res_data)
+                result_udp.set_comment(pr_comment)
+                perf_api.save_result(result_udp, official_result)
 
         if ipv in [ 'ipv6', 'both']:
             configure_ipsec(ciph_alg,
@@ -470,85 +471,86 @@ for ciph_alg, ciph_len in ciphers:
             dump.intr()
 
             # prepare PerfRepo result for tcp
-            result_tcp = perf_api.new_result("tcp_ipv6_id",
-                                             "tcp_ipv6_result",
-                                             hash_ignore=[
-                                                 r'kernel_release',
-                                                 r'redhat_release'])
-            result_tcp.add_tag(product_name)
+            if nperf_protocols.find("tcp") > -1:
+                result_tcp = perf_api.new_result("tcp_ipv6_id",
+                                                 "tcp_ipv6_result",
+                                                 hash_ignore=[
+                                                     r'kernel_release',
+                                                     r'redhat_release'])
+                result_tcp.add_tag(product_name)
 
-            if nperf_num_parallel > 1:
-                result_tcp.add_tag("multithreaded")
-                result_tcp.set_parameter('num_parallel', nperf_num_parallel)
+                if nperf_num_parallel > 1:
+                    result_tcp.add_tag("multithreaded")
+                    result_tcp.set_parameter('num_parallel', nperf_num_parallel)
 
-            result_tcp.set_parameter('cipher_alg', ciph_alg)
-            result_tcp.set_parameter('cipher_len', ciph_len)
-            result_tcp.set_parameter('hash_alg', hash_alg)
-            result_tcp.set_parameter('msg_size', nperf_msg_size)
-            result_tcp.set_parameter('ipsec_mode', ipsec_mode)
+                result_tcp.set_parameter('cipher_alg', ciph_alg)
+                result_tcp.set_parameter('cipher_len', ciph_len)
+                result_tcp.set_parameter('hash_alg', hash_alg)
+                result_tcp.set_parameter('msg_size', nperf_msg_size)
+                result_tcp.set_parameter('ipsec_mode', ipsec_mode)
 
-            baseline = perf_api.get_baseline_of_result(result_tcp)
-            baseline = perfrepo_baseline_to_dict(baseline)
+                baseline = perf_api.get_baseline_of_result(result_tcp)
+                baseline = perfrepo_baseline_to_dict(baseline)
 
+                tcp_res_data = netperf((m1, m1_if, 1, {"scope": 0}),
+                                       (m2, m2_if, 1, {"scope": 0}),
+                                       client_opts={"duration" : netperf_duration,
+                                                    "testname" : "TCP_STREAM",
+                                                    "confidence" : nperf_confidence,
+                                                    "num_parallel" : nperf_num_parallel,
+                                                    "cpu_util" : nperf_cpu_util,
+                                                    "runs": nperf_max_runs,
+                                                    "debug": nperf_debug,
+                                                    "max_deviation": nperf_max_dev,
+                                                    "msg_size" : nperf_msg_size,
+                                                    "netperf_opts" : nperf_opts + " -6"},
+                                       baseline = baseline,
+                                       timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            tcp_res_data = netperf((m1, m1_if, 1, {"scope": 0}),
-                                   (m2, m2_if, 1, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "TCP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "msg_size" : nperf_msg_size,
-                                                "netperf_opts" : nperf_opts + " -6"},
-                                   baseline = baseline,
-                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
-
-            netperf_result_template(result_tcp, tcp_res_data)
-            result_tcp.set_comment(pr_comment)
-            perf_api.save_result(result_tcp, official_result)
+                netperf_result_template(result_tcp, tcp_res_data)
+                result_tcp.set_comment(pr_comment)
+                perf_api.save_result(result_tcp, official_result)
 
             # prepare PerfRepo result for udp
-            result_udp = perf_api.new_result("udp_ipv6_id",
-                                             "udp_ipv6_result",
-                                             hash_ignore=[
-                                                 r'kernel_release',
-                                                 r'redhat_release'])
-            result_udp.add_tag(product_name)
+            if nperf_protocols.find("udp") > -1:
+                result_udp = perf_api.new_result("udp_ipv6_id",
+                                                 "udp_ipv6_result",
+                                                 hash_ignore=[
+                                                     r'kernel_release',
+                                                     r'redhat_release'])
+                result_udp.add_tag(product_name)
 
-            if nperf_num_parallel > 1:
-                result_udp.add_tag("multithreaded")
-                result_udp.set_parameter('num_parallel', nperf_num_parallel)
+                if nperf_num_parallel > 1:
+                    result_udp.add_tag("multithreaded")
+                    result_udp.set_parameter('num_parallel', nperf_num_parallel)
 
-            result_udp.set_parameter('cipher_alg', ciph_alg)
-            result_udp.set_parameter('cipher_len', ciph_len)
-            result_udp.set_parameter('hash_alg', hash_alg)
-            result_udp.set_parameter('msg_size', nperf_msg_size)
-            result_udp.set_parameter('ipsec_mode', ipsec_mode)
+                result_udp.set_parameter('cipher_alg', ciph_alg)
+                result_udp.set_parameter('cipher_len', ciph_len)
+                result_udp.set_parameter('hash_alg', hash_alg)
+                result_udp.set_parameter('msg_size', nperf_msg_size)
+                result_udp.set_parameter('ipsec_mode', ipsec_mode)
 
-            baseline = perf_api.get_baseline_of_result(result_udp)
-            baseline = perfrepo_baseline_to_dict(baseline)
+                baseline = perf_api.get_baseline_of_result(result_udp)
+                baseline = perfrepo_baseline_to_dict(baseline)
 
-            udp_res_data = netperf((m1, m1_if, 1, {"scope": 0}),
-                                   (m2, m2_if, 1, {"scope": 0}),
-                                   client_opts={"duration" : netperf_duration,
-                                                "testname" : "UDP_STREAM",
-                                                "confidence" : nperf_confidence,
-                                                "num_parallel" : nperf_num_parallel,
-                                                "cpu_util" : nperf_cpu_util,
-                                                "runs": nperf_max_runs,
-                                                "debug": nperf_debug,
-                                                "max_deviation": nperf_max_dev,
-                                                "msg_size" : nperf_msg_size,
-                                                "netperf_opts" : nperf_opts + " -6"},
-                                   baseline = baseline,
-                                   timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
+                udp_res_data = netperf((m1, m1_if, 1, {"scope": 0}),
+                                       (m2, m2_if, 1, {"scope": 0}),
+                                       client_opts={"duration" : netperf_duration,
+                                                    "testname" : "UDP_STREAM",
+                                                    "confidence" : nperf_confidence,
+                                                    "num_parallel" : nperf_num_parallel,
+                                                    "cpu_util" : nperf_cpu_util,
+                                                    "runs": nperf_max_runs,
+                                                    "debug": nperf_debug,
+                                                    "max_deviation": nperf_max_dev,
+                                                    "msg_size" : nperf_msg_size,
+                                                    "netperf_opts" : nperf_opts + " -6"},
+                                       baseline = baseline,
+                                       timeout = (netperf_duration + nperf_reserve)*nperf_max_runs)
 
-            netperf_result_template(result_udp, udp_res_data)
-            result_udp.set_comment(pr_comment)
-            perf_api.save_result(result_udp, official_result)
+                netperf_result_template(result_udp, udp_res_data)
+                result_udp.set_comment(pr_comment)
+                perf_api.save_result(result_udp, official_result)
 
 m1.run("ip xfrm policy flush")
 m1.run("ip xfrm state flush")

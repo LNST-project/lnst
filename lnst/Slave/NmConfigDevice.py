@@ -611,7 +611,7 @@ class NmConfigDeviceBridge(NmConfigDeviceGeneric):
         if get_nm_version() < "0.9.9":
             try:
                 exec_cmd("ip link set %s down" % config["name"])
-                exec_cmd("brctl delbr %s " % config["name"])
+                exec_cmd("ip link del %s type bridge" % config["name"])
             except:
                 pass
 
