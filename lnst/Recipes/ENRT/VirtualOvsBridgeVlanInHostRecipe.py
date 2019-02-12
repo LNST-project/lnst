@@ -48,7 +48,10 @@ class VirtualOvsBridgeVlanInHostRecipe(BaseEnrtRecipe):
         configuration.endpoint2 = guest1.eth0
 
         if "mtu" in self.params:
+            host1.eth0.mtu = self.params.mtu
+            host1.tap0.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
+            host2.eth0.mtu = self.params.mtu
             host2.vlan1.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
 

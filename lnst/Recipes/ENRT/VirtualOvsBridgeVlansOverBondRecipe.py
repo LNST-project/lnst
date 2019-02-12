@@ -86,7 +86,15 @@ class VirtualOvsBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         configuration.endpoint2 = guest3.eth0
 
         if "mtu" in self.params:
+            host1.eth1.mtu = self.params.mtu
+            host1.eth2.mtu = self.params.mtu
+            host1.tap0.mtu = self.params.mtu
+            host1.tap1.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
+            host2.eth1.mtu = self.params.mtu
+            host2.eth2.mtu = self.params.mtu
+            host2.tap0.mtu = self.params.mtu
+            host2.tap1.mtu = self.params.mtu
             host2.br0.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
             guest2.eth0.mtu = self.params.mtu

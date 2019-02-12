@@ -52,6 +52,7 @@ class VlansOverTeamRecipe(BaseEnrtRecipe):
                 m.vlan1.mtu = self.params.mtu
                 m.vlan2.mtu = self.params.mtu
             m1.team.mtu = self.params.mtu
+            m2.eth1.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr_2 = "192.168.20"

@@ -50,6 +50,10 @@ class VlansOverBondRecipe(BaseEnrtRecipe):
         if "mtu" in self.params:
             m1.bond.mtu = self.params.mtu
             m2.eth0.mtu = self.params.mtu
+            m1.vlan1.mtu = self.params.mtu
+            m1.vlan2.mtu = self.params.mtu
+            m2.vlan1.mtu = self.params.mtu
+            m2.vlan2.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr_2 = "192.168.20"

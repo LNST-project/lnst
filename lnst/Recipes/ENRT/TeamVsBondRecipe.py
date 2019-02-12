@@ -53,7 +53,7 @@ class TeamVsBondRecipe(BaseEnrtRecipe):
 
         if "mtu" in self.params:
             m1.team.mtu = self.params.mtu
-            m2.team.mtu = self.params.mtu
+            m2.bond.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"
