@@ -24,16 +24,21 @@ class RunFormatterException(ControllerError):
     pass
 
 class RunSummaryFormatter(object):
-    def __init__(self, level=ResultLevel.IMPORTANT):
+    def __init__(self, level=ResultLevel.IMPORTANT, colourize=False):
         #TODO changeable format?
         self._format = ""
         self._level = level
+        self._colourize = colourize
 
     def _format_success(self, success):
         if success:
-            return decorate_with_preset("PASS", "pass")
+            return (decorate_with_preset("PASS", "pass")
+                    if self._colourize
+                    else "PASS")
         else:
-            return decorate_with_preset("FAIL", "fail")
+            return (decorate_with_preset("FAIL", "fail")
+                    if self._colourize
+                    else "FAIL")
 
     def _format_source(self, res):
         if isinstance(res, JobResult):
