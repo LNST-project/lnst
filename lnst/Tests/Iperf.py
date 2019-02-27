@@ -38,7 +38,6 @@ class IperfBase(BaseTestModule):
             self._res_data["msg"] = "errors reported by iperf"
             logging.error(self._res_data["msg"])
             logging.error(self._res_data["stderr"])
-            return False
 
         if server.returncode > 0:
             self._res_data["msg"] = "{} returncode = {}".format(
