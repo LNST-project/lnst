@@ -159,16 +159,7 @@ class BaseFlowMeasurement(BaseMeasurement):
     @classmethod
     def evaluate_results(cls, recipe, results):
         #TODO split off into a separate evaluator class
-        for flow_results in results:
-            if flow_results.generator_results.average > 0:
-                recipe.add_result(True, "Generator reported non-zero throughput")
-            else:
-                recipe.add_result(False, "Generator reported zero throughput")
-
-            if flow_results.receiver_results.average > 0:
-                recipe.add_result(True, "Receiver reported non-zero throughput")
-            else:
-                recipe.add_result(False, "Receiver reported zero throughput")
+        recipe.add_result(True, "Flow result evaluation not implemented")
 
     @classmethod
     def _report_flow_results(cls, recipe, flow_results):
