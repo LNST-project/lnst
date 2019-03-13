@@ -104,6 +104,10 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
                 m.run("service irqbalance stop")
                 self._pin_dev_interrupts(m.eth1, self.params.dev_intr_cpu)
 
+        if self.params.perf_parallel_streams > 1:
+            for m in [host1, host2]:
+                m.run("tc qdisc replace dev %s root mq" % m.eth1.name)
+
         return configuration
 
     def test_wide_deconfiguration(self, config):

@@ -78,6 +78,10 @@ class VlansRecipe(BaseEnrtRecipe):
                 m.run("service irqbalance stop")
                 self._pin_dev_interrupts(m.eth0, self.params.dev_intr_cpu)
 
+        if self.params.perf_parallel_streams > 1:
+            for m in [m1, m2]:
+                m.run("tc qdisc replace dev %s root mq" % m.eth0.name)
+
         return configuration
 
     def test_wide_deconfiguration(self, config):

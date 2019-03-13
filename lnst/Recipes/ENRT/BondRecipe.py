@@ -68,6 +68,10 @@ class BondRecipe(BaseEnrtRecipe):
             for dev in [m1.eth0, m1.eth1, m2.eth0]:
                 self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
 
+        if self.params.perf_parallel_streams > 1:
+            for m, d in [(m1, m1.eth0), (m1, m1.eth1), (m2, m2.eth0)]:
+                m.run("tc qdisc replace dev %s root mq" % d.name)
+
         return configuration
 
     def test_wide_deconfiguration(self, config):

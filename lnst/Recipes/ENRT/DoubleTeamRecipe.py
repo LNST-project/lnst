@@ -83,6 +83,11 @@ class DoubleTeamRecipe(BaseEnrtRecipe):
                 for dev in [m.eth1, m.eth2]:
                     self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
 
+        if self.params.perf_parallel_streams > 1:
+            for m in [m1, m2]:
+                for dev in [m.eth1, m.eth2]:
+                    m.run("tc qdisc replace dev %s root mq" % dev.name)
+
         return configuration
 
     def test_wide_deconfiguration(self, config):
