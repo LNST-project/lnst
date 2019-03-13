@@ -134,6 +134,12 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
         client_netns = client_nic.netns
         server_netns = server_nic.netns
 
+        if 'sctp_stream' in self.params.perf_tests:
+            client_netns.run("iptables -I OUTPUT ! -o %s -p sctp -j DROP" %
+                             client_nic.name)
+            server_netns.run("iptables -I OUTPUT ! -o %s -p sctp -j DROP" %
+                             server_nic.name)
+
         ethtool_offload_string = ""
         for name, value in sub_config.offload_settings.items():
             ethtool_offload_string += " %s %s" % (name, value)
@@ -148,6 +154,12 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
         server_nic = main_config.endpoint2
         client_netns = client_nic.netns
         server_netns = server_nic.netns
+
+        if 'sctp_stream' in self.params.perf_tests:
+            client_netns.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
+                             client_nic.name)
+            server_netns.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
+                             server_nic.name)
 
         ethtool_offload_string = ""
         for name, value in sub_config.offload_settings.items():
@@ -195,6 +207,14 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
             server_bind = server_nic.ips_filter(family=family)[0]
 
             for perf_test in self.params.perf_tests:
+                offload_values = sub_config.offload_settings.values()
+                offload_items = sub_config.offload_settings.items()
+                if ((perf_test == 'udp_stream' and ('gro', 'off') in offload_items)
+                    or
+                    (perf_test == 'sctp_stream' and 'off' in offload_values and
+                    ('gso', 'on') in offload_items)):
+                    continue
+
                 flow = PerfFlow(
                         type = perf_test,
                         generator = client_netns,
