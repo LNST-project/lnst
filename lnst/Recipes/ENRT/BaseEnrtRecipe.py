@@ -98,22 +98,24 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     def test(self):
         main_config = self.test_wide_configuration()
 
-        for sub_config in self.generate_sub_configurations(main_config):
-            self.apply_sub_configuration(main_config, sub_config)
+        try:
+            for sub_config in self.generate_sub_configurations(main_config):
+                self.apply_sub_configuration(main_config, sub_config)
 
-            for ping_config in self.generate_ping_configurations(main_config,
-                                                                 sub_config):
-                result = self.ping_test(ping_config)
-                self.ping_evaluate_and_report(ping_config, result)
+                try:
+                    for ping_config in self.generate_ping_configurations(main_config,
+                                                                         sub_config):
+                        result = self.ping_test(ping_config)
+                        self.ping_evaluate_and_report(ping_config, result)
 
-            for perf_config in self.generate_perf_configurations(main_config,
-                                                                 sub_config):
-                result = self.perf_test(perf_config)
-                self.perf_report_and_evaluate(result)
-
-            self.remove_sub_configuration(main_config, sub_config)
-
-        self.test_wide_deconfiguration(main_config)
+                    for perf_config in self.generate_perf_configurations(main_config,
+                                                                         sub_config):
+                        result = self.perf_test(perf_config)
+                        self.perf_report_and_evaluate(result)
+                finally:
+                    self.remove_sub_configuration(main_config, sub_config)
+        finally:
+            self.test_wide_deconfiguration(main_config)
 
     def test_wide_configuration(self):
         raise NotImplementedError("Method must be defined by a child class.")
