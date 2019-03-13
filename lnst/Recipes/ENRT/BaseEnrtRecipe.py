@@ -84,6 +84,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
     perf_msg_size = IntParam(default=123)
+    perf_reverse = BoolParam(mandatory=False)
 
     perf_usr_comment = StrParam(default="")
 
@@ -212,6 +213,30 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                             flow_measurement
                             ],
                         iterations=self.params.perf_iterations)
+
+                if "perf_reverse" in self.params and self.params.perf_reverse:
+                    reverse_flow = self._create_reverse_flow(flow)
+                    reverse_flow_measurement = self.params.net_perf_tool([reverse_flow])
+                    yield PerfRecipeConf(
+                            measurements=[
+                                self.params.cpu_perf_tool([server_netns, client_netns]),
+                                reverse_flow_measurement
+                                ],
+                            iterations=self.params.perf_iterations)
+
+    def _create_reverse_flow(self, flow):
+        rev_flow = PerfFlow(
+                    type = flow.type,
+                    generator = flow.receiver,
+                    generator_bind = flow.receiver_bind,
+                    receiver = flow.generator,
+                    receiver_bind = flow.generator_bind,
+                    msg_size = flow.msg_size,
+                    duration = flow.duration,
+                    parallel_streams = flow.parallel_streams,
+                    cpupin = flow.cpupin
+                    )
+        return rev_flow
 
     def _pin_dev_interrupts(self, dev, cpu):
         netns = dev.netns

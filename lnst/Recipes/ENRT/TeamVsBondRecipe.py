@@ -3,7 +3,7 @@ Implements scenario similar to regression_tests/phase2/
 ({active_backup,round_robin}_team_vs_{active_backup,round_robin}
 _bond.xml + team_test.py)
 """
-from lnst.Common.Parameters import Param, IntParam, StrParam
+from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
@@ -25,6 +25,7 @@ class TeamVsBondRecipe(BaseEnrtRecipe):
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
+    perf_reverse = BoolParam(default=True)
     runner_name = StrParam(mandatory = True)
     bonding_mode = StrParam(mandatory = True)
     miimon_value = IntParam(mandatory = True)
