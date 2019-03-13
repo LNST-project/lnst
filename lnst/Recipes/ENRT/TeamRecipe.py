@@ -58,6 +58,13 @@ class TeamRecipe(BaseEnrtRecipe):
         m1.team.up()
         m2.eth1.up()
 
+        if "adaptive_rx_coalescing" in self.params:
+            for dev in [m1.eth1, m1.eth2, m2.eth1]:
+                dev.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
+        if "adaptive_tx_coalescing" in self.params:
+            for dev in [m1.eth1, m1.eth2, m2.eth1]:
+                dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             for m in [m1, m2]:

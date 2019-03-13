@@ -65,6 +65,13 @@ class VlansRecipe(BaseEnrtRecipe):
         m2.vlan1.up()
         m2.vlan2.up()
 
+        if "adaptive_rx_coalescing" in self.params:
+            for m in [m1, m2]:
+                m.eth0.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
+        if "adaptive_tx_coalescing" in self.params:
+            for m in [m1, m2]:
+                m.eth0.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             for m in [m1, m2]:

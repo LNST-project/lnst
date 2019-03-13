@@ -73,7 +73,8 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
 
     driver = StrParam(default="ixgbe")
 
-    adaptive_coalescing = BoolParam(default=True)
+    adaptive_rx_coalescing = BoolParam(mandatory=False)
+    adaptive_tx_coalescing = BoolParam(mandatory=False)
 
     mtu = IntParam(mandatory=False)
 

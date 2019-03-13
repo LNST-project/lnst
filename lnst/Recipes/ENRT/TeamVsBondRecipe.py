@@ -71,6 +71,15 @@ class TeamVsBondRecipe(BaseEnrtRecipe):
         m2.eth2.up()
         m2.bond.up()
 
+        if "adaptive_rx_coalescing" in self.params:
+            for m in [m1, m2]:
+                for dev in [m.eth1, m.eth2]:
+                    dev.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
+        if "adaptive_tx_coalescing" in self.params:
+            for m in [m1, m2]:
+                for dev in [m.eth1, m.eth2]:
+                    dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             for m in [m1, m2]:

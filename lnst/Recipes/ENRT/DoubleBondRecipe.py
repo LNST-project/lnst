@@ -53,6 +53,15 @@ class DoubleBondRecipe(BaseEnrtRecipe):
             m.eth1.up()
             m.bond.up()
 
+        if "adaptive_tx_coalescing" in self.params:
+            for m in [m1, m2]:
+                for dev in [m.eth0, m.eth1]:
+                    dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+        if "adaptive_tx_coalescing" in self.params:
+            for m in [m1, m2]:
+                for dev in [m.eth0, m.eth1]:
+                    dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             for m in [m1, m2]:

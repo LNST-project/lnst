@@ -51,6 +51,13 @@ class SimplePerfRecipe(BaseEnrtRecipe):
         m2.eth0.ip_add(ipaddress("fc00::2/64"))
         m2.eth0.up()
 
+        if "adaptive_rx_coalescing" in self.params:
+            for m in [m1, m2]:
+                m.eth0.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
+        if "adaptive_tx_coalescing" in self.params:
+            for m in [m1, m2]:
+                m.eth0.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             for m in [m1, m2]:

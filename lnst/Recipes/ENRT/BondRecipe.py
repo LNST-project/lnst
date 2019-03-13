@@ -54,6 +54,13 @@ class BondRecipe(BaseEnrtRecipe):
         m2.eth0.ip_add(ipaddress(net_addr6 + "::2/64"))
         m2.eth0.up()
 
+        if "adaptive_rx_coalescing" in self.params:
+            for dev in [m1.eth0, m1.eth1, m2.eth0]:
+                dev.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
+        if "adaptive_tx_coalescing" in self.params:
+            for dev in [m1.eth0, m1.eth1, m2.eth0]:
+                dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             for m in [m1, m2]:
