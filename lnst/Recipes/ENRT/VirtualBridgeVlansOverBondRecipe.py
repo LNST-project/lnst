@@ -40,7 +40,7 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         dict(gro="on", gso="on", tso="on", tx="on"),
         dict(gro="off", gso="on", tso="on", tx="on"),
         dict(gro="on", gso="off", tso="off", tx="on"),
-        dict(gro="on", gso="on", tso="off", tx="on")))
+        dict(gro="on", gso="on", tso="off", tx="off")))
 
     bonding_mode = StrParam(mandatory=True)
     miimon_value = IntParam(mandatory=True)
