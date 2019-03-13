@@ -8,6 +8,7 @@ from lnst.Controller import HostReq, DeviceReq
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import VlanDevice
 from lnst.Devices import BridgeDevice
+from lnst.Common.LnstError import LnstError
 
 class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
     host1 = HostReq()
@@ -74,13 +75,13 @@ class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         guest1.vlan1.up()
 
         #TODO better service handling through HostAPI
-        host1.run("service irqbalance stop")
-        host2.run("service irqbalance stop")
-        guest1.run("service irqbalance stop")
+        if "dev_intr_cpu" in self.params:
+            raise LnstError("'dev_intr_cpu' (%d) should not be set for this test" % self.params.dev_intr_cpu)
 
-        for m in self.matched:
-            for dev in m.devices:
-                self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
+        if "perf_tool_cpu" in self.params:
+            for m in [host1, host2]:
+                m.run("service irqbalance stop")
+                self._pin_dev_interrupts(m.eth0, 0)
 
         return configuration
 
@@ -88,6 +89,6 @@ class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         host1, host2, guest1 = self.matched.host1, self.matched.host2, self.matched.guest1
 
         #TODO better service handling through HostAPI
-        host1.run("service irqbalance start")
-        host2.run("service irqbalance start")
-        guest1.run("service irqbalance start")
+        if "perf_tool_cpu" in self.params:
+            for m in [host1, hpst2]:
+                m.run("service irqbalance start")

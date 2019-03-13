@@ -8,7 +8,7 @@ class Flow(object):
                  type,
                  generator, generator_bind,
                  receiver, receiver_bind,
-                 msg_size, duration, parallel_streams):
+                 msg_size, duration, parallel_streams, cpupin):
         self._type = type
 
         self._generator = generator
@@ -19,6 +19,7 @@ class Flow(object):
         self._msg_size = msg_size
         self._duration = duration
         self._parallel_streams = parallel_streams
+        self._cpupin = cpupin
 
     @property
     def type(self):
@@ -51,6 +52,10 @@ class Flow(object):
     @property
     def parallel_streams(self):
         return self._parallel_streams
+
+    @property
+    def cpupin(self):
+        return self._cpupin
 
 class NetworkFlowTest(object):
     def __init__(self, flow, server_job, client_job):

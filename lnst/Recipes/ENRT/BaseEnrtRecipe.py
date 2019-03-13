@@ -1,8 +1,9 @@
+import re
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-
-from lnst.Controller.Recipe import BaseRecipe
+from lnst.Common.ExecCmd import exec_cmd
+from lnst.Controller.Recipe import BaseRecipe, RecipeError
 
 from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
@@ -76,7 +77,8 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
 
     mtu = IntParam(mandatory=False)
 
-    dev_intr_cpu = IntParam(default=0)
+    dev_intr_cpu = IntParam(mandatory=False)
+    perf_tool_cpu = IntParam(mandatory=False)
 
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
@@ -199,7 +201,9 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                         receiver_bind = server_bind,
                         msg_size = self.params.perf_msg_size,
                         duration = self.params.perf_duration,
-                        parallel_streams = self.params.perf_parallel_streams)
+                        parallel_streams = self.params.perf_parallel_streams,
+                        cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
+                        )
 
                 flow_measurement = self.params.net_perf_tool([flow])
                 yield PerfRecipeConf(
@@ -211,6 +215,13 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
 
     def _pin_dev_interrupts(self, dev, cpu):
         netns = dev.netns
+        cpu_info = netns.run("lscpu").stdout
+        regex = "CPU\(s\): *([0-9]*)"
+        num_cpus = int(re.search(regex, cpu_info).groups()[0])
+        if cpu < 0 or cpu > num_cpus - 1:
+            raise RecipeError("Invalid CPU value given: %d. Accepted value %s." %
+                              (cpu, "is: 0" if num_cpus == 1 else "are: 0..%d" %
+                               (num_cpus - 1)))
 
         res = netns.run("grep {} /proc/interrupts | cut -f1 -d: | sed 's/ //'"
                         .format(dev.name))

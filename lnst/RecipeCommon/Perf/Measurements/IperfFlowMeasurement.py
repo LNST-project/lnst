@@ -84,6 +84,15 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         server_params = dict(bind = ipaddress(flow.receiver_bind),
                              oneoff = True)
 
+        if flow.cpupin >= 0:
+            if flow.parallel_streams == 1:
+                server_params["cpu_bind"] = flow.cpupin
+            else:
+                raise RecipeError("Unsupported combination of single cpupin "
+                                  "with parallel perf streams.")
+        elif not flow.cpupin is None:
+            raise RecipeError("Negative perf cpupin value provided.")
+
         return host.prepare_job(IperfServer(**server_params),
                                 job_level=ResultLevel.NORMAL)
 
@@ -101,6 +110,15 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
             client_params["sctp"] = True
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
+
+        if flow.cpupin >= 0:
+            if flow.parallel_streams == 1:
+                client_params["cpu_bind"] = flow.cpupin
+            else:
+                raise RecipeError("Unsupported combination of single cpupin "
+                                  "with parallel perf streams.")
+        elif not flow.cpupin is None:
+            raise RecipeError("Negative perf cpupin value provided.")
 
         if flow.parallel_streams > 1:
             client_params["parallel"] = flow.parallel_streams

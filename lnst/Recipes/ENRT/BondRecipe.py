@@ -55,10 +55,10 @@ class BondRecipe(BaseEnrtRecipe):
         m2.eth0.up()
 
         #TODO better service handling through HostAPI
-        m1.run("service irqbalance stop")
-        m2.run("service irqbalance stop")
-        for m in self.matched:
-            for dev in m.devices:
+        if "dev_intr_cpu" in self.params:
+            for m in [m1, m2]:
+                m.run("service irqbalance stop")
+            for dev in [m1.eth0, m1.eth1, m2.eth0]:
                 self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
 
         return configuration
@@ -67,5 +67,6 @@ class BondRecipe(BaseEnrtRecipe):
         m1, m2 = self.matched.m1, self.matched.m2
 
         #TODO better service handling through HostAPI
-        m1.run("service irqbalance start")
-        m2.run("service irqbalance start")
+        if "dev_intr_cpu" in self.params:
+            for m in [m1, m2]:
+                m.run("service irqbalance start")
