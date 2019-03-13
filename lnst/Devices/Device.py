@@ -228,6 +228,13 @@ class Device(object):
                    "mtu": self.mtu,
                    "driver": self.driver,
                    "devlink": self._devlink}
+        try:
+            ad_rx_coal, ad_tx_coal = self._read_adaptive_coalescing()
+        except DeviceError:
+            ad_rx_coal, ad_tx_coal = None, None
+        if_data["adaptive_rx_coalescing"] = ad_rx_coal
+        if_data["adaptive_tx_coalescing"] = ad_tx_coal
+
         return if_data
 
     def _vars(self):
@@ -268,6 +275,12 @@ class Device(object):
                 "mtu": self.mtu,
                 "name": self.name,
                 "hwaddr": self.hwaddr}
+        try:
+            ad_rx_coal, ad_tx_coal = self._read_adaptive_coalescing()
+        except DeviceError:
+            ad_rx_coal, ad_tx_coal = None, None
+        self._cleanup_data["adaptive_rx_coalescing"] = ad_rx_coal
+        self._cleanup_data["adaptive_tx_coalescing"] = ad_tx_coal
 
     def restore_original_data(self):
         """Restores initial configuration from stored values"""
@@ -283,6 +296,11 @@ class Device(object):
 
         if self.hwaddr != self._cleanup_data["hwaddr"]:
             self.hwaddr = self._cleanup_data["hwaddr"]
+
+        try:
+            self.restore_coalescing()
+        except DeviceError:
+            pass
 
         self._cleanup_data = None
 
@@ -364,6 +382,30 @@ class Device(object):
         addr = hwaddress(addr)
         self._update_attr(str(addr), "IFLA_ADDRESS")
         self._nl_sync("set")
+
+    @property
+    def adaptive_rx_coalescing(self):
+        return self._read_adaptive_coalescing()[0] == 'on'
+
+    @adaptive_rx_coalescing.setter
+    def adaptive_rx_coalescing(self, value):
+        rx_val = 'off'
+        if value:
+            rx_val = 'on'
+        tx_val = self._read_adaptive_coalescing()[1]
+        self._write_adaptive_coalescing(rx_val, tx_val)
+
+    @property
+    def adaptive_tx_coalescing(self):
+        return self._read_adaptive_coalescing()[1] == 'on'
+
+    @adaptive_tx_coalescing.setter
+    def adaptive_tx_coalescing(self, value):
+        tx_val = 'off'
+        if value:
+            tx_val = 'on'
+        rx_val = self._read_adaptive_coalescing()[0]
+        self._write_adaptive_coalescing(rx_val, tx_val)
 
     @property
     def state(self):
@@ -602,6 +644,35 @@ class Device(object):
     def autoneg_off(self):
         """disable automatic negotiation of speed for this device"""
         exec_cmd("ethtool -s %s autoneg off" % self.name)
+
+    def _read_adaptive_coalescing(self):
+        try:
+            res = exec_cmd("ethtool -c %s" % self.name)
+        except:
+            raise DeviceError("Could not read coalescence values of "
+                              "%s." % self.name)
+        regex = "Adaptive RX: (on|off)  TX: (on|off)"
+        try:
+            res = re.search(regex, res[0]).groups()
+        except AttributeError:
+            raise DeviceError("No values for coalescence of %s." %
+                              self.name)
+        return list(res)
+
+    def _write_adaptive_coalescing(self, rx_val, tx_val):
+        if self._read_adaptive_coalescing() == [rx_val, tx_val]:
+            return
+        try:
+            exec_cmd("ethtool -C %s adaptive-rx %s adaptive-tx %s" %
+                     (self.name, rx_val, tx_val))
+        except:
+            raise DeviceConfigError("Not allowed to modify coalescence "
+                                    "settings for %s." % self.name)
+
+    def restore_coalescing(self):
+        rx_val = self._cleanup_data["adaptive_rx_coalescing"]
+        tx_val = self._cleanup_data["adaptive_tx_coalescing"]
+        self._write_adaptive_coalescing(rx_val, tx_val)
 
     #TODO implement proper Route objects
     #consider the same as with tc?
