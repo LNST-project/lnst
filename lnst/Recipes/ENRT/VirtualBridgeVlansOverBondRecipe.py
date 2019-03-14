@@ -48,25 +48,25 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
     def test_wide_configuration(self):
         host1, host2, guest1, guest2, guest3, guest4 = self.matched.host1, self.matched.host2, self.matched.guest1, self.matched.guest2, self.matched.guest3, self.matched.guest4
 
-        for m, n in [(host1, 10),(host2, 10)]:
-            m.eth0.down()
-            m.eth1.down()
-            m.tap0.down()
-            m.tap1.down()
-            m.bond = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
-            m.bond.slave_add(m.eth0)
-            m.bond.slave_add(m.eth1)
-            m.vlan1 = VlanDevice(realdev=m.bond, vlan_id=n)
-            m.vlan2 = VlanDevice(realdev=m.bond, vlan_id=2*n)
-            m.br0 = BridgeDevice()
-            m.br0.slave_add(m.vlan1)
-            m.br0.slave_add(m.tap0)
-            m.br1 = BridgeDevice()
-            m.br1.slave_add(m.vlan2)
-            m.br1.slave_add(m.tap1)
+        for host, n in [(host1, 10), (host2, 10)]:
+            host.eth0.down()
+            host.eth1.down()
+            host.tap0.down()
+            host.tap1.down()
+            host.bond = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
+            host.bond.slave_add(host.eth0)
+            host.bond.slave_add(host.eth1)
+            host.vlan0 = VlanDevice(realdev=host.bond, vlan_id=n)
+            host.vlan1 = VlanDevice(realdev=host.bond, vlan_id=2*n)
+            host.br0 = BridgeDevice()
+            host.br0.slave_add(host.vlan0)
+            host.br0.slave_add(host.tap0)
+            host.br1 = BridgeDevice()
+            host.br1.slave_add(host.vlan1)
+            host.br1.slave_add(host.tap1)
 
-        for m in (guest1, guest2, guest3, guest4):
-            m.eth0.down()
+        for guest in (guest1, guest2, guest3, guest4):
+            guest.eth0.down()
 
         #Due to limitations in the current EnrtConfiguration
         #class, a single vlan test pair is chosen
@@ -78,15 +78,15 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
             host1.bond.mtu = self.params.mtu
             host1.tap0.mtu = self.params.mtu
             host1.tap1.mtu = self.params.mtu
+            host1.vlan0.mtu = self.params.mtu
             host1.vlan1.mtu = self.params.mtu
-            host1.vlan2.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
             host1.br1.mtu = self.params.mtu
             host2.bond.mtu = self.params.mtu
             host2.tap0.mtu = self.params.mtu
             host2.tap1.mtu = self.params.mtu
+            host2.vlan0.mtu = self.params.mtu
             host2.vlan1.mtu = self.params.mtu
-            host2.vlan2.mtu = self.params.mtu
             host2.br0.mtu = self.params.mtu
             host2.br1.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
@@ -99,42 +99,42 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         net_addr6_1 = "fc00:0:0:1"
         net_addr6_2 = "fc00:0:0:2"
 
-        for m, (g1, g2), n in [(host1, (guest1, guest2), 1), (host2, (guest3, guest4), 3)]:
-            m.bond.ip_add(ipaddress("1.2.3.4"))
-            m.br0.ip_add(ipaddress(net_addr_1 + "." + str(n) + "/24"))
-            m.br1.ip_add(ipaddress(net_addr_2 + "." + str(n) + "/24"))
-            g1.eth0.ip_add(ipaddress(net_addr_1 + "." + str(n+1) + "/24"))
-            g1.eth0.ip_add(ipaddress(net_addr6_1 + "::" + str(n+1) + "/64"))
-            g2.eth0.ip_add(ipaddress(net_addr_2 + "." + str(n+1) + "/24"))
-            g2.eth0.ip_add(ipaddress(net_addr6_2 + "::" + str(n+1) + "/64"))
+        for host, (guest_a, guest_b), n in [(host1, (guest1, guest2), 1), (host2, (guest3, guest4), 3)]:
+            host.bond.ip_add(ipaddress("1.2.3.4"))
+            host.br0.ip_add(ipaddress(net_addr_1 + "." + str(n) + "/24"))
+            host.br1.ip_add(ipaddress(net_addr_2 + "." + str(n) + "/24"))
+            guest_a.eth0.ip_add(ipaddress(net_addr_1 + "." + str(n+1) + "/24"))
+            guest_a.eth0.ip_add(ipaddress(net_addr6_1 + "::" + str(n+1) + "/64"))
+            guest_b.eth0.ip_add(ipaddress(net_addr_2 + "." + str(n+1) + "/24"))
+            guest_b.eth0.ip_add(ipaddress(net_addr6_2 + "::" + str(n+1) + "/64"))
 
-        for m, g1, g2 in [(host1, guest1, guest2), (host2, guest3, guest4)]:
-            m.eth0.up()
-            m.eth1.up()
-            m.tap0.up()
-            m.tap1.up()
-            m.bond.up()
-            m.vlan1.up()
-            m.vlan2.up()
-            m.br0.up()
-            m.br1.up()
-            g1.eth0.up()
-            g2.eth0.up()
+        for host, guest_a, guest_b in [(host1, guest1, guest2), (host2, guest3, guest4)]:
+            host.eth0.up()
+            host.eth1.up()
+            host.tap0.up()
+            host.tap1.up()
+            host.bond.up()
+            host.vlan0.up()
+            host.vlan1.up()
+            host.br0.up()
+            host.br1.up()
+            guest_a.eth0.up()
+            guest_b.eth0.up()
 
         #TODO better service handling through HostAPI
         if "perf_tool_cpu" in self.params:
             raise LnstError("'perf_tool_cpu' (%d) should not be set for this test" % self.params.perf_tool_cpu)
 
         if "dev_intr_cpu" in self.params:
-            for m in [host1, host2]:
-                m.run("service irqbalance stop")
-                for dev in [m.eth0, m.eth1]:
+            for host in [host1, host2]:
+                host.run("service irqbalance stop")
+                for dev in [host.eth0, host.eth1]:
                     self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
 
         if self.params.perf_parallel_streams > 1:
-            for m in [host1, host2]:
-                for dev in [m.eth0, m.eth1]:
-                    m.run("tc qdisc replace dev %s root mq" % dev.name)
+            for host in [host1, host2]:
+                for dev in [host.eth0, host.eth1]:
+                    host.run("tc qdisc replace dev %s root mq" % dev.name)
 
         return configuration
 
@@ -143,5 +143,5 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
-            for m in [host1, host2]:
-                m.run("service irqbalance start")
+            for host in [host1, host2]:
+                host.run("service irqbalance start")

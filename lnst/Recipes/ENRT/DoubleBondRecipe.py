@@ -9,13 +9,13 @@ from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import BondDevice
 
 class DoubleBondRecipe(BaseEnrtRecipe):
-    m1 = HostReq()
-    m1.eth0 = DeviceReq(label="net1")
-    m1.eth1 = DeviceReq(label="net1")
+    host1 = HostReq()
+    host1.eth0 = DeviceReq(label="net1")
+    host1.eth1 = DeviceReq(label="net1")
 
-    m2 = HostReq()
-    m2.eth0 = DeviceReq(label="net1")
-    m2.eth1 = DeviceReq(label="net1")
+    host2 = HostReq()
+    host2.eth0 = DeviceReq(label="net1")
+    host2.eth1 = DeviceReq(label="net1")
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
@@ -27,59 +27,59 @@ class DoubleBondRecipe(BaseEnrtRecipe):
     miimon_value = IntParam(mandatory=True)
 
     def test_wide_configuration(self):
-        m1, m2 = self.matched.m1, self.matched.m2
+        host1, host2 = self.matched.host1, self.matched.host2
 
-        for m in (m1, m2):
-            m.bond = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
-            m.eth0.down()
-            m.eth1.down()
-            m.bond.slave_add(m.eth0)
-            m.bond.slave_add(m.eth1)
+        for host in (host1, host2):
+            host.bond0 = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
+            host.eth0.down()
+            host.eth1.down()
+            host.bond0.slave_add(host.eth0)
+            host.bond0.slave_add(host.eth1)
 
         configuration = EnrtConfiguration()
-        configuration.endpoint1 = m1.bond
-        configuration.endpoint2 = m2.bond
+        configuration.endpoint1 = host1.bond0
+        configuration.endpoint2 = host2.bond0
 
         if "mtu" in self.params:
-            m1.bond.mtu = self.params.mtu
-            m2.bond.mtu = self.params.mtu
+            host1.bond0.mtu = self.params.mtu
+            host2.bond0.mtu = self.params.mtu
 
         net_addr = "192.168.101"
         net_addr6 = "fc00:0:0:0"
-        for i, m in enumerate([m1, m2]):
-            m.bond.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
-            m.bond.ip_add(ipaddress(net_addr6 + "::" + str(i+1) + "/64"))
-            m.eth0.up()
-            m.eth1.up()
-            m.bond.up()
+        for i, host in enumerate([host1, host2]):
+            host.bond0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
+            host.bond0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) + "/64"))
+            host.eth0.up()
+            host.eth1.up()
+            host.bond0.up()
 
         if "adaptive_tx_coalescing" in self.params:
-            for m in [m1, m2]:
-                for dev in [m.eth0, m.eth1]:
+            for host in [host1, host2]:
+                for dev in [host.eth0, host.eth1]:
                     dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
         if "adaptive_tx_coalescing" in self.params:
-            for m in [m1, m2]:
-                for dev in [m.eth0, m.eth1]:
+            for host in [host1, host2]:
+                for dev in [host.eth0, host.eth1]:
                     dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
-            for m in [m1, m2]:
-                m.run("service irqbalance stop")
-                for dev in [m.eth0, m.eth1]:
-                    self._pin_dev_interrupts(m.eth0, self.params.dev_intr_cpu)
+            for host in [host1, host2]:
+                host.run("service irqbalance stop")
+                for dev in [host.eth0, host.eth1]:
+                    self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
 
         if self.params.perf_parallel_streams > 1:
-            for m in [m1, m2]:
-                for dev in [m.eth0, m.eth1]:
-                    m.run("tc qdisc replace dev %s root mq" % dev.name)
+            for host in [host1, host2]:
+                for dev in [host.eth0, host.eth1]:
+                    host.run("tc qdisc replace dev %s root mq" % dev.name)
 
         return configuration
 
     def test_wide_deconfiguration(self, config):
-        m1, m2 = self.matched.m1, self.matched.m2
+        host1, host2 = self.matched.host1, self.matched.host2
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
-            for m in [m1, m2]:
-                m.run("service irqbalance start")
+            for host in [host1, host2]:
+                host.run("service irqbalance start")

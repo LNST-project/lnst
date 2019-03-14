@@ -38,54 +38,54 @@ class VirtualOvsBridgeVlanInGuestRecipe(BaseEnrtRecipe):
         host1.br0.port_add(host1.tap0)
 
         host2.eth0.down()
-        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=10)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=10)
 
         guest1.eth0.down()
-        guest1.vlan1 = VlanDevice(realdev=guest1.eth0, vlan_id=10)
+        guest1.vlan0 = VlanDevice(realdev=guest1.eth0, vlan_id=10)
 
         #Due to limitations in the current EnrtConfiguration
         #class, a single vlan test pair is chosen
         configuration = EnrtConfiguration()
-        configuration.endpoint1 = guest1.vlan1
-        configuration.endpoint2 = host2.vlan1
+        configuration.endpoint1 = guest1.vlan0
+        configuration.endpoint2 = host2.vlan0
 
         if "mtu" in self.params:
             host1.eth0.mtu = self.params.mtu
             host1.tap0.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
             host2.eth0.mtu = self.params.mtu
-            host2.vlan1.mtu = self.params.mtu
+            host2.vlan0.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
-            guest1.vlan1.mtu = self.params.mtu
+            guest1.vlan0.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"
 
-        host2.vlan1.ip_add(ipaddress(net_addr_1 + ".2/24"))
-        host2.vlan1.ip_add(ipaddress(net_addr6_1 + "::2/64"))
-        guest1.vlan1.ip_add(ipaddress(net_addr_1 + ".3/24"))
-        guest1.vlan1.ip_add(ipaddress(net_addr6_1 + "::3/64"))
+        host2.vlan0.ip_add(ipaddress(net_addr_1 + ".2/24"))
+        host2.vlan0.ip_add(ipaddress(net_addr6_1 + "::2/64"))
+        guest1.vlan0.ip_add(ipaddress(net_addr_1 + ".3/24"))
+        guest1.vlan0.ip_add(ipaddress(net_addr6_1 + "::3/64"))
 
         host1.eth0.up()
         host1.tap0.up()
         host1.br0.up()
         host2.eth0.up()
-        host2.vlan1.up()
+        host2.vlan0.up()
         guest1.eth0.up()
-        guest1.vlan1.up()
+        guest1.vlan0.up()
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
             raise LnstError("'dev_intr_cpu' (%d) should not be set for this test" % self.params.dev_intr_cpu)
 
         if "perf_tool_cpu" in self.params:
-            for m in [host1, host2]:
-                m.run("service irqbalance stop")
-                self._pin_dev_interrupts(m.eth0, 0)
+            for host in [host1, host2]:
+                host.run("service irqbalance stop")
+                self._pin_dev_interrupts(host.eth0, 0)
 
         if self.params.perf_parallel_streams > 1:
-            for m in [host1, host2]:
-                m.run("tc qdisc replace dev %s root mq" % m.eth0.name)
+            for host in [host1, host2]:
+                host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
 
         return configuration
 
@@ -94,5 +94,5 @@ class VirtualOvsBridgeVlanInGuestRecipe(BaseEnrtRecipe):
 
         #TODO better service handling through HostAPI
         if "perf_tool_cpu" in self.params:
-            for m in [host1, host2]:
-                m.run("service irqbalance start")
+            for host in [host1, host2]:
+                host.run("service irqbalance start")

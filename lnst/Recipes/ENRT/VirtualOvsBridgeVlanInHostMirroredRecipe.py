@@ -7,17 +7,16 @@ from lnst.Common.Parameters import Param
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
-from lnst.Devices import VlanDevice
 from lnst.Devices import OvsBridgeDevice
 from lnst.Common.LnstError import LnstError
 
 class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
     host1 = HostReq()
-    host1.eth1 = DeviceReq(label="to_switch")
+    host1.eth0 = DeviceReq(label="to_switch")
     host1.tap0 = DeviceReq(label="to_guest1")
 
     host2 = HostReq()
-    host2.eth1 = DeviceReq(label="to_switch")
+    host2.eth0 = DeviceReq(label="to_switch")
     host2.tap0 = DeviceReq(label="to_guest2")
 
     guest1 = HostReq()
@@ -36,16 +35,16 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
     def test_wide_configuration(self):
         host1, host2, guest1, guest2 = self.matched.host1, self.matched.host2, self.matched.guest1, self.matched.guest2
 
-        host1.eth1.down()
+        host1.eth0.down()
         host1.tap0.down()
         host1.br0 = OvsBridgeDevice()
-        host1.br0.port_add(host1.eth1)
+        host1.br0.port_add(host1.eth0)
         host1.br0.port_add(host1.tap0, tag="10")
 
-        host2.eth1.down()
+        host2.eth0.down()
         host2.tap0.down()
         host2.br0 = OvsBridgeDevice()
-        host2.br0.port_add(host2.eth1)
+        host2.br0.port_add(host2.eth0)
         host2.br0.port_add(host2.tap0, tag="10")
 
         guest1.eth0.down()
@@ -59,10 +58,10 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
         configuration.endpoint2 = guest2.eth0
 
         if "mtu" in self.params:
-            host1.eth1.mtu = self.params.mtu
+            host1.eth0.mtu = self.params.mtu
             host1.tap0.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
-            host2.eth1.mtu = self.params.mtu
+            host2.eth0.mtu = self.params.mtu
             host2.tap0.mtu = self.params.mtu
             host2.br0.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
@@ -76,10 +75,10 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
         guest2.eth0.ip_add(ipaddress(net_addr_1 + ".4/24"))
         guest2.eth0.ip_add(ipaddress(net_addr6_1 + "::4/64"))
 
-        host1.eth1.up()
+        host1.eth0.up()
         host1.tap0.up()
         host1.br0.up()
-        host2.eth1.up()
+        host2.eth0.up()
         host2.tap0.up()
         host2.br0.up()
         guest1.eth0.up()
@@ -90,13 +89,13 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
             raise LnstError("'perf_cpu_pin' (%d) should not be set for this test" % self.params.perf_tool_cpu)
 
         if "dev_intr_cpu" in self.params:
-            for m in [host1, host2]:
-                m.run("service irqbalance stop")
-                self._pin_dev_interrupts(m.eth1, self.params.dev_intr_cpu)
+            for host in [host1, host2]:
+                host.run("service irqbalance stop")
+                self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
 
         if self.params.perf_parallel_streams > 1:
-            for m in [host1, host2]:
-                m.run("tc qdisc replace dev %s root mq" % m.eth1.name)
+            for host in [host1, host2]:
+                host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
 
         return configuration
 
@@ -105,5 +104,5 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
-            for m in [host1, host2]:
-                m.run("service irqbalance start")
+            for host in [host1, host2]:
+                host.run("service irqbalance start")

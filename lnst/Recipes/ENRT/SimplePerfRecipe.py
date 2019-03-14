@@ -7,11 +7,11 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 
 class SimplePerfRecipe(BaseEnrtRecipe):
-    m1 = HostReq()
-    m1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1 = HostReq()
+    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    m2 = HostReq()
-    m2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2 = HostReq()
+    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
@@ -21,65 +21,65 @@ class SimplePerfRecipe(BaseEnrtRecipe):
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
     def test_wide_configuration(self):
-        m1, m2 = self.matched.m1, self.matched.m2
+        host1, host2 = self.matched.host1, self.matched.host2
 
         configuration = EnrtConfiguration()
-        configuration.endpoint1 = m1.eth0
-        configuration.endpoint2 = m2.eth0
+        configuration.endpoint1 = host1.eth0
+        configuration.endpoint2 = host2.eth0
 
         if "mtu" in self.params:
-            m1.eth0.mtu = self.params.mtu
-            m2.eth0.mtu = self.params.mtu
+            host1.eth0.mtu = self.params.mtu
+            host2.eth0.mtu = self.params.mtu
 
         #TODO redo
         # configuration.saved_coalescing_state = dict(
-                # m1_if = dict(tx = m1.eth0.adaptive_tx_coalescing,
-                             # rx = m1.eth0.adaptive_rx_coalescing),
-                # m2_if = dict(tx = m2.eth0.adaptive_tx_coalescing,
-                             # rx = m2.eth0.adaptive_rx_coalescing))
+                # host1_if = dict(tx = host1.eth0.adaptive_tx_coalescing,
+                             # rx = host1.eth0.adaptive_rx_coalescing),
+                # host2_if = dict(tx = host2.eth0.adaptive_tx_coalescing,
+                             # rx = host2.eth0.adaptive_rx_coalescing))
 
-        # m1.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
-        # m1.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
-        # m2.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
-        # m2.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
+        # host1.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
+        # host1.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
+        # host2.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
+        # host2.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
 
-        m1.eth0.ip_add(ipaddress("192.168.101.1/24"))
-        m1.eth0.ip_add(ipaddress("fc00::1/64"))
-        m1.eth0.up()
+        host1.eth0.ip_add(ipaddress("192.168.101.1/24"))
+        host1.eth0.ip_add(ipaddress("fc00::1/64"))
+        host1.eth0.up()
 
-        m2.eth0.ip_add(ipaddress("192.168.101.2/24"))
-        m2.eth0.ip_add(ipaddress("fc00::2/64"))
-        m2.eth0.up()
+        host2.eth0.ip_add(ipaddress("192.168.101.2/24"))
+        host2.eth0.ip_add(ipaddress("fc00::2/64"))
+        host2.eth0.up()
 
         if "adaptive_rx_coalescing" in self.params:
-            for m in [m1, m2]:
-                m.eth0.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
+            for host in [host1, host2]:
+                host.eth0.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
         if "adaptive_tx_coalescing" in self.params:
-            for m in [m1, m2]:
-                m.eth0.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+            for host in [host1, host2]:
+                host.eth0.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
-            for m in [m1, m2]:
-                m.run("service irqbalance stop")
-                self._pin_dev_interrupts(m.eth0, self.params.dev_intr_cpu)
+            for host in [host1, host2]:
+                host.run("service irqbalance stop")
+                self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
 
         if self.params.perf_parallel_streams > 1:
-            for m in [m1, m2]:
-                m.run("tc qdisc replace dev %s root mq" % m.eth0.name)
+            for host in [host1, host2]:
+                host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
 
         return configuration
 
     def test_wide_deconfiguration(self, config):
-        m1, m2 = self.matched.m1, self.matched.m2
+        host1, host2 = self.matched.host1, self.matched.host2
 
         #TODO better service handling through HostAPI
         if "dev_intr_cpu" in self.params:
-            for m in [m1, m2]:
-                m.run("service irqbalance start")
+            for host in [host1, host2]:
+                host.run("service irqbalance start")
 
         # redo
-        # m1.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["m1_if"]["tx"]
-        # m1.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["m1_if"]["rx"]
-        # m2.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["m2_if"]["tx"]
-        # m2.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["m2_if"]["rx"]
+        # host1.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["host1_if"]["tx"]
+        # host1.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["host1_if"]["rx"]
+        # host2.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["host2_if"]["tx"]
+        # host2.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["host2_if"]["rx"]
