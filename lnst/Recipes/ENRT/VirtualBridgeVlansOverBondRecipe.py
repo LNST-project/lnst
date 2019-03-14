@@ -53,11 +53,11 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
             host.eth1.down()
             host.tap0.down()
             host.tap1.down()
-            host.bond = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
-            host.bond.slave_add(host.eth0)
-            host.bond.slave_add(host.eth1)
-            host.vlan0 = VlanDevice(realdev=host.bond, vlan_id=n)
-            host.vlan1 = VlanDevice(realdev=host.bond, vlan_id=2*n)
+            host.bond0 = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
+            host.bond0.slave_add(host.eth0)
+            host.bond0.slave_add(host.eth1)
+            host.vlan0 = VlanDevice(realdev=host.bond0, vlan_id=n)
+            host.vlan1 = VlanDevice(realdev=host.bond0, vlan_id=2*n)
             host.br0 = BridgeDevice()
             host.br0.slave_add(host.vlan0)
             host.br0.slave_add(host.tap0)
@@ -75,14 +75,14 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         configuration.endpoint2 = guest3.eth0
 
         if "mtu" in self.params:
-            host1.bond.mtu = self.params.mtu
+            host1.bond0.mtu = self.params.mtu
             host1.tap0.mtu = self.params.mtu
             host1.tap1.mtu = self.params.mtu
             host1.vlan0.mtu = self.params.mtu
             host1.vlan1.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
             host1.br1.mtu = self.params.mtu
-            host2.bond.mtu = self.params.mtu
+            host2.bond0.mtu = self.params.mtu
             host2.tap0.mtu = self.params.mtu
             host2.tap1.mtu = self.params.mtu
             host2.vlan0.mtu = self.params.mtu
@@ -100,7 +100,7 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
         net_addr6_2 = "fc00:0:0:2"
 
         for host, (guest_a, guest_b), n in [(host1, (guest1, guest2), 1), (host2, (guest3, guest4), 3)]:
-            host.bond.ip_add(ipaddress("1.2.3.4"))
+            host.bond0.ip_add(ipaddress("1.2.3.4"))
             host.br0.ip_add(ipaddress(net_addr_1 + "." + str(n) + "/24"))
             host.br1.ip_add(ipaddress(net_addr_2 + "." + str(n) + "/24"))
             guest_a.eth0.ip_add(ipaddress(net_addr_1 + "." + str(n+1) + "/24"))
@@ -113,7 +113,7 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
             host.eth1.up()
             host.tap0.up()
             host.tap1.up()
-            host.bond.up()
+            host.bond0.up()
             host.vlan0.up()
             host.vlan1.up()
             host.br0.up()
