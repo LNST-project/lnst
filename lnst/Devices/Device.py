@@ -329,6 +329,7 @@ class Device(object):
         values.
         """
         if self.master:
+            self.master.cleanup()
             self.master = None
         self.down()
         self.ip_flush()
