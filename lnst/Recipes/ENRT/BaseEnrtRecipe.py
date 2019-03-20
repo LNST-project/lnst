@@ -66,6 +66,13 @@ class EnrtSubConfiguration(object):
 
 class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     ip_versions = Param(default=("ipv4", "ipv6"))
+
+    ping_parallel = BoolParam(default=False)
+    ping_bidirect  = BoolParam(default=False)
+    ping_count = IntParam(default = 100)
+    ping_interval = StrParam(default = 0.2)
+    ping_psize = IntParam(default = None)
+
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
 
     offload_combinations = Param(default=(
@@ -176,22 +183,47 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     def generate_ping_configurations(self, main_config, sub_config):
         client_nic = main_config.endpoint1
         server_nic = main_config.endpoint2
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
+
+        count = self.params.ping_count
+        interval = self.params.ping_interval
+        size = self.params.ping_psize
+        common_args = {'count' : count, 'interval' : interval, 'size' : size}
 
         for ipv in self.params.ip_versions:
+            kwargs = {}
             if ipv == "ipv4":
-                family = AF_INET
+                kwargs.update(family = AF_INET)
             elif ipv == "ipv6":
-                family = AF_INET6
+                kwargs.update(family = AF_INET6)
+                kwargs.update(link_local = False)
 
-            client_bind = client_nic.ips_filter(family=family)[0]
-            server_bind = server_nic.ips_filter(family=family)[0]
+            client_ips = client_nic.ips_filter(**kwargs)
+            server_ips = server_nic.ips_filter(**kwargs)
+            if ipv == "ipv6":
+                client_ips = client_ips[::-1]
+                server_ips = server_ips[::-1]
 
-            yield PingConf(client = client_netns,
-                           client_bind = client_bind,
-                           destination = server_netns,
-                           destination_address = server_bind)
+            if len(client_ips) != len(server_ips) or len(client_ips) * len(server_ips) == 0:
+                raise LnstError("Source/destination ip lists are of different size or empty.")
+
+            ping_conf_list = []
+            for src_addr, dst_addr in zip(client_ips, server_ips):
+                pconf = PingConf(client = client_nic.netns,
+                                 client_bind = src_addr,
+                                 destination = server_nic.netns,
+                                 destination_address = dst_addr,
+                                 **common_args)
+
+                ping_conf_list.append(pconf)
+
+                if self.params.ping_bidirect:
+                    rev_pconf = self._create_reverse_ping(pconf, common_args)
+                    ping_conf_list.append(rev_pconf)
+
+                if not self.params.ping_parallel:
+                    break
+
+            yield ping_conf_list
 
     def generate_perf_configurations(self, main_config, sub_config):
         client_nic = main_config.endpoint1
@@ -260,6 +292,16 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                     cpupin = flow.cpupin
                     )
         return rev_flow
+
+    def _create_reverse_ping(self, pconf, args):
+        rev_pconf = PingConf(
+                    client = pconf.destination,
+                    client_bind = pconf.destination_address,
+                    destination = pconf.client,
+                    destination_address = pconf.client_bind,
+                    **args
+                    )
+        return rev_pconf
 
     def _pin_dev_interrupts(self, dev, cpu):
         netns = dev.netns

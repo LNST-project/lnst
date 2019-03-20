@@ -44,21 +44,48 @@ class PingConf(object):
 
 class PingTestAndEvaluate(BaseRecipe):
     def ping_test(self, ping_config):
+        results = {}
+
+        running_ping_array = []
+        for pingconf in ping_config:
+            ping, client = self.ping_init(pingconf)
+            running_ping = client.prepare_job(ping)
+            running_ping.start(bg = True)
+            running_ping_array.append((pingconf, running_ping))
+
+        for _, pingjob in running_ping_array:
+            try:
+                pingjob.wait()
+            finally:
+                pingjob.kill()
+
+        for pingconf, pingjob in running_ping_array:
+            result = pingjob.result
+            results[pingconf] = result
+
+        return results
+
+    def ping_init(self, ping_config):
         client = ping_config.client
         destination = ping_config.destination
-
         kwargs = self._generate_ping_kwargs(ping_config)
         ping = Ping(**kwargs)
-
-        ping_job = client.run(ping)
-        return ping_job.result
+        return (ping, client)
 
     def ping_evaluate_and_report(self, ping_config, results):
-        # do we want to use the "perf" measurements (store a baseline etc...) as well?
-        if results["rate"] > 50:
-            self.add_result(True, "Ping succesful", results)
+        for pingconf, result in results.items():
+            self.single_ping_evaluate_and_report(pingconf, result)
+
+    def single_ping_evaluate_and_report(self, ping_config, result):
+        fmt = "From: <{0.client.hostid} ({0.client_bind})> To: " \
+              "<{0.destination.hostid} ({0.destination_address})>"
+        description = fmt.format(ping_config)
+        if result["rate"] > 50:
+            message = "Ping successful --- " + description
+            self.add_result(True, message, result)
         else:
-            self.add_result(False, "Ping unsuccesful", results)
+            message = "Ping unsuccessful --- " + description
+            self.add_result(False, message, result)
 
     def _generate_ping_kwargs(self, ping_config):
         kwargs = dict(dst=ping_config.destination_address,
