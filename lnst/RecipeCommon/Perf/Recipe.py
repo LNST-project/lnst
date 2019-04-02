@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 from lnst.Common.LnstError import LnstError
 from lnst.Controller.Recipe import BaseRecipe
@@ -32,7 +33,7 @@ class RecipeConf(object):
 class RecipeResults(object):
     def __init__(self, perf_conf):
         self._perf_conf = perf_conf
-        self._results = {}
+        self._results = OrderedDict()
 
     @property
     def perf_conf(self):
