@@ -54,7 +54,6 @@ class Recipe(BaseRecipe):
         results = RecipeResults(recipe_conf)
 
         for i in range(recipe_conf.iterations):
-            run_results = []
             for measurement in recipe_conf.measurements:
                 measurement.start()
             for measurement in reversed(recipe_conf.measurements):
