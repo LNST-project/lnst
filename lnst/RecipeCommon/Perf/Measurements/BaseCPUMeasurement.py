@@ -62,17 +62,6 @@ class BaseCPUMeasurement(BaseMeasurement):
             cls._report_host_results(recipe, host_results)
 
     @classmethod
-    def evaluate_results(cls, recipe, results):
-        #TODO split off into a separate evaluator class
-        hosts = []
-        for result in results:
-            if result.host.hostid not in hosts:
-                hosts.append(result.host.hostid)
-        recipe.add_result(True,
-                "CPU evaluation for results from hosts {} not implemented"
-                .format(hosts))
-
-    @classmethod
     def _divide_results_by_host(cls, results):
         results_by_host = {}
         for result in results:

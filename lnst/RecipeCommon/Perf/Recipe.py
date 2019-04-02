@@ -1,3 +1,6 @@
+import logging
+
+from lnst.Common.LnstError import LnstError
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
@@ -5,11 +8,22 @@ from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 class RecipeConf(object):
     def __init__(self, measurements, iterations):
         self._measurements = measurements
+        self._evaluators = dict()
         self._iterations = iterations
 
     @property
     def measurements(self):
         return self._measurements
+
+    @property
+    def evaluators(self):
+        return dict(self._evaluators)
+
+    def register_evaluators(self, measurement, evaluators):
+        if measurement not in self.measurements:
+            raise LnstError("Can't register evaluators for an unknown measurement")
+
+        self._evaluators[measurement] = list(evaluators)
 
     @property
     def iterations(self):
@@ -69,5 +83,13 @@ class Recipe(BaseRecipe):
             self.add_result(False, "No results available to evaluate.")
             return
 
+        perf_conf = recipe_results.perf_conf
+
         for measurement, results in recipe_results.results.items():
-            measurement.evaluate_results(self, results)
+            evaluators = perf_conf.evaluators.get(measurement, [])
+            for evaluator in evaluators:
+                evaluator.evaluate_results(self, results)
+
+            if len(evaluators) == 0:
+                logging.debug("No evaluator registered for measurement {}"
+                              .format(measurement))

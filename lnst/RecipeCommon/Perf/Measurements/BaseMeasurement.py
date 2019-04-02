@@ -20,10 +20,5 @@ class BaseMeasurement(object):
         raise NotImplementedError()
 
     @classmethod
-    def evaluate_results(recipe, results):
-        #TODO split off into separate evaluator classes
-        raise NotImplementedError()
-
-    @classmethod
     def aggregate_results(first, second):
         raise NotImplementedError()

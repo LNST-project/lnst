@@ -157,11 +157,6 @@ class BaseFlowMeasurement(BaseMeasurement):
             cls._report_flow_results(recipe, flow_results)
 
     @classmethod
-    def evaluate_results(cls, recipe, results):
-        #TODO split off into a separate evaluator class
-        recipe.add_result(True, "Flow result evaluation not implemented")
-
-    @classmethod
     def _report_flow_results(cls, recipe, flow_results):
         generator = flow_results.generator_results
         generator_cpu = flow_results.generator_cpu_stats
