@@ -50,7 +50,7 @@ class Host(Namespace):
 
         Does not include the init namespace (self)."""
         ret = []
-        for x in self._machine._objects.values():
+        for x in self._objects.values():
             if isinstance(x, NetNamespace):
                 ret.append(x)
         return ret
