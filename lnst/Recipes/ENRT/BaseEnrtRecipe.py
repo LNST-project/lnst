@@ -11,6 +11,7 @@ from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
+from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 
 class EnrtConfiguration(object):
     def __init__(self):
@@ -231,6 +232,30 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
         client_netns = client_nic.netns
         server_netns = server_nic.netns
 
+        cpu_measurement = self.params.cpu_perf_tool(
+                [client_netns, server_netns])
+
+        flow_combinations = self.generate_flow_combinations(main_config, sub_config)
+
+        for flows in flow_combinations:
+            flows_measurement = self.params.net_perf_tool(flows)
+
+            perf_conf = PerfRecipeConf(
+                    measurements=[cpu_measurement, flows_measurement],
+                    iterations=self.params.perf_iterations)
+
+            perf_conf.register_evaluators(
+                    cpu_measurement, self.cpu_perf_evaluators)
+            perf_conf.register_evaluators(
+                    flows_measurement, self.net_perf_evaluators)
+
+            yield perf_conf
+
+    def generate_flow_combinations(self, main_config, sub_config):
+        client_nic = main_config.endpoint1
+        server_nic = main_config.endpoint2
+        client_netns = client_nic.netns
+        server_netns = server_nic.netns
         for ipv in self.params.ip_versions:
             if ipv == "ipv4":
                 family = AF_INET
@@ -260,24 +285,20 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                         parallel_streams = self.params.perf_parallel_streams,
                         cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
                         )
-
-                flow_measurement = self.params.net_perf_tool([flow])
-                yield PerfRecipeConf(
-                        measurements=[
-                            self.params.cpu_perf_tool([client_netns, server_netns]),
-                            flow_measurement
-                            ],
-                        iterations=self.params.perf_iterations)
+                yield [flow]
 
                 if "perf_reverse" in self.params and self.params.perf_reverse:
                     reverse_flow = self._create_reverse_flow(flow)
-                    reverse_flow_measurement = self.params.net_perf_tool([reverse_flow])
-                    yield PerfRecipeConf(
-                            measurements=[
-                                self.params.cpu_perf_tool([server_netns, client_netns]),
-                                reverse_flow_measurement
-                                ],
-                            iterations=self.params.perf_iterations)
+                    yield [reverse_flow]
+
+    @property
+    def cpu_perf_evaluators(self):
+        return []
+
+    @property
+    def net_perf_evaluators(self):
+        return [NonzeroFlowEvaluator()]
+
 
     def _create_reverse_flow(self, flow):
         rev_flow = PerfFlow(
