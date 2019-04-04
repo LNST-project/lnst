@@ -55,6 +55,10 @@ class Namespace(object):
         return self._machine.get_id()
 
     @property
+    def hostname(self):
+        return self._machine.get_hostname()
+
+    @property
     def devices(self):
         """List of mapped devices available in the Namespace"""
         ret = []
