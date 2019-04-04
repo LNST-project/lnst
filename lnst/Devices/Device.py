@@ -650,8 +650,9 @@ class Device(object):
         try:
             res = exec_cmd("ethtool -c %s" % self.name)
         except:
-            raise DeviceError("Could not read coalescence values of "
-                              "%s." % self.name)
+            logging.debug("Could not read coalescence values of %s." % self.name)
+            return (None, None)
+
         regex = "Adaptive RX: (on|off)  TX: (on|off)"
         try:
             res = re.search(regex, res[0]).groups()
