@@ -5,6 +5,7 @@
 .#*
 
 Logs/
+build/
 
 # vim swap files
 *.swp
