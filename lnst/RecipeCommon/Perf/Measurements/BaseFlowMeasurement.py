@@ -1,6 +1,7 @@
 import signal
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurementResults
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 
 class Flow(object):
@@ -75,8 +76,9 @@ class NetworkFlowTest(object):
     def client_job(self):
         return self._client_job
 
-class FlowMeasurementResults(object):
-    def __init__(self, flow):
+class FlowMeasurementResults(BaseMeasurementResults):
+    def __init__(self, measurement, flow):
+        super(FlowMeasurementResults, self).__init__(measurement)
         self._flow = flow
         self._generator_results = None
         self._generator_cpu_stats = None
@@ -120,7 +122,8 @@ class FlowMeasurementResults(object):
         self._receiver_cpu_stats = value
 
 class AggregatedFlowMeasurementResults(FlowMeasurementResults):
-    def __init__(self, flow):
+    def __init__(self, measurement, flow):
+        super(FlowMeasurementResults, self).__init__(measurement)
         self._flow = flow
         self._generator_results = SequentialPerfResult()
         self._generator_cpu_stats = SequentialPerfResult()
@@ -190,21 +193,19 @@ class BaseFlowMeasurement(BaseMeasurement):
                     receiver_flow_data=receiver,
                     receiver_cpu_data=receiver_cpu))
 
-    @classmethod
-    def aggregate_results(cls, old, new):
+    def aggregate_results(self, old, new):
         aggregated = []
         if old is None:
             old = [None] * len(new)
         for old_flow, new_flow in zip(old, new):
-            aggregated.append(cls._aggregate_flows(old_flow, new_flow))
+            aggregated.append(self._aggregate_flows(old_flow, new_flow))
         return aggregated
 
-    @classmethod
-    def _aggregate_flows(cls, old_flow, new_flow):
+    def _aggregate_flows(self, old_flow, new_flow):
         if old_flow is not None and old_flow.flow is not new_flow.flow:
             raise MeasurementError("Aggregating incompatible Flows")
 
-        new_result = AggregatedFlowMeasurementResults(new_flow.flow)
+        new_result = AggregatedFlowMeasurementResults(measurement=self, flow=new_flow.flow)
 
         new_result.add_results(old_flow)
         new_result.add_results(new_flow)

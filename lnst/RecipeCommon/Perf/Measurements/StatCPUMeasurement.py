@@ -66,7 +66,7 @@ class StatCPUMeasurement(BaseCPUMeasurement):
 
             for cpu, cpu_intervals in parsed_sample.items():
                 if cpu not in job_results:
-                    job_results[cpu] = StatCPUMeasurementResults(host, cpu)
+                    job_results[cpu] = StatCPUMeasurementResults(self, host, cpu)
                 cpu_results = job_results[cpu]
                 cpu_results.update_intervals(cpu_intervals)
 

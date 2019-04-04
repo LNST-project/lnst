@@ -22,3 +22,12 @@ class BaseMeasurement(object):
     @classmethod
     def aggregate_results(first, second):
         raise NotImplementedError()
+
+
+class BaseMeasurementResults(object):
+    def __init__(self, measurement):
+        self._measurement = measurement
+
+    @property
+    def measurement(self):
+        return self._measurement

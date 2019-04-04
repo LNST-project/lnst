@@ -1,10 +1,12 @@
 import signal
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurementResults
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 
-class CPUMeasurementResults(object):
-    def __init__(self, host, cpu):
+class CPUMeasurementResults(BaseMeasurementResults):
+    def __init__(self, measurement, host, cpu):
+        super(CPUMeasurementResults, self).__init__(measurement)
         self._host = host
         self._cpu = cpu
 
@@ -21,8 +23,8 @@ class CPUMeasurementResults(object):
         raise NotImplementedError()
 
 class AggregatedCPUMeasurementResults(CPUMeasurementResults):
-    def __init__(self, host, cpu):
-        super(AggregatedCPUMeasurementResults, self).__init__(host, cpu)
+    def __init__(self, measurement, host, cpu):
+        super(AggregatedCPUMeasurementResults, self).__init__(measurement, host, cpu)
         self._individual_results = []
 
     @property
@@ -45,13 +47,12 @@ class AggregatedCPUMeasurementResults(CPUMeasurementResults):
             raise MeasurementError("Adding incorrect results.")
 
 class BaseCPUMeasurement(BaseMeasurement):
-    @classmethod
-    def aggregate_results(cls, old, new):
+    def aggregate_results(self, old, new):
         aggregated = []
         if old is None:
             old = [None] * len(new)
         for old_measurements, new_measurements in zip(old, new):
-            aggregated.append(cls._aggregate_hostcpu_results(
+            aggregated.append(self._aggregate_hostcpu_results(
                 old_measurements, new_measurements))
         return aggregated
 
@@ -89,13 +90,12 @@ class BaseCPUMeasurement(BaseMeasurement):
 
         recipe.add_result(True, "\n".join(desc), data=cpu_data)
 
-    @classmethod
-    def _aggregate_hostcpu_results(cls, old, new):
+    def _aggregate_hostcpu_results(self, old, new):
         if (old is not None and
                 (old.host is not new.host or old.cpu != new.cpu)):
             raise MeasurementError("Aggregating incompatible CPU Results")
 
-        new_result = AggregatedCPUMeasurementResults(new.host, new.cpu)
+        new_result = AggregatedCPUMeasurementResults(self, new.host, new.cpu)
         new_result.add_results(old)
         new_result.add_results(new)
         return new_result

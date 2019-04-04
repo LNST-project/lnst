@@ -55,7 +55,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
         results = []
         for test_flow in test_flows:
-            flow_results = FlowMeasurementResults(test_flow.flow)
+            flow_results = FlowMeasurementResults(
+                    measurement=self,
+                    flow=test_flow.flow)
             flow_results.generator_results = self._parse_job_streams(
                     test_flow.client_job)
             flow_results.generator_cpu_stats = self._parse_job_cpu(
