@@ -1,3 +1,4 @@
+import re
 import time
 
 from lnst.Common.IpAddress import ipaddress
@@ -15,10 +16,34 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurem
 from lnst.Tests.Iperf import IperfClient, IperfServer
 
 class IperfFlowMeasurement(BaseFlowMeasurement):
+    _MEASUREMENT_VERSION = 1
+
     def __init__(self, *args):
         super(IperfFlowMeasurement, self).__init__(*args)
         self._running_measurements = []
         self._finished_measurements = []
+
+        self._hosts_versions = {}
+
+    @property
+    def version(self):
+        if not self._hosts_versions:
+            for flow in self._conf:
+                if flow.receiver not in self._hosts_versions:
+                    self._hosts_versions[flow.receiver] = self._get_host_iperf_version(flow.receiver)
+                if flow.generator not in self._hosts_versions:
+                    self._hosts_versions[flow.generator] = self._get_host_iperf_version(flow.generator)
+
+        return {"measurement_version": self._MEASUREMENT_VERSION,
+                "hosts_iperf_versions": self._hosts_versions}
+
+    def _get_host_iperf_version(self, host):
+        version_job = host.run("iperf3 --version")
+        if version_job.passed:
+            match = re.match(r"iperf (.+?) .*", version_job.stdout)
+            if match:
+                return match.group(1)
+        return None
 
     def start(self):
         if len(self._running_measurements) > 0:

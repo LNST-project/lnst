@@ -3,6 +3,14 @@ class BaseMeasurement(object):
         self._conf = conf
 
     @property
+    def name(self):
+        return self.__class__.__name__
+
+    @property
+    def version(self):
+        raise NotImplementedError()
+
+    @property
     def conf(self):
         return self._conf
 

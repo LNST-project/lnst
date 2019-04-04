@@ -31,6 +31,10 @@ class StatCPUMeasurement(BaseCPUMeasurement):
         self._running_measurements = []
         self._finished_measurements = []
 
+    @property
+    def version(self):
+        return "1"
+
     def start(self):
         jobs = []
         for host in self._conf:
