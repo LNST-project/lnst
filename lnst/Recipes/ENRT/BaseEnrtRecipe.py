@@ -1,4 +1,5 @@
 import re
+
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import AF_INET, AF_INET6
@@ -17,7 +18,6 @@ class EnrtConfiguration(object):
     def __init__(self):
         self._endpoint1 = None
         self._endpoint2 = None
-        self._endpoint1_coalescing = None
 
     @property
     def endpoint1(self):
@@ -35,18 +35,9 @@ class EnrtConfiguration(object):
     def endpoint2(self, value):
         self._endpoint2 = value
 
-    @property
-    def endpoint1_coalescing(self):
-        self._endpoint1_coalescing
-
-    @endpoint1_coalescing.setter
-    def endpoint1_coalescing(self, value):
-        self._endpoint1_coalescing = value
-
 class EnrtSubConfiguration(object):
     def __init__(self):
         self._ip_version = None
-        self._perf_test = None
         self._offload_settings = None
 
     @property
