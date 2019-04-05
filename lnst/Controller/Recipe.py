@@ -85,28 +85,28 @@ class BaseRecipe(object):
         self.runs = []
         self.req = _Requirements()
         self.params = Parameters()
-        for attr in dir(self):
-            val = getattr(self, attr)
-            if isinstance(val, Param):
-                if attr in kwargs:
-                    param_val = kwargs.pop(attr)
-                    param_val = val.type_check(param_val)
-                    setattr(self.params, attr, param_val)
-                else:
-                    try:
-                        param_val = copy.deepcopy(val.default)
-                        setattr(self.params, attr, param_val)
-                    except AttributeError:
-                        if val.mandatory:
-                            raise RecipeError("Parameter {} is mandatory"
-                                              .format(attr))
 
-        for attr in dir(self):
-            val = getattr(self, attr)
-            if isinstance(val, HostReq):
-                new_val = copy.deepcopy(val)
-                new_val.reinit_with_params(self.params)
-                setattr(self.req, attr, new_val)
+        attrs = {name: getattr(type(self), name) for name in dir(type(self))}
+
+        params = ((name, val) for name, val in attrs.items() if isinstance(val, Param))
+        for name, val in params:
+            if name in kwargs:
+                param_val = kwargs.pop(name)
+                param_val = val.type_check(param_val)
+                setattr(self.params, name, param_val)
+            else:
+                try:
+                    param_val = copy.deepcopy(val.default)
+                    setattr(self.params, name, param_val)
+                except AttributeError:
+                    if val.mandatory:
+                        raise RecipeError("Parameter {} is mandatory".format(name))
+
+        reqs = ((name, val) for name, val in attrs.items() if isinstance(val, HostReq))
+        for name, val in reqs:
+            new_val = copy.deepcopy(val)
+            new_val.reinit_with_params(self.params)
+            setattr(self.req, name, new_val)
 
         if len(kwargs):
             for key in kwargs.keys():
