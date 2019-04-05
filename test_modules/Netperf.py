@@ -519,7 +519,7 @@ class Netperf(TestGeneric):
             rate_deviation = 2*res_data["std_deviation"]
         elif len(rates) == 1 and self._confidence is not None:
             result = results[0]
-            rate_deviation = rate * (int(result["confidence"][1]) / 100)
+            rate_deviation = rate * (float(result["confidence"][1]) / 100)
         else:
             rate_deviation = 0.0
 
