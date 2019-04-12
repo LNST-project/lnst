@@ -1,12 +1,12 @@
 from __future__ import division
 
-from .BaseEvaluator import BaseEvaluator
+from lnst.RecipeCommon.Perf.Evaluators.BaseEvaluator import BaseEvaluator
 
-from ..Measurements.BaseCPUMeasurement import (
+from lnst.RecipeCommon.Perf.Measurements.BaseCPUMeasurement import (
     CPUMeasurementResults,
     AggregatedCPUMeasurementResults,
 )
-from ..Results import result_averages_difference
+from lnst.RecipeCommon.Perf.Results import result_averages_difference
 
 
 class BaselineCPUAverageEvaluator(BaseEvaluator):

@@ -1,6 +1,6 @@
-from .BaseEvaluator import BaseEvaluator
+from lnst.RecipeCommon.Perf.Evaluators.BaseEvaluator import BaseEvaluator
 
-from ..Measurements.BaseFlowMeasurement import (
+from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import (
     FlowMeasurementResults,
     AggregatedFlowMeasurementResults,
 )

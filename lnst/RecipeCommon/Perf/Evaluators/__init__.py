@@ -1,4 +1,4 @@
-from .NonzeroFlowEvaluator import NonzeroFlowEvaluator
-from .BaselineFlowAverageEvaluator import BaselineFlowAverageEvaluator
+from lnst.RecipeCommon.Perf.Evaluators.NonzeroFlowEvaluator import NonzeroFlowEvaluator
+from lnst.RecipeCommon.Perf.Evaluators.BaselineFlowAverageEvaluator import BaselineFlowAverageEvaluator
 
-from .BaselineCPUAverageEvaluator import BaselineCPUAverageEvaluator
+from lnst.RecipeCommon.Perf.Evaluators.BaselineCPUAverageEvaluator import BaselineCPUAverageEvaluator
