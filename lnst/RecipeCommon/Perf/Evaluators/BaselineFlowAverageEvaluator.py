@@ -6,6 +6,7 @@ from ..Measurements.BaseFlowMeasurement import (
     FlowMeasurementResults,
     AggregatedFlowMeasurementResults,
 )
+from ..Results import result_averages_difference
 
 
 class BaselineFlowAverageEvaluator(BaseEvaluator):
@@ -30,16 +31,16 @@ class BaselineFlowAverageEvaluator(BaseEvaluator):
             comparison_result = False
             result_text.append("No baseline found for this flow")
         else:
-            generator_diff = _result_averages_difference(
-                result.generator_results,
-                baseline.generator_results)
+            generator_diff = result_averages_difference(
+                result.generator_results, baseline.generator_results
+            )
             result_text.append(
                     "Generator average is {:.2f}% different from the baseline generator average"
                 .format(generator_diff))
 
-            receiver_diff = _result_averages_difference(
-                result.receiver_results,
-                baseline.receiver_results)
+            receiver_diff = result_averages_difference(
+                result.receiver_results, baseline.receiver_results
+            )
             result_text.append(
                     "Receiver average is {:.2f}% different from the baseline receiver average"
                 .format(receiver_diff))
@@ -51,7 +52,3 @@ class BaselineFlowAverageEvaluator(BaseEvaluator):
                 comparison_result = False
 
         recipe.add_result(comparison_result, "\n".join(result_text))
-
-
-def _result_averages_difference(a, b):
-    return 100 - ((a.average / b.average)*100)

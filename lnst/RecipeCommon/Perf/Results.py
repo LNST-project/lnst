@@ -144,3 +144,8 @@ class ParallelPerfResult(PerfResult, PerfList):
             return self[0].unit
         else:
             return None
+
+def result_averages_difference(a, b):
+    if a is None or b is None:
+        return None
+    return 100 - ((a.average / b.average) * 100)
