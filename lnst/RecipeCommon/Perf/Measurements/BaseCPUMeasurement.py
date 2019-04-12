@@ -9,6 +9,7 @@ class CPUMeasurementResults(BaseMeasurementResults):
         super(CPUMeasurementResults, self).__init__(measurement)
         self._host = host
         self._cpu = cpu
+        self._utilization = None
 
     @property
     def host(self):
@@ -20,7 +21,11 @@ class CPUMeasurementResults(BaseMeasurementResults):
 
     @property
     def utilization(self):
-        raise NotImplementedError()
+        return self._utilization
+
+    @utilization.setter
+    def utilization(self, value):
+        self._utilization = value
 
 class AggregatedCPUMeasurementResults(CPUMeasurementResults):
     def __init__(self, measurement, host, cpu):
