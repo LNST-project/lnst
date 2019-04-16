@@ -10,15 +10,31 @@ from lnst.RecipeCommon.Perf.Results import result_averages_difference
 
 
 class BaselineCPUAverageEvaluator(BaseEvaluator):
-    def __init__(self, pass_difference):
+    def __init__(self, pass_difference, evaluation_filter=None):
         self._pass_difference = pass_difference
+        self._evaluation_filter = evaluation_filter
 
     def evaluate_results(self, recipe, results):
-        for host_results in self._divide_results_by_host(results).values():
+        filtered_results = self._filter_results(results)
+
+        for host_results in self._divide_results_by_host(filtered_results).values():
             self._evaluate_host_results(recipe, host_results)
 
     def get_baseline(self, recipe, result):
         return None
+
+    def _filter_results(self, results):
+        if self._evaluation_filter is None:
+            return results
+
+        filtered = []
+        for result in results:
+            if (
+                result.host.hostid in self._evaluation_filter
+                and result.cpu in self._evaluation_filter[result.host.hostid]
+            ):
+                filtered.append(result)
+        return filtered
 
     def _divide_results_by_host(self, results):
         results_by_host = {}
