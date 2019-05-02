@@ -167,3 +167,7 @@ class RecipeRun(object):
     @property
     def results(self):
         return self._results
+
+    @property
+    def overall_result(self):
+        return reduce(lambda x, y: x and y, [i.success for i in self.results])

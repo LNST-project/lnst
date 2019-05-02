@@ -93,10 +93,7 @@ class RunSummaryFormatter(object):
 
         filtered_results = [res for res in run.results if
                             res.success == False or res.level <= self._level]
-        overall_result = True
         for i, res in enumerate(filtered_results):
-            overall_result = overall_result and res.success
-
             try:
                 next_res = filtered_results[i+1]
                 if (isinstance(res, JobStartResult) and
@@ -119,6 +116,6 @@ class RunSummaryFormatter(object):
                 output_lines.extend(self._format_data(res.data))
 
         output_lines.append("Overall result of this Run: {}".
-                            format(self._format_success(overall_result)))
+                            format(self._format_success(run.overall_result)))
 
         return "\n".join(output_lines)
