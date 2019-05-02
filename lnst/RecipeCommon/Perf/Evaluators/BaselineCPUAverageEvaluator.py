@@ -60,8 +60,9 @@ class BaselineCPUAverageEvaluator(BaseEvaluator):
         ]
         for result, baseline in pairs:
             if baseline is None:
+                comparison_result = False
                 result_text.append(
-                    "CPU {cpuid}: no baseline found for ".format(
+                    "CPU {cpuid}: no baseline found".format(
                         cpuid=result.cpu
                     )
                 )
