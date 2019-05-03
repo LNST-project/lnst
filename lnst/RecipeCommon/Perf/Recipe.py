@@ -31,13 +31,13 @@ class RecipeConf(object):
         return self._iterations
 
 class RecipeResults(object):
-    def __init__(self, perf_conf):
-        self._perf_conf = perf_conf
+    def __init__(self, recipe_conf):
+        self._recipe_conf = recipe_conf
         self._results = OrderedDict()
 
     @property
-    def perf_conf(self):
-        return self._perf_conf
+    def recipe_conf(self):
+        return self._recipe_conf
 
     @property
     def results(self):
@@ -83,10 +83,10 @@ class Recipe(BaseRecipe):
             self.add_result(False, "No results available to evaluate.")
             return
 
-        perf_conf = recipe_results.perf_conf
+        recipe_conf = recipe_results.recipe_conf
 
         for measurement, results in recipe_results.results.items():
-            evaluators = perf_conf.evaluators.get(measurement, [])
+            evaluators = recipe_conf.evaluators.get(measurement, [])
             for evaluator in evaluators:
                 evaluator.evaluate_results(self, results)
 
