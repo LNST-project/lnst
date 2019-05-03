@@ -18,6 +18,7 @@ class EnrtConfiguration(object):
     def __init__(self):
         self._endpoint1 = None
         self._endpoint2 = None
+        self._params = None
 
     @property
     def endpoint1(self):
@@ -34,6 +35,15 @@ class EnrtConfiguration(object):
     @endpoint2.setter
     def endpoint2(self, value):
         self._endpoint2 = value
+
+    @property
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, value):
+        self._params = value
+
 
 class EnrtSubConfiguration(object):
     def __init__(self):
