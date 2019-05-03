@@ -1,6 +1,7 @@
 class BaseMeasurement(object):
-    def __init__(self, conf):
-        self._conf = conf
+    def __init__(self, measurement_conf, recipe_conf=None):
+        self._conf = measurement_conf
+        self._recipe_conf = recipe_conf
 
     @property
     def name(self):
@@ -13,6 +14,10 @@ class BaseMeasurement(object):
     @property
     def conf(self):
         return self._conf
+
+    @property
+    def recipe_conf(self):
+        return self._recipe_conf
 
     def start(self):
         raise NotImplementedError()
