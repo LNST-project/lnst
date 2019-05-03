@@ -84,11 +84,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
     perf_msg_size = IntParam(default=123)
-    perf_reverse = BoolParam(mandatory=False)
-
-    perf_usr_comment = StrParam(default="")
-
-    perf_max_deviation = IntParam(default=10) #TODO required?
+    perf_reverse = BoolParam(default=False)
 
     net_perf_tool = Param(default=IperfFlowMeasurement)
 
@@ -278,7 +274,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                         )
                 yield [flow]
 
-                if "perf_reverse" in self.params and self.params.perf_reverse:
+                if self.params.perf_reverse:
                     reverse_flow = self._create_reverse_flow(flow)
                     yield [reverse_flow]
 
