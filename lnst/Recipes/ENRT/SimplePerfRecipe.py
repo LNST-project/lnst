@@ -26,6 +26,7 @@ class SimplePerfRecipe(BaseEnrtRecipe):
         configuration = EnrtConfiguration()
         configuration.endpoint1 = host1.eth0
         configuration.endpoint2 = host2.eth0
+        configuration.params = self.params
 
         if "mtu" in self.params:
             host1.eth0.mtu = self.params.mtu
