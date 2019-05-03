@@ -229,22 +229,38 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
         client_netns = client_nic.netns
         server_netns = server_nic.netns
 
-        cpu_measurement = self.params.cpu_perf_tool(
-                [client_netns, server_netns])
-
-        flow_combinations = self.generate_flow_combinations(main_config, sub_config)
+        flow_combinations = self.generate_flow_combinations(
+            main_config, sub_config
+        )
 
         for flows in flow_combinations:
-            flows_measurement = self.params.net_perf_tool(flows)
+            perf_recipe_conf=dict(
+                main_config=main_config,
+                sub_config=sub_config,
+                flows=flows,
+            )
+
+            flows_measurement = self.params.net_perf_tool(
+                flows,
+                perf_recipe_conf
+            )
+
+            cpu_measurement = self.params.cpu_perf_tool(
+                [client_netns, server_netns],
+                perf_recipe_conf,
+            )
 
             perf_conf = PerfRecipeConf(
-                    measurements=[cpu_measurement, flows_measurement],
-                    iterations=self.params.perf_iterations)
+                measurements=[cpu_measurement, flows_measurement],
+                iterations=self.params.perf_iterations,
+            )
 
             perf_conf.register_evaluators(
-                    cpu_measurement, self.cpu_perf_evaluators)
+                cpu_measurement, self.cpu_perf_evaluators
+            )
             perf_conf.register_evaluators(
-                    flows_measurement, self.net_perf_evaluators)
+                flows_measurement, self.net_perf_evaluators
+            )
 
             yield perf_conf
 
