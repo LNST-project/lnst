@@ -31,18 +31,6 @@ class SimplePerfRecipe(BaseEnrtRecipe):
             host1.eth0.mtu = self.params.mtu
             host2.eth0.mtu = self.params.mtu
 
-        #TODO redo
-        # configuration.saved_coalescing_state = dict(
-                # host1_if = dict(tx = host1.eth0.adaptive_tx_coalescing,
-                             # rx = host1.eth0.adaptive_rx_coalescing),
-                # host2_if = dict(tx = host2.eth0.adaptive_tx_coalescing,
-                             # rx = host2.eth0.adaptive_rx_coalescing))
-
-        # host1.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
-        # host1.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
-        # host2.eth0.adaptive_tx_coalescing = self.params.adaptive_coalescing
-        # host2.eth0.adaptive_rx_coalescing = self.params.adaptive_coalescing
-
         host1.eth0.ip_add(ipaddress("192.168.101.1/24"))
         host1.eth0.ip_add(ipaddress("fc00::1/64"))
         host1.eth0.up()
@@ -77,9 +65,3 @@ class SimplePerfRecipe(BaseEnrtRecipe):
         if "dev_intr_cpu" in self.params:
             for host in [host1, host2]:
                 host.run("service irqbalance start")
-
-        # redo
-        # host1.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["host1_if"]["tx"]
-        # host1.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["host1_if"]["rx"]
-        # host2.eth0.adaptive_tx_coalescing = self.saved_coalescing_state["host2_if"]["tx"]
-        # host2.eth0.adaptive_rx_coalescing = self.saved_coalescing_state["host2_if"]["rx"]
