@@ -1,29 +1,18 @@
 from __future__ import division
 
-from lnst.RecipeCommon.Perf.Evaluators.BaseEvaluator import BaseEvaluator
-
-from lnst.RecipeCommon.Perf.Measurements.BaseCPUMeasurement import (
-    CPUMeasurementResults,
-    AggregatedCPUMeasurementResults,
+from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (
+    BaselineEvaluator,
 )
+
 from lnst.RecipeCommon.Perf.Results import result_averages_difference
 
 
-class BaselineCPUAverageEvaluator(BaseEvaluator):
+class BaselineCPUAverageEvaluator(BaselineEvaluator):
     def __init__(self, pass_difference, evaluation_filter=None):
         self._pass_difference = pass_difference
         self._evaluation_filter = evaluation_filter
 
-    def evaluate_results(self, recipe, results):
-        filtered_results = self._filter_results(results)
-
-        for host_results in self._divide_results_by_host(filtered_results).values():
-            self._evaluate_host_results(recipe, host_results)
-
-    def get_baseline(self, recipe, result):
-        return None
-
-    def _filter_results(self, results):
+    def filter_results(self, recipe, results):
         if self._evaluation_filter is None:
             return results
 
@@ -36,6 +25,11 @@ class BaselineCPUAverageEvaluator(BaseEvaluator):
                 filtered.append(result)
         return filtered
 
+    def group_results(self, recipe, results):
+        results_by_host = self._divide_results_by_host(results)
+        for host_results in results_by_host.values():
+            yield host_results
+
     def _divide_results_by_host(self, results):
         results_by_host = {}
         for result in results:
@@ -44,49 +38,44 @@ class BaselineCPUAverageEvaluator(BaseEvaluator):
             results_by_host[result.host].append(result)
         return results_by_host
 
-    def _evaluate_host_results(self, recipe, host_results):
-        comparison_result = True
-        result_text = [
+    def describe_group_results(self, recipe, results):
+        return [
             "CPU Baseline average evaluation for Host {hostid}:".format(
-                hostid=host_results[0].host.hostid
+                hostid=results[0].host.hostid
             ),
             "Configured {diff}% difference as acceptable".format(
                 diff=self._pass_difference
             ),
         ]
-        pairs = [
-            (result, self.get_baseline(recipe, result))
-            for result in host_results
-        ]
-        for result, baseline in pairs:
-            if baseline is None:
-                comparison_result = False
-                result_text.append(
-                    "CPU {cpuid}: no baseline found".format(
+
+    def compare_result_with_baseline(self, recipe, result, baseline):
+        comparison = True
+        text = []
+        if baseline is None:
+            comparison = False
+            text.append(
+                "CPU {cpuid}: no baseline found".format(cpuid=result.cpu)
+            )
+        else:
+            try:
+                difference = result_averages_difference(
+                    result.utilization, baseline.utilization
+                )
+
+                if abs(difference) > self._pass_difference:
+                    comparison = False
+
+                text.append(
+                    "CPU {cpuid}: utilization {diff:.2f}% {direction} than baseline".format(
+                        cpuid=result.cpu,
+                        diff=abs(difference),
+                        direction="higher" if difference >= 0 else "lower",
+                    )
+                )
+            except ZeroDivisionError:
+                text.append(
+                    "CPU {cpuid}: zero division by baseline".format(
                         cpuid=result.cpu
                     )
                 )
-            else:
-                try:
-                    difference = result_averages_difference(
-                        result.utilization, baseline.utilization
-                    )
-
-                    if abs(difference) > self._pass_difference:
-                        comparison_result = False
-
-                    result_text.append(
-                        "CPU {cpuid}: utilization {diff:.2f}% {direction} than baseline".format(
-                            cpuid=result.cpu,
-                            diff=abs(difference),
-                            direction="higher" if difference >= 0 else "lower",
-                        )
-                    )
-                except ZeroDivisionError:
-                    result_text.append(
-                        "CPU {cpuid}: zero division by baseline".format(
-                            cpuid=result.cpu
-                        )
-                    )
-
-        recipe.add_result(comparison_result, "\n".join(result_text))
+        return comparison, text
