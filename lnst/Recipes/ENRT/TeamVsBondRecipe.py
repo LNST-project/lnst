@@ -5,19 +5,19 @@ _bond.xml + team_test.py)
 """
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import TeamDevice
 from lnst.Devices import BondDevice
 
 class TeamVsBondRecipe(BaseEnrtRecipe):
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="tnet")
-    host1.eth1 = DeviceReq(label="tnet")
+    host1.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
+    host1.eth1 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="tnet")
-    host2.eth1 = DeviceReq(label="tnet")
+    host2.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
+    host2.eth1 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),

@@ -5,7 +5,7 @@ Implements scenario similar to regression_tests/phase2/
 """
 from lnst.Common.Parameters import Param
 from lnst.Common.IpAddress import ipaddress
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import VlanDevice
 from lnst.Devices import OvsBridgeDevice
@@ -13,11 +13,11 @@ from lnst.Common.LnstError import LnstError
 
 class VirtualOvsBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
     host1 = HostReq()
-    host1.eth1 = DeviceReq(label="to_switch")
+    host1.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.tap0 = DeviceReq(label="to_guest1")
 
     host2 = HostReq()
-    host2.eth1 = DeviceReq(label="to_switch")
+    host2.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host2.tap0 = DeviceReq(label="to_guest2")
 
     guest1 = HostReq()

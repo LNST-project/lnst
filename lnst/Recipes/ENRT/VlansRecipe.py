@@ -4,16 +4,16 @@ Implements scenario similar to regression_tests/phase1/
 """
 from lnst.Common.Parameters import Param
 from lnst.Common.IpAddress import ipaddress
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import VlanDevice
 
 class VlansRecipe(BaseEnrtRecipe):
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1")
+    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1")
+    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),

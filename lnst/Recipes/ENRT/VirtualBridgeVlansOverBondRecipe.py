@@ -4,7 +4,7 @@ Implements scenario similar to regression_tests/phase1/
 """
 from lnst.Common.Parameters import Param, IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import VlanDevice
 from lnst.Devices import BondDevice
@@ -13,14 +13,14 @@ from lnst.Common.LnstError import LnstError
 
 class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch")
-    host1.eth1 = DeviceReq(label="to_switch")
+    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
+    host1.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.tap0 = DeviceReq(label="to_guest1")
     host1.tap1 = DeviceReq(label="to_guest2")
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch")
-    host2.eth1 = DeviceReq(label="to_switch")
+    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
+    host2.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host2.tap0 = DeviceReq(label="to_guest3")
     host2.tap1 = DeviceReq(label="to_guest4")
 

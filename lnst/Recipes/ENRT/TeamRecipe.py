@@ -4,17 +4,17 @@ Implements scenario similar to regression_tests/phase2/
 """
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from lnst.Devices import TeamDevice
 
 class TeamRecipe(BaseEnrtRecipe):
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="tnet")
-    host1.eth1 = DeviceReq(label="tnet")
+    host1.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
+    host1.eth1 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="tnet")
+    host2.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),

@@ -6,15 +6,16 @@ Implements scenario similar to regression_tests/phase1/
 
 from lnst.Common.Parameters import Param, IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.Controller import HostReq, DeviceReq
+from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.Ping import PingConf, PingTestAndEvaluate
 
 class PingFloodRecipe(PingTestAndEvaluate):
+    driver = StrParam(default='ixgbe')
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1")
+    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1")
+    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     #TODO: use a parameter for the network
     src_addr = StrParam(default = "192.168.1.1/24")
