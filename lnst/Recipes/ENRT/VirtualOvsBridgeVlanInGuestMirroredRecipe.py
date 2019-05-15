@@ -53,17 +53,11 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
                 host.br0.port_add(dev)
 
         guest1.eth0.down()
-        guest1.vlan0 = VlanDevice(realdev=guest1.eth0, vlan_id=10)
 
         guest2.eth0.down()
-        guest2.vlan0 = VlanDevice(realdev=guest2.eth0, vlan_id=10)
 
-        #Due to limitations in the current EnrtConfiguration
-        #class, a single vlan test pair is chosen
-        configuration = EnrtConfiguration()
-        configuration.endpoint1 = guest1.vlan0
-        configuration.endpoint2 = guest2.vlan0
-
+        guest1_vlan_args0 = dict(realdev=guest1.eth0, vlan_id=10)
+        guest2_vlan_args0 = dict(realdev=guest2.eth0, vlan_id=10)
         if "mtu" in self.params:
             host1.eth1.mtu = self.params.mtu
             host1.tap0.mtu = self.params.mtu
@@ -72,9 +66,18 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
             host2.tap0.mtu = self.params.mtu
             host2.br0.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
-            guest1.vlan0.mtu = self.params.mtu
             guest2.eth0.mtu = self.params.mtu
-            guest2.vlan0.mtu = self.params.mtu
+            for vlan_args in (guest1_vlan_args0, guest2_vlan_args0):
+                vlan_args["mtu"] = self.params.mtu
+
+        guest1.vlan0 = VlanDevice(**guest1_vlan_args0)
+        guest2.vlan0 = VlanDevice(**guest2_vlan_args0)
+
+        #Due to limitations in the current EnrtConfiguration
+        #class, a single vlan test pair is chosen
+        configuration = EnrtConfiguration()
+        configuration.endpoint1 = guest1.vlan0
+        configuration.endpoint2 = guest2.vlan0
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"

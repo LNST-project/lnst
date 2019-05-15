@@ -37,37 +37,38 @@ class VirtualBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
 
         host1.eth0.down()
         host1.tap0.down()
-        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=10)
         host1.br0 = BridgeDevice()
-        host1.br0.slave_add(host1.vlan0)
         host1.br0.slave_add(host1.tap0)
 
         host2.eth0.down()
         host2.tap0.down()
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=10)
         host2.br0 = BridgeDevice()
-        host2.br0.slave_add(host2.vlan0)
         host2.br0.slave_add(host2.tap0)
 
         guest1.eth0.down()
 
         guest2.eth0.down()
 
-        configuration = EnrtConfiguration()
-        configuration.endpoint1 = guest1.eth0
-        configuration.endpoint2 = guest2.eth0
-
+        host1_vlan_args0 = dict(realdev=host1.eth0, vlan_id=10, master=host1.br0)
+        host2_vlan_args0 = dict(realdev=host2.eth0, vlan_id=10, master=host2.br0)
         if "mtu" in self.params:
             host1.eth0.mtu = self.params.mtu
             host1.tap0.mtu = self.params.mtu
-            host1.vlan0.mtu = self.params.mtu
             host1.br0.mtu = self.params.mtu
             host2.eth0.mtu = self.params.mtu
             host2.tap0.mtu = self.params.mtu
-            host2.vlan0.mtu = self.params.mtu
             host2.br0.mtu = self.params.mtu
             guest1.eth0.mtu = self.params.mtu
             guest2.eth0.mtu = self.params.mtu
+            for vlan_args in (host1_vlan_args0, host2_vlan_args0):
+                vlan_args["mtu"] = self.params.mtu
+
+        host1.vlan0 = VlanDevice(**host1_vlan_args0)
+        host2.vlan0 = VlanDevice(**host2_vlan_args0)
+
+        configuration = EnrtConfiguration()
+        configuration.endpoint1 = guest1.eth0
+        configuration.endpoint2 = guest2.eth0
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"

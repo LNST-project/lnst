@@ -52,7 +52,7 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
         guest2.eth0.down()
 
         #Due to limitations in the current EnrtConfiguration
-        #class, a single vlan test pair is chosen
+        #class, a single test pair is chosen
         configuration = EnrtConfiguration()
         configuration.endpoint1 = guest1.eth0
         configuration.endpoint2 = guest2.eth0

@@ -48,7 +48,7 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
     def test_wide_configuration(self):
         host1, host2, guest1, guest2, guest3, guest4 = self.matched.host1, self.matched.host2, self.matched.guest1, self.matched.guest2, self.matched.guest3, self.matched.guest4
 
-        for host, n in [(host1, 10), (host2, 10)]:
+        for host in [host1, host2]:
             host.eth0.down()
             host.eth1.down()
             host.tap0.down()
@@ -56,43 +56,41 @@ class VirtualBridgeVlansOverBondRecipe(BaseEnrtRecipe):
             host.bond0 = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
             host.bond0.slave_add(host.eth0)
             host.bond0.slave_add(host.eth1)
-            host.vlan0 = VlanDevice(realdev=host.bond0, vlan_id=n)
-            host.vlan1 = VlanDevice(realdev=host.bond0, vlan_id=2*n)
             host.br0 = BridgeDevice()
-            host.br0.slave_add(host.vlan0)
             host.br0.slave_add(host.tap0)
             host.br1 = BridgeDevice()
-            host.br1.slave_add(host.vlan1)
             host.br1.slave_add(host.tap1)
 
         for guest in (guest1, guest2, guest3, guest4):
             guest.eth0.down()
+
+        host1_vlan_args0 = dict(realdev=host1.bond0, vlan_id=10, master=host1.br0)
+        host1_vlan_args1 = dict(realdev=host1.bond0, vlan_id=20, master=host1.br1)
+        host2_vlan_args0 = dict(realdev=host2.bond0, vlan_id=10, master=host2.br0)
+        host2_vlan_args1 = dict(realdev=host2.bond0, vlan_id=20, master=host2.br1)
+        if "mtu" in self.params:
+            for host in [host1, host2]:
+                host1.bond0.mtu = self.params.mtu
+                host1.tap0.mtu = self.params.mtu
+                host1.tap1.mtu = self.params.mtu
+                host1.br0.mtu = self.params.mtu
+                host1.br1.mtu = self.params.mtu
+            for guest in [guest1, guest2, guest3, guest4]:
+                guest.eth0.mtu = self.params.mtu
+            for vlan_args in (host1_vlan_args0, host1_vlan_args1,
+                              host2_vlan_args0, host2_vlan_args1):
+                vlan_args["mtu"] = self.params.mtu
+
+        host1.vlan0 = VlanDevice(**host1_vlan_args0)
+        host1.vlan1 = VlanDevice(**host1_vlan_args1)
+        host2.vlan0 = VlanDevice(**host2_vlan_args0)
+        host2.vlan1 = VlanDevice(**host2_vlan_args1)
 
         #Due to limitations in the current EnrtConfiguration
         #class, a single vlan test pair is chosen
         configuration = EnrtConfiguration()
         configuration.endpoint1 = guest1.eth0
         configuration.endpoint2 = guest3.eth0
-
-        if "mtu" in self.params:
-            host1.bond0.mtu = self.params.mtu
-            host1.tap0.mtu = self.params.mtu
-            host1.tap1.mtu = self.params.mtu
-            host1.vlan0.mtu = self.params.mtu
-            host1.vlan1.mtu = self.params.mtu
-            host1.br0.mtu = self.params.mtu
-            host1.br1.mtu = self.params.mtu
-            host2.bond0.mtu = self.params.mtu
-            host2.tap0.mtu = self.params.mtu
-            host2.tap1.mtu = self.params.mtu
-            host2.vlan0.mtu = self.params.mtu
-            host2.vlan1.mtu = self.params.mtu
-            host2.br0.mtu = self.params.mtu
-            host2.br1.mtu = self.params.mtu
-            guest1.eth0.mtu = self.params.mtu
-            guest2.eth0.mtu = self.params.mtu
-            guest3.eth0.mtu = self.params.mtu
-            guest4.eth0.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr_2 = "192.168.20"

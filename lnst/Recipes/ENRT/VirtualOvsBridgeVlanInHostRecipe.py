@@ -38,23 +38,26 @@ class VirtualOvsBridgeVlanInHostRecipe(BaseEnrtRecipe):
         host1.br0.port_add(host1.tap0, tag="10")
 
         host2.eth0.down()
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id="10")
 
         guest1.eth0.down()
+
+        host2_vlan_args0 = dict(realdev=host2.eth0, vlan_id=10)
+        if "mtu" in self.params:
+            host1.eth0.mtu = self.params.mtu
+            host1.tap0.mtu = self.params.mtu
+            host1.br0.mtu = self.params.mtu
+            host2.eth0.mtu = self.params.mtu
+            guest1.eth0.mtu = self.params.mtu
+
+            host2_vlan_args0["mtu"] = self.params.mtu
+
+        host2.vlan0 = VlanDevice(**host2_vlan_args0)
 
         #Due to limitations in the current EnrtConfiguration
         #class, a single vlan test pair is chosen
         configuration = EnrtConfiguration()
         configuration.endpoint1 = host2.vlan0
         configuration.endpoint2 = guest1.eth0
-
-        if "mtu" in self.params:
-            host1.eth0.mtu = self.params.mtu
-            host1.tap0.mtu = self.params.mtu
-            host1.br0.mtu = self.params.mtu
-            host2.eth0.mtu = self.params.mtu
-            host2.vlan0.mtu = self.params.mtu
-            guest1.eth0.mtu = self.params.mtu
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"
