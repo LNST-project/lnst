@@ -99,5 +99,5 @@ class VirtualBridgeVlanInGuestRecipe(BaseEnrtRecipe):
 
         #TODO better service handling through HostAPI
         if "perf_tool_cpu" in self.params:
-            for host in [host1, hpst2]:
+            for host in [host1, host2]:
                 host.run("service irqbalance start")

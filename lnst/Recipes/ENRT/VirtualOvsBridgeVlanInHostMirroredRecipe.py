@@ -86,7 +86,7 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(BaseEnrtRecipe):
 
         #TODO better service handling through HostAPI
         if "perf_tool_cpu" in self.params:
-            raise LnstError("'perf_cpu_pin' (%d) should not be set for this test" % self.params.perf_tool_cpu)
+            raise LnstError("'perf_tool_cpu' (%d) should not be set for this test" % self.params.perf_tool_cpu)
 
         if "dev_intr_cpu" in self.params:
             for host in [host1, host2]:
