@@ -145,6 +145,12 @@ class Namespace(object):
 
         if isinstance(value, RemoteDevice):
             if value.ifindex is not None:
+                if value.netns is self:
+                    if name not in self._objects:
+                        self._objects[name] = value
+                    elif self._objects[name] is not value:
+                        raise HostError("Different object with same name is already assined")
+                    return True
                 old_ns = value.netns
                 old_ns._unset(value)
                 self._machine.remote_device_set_netns(value, self, old_ns)
