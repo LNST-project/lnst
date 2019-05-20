@@ -78,7 +78,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
 
     offload_combinations = Param(default=(
-        dict(gro="on", gso="on", tso="on", tx="on", rx="on")))
+        dict(gro="on", gso="on", tso="on", tx="on", rx="on"),))
 
     driver = StrParam(default="ixgbe")
 
