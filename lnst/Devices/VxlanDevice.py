@@ -52,7 +52,7 @@ class VxlanDevice(SoftDevice):
         if not isinstance(val, Device):
             raise DeviceConfigError("realdev value must be a Device object.")
 
-        self._set_linkinfo_data_attr("IFLA_VXLAN_ID", val.ifindex)
+        self._set_linkinfo_data_attr("IFLA_VXLAN_LINK", val.ifindex)
         self._nl_sync("set")
 
     @property
