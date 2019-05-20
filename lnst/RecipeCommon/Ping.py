@@ -42,6 +42,10 @@ class PingConf(object):
     def size(self):
         return self._size
 
+    @size.setter
+    def size(self, value):
+        self._size = value
+
 class PingTestAndEvaluate(BaseRecipe):
     def ping_test(self, ping_config):
         results = {}
