@@ -74,6 +74,10 @@ class Ip4Address(BaseIpAddress):
 
         return addr, prefixlen
 
+    def is_multicast(self):
+        aton = socket.inet_aton
+        return aton("224.0.0.0") <= self.addr <= aton("239.255.255.255")
+
 class Ip6Address(BaseIpAddress):
     def __init__(self, addr):
         super(Ip6Address, self).__init__(addr)
@@ -103,6 +107,10 @@ class Ip6Address(BaseIpAddress):
     def is_link_local(self):
         left_half = hexlify(socket.inet_pton(socket.AF_INET6, str(self)))[:16]
         return left_half == 'fe80000000000000'
+
+    def is_multicast(self):
+        prefix = hexlify(socket.inet_pton(socket.AF_INET6, str(self)))[:2]
+        return prefix == 'ff'
 
 def ipaddress(addr):
     """Factory method to create a BaseIpAddress object"""
