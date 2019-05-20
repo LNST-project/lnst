@@ -11,6 +11,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import pyroute2
+import logging
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.DeviceError import DeviceError, DeviceConfigError
 from lnst.Common.IpAddress import ipaddress
@@ -29,6 +30,12 @@ class VxlanDevice(SoftDevice):
 
         if "group" not in kwargs and "remote" not in kwargs:
             raise DeviceError("One of group or remote must be specified for vxlan")
+
+        if kwargs.get("remote", False) and ipaddress(kwargs["remote"]).is_multicast():
+            logging.debug("ATTENTION: non-unicast remote IP set: %s" % str(kwargs["remote"]))
+
+        if kwargs.get("group", False) and not ipaddress(kwargs["group"]).is_multicast():
+            logging.debug("ATTENTION: non-multicast group IP set: %s" % str(kwargs["group"]))
 
         super(VxlanDevice, self).__init__(ifmanager, *args, **kwargs)
 
