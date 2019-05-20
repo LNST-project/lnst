@@ -36,7 +36,10 @@ class OvsBridgeDevice(SoftDevice):
     def port_add(self, dev, **kwargs):
         options = ""
         for opt_name, opt_value in kwargs.items():
-            options += " %s=%s" % (opt_name, opt_value)
+            if opt_name == "set_iface" and opt_value:
+                options = (" -- set Interface %s" + options) % dev.name
+            else:
+                options += " %s=%s" % (opt_name, opt_value)
 
         exec_cmd("ovs-vsctl add-port %s %s%s" % (self.name, dev.name, options))
 
@@ -79,22 +82,23 @@ class OvsBridgeDevice(SoftDevice):
                                        name, options))
 
         dev = self._if_manager.get_device_by_name(name)
+        dev._enable()
         return dev
 
     def tunnel_add(self, tunnel_type, options):
         name = self._if_manager.assign_name(tunnel_type)
 
-        options = ""
+        opts = ""
         for opt_name, opt_value in options.items():
             if opt_name == "name":
                 name = opt_value
                 continue
 
-            options += " %s=%s" % (opt_name, opt_value)
+            opts += " %s=%s" % (opt_name, opt_value)
 
         exec_cmd("ovs-vsctl add-port %s %s -- set Interface %s "\
                  "type=%s %s" % (self.name, name, name,
-                                 tunnel_type, options))
+                                 tunnel_type, opts))
 
     def tunnel_del(self, name):
         self.port_del(name)
