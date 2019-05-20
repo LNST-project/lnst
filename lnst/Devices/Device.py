@@ -191,26 +191,14 @@ class Device(object):
             raise DeviceError(msg)
 
         if nl_msg['header']['type'] == RTM_NEWLINK:
-            if self.ifindex != nl_msg['index']:
-                raise DeviceError("RTM_NEWLINK message passed to incorrect "\
-                                  "Device object.")
-
             self._nl_msg = nl_msg
         elif nl_msg['header']['type'] == RTM_NEWADDR:
-            if self.ifindex != nl_msg['index']:
-                raise DeviceError("RTM_NEWADDR message passed to incorrect "\
-                                  "Device object.")
-
             addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'))
             addr.prefixlen = nl_msg["prefixlen"]
 
             if addr not in self._ip_addrs:
                 self._ip_addrs.append(addr)
         elif nl_msg['header']['type'] == RTM_DELADDR:
-            if self.ifindex != nl_msg['index']:
-                raise DeviceError("RTM_DELADDR message passed to incorrect "\
-                                  "Device object.")
-
             addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'))
             addr.prefixlen = nl_msg["prefixlen"]
 
