@@ -40,7 +40,7 @@ class PacketAssert(BaseTestModule):
     def _is_real_err(self, err):
 
         ignore_exprs = [r"tcpdump: verbose output suppressed, use -v or -vv for full protocol decode",
-                        r"listening on %s, link-type EN10MB \(Ethernet\), capture size 262144 bytes" %
+                        r"listening on %s, link-type .* \(.*\), capture size [0-9]* bytes" %
                         self.params.interface.name, r"\d+ packets captured",
                         r"\d+ packets received by filter", r"\d+ packets dropped by kernel"]
 
