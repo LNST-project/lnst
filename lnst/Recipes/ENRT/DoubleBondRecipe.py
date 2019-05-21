@@ -67,7 +67,7 @@ class DoubleBondRecipe(BaseEnrtRecipe):
             for host in [host1, host2]:
                 host.run("service irqbalance stop")
                 for dev in [host.eth0, host.eth1]:
-                    self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
+                    self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
 
         if self.params.perf_parallel_streams > 1:
             for host in [host1, host2]:

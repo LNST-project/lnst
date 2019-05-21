@@ -102,7 +102,7 @@ class VirtualBridgeVlanInGuestMirroredRecipe(BaseEnrtRecipe):
         if "dev_intr_cpu" in self.params:
             for host in [host1, host2]:
                 host.run("service irqbalance stop")
-                self._pin_dev_interrupts(m.eth0, self.params.dev_intr_cpu)
+                self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
 
         if self.params.perf_parallel_streams > 1:
             for host in [host1, host2]:
