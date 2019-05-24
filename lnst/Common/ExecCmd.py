@@ -22,6 +22,7 @@ class ExecCmdFail(LnstError):
     _report_stderr = None
 
     def __init__(self, cmd=None, retval=None, outs=["", ""], report_stderr=False):
+        self._cmd = cmd
         self._stdout = outs[0]
         self._stderr = outs[1]
         self._retval = retval
@@ -43,7 +44,7 @@ class ExecCmdFail(LnstError):
             retval = " (exited with %d)" % self._retval
         if self._report_stderr:
             stderr = " [%s]" % self._stderr
-        return "Command execution failed%s%s" % (retval, stderr)
+        return "Command \"%s\" execution failed%s%s" % (self._cmd, retval, stderr)
 
 def log_output(log_func, out_type, out):
     log_func("%s:\n"
