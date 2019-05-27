@@ -37,6 +37,10 @@ class BaseResult(object):
     def success(self):
         return self._success
 
+    @success.setter
+    def success(self, value):
+        self._success = value
+
     @property
     def description(self):
         return "Short description of result if relevant"
