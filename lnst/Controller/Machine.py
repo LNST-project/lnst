@@ -353,10 +353,12 @@ class Machine(object):
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
-        res = self.rpc_call("run_job", job._to_dict(), netns=job.netns)
+        job_result = JobStartResult(job, True)
+        self._recipe.current_run.add_result(job_result)
+        job_result.success = self.rpc_call("run_job", job._to_dict(),
+                                           netns=job.netns)
 
-        self._recipe.current_run.add_result(JobStartResult(job, res))
-        return res
+        return job_result.success
 
     def wait_for_job(self, job, timeout):
         if job.id not in self._jobs:
