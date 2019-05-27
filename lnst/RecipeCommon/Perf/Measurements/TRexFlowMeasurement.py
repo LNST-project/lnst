@@ -11,6 +11,8 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeas
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowTest
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
 
+from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
+
 from lnst.Tests.TRex import TRexServer, TRexClient
 
 class TRexFlowMeasurement(BaseFlowMeasurement):
@@ -56,7 +58,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
         tests = []
 
         flows_by_generator = self._flows_by_generator(flows)
-        for generator, flows in flows_by_generator.items():
+        for generator, flows in list(flows_by_generator.items()):
             flow_tuples = [(flow.generator_bind, flow.receiver_bind)
                            for flow in flows]
             server_job = generator.prepare_job(
@@ -67,7 +69,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
             client_job = generator.prepare_job(
                     TRexClient(
                         trex_dir=self._trex_dir,
-                        ports=range(len(flow_tuples)),
+                        ports=list(range(len(flow_tuples))),
                         flows=flow_tuples,
                         duration=flows[0].duration,
                         msg_size=flows[0].msg_size))
@@ -96,7 +98,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
             else:
                 result[flow.generator] = [flow]
 
-        for generator, flows in result.items():
+        for generator, flows in list(result.items()):
             for flow in flows:
                 if (flow.duration != flows[0].duration or
                     flow.msg_size != flows[0].msg_size):

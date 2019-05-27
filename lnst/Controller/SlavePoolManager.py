@@ -47,16 +47,16 @@ class SlavePoolManager(object):
         self._pool_checks = pool_checks
 
         logging.info("Checking machine pool availability.")
-        for pool_name, pool_dir in pools.items():
+        for pool_name, pool_dir in list(pools.items()):
             self._pools[pool_name] = {}
             self.add_dir(pool_name, pool_dir)
             if len(self._pools[pool_name]) == 0:
                 del self._pools[pool_name]
 
         self._machines = {}
-        for pool_name, machines in self._pools.items():
+        for pool_name, machines in list(self._pools.items()):
             pool = self._machines[pool_name] = {}
-            for m_id, m_spec in machines.items():
+            for m_id, m_spec in list(machines.items()):
                 params = m_spec["params"]
 
                 hostname = params["hostname"]
@@ -115,13 +115,13 @@ class SlavePoolManager(object):
                                                                     dir_path))
 
         max_len = 0
-        for m_id in pool.keys():
+        for m_id in list(pool.keys()):
             if len(m_id) > max_len:
                 max_len = len(m_id)
 
         if self._pool_checks:
             check_sockets = {}
-            for m_id, m in sorted(pool.iteritems()):
+            for m_id, m in sorted(pool.items()):
                 hostname = m["params"]["hostname"]
                 if "rpc_port" in m["params"]:
                     port = int(m["params"]["rpc_port"])
@@ -153,7 +153,7 @@ class SlavePoolManager(object):
                 check_sockets[s] = m_id
 
             while len(check_sockets) > 0:
-                rl, wl, el = select.select([], check_sockets.keys(), [])
+                rl, wl, el = select.select([], list(check_sockets.keys()), [])
                 for s in wl:
                     err = s.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
                     m_id = check_sockets[s]
@@ -167,7 +167,7 @@ class SlavePoolManager(object):
                         s.close()
                         del check_sockets[s]
         else:
-            for m_id in pool.keys():
+            for m_id in list(pool.keys()):
                 pool[m_id]["available"] = True
 
         for m_id in sorted(list(pool.keys())):
@@ -208,7 +208,7 @@ class SlavePoolManager(object):
 
             # Check if there isn't any machine with the same
             # hostname or libvirt_domain already in the pool
-            for pm_id, m in pool.iteritems():
+            for pm_id, m in pool.items():
                 pm = m["params"]
                 rm = machine_spec["params"]
                 if pm["hostname"] == rm["hostname"]:
@@ -254,7 +254,7 @@ class SlavePoolManager(object):
                     raise PoolManagerError(msg, iface)
 
                 if_hwaddr = iface_spec["params"]["hwaddr"]
-                hwaddr_dups = [ k for k, v in machine_spec["interfaces"].iteritems()\
+                hwaddr_dups = [ k for k, v in machine_spec["interfaces"].items()\
                                 if v["params"]["hwaddr"] == if_hwaddr ]
                 if len(hwaddr_dups) > 0:
                     msg = "Duplicate MAC address %s for interface '%s' and '%s'."\

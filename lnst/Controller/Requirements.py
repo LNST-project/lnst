@@ -35,7 +35,7 @@ class RecipeParam(Param):
 class BaseReq(object):
     def __init__(self, **kwargs):
         self.params = Parameters()
-        for name, val in kwargs.items():
+        for name, val in list(kwargs.items()):
             if name == "params":
                 raise RequirementError("'params' is a reserved keyword.")
             setattr(self.params, name, val)

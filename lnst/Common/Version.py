@@ -21,7 +21,7 @@ class LNSTVersion(object):
         self._version = "14"
 
         if git_version:
-            self._version += "-" + git_version()
+            self._version += "-" + git_version().decode()
 
     @property
     def version(self):

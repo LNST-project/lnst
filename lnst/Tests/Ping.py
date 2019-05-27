@@ -48,6 +48,8 @@ class Ping(BaseTestModule):
 
         try:
             stdout, stderr = ping_process.communicate()
+            stdout = stdout.decode()
+            stderr = stderr.decode()
         except KeyboardInterrupt:
             pass
 

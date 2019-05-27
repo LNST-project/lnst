@@ -13,6 +13,8 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowT
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
 
+from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
+
 from lnst.Tests.Iperf import IperfClient, IperfServer
 
 class IperfFlowMeasurement(BaseFlowMeasurement):
@@ -111,13 +113,13 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         server_params = dict(bind = ipaddress(flow.receiver_bind),
                              oneoff = True)
 
-        if flow.cpupin >= 0:
+        if flow.cpupin and flow.cpupin >= 0:
             if flow.parallel_streams == 1:
                 server_params["cpu_bind"] = flow.cpupin
             else:
                 raise RecipeError("Unsupported combination of single cpupin "
                                   "with parallel perf streams.")
-        elif not flow.cpupin is None:
+        elif flow.cpupin is not None:
             raise RecipeError("Negative perf cpupin value provided.")
 
         return host.prepare_job(IperfServer(**server_params),
@@ -138,13 +140,13 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
 
-        if flow.cpupin >= 0:
+        if flow.cpupin and flow.cpupin >= 0:
             if flow.parallel_streams == 1:
                 client_params["cpu_bind"] = flow.cpupin
             else:
                 raise RecipeError("Unsupported combination of single cpupin "
                                   "with parallel perf streams.")
-        elif not flow.cpupin is None:
+        elif flow.cpupin is not None:
             raise RecipeError("Negative perf cpupin value provided.")
 
         if flow.parallel_streams > 1:

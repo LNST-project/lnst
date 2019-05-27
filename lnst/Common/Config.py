@@ -62,7 +62,7 @@ class Config():
             raise ConfigError(msg)
 
         res = {}
-        for opt_name, opt in self._options[section].items():
+        for opt_name, opt in list(self._options[section].items()):
             res[opt_name] = opt["value"]
         return res
 
@@ -124,7 +124,7 @@ class Config():
         '''Parse and load the config file'''
         exp_path = os.path.expanduser(path)
         abs_path = os.path.abspath(exp_path)
-        print >> sys.stderr, "Loading config file '%s'" % abs_path
+        print("Loading config file '%s'" % abs_path, file=sys.stderr)
         sections = self._parse_file(abs_path)
 
         self.handleSections(sections, abs_path)
@@ -179,7 +179,7 @@ class Config():
 
     def get_pools(self):
         pools = {}
-        for pool_name, pool in self._options["pools"].items():
+        for pool_name, pool in list(self._options["pools"].items()):
             pools[pool_name] = pool["value"]
         return pools
 
@@ -190,7 +190,7 @@ class Config():
             return None
 
     def _find_option_by_name(self, section, opt_name):
-        for option in section.itervalues():
+        for option in section.values():
             if option["name"] == opt_name:
                 return option
         return None

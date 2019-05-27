@@ -13,7 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import select
 import socket
-from _multiprocessing import Connection
+from multiprocessing.connection import Connection
 from pyroute2 import IPRSocket
 from lnst.Common.SecureSocket import SecureSocket, SecSocketException
 

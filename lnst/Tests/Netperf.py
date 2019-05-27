@@ -477,7 +477,7 @@ class Netperf(BaseTestModule):
             rate_deviation = 2*res_data["std_deviation"]
         elif len(rates) == 1 and "confidence" in self.params:
             result = results[0]
-            rate_deviation = rate * (result["confidence"][1] / 100)
+            rate_deviation = rate * (float(result["confidence"][1]) / 100)
         else:
             rate_deviation = 0.0
 

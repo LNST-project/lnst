@@ -148,7 +148,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                              server_nic.name)
 
         ethtool_offload_string = ""
-        for name, value in sub_config.offload_settings.items():
+        for name, value in list(sub_config.offload_settings.items()):
             ethtool_offload_string += " %s %s" % (name, value)
 
         client_netns.run("ethtool -K {} {}".format(client_nic.name,
@@ -169,7 +169,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                              server_nic.name)
 
         ethtool_offload_string = ""
-        for name, value in sub_config.offload_settings.items():
+        for name, value in list(sub_config.offload_settings.items()):
             ethtool_offload_string += " %s %s" % (name, "on")
 
         #set all the offloads back to 'on' state
@@ -279,8 +279,8 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
             server_bind = server_nic.ips_filter(family=family)[0]
 
             for perf_test in self.params.perf_tests:
-                offload_values = sub_config.offload_settings.values()
-                offload_items = sub_config.offload_settings.items()
+                offload_values = list(sub_config.offload_settings.values())
+                offload_items = list(sub_config.offload_settings.items())
                 if ((perf_test == 'udp_stream' and ('gro', 'off') in offload_items)
                     or
                     (perf_test == 'sctp_stream' and 'off' in offload_values and

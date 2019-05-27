@@ -305,7 +305,6 @@ class PerfRepoAPI(object):
             return True
         else:
             return False
-        return False
 
 class PerfRepoResult(object):
     def __init__(self, test, name, hash_ignore=[]):

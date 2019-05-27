@@ -164,18 +164,18 @@ class Parameters(object):
         return name in self._attrs
 
     def __iter__(self):
-        for attr, val in self._attrs.items():
+        for attr, val in list(self._attrs.items()):
             yield (attr, val)
 
     def _to_dict(self):
         return copy.deepcopy(self._attrs)
 
     def _from_dict(self, d):
-        for name, val in d.items():
+        for name, val in list(d.items()):
             setattr(self, name, copy.deepcopy(val))
 
     def __str__(self):
         result = ""
-        for attr, val in self._attrs.items():
+        for attr, val in list(self._attrs.items()):
             result += "%s = %s\n" % (attr, str(val))
         return result

@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 """
 Machine pool wizard
 
@@ -19,7 +19,7 @@ RETVAL_ERR = 1
 
 
 def help(retval=0):
-    print "Usage:\n"\
+    print("Usage:\n"\
           " lnst-pool-wizard [mode] [hostname[:port]]\n"\
           "\n"\
           "Modes:\n"\
@@ -34,7 +34,7 @@ def help(retval=0):
           " lnst-pool-wizard hostname1:1234 hostname2\n"\
           " lnst-pool-wizard --noninteractive 192.168.122.2\n"\
           " lnst-pool-wizard -n 192.168.122.2:8888 192.168.122.4\n"\
-          " lnst-pool-wizard -p \".pool/\" -n 192.168.1.1:8877 192.168.122.4"
+          " lnst-pool-wizard -p \".pool/\" -n 192.168.1.1:8877 192.168.122.4")
     sys.exit(retval)
 
 

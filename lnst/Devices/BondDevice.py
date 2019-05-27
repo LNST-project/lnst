@@ -82,7 +82,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_AD_SELECT", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 
@@ -159,7 +159,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_ARP_VALIDATE", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 
@@ -177,7 +177,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_ARP_ALL_TARGETS", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 
@@ -204,7 +204,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_FAIL_OVER_MAC", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 
@@ -222,7 +222,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_LACP_RATE", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 
@@ -259,7 +259,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_MODE", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 
@@ -317,7 +317,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_PRIMARY_RESELECT", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
-                    format(m.keys(), m.values()))
+                    format(list(m.keys()), list(m.values())))
 
         self._nl_sync("set")
 

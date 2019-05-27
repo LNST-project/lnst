@@ -21,9 +21,9 @@ def format_match_description(match):
     output.append("Pool match description:")
     if match["virtual"]:
         output.append("  Setup is using virtual machines.")
-    for m_id, m in sorted(match["machines"].iteritems()):
+    for m_id, m in sorted(match["machines"].items()):
         output.append("  host \"{}\" uses \"{}\"".format(m_id, m["target"]))
-        for if_id, match in sorted(m["interfaces"].iteritems()):
+        for if_id, match in sorted(m["interfaces"].items()):
             pool_id = match["target"]
             output.append("    interface \"{}\" matched to \"{}\"".
                           format(if_id, pool_id))
@@ -78,7 +78,7 @@ class MachineMapper(object):
         """resets the state of the backtracking algorithm"""
         self._net_label_mapping = {}
         self._machine_stack = []
-        self._unmatched_req_machines = sorted(self._mreqs.keys(), reverse=True)
+        self._unmatched_req_machines = sorted(list(self._mreqs.keys()), reverse=True)
 
         self._pool_stack = list(self._pools.keys())
         if len(self._pool_stack) > 0:
@@ -86,7 +86,7 @@ class MachineMapper(object):
             self._pool = self._pools[self._pool_name]
 
         self._unmatched_pool_machines = []
-        for p_id, p_machine in sorted(self._pool.iteritems(), reverse=True):
+        for p_id, p_machine in sorted(list(self._pool.items()), reverse=True):
             if self._virtual_matching:
                 if "libvirt_domain" in p_machine["params"]:
                     self._unmatched_pool_machines.append(p_id)
@@ -162,7 +162,7 @@ class MachineMapper(object):
                         #map compatible pool machine
                         stack_top["current_match"] = pool_m_id
                         stack_top["unmatched_pool_ifs"] = \
-                            sorted(self._pool[pool_m_id]["interfaces"].keys(),
+                            sorted(list(self._pool[pool_m_id]["interfaces"].keys()),
                                    reverse=True)
                         self._unmatched_pool_machines.remove(pool_m_id)
                         break
@@ -186,7 +186,7 @@ class MachineMapper(object):
                                      self._pool_name)
 
                         self._unmatched_pool_machines = []
-                        for p_id, p_machine in sorted(self._pool.iteritems(), reverse=True):
+                        for p_id, p_machine in sorted(list(self._pool.items()), reverse=True):
                             if self._virtual_matching:
                                 if "libvirt_domain" in p_machine["params"]:
                                     self._unmatched_pool_machines.append(p_id)
@@ -261,7 +261,7 @@ class MachineMapper(object):
         machine_match["if_stack"] = []
 
         machine = self._mreqs[machine_match["m_id"]]
-        machine_match["unmatched_ifs"] = sorted(machine["interfaces"].keys(),
+        machine_match["unmatched_ifs"] = sorted(list(machine["interfaces"].keys()),
                                                 reverse=True)
         machine_match["unmatched_pool_ifs"] = []
 
@@ -291,7 +291,7 @@ class MachineMapper(object):
     def _check_machine_compatibility(self, req_id, pool_id):
         req_machine = self._mreqs[req_id]
         pool_machine = self._pool[pool_id]
-        for param, value in req_machine["params"].iteritems():
+        for param, value in list(req_machine["params"].items()):
             # skip empty parameters
             if len(value) == 0:
                 continue
@@ -302,14 +302,14 @@ class MachineMapper(object):
 
     def _check_interface_compatibility(self, req_if, pool_if):
         label_mapping = self._net_label_mapping
-        for req_label, mapping in label_mapping.iteritems():
+        for req_label, mapping in list(label_mapping.items()):
             if req_label == req_if["network"] and\
                mapping[0] != pool_if["network"]:
                 return False
             if mapping[0] == pool_if["network"] and\
                req_label != req_if["network"]:
                 return False
-        for param, value in req_if["params"].iteritems():
+        for param, value in list(req_if["params"].items()):
             # skip empty parameters
             if len(value) == 0:
                 continue
@@ -322,7 +322,7 @@ class MachineMapper(object):
         mapping = {"machines": {}, "networks": {}, "virtual": False,
                    "pool_name": self._pool_name}
 
-        for req_label, label_map in self._net_label_mapping.iteritems():
+        for req_label, label_map in list(self._net_label_mapping.items()):
             mapping["networks"][req_label] = label_map[0]
 
         for machine in self._machine_stack:

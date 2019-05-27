@@ -62,7 +62,7 @@ class Namespace(object):
     def devices(self):
         """List of mapped devices available in the Namespace"""
         ret = []
-        for x in self._objects.values():
+        for x in list(self._objects.values()):
             if isinstance(x, Device) and x.netns == self:
                 ret.append(x)
         return ret
@@ -71,7 +71,7 @@ class Namespace(object):
     def device_database(self):
         """List of all devices (including unmapped) available in the Namespace"""
         ret = []
-        for x in self._machine._device_database.values():
+        for x in list(self._machine._device_database.values()):
             if isinstance(x, Device) and x.netns == self:
                 ret.append(x)
         return ret
@@ -204,7 +204,7 @@ class Namespace(object):
 
     def _unset(self, value):
         k_to_del = None
-        for k, v in self._objects.items():
+        for k, v in list(self._objects.items()):
             if v == value:
                 k_to_del = k
                 break

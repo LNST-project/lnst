@@ -79,7 +79,7 @@ class BaseTestModule(object):
                                                   .format(name))
 
         if len(kwargs):
-            for name in kwargs.keys():
+            for name in list(kwargs.keys()):
                 raise TestModuleError("Unknown parameter {}".format(name))
 
         self._res_data = None

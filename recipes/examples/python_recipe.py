@@ -1,4 +1,4 @@
-#!/bin/python2
+#!/bin/python3
 """
 This is an example python recipe that can be run as an executable script.
 Performs a simple ping between two hosts.
@@ -20,7 +20,7 @@ from lnst.Devices import VlanDevice
 from lnst.Devices import VtiDevice
 from lnst.Devices import VxlanDevice
 
-from lnst.Tests import IcmpPing
+from lnst.Tests import Ping
 from lnst.Tests.Netperf import Netperf, Netserver
 
 import signal
@@ -40,7 +40,7 @@ class MyRecipe(BaseRecipe):
         self.matched.m1.eth0.up()
         self.matched.m2.eth0.ip_add(ipaddress("192.168.1.2/24"))
         self.matched.m2.eth0.up()
-        ping_job = self.matched.m1.run(IcmpPing(dst=self.matched.m2.eth0,
+        ping_job = self.matched.m1.run(Ping(dst=self.matched.m2.eth0,
                                                 interval=0,
                                                 iface=self.matched.m1.eth0))
 

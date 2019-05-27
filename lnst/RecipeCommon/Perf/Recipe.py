@@ -75,7 +75,7 @@ class Recipe(BaseRecipe):
             self.add_result(False, "No results available to report.")
             return
 
-        for measurement, results in recipe_results.results.items():
+        for measurement, results in list(recipe_results.results.items()):
             measurement.report_results(self, results)
 
     def perf_evaluate(self, recipe_results):
@@ -85,7 +85,7 @@ class Recipe(BaseRecipe):
 
         recipe_conf = recipe_results.recipe_conf
 
-        for measurement, results in recipe_results.results.items():
+        for measurement, results in list(recipe_results.results.items()):
             evaluators = recipe_conf.evaluators.get(measurement, [])
             for evaluator in evaluators:
                 evaluator.evaluate_results(self, results)

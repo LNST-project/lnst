@@ -126,7 +126,7 @@ class ResourceCache(object):
 
         rm = []
         now = time.time()
-        for entry_hash, entry in self._index["entries"].iteritems():
+        for entry_hash, entry in list(self._index["entries"].items()):
             if entry["last_used"] <= (now - self._expiration_period):
                 rm.append(entry_hash)
 

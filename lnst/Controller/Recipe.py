@@ -109,7 +109,7 @@ class BaseRecipe(object):
             setattr(self.req, name, new_val)
 
         if len(kwargs):
-            for key in kwargs.keys():
+            for key in list(kwargs.keys()):
                 raise RecipeError("Unknown parameter {}".format(key))
 
     @property
@@ -170,4 +170,4 @@ class RecipeRun(object):
 
     @property
     def overall_result(self):
-        return reduce(lambda x, y: x and y, [i.success for i in self.results])
+        return all([i.success for i in self.results])

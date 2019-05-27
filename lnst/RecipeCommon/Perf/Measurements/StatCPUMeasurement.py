@@ -14,7 +14,7 @@ class StatCPUMeasurementResults(CPUMeasurementResults):
         self._data = {}
 
     def update_intervals(self, intervals):
-        for key, interval in intervals.items():
+        for key, interval in list(intervals.items()):
             if key not in self._data:
                 self._data[key] = SequentialPerfResult()
             self._data[key].append(interval)
@@ -68,24 +68,24 @@ class StatCPUMeasurement(BaseCPUMeasurement):
         for sample in job.result["data"]:
             parsed_sample = self._parse_sample(sample)
 
-            for cpu, cpu_intervals in parsed_sample.items():
+            for cpu, cpu_intervals in list(parsed_sample.items()):
                 if cpu not in job_results:
                     job_results[cpu] = StatCPUMeasurementResults(self, host, cpu)
                 cpu_results = job_results[cpu]
                 cpu_results.update_intervals(cpu_intervals)
 
-        return job_results.values()
+        return list(job_results.values())
 
     def _parse_sample(self, sample):
         result = {}
         duration = sample["duration"]
-        for key, value in sample.items():
+        for key, value in list(sample.items()):
             if key.startswith("cpu"):
                 result[key] = self._create_cpu_intervals(duration, value)
         return result
 
     def _create_cpu_intervals(self, duration, cpu_intervals):
         result = {}
-        for key, value in cpu_intervals.items():
+        for key, value in list(cpu_intervals.items()):
             result[key] = PerfInterval(value, duration, "time units")
         return result

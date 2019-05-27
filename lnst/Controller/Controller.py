@@ -139,7 +139,7 @@ class Controller(object):
         self._machines = {}
         self._hosts = Hosts()
         pool = self._pools.get_machine_pool(match["pool_name"])
-        for m_id, m in match["machines"].items():
+        for m_id, m in list(match["machines"].items()):
             machine = self._machines[m_id] = pool[m["target"]]
 
             setattr(self._hosts, m_id, Host(machine))
@@ -149,7 +149,7 @@ class Controller(object):
             machine.set_mapped(True)
             self._prepare_machine(machine)
 
-            for if_id, i in m["interfaces"].items():
+            for if_id, i in list(m["interfaces"].items()):
                 host.map_device(if_id, i)
 
             if match["virtual"]:
@@ -174,14 +174,14 @@ class Controller(object):
         if self._machines == None:
             return
 
-        for m_id, machine in self._machines.iteritems():
+        for m_id, machine in list(self._machines.items()):
             try:
                 machine.cleanup()
             except:
                 #TODO report errors during deconfiguration as FAIL!!
                 log_exc_traceback()
             finally:
-                for dev in machine._device_database.values():
+                for dev in list(machine._device_database.values()):
                     if isinstance(dev, VirtualDevice):
                         dev._destroy()
 
@@ -192,7 +192,7 @@ class Controller(object):
         self._machines.clear()
 
         # remove dynamically created bridges
-        for bridge in self._network_bridges.itervalues():
+        for bridge in list(self._network_bridges.values()):
             bridge.cleanup()
         self._network_bridges = {}
 

@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 """
 Net test controller
 
@@ -34,42 +34,42 @@ def usage(retval=0):
     """
     Print usage of this app
     """
-    print "Usage: %s [OPTIONS...] ACTION [RECIPES...]" % sys.argv[0]
-    print ""
-    print "ACTION = [ run | config_only | deconfigure | match_setup | " \
-                     "list_pools]"
-    print ""
-    print "OPTIONS"
-    print "  -A, --override-alias name=value define top-level alias that " \
-              "will override any other definitions in the recipe"
-    print "  -a, --define-alias name=value   define top-level alias"
-    print "  -b, --breakpoints               enable breakpoint feature"
-    print "  -c, --config=FILE               load additional config file"
-    print "  -C, --config-override=FILE      reset config defaults and load " \
-              "the following config file"
-    print "  -d, --debug                     emit debugging messages"
-    print "      --dump-config               dumps the join of all loaded " \
-              "configuration files on stdout and exits"
-    print "  -v, --verbose                   verbose version of list_pools " \
-              "command"
-    print "  -h, --help                      print this message"
-    print "  -m, --no-colours                disable coloured terminal output"
-    print "  -o, --disable-pool-checks       don't check the availability of " \
-              "machines in the pool"
-    print "  -p, --packet-capture            capture and log all ongoing " \
-              "network communication during the test"
-    print "      --pools=NAME[,...]          restricts which pools to use "\
-              "for matching, value can be a comma separated list of values or"
-    print "      --pools=PATH                a single path to a pool directory"
-    print "  -r, --reduce-sync               reduces resource synchronization "\
-              "for python tasks, see documentation"
-    print "  -s, --xslt-url=URL              URL to a XSLT document that will "\
+    print("Usage: %s [OPTIONS...] ACTION [RECIPES...]" % sys.argv[0])
+    print("")
+    print("ACTION = [ run | config_only | deconfigure | match_setup | " \
+                     "list_pools]")
+    print("")
+    print("OPTIONS")
+    print("  -A, --override-alias name=value define top-level alias that " \
+              "will override any other definitions in the recipe")
+    print("  -a, --define-alias name=value   define top-level alias")
+    print("  -b, --breakpoints               enable breakpoint feature")
+    print("  -c, --config=FILE               load additional config file")
+    print("  -C, --config-override=FILE      reset config defaults and load " \
+              "the following config file")
+    print("  -d, --debug                     emit debugging messages")
+    print("      --dump-config               dumps the join of all loaded " \
+              "configuration files on stdout and exits")
+    print("  -v, --verbose                   verbose version of list_pools " \
+              "command")
+    print("  -h, --help                      print this message")
+    print("  -m, --no-colours                disable coloured terminal output")
+    print("  -o, --disable-pool-checks       don't check the availability of " \
+              "machines in the pool")
+    print("  -p, --packet-capture            capture and log all ongoing " \
+              "network communication during the test")
+    print("      --pools=NAME[,...]          restricts which pools to use "\
+              "for matching, value can be a comma separated list of values or")
+    print("      --pools=PATH                a single path to a pool directory")
+    print("  -r, --reduce-sync               reduces resource synchronization "\
+              "for python tasks, see documentation")
+    print("  -s, --xslt-url=URL              URL to a XSLT document that will "\
               "be used when transforming the xml result file, only useful "\
-              "when -t is used as well"
-    print "  -t, --html=FILE                 generate a formatted result html"
-    print "  -u, --multi-match               run each recipe with every "\
-              "pool match possible"
-    print "  -x, --result=FILE               file to write xml_result"
+              "when -t is used as well")
+    print("  -t, --html=FILE                 generate a formatted result html")
+    print("  -u, --multi-match               run each recipe with every "\
+              "pool match possible")
+    print("  -x, --result=FILE               file to write xml_result")
     sys.exit(retval)
 
 def list_pools(restrict_pools, verbose):
@@ -91,12 +91,12 @@ def list_pools(restrict_pools, verbose):
     out = ""
     # iterate over all pools
     sp_pools = sp.get_pools()
-    for pool_name, pool_content in sp_pools.iteritems():
+    for pool_name, pool_content in sp_pools.items():
         out += "Pool: %s (%s)\n" % (pool_name, pools[pool_name])
         # verbose output
         if verbose:
         # iterate over all slave machine cfgs
-            for filename, pool in pool_content.iteritems():
+            for filename, pool in pool_content.items():
                 # print in human-readable format
                 out += 3*" " + filename + ".xml\n"
                 out += 5*" " + "params:\n"
@@ -114,9 +114,9 @@ def list_pools(restrict_pools, verbose):
                 out += "\n"
     # print wihout newlines on the end of string
     if verbose:
-        print out[:-2]
+        print(out[:-2])
     else:
-        print out[:-1]
+        print(out[:-1])
 
 
 def store_alias(alias_def, aliases_dict):
@@ -267,7 +267,7 @@ def main():
             ]
         )
     except getopt.GetoptError as err:
-        print str(err)
+        print(str(err))
         usage(RETVAL_ERR)
 
     lnst_config.controller_init()
@@ -315,16 +315,16 @@ def main():
             breakpoints = True
         elif opt in ("-c", "--config"):
             if not os.path.isfile(arg):
-                print "File '%s' doesn't exist!" % arg
+                print("File '%s' doesn't exist!" % arg)
                 usage(RETVAL_ERR)
             else:
                 lnst_config.load_config(arg)
         elif opt in ("-C", "--config-override"):
             if not os.path.isfile(arg):
-                print "File '%s' doesn't exist!" % arg
+                print("File '%s' doesn't exist!" % arg)
                 usage(RETVAL_ERR)
             else:
-                print >> sys.stderr, "Reloading config defaults!"
+                print("Reloading config defaults!", file=sys.stderr)
                 lnst_config.controller_init()
                 lnst_config.load_config(arg)
         elif opt in ("-x", "--result"):
@@ -358,7 +358,7 @@ def main():
         lnst_config.set_option("environment", "xslt_url", xslt_url)
 
     if dump_config:
-        print lnst_config.dump_config()
+        print(lnst_config.dump_config())
         return RETVAL_PASS
 
     if coloured_output:

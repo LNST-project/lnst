@@ -71,14 +71,14 @@ class VirtDomainCtl(object):
             self._domain.attachDevice(device_xml)
             logging.debug("libvirt device with hwaddr '%s' "
                           "driver '%s' attached" % (hw_addr, driver))
-            self._created_interfaces[hw_addr] = device_xml
+            self._created_interfaces[str(hw_addr)] = device_xml
             return True
         except libvirtError as e:
             raise VirtDomainCtlError(str(e))
 
     def detach_interface(self, hw_addr):
-        if hw_addr in self._created_interfaces:
-            device_xml = self._created_interfaces[hw_addr]
+        if str(hw_addr) in self._created_interfaces:
+            device_xml = self._created_interfaces[str(hw_addr)]
         else:
             device_xml = self._net_device_bare_template.format(hw_addr)
 

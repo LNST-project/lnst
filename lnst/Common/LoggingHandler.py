@@ -16,7 +16,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import pickle
 import logging
-import xmlrpclib
+import xmlrpc.client
 from lnst.Common.ConnectionHandler import send_data
 
 class LogBuffer(logging.Handler):
@@ -39,7 +39,7 @@ class LogBuffer(logging.Handler):
         d['args'] = None
         d['exc_info'] = None
         s = pickle.dumps(d, 1)
-        return xmlrpclib.Binary(s)
+        return xmlrpc.client.Binary(s)
 
     def add_buffer(self, buf):
         for i in buf:

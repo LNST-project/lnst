@@ -64,7 +64,7 @@ class BaseCPUMeasurement(BaseMeasurement):
     @classmethod
     def report_results(cls, recipe, results):
         results_by_host = cls._divide_results_by_host(results)
-        for host_results in results_by_host.values():
+        for host_results in list(results_by_host.values()):
             cls._report_host_results(recipe, host_results)
 
     @classmethod

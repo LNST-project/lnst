@@ -1,4 +1,4 @@
-#!/bin/python2
+#!/bin/python3
 """
 Implements scenario similar to regression_tests/phase1/
 (ping_flood.xml + simple_ping.py).

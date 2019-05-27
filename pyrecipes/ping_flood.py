@@ -13,11 +13,11 @@ while lnst.match():
     lnst.wait(15)
 
     ipv = lnst.get_alias("ipv", default="ipv4")
-    print "ipv"
-    print ipv
+    print("ipv")
+    print(ipv)
     mtu = lnst.get_alias("mtu", default="1500")
-    print "mtu"
-    print mtu
+    print("mtu")
+    print(mtu)
 
     m1_eth1.reset(ip=["192.168.101.10/24", "fc00:0:0:0::1/64"])
     m2_eth1.reset(ip=["192.168.101.11/24", "fc00:0:0:0::2/64"])

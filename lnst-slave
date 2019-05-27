@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 """
 Net test slave
 
@@ -25,14 +25,14 @@ def usage():
     """
     Print usage of this app
     """
-    print "Usage: %s [OPTION...]" % sys.argv[0]
-    print ""
-    print "  -d, --debug                emit debugging messages"
-    print "  -h, --help                 print this message"
-    print "  -e, --daemonize            go to background after init"
-    print "  -i, --pidfile              file to write daemonized process pid"
-    print "  -m, --no-colours           disable coloured terminal output"
-    print "  -p, --port                 xmlrpc port to listen on"
+    print("Usage: %s [OPTION...]" % sys.argv[0])
+    print("")
+    print("  -d, --debug                emit debugging messages")
+    print("  -h, --help                 print this message")
+    print("  -e, --daemonize            go to background after init")
+    print("  -i, --pidfile              file to write daemonized process pid")
+    print("  -m, --no-colours           disable coloured terminal output")
+    print("  -p, --port                 xmlrpc port to listen on")
     sys.exit()
 
 def main():
@@ -46,7 +46,7 @@ def main():
             ["debug", "help", "daemonize", "pidfile=", "port=", "no-colours"]
         )[0]
     except getopt.GetoptError as err:
-        print str(err)
+        print(str(err))
         usage()
         sys.exit()
 

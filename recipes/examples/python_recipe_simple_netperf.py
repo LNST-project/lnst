@@ -1,4 +1,4 @@
-#!/bin/python2
+#!/bin/python3
 
 import time
 

@@ -52,7 +52,7 @@ class RunSummaryFormatter(object):
         output = []
         if data is not None:
             if isinstance(data, dict):
-                for key, value in data.items():
+                for key, value in list(data.items()):
                     output.append("{pref}{key}:".format(pref=level*prefix,
                                                         key=key))
                     nest_res = self._format_data(value, level=level+1)

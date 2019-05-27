@@ -31,7 +31,7 @@ def deviceref_to_remote_device(machine, obj):
         return dev
     elif isinstance(obj, dict):
         new_dict = {}
-        for key, value in obj.items():
+        for key, value in list(obj.items()):
             new_dict[key] = deviceref_to_remote_device(machine,
                                                        value)
         return new_dict
@@ -55,7 +55,7 @@ def remote_device_to_deviceref(obj):
         return DeviceRef(obj.ifindex)
     elif isinstance(obj, dict):
         new_dict = {}
-        for key, value in obj.items():
+        for key, value in list(obj.items()):
             new_dict[key] = remote_device_to_deviceref(value)
         return new_dict
     elif isinstance(obj, list):
@@ -109,7 +109,7 @@ class MessageDispatcher(ConnectionHandler):
 
         result = None
         while True:
-            connected_slaves = self._connection_mapping.keys()
+            connected_slaves = list(self._connection_mapping.keys())
 
             messages = self.check_connections()
             for msg in messages:
@@ -122,7 +122,7 @@ class MessageDispatcher(ConnectionHandler):
                 else:
                     self._process_message(msg)
 
-            remaining_slaves = self._connection_mapping.keys()
+            remaining_slaves = list(self._connection_mapping.keys())
             if connected_slaves != remaining_slaves:
                 self._handle_disconnects(set(connected_slaves)-
                                          set(remaining_slaves))
@@ -147,7 +147,7 @@ class MessageDispatcher(ConnectionHandler):
 
             wait = True
             while wait:
-                connected_slaves = self._connection_mapping.keys()
+                connected_slaves = list(self._connection_mapping.keys())
                 messages = self.check_connections(timeout=1)
                 for msg in messages:
                     try:
@@ -160,7 +160,7 @@ class MessageDispatcher(ConnectionHandler):
 
                 wait = wait and not condition_wrapper()
 
-                remaining_slaves = self._connection_mapping.keys()
+                remaining_slaves = list(self._connection_mapping.keys())
                 if connected_slaves != remaining_slaves:
                     self._handle_disconnects(set(connected_slaves)-
                                              set(remaining_slaves))
@@ -174,14 +174,14 @@ class MessageDispatcher(ConnectionHandler):
         return res
 
     def handle_messages(self):
-        connected_slaves = self._connection_mapping.keys()
+        connected_slaves = list(self._connection_mapping.keys())
 
         messages = self.check_connections()
 
         for msg in messages:
             self._process_message(msg)
 
-        remaining_slaves = self._connection_mapping.keys()
+        remaining_slaves = list(self._connection_mapping.keys())
         if connected_slaves != remaining_slaves:
             self._handle_disconnects(set(connected_slaves)-
                                      set(remaining_slaves))

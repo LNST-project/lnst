@@ -109,7 +109,7 @@ class Machine(object):
         configuration["redhat_release"] = self._slave_desc["redhat_release"]
 
         configuration["interfaces"] = {}
-        for dev in self._device_database.items():
+        for dev in list(self._device_database.items()):
             configuration["device_"+dev.name] = dev.get_config()
         return configuration
 
@@ -166,14 +166,14 @@ class Machine(object):
 
     def dev_db_get_name(self, dev_name):
         #TODO move these to Slave to optimize quering for each device
-        for dev in self._device_database.values():
+        for dev in list(self._device_database.values()):
             if dev.get_name() == dev_name:
                 return dev
         return None
 
     def get_dev_by_hwaddr(self, hwaddr):
         #TODO move these to Slave to optimize quering for each device
-        for dev in self._device_database.values():
+        for dev in list(self._device_database.values()):
             if dev.hwaddr == hwaddr:
                 return dev
         return None
@@ -247,7 +247,7 @@ class Machine(object):
         self._device_database = {}
 
         devices = self.rpc_call("get_devices")
-        for ifindex, dev in devices.items():
+        for ifindex, dev in list(devices.items()):
             remote_dev = RemoteDevice(Device)
             remote_dev._machine = self
             remote_dev.ifindex = ifindex
@@ -275,7 +275,7 @@ class Machine(object):
         for cls in reversed(classes):
             module_name = cls.__module__
 
-            if module_name == "__builtin__":
+            if module_name == "builtins":
                 continue
 
             module = sys.modules[module_name]

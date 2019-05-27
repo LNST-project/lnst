@@ -222,8 +222,8 @@ class Wizard:
         """
         while True:
             if pool_dir is None:
-                pool_dir = raw_input("Enter path to a pool directory "
-                                     "(default: '%s'): " % DefaultPoolDir)
+                pool_dir = eval(input("Enter path to a pool directory "
+                                     "(default: '%s'): " % DefaultPoolDir))
             if pool_dir == "":
                 pool_dir = DefaultPoolDir
 
@@ -316,7 +316,7 @@ class Wizard:
                 if mode == "interactive":
                     msg = "Do you want to add interface '%s' (%s) to the "\
                           "recipe? [Y/n]: " % (iface["name"], iface["hwaddr"])
-                    answer = raw_input(msg)
+                    answer = eval(input(msg))
                 if mode == "noninteractive" or answer.lower() == "y"\
                    or answer == "":
                     interfaces_added += 1
@@ -431,7 +431,7 @@ class Wizard:
         """ Queries user for adding next machine
         @return True if user wants to add another machine, False otherwise
         """
-        answer = raw_input("Do you want to add another machine? [Y/n]: ")
+        answer = eval(input("Do you want to add another machine? [Y/n]: "))
         if answer.lower() == "y" or answer == "":
             return True
         else:
@@ -441,7 +441,7 @@ class Wizard:
         """ Queries user for creating specified directory
         @return True if user wants to create the directory, False otherwise
         """
-        answer = raw_input("Create dir '%s'? [Y/n]: " % pool_dir)
+        answer = eval(input("Create dir '%s'? [Y/n]: " % pool_dir))
         if answer.lower() == 'y' or answer == "":
             return True
         else:
@@ -452,9 +452,9 @@ class Wizard:
         @hostname Hostname of the machine which is used as default filename
         @return Name of the file with .xml extension
         """
-        output_file = raw_input("Enter the name of the output .xml file "
+        output_file = eval(input("Enter the name of the output .xml file "
                                 "(without .xml, default is '%s.xml'): "
-                                % hostname)
+                                % hostname))
         if output_file == "":
             return hostname + ".xml"
         else:
@@ -465,7 +465,7 @@ class Wizard:
         @return Valid (is translatable to an IP address) hostname
         """
         while True:
-            hostname = raw_input("Enter hostname: ")
+            hostname = eval(input("Enter hostname: "))
             if hostname == "":
                 sys.stderr.write("No hostname entered\n")
                 continue
@@ -485,8 +485,8 @@ class Wizard:
                 string representing hostname of the host
         """
         while True:
-            libvirt_domain = raw_input("Enter libvirt domain "
-                                       "of virtual host: ")
+            libvirt_domain = eval(input("Enter libvirt domain "
+                                       "of virtual host: "))
             if libvirt_domain == "":
                 sys.stderr.write("No domain entered\n")
                 continue
@@ -524,7 +524,7 @@ class Wizard:
         @return Integer representing port
         """
         while True:
-            port = raw_input("Enter port (default: %d): " % DefaultRPCPort)
+            port = eval(input("Enter port (default: %d): " % DefaultRPCPort))
             if port == "":
                 return DefaultRPCPort
             else:
@@ -539,7 +539,7 @@ class Wizard:
         @return Dictionary with the security parameters
         """
         while True:
-            auth_type = raw_input("Enter authentication type (default: none): ")
+            auth_type = eval(input("Enter authentication type (default: none): "))
             if auth_type == "":
                 auth_type = "none"
             elif auth_type not in ["none", "no-auth", "password",
@@ -555,7 +555,7 @@ class Wizard:
             return {"auth_type": "ssh"}
         elif auth_type == "password":
             while True:
-                password = raw_input("Enter password: ")
+                password = eval(input("Enter password: "))
                 if password == "":
                     sys.stderr.write("Invalid password.")
                     continue
@@ -564,19 +564,19 @@ class Wizard:
                     "auth_passwd": password}
         elif auth_type == "pubkey":
             while True:
-                identity = raw_input("Enter identity: ")
+                identity = eval(input("Enter identity: "))
                 if identity == "":
                     sys.stderr.write("Invalid identity.")
                     continue
                 break
             while True:
-                privkey = raw_input("Enter path to Ctl private key: ")
+                privkey = eval(input("Enter path to Ctl private key: "))
                 if privkey == "" or not os.path.isfile(privkey):
                     sys.stderr.write("Invalid path to private key.")
                     continue
                 break
             while True:
-                srv_pubkey_path = raw_input("Enter path to Slave public key: ")
+                srv_pubkey_path = eval(input("Enter path to Slave public key: "))
                 if srv_pubkey_path == "" or not os.path.isfile(srv_pubkey_path):
                     sys.stderr.write("Invalid path to public key.")
                     continue

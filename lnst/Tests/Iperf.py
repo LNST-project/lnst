@@ -24,6 +24,8 @@ class IperfBase(BaseTestModule):
 
         try:
             stdout, stderr = server.communicate()
+            stdout = stdout.decode()
+            stderr = stderr.decode()
         except KeyboardInterrupt:
             pass
 
@@ -102,7 +104,7 @@ class IperfClient(IperfBase):
 
     def runtime_estimate(self):
         _duration_overhead = 5
-        return (self.params.duration + _duration_overhead)
+        return self.params.duration + _duration_overhead
 
     def _compose_cmd(self):
         port = ""

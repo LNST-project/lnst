@@ -58,7 +58,7 @@ class CPUStatMonitor(BaseTestModule):
 
     def _subtract_nested_dicts(self, first, second):
         result = {}
-        for key, val in first.items():
+        for key, val in list(first.items()):
             if isinstance(val, dict):
                 result[key] = self._subtract_nested_dicts(val, second[key])
             else:

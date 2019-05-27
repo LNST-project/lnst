@@ -68,6 +68,10 @@ RecipeCommon.__path__ = ["lnst.RecipeCommon"]
 
 sys.modules["lnst.RecipeCommon"] = RecipeCommon
 
+class SystemCallException(Exception):
+    """Exception used to handle SIGINT waiting for system calls"""
+    pass
+
 class SlaveMethods:
     '''
     Exported xmlrpc methods
@@ -278,7 +282,7 @@ class SlaveMethods:
             dev_data = dev._get_if_data()
             entry = {"name": dev.get_name(),
                      "hwaddr": dev.get_hwaddr()}
-            for key, value in params.iteritems():
+            for key, value in params.items():
                 if key not in dev_data or dev_data[key] != value:
                     entry = None
                     break
@@ -326,7 +330,7 @@ class SlaveMethods:
             raise Exception("Can't start packet capture, tcpdump not available")
 
         files = {}
-        for if_id, dev in self._if_manager.get_mapped_devices().iteritems():
+        for if_id, dev in self._if_manager.get_mapped_devices().items():
             if dev.get_netns() != None:
                 continue
             dev_name = dev.get_name()
@@ -352,7 +356,7 @@ class SlaveMethods:
         if self._packet_captures == None:
             return True
 
-        for ifindex, pcap in self._packet_captures.iteritems():
+        for ifindex, pcap in self._packet_captures.items():
             pcap.stop()
 
         self._packet_captures.clear()
@@ -360,7 +364,7 @@ class SlaveMethods:
         return True
 
     def _remove_capture_files(self):
-        for key, name in self._capture_files.iteritems():
+        for key, name in self._capture_files.items():
             logging.debug("Removing temporary packet capture file %s", name)
             os.unlink(name)
 
@@ -383,7 +387,7 @@ class SlaveMethods:
 
     def restore_system_config(self):
         logging.info("Restoring system configuration")
-        for option, values in self._system_config.iteritems():
+        for option, values in self._system_config.items():
             try:
                 cmd_str = "echo \"%s\" >%s" % (values["initial_val"], option)
                 (stdout, stderr) = exec_cmd(cmd_str)
@@ -441,11 +445,11 @@ class SlaveMethods:
         if self._if_manager is not None:
             self._if_manager.deconfigure_all()
 
-        for netns in self._net_namespaces.keys():
+        for netns in list(self._net_namespaces.keys()):
             self.del_namespace(netns)
         self._net_namespaces = {}
 
-        for obj_id, obj in self._dynamic_objects.items():
+        for obj_id, obj in list(self._dynamic_objects.items()):
             del obj
 
         for cls_name in dir(Devices):
@@ -453,7 +457,7 @@ class SlaveMethods:
             if isclass(cls):
                 delattr(Devices, cls_name)
 
-        for module_name, module in self._dynamic_modules.items():
+        for module_name, module in list(self._dynamic_modules.items()):
             del sys.modules[module_name]
 
         self._dynamic_objects = {}
@@ -527,11 +531,11 @@ class SlaveMethods:
         return False
 
     def reset_file_transfers(self):
-        for file_handle in self._copy_targets.itervalues():
+        for file_handle in self._copy_targets.values():
             file_handle.close()
         self._copy_targets = {}
 
-        for file_handle in self._copy_sources.itervalues():
+        for file_handle in self._copy_sources.values():
             file_handle.close()
         self._copy_sources = {}
 
@@ -892,7 +896,7 @@ class ServerHandler(ConnectionHandler):
         self._netns_con_mapping = {}
 
     def update_connections(self, connections):
-        for key, connection in connections.iteritems():
+        for key, connection in connections.items():
             self.remove_connection_by_id(key)
             self.add_connection(key, connection)
 
@@ -926,7 +930,7 @@ def device_to_deviceref(obj):
         return dev_ref
     elif isinstance(obj, dict):
         new_dict = {}
-        for key, value in obj.items():
+        for key, value in list(obj.items()):
             new_dict[key] = device_to_deviceref(value)
         return new_dict
     elif isinstance(obj, list):
@@ -953,7 +957,7 @@ def deviceref_to_device(if_manager, obj):
         return dev
     elif isinstance(obj, dict):
         new_dict = {}
-        for key, value in obj.items():
+        for key, value in list(obj.items()):
             new_dict[key] = deviceref_to_device(if_manager, value)
         return new_dict
     elif isinstance(obj, list):
@@ -1002,21 +1006,23 @@ class NetTestSlave:
         self._log_ctl = log_ctl
 
     def run(self):
-        while not self._finished:
-            if self._server_handler.get_ctl_sock() == None:
-                self._log_ctl.cancel_connection()
-                try:
-                    logging.info("Waiting for connection.")
-                    self._server_handler.accept_connection()
-                except (socket.error, SecSocketException):
-                    log_exc_traceback()
-                    continue
-                self._log_ctl.set_connection(self._server_handler.get_ctl_sock())
+        while True:
+            try:
+                if self._server_handler.get_ctl_sock() is None:
+                    self._log_ctl.cancel_connection()
+                    try:
+                        logging.info("Waiting for connection.")
+                        self._server_handler.accept_connection()
+                    except (socket.error, SecSocketException):
+                        continue
+                    self._log_ctl.set_connection(self._server_handler.get_ctl_sock())
 
-            msgs = self._server_handler.get_messages()
+                msgs = self._server_handler.get_messages()
 
-            for msg in msgs:
-                self._process_msg(msg[1])
+                for msg in msgs:
+                    self._process_msg(msg[1])
+            except SystemCallException:
+                break
 
         self._methods.machine_cleanup()
 
@@ -1106,7 +1112,7 @@ class NetTestSlave:
 
     def _signal_die_handler(self, signum, frame):
         logging.info("Caught signal %d -> dying" % signum)
-        self._finished = True
+        raise SystemCallException()
 
     def _parent_resend_signal_handler(self, signum, frame):
         logging.info("Caught signal %d -> resending to parent" % signum)

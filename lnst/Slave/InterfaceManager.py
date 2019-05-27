@@ -97,7 +97,7 @@ class InterfaceManager(object):
         #devices with outdated messages
         self.get_netlink_messages()
 
-        devices_to_remove = self._devices.keys()
+        devices_to_remove = list(self._devices.keys())
         devs = scan_netdevs()
         for dev in devs:
             if dev['index'] not in self._devices:
@@ -199,18 +199,18 @@ class InterfaceManager(object):
 
     def get_devices(self):
         self.rescan_devices()
-        return self._devices.values()
+        return list(self._devices.values())
 
     def get_device_by_hwaddr(self, hwaddr):
         self.rescan_devices()
-        for dev in self._devices.values():
+        for dev in list(self._devices.values()):
             if dev.hwaddr == hwaddr:
                 return dev
         raise DeviceNotFound()
 
     def get_device_by_name(self, name):
         self.rescan_devices()
-        for dev in self._devices.values():
+        for dev in list(self._devices.values()):
             if dev.name == name:
                 return dev
         raise DeviceNotFound()
@@ -218,10 +218,10 @@ class InterfaceManager(object):
     def get_device_by_params(self, params):
         self.rescan_devices()
         matched = None
-        for dev in self._devices.values():
+        for dev in list(self._devices.values()):
             matched = dev
             dev_data = dev.get_if_data()
-            for key, value in params.iteritems():
+            for key, value in params.items():
                 if key not in dev_data or dev_data[key] != value:
                     matched = None
                     break
@@ -232,7 +232,7 @@ class InterfaceManager(object):
         return matched
 
     def deconfigure_all(self):
-        for dev in self._devices.itervalues():
+        for dev in self._devices.values():
             pass
             # dev.clear_configuration()
 
@@ -261,12 +261,13 @@ class InterfaceManager(object):
 
     def _is_name_used(self, name):
         self.rescan_devices()
-        for device in self._devices.itervalues():
+        for device in self._devices.values():
             if name == device.name:
                 return True
 
         out, _ = exec_cmd("ovs-vsctl --columns=name list Interface",
                           log_outputs=False, die_on_err=False)
+        out = out.decode()
         for line in out.split("\n"):
             m = re.match(r'.*: \"(.*)\"', line)
             if m is not None:

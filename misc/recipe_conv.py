@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 Recipe converter
 
@@ -106,7 +106,7 @@ def convert_recipe(file_path):
     writer.close()
 
 def usage():
-    print "Usage: %s recipe1 recipe2 dir1 ..." % sys.argv[0]
+    print("Usage: %s recipe1 recipe2 dir1 ..." % sys.argv[0])
 
 def main():
     if len(sys.argv) <= 1 or "-h" in sys.argv:
@@ -122,10 +122,10 @@ def main():
                     if re.match(r"^.*\.xml$", file_name):
                         full_path = "%s/%s" % (root, file_name)
                         full_path = os.path.normpath(full_path)
-                        print "Converting %s" % full_path
+                        print("Converting %s" % full_path)
                         convert_recipe(full_path)
         else:
-            print "Converting %s" % file_path
+            print("Converting %s" % file_path)
             convert_recipe(file_path)
     return 0
 
