@@ -66,17 +66,17 @@ class JobResult(BaseResult):
     def job(self):
         return self._job
 
-    @BaseResult.level.getter
+    @property
     def level(self):
         return self.job.level
 
-    @BaseResult.data_level.getter
+    @property
     def data_level(self):
         return self.job.level+1
 
 class JobStartResult(JobResult):
     """Generated automatically when a Job is succesfully started on a slave"""
-    @BaseResult.description.getter
+    @property
     def description(self):
         return "Job started: {}".format(str(self.job))
 
@@ -88,15 +88,15 @@ class JobFinishResult(JobResult):
     def __init__(self, job):
         super(JobFinishResult, self).__init__(job, None)
 
-    @BaseResult.success.getter
+    @property
     def success(self):
         return self._job.passed
 
-    @BaseResult.description.getter
+    @property
     def description(self):
         return "Job finished: {}".format(str(self.job))
 
-    @BaseResult.data.getter
+    @property
     def data(self):
         return self.job.result
 
@@ -118,18 +118,18 @@ class Result(BaseResult):
                 if isinstance(data_level, ResultLevel)
                 else ResultLevel.IMPORTANT+1)
 
-    @BaseResult.description.getter
+    @property
     def description(self):
         return self._description
 
-    @BaseResult.data.getter
+    @property
     def data(self):
         return self._data
 
-    @BaseResult.level.getter
+    @property
     def level(self):
         return self._level
 
-    @BaseResult.data_level.getter
+    @property
     def data_level(self):
         return self._data_level
