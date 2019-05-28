@@ -1,7 +1,7 @@
 import re
 
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
+from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam, ListParam
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Controller.Recipe import BaseRecipe, RecipeError
@@ -93,7 +93,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
-    perf_msg_size = IntParam(default=123)
+    perf_msg_sizes = ListParam(default=[123])
     perf_reverse = BoolParam(default=False)
 
     net_perf_tool = Param(default=IperfFlowMeasurement)
@@ -287,22 +287,23 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                     ('gso', 'on') in offload_items)):
                     continue
 
-                flow = PerfFlow(
-                        type = perf_test,
-                        generator = client_netns,
-                        generator_bind = client_bind,
-                        receiver = server_netns,
-                        receiver_bind = server_bind,
-                        msg_size = self.params.perf_msg_size,
-                        duration = self.params.perf_duration,
-                        parallel_streams = self.params.perf_parallel_streams,
-                        cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
-                        )
-                yield [flow]
+                for size in self.params.perf_msg_sizes:
+                    flow = PerfFlow(
+                            type = perf_test,
+                            generator = client_netns,
+                            generator_bind = client_bind,
+                            receiver = server_netns,
+                            receiver_bind = server_bind,
+                            msg_size = size,
+                            duration = self.params.perf_duration,
+                            parallel_streams = self.params.perf_parallel_streams,
+                            cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
+                            )
+                    yield [flow]
 
-                if self.params.perf_reverse:
-                    reverse_flow = self._create_reverse_flow(flow)
-                    yield [reverse_flow]
+                    if self.params.perf_reverse:
+                        reverse_flow = self._create_reverse_flow(flow)
+                        yield [reverse_flow]
 
     @property
     def cpu_perf_evaluators(self):

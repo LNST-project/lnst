@@ -114,22 +114,23 @@ class IpsecEspAhCompRecipe(BaseEnrtRecipe, PacketAssertTestAndEvaluate):
                  ('gso', 'on') in offload_items)):
                 continue
 
-            flow = PerfFlow(
-                    type = perf_test,
-                    generator = ns1,
-                    generator_bind = ip1,
-                    receiver = ns2,
-                    receiver_bind = ip2,
-                    msg_size = self.params.perf_msg_size,
-                    duration = self.params.perf_duration,
-                    parallel_streams = self.params.perf_parallel_streams,
-                    cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
-                    )
-            yield [flow]
+            for size in self.params.perf_msg_sizes:
+                flow = PerfFlow(
+                        type = perf_test,
+                        generator = ns1,
+                        generator_bind = ip1,
+                        receiver = ns2,
+                        receiver_bind = ip2,
+                        msg_size = size,
+                        duration = self.params.perf_duration,
+                        parallel_streams = self.params.perf_parallel_streams,
+                        cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
+                        )
+                yield [flow]
 
-            if "perf_reverse" in self.params and self.params.perf_reverse:
-                reverse_flow = self._create_reverse_flow(flow)
-                yield [reverse_flow]
+                if "perf_reverse" in self.params and self.params.perf_reverse:
+                    reverse_flow = self._create_reverse_flow(flow)
+                    yield [reverse_flow]
 
     def ping_test(self, ping_config):
         m1, m2 = ping_config[0].client, ping_config[0].destination
