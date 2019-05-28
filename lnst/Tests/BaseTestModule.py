@@ -59,6 +59,7 @@ class BaseTestModule(object):
                 to class attributes (Param type). Values will be parsed and
                 set to Param instances under the self.params object.
         """
+        self._orig_kwargs = kwargs.copy()
         #by defaults loads the params into self.params - no checks pseudocode:
         self.params = Parameters()
 
@@ -101,3 +102,14 @@ class BaseTestModule(object):
 
     def _get_res_data(self):
         return self._res_data
+
+    def __repr__(self):
+        return "{}({})".format(
+            self.__class__.__name__,
+            ", ".join(
+                [
+                    "{}={}".format(k, repr(v))
+                    for k, v in self._orig_kwargs.items()
+                ]
+            ),
+        )

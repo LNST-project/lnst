@@ -48,6 +48,9 @@ class BaseIpAddress(object):
     def _parse_addr(addr):
         raise NotImplementedError()
 
+    def __repr__(self):
+        return "{}({}/{})".format(self.__class__.__name__, str(self), self.prefixlen)
+
 class Ip4Address(BaseIpAddress):
     def __init__(self, addr):
         super(Ip4Address, self).__init__(addr)

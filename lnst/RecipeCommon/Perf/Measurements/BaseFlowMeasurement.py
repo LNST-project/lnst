@@ -1,3 +1,4 @@
+import textwrap
 import signal
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
@@ -57,6 +58,32 @@ class Flow(object):
     @property
     def cpupin(self):
         return self._cpupin
+
+    def __repr__(self):
+        string = """
+        Flow(
+            type={type},
+            generator={generator}, 
+            generator_bind={generator_bind},
+            receiver={receiver}, 
+            receiver_bind={receiver_bind},
+            msg_size={msg_size}, 
+            duration={duration},
+            parallel_streams={parallel_streams},
+            cpupin={cpupin},
+        )""".format(
+            type=self.type,
+            generator=str(self.generator),
+            generator_bind=self.generator_bind,
+            receiver=str(self.receiver),
+            receiver_bind=self.receiver_bind,
+            msg_size=self.msg_size,
+            duration=self.duration,
+            parallel_streams=self.parallel_streams,
+            cpupin=self.cpupin,
+        )
+        string = textwrap.dedent(string).strip()
+        return string
 
 class NetworkFlowTest(object):
     def __init__(self, flow, server_job, client_job):

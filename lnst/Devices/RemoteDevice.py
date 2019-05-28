@@ -149,6 +149,19 @@ class RemoteDevice(object):
     def _match_update_data(self, data):
         return False
 
+    def __repr__(self):
+        args = [
+            "{}={}".format(k, v)
+            for k, v in [
+                ("machine", self._machine.get_id()),
+                ("id", self._id),
+                ("name", self.name),
+                ("ifindex", self.ifindex),
+            ]
+        ]
+
+        return "{}({})".format(self._dev_cls.__name__, ", ".join(args))
+
 class PairedRemoteDevice(RemoteDevice):
     """RemoteDevice class for paired Devices (such as veth)"""
     def __init__(self, peer, dev_cls, args=[], kwargs={}):

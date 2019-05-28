@@ -214,3 +214,10 @@ class Namespace(object):
             return True
         else:
             return False
+
+    def __str__(self):
+        return "{cls}(machine_id={m_id}{namespace})".format(
+            cls=self.__class__.__name__,
+            m_id=self._machine.get_id(),
+            namespace=", namespace_name={}".format(self.name) if self.name else "",
+        )

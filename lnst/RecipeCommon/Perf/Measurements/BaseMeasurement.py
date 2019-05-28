@@ -36,6 +36,12 @@ class BaseMeasurement(object):
     def aggregate_results(first, second):
         raise NotImplementedError()
 
+    def __repr__(self):
+        return "{}({})".format(
+            self.__class__.__name__,
+            repr(self.conf),
+        )
+
 
 class BaseMeasurementResults(object):
     def __init__(self, measurement):
