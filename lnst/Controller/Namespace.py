@@ -195,6 +195,13 @@ class Namespace(object):
         if not self._custom_setattr(name, value):
             super(Namespace, self).__setattr__(name, value)
 
+    def __delattr__(self, name):
+        if name in self._objects and isinstance(self._objects[name], RemoteDevice):
+            if self._objects[name].deleted:
+                del self._objects[name]
+        else:
+            super(Namespace, self).__delattr__(name)
+
     def _unset(self, value):
         k_to_del = None
         for k, v in self._objects.items():
