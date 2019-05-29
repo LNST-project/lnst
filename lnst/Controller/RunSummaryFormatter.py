@@ -48,7 +48,7 @@ class RunSummaryFormatter(object):
         elif isinstance(res, DeviceConfigResult):
             return res.__class__.__name__
         else:
-            return ""
+            return res.__class__.__name__
 
     def _format_data(self, data, prefix="    ", level=1):
         output = []
