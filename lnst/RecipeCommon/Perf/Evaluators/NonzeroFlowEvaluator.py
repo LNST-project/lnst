@@ -10,7 +10,10 @@ class NonzeroFlowEvaluator(BaseEvaluator):
     def evaluate_results(self, recipe, results):
         for flow_results in results:
             result = True
-            result_text = ["Flow {} Nonzero evaluation".format(flow_results.flow)]
+            result_text = [
+                "Nonzero evaluation of flow:",
+                "{}".format(flow_results.flow),
+            ]
             if flow_results.generator_results.average > 0:
                 result_text.append("Generator reported non-zero throughput")
             else:

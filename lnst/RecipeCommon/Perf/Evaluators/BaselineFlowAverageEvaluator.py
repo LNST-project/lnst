@@ -14,7 +14,8 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
     def describe_group_results(self, recipe, results):
         result = results[0]
         return [
-            "Flow {} Baseline average evaluation".format(result.flow),
+            "Baseline average evaluation of flow:",
+            "{}".format(result.flow),
             "Configured {}% difference as acceptable".format(
                 self._pass_difference
             ),
