@@ -11,7 +11,9 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import copy
+import logging
 from lnst.Common.Parameters import Parameters, Param
+from lnst.Common.Colours import decorate_with_preset
 from lnst.Controller.Requirements import _Requirements, HostReq
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.RecipeResults import BaseResult, Result
@@ -155,6 +157,19 @@ class RecipeRun(object):
             raise RecipeError("result must be a BaseActionResult instance.")
 
         self._results.append(result)
+
+        result_str = (
+            decorate_with_preset("PASS", "pass")
+            if result.success
+            else decorate_with_preset("FAIL", "fail")
+        )
+        if len(result.description.split("\n")) == 1:
+            logging.info(
+                "Result: {}, What: {}".format(result_str, result.description)
+            )
+        else:
+            logging.info("Result: {}, What:".format(result_str))
+            logging.info("{}".format(result.description))
 
     @property
     def match(self):
