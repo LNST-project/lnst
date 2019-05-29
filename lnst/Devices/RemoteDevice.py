@@ -120,16 +120,14 @@ class RemoteDevice(object):
                 raise DeviceReadOnly("Can't call methods when in ReadOnly cache mode.")
 
             def dev_method(*args, **kwargs):
-                return self._machine.rpc_call("dev_method", self.ifindex,
-                                              name, args, kwargs,
-                                              netns=self.netns)
+                return self._machine.remote_device_method(
+                        self.ifindex, name, args, kwargs, self.netns)
             return dev_method
         else:
             if self._cached:
                 return self._cache[name]
 
-            return self._machine.rpc_call("dev_getattr", self.ifindex, name,
-                                          netns=self.netns)
+            return self._machine.remote_device_getattr(self.ifindex, name, self.netns)
 
     def __setattr__(self, name, value):
         if not self._inited:
@@ -137,14 +135,13 @@ class RemoteDevice(object):
 
         try:
             getattr(self._dev_cls, name)
-
-            if self._cached:
-                raise DeviceReadOnly("Can't set attributes when in ReadOnly cache mode.")
-
-            return self._machine.rpc_call("dev_setattr", self.ifindex, name, value,
-                                          netns=self.netns)
         except AttributeError:
             return super(RemoteDevice, self).__setattr__(name, value)
+
+        if self._cached:
+            raise DeviceReadOnly("Can't set attributes when in ReadOnly cache mode.")
+
+        return self._machine.remote_device_setattr(self.ifindex, name, value, netns=self.netns)
 
     def __iter__(self):
         for x in dir(self._dev_cls):

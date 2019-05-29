@@ -20,7 +20,7 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
-from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
+from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult, DeviceCreateResult, DeviceMethodCallResult, DeviceAttrSetResult
 from lnst.Controller.SlaveObject import SlaveObject
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
@@ -121,6 +121,14 @@ class Machine(object):
         dev_clsname = dev._dev_cls.__name__
         dev_args = dev._dev_args
         dev_kwargs = dev._dev_kwargs
+
+        self._add_recipe_result(
+            DeviceCreateResult(
+                success=True,
+                device=dev,
+            )
+        )
+
         ret = self.rpc_call("create_device", clsname=dev_clsname,
                                              args=dev_args,
                                              kwargs=dev_kwargs,
@@ -131,6 +139,44 @@ class Machine(object):
 
     def remote_device_set_netns(self, dev, dst, src):
         self.rpc_call("set_dev_netns", dev, dst.name, netns=src)
+
+    def remote_device_method(self, index, method_name, args, kwargs, netns):
+        config_res = DeviceMethodCallResult(
+            success=True,
+            device=self._device_database[index],
+            method_name=method_name,
+            args=args,
+            kwargs=kwargs,
+        )
+        self._add_recipe_result(config_res)
+
+        try:
+            res = self.rpc_call("dev_method", index, method_name, args, kwargs,
+                                netns=netns)
+        except:
+            config_res.success = False
+            raise
+        return res
+
+    def remote_device_setattr(self, index, attr_name, value, netns):
+        config_res = DeviceAttrSetResult(
+            success=True,
+            device=self._device_database[index],
+            attr_name=attr_name,
+            value=value,
+            old_value=getattr(self._device_database[index], attr_name),
+        )
+        self._add_recipe_result(config_res)
+
+        try:
+            res = self.rpc_call("dev_setattr", index, attr_name, value, netns=netns)
+        except:
+            config_res.success = False
+            raise
+        return res
+
+    def remote_device_getattr(self, index, attr_name, netns):
+        return self.rpc_call("dev_getattr", index, attr_name, netns=netns)
 
     def device_created(self, dev_data):
         ifindex = dev_data["ifindex"]
@@ -263,6 +309,10 @@ class Machine(object):
     def stop_recipe(self):
         self._recipe = None
 
+    def _add_recipe_result(self, result):
+        if self._recipe:
+            self._recipe.current_run.add_result(result)
+
     def _send_device_classes(self):
         for cls_name, cls in device_classes:
             self.send_class(cls)
@@ -357,7 +407,7 @@ class Machine(object):
             logging.info("Job description: %s" % job._desc)
 
         job_result = JobStartResult(job, True)
-        self._recipe.current_run.add_result(job_result)
+        self._add_recipe_result(job_result)
         job_result.success = self.rpc_call("run_job", job._to_dict(),
                                            netns=job.netns)
 
@@ -397,7 +447,7 @@ class Machine(object):
         job_id = msg["job_id"]
         job = self._jobs[job_id]
         job._res = msg["result"]
-        self._recipe.current_run.add_result(JobFinishResult(job))
+        self._add_recipe_result(JobFinishResult(job))
 
     def kill(self, job, signal):
         if job.id not in self._jobs:
