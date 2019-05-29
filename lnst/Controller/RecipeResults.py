@@ -104,6 +104,116 @@ class JobFinishResult(JobResult):
     def data(self):
         return self.job.result
 
+
+class DeviceConfigResult(BaseResult):
+    def __init__(self, success, device):
+        super(DeviceConfigResult, self).__init__(success)
+        self._device = device
+
+    @property
+    def level(self):
+        return ResultLevel.IMPORTANT
+
+    @property
+    def device(self):
+        return self._device
+
+
+class DeviceCreateResult(DeviceConfigResult):
+    @property
+    def description(self):
+        dev_clsname = self.device._dev_cls.__name__
+        dev_args = self.device._dev_args
+        dev_kwargs = self.device._dev_kwargs
+
+        return "Creating Device {hostid}{netns}.{dev_id} = {cls_name}({args}{comma}{kwargs})".format(
+            hostid=self.device.host.hostid,
+            netns=".{}".format(self.device.netns.name)
+            if self.device.netns.name
+            else "",
+            dev_id=self.device._id,
+            cls_name=dev_clsname,
+            args=", ".join([repr(arg) for arg in dev_args]),
+            comma=", " if dev_args and dev_kwargs else "",
+            kwargs=", ".join(
+                ["{}={}".format(k, repr(v)) for k, v in dev_kwargs.items()]
+            ),
+        )
+
+
+class DeviceMethodCallResult(DeviceConfigResult):
+    def __init__(self, success, device, method_name, args, kwargs):
+        super(DeviceMethodCallResult, self).__init__(success, device)
+        self._method_name = method_name
+        self._args = args
+        self._kwargs = kwargs
+
+    @property
+    def method_name(self):
+        return self._method_name
+
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def kwargs(self):
+        return self._kwargs
+
+    @property
+    def description(self):
+        return "Calling Device method {host}{netns}.{dev_id}.{fname}({args}{comma}{kwargs})".format(
+            host=self.device.host.hostid,
+            netns=(
+                ".{}".format(self.device.netns.name)
+                if self.device.netns.name
+                else ""
+            ),
+            dev_id=self.device._id,
+            fname=self.method_name,
+            args=", ".join([repr(arg) for arg in self.args]),
+            comma=", " if self.args and self.kwargs else "",
+            kwargs=", ".join(
+                ["{}={}".format(k, repr(v)) for k, v in self.kwargs.items()]
+            ),
+        )
+
+
+class DeviceAttrSetResult(DeviceConfigResult):
+    def __init__(self, success, device, attr_name, value, old_value):
+        super(DeviceAttrSetResult, self).__init__(success, device)
+        self._attr_name = attr_name
+        self._value = value
+        self._old_value = old_value
+
+    @property
+    def attr_name(self):
+        return self._attr_name
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def old_value(self):
+        return self._old_value
+
+    @property
+    def description(self):
+        return "Setting Device attribute {host}{netns}.{dev_id}.{attr} = {val}, previous value = {old_val}".format(
+            host=self.device.host.hostid,
+            netns=(
+                ".{}".format(self.device.netns.name)
+                if self.device.netns.name
+                else ""
+            ),
+            dev_id=self.device._id,
+            attr=self.attr_name,
+            val=self.value,
+            old_val=self.old_value,
+        )
+
+
 class Result(BaseResult):
     """Class intended to store aribitrary tester supplied data
 

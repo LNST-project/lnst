@@ -16,7 +16,7 @@ from lnst.Common.Colours import decorate_with_preset
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Recipe import BaseRecipe, RecipeRun
-from lnst.Controller.RecipeResults import BaseResult, JobResult, Result
+from lnst.Controller.RecipeResults import BaseResult, JobResult, Result, DeviceConfigResult
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
 from lnst.Controller.RecipeResults import ResultLevel
 
@@ -45,6 +45,8 @@ class RunSummaryFormatter(object):
             return "Host {} job {}".format(res.job.host.hostid, res.job.id)
         elif isinstance(res, Result):
             return "TestResult:"
+        elif isinstance(res, DeviceConfigResult):
+            return res.__class__.__name__
         else:
             return ""
 
