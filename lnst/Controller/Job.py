@@ -218,15 +218,12 @@ class Job(object):
     def __str__(self):
         attrs = ["type(%s)" % self.type]
 
-        if self._type == "module":
-            attrs.append("module(%s)" % self._what.__class__.__name__)
-        elif self._type == "shell":
-            attrs.append("command(%s)" % self._what)
-
         if self._netns is not None:
             attrs.append("netns(%s)" % self._netns.name)
 
         if not self._expect:
             attrs.append("expecting FAIL")
+
+        attrs.append(repr(self._what))
 
         return ", ".join(attrs)
