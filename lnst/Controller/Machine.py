@@ -348,7 +348,7 @@ class Machine(object):
         self._job_id_seq += 1
         self._jobs[job.id] = job
 
-        if job._type == "module":
+        if job.type == "module":
             self.send_class(job._what.__class__)
 
         logging.info("Host %s executing job %d: %s" %

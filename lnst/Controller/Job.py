@@ -40,11 +40,7 @@ class Job(object):
 
         self._res = None
 
-        if isinstance(what, BaseTestModule):
-            self._type = "module"
-        elif type(what) == str:
-            self._type = "shell"
-        else:
+        if self.type == "unknown":
             raise JobError("Unable to run '%s'" % str(what))
 
         self._id = None
@@ -68,6 +64,14 @@ class Job(object):
     @property
     def what(self):
         return self._what
+
+    @property
+    def type(self):
+        if isinstance(self.what, BaseTestModule):
+            return "module"
+        elif isinstance(self.what, str):
+            return "shell"
+        return "unknown"
 
     @property
     def host(self):
@@ -201,18 +205,18 @@ class Job(object):
 
     def _to_dict(self):
         d = {"job_id": self._id,
-             "type": self._type,
+             "type": self.type,
              "json": self._json}
-        if self._type == "shell":
+        if self.type == "shell":
             d["command"] = self._what
-        elif self._type == "module":
+        elif self.type == "module":
             d["module"] = self._what
         else:
-            raise JobError("Unknown Job type %s" % self._type)
+            raise JobError("Unknown Job type %s" % self.type)
         return d
 
     def __str__(self):
-        attrs = ["type(%s)" % self._type]
+        attrs = ["type(%s)" % self.type]
 
         if self._type == "module":
             attrs.append("module(%s)" % self._what.__class__.__name__)
