@@ -61,6 +61,7 @@ class Host(Namespace):
         dev = self._machine.get_dev_by_hwaddr(hwaddr)
         if dev:
             self._objects[dev_id] = dev
+            dev._id = dev_id
             dev._enable()
         else:
             raise ControllerError("Device with macaddr {} not found on {}."

@@ -32,6 +32,7 @@ class RemoteDevice(object):
         self.__dev_args = args
         self.__dev_kwargs = kwargs
         self.__netns = None
+        self.__id = None
 
         self._machine = None
         self.ifindex = None
@@ -78,6 +79,14 @@ class RemoteDevice(object):
     @property
     def _dev_kwargs(self):
         return self.__dev_kwargs
+
+    def __id_get(self):
+        return self.__id
+
+    def __id_set(self, value):
+        self.__id = value
+
+    _id = property(__id_get, __id_set)
 
     def _get_dev_cls(self):
         return self._dev_cls

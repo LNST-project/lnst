@@ -158,6 +158,7 @@ class Namespace(object):
                 self._objects[name] = value
                 return True
             else:
+                value._id = name
                 if isinstance(value, VirtualDevice):
                     # TODO creation of VirtualDevices should be disabled during
                     # test execution, it's commented out right now because I
