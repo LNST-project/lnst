@@ -260,6 +260,9 @@ class Machine(object):
         recipe_name = recipe.__class__.__name__
         self.rpc_call("start_recipe", recipe_name)
 
+    def stop_recipe(self):
+        self._recipe = None
+
     def _send_device_classes(self):
         for cls_name, cls in device_classes:
             self.send_class(cls)

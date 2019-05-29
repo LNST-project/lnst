@@ -181,6 +181,7 @@ class Controller(object):
                 #TODO report errors during deconfiguration as FAIL!!
                 log_exc_traceback()
             finally:
+                machine.stop_recipe()
                 for dev in list(machine._device_database.values()):
                     if isinstance(dev, VirtualDevice):
                         dev._destroy()
