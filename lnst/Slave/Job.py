@@ -91,7 +91,7 @@ class Job(object):
         self._process.start()
         self._pid = self._process.pid
 
-        logging.info("Running job %d with pid \"%d\"" % (self._id, self._pid))
+        logging.debug("Running job %d with pid \"%d\"" % (self._id, self._pid))
         return True
 
     def _run(self):

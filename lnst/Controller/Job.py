@@ -195,11 +195,11 @@ class Job(object):
             False if an exception was raised while sending the signal.
         """
         if self.finished:
-            logging.info("Job {} on host {} already finished, skipping kill call."
+            logging.debug("Job {} on host {} already finished, skipping kill call."
                     .format(self._id, self._netns.hostid))
             return True
 
-        logging.info("Sending signal {} to job {} on host {}".format(signal,
+        logging.debug("Sending signal {} to job {} on host {}".format(signal,
                      self._id, self._netns.hostid))
         return self._netns._machine.kill(self, signal)
 

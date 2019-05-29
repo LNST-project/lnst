@@ -90,7 +90,7 @@ class Namespace(object):
                    level=job_level)
 
     def run(self, what, fail=False, json=False, desc=None,
-            job_level=ResultLevel.DEBUG, bg=False, timeout=DEFAULT_TIMEOUT):
+            job_level=ResultLevel.IMPORTANT, bg=False, timeout=DEFAULT_TIMEOUT):
         """
         Args:
             what (mandatory) -- what should be run on the host. Can be either a

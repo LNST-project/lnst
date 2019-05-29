@@ -401,8 +401,9 @@ class Machine(object):
         if job.type == "module":
             self.send_class(job._what.__class__)
 
-        logging.info("Host %s executing job %d: %s" %
+        logging.debug("Host %s executing job %d: %s" %
                      (self._id, job.id, str(job)))
+        logging.debug("Job.what = {}".format(repr(job.what)))
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
@@ -419,10 +420,10 @@ class Machine(object):
                                (job.id, self._id))
 
         if timeout > 0:
-            logging.info("Waiting for Job %d on Host %s for %d seconds." %
+            logging.debug("Waiting for Job %d on Host %s for %d seconds." %
                          (job.id, self._id, timeout))
         elif timeout == 0:
-            logging.info("Waiting for Job %d on Host %s." %
+            logging.debug("Waiting for Job %d on Host %s." %
                          (job.id, self._id))
 
         def condition():

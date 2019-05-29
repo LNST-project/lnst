@@ -5,6 +5,7 @@ from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam, ListPar
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Controller.Recipe import BaseRecipe, RecipeError
+from lnst.Controller.RecipeResults import ResultLevel
 
 from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
@@ -340,7 +341,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
 
     def _pin_dev_interrupts(self, dev, cpu):
         netns = dev.netns
-        cpu_info = netns.run("lscpu").stdout
+        cpu_info = netns.run("lscpu", job_level=ResultLevel.DEBUG).stdout
         regex = "CPU\(s\): *([0-9]*)"
         num_cpus = int(re.search(regex, cpu_info).groups()[0])
         if cpu < 0 or cpu > num_cpus - 1:
@@ -348,14 +349,21 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                               (cpu, "is: 0" if num_cpus == 1 else "are: 0..%d" %
                                (num_cpus - 1)))
 
-        res = netns.run("grep {} /proc/interrupts | cut -f1 -d: | sed 's/ //'"
-                        .format(dev.name))
+        res = netns.run(
+            "grep {} /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
+                dev.name
+            ),
+            job_level=ResultLevel.DEBUG,
+
+        )
         intrs = res.stdout
         split = res.stdout.split("\n")
-        if len(split) == 1 and split[0] == '':
-            res = netns.run("dev_irqs=/sys/class/net/{}/device/msi_irqs; "
-                            "[ -d $dev_irqs ] && ls -1 $dev_irqs"
-                            .format(dev.name))
+        if len(split) == 1 and split[0] == "":
+            res = netns.run(
+                "dev_irqs=/sys/class/net/{}/device/msi_irqs; "
+                "[ -d $dev_irqs ] && ls -1 $dev_irqs".format(dev.name),
+                job_level=ResultLevel.DEBUG,
+            )
             intrs = res.stdout
 
         for intr in intrs.split("\n"):

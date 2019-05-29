@@ -1,5 +1,6 @@
 import signal
 
+from lnst.Controller.RecipeResults import ResultLevel
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
@@ -38,7 +39,13 @@ class StatCPUMeasurement(BaseCPUMeasurement):
     def start(self):
         jobs = []
         for host in self._conf:
-            jobs.append(host.run(CPUStatMonitor(interval=1000),bg=True))
+            jobs.append(
+                host.run(
+                    CPUStatMonitor(interval=1000),
+                    bg=True,
+                    job_level=ResultLevel.NORMAL,
+                )
+            )
         self._running_measurements = jobs
 
     def finish(self):
