@@ -30,6 +30,6 @@ def git_version():
         cmd = ['git', 'rev-parse', 'HEAD']
         try:
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=null)
-            return proc.communicate()[0].strip()
+            return proc.communicate()[0].decode().strip()
         finally:
             os.chdir(cwd)

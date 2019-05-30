@@ -232,18 +232,18 @@ class Device(object, metaclass=ABCMeta):
     def _clear_tc_qdisc(self):
         exec_cmd("tc qdisc del dev %s root" % self.name, die_on_err=False)
         out, _ = exec_cmd("tc filter show dev %s" % self.name)
-        ingress_handles = re.findall("ingress (\\d+):", out.decode())
+        ingress_handles = re.findall("ingress (\\d+):", out)
         for ingress_handle in ingress_handles:
             exec_cmd("tc qdisc del dev %s handle %s: ingress" %
                      (self.name, ingress_handle))
         out, _ = exec_cmd("tc qdisc show dev %s" % self.name)
-        ingress_qdiscs = re.findall("qdisc ingress (\\w+):", out.decode())
+        ingress_qdiscs = re.findall("qdisc ingress (\\w+):", out)
         if len(ingress_qdiscs) != 0:
                 exec_cmd("tc qdisc del dev %s ingress" % self.name)
 
     def _clear_tc_filters(self):
         out, _ = exec_cmd("tc filter show dev %s" % self.name)
-        egress_prefs = re.findall("pref (\\d+) .* handle", out.decode())
+        egress_prefs = re.findall("pref (\\d+) .* handle", out)
 
         for egress_pref in egress_prefs:
             exec_cmd("tc filter del dev %s pref %s" % (self.name, egress_pref))
@@ -631,7 +631,6 @@ class Device(object, metaclass=ABCMeta):
     def _read_adaptive_coalescing(self):
         try:
             res = exec_cmd("ethtool -c %s" % self.name)
-            res = res.decode()
         except:
             logging.debug("Could not read coalescence values of %s." % self.name)
             return (None, None)

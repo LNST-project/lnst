@@ -261,7 +261,6 @@ class InterfaceManager(object):
 
         out, _ = exec_cmd("ovs-vsctl --columns=name list Interface",
                           log_outputs=False, die_on_err=False)
-        out = out.decode()
         for line in out.split("\n"):
             m = re.match(r'.*: \"(.*)\"', line)
             if m is not None:
