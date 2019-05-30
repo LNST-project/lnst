@@ -26,14 +26,9 @@ from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.HWAddress import hwaddress
 
-try:
-    from pyroute2.netlink.iproute import RTM_NEWLINK
-    from pyroute2.netlink.iproute import RTM_NEWADDR
-    from pyroute2.netlink.iproute import RTM_DELADDR
-except ImportError:
-    from pyroute2.iproute import RTM_NEWLINK
-    from pyroute2.iproute import RTM_NEWADDR
-    from pyroute2.iproute import RTM_DELADDR
+from pyroute2.netlink.rtnl import RTM_NEWLINK
+from pyroute2.netlink.rtnl import RTM_NEWADDR
+from pyroute2.netlink.rtnl import RTM_DELADDR
 
 class Device(object, metaclass=ABCMeta):
     """The base Device class
