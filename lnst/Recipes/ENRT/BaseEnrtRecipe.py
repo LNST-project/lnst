@@ -193,7 +193,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                 kwargs.update(family = AF_INET)
             elif ipv == "ipv6":
                 kwargs.update(family = AF_INET6)
-                kwargs.update(link_local = False)
+                kwargs.update(is_link_local = False)
 
             client_ips = client_nic.ips_filter(**kwargs)
             server_ips = server_nic.ips_filter(**kwargs)
