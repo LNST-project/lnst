@@ -59,7 +59,6 @@ class Ping(BaseTestModule):
             self._res_data["msg"] = "errors reported by ping"
             logging.error(self._res_data["msg"])
             logging.error(self._res_data["stderr"])
-            return False
 
         if ping_process.returncode > 0:
             self._res_data["msg"] = "returncode = {}".format(ping_process.returncode)
