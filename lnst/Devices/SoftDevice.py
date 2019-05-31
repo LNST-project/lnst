@@ -51,17 +51,8 @@ class SoftDevice(Device):
         except:
             return self._orig_name
 
-    def _nl_sync(self, op, ipr_attrs=None, bulk=False):
-        if ipr_attrs is None:
-            self._update_attr(self._link_type, "IFLA_LINKINFO",
-                                               "IFLA_INFO_KIND")
-        else:
-            self._set_nested_nl_attr(ipr_attrs, self._link_type,
-                                     "IFLA_LINKINFO", "IFLA_INFO_KIND")
-
-        super(SoftDevice, self)._nl_sync(op, ipr_attrs, bulk)
-
     def _set_linkinfo_data_attr(self, attr, val):
+        self._update_attr(self._link_type, "IFLA_LINKINFO", "IFLA_INFO_KIND")
         self._update_attr(val, "IFLA_LINKINFO", "IFLA_INFO_DATA", attr)
 
     def _get_linkinfo_data_attr(self, attr_name):
@@ -69,6 +60,7 @@ class SoftDevice(Device):
                                        attr_name)
 
     def _create(self):
+        self._update_attr(self._link_type, "IFLA_LINKINFO", "IFLA_INFO_KIND")
         try:
             self._nl_sync("add", bulk=True)
         except Exception as e:
