@@ -52,7 +52,7 @@ class VethDevice(SoftDevice):
         else:
             self._update_attr(str(val), "IFLA_LINKINFO", "IFLA_INFO_DATA",
                     "VETH_INFO_PEER", "IFLA_IFNAME")
-            self._nl_sync("set")
+            self._nl_link_sync("set")
 
 class PairedVethDevice(VethDevice):
     def __init__(self, ifmanager, *args, **kwargs):

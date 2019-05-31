@@ -33,7 +33,7 @@ class MacvlanDevice(SoftDevice):
             raise DeviceConfigError("Value must be a Device object.")
 
         self._update_attr(val.ifindex, "IFLA_LINK")
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def mode(self):
@@ -42,4 +42,4 @@ class MacvlanDevice(SoftDevice):
     @mode.setter
     def mode(self, val):
         self._set_linkinfo_data_attr("IFLA_MACVLAN_MODE", str(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")

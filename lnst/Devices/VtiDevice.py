@@ -46,7 +46,7 @@ class _BaseVtiDevice(SoftDevice):
     @ikey.setter
     def ikey(self, val):
         self._set_linkinfo_data_attr("IFLA_VTI_IKEY", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def okey(self):
@@ -58,7 +58,7 @@ class _BaseVtiDevice(SoftDevice):
     @okey.setter
     def okey(self, val):
         self._set_linkinfo_data_attr("IFLA_VTI_OKEY", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def local(self):
@@ -70,7 +70,7 @@ class _BaseVtiDevice(SoftDevice):
     @local.setter
     def local(self, val):
         self._set_linkinfo_data_attr("IFLA_VTI_LOCAL", str(ipaddress(val)))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def remote(self):
@@ -82,7 +82,7 @@ class _BaseVtiDevice(SoftDevice):
     @remote.setter
     def remote(self, val):
         self._set_linkinfo_data_attr("IFLA_VTI_REMOTE", str(ipaddress(val)))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def realdev(self):
@@ -98,7 +98,7 @@ class _BaseVtiDevice(SoftDevice):
             raise DeviceConfigError("realdev value must be a Device object.")
 
         self._set_linkinfo_data_attr("IFLA_VTI_LINK", val.ifindex)
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def vti_type(self):

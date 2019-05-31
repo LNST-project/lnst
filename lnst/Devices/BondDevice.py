@@ -34,7 +34,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be Device.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_ACTIVE_SLAVE", val.ifindex)
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def ad_actor_sys_prio(self):
@@ -50,7 +50,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be 1-65535.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_AD_ACTOR_SYS_PRIO", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def ad_actor_system(self):
@@ -64,7 +64,7 @@ class BondDevice(MasterDevice):
     def ad_actor_system(self, val):
         val = hwaddress(val)
         self._set_linkinfo_data_attr("IFLA_BOND_AD_ACTOR_SYSTEM", val)
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def ad_select(self):
@@ -84,7 +84,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def ad_user_port_key(self):
@@ -96,7 +96,7 @@ class BondDevice(MasterDevice):
     @ad_user_port_key.setter
     def ad_user_port_key(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_AD_PORT_KEY", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def all_slaves_active(self):
@@ -105,7 +105,7 @@ class BondDevice(MasterDevice):
     @all_slaves_active.setter
     def all_slaves_active(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_ALL_SLAVES_ACTIVE", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def arp_interval(self):
@@ -114,7 +114,7 @@ class BondDevice(MasterDevice):
     @arp_interval.setter
     def arp_interval(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_ARP_INTERVAL", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def arp_ip_target(self):
@@ -142,7 +142,7 @@ class BondDevice(MasterDevice):
 
         ip_str = ",".join(new)
         self._set_linkinfo_data_attr("IFLA_BOND_ARP_IP_TARGET", ip_str)
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def arp_validate(self):
@@ -161,7 +161,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def arp_all_targets(self):
@@ -179,7 +179,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def downdelay(self):
@@ -188,7 +188,7 @@ class BondDevice(MasterDevice):
     @downdelay.setter
     def downdelay(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_DOWNDELAY", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def fail_over_mac(self):
@@ -206,7 +206,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def lacp_rate(self):
@@ -224,7 +224,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def miimon(self):
@@ -233,7 +233,7 @@ class BondDevice(MasterDevice):
     @miimon.setter
     def miimon(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_LACP_RATE", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def min_links(self):
@@ -242,7 +242,7 @@ class BondDevice(MasterDevice):
     @min_links.setter
     def min_links(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_MIN_LINKS", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def mode(self):
@@ -261,7 +261,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def num_peer_notif(self):
@@ -273,7 +273,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be 0-255.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_NUM_PEER_NOTIF", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def packets_per_slave(self):
@@ -285,7 +285,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be 0-65535.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_PACKETS_PER_SLAVE", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def primary(self):
@@ -301,7 +301,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be Device.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_PRIMARY", val.ifindex)
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def primary_reselect(self):
@@ -319,7 +319,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be in {} or {}.".
                     format(list(m.keys()), list(m.values())))
 
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def tlb_dynamic_lb(self):
@@ -328,7 +328,7 @@ class BondDevice(MasterDevice):
     @tlb_dynamic_lb.setter
     def tlb_dynamic_lb(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_TLB_DYNAMIC_LB", bool(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def updelay(self):
@@ -337,7 +337,7 @@ class BondDevice(MasterDevice):
     @updelay.setter
     def updelay(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_UPDELAY", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def use_carrier(self):
@@ -346,7 +346,7 @@ class BondDevice(MasterDevice):
     @use_carrier.setter
     def use_carrier(self, val):
         self._set_linkinfo_data_attr("IFLA_BOND_USE_CARRIER", bool(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def xmit_hash_policy(self):
@@ -360,7 +360,7 @@ class BondDevice(MasterDevice):
             self._set_linkinfo_data_attr("IFLA_BOND_XMIT_HASH_POLICY", val)
         else:
             raise DeviceConfigError("Invalid value, must be in {}}.".format(m))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def resend_igmp(self):
@@ -372,7 +372,7 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be 0-255.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_RESEND_IGMP", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def lp_interval(self):
@@ -384,4 +384,4 @@ class BondDevice(MasterDevice):
             raise DeviceConfigError("Invalid value, must be 1-0x7fffffff.")
 
         self._set_linkinfo_data_attr("IFLA_BOND_LP_INTERVAL", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")

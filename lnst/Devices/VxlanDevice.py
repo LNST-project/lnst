@@ -53,7 +53,7 @@ class VxlanDevice(SoftDevice):
             raise DeviceConfigError("realdev value must be a Device object.")
 
         self._set_linkinfo_data_attr("IFLA_VXLAN_LINK", val.ifindex)
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def vxlan_id(self):
@@ -68,7 +68,7 @@ class VxlanDevice(SoftDevice):
             raise DeviceConfigError("Invalid value, must be 0-16777215.")
 
         self._set_linkinfo_data_attr("IFLA_VXLAN_ID", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def group(self):
@@ -80,7 +80,7 @@ class VxlanDevice(SoftDevice):
     @group.setter
     def group(self, val):
         self._set_linkinfo_data_attr("IFLA_VXLAN_GROUP", str(ipaddress(val)))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def remote(self):
@@ -92,7 +92,7 @@ class VxlanDevice(SoftDevice):
     @remote.setter
     def remote(self, val):
         self._set_linkinfo_data_attr("IFLA_VXLAN_GROUP", str(ipaddress(val)))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def dst_port(self):
@@ -101,4 +101,4 @@ class VxlanDevice(SoftDevice):
     @dst_port.setter
     def dst_port(self, val):
         self._set_linkinfo_data_attr("IFLA_VXLAN_PORT", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")

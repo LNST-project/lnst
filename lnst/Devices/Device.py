@@ -60,7 +60,7 @@ class Device(object, metaclass=DeviceMeta):
 
         self._ip_addrs = []
 
-        self._nl_update = {}
+        self._nl_link_update = {}
         self._bulk_enabled = False
 
         self._cleanup_data = None
@@ -83,7 +83,7 @@ class Device(object, metaclass=DeviceMeta):
             raise DeviceError("Error constructing nested nl msg.")
 
     def _update_attr(self, value, *args):
-        self._set_nested_nl_attr(self._nl_update, value, *args)
+        self._set_nested_nl_attr(self._nl_link_update, value, *args)
 
     def _process_nested_nl_attrs(self, msg):
         ret = {}
@@ -95,33 +95,42 @@ class Device(object, metaclass=DeviceMeta):
                 ret[k] = v
         return ret
 
-    def _nl_sync(self, op, ipr_attrs=None, bulk=False):
+    def _nl_link_sync(self, op, ipr_attrs=None, bulk=False):
         if self._bulk_enabled and not bulk:
             return
 
         if ipr_attrs is None:
-            attrs = self._process_nested_nl_attrs(self._nl_update)
+            attrs = self._process_nested_nl_attrs(self._nl_link_update)
         else:
             attrs = self._process_nested_nl_attrs(ipr_attrs)
 
+        if op == "add":
+            self._ipr_wrapper("link", op, **attrs)
+        else:
+            self._ipr_wrapper("link", op, index=self.ifindex, **attrs)
+
+        if ipr_attrs is None:
+            self._nl_link_update = {}
+
+    def _ipr_wrapper(self, obj_name, op_name, *args, **kwargs):
+        pretty_attrs = pprint.pformat({"args": args, "kwargs": kwargs})
+        logging.debug("Performing pyroute.IPRoute().{}({}, *args, **kwargs)".format(obj_name, op_name))
+        logging.debug("{}".format(pretty_attrs))
+
+        ret_val = None
         with pyroute2.IPRoute() as ipr:
             try:
-                pretty_attrs = pprint.pformat(attrs)
-                logging.debug("Performing Netlink operation {}, data:".format(op))
-                logging.debug("{}".format(pretty_attrs))
-
-                if op == "add":
-                    ipr.link(op, **attrs)
+                obj = getattr(ipr, obj_name)
+                if op_name is not None:
+                    ret_val = obj(op_name, *args, **kwargs)
                 else:
-                    ipr.link(op, index=self.ifindex, **attrs)
+                    ret_val = obj(*args, **kwargs)
                 self._if_manager.rescan_devices()
             except Exception as e:
                 log_exc_traceback()
-                raise DeviceConfigError("Operation {} on link {} failed: {}"
-                        .format(op, self.name, str(e)))
-
-        if ipr_attrs is None:
-            self._nl_update = {}
+                raise DeviceConfigError("Object {} operation {} on link {} failed: {}"
+                        .format(obj_name, op_name, self.name, str(e)))
+        return ret_val
 
     def _enable(self):
         """Enables the Device object"""
@@ -351,7 +360,7 @@ class Device(object, metaclass=DeviceMeta):
             new_name -- the new name of the interface.
         """
         self._update_attr(new_name, "IFLA_IFNAME")
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def hwaddr(self):
@@ -371,7 +380,7 @@ class Device(object, metaclass=DeviceMeta):
         """
         addr = hwaddress(addr)
         self._update_attr(str(addr), "IFLA_ADDRESS")
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def adaptive_rx_coalescing(self):
@@ -431,7 +440,7 @@ class Device(object, metaclass=DeviceMeta):
         Args:
             value -- the new MTU."""
         self._update_attr(int(value), "IFLA_MTU")
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def master(self):
@@ -461,7 +470,7 @@ class Device(object, metaclass=DeviceMeta):
             raise DeviceError("Invalid dev argument.")
 
         self._update_attr(master_idx, "IFLA_MASTER")
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def driver(self):
@@ -515,14 +524,8 @@ class Device(object, metaclass=DeviceMeta):
     def _ip_add_one(self, addr):
         ip = ipaddress(addr)
         if ip not in self.ips:
-            with pyroute2.IPRoute() as ipr:
-                try:
-                    ipr.addr("add", index=self.ifindex, address=str(ip),
-                             mask=ip.prefixlen)
-                    self._if_manager.handle_netlink_msgs()
-                except pyroute2.netlink.NetlinkError:
-                    log_exc_traceback()
-                    raise DeviceConfigValueError("Invalid IP address")
+            self._ipr_wrapper("addr", "add", index=self.ifindex,
+                              address=str(ip), mask=ip.prefixlen)
 
     def ip_add(self, addr):
         """add an ip address or a list of ip addresses
@@ -542,14 +545,8 @@ class Device(object, metaclass=DeviceMeta):
     def _ip_del_one(self, addr):
         ip = ipaddress(addr)
         if ip in self.ips:
-            with pyroute2.IPRoute() as ipr:
-                try:
-                    ipr.addr("del", index=self.ifindex, address=str(ip),
-                             mask=ip.prefixlen)
-                    self._if_manager.handle_netlink_msgs()
-                except pyroute2.netlink.NetlinkError:
-                    log_exc_traceback()
-                    raise DeviceConfigValueError("Invalid IP address")
+            self._ipr_wrapper("addr", "del", index=self.ifindex,
+                              address=str(ip), mask=ip.prefixlen)
 
     def ip_del(self, addr):
         """remove an ip address or a list of ip addresses
@@ -567,13 +564,7 @@ class Device(object, metaclass=DeviceMeta):
 
     def ip_flush(self, scope=0):
         """flush all ip addresses of the device"""
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.flush_addr(index=self.ifindex, scope=scope)
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigError("IP address flush failed")
+        self._ipr_wrapper("flush_addr", None, index=self.ifindex, scope=scope)
 
     def ips_filter(self, **selectors):
         result = []
@@ -592,23 +583,13 @@ class Device(object, metaclass=DeviceMeta):
 
     def up(self):
         """set device up"""
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.link("set", index=self.ifindex, state="up")
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigError("Setting link up failed.")
+        self._nl_link_update["state"] = "up"
+        self._nl_link_sync("set")
 
     def down(self):
         """set device down"""
-        with pyroute2.IPRoute() as ipr:
-            try:
-                ipr.link("set", index=self.ifindex, state="down")
-                self._if_manager.handle_netlink_msgs()
-            except pyroute2.netlink.NetlinkError:
-                log_exc_traceback()
-                raise DeviceConfigError("Setting link down failed.")
+        self._nl_link_update["state"] = "down"
+        self._nl_link_sync("set")
 
     #TODO looks like python ethtool module doesn't support these so we'll keep
     #exec_cmd for now...

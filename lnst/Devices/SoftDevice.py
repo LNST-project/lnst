@@ -62,7 +62,7 @@ class SoftDevice(Device):
     def _create(self):
         self._update_attr(self._link_type, "IFLA_LINKINFO", "IFLA_INFO_KIND")
         try:
-            self._nl_sync("add", bulk=True)
+            self._nl_link_sync("add", bulk=True)
         except Exception as e:
             log_exc_traceback()
             raise DeviceConfigError("Creating link {} failed: {}".format(

@@ -24,7 +24,7 @@ class BridgeDevice(MasterDevice):
     @ageing_time.setter
     def ageing_time(self, val):
         self._set_linkinfo_data_attr("IFLA_BR_AGEING_TIME", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def stp_state(self):
@@ -33,7 +33,7 @@ class BridgeDevice(MasterDevice):
     @stp_state.setter
     def stp_state(self, val):
         self._set_linkinfo_data_attr("IFLA_BR_STP_STATE", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def vlan_filtering(self):
@@ -42,4 +42,4 @@ class BridgeDevice(MasterDevice):
     @vlan_filtering.setter
     def vlan_filtering(self, val):
         self._set_linkinfo_data_attr("IFLA_BR_VLAN_FILTERING", bool(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")

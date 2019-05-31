@@ -36,7 +36,7 @@ class VlanDevice(SoftDevice):
             raise DeviceConfigError("realdev value must be a Device object.")
 
         self._update_attr(val.ifindex, "IFLA_LINK")
-        self._nl_sync("set")
+        self._nl_link_sync("set")
 
     @property
     def vlan_id(self):
@@ -51,4 +51,4 @@ class VlanDevice(SoftDevice):
             raise DeviceConfigError("Invalid value, must be 1-4095.")
 
         self._set_linkinfo_data_attr("IFLA_VLAN_ID", int(val))
-        self._nl_sync("set")
+        self._nl_link_sync("set")
