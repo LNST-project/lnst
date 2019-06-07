@@ -19,9 +19,10 @@ from lnst.Common.LnstError import LnstError
 #network
 
 class BaseIpAddress(object):
-    def __init__(self, addr):
+    def __init__(self, addr, flags=None):
         self.addr, self.prefixlen = self._parse_addr(addr)
 
+        self.flags = flags
         self.family = None
 
     def __str__(self):
@@ -52,8 +53,8 @@ class BaseIpAddress(object):
         return "{}({}/{})".format(self.__class__.__name__, str(self), self.prefixlen)
 
 class Ip4Address(BaseIpAddress):
-    def __init__(self, addr):
-        super(Ip4Address, self).__init__(addr)
+    def __init__(self, addr, flags=None):
+        super(Ip4Address, self).__init__(addr, flags)
 
         self.family = AF_INET
 
@@ -82,8 +83,8 @@ class Ip4Address(BaseIpAddress):
         return aton("224.0.0.0") <= self.addr <= aton("239.255.255.255")
 
 class Ip6Address(BaseIpAddress):
-    def __init__(self, addr):
-        super(Ip6Address, self).__init__(addr)
+    def __init__(self, addr, flags=None):
+        super(Ip6Address, self).__init__(addr, flags)
 
         self.family = AF_INET6
 
@@ -114,15 +115,15 @@ class Ip6Address(BaseIpAddress):
     def is_multicast(self):
         return self.addr[:1] == b'\xff'
 
-def ipaddress(addr):
+def ipaddress(addr, flags=None):
     """Factory method to create a BaseIpAddress object"""
     if isinstance(addr, BaseIpAddress):
         return addr
     elif isinstance(addr, str):
         try:
-            return Ip4Address(addr)
+            return Ip4Address(addr, flags)
         except:
-            return Ip6Address(addr)
+            return Ip6Address(addr, flags)
     else:
         raise LnstError("Value must be a BaseIpAddress or string object."
                         " Not {}".format(type(addr)))
