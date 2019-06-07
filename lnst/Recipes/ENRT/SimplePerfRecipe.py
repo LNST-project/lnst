@@ -47,12 +47,6 @@ class SimplePerfRecipe(BaseEnrtRecipe):
             for host in [host1, host2]:
                 host.eth0.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
 
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance stop")
-                self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
-
         if self.params.perf_parallel_streams > 1:
             for host in [host1, host2]:
                 host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
@@ -61,8 +55,3 @@ class SimplePerfRecipe(BaseEnrtRecipe):
 
     def test_wide_deconfiguration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
-
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance start")

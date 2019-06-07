@@ -41,7 +41,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
 
     mtu = IntParam(mandatory=False)
 
-    dev_intr_cpu = IntParam(mandatory=False)
     perf_tool_cpu = IntParam(mandatory=False)
 
     perf_duration = IntParam(default=60)
@@ -262,38 +261,3 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
             interval = pconf.ping_interval,
             size = pconf.ping_psize,
         )
-
-    def _pin_dev_interrupts(self, dev, cpu):
-        netns = dev.netns
-        cpu_info = netns.run("lscpu", job_level=ResultLevel.DEBUG).stdout
-        regex = "CPU\(s\): *([0-9]*)"
-        num_cpus = int(re.search(regex, cpu_info).groups()[0])
-        if cpu < 0 or cpu > num_cpus - 1:
-            raise RecipeError("Invalid CPU value given: %d. Accepted value %s." %
-                              (cpu, "is: 0" if num_cpus == 1 else "are: 0..%d" %
-                               (num_cpus - 1)))
-
-        res = netns.run(
-            "grep {} /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
-                dev.name
-            ),
-            job_level=ResultLevel.DEBUG,
-
-        )
-        intrs = res.stdout
-        split = res.stdout.split("\n")
-        if len(split) == 1 and split[0] == "":
-            res = netns.run(
-                "dev_irqs=/sys/class/net/{}/device/msi_irqs; "
-                "[ -d $dev_irqs ] && ls -1 $dev_irqs".format(dev.name),
-                job_level=ResultLevel.DEBUG,
-            )
-            intrs = res.stdout
-
-        for intr in intrs.split("\n"):
-            try:
-                int(intr)
-                netns.run("echo -n {} > /proc/irq/{}/smp_affinity_list"
-                          .format(cpu, intr.strip()))
-            except:
-                pass
