@@ -218,6 +218,8 @@ class Job(object):
     def __str__(self):
         attrs = ["type(%s)" % self.type]
 
+        attrs.append("host(%s)" % self.host.hostid)
+
         if self._netns is not None:
             attrs.append("netns(%s)" % self._netns.name)
 
