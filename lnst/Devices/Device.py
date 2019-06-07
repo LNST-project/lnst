@@ -203,7 +203,8 @@ class Device(object, metaclass=DeviceMeta):
         if nl_msg['header']['type'] == RTM_NEWLINK:
             self._nl_msg = nl_msg
         elif nl_msg['header']['type'] == RTM_NEWADDR:
-            addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'))
+            addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'),
+                             flags=nl_msg.get_attr("IFA_FLAGS"))
             addr.prefixlen = nl_msg["prefixlen"]
 
             if addr not in self._ip_addrs:
