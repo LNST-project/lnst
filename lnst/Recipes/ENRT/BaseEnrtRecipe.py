@@ -1,13 +1,9 @@
-import re
 import pprint
 from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam, ListParam
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.ExecCmd import exec_cmd
-from lnst.Controller.Recipe import BaseRecipe, RecipeError
-from lnst.Controller.RecipeResults import ResultLevel
 
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 
@@ -22,27 +18,28 @@ from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 class EnrtConfiguration(object):
     pass
 
-
 class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
-    ip_versions = Param(default=("ipv4", "ipv6"))
-
-    ping_parallel = BoolParam(default=False)
-    ping_bidirect  = BoolParam(default=False)
-    ping_count = IntParam(default = 100)
-    ping_interval = StrParam(default = 0.2)
-    ping_psize = IntParam(default = None)
-
-    perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
-
+    #common requirements parameters
     driver = StrParam(default="ixgbe")
 
+    #common configuration parameters
+    mtu = IntParam(mandatory=False)
     adaptive_rx_coalescing = BoolParam(mandatory=False)
     adaptive_tx_coalescing = BoolParam(mandatory=False)
 
-    mtu = IntParam(mandatory=False)
+    #common test parameters
+    ip_versions = Param(default=("ipv4", "ipv6"))
 
+    #common ping test params
+    ping_parallel = BoolParam(default=False)
+    ping_bidirect = BoolParam(default=False)
+    ping_count = IntParam(default=100)
+    ping_interval = StrParam(default=0.2)
+    ping_psize = IntParam(default=None)
+
+    #common perf test params
+    perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
     perf_tool_cpu = IntParam(mandatory=False)
-
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
@@ -50,7 +47,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     perf_reverse = BoolParam(default=False)
 
     net_perf_tool = Param(default=IperfFlowMeasurement)
-
     cpu_perf_tool = Param(default=StatCPUMeasurement)
 
     def test(self):
@@ -235,7 +231,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     @property
     def net_perf_evaluators(self):
         return [NonzeroFlowEvaluator()]
-
 
     def _create_reverse_flow(self, flow):
         rev_flow = PerfFlow(
