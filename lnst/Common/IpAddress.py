@@ -52,6 +52,11 @@ class BaseIpAddress(object):
     def __repr__(self):
         return "{}({}/{})".format(self.__class__.__name__, str(self), self.prefixlen)
 
+    @property
+    def is_tentative(self):
+        #can only be True for IPv6 addresses
+        return False
+
 class Ip4Address(BaseIpAddress):
     def __init__(self, addr, flags=None):
         super(Ip4Address, self).__init__(addr, flags)
@@ -114,6 +119,12 @@ class Ip6Address(BaseIpAddress):
     @property
     def is_multicast(self):
         return self.addr[:1] == b'\xff'
+
+    @property
+    def is_tentative(self):
+        #constant from linux/if_addr.h
+        IFA_F_TENTATIVE = 0x40
+        return IFA_F_TENTATIVE & self.flags
 
 def ipaddress(addr, flags=None):
     """Factory method to create a BaseIpAddress object"""
