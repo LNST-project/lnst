@@ -617,15 +617,11 @@ class Device(object, metaclass=DeviceMeta):
         exec_cmd("ethtool -s %s autoneg off" % self.name)
 
     def _read_adaptive_coalescing(self):
-        try:
-            res = exec_cmd("ethtool -c %s" % self.name)
-        except:
-            logging.debug("Could not read coalescence values of %s." % self.name)
-            return (None, None)
+        res, _ = exec_cmd("ethtool -c %s" % self.name, die_on_err=False)
 
         regex = "Adaptive RX: (on|off)  TX: (on|off)"
         try:
-            res = re.search(regex, res[0]).groups()
+            res = re.search(regex, res).groups()
         except AttributeError:
             raise DeviceError("No values for coalescence of %s." %
                               self.name)
@@ -644,7 +640,8 @@ class Device(object, metaclass=DeviceMeta):
     def restore_coalescing(self):
         rx_val = self._cleanup_data["adaptive_rx_coalescing"]
         tx_val = self._cleanup_data["adaptive_tx_coalescing"]
-        self._write_adaptive_coalescing(rx_val, tx_val)
+        if (rx_val, tx_val) != (None, None):
+            self._write_adaptive_coalescing(rx_val, tx_val)
 
     #TODO implement proper Route objects
     #consider the same as with tc?
