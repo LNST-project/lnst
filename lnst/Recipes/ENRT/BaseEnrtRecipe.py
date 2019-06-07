@@ -1,4 +1,5 @@
 import re
+import pprint
 from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
@@ -119,6 +120,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     @contextmanager
     def _test_wide_context(self):
         config = self.test_wide_configuration()
+        self.describe_test_wide_configuration(config)
         try:
             yield config
         finally:
@@ -130,9 +132,23 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     def test_wide_deconfiguration(self, main_config):
         raise NotImplementedError("Method must be defined by a child class.")
 
+    def describe_test_wide_configuration(self, config):
+        description = self.generate_test_wide_description(config)
+        self.add_result(True, "Summary of used Recipe parameters:\n{}".format(
+                        pprint.pformat(self.params._to_dict())))
+        self.add_result(True, "\n".join(description))
+
+    def generate_test_wide_description(self, config):
+        return [
+            "Testwide configuration for recipe {} description:".format(
+                self.__class__.__name__
+            )
+        ]
+
     @contextmanager
     def _sub_context(self, main_config, sub_config):
         self.apply_sub_configuration(main_config, sub_config)
+        self.describe_sub_configuration(sub_config)
         try:
             yield (main_config, sub_config)
         finally:
@@ -187,6 +203,13 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                                                    ethtool_offload_string))
         server_netns.run("ethtool -K {} {}".format(server_nic.name,
                                                    ethtool_offload_string))
+
+    def describe_sub_configuration(self, config):
+        description = self.generate_sub_configuration_description(config)
+        self.add_result(True, "\n".join(description))
+
+    def generate_sub_configuration_description(self, config):
+        return ["Sub configuration description:"]
 
     def generate_ping_configurations(self, main_config, sub_config):
         client_nic = main_config.endpoint1
