@@ -85,15 +85,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
         with self._test_wide_context() as main_config:
             for sub_config in self.generate_sub_configurations(main_config):
                 with self._sub_context(sub_config) as recipe_config:
-                    for ping_config in self.generate_ping_configurations(main_config,
-                                                                         sub_config):
-                        result = self.ping_test(ping_config)
-                        self.ping_evaluate_and_report(ping_config, result)
-
-                    for perf_config in self.generate_perf_configurations(main_config,
-                                                                         sub_config):
-                        result = self.perf_test(perf_config)
-                        self.perf_report_and_evaluate(result)
+                    self.do_tests(recipe_config)
 
     @contextmanager
     def _test_wide_context(self):
@@ -139,65 +131,65 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     def generate_sub_configuration_description(self, config):
         return ["Sub configuration description:"]
 
-    def generate_ping_configurations(self, main_config, sub_config):
-        client_nic = main_config.endpoint1
-        server_nic = main_config.endpoint2
+    def do_tests(self, recipe_config):
+        self.do_ping_tests(recipe_config)
+        self.do_perf_tests(recipe_config)
 
-        count = self.params.ping_count
-        interval = self.params.ping_interval
-        size = self.params.ping_psize
-        common_args = {'count' : count, 'interval' : interval, 'size' : size}
+    def do_ping_tests(self, recipe_config):
+        for ping_config in self.generate_ping_configurations(recipe_config):
+            result = self.ping_test(ping_config)
+            self.ping_evaluate_and_report(ping_config, result)
 
-        for ipv in self.params.ip_versions:
-            kwargs = {}
-            if ipv == "ipv4":
-                kwargs.update(family = AF_INET)
-            elif ipv == "ipv6":
-                kwargs.update(family = AF_INET6)
-                kwargs.update(is_link_local = False)
+    def do_perf_tests(self, recipe_config):
+        for perf_config in self.generate_perf_configurations(recipe_config):
+            result = self.perf_test(perf_config)
+            self.perf_report_and_evaluate(result)
 
-            client_ips = client_nic.ips_filter(**kwargs)
-            server_ips = server_nic.ips_filter(**kwargs)
-            if ipv == "ipv6":
-                client_ips = client_ips[::-1]
-                server_ips = server_ips[::-1]
+    def generate_ping_configurations(self, config):
+        for endpoint1, endpoint2 in self.generate_ping_endpoints(config):
+            for ipv in self.params.ip_versions:
+                ip_filter = {}
+                if ipv == "ipv4":
+                    ip_filter.update(family = AF_INET)
+                elif ipv == "ipv6":
+                    ip_filter.update(family = AF_INET6)
+                    ip_filter.update(is_link_local = False)
 
-            if len(client_ips) != len(server_ips) or len(client_ips) * len(server_ips) == 0:
-                raise LnstError("Source/destination ip lists are of different size or empty.")
+                endpoint1_ips = endpoint1.ips_filter(**ip_filter)
+                endpoint2_ips = endpoint2.ips_filter(**ip_filter)
 
-            ping_conf_list = []
-            for src_addr, dst_addr in zip(client_ips, server_ips):
-                pconf = PingConf(client = client_nic.netns,
-                                 client_bind = src_addr,
-                                 destination = server_nic.netns,
-                                 destination_address = dst_addr,
-                                 **common_args)
+                if len(endpoint1_ips) != len(endpoint2_ips):
+                    raise LnstError("Source/destination ip lists are of different size.")
 
-                ping_conf_list.append(pconf)
+                ping_conf_list = []
+                for src_addr, dst_addr in zip(endpoint1_ips, endpoint2_ips):
+                    pconf = PingConf(client = endpoint1.netns,
+                                     client_bind = src_addr,
+                                     destination = endpoint2.netns,
+                                     destination_address = dst_addr,
+                                     count = self.params.ping_count,
+                                     interval = self.params.ping_interval,
+                                     size = self.params.ping_psize,
+                                     )
 
-                if self.params.ping_bidirect:
-                    rev_pconf = self._create_reverse_ping(pconf, common_args)
-                    ping_conf_list.append(rev_pconf)
+                    ping_conf_list.append(pconf)
 
-                if not self.params.ping_parallel:
-                    break
+                    if self.params.ping_bidirect:
+                        ping_conf_list.append(self._create_reverse_ping(pconf))
 
-            yield ping_conf_list
+                    if not self.params.ping_parallel:
+                        break
 
-    def generate_perf_configurations(self, main_config, sub_config):
-        client_nic = main_config.endpoint1
-        server_nic = main_config.endpoint2
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
+                yield ping_conf_list
 
-        flow_combinations = self.generate_flow_combinations(
-            main_config, sub_config
-        )
+    def generate_ping_endpoints(self, config):
+        return []
 
-        for flows in flow_combinations:
+    def generate_perf_configurations(self, config):
+        for flows in self.generate_flow_combinations(config):
             perf_recipe_conf=dict(
-                main_config=main_config,
-                sub_config=sub_config,
+                main_config=config,
+                sub_config=config,
                 flows=flows,
             )
 
@@ -206,8 +198,13 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
                 perf_recipe_conf
             )
 
+            cpu_measurement_hosts = set()
+            for flow in flows:
+                cpu_measurement_hosts.add(flow.generator)
+                cpu_measurement_hosts.add(flow.receiver)
+
             cpu_measurement = self.params.cpu_perf_tool(
-                [client_netns, server_netns],
+                cpu_measurement_hosts,
                 perf_recipe_conf,
             )
 
@@ -225,38 +222,38 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
 
             yield perf_conf
 
-    def generate_flow_combinations(self, main_config, sub_config):
-        client_nic = main_config.endpoint1
-        server_nic = main_config.endpoint2
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
-        for ipv in self.params.ip_versions:
-            if ipv == "ipv4":
-                family = AF_INET
-            elif ipv == "ipv6":
-                family = AF_INET6
+    def generate_flow_combinations(self, config):
+        for client_nic, server_nic in self.generate_perf_endpoints(config):
+            for ipv in self.params.ip_versions:
+                if ipv == "ipv4":
+                    family = AF_INET
+                elif ipv == "ipv6":
+                    family = AF_INET6
 
-            client_bind = client_nic.ips_filter(family=family)[0]
-            server_bind = server_nic.ips_filter(family=family)[0]
+                client_bind = client_nic.ips_filter(family=family)[0]
+                server_bind = server_nic.ips_filter(family=family)[0]
 
-            for perf_test in self.params.perf_tests:
-                for size in self.params.perf_msg_sizes:
-                    flow = PerfFlow(
-                            type = perf_test,
-                            generator = client_netns,
-                            generator_bind = client_bind,
-                            receiver = server_netns,
-                            receiver_bind = server_bind,
-                            msg_size = size,
-                            duration = self.params.perf_duration,
-                            parallel_streams = self.params.perf_parallel_streams,
-                            cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
-                            )
-                    yield [flow]
+                for perf_test in self.params.perf_tests:
+                    for size in self.params.perf_msg_sizes:
+                        flow = PerfFlow(
+                                type = perf_test,
+                                generator = client_nic.netns,
+                                generator_bind = client_bind,
+                                receiver = server_nic.netns,
+                                receiver_bind = server_bind,
+                                msg_size = size,
+                                duration = self.params.perf_duration,
+                                parallel_streams = self.params.perf_parallel_streams,
+                                cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
+                                )
+                        yield [flow]
 
-                    if self.params.perf_reverse:
-                        reverse_flow = self._create_reverse_flow(flow)
-                        yield [reverse_flow]
+                        if self.params.perf_reverse:
+                            reverse_flow = self._create_reverse_flow(flow)
+                            yield [reverse_flow]
+
+    def generate_perf_endpoints(self, config):
+        return []
 
     @property
     def cpu_perf_evaluators(self):
@@ -281,15 +278,16 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
                     )
         return rev_flow
 
-    def _create_reverse_ping(self, pconf, args):
-        rev_pconf = PingConf(
-                    client = pconf.destination,
-                    client_bind = pconf.destination_address,
-                    destination = pconf.client,
-                    destination_address = pconf.client_bind,
-                    **args
-                    )
-        return rev_pconf
+    def _create_reverse_ping(self, pconf):
+        return PingConf(
+            client = pconf.destination,
+            client_bind = pconf.destination_address,
+            destination = pconf.client,
+            destination_address = pconf.client_bind,
+            count = pconf.ping_count,
+            interval = pconf.ping_interval,
+            size = pconf.ping_psize,
+        )
 
     def _pin_dev_interrupts(self, dev, cpu):
         netns = dev.netns
