@@ -1,4 +1,5 @@
 import re
+from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam, ListParam
@@ -102,13 +103,9 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     cpu_perf_tool = Param(default=StatCPUMeasurement)
 
     def test(self):
-        main_config = self.test_wide_configuration()
-
-        try:
+        with self._test_wide_context() as main_config:
             for sub_config in self.generate_sub_configurations(main_config):
-                self.apply_sub_configuration(main_config, sub_config)
-
-                try:
+                with self._sub_context(main_config, sub_config) as recipe_config:
                     for ping_config in self.generate_ping_configurations(main_config,
                                                                          sub_config):
                         result = self.ping_test(ping_config)
@@ -118,16 +115,28 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
                                                                          sub_config):
                         result = self.perf_test(perf_config)
                         self.perf_report_and_evaluate(result)
-                finally:
-                    self.remove_sub_configuration(main_config, sub_config)
+
+    @contextmanager
+    def _test_wide_context(self):
+        config = self.test_wide_configuration()
+        try:
+            yield config
         finally:
-            self.test_wide_deconfiguration(main_config)
+            self.test_wide_deconfiguration(config)
 
     def test_wide_configuration(self):
         raise NotImplementedError("Method must be defined by a child class.")
 
     def test_wide_deconfiguration(self, main_config):
         raise NotImplementedError("Method must be defined by a child class.")
+
+    @contextmanager
+    def _sub_context(self, main_config, sub_config):
+        self.apply_sub_configuration(main_config, sub_config)
+        try:
+            yield (main_config, sub_config)
+        finally:
+            self.remove_sub_configuration(main_config, sub_config)
 
     def generate_sub_configurations(self, main_config):
         for offload_settings in self.params.offload_combinations:
