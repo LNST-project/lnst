@@ -9,6 +9,8 @@ from lnst.Common.ExecCmd import exec_cmd
 from lnst.Controller.Recipe import BaseRecipe, RecipeError
 from lnst.Controller.RecipeResults import ResultLevel
 
+from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
+
 from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
@@ -69,7 +71,7 @@ class EnrtSubConfiguration(object):
     def offload_settings(self, value):
         self._offload_settings = value
 
-class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
+class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     ip_versions = Param(default=("ipv4", "ipv6"))
 
     ping_parallel = BoolParam(default=False)
@@ -79,9 +81,6 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     ping_psize = IntParam(default = None)
 
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
-
-    offload_combinations = Param(default=(
-        dict(gro="on", gso="on", tso="on", tx="on", rx="on"),))
 
     driver = StrParam(default="ixgbe")
 
@@ -106,7 +105,7 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
     def test(self):
         with self._test_wide_context() as main_config:
             for sub_config in self.generate_sub_configurations(main_config):
-                with self._sub_context(main_config, sub_config) as recipe_config:
+                with self._sub_context(sub_config) as recipe_config:
                     for ping_config in self.generate_ping_configurations(main_config,
                                                                          sub_config):
                         result = self.ping_test(ping_config)
@@ -146,63 +145,13 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
         ]
 
     @contextmanager
-    def _sub_context(self, main_config, sub_config):
-        self.apply_sub_configuration(main_config, sub_config)
-        self.describe_sub_configuration(sub_config)
+    def _sub_context(self, config):
+        self.apply_sub_configuration(config)
+        self.describe_sub_configuration(config)
         try:
-            yield (main_config, sub_config)
+            yield config
         finally:
-            self.remove_sub_configuration(main_config, sub_config)
-
-    def generate_sub_configurations(self, main_config):
-        for offload_settings in self.params.offload_combinations:
-            sub_config = EnrtSubConfiguration()
-            sub_config.offload_settings = offload_settings
-
-            yield sub_config
-
-    def apply_sub_configuration(self, main_config, sub_config):
-        client_nic = main_config.endpoint1
-        server_nic = main_config.endpoint2
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
-
-        if 'sctp_stream' in self.params.perf_tests:
-            client_netns.run("iptables -I OUTPUT ! -o %s -p sctp -j DROP" %
-                             client_nic.name)
-            server_netns.run("iptables -I OUTPUT ! -o %s -p sctp -j DROP" %
-                             server_nic.name)
-
-        ethtool_offload_string = ""
-        for name, value in list(sub_config.offload_settings.items()):
-            ethtool_offload_string += " %s %s" % (name, value)
-
-        client_netns.run("ethtool -K {} {}".format(client_nic.name,
-                                                   ethtool_offload_string))
-        server_netns.run("ethtool -K {} {}".format(server_nic.name,
-                                                   ethtool_offload_string))
-
-    def remove_sub_configuration(self, main_config, sub_config):
-        client_nic = main_config.endpoint1
-        server_nic = main_config.endpoint2
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
-
-        if 'sctp_stream' in self.params.perf_tests:
-            client_netns.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
-                             client_nic.name)
-            server_netns.run("iptables -D OUTPUT ! -o %s -p sctp -j DROP" %
-                             server_nic.name)
-
-        ethtool_offload_string = ""
-        for name, value in list(sub_config.offload_settings.items()):
-            ethtool_offload_string += " %s %s" % (name, "on")
-
-        #set all the offloads back to 'on' state
-        client_netns.run("ethtool -K {} {}".format(client_nic.name,
-                                                   ethtool_offload_string))
-        server_netns.run("ethtool -K {} {}".format(server_nic.name,
-                                                   ethtool_offload_string))
+            self.remove_sub_configuration(config)
 
     def describe_sub_configuration(self, config):
         description = self.generate_sub_configuration_description(config)
@@ -312,14 +261,6 @@ class BaseEnrtRecipe(PingTestAndEvaluate, PerfRecipe):
             server_bind = server_nic.ips_filter(family=family)[0]
 
             for perf_test in self.params.perf_tests:
-                offload_values = list(sub_config.offload_settings.values())
-                offload_items = list(sub_config.offload_settings.items())
-                if ((perf_test == 'udp_stream' and ('gro', 'off') in offload_items)
-                    or
-                    (perf_test == 'sctp_stream' and 'off' in offload_values and
-                    ('gso', 'on') in offload_items)):
-                    continue
-
                 for size in self.params.perf_msg_sizes:
                     flow = PerfFlow(
                             type = perf_test,
