@@ -50,27 +50,6 @@ class EnrtConfiguration(object):
         self._params = value
 
 
-class EnrtSubConfiguration(object):
-    def __init__(self):
-        self._ip_version = None
-        self._offload_settings = None
-
-    @property
-    def ip_version(self):
-        return self._ip_version
-
-    @ip_version.setter
-    def ip_version(self, value):
-        self._ip_version = value
-
-    @property
-    def offload_settings(self):
-        return self._offload_settings
-
-    @offload_settings.setter
-    def offload_settings(self, value):
-        self._offload_settings = value
-
 class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     ip_versions = Param(default=("ipv4", "ipv6"))
 
