@@ -30,7 +30,14 @@ from pyroute2.netlink.rtnl import RTM_NEWLINK
 from pyroute2.netlink.rtnl import RTM_NEWADDR
 from pyroute2.netlink.rtnl import RTM_DELADDR
 
-class Device(object, metaclass=ABCMeta):
+class DeviceMeta(ABCMeta):
+    def __instancecheck__(self, other):
+        try:
+            return issubclass(other._dev_cls, self)
+        except AttributeError:
+            return super(DeviceMeta, self).__instancecheck__(other)
+
+class Device(object, metaclass=DeviceMeta):
     """The base Device class
 
     Implemented using the pyroute2 package to access different attributes of
