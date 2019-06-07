@@ -20,34 +20,7 @@ from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 
 class EnrtConfiguration(object):
-    def __init__(self):
-        self._endpoint1 = None
-        self._endpoint2 = None
-        self._params = None
-
-    @property
-    def endpoint1(self):
-        return self._endpoint1
-
-    @endpoint1.setter
-    def endpoint1(self, value):
-        self._endpoint1 = value
-
-    @property
-    def endpoint2(self):
-        return self._endpoint2
-
-    @endpoint2.setter
-    def endpoint2(self, value):
-        self._endpoint2 = value
-
-    @property
-    def params(self):
-        return self._params
-
-    @params.setter
-    def params(self, value):
-        self._params = value
+    pass
 
 
 class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
@@ -97,10 +70,11 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
             self.test_wide_deconfiguration(config)
 
     def test_wide_configuration(self):
-        raise NotImplementedError("Method must be defined by a child class.")
+        return EnrtConfiguration()
 
-    def test_wide_deconfiguration(self, main_config):
-        raise NotImplementedError("Method must be defined by a child class.")
+    def test_wide_deconfiguration(self, config):
+        #TODO check if anything is still applied and throw exception?
+        return
 
     def describe_test_wide_configuration(self, config):
         description = self.generate_test_wide_description(config)
