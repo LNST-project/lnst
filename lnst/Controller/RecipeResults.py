@@ -112,7 +112,7 @@ class DeviceConfigResult(BaseResult):
 
     @property
     def level(self):
-        return ResultLevel.IMPORTANT
+        return ResultLevel.NORMAL
 
     @property
     def device(self):
