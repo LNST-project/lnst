@@ -27,12 +27,12 @@ class RecipeControl(object):
         msg_dispatcher = self._controller._msg_dispatcher
         msg_dispatcher.wait_for_condition(condition)
 
-    def wait_for_condition(self, condition):
+    def wait_for_condition(self, condition, timeout=0):
         #TODO add descriptions to conditions?
         logging.info("Suspending recipe execution until condition is true")
 
         msg_dispatcher = self._controller._msg_dispatcher
-        msg_dispatcher.wait_for_condition(condition)
+        msg_dispatcher.wait_for_condition(condition, timeout)
 
     def connect_host(self, hostname, timeout=60, port=None, machine_id=None,
                      security=None):
