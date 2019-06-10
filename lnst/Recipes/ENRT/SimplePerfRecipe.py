@@ -24,8 +24,6 @@ class SimplePerfRecipe(BaseEnrtRecipe):
         host1, host2 = self.matched.host1, self.matched.host2
 
         configuration = EnrtConfiguration()
-        configuration.endpoint1 = host1.eth0
-        configuration.endpoint2 = host2.eth0
         configuration.params = self.params
 
         if "mtu" in self.params:
@@ -55,3 +53,9 @@ class SimplePerfRecipe(BaseEnrtRecipe):
 
     def test_wide_deconfiguration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
+
+    def generate_ping_endpoints(self, config):
+        return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+
+    def generate_perf_endpoints(self, config):
+        return [(self.matched.host1.eth0, self.matched.host2.eth0)]
