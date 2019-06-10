@@ -6,7 +6,14 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 
-class SimplePerfRecipe(BaseEnrtRecipe):
+from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
+    OffloadSubConfigMixin,
+)
+
+
+class SimplePerfRecipe(
+    OffloadSubConfigMixin, BaseEnrtRecipe
+):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
@@ -72,3 +79,7 @@ class SimplePerfRecipe(BaseEnrtRecipe):
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+
+    @property
+    def offload_nics(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
