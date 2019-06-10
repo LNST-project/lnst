@@ -9,10 +9,13 @@ from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
+    CommonHWConfigMixin,
+)
 
 
 class SimplePerfRecipe(
-    OffloadSubConfigMixin, BaseEnrtRecipe
+    OffloadSubConfigMixin, CommonHWConfigMixin, BaseEnrtRecipe
 ):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -32,10 +35,6 @@ class SimplePerfRecipe(
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
 
-        if "mtu" in self.params:
-            host1.eth0.mtu = self.params.mtu
-            host2.eth0.mtu = self.params.mtu
-
         host1.eth0.ip_add(ipaddress("192.168.101.1/24"))
         host1.eth0.ip_add(ipaddress("fc00::1/64"))
         host1.eth0.up()
@@ -46,16 +45,6 @@ class SimplePerfRecipe(
         host2.eth0.up()
         configuration.test_wide_devices.append(host2.eth0)
 
-        if "adaptive_rx_coalescing" in self.params:
-            for host in [host1, host2]:
-                host.eth0.adaptive_rx_coalescing = self.params.adaptive_rx_coalescing
-        if "adaptive_tx_coalescing" in self.params:
-            for host in [host1, host2]:
-                host.eth0.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
-
-        if self.params.perf_parallel_streams > 1:
-            for host in [host1, host2]:
-                host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
 
         return configuration
 
@@ -82,4 +71,8 @@ class SimplePerfRecipe(
 
     @property
     def offload_nics(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
