@@ -22,11 +22,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     #common requirements parameters
     driver = StrParam(default="ixgbe")
 
-    #common configuration parameters
-    mtu = IntParam(mandatory=False)
-    adaptive_rx_coalescing = BoolParam(mandatory=False)
-    adaptive_tx_coalescing = BoolParam(mandatory=False)
-
     #common test parameters
     ip_versions = Param(default=("ipv4", "ipv6"))
 
