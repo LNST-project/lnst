@@ -4,7 +4,7 @@ from lnst.Common.IpAddress import ipaddress, AF_INET, AF_INET6
 
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 
 class SimplePerfRecipe(BaseEnrtRecipe):
     host1 = HostReq()
@@ -22,9 +22,8 @@ class SimplePerfRecipe(BaseEnrtRecipe):
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
-
-        configuration = EnrtConfiguration()
-        configuration.params = self.params
+        configuration = super().test_wide_configuration()
+        configuration.test_wide_devices = []
 
         if "mtu" in self.params:
             host1.eth0.mtu = self.params.mtu
@@ -33,10 +32,12 @@ class SimplePerfRecipe(BaseEnrtRecipe):
         host1.eth0.ip_add(ipaddress("192.168.101.1/24"))
         host1.eth0.ip_add(ipaddress("fc00::1/64"))
         host1.eth0.up()
+        configuration.test_wide_devices.append(host1.eth0)
 
         host2.eth0.ip_add(ipaddress("192.168.101.2/24"))
         host2.eth0.ip_add(ipaddress("fc00::2/64"))
         host2.eth0.up()
+        configuration.test_wide_devices.append(host2.eth0)
 
         if "adaptive_rx_coalescing" in self.params:
             for host in [host1, host2]:
@@ -51,8 +52,20 @@ class SimplePerfRecipe(BaseEnrtRecipe):
 
         return configuration
 
+    def generate_test_wide_description(self, config):
+        desc = super().generate_test_wide_description(config)
+        desc += [
+            "Configured {}.{}.ips = {}".format(
+                dev.host.hostid, dev.name, dev.ips
+            )
+            for dev in config.test_wide_devices
+        ]
+        return desc
+
     def test_wide_deconfiguration(self, config):
-        host1, host2 = self.matched.host1, self.matched.host2
+        del config.test_wide_devices
+
+        super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
         return [(self.matched.host1.eth0, self.matched.host2.eth0)]
