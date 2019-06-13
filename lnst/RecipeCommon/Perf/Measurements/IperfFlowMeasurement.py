@@ -40,7 +40,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
                 "hosts_iperf_versions": self._hosts_versions}
 
     def _get_host_iperf_version(self, host):
-        version_job = host.run("iperf3 --version")
+        version_job = host.run("iperf3 --version", job_level=ResultLevel.DEBUG)
         if version_job.passed:
             match = re.match(r"iperf (.+?) .*", version_job.stdout)
             if match:
