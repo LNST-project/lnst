@@ -152,8 +152,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     def generate_perf_configurations(self, config):
         for flows in self.generate_flow_combinations(config):
             perf_recipe_conf=dict(
-                main_config=config,
-                sub_config=config,
+                recipe_config=config,
                 flows=flows,
             )
 
