@@ -39,4 +39,4 @@ class BaselineEvaluator(BaseEvaluator):
         return None
 
     def compare_result_with_baseline(self, recipe, result, baseline):
-        return False, "Result to baseline comparison not implemented"
+        return False, ["Result to baseline comparison not implemented"]
