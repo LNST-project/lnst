@@ -6,11 +6,11 @@ Install script for lnst
 This script will install LNST to your system.
 To install LNST, execute it as follows:
 
-    pip3 install .
+    pip3 install -r requirements.txt .
 
 To install lnst to a different root use:
 
-    pip3 install --prefix <path> .
+    pip3 install -r requirements.txt --prefix <path> .
 
 """
 
@@ -117,10 +117,5 @@ setup(name="lnst",
       platforms=["linux"],
       license=["GNU GPLv2"],
       packages=find_packages(),
-      install_requires=[
-          'pyyaml',
-          'lxml',
-          'pyroute2',
-          'libvirt-python'],
       scripts=SCRIPTS,
       data_files=DATA_FILES)
