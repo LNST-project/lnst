@@ -13,7 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import pyroute2
 import logging
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.DeviceError import DeviceError, DeviceConfigError
+from lnst.Common.DeviceError import DeviceError, DeviceConfigError, DeviceNotFound
 from lnst.Common.IpAddress import ipaddress
 from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
@@ -43,9 +43,11 @@ class VxlanDevice(SoftDevice):
     def realdev(self):
         if self._nl_msg is None:
             return None
-
-        if_id = int(self._get_linkinfo_data_attr("IFLA_VXLAN_LINK"))
-        return self._if_manager.get_device(if_id)
+        try:
+            if_id = int(self._get_linkinfo_data_attr("IFLA_VXLAN_LINK"))
+            return self._if_manager.get_device(if_id)
+        except (TypeError, DeviceNotFound):
+            return None
 
     @realdev.setter
     def realdev(self, val):
