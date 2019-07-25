@@ -2,7 +2,7 @@ from lnst.Common.LnstError import LnstError
 
 def generate_key(length):
     key = "0x"
-    key = key + (length/8) * "0b"
+    key = key + (length//8) * "0b"
     return key
 
 def configure_ipsec_esp_aead(m1, ip1, m2, ip2, algo, algo_key, icv_len,
