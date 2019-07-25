@@ -1,16 +1,17 @@
-"""
-Implements scenario similar to regression_tests/phase2/
-(virtual_ovs_bridge_vlan_in_host.xml + virtual_ovs_bridge_vlan_in_host.py)
-"""
-from lnst.Common.Parameters import Param
+import logging
+from lnst.Common.Parameters import Param, IntParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
+    OffloadSubConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
+    CommonHWConfigMixin)
 from lnst.Devices import VlanDevice
 from lnst.Devices import OvsBridgeDevice
-from lnst.Common.LnstError import LnstError
 
-class VirtualOvsBridgeVlanInHostRecipe(BaseEnrtRecipe):
+class VirtualOvsBridgeVlanInHostRecipe(OffloadSubConfigMixin,
+    CommonHWConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.tap0 = DeviceReq(label="to_guest")
@@ -29,7 +30,8 @@ class VirtualOvsBridgeVlanInHostRecipe(BaseEnrtRecipe):
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
     def test_wide_configuration(self):
-        host1, host2, guest1 = self.matched.host1, self.matched.host2, self.matched.guest1
+        host1, host2, guest1 = (self.matched.host1, self.matched.host2,
+            self.matched.guest1)
 
         host1.eth0.down()
         host1.tap0.down()
@@ -38,61 +40,88 @@ class VirtualOvsBridgeVlanInHostRecipe(BaseEnrtRecipe):
         host1.br0.port_add(host1.tap0, tag="10")
 
         host2.eth0.down()
-
         guest1.eth0.down()
 
-        host2_vlan_args0 = dict(realdev=host2.eth0, vlan_id=10)
-        if "mtu" in self.params:
-            host1.eth0.mtu = self.params.mtu
-            host1.tap0.mtu = self.params.mtu
-            host1.br0.mtu = self.params.mtu
-            host2.eth0.mtu = self.params.mtu
-            guest1.eth0.mtu = self.params.mtu
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=10)
 
-            host2_vlan_args0["mtu"] = self.params.mtu
-
-        host2.vlan0 = VlanDevice(**host2_vlan_args0)
-
-        #Due to limitations in the current EnrtConfiguration
-        #class, a single vlan test pair is chosen
-        configuration = EnrtConfiguration()
-        configuration.endpoint1 = host2.vlan0
-        configuration.endpoint2 = guest1.eth0
+        configuration = super().test_wide_configuration()
+        configuration.test_wide_devices = [guest1.eth0, host2.vlan0]
 
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"
+        for i, dev in enumerate([host2.vlan0, guest1.eth0]):
+            dev.ip_add(ipaddress(net_addr_1 + "." + str(i+2) + "/24"))
+            dev.ip_add(ipaddress(net_addr6_1 + "::" + str(i+2) + "/64"))
 
-        host2.vlan0.ip_add(ipaddress(net_addr_1 + ".2/24"))
-        host2.vlan0.ip_add(ipaddress(net_addr6_1 + "::2/64"))
-        guest1.eth0.ip_add(ipaddress(net_addr_1 + ".3/24"))
-        guest1.eth0.ip_add(ipaddress(net_addr6_1 + "::3/64"))
+        for dev in [host1.eth0, host1.tap0, host1.br0, host2.eth0,
+            host2.vlan0, guest1.eth0]:
+            dev.up()
 
-        host1.eth0.up()
-        host1.tap0.up()
-        host1.br0.up()
-        host2.eth0.up()
-        host2.vlan0.up()
-        guest1.eth0.up()
-
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            raise LnstError("'dev_intr_cpu' (%d) should not be set for this test" % self.params.dev_intr_cpu)
-
-        if "perf_tool_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance stop")
-                self._pin_dev_interrupts(host.eth0, 0)
-
-        if self.params.perf_parallel_streams > 1:
-            for host in [host1, host2]:
-                host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
+        self.wait_tentative_ips(configuration.test_wide_devices)
 
         return configuration
 
-    def test_wide_deconfiguration(self, config):
-        host1, host2, guest1 = self.matched.host1, self.matched.host2, self.matched.guest1
+    def generate_test_wide_description(self, config):
+        host1, host2 = self.matched.host1, self.matched.host2
+        desc = super().generate_test_wide_description(config)
+        desc += [
+            "\n".join([
+                "Configured {}.{}.ips = {}".format(
+                    dev.host.hostid, dev.name, dev.ips
+                )
+                for dev in config.test_wide_devices
+            ]),
+            "Configured {}.{}.vlan_id = {}".format(
+                host2.hostid, host2.vlan0.name, host2.vlan0.vlan_id
+            ),
+            "Configured {}.{}.realdev = {}".format(
+                host2.hostid, host2.vlan0.name,
+                '.'.join([host2.hostid, host2.vlan0.realdev.name])
+            ),
+            "Configured {}.{}.ports = {}".format(
+                host1.hostid, host1.br0.name, host1.br0.ports
+            )
+        ]
+        return desc
 
-        #TODO better service handling through HostAPI
-        if "perf_tool_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance start")
+    def test_wide_deconfiguration(self, config):
+        del config.test_wide_devices
+
+        super().test_wide_deconfiguration(config)
+
+    def generate_ping_endpoints(self, config):
+        return [(self.matched.guest1.eth0, self.matched.host2.vlan0)]
+
+    def generate_perf_endpoints(self, config):
+        return [(self.matched.guest1.eth0, self.matched.host2.vlan0)]
+
+    def wait_tentative_ips(self, devices):
+        def condition():
+            return all(
+                [not ip.is_tentative for dev in devices for ip in dev.ips]
+            )
+
+        self.ctl.wait_for_condition(condition, timeout=5)
+
+    @property
+    def offload_nics(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0,
+            self.matched.guest1.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        host1, host2, guest1 = (self.matched.host1,
+            self.matched.host2, self.matched.guest1)
+        result = []
+        for dev in [host1.eth0, host1.tap0, host1.br0, host2.eth0,
+            host2.vlan0, guest1.eth0]:
+            result.append(dev)
+        return result
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]

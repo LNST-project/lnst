@@ -1,13 +1,11 @@
-"""
-Implements scenario similar to regression_tests/phase3/
-(short_lived_connections.xml + short_lived_connections.py)
-"""
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Common.Parameters import Param, IntParam, ListParam
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
+    CommonHWConfigMixin)
 
-class ShortLivedConnectionsRecipe(BaseEnrtRecipe):
+class ShortLivedConnectionsRecipe(CommonHWConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
@@ -22,46 +20,56 @@ class ShortLivedConnectionsRecipe(BaseEnrtRecipe):
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        for host in [host1, host2]:
-            host.eth0.down()
+        configuration = super().test_wide_configuration()
+        configuration.test_wide_devices = [host1.eth0, host2.eth0]
 
         net_addr = "192.168.101"
-
         for i, host in enumerate([host1, host2], 10):
+            host.eth0.down()
             host.eth0.ip_add(ipaddress(net_addr + "." + str(i) + "/24"))
-
-        #Due to limitations in the current EnrtConfiguration
-        #class, a single vlan test pair is chosen
-        configuration = EnrtConfiguration()
-        configuration.endpoint1 = host1.eth0
-        configuration.endpoint2 = host2.eth0
-
-        if "mtu" in self.params:
-            for host in [host1, host2]:
-                host.eth0.mtu = self.params.mtu
-
-        for host in [host1, host2]:
             host.eth0.up()
 
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance stop")
-                self._pin_dev_interrupts(host.eth0, self.params.dev_intr_cpu)
-
-        if self.params.perf_parallel_streams > 1:
-            for host in [host1, host2]:
-                host.run("tc qdisc replace dev %s root mq" % host.eth0.name)
+        self.wait_tentative_ips(configuration.test_wide_devices)
 
         return configuration
 
-    def test_wide_deconfiguration(self, config):
+    def generate_test_wide_description(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
+        desc = super().generate_test_wide_description(config)
+        desc += [
+            "\n".join([
+                "Configured {}.{}.ips = {}".format(
+                    dev.host.hostid, dev.name, dev.ips
+                )
+                for dev in config.test_wide_devices
+            ])
+        ]
+        return desc
 
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance start")
+    def test_wide_deconfiguration(self, config):
+        del config.test_wide_devices
 
-    def generate_ping_configurations(self, main_config, sub_config):
-        return []
+        super().test_wide_deconfiguration(config)
+
+    def generate_perf_endpoints(self, config):
+        return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+
+    def wait_tentative_ips(self, devices):
+        def condition():
+            return all(
+                [not ip.is_tentative for dev in devices for ip in dev.ips]
+            )
+
+        self.ctl.wait_for_condition(condition, timeout=5)
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]

@@ -1,14 +1,15 @@
-"""
-Implements scenario similar to regression_tests/phase1/
-({round_robin, active_backup}_double_bond.xml + bonding_test.py).
-"""
 from lnst.Common.Parameters import Param, StrParam, IntParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
+    OffloadSubConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
+    CommonHWConfigMixin)
 from lnst.Devices import BondDevice
 
-class DoubleBondRecipe(BaseEnrtRecipe):
+class DoubleBondRecipe(OffloadSubConfigMixin, CommonHWConfigMixin,
+    BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -29,57 +30,98 @@ class DoubleBondRecipe(BaseEnrtRecipe):
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        for host in (host1, host2):
-            host.bond0 = BondDevice(mode=self.params.bonding_mode, miimon=self.params.miimon_value)
-            host.eth0.down()
-            host.eth1.down()
-            host.bond0.slave_add(host.eth0)
-            host.bond0.slave_add(host.eth1)
-
-        configuration = EnrtConfiguration()
-        configuration.endpoint1 = host1.bond0
-        configuration.endpoint2 = host2.bond0
-
-        if "mtu" in self.params:
-            host1.bond0.mtu = self.params.mtu
-            host2.bond0.mtu = self.params.mtu
-
         net_addr = "192.168.101"
         net_addr6 = "fc00:0:0:0"
         for i, host in enumerate([host1, host2]):
+            host.bond0 = BondDevice(mode=self.params.bonding_mode,
+                miimon=self.params.miimon_value)
+            for dev in [host.eth0, host.eth1]:
+                dev.down()
+                host.bond0.slave_add(dev)
             host.bond0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
-            host.bond0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) + "/64"))
-            host.eth0.up()
-            host.eth1.up()
-            host.bond0.up()
+            host.bond0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) +
+                "/64"))
+            for dev in [host.eth0, host.eth1, host.bond0]:
+                dev.up()
 
-        if "adaptive_tx_coalescing" in self.params:
-            for host in [host1, host2]:
-                for dev in [host.eth0, host.eth1]:
-                    dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
-        if "adaptive_tx_coalescing" in self.params:
-            for host in [host1, host2]:
-                for dev in [host.eth0, host.eth1]:
-                    dev.adaptive_tx_coalescing = self.params.adaptive_tx_coalescing
+        configuration = super().test_wide_configuration()
+        configuration.test_wide_devices = [host1.bond0, host2.bond0]
 
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance stop")
-                for dev in [host.eth0, host.eth1]:
-                    self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
-
-        if self.params.perf_parallel_streams > 1:
-            for host in [host1, host2]:
-                for dev in [host.eth0, host.eth1]:
-                    host.run("tc qdisc replace dev %s root mq" % dev.name)
+        self.wait_tentative_ips(configuration.test_wide_devices)
 
         return configuration
 
-    def test_wide_deconfiguration(self, config):
+    def generate_test_wide_description(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
+        desc = super().generate_test_wide_description(config)
+        desc += [
+            "\n".join([
+                "Configured {}.{}.ips = {}".format(
+                    dev.host.hostid, dev.name, dev.ips
+                )
+                for dev in config.test_wide_devices
+            ]),
+            "\n".join([
+                "Configured {}.{}.slaves = {}".format(
+                    dev.host.hostid, dev.name,
+                    ['.'.join([dev.host.hostid, slave.name])
+                        for slave in dev.slaves]
+                )
+                for dev in config.test_wide_devices
+            ]),
+            "\n".join([
+                "Configured {}.{}.mode = {}".format(
+                    dev.host.hostid, dev.name, dev.mode
+                )
+                for dev in config.test_wide_devices
+            ]),
+            "\n".join([
+                "Configured {}.{}.miimon = {}".format(
+                    dev.host.hostid, dev.name, dev.miimon
+                )
+                for dev in config.test_wide_devices
+            ])
+        ]
+        return desc
 
-        #TODO better service handling through HostAPI
-        if "dev_intr_cpu" in self.params:
-            for host in [host1, host2]:
-                host.run("service irqbalance start")
+    def test_wide_deconfiguration(self, config):
+        del config.test_wide_devices
+
+        super().test_wide_deconfiguration(config)
+
+    def generate_ping_endpoints(self, config):
+        return [(self.matched.host1.bond0, self.matched.host2.bond0)]
+
+    def generate_perf_endpoints(self, config):
+        return [(self.matched.host1.bond0, self.matched.host2.bond0)]
+
+    def wait_tentative_ips(self, devices):
+        def condition():
+            return all(
+                [not ip.is_tentative for dev in devices for ip in dev.ips]
+            )
+
+        self.ctl.wait_for_condition(condition, timeout=5)
+
+    @property
+    def offload_nics(self):
+        return [self.matched.host1.bond0, self.matched.host2.bond0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.bond0, self.matched.host2.bond0]
+
+    @property
+    def coalescing_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+        return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+        return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+        return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]

@@ -1,11 +1,7 @@
-from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import IntParam, Param, StrParam, BoolParam
-from lnst.Common.IpAddress import ipaddress, AF_INET, AF_INET6
-
+from lnst.Common.Parameters import Param
+from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
-
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -13,8 +9,7 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
     CommonHWConfigMixin,
 )
 
-
-class SimplePerfRecipe(
+class SimpleNetworkRecipe(
     OffloadSubConfigMixin, CommonHWConfigMixin, BaseEnrtRecipe
 ):
     host1 = HostReq()
@@ -35,17 +30,13 @@ class SimplePerfRecipe(
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
 
-        host1.eth0.ip_add(ipaddress("192.168.101.1/24"))
-        host1.eth0.ip_add(ipaddress("fc00::1/64"))
-        host1.eth0.up()
-        configuration.test_wide_devices.append(host1.eth0)
+        for i, host in enumerate([host1, host2]):
+            host.eth0.ip_add(ipaddress("192.168.101." + str(i+1) + "/24"))
+            host.eth0.ip_add(ipaddress("fc00::" + str(i+1) + "/64"))
+            host.eth0.up()
+            configuration.test_wide_devices.append(host.eth0)
 
-        host2.eth0.ip_add(ipaddress("192.168.101.2/24"))
-        host2.eth0.ip_add(ipaddress("fc00::2/64"))
-        host2.eth0.up()
-        configuration.test_wide_devices.append(host2.eth0)
-
-        self.wait_tentative_ips([host1.eth0, host2.eth0])
+        self.wait_tentative_ips(configuration.test_wide_devices)
 
         return configuration
 
@@ -83,5 +74,17 @@ class SimplePerfRecipe(
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
-    def hw_config_dev_list(self):
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def coalescing_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
