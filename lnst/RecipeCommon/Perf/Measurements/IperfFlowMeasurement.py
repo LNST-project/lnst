@@ -113,7 +113,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         server_params = dict(bind = ipaddress(flow.receiver_bind),
                              oneoff = True)
 
-        if flow.cpupin and flow.cpupin >= 0:
+        if flow.cpupin is not None and flow.cpupin >= 0:
             if flow.parallel_streams == 1:
                 server_params["cpu_bind"] = flow.cpupin
             else:
@@ -140,7 +140,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
 
-        if flow.cpupin and flow.cpupin >= 0:
+        if flow.cpupin is not None and flow.cpupin >= 0:
             if flow.parallel_streams == 1:
                 client_params["cpu_bind"] = flow.cpupin
             else:
