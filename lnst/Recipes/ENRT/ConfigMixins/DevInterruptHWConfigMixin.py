@@ -37,7 +37,7 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
                 intr_cfg["irq_devs"][dev] = self.params.dev_intr_cpu
 
     def hw_deconfig(self, config):
-        intr_config = config.hw_config["dev_intr_cpu_configuration"]
+        intr_config = config.hw_config.get("dev_intr_cpu_configuration", {})
         for host in intr_config.get("irqbalance_hosts", []):
             host.run("service irqbalance start")
 
