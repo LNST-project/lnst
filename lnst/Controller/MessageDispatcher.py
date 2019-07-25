@@ -75,6 +75,7 @@ def remote_device_to_deviceref(obj):
     elif isinstance(obj, BaseTestModule):
         new_test = copy.deepcopy(obj)
         new_test.params = remote_device_to_deviceref(new_test.params)
+        new_test._orig_kwargs = remote_device_to_deviceref(new_test._orig_kwargs)
         return new_test
     else:
         return obj
