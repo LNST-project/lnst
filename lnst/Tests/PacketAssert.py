@@ -76,8 +76,8 @@ class PacketAssert(BaseTestModule):
             raise LnstError("Could not handle interrupt properly.")
 
         with packet_assert_process.stdout, packet_assert_process.stderr:
-            stderr=packet_assert_process.stderr.read()
-            stdout=packet_assert_process.stdout.read()
+            stderr=packet_assert_process.stderr.read().decode()
+            stdout=packet_assert_process.stdout.read().decode()
 
         self._res_data["stderr"] = stderr
 
