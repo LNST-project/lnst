@@ -10,6 +10,8 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import re
+import pprint
 from lnst.Common.Utils import check_process_running
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceError
@@ -112,3 +114,112 @@ class OvsBridgeDevice(SoftDevice):
 
     def flows_del(self, entry):
         exec_cmd("ovs-ofctl del-flows %s" % (self.name))
+
+    @property
+    def ports(self):
+        numbered_ports, port_lines = self._get_port_info()
+        ports = {}
+
+        for line in port_lines:
+            if not re.search('type=', line):
+                self._line_to_port_number(line, numbered_ports, ports)
+
+        return ports
+
+    @property
+    def internal_ports(self):
+        numbered_ports, port_lines = self._get_port_info()
+        int_ports = {}
+
+        for line in port_lines:
+            if re.search('type=internal', line):
+                line = re.sub(r",?\stype=internal", "", line)
+                self._line_to_port_number(line, numbered_ports, int_ports)
+
+        return int_ports
+
+    @property
+    def tunnels(self):
+        numbered_ports, port_lines = self._get_port_info()
+        tunnels = {}
+
+        for line in port_lines:
+            if re.search('type=(?!internal)', line):
+                self._line_to_port_number(line, numbered_ports, tunnels)
+
+        return tunnels
+
+    @property
+    def bonds(self):
+        bonds = {}
+        bond_list = []
+        out = exec_cmd("ovs-appctl bond/list", log_outputs=False)[0]
+
+        for line in out.split('\n'):
+            if line:
+                bond_list.append(line.split('\t'))
+
+        for bond in bond_list[1:]:
+            bonds[bond[0]] = {'type' : bond[1], 'slaves' : bond[3]}
+
+        return bonds
+
+    @property
+    def flows_str(self):
+        flows = []
+        ignore_exprs = [r"cookie", r"duration", r"n_packets",
+            r"n_bytes", r"idle_age"]
+        out = exec_cmd("ovs-ofctl dump-flows %s" % self.name,
+            log_outputs=False)[0]
+
+        for line in out.split('\n'):
+            if line:
+                flows.append(line.split(', '))
+
+        for flow in flows[1:]:
+            for entry in list(flow):
+                for expr in ignore_exprs:
+                    if re.search(expr, entry):
+                        del flow[flow.index(entry)]
+                        break
+
+        return pprint.pformat(flows[1:])
+
+    def _get_port_info(self):
+        numbered_ports = {}
+        port_lines = []
+
+        dumped_ports = exec_cmd("ovs-ofctl dump-ports-desc %s" %
+            self.name, log_outputs=False)[0]
+
+        for match in re.finditer(r'(\w+)\((\w*)\)',
+            dumped_ports):
+            numbered_ports[match.groups()[1]] = match.groups()[0]
+
+        ovs_show = exec_cmd("ovs-vsctl show",
+            log_outputs=False)[0]
+        regex = r'(Port[\w\W]*?)(?=Port|ovs_version)'
+
+        for match in re.finditer(regex, ovs_show):
+            line = match.groups()[0].replace('\n', ' ')
+            line = self._port_format(line)
+            port_lines.append(line)
+
+        return numbered_ports, port_lines
+
+    def _port_format(self, line):
+        res = re.sub(r":", "", line)
+        res = re.sub(r"(\S[^,])\s(\S)", "\\1=\\2", res)
+        res = re.sub(r"\s{2,}(?=\S)", ", ", res)
+        res = re.sub(r"\s*$", "", res)
+
+        return res
+
+    def _line_to_port_number(self, line, ref, result):
+        name = re.match(r"Port=\"(\w+)\"", line).groups()[0]
+
+        try:
+            number = ref[name]
+            result[number] = line
+        except KeyError:
+            pass
