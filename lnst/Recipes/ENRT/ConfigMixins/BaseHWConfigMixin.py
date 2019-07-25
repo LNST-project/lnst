@@ -1,8 +1,4 @@
 class BaseHWConfigMixin(object):
-    @property
-    def hw_config_dev_list(self):
-        return []
-
     def hw_config(self, config):
         config.hw_config = {}
 
@@ -12,11 +8,11 @@ class BaseHWConfigMixin(object):
     def describe_hw_config(self, config):
         return []
 
-    def _configure_dev_attribute(self, config, attr_name, value):
+    def _configure_dev_attribute(self, config, dev_list, attr_name, value):
         hw_config = config.hw_config
         if value:
             attr_cfg = hw_config[attr_name + "_configuration"] = {}
-            for dev in self.hw_config_dev_list:
+            for dev in dev_list:
                 attr_cfg[dev] = {}
                 attr_cfg[dev]["original"] = getattr(dev, attr_name)
                 setattr(dev, attr_name, value)

@@ -2,6 +2,10 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 
 
 class ParallelStreamQDiscHWConfigMixin(BaseHWConfigMixin):
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        return []
+
     def hw_config(self, config):
         super().hw_config(config)
 
@@ -10,7 +14,7 @@ class ParallelStreamQDiscHWConfigMixin(BaseHWConfigMixin):
         parallel_streams = getattr(self.params, "perf_parallel_streams", None)
         if parallel_streams is not None and parallel_streams > 1:
             hw_config["parallel_stream_devs"] = []
-            for dev in self.hw_config_dev_list:
+            for dev in self.parallel_stream_qdisc_hw_config_dev_list:
                 dev.host.run("tc qdisc replace dev %s root mq" % dev.name)
                 hw_config["parallel_stream_devs"].append(dev)
 

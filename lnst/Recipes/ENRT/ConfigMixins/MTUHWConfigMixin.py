@@ -6,11 +6,15 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 class MTUHWConfigMixin(BaseHWConfigMixin):
     mtu = IntParam(mandatory=False)
 
+    @property
+    def mtu_hw_config_dev_list(self):
+        return []
+
     def hw_config(self, config):
         super().hw_config(config)
 
         self._configure_dev_attribute(
-            config, "mtu", getattr(self.params, "mtu", None)
+            config, self.mtu_hw_config_dev_list, "mtu", getattr(self.params, "mtu", None)
         )
 
     def describe_hw_config(self, config):

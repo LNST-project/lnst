@@ -7,16 +7,22 @@ class CoalescingHWConfigMixin(BaseHWConfigMixin):
     adaptive_rx_coalescing = BoolParam(mandatory=False)
     adaptive_tx_coalescing = BoolParam(mandatory=False)
 
+    @property
+    def coalescing_hw_config_dev_list(self):
+        return []
+
     def hw_config(self, config):
         super().hw_config(config)
 
         self._configure_dev_attribute(
             config,
+            self.coalescing_hw_config_dev_list,
             "adaptive_rx_coalescing",
             getattr(self.params, "adaptive_rx_coalescing", None),
         )
         self._configure_dev_attribute(
             config,
+            self.coalescing_hw_config_dev_list,
             "adaptive_tx_coalescing",
             getattr(self.params, "adaptive_tx_coalescing", None),
         )

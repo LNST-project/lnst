@@ -9,6 +9,10 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 class DevInterruptHWConfigMixin(BaseHWConfigMixin):
     dev_intr_cpu = IntParam(mandatory=False)
 
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        return []
+
     def hw_config(self, config):
         super().hw_config(config)
 
@@ -20,14 +24,14 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
             intr_cfg["irqbalance_hosts"] = []
 
             hosts = []
-            for dev in self.hw_config_dev_list:
+            for dev in self.dev_interrupt_hw_config_dev_list:
                 if dev.host not in hosts:
                     hosts.append(dev.host)
             for host in hosts:
                 host.run("service irqbalance stop")
                 intr_cfg["irqbalance_hosts"].append(host)
 
-            for dev in self.hw_config_dev_list:
+            for dev in self.dev_interrupt_hw_config_dev_list:
                 # TODO better service handling through HostAPI
                 self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
                 intr_cfg["irq_devs"][dev] = self.params.dev_intr_cpu
