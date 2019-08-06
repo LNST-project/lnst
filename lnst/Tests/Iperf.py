@@ -139,7 +139,7 @@ class IperfClient(IperfBase):
         else:
             test = ""
 
-        cmd = ("iperf3 -c {server} -b 0 -J -t {duration}"
+        cmd = ("iperf3 -c {server} -b 0/1000 -J -t {duration}"
                " {cpu} {test} {mss} {blksize} {parallel}"
                " {opts}".format(
                 server=self.params.server, duration=self.params.duration,
