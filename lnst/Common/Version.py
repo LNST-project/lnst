@@ -11,4 +11,4 @@ __autor__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-LNSTMajorVersion = '13'
+LNSTMajorVersion = '14'
