@@ -56,7 +56,7 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
             ]
             desc += [
                 "{}.{} irqs bound to cpu {}".format(
-                    dev.host.hostid, dev.name, cpu
+                    dev.host.hostid, dev._id, cpu
                 )
                 for dev, cpu in intr_cfg["irq_devs"].items()
             ]
