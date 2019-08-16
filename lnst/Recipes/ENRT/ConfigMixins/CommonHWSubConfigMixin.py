@@ -8,24 +8,25 @@ from lnst.Recipes.ENRT.ConfigMixins.CoalescingHWConfigMixin import (
     CoalescingHWConfigMixin,
 )
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
+from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 
 
-class CommonHWConfigMixin(
+class CommonHWSubConfigMixin(
     ParallelStreamQDiscHWConfigMixin,
     DevInterruptHWConfigMixin,
     CoalescingHWConfigMixin,
     MTUHWConfigMixin,
+    BaseSubConfigMixin,
 ):
-    def test_wide_configuration(self):
-        configuration = super().test_wide_configuration()
-        self.hw_config(configuration)
-        return configuration
+    def apply_sub_configuration(self, config):
+        super().apply_sub_configuration(config)
+        self.hw_config(config)
 
-    def test_wide_deconfiguration(self, configuration):
-        self.hw_deconfig(configuration)
-        return super().test_wide_deconfiguration(configuration)
+    def remove_sub_configuration(self, config):
+        self.hw_deconfig(config)
+        return super().remove_sub_configuration(config)
 
-    def generate_test_wide_description(self, config):
-        desc = super().generate_test_wide_description(config)
+    def generate_sub_configuration_description(self, config):
+        desc = super().generate_sub_configuration_description(config)
         desc.extend(self.describe_hw_config(config))
         return desc

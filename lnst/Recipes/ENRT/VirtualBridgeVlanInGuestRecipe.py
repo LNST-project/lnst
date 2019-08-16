@@ -5,14 +5,14 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
-    CommonHWConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin)
 from lnst.Devices import VlanDevice
 from lnst.Devices.VlanDevice import VlanDevice as Vlan
 from lnst.Devices import BridgeDevice
 
-class VirtualBridgeVlanInGuestRecipe(OffloadSubConfigMixin,
-    CommonHWConfigMixin, BaseEnrtRecipe):
+class VirtualBridgeVlanInGuestRecipe(CommonHWSubConfigMixin,
+    OffloadSubConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.tap0 = DeviceReq(label="to_guest")

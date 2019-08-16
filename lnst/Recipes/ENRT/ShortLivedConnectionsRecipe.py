@@ -2,10 +2,10 @@ from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Common.Parameters import Param, IntParam, ListParam
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
-    CommonHWConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin)
 
-class ShortLivedConnectionsRecipe(CommonHWConfigMixin, BaseEnrtRecipe):
+class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 

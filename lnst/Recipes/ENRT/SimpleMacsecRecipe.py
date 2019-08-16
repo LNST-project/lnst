@@ -8,13 +8,13 @@ from lnst.Devices import MacsecDevice
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
-    CommonHWConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin)
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Ping import PingConf
 
-class SimpleMacsecRecipe(CommonHWConfigMixin, BaseEnrtRecipe):
+class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 

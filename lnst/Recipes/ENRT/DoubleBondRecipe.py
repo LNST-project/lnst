@@ -4,11 +4,11 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
-    CommonHWConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin)
 from lnst.Devices import BondDevice
 
-class DoubleBondRecipe(OffloadSubConfigMixin, CommonHWConfigMixin,
+class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))

@@ -2,11 +2,11 @@ from itertools import permutations
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWConfigMixin import (
-    CommonHWConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin)
 from lnst.Devices import BridgeDevice, VxlanDevice
 
-class VxlanMulticastRecipe(CommonHWConfigMixin, BaseEnrtRecipe):
+class VxlanMulticastRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.tap0 = DeviceReq(label="to_guest1")
