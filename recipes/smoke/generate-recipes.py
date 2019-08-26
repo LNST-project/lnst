@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 
 # LNST Smoke Tests
 # Author:  Ondrej Lichtner <olichtne@redhat.com>
@@ -11,27 +11,27 @@
 import os
 import shutil
 import re
-import ConfigParser
+import configparser
 import xml.dom.minidom
 
 def print_test_usage():
-    print ""
+    print("")
 
-    print "To run these recipes, you need to have a pool prepared with at"
-    print "least two machines. Both of them must have at least two test"
-    print "interfaces connected to the same network segment."
+    print("To run these recipes, you need to have a pool prepared with at")
+    print("least two machines. Both of them must have at least two test")
+    print("interfaces connected to the same network segment.")
 
-    print ""
+    print("")
 
-    print "   +-----------+          +--------+          +-----------+"
-    print "   |           |----------|        |----------|           |"
-    print "   |  Machine  |          | Switch |          |  Machine  |"
-    print "   |     1     |----------|        |----------|     2     |"
-    print "   |           |          +--------+          |           |"
-    print "   +-----------+                              +-----------+"
+    print("   +-----------+          +--------+          +-----------+")
+    print("   |           |----------|        |----------|           |")
+    print("   |  Machine  |          | Switch |          |  Machine  |")
+    print("   |     1     |----------|        |----------|     2     |")
+    print("   |           |          +--------+          |           |")
+    print("   +-----------+                              +-----------+")
 
-    print "\nYou can execute the set using the following command:"
-    print "    ./lnst-ctl -d run recipes/smoke/tests/"
+    print("\nYou can execute the set using the following command:")
+    print("    ./lnst-ctl -d run recipes/smoke/tests/")
 
 def replace_variables(recipe, name1, name2, variables):
     vars = dict(variables.items("defaults"))
@@ -41,7 +41,7 @@ def replace_variables(recipe, name1, name2, variables):
         for name, val in section:
             vars[name] = val
 
-    for name, val in vars.iteritems():
+    for name, val in vars.items():
         recipe = recipe.replace("#%s#" % name, val)
     return recipe
 
@@ -50,18 +50,18 @@ def main():
     LIB = "../lib/"
     vars_filename = "%svariables.conf" % LIB
 
-    print "[LNST Smoke Tests]"
-    print "Creating '%s' directory for the recipes..." % DIR,
+    print("[LNST Smoke Tests]")
+    print("Creating '%s' directory for the recipes..." % DIR, end=' ')
     shutil.rmtree(DIR, ignore_errors=True)
     os.mkdir(DIR)
     os.chdir(DIR)
-    print "[DONE]"
+    print("[DONE]")
 
     sequences = ""
     for seq in os.listdir(LIB):
         if not re.match("task-.*", seq):
             continue
-        print "Found a task: %s%s" % (LIB, seq)
+        print("Found a task: %s%s" % (LIB, seq))
 
         task_f = open("%s/%s" % (LIB, seq), 'r')
         task = task_f.read()
@@ -70,12 +70,12 @@ def main():
 
     conf_files = [LIB+i for i in os.listdir(LIB) if re.match("conf-.*", i)]
     for conf in conf_files:
-        print "Found configuration %s" % conf
+        print("Found configuration %s" % conf)
 
     template_file = open("%s/recipe-temp.xml" % LIB, 'r')
     template = template_file.read()
 
-    variables = ConfigParser.ConfigParser()
+    variables = configparser.ConfigParser()
     variables.read(vars_filename)
 
     for machine1 in conf_files:
@@ -83,7 +83,7 @@ def main():
             name1 = re.match(".*conf-(.*)\.xml", machine1).group(1)
             name2 = re.match(".*conf-(.*)\.xml", machine2).group(1)
             recipe_name = "recipe-%s-%s.xml" % (name1, name2)
-            print "Generating %s%s..." % (DIR, recipe_name),
+            print("Generating %s%s..." % (DIR, recipe_name), end=' ')
 
             m1_f = open(machine1, 'r')
             m1 = m1_f.read()
@@ -102,7 +102,7 @@ def main():
             recipe_file.write(recipe)
             recipe_file.close()
 
-            print "[DONE]"
+            print("[DONE]")
 
     print_test_usage()
 
