@@ -2,3 +2,4 @@ pyyaml
 lxml
 pyroute2
 libvirt-python
+ethtool
