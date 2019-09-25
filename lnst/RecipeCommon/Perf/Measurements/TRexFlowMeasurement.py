@@ -19,6 +19,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
     def __init__(self, flows, trex_dir):
         self._flows = flows
         self._trex_dir = trex_dir
+        self._conf = dict(flows=flows, trex_dir=trex_dir)
         self._running_measurements = []
         self._finished_measurements = []
 
@@ -115,9 +116,9 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
 
         if not job.passed:
             results.generator_results.append(PerfInterval(0, 0, "packets"))
-            results.generator_cpu.append(PerfInterval(0, 0, "cpu_percent"))
+            results.generator_cpu_stats.append(PerfInterval(0, 0, "cpu_percent"))
             results.receiver_results.append(PerfInterval(0, 0, "packets"))
-            results.receiver_cpu.append(PerfInterval(0, 0, "cpu_percent"))
+            results.receiver_cpu_stats.append(PerfInterval(0, 0, "cpu_percent"))
         else:
             prev_time = job.result["start_time"]
             prev_tx_val = 0
