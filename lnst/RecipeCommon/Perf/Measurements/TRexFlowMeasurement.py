@@ -33,6 +33,9 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
         for test in tests:
             test.server_job.start(bg=True)
 
+        #wait for Trex server to start
+        time.sleep(5)
+
         for test in tests:
             test.client_job.start(bg=True)
 
