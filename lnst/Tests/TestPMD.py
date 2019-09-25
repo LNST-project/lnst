@@ -38,12 +38,12 @@ class TestPMD(BaseTestModule):
                                    stderr=subprocess.PIPE,
                                    close_fds=True)
 
-        process.stdin.write("start tx_first\n")
+        process.stdin.write(str.encode("start tx_first\n"))
 
         self.wait_for_interrupt()
 
-        process.stdin.write("stop\n")
-        process.stdin.write("quit\n")
+        process.stdin.write(str.encode("stop\n"))
+        process.stdin.write(str.encode("quit\n"))
 
         out, err = process.communicate()
         self._res_data = {"stdout": out, "stderr": err}
