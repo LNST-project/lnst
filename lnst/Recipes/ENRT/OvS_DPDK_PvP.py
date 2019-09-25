@@ -52,7 +52,7 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
     m1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     m1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    m2 = HostReq(has_guest="True")
+    m2 = HostReq(with_guest="yes")
     m2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     m2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
@@ -197,7 +197,8 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
                 receiver_bind = dst_bind,
                 msg_size = self.params.perf_msg_size,
                 duration = self.params.perf_duration,
-                parallel_streams = self.params.perf_streams))
+                parallel_streams = self.params.perf_streams,
+                cpupin=None))
 
         return PerfRecipeConf(
                 measurements=[
@@ -287,8 +288,6 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
                  .format(self.params.host2_l_cores))
         host.run("systemctl restart openvswitch")
 
-        host.run("systemctl restart openvswitch")
-
         #TODO use an actual OvS Device object
         #TODO config.dut.nics.append(CachedRemoteDevice(m2.ovs))
         host.run("ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev")
@@ -373,7 +372,9 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
         virtctl = guest_conf.virtctl
         guest_xml = guest_conf.libvirt_xml
 
-        virtctl.createXML(ET.tostring(guest_xml))
+        str_xml = ET.tostring(guest_xml, encoding='utf8', method='xml')
+        virtctl.createXML(str_xml.decode('utf8'))
+
 
         guest_ip_job = host.run("gethostip -d {}".format(guest_conf.name))
         guest_ip = guest_ip_job.stdout.strip()
