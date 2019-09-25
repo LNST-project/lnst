@@ -136,7 +136,7 @@ class TRexServer(TRexCommon):
                     {'src_mac': str(src["mac_addr"]),
                      'dest_mac': str(dst["mac_addr"])})
 
-        with tempfile.NamedTemporaryFile() as cfg_file:
+        with tempfile.NamedTemporaryFile(mode="w+") as cfg_file:
             yaml.dump(trex_server_conf, cfg_file)
             cfg_file.flush()
             os.fsync(cfg_file.file.fileno())
