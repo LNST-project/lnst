@@ -90,9 +90,6 @@ class RemoteDevice(object):
 
     _id = property(__id_get, __id_set)
 
-    def _get_dev_cls(self):
-        return self._dev_cls
-
     @property
     def host(self):
         return self._machine._initns
