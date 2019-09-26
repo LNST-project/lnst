@@ -23,6 +23,7 @@ from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
+from lnst.Common.DeviceError import DeviceFeatureNotSupported
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.HWAddress import hwaddress
 
@@ -624,8 +625,9 @@ class Device(object, metaclass=DeviceMeta):
         try:
             res = re.search(regex, res).groups()
         except AttributeError:
-            raise DeviceError("No values for coalescence of %s." %
-                              self.name)
+            raise DeviceFeatureNotSupported(
+                "No values for coalescence of %s." % self.name
+            )
         return list(res)
 
     def _write_adaptive_coalescing(self, rx_val, tx_val):
@@ -635,8 +637,9 @@ class Device(object, metaclass=DeviceMeta):
             exec_cmd("ethtool -C %s adaptive-rx %s adaptive-tx %s" %
                      (self.name, rx_val, tx_val))
         except:
-            raise DeviceConfigError("Not allowed to modify coalescence "
-                                    "settings for %s." % self.name)
+            raise DeviceFeatureNotSupported(
+                "Not allowed to modify coalescence settings for %s." % self.name
+            )
 
     def restore_coalescing(self):
         rx_val = self._cleanup_data["adaptive_rx_coalescing"]

@@ -11,9 +11,11 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import logging
 from copy import deepcopy
 from lnst.Devices.Device import Device
 from lnst.Common.DeviceError import DeviceDeleted, DeviceReadOnly
+from lnst.Common.DeviceError import DeviceFeatureNotSupported
 
 def remotedev_decorator(cls):
     def func(*args, **kwargs):
@@ -150,7 +152,11 @@ class RemoteDevice(object):
             attr = getattr(self._dev_cls, x)
 
             if not callable(attr):
-                yield (x, getattr(self, x))
+                try:
+                    yield (x, getattr(self, x))
+                except DeviceFeatureNotSupported as e:
+                    logging.debug(str(e))
+                    continue
 
     def _match_update_data(self, data):
         return False

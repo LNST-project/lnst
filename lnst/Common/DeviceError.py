@@ -32,3 +32,6 @@ class DeviceReadOnly(DeviceError):
 
 class DeviceConfigValueError(DeviceConfigError):
     pass
+
+class DeviceFeatureNotSupported(DeviceError):
+    pass
