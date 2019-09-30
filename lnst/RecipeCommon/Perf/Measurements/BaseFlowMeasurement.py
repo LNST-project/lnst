@@ -198,7 +198,7 @@ class BaseFlowMeasurement(BaseMeasurement):
         desc.append("Generator measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second."
                 .format(tput=generator.average,
                         deviation=generator.std_deviation,
-                        percentage=(generator.std_deviation/generator.average) * 100,
+                        percentage=cls._deviation_percentage(generator),
                         unit=generator.unit))
         desc.append("Generator process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second."
                 .format(cpu=generator_cpu.average,
@@ -207,7 +207,7 @@ class BaseFlowMeasurement(BaseMeasurement):
         desc.append("Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2}%) {unit} per second."
                 .format(tput=receiver.average,
                         deviation=receiver.std_deviation,
-                        percentage=(receiver.std_deviation/receiver.average) * 100,
+                        percentage=cls._deviation_percentage(receiver),
                         unit=receiver.unit))
         desc.append("Receiver process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second."
                 .format(cpu=receiver_cpu.average,
@@ -238,3 +238,10 @@ class BaseFlowMeasurement(BaseMeasurement):
         new_result.add_results(old_flow)
         new_result.add_results(new_flow)
         return new_result
+
+    @classmethod
+    def _deviation_percentage(cls, result):
+        try:
+            return (result.std_deviation/result.average) * 100
+        except ZeroDivisionError:
+            return float('inf') if result.std_deviation >= 0 else float("-inf")

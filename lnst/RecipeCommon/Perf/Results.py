@@ -4,7 +4,10 @@ from lnst.Common.Utils import std_deviation
 class PerfStatMixin(object):
     @property
     def average(self):
-        return float(self.value) / self.duration
+        try:
+            return float(self.value) / self.duration
+        except ZeroDivisionError:
+            return float('inf') if self.value >= 0 else float('-inf')
 
     @property
     def std_deviation(self):
