@@ -53,6 +53,9 @@ class HWAddress(object):
             res.append(val)
         return res
 
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, str(self))
+
 def hwaddress(addr):
     """Factory method to create a _HWAddress object"""
     if isinstance(addr, HWAddress):
