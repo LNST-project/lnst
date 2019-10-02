@@ -39,11 +39,14 @@ class TestPMD(BaseTestModule):
                                    close_fds=True)
 
         process.stdin.write(str.encode("start tx_first\n"))
+        process.stdin.flush()
 
         self.wait_for_interrupt()
 
         process.stdin.write(str.encode("stop\n"))
+        process.stdin.flush()
         process.stdin.write(str.encode("quit\n"))
+        process.stdin.flush()
 
         out, err = process.communicate()
         self._res_data = {"stdout": out, "stderr": err}
