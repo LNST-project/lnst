@@ -19,7 +19,6 @@ import logging
 from collections import deque
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
-from lnst.Common.NetUtils import scan_netdevs
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
 from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError, DeviceDeleted
@@ -89,13 +88,16 @@ class InterfaceManager(object):
             return []
 
     def rescan_devices(self):
+        self.request_netlink_dump()
+        self.handle_netlink_msgs()
+
+    def request_netlink_dump(self):
         self._nl_socket.put(
             None, RTM_GETLINK, msg_flags=NLM_F_REQUEST | NLM_F_DUMP
         )
         self._nl_socket.put(
             None, RTM_GETADDR, msg_flags=NLM_F_REQUEST | NLM_F_DUMP
         )
-        self.handle_netlink_msgs()
 
     def handle_netlink_msgs(self):
         self.pull_netlink_messages_into_queue()
@@ -196,14 +198,23 @@ class InterfaceManager(object):
         device._create()
         device._bulk_enabled = False
 
-        devs = scan_netdevs()
-        for dev in devs:
-            if dev["name"] == device.name:
-                device._init_netlink(dev['netlink_msg'])
-                self._devices[dev['index']] = device
-                return device
+        self.request_netlink_dump()
+        self.pull_netlink_messages_into_queue()
 
-        return None
+        device_found = False
+        while len(self._msg_queue):
+            msg = self._msg_queue.popleft()
+            if msg.get_attr("IFLA_IFNAME") == device.name:
+                device_found = True
+                device._init_netlink(msg)
+                self._devices[msg['index']] = device
+            else:
+                self._handle_netlink_msg(msg)
+
+        if device_found:
+            return device
+        else:
+            raise DeviceError("Device creation failed")
 
     def replace_dev(self, if_id, dev):
         del self._devices[if_id]

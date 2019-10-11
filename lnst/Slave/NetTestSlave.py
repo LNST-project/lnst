@@ -319,8 +319,6 @@ class SlaveMethods:
 
     def create_device(self, clsname, args=[], kwargs={}):
         dev =  self._if_manager.create_device(clsname, args, kwargs)
-        if dev is None:
-            raise Exception("Device creation failed")
         return {"ifindex": dev.ifindex, "name": dev.name}
 
     def start_packet_capture(self, filt):
