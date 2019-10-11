@@ -241,7 +241,6 @@ class SlaveMethods:
         return setattr(dev, name, value)
 
     def get_devices(self):
-        self._if_manager.rescan_devices()
         devices = self._if_manager.get_devices()
         result = {}
         for device in devices:
@@ -249,7 +248,6 @@ class SlaveMethods:
         return result
 
     def get_device(self, ifindex):
-        self._if_manager.rescan_devices()
         device = self._if_manager.get_device(ifindex)
         if device:
             return device._get_if_data()
