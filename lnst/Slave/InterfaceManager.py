@@ -16,6 +16,7 @@ import re
 import select
 import socket
 import logging
+from collections import deque
 from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.NetUtils import scan_netdevs
@@ -25,12 +26,15 @@ from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError, DeviceDel
 from lnst.Common.InterfaceManagerError import InterfaceManagerError
 from lnst.Slave.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
+from pyroute2.netlink import NLM_F_REQUEST, NLM_F_DUMP
 from pyroute2.netlink.rtnl import RTMGRP_IPV4_IFADDR
 from pyroute2.netlink.rtnl import RTMGRP_IPV6_IFADDR
 from pyroute2.netlink.rtnl import RTMGRP_LINK
 from pyroute2.netlink.rtnl import RTM_NEWLINK
+from pyroute2.netlink.rtnl import RTM_GETLINK
 from pyroute2.netlink.rtnl import RTM_DELLINK
 from pyroute2.netlink.rtnl import RTM_NEWADDR
+from pyroute2.netlink.rtnl import RTM_GETADDR
 from pyroute2.netlink.rtnl import RTM_DELADDR
 
 NL_GROUPS = RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR | RTMGRP_LINK
@@ -43,6 +47,8 @@ class InterfaceManager(object):
 
         self._nl_socket = IPRSocket()
         self._nl_socket.bind(groups=NL_GROUPS)
+
+        self._msg_queue = deque()
 
         #TODO split DevlinkManager away from the InterfaceManager
         #self._dl_manager = DevlinkManager()
@@ -71,78 +77,31 @@ class InterfaceManager(object):
     def get_nl_socket(self):
         return self._nl_socket
 
-    def get_netlink_messages(self):
+    def pull_netlink_messages_into_queue(self):
         try:
-            rl, wl, xl = select.select([self._nl_socket], [], [], 0)
-            try:
-                f = rl[0]
-            except:
-                return []
-            return f.get()
-        except (IndexError, select.error):
-            return []
+            while True:
+                rl, wl, xl = select.select([self._nl_socket], [], [], 0)
+                if not len(rl):
+                    break
+                self._msg_queue.extend(self._nl_socket.get())
         except socket.error:
             self.reconnect_netlink()
             return []
 
     def rescan_devices(self):
-        #since we're rescanning all devices we need to dump all the messages
-        #currently in the Queue of the nl socket - so we don't later update
-        #devices with outdated messages
-        self.get_netlink_messages()
-
-        devices_to_remove = list(self._devices.keys())
-        devs = scan_netdevs()
-        for dev in devs:
-            if dev['index'] not in self._devices:
-                device = self._device_classes["Device"](self)
-                device._init_netlink(dev['netlink_msg'])
-                self._devices[dev['index']] = device
-
-                update_msg = {"type": "dev_created",
-                              "dev_data": device._get_if_data()}
-                self._server_handler.send_data_to_ctl(update_msg)
-
-                device._disable()
-            else:
-                self._devices[dev['index']]._update_netlink(dev['netlink_msg'])
-                try:
-                    devices_to_remove.remove(dev['index'])
-                except ValueError:
-                    # we may have multiple updates for the same device, it's
-                    # okay not to find the device in devices_to_remove
-                    pass
-
-            self._devices[dev['index']]._clear_ips()
-            for addr_msg in dev['ip_addrs']:
-                self._devices[dev['index']]._update_netlink(addr_msg)
-        for i in devices_to_remove:
-            if i not in self._devices:
-                #TODO
-                #this is a workaround fix for when the device to remove was
-                #already removed indirectly by the previous update loop
-                #the fix works for now but should be refactored at some point
-                continue
-            dev_name = self._devices[i].name
-            logging.debug("Deleting Device with ifindex %d, name %s because "\
-                          "it doesn't exist anymore." % (i, dev_name))
-
-            self._devices[i]._deleted = True
-            del self._devices[i]
-
-            del_msg = {"type": "dev_deleted",
-                       "ifindex": i}
-            self._server_handler.send_data_to_ctl(del_msg)
-
-        # self._dl_manager.rescan_ports()
-        # for device in self._devices.values():
-            # dl_port = self._dl_manager.get_port(device.name)
-            # device._set_devlink(dl_port)
+        self._nl_socket.put(
+            None, RTM_GETLINK, msg_flags=NLM_F_REQUEST | NLM_F_DUMP
+        )
+        self._nl_socket.put(
+            None, RTM_GETADDR, msg_flags=NLM_F_REQUEST | NLM_F_DUMP
+        )
+        self.handle_netlink_msgs()
 
     def handle_netlink_msgs(self):
-        msgs = self.get_netlink_messages()
+        self.pull_netlink_messages_into_queue()
 
-        for msg in msgs:
+        while len(self._msg_queue):
+            msg = self._msg_queue.popleft()
             self._handle_netlink_msg(msg)
 
         # self._dl_manager.rescan_ports()
@@ -153,10 +112,7 @@ class InterfaceManager(object):
     def _handle_netlink_msg(self, msg):
         if msg['header']['type'] in [RTM_NEWLINK, RTM_NEWADDR, RTM_DELADDR]:
             if msg['index'] in self._devices:
-                try:
-                    self._devices[msg['index']]._update_netlink(msg)
-                except DeviceDeleted:
-                    return
+                self._devices[msg['index']]._update_netlink(msg)
             elif msg['header']['type'] == RTM_NEWLINK:
                 dev = self._device_classes["Device"](self)
                 dev._init_netlink(msg)
