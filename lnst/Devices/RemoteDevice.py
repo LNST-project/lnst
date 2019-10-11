@@ -164,7 +164,7 @@ class RemoteDevice(object):
             for k, v in [
                 ("machine", self._machine.get_id()),
                 ("id", self._id),
-                ("name", self.name),
+                ("name", self.name if not self.deleted else "<deleted>"),
                 ("ifindex", self.ifindex),
             ]
         ]
