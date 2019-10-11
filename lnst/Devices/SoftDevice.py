@@ -69,14 +69,5 @@ class SoftDevice(Device):
                 self.name, str(e)))
 
     def destroy(self):
-        with pyroute2.IPRoute() as ipr:
-            try:
-                logging.debug("Performing Netlink operation del for device {} {}".
-                        format(self.ifindex, self.name))
-                ipr.link("del", index=self.ifindex)
-                self._if_manager.rescan_devices()
-            except Exception as e:
-                log_exc_traceback()
-                raise DeviceConfigError("Deleting link {} failed: {}".format(
-                    self.name, str(e)))
+        self._ipr_wrapper("link", "del", index=self.ifindex)
         return True
