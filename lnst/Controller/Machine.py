@@ -148,7 +148,6 @@ class Machine(object):
             args=args,
             kwargs=kwargs,
         )
-        self._add_recipe_result(config_res)
 
         try:
             res = self.rpc_call("dev_method", index, method_name, args, kwargs,
@@ -156,6 +155,8 @@ class Machine(object):
         except:
             config_res.success = False
             raise
+        finally:
+            self._add_recipe_result(config_res)
         return res
 
     def remote_device_setattr(self, index, attr_name, value, netns):
