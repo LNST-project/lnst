@@ -3,6 +3,8 @@ import time
 import signal
 import xml.etree.ElementTree as ET
 
+from lnst.Recipes.ENRT.BasePvPRecipe import BasePvPTestConf, BasePvPRecipe
+from lnst.Recipes.ENRT.BasePvPRecipe import VirtioDevice, VirtioType
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
@@ -21,33 +23,26 @@ from lnst.RecipeCommon.LibvirtControl import LibvirtControl
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
-class PvPTestConf(object):
-    class HostConf(object):
+class OVSPvPTestConf(BasePvPTestConf):
+    class DUTConf(BasePvPTestConf.BaseHostConf):
         def __init__(self):
-            self.host = None
-            self.nics = []
-
-    class DUTConf(HostConf):
-        def __init__(self):
-            super(PvPTestConf.DUTConf, self).__init__()
+            super(OVSPvPTestConf.DUTConf, self).__init__()
             self.trex_path = ""
             self.dpdk_ports = None
             self.vm_ports = None
 
-    class GuestConf(HostConf):
+    class GuestConf(BasePvPTestConf.BaseGuestConf):
         def __init__(self):
-            super(PvPTestConf.GuestConf, self).__init__()
-            self.name = ""
-            self.virtctl = None
+            super(OVSPvPTestConf.GuestConf, self).__init__()
             self.testpmd = None
-            self.vhost_nics = None
 
     def __init__(self):
-        self.generator = self.HostConf()
+        self.generator = self.BasePvPTestConf.BaseHostConf()
         self.dut = self.DUTConf()
         self.guest = self.GuestConf()
 
-class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
+
+class OvSDPDKPvPRecipe(BasePvPRecipe):
     m1 = HostReq()
     m1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     m1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -56,25 +51,12 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
     m2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     m2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    driver = StrParam(mandatory=True)
-
-    trex_dir = StrParam(mandatory=True)
-
-    guest_name = StrParam(mandatory=True)
-    guest_cpus = StrParam(mandatory=True)
-    guest_emulatorpin_cpu = StrParam(mandatory=True)
     guest_dpdk_cores = StrParam(mandatory=True)
     guest_testpmd_cores = StrParam(mandatory=True)
-    guest_mem_size = IntParam(default=16777216)
 
-    host1_dpdk_cores = StrParam(mandatory=True)
     host2_pmd_cores = StrParam(mandatory=True)
     host2_l_cores = StrParam(mandatory=True)
-    nr_hugepages = IntParam(default=13000)
     socket_mem = IntParam(default=2048)
-
-    dev_intr_cpu = IntParam(default=0)
-
 
     cpu_perf_tool = Param(default=StatCPUMeasurement)
 
@@ -85,62 +67,24 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
     #doesn't do anything for now...
     perf_streams = IntParam(default=1)
 
-    perf_usr_comment = StrParam(default="")
-
     def test(self):
         self.check_dependencies()
-        self.warmup()
-        self.pvp_test()
+        ping_config = self.gen_ping_config()
+        self.warmup(ping_config)
+
+        config = OVSPvPTestConf()
+        self.pvp_test(config)
 
     def check_dependencies(self):
         pass
 
-    def warmup(self):
-        try:
-            self.warmup_configuration()
-            self.warmup_pings()
-        finally:
-            self.warmup_deconfiguration()
-
-    def warmup_configuration(self):
-        m1, m2 = self.matched.m1, self.matched.m2
-        m1.eth0.ip_add(ipaddress("192.168.1.1/24"))
-        m1.eth1.ip_add(ipaddress("192.168.1.3/24"))
-
-        m2.eth0.ip_add(ipaddress("192.168.1.2/24"))
-        m2.eth1.ip_add(ipaddress("192.168.1.4/24"))
-
-    def warmup_pings(self):
-        m1, m2 = self.matched.m1, self.matched.m2
-
-        jobs = []
-        jobs.append(m1.run(Ping(interface=m1.eth0.ips[0], dst=m2.eth0.ips[0]), bg=True))
-        jobs.append(m1.run(Ping(interface=m1.eth1.ips[0], dst=m2.eth1.ips[0]), bg=True))
-        jobs.append(m2.run(Ping(interface=m2.eth0.ips[0], dst=m1.eth0.ips[0]), bg=True))
-        jobs.append(m2.run(Ping(interface=m2.eth1.ips[0], dst=m1.eth1.ips[0]), bg=True))
-
-        for job in jobs:
-            job.wait()
-        #TODO eval
-
-    def warmup_deconfiguration(self):
-        m1, m2 = self.matched.m1, self.matched.m2
-        m1.eth0.ip_flush()
-        m1.eth1.ip_flush()
-
-        m2.eth0.ip_flush()
-        m2.eth1.ip_flush()
-
-    def pvp_test(self):
-        try:
-            config = PvPTestConf()
-            self.test_wide_configuration(config)
-
-            perf_config = self.generate_perf_config(config)
-            result = self.perf_test(perf_config)
-            self.perf_report_and_evaluate(result)
-        finally:
-            self.test_wide_deconfiguration(config)
+    def gen_ping_config(self):
+        return [
+            (self.matched.m1, self.matched.m1.eth0, self.matched.m2.eth0),
+            (self.matched.m1, self.matched.m1.eth1, self.matched.m2.eth1),
+            (self.matched.m2, self.matched.m2.eth0, self.matched.m1.eth0),
+            (self.matched.m2, self.matched.m2.eth1, self.matched.m2.eth1)
+        ]
 
     def test_wide_configuration(self, config):
         config.generator.host = self.matched.m1
@@ -190,14 +134,14 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
                             pci_addr=dst_nic.bus_info,
                             ip_addr=dst_nic.ips[0])
             flows.append(PerfFlow(
-                type = "pvp_loop_rate",
-                generator = config.generator.host,
-                generator_bind = src_bind,
-                receiver = config.dut.host,
-                receiver_bind = dst_bind,
-                msg_size = self.params.perf_msg_size,
-                duration = self.params.perf_duration,
-                parallel_streams = self.params.perf_streams,
+                type="pvp_loop_rate",
+                generator=config.generator.host,
+                generator_bind=src_bind,
+                receiver=config.dut.host,
+                receiver_bind=dst_bind,
+                msg_size=self.params.perf_msg_size,
+                duration=self.params.perf_duration,
+                parallel_streams=self.params.perf_streams,
                 cpupin=None))
 
         return PerfRecipeConf(
@@ -224,12 +168,12 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
             config.dut.host.run("ovs-vsctl del-br br0")
             config.dut.host.run("service openvswitch restart")
 
-            self.base_dpdk_deconfiguration(config.dut)
+            self.base_dpdk_deconfiguration(config.dut, ["openvswitch"])
         except:
             log_exc_traceback()
 
         try:
-            #returning the guest to the original running state
+            #  returning the guest to the original running state
             self.shutdown_guest(config.guest)
             config.guest.virtctl.vm_start(config.guest.name)
         except:
@@ -244,37 +188,6 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
         except:
             log_exc_traceback()
 
-    def base_dpdk_configuration(self, dpdk_host_cfg):
-        host = dpdk_host_cfg.host
-
-        for nic in dpdk_host_cfg.nics:
-            nic.enable_readonly_cache()
-
-        #TODO service should be a host method
-        host.run("service irqbalance stop")
-
-        # this will pin all irqs to cpu #0
-        self._pin_irqs(host, 0)
-        host.run("echo -n {} /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages"
-               .format(self.params.nr_hugepages))
-
-        host.run("modprobe vfio-pci")
-        for nic in dpdk_host_cfg.nics:
-            host.run("driverctl set-override {} vfio-pci".format(nic.bus_info))
-
-    def base_dpdk_deconfiguration(self, dpdk_host_cfg):
-        host = dpdk_host_cfg.host
-        #TODO service should be a host method
-        host.run("service irqbalance start")
-        for nic in dpdk_host_cfg.nics:
-            job = host.run("driverctl unset-override {}".format(nic.bus_info),
-                           bg=True)
-            if isinstance(dpdk_host_cfg, PvPTestConf.DUTConf):
-                host.run("systemctl restart openvswitch")
-
-            if not job.wait(10):
-                job.kill()
-
     def ovs_dpdk_bridge_configuration(self, host_conf):
         host = host_conf.host
         host.run("systemctl enable openvswitch")
@@ -288,8 +201,8 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
                  .format(self.params.host2_l_cores))
         host.run("systemctl restart openvswitch")
 
-        #TODO use an actual OvS Device object
-        #TODO config.dut.nics.append(CachedRemoteDevice(m2.ovs))
+        #  TODO use an actual OvS Device object
+        #  TODO config.dut.nics.append(CachedRemoteDevice(m2.ovs))
         host.run("ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev")
 
         host_conf.dpdk_ports = []
@@ -301,43 +214,29 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
             host_conf.dpdk_ports.append(
                     ("dpdk{}".format(i), "1{}".format(i)))
 
-    def init_guest_virtctl(self, host_conf, guest_conf):
-        host = host_conf.host
-
-        guest_conf.name = self.params.guest_name
-        guest_conf.virtctl = host.init_class(LibvirtControl)
-
-    def shutdown_guest(self, guest_conf):
-        virtctl = guest_conf.virtctl
-        virtctl.vm_shutdown(guest_conf.name)
-        self.ctl.wait_for_condition(lambda:
-            not virtctl.is_vm_running(guest_conf.name))
-
     def configure_guest_xml(self, host_conf, guest_conf):
-        virtctl = guest_conf.virtctl
-        guest_xml = ET.fromstring(virtctl.vm_XMLDesc(guest_conf.name))
-        guest_conf.libvirt_xml = guest_xml
+        #  Initialize guest XML
+        guest_xml = self.init_guest_xml(guest_conf)
 
-        guest_conf.vhost_nics = []
-        vhosts = guest_conf.vhost_nics
+        guest_conf.virtio_devs = []
         for i, nic in enumerate(host_conf.nics):
-            path = self._xml_add_vhostuser_dev(
-                    guest_xml, "vhost_nic{i}".format(i=i), nic.hwaddr)
-            vhosts.append((path, nic.hwaddr))
+            path = self._xml_add_vhostuser_dev(guest_xml,
+                                               "vhost_nic{i}".format(i=i),
+                                               nic.hwaddr)
+
+            virtio_dev = VirtioDevice(VirtioType.VHOST_USER,
+                                      str(nic.hwaddr),
+                                      config={
+                                          "path": path
+                                      }
+                                      )
+            guest_conf.virtio_devs.append(virtio_dev)
 
         cpu = guest_xml.find("cpu")
         numa = ET.SubElement(cpu, 'numa')
         ET.SubElement(numa, 'cell', id='0', cpus='0',
                       memory=str(self.params.guest_mem_size), unit='KiB',
                       memAccess='shared')
-
-        cputune = ET.SubElement(guest_xml, "cputune")
-        for i, cpu_id in enumerate(self.params.guest_cpus.split(',')):
-            ET.SubElement(cputune, "vcpupin", vcpu=str(i), cpuset=str(cpu_id))
-
-        ET.SubElement(cputune,
-                      "emulatorpin",
-                      cpuset=str(self.params.guest_emulatorpin_cpu))
 
         memoryBacking = ET.SubElement(guest_xml, "memoryBacking")
         hugepages = ET.SubElement(memoryBacking, "hugepages")
@@ -348,13 +247,13 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
     def ovs_dpdk_bridge_vm_configuration(self, host_conf, guest_conf):
         host = host_conf.host
         host_conf.vm_ports = []
-        for i, nic in enumerate(guest_conf.vhost_nics):
+        for i, vhuser_nic in enumerate(guest_conf.virtio_devs):
             host.run(
                 "ovs-vsctl add-port br0 guest_nic{i} -- "
                 "set interface guest_nic{i} type=dpdkvhostuserclient "
                 "ofport_request=2{i} "
                 "options:vhost-server-path={path}".format(
-                    i=i, path=nic[0]))
+                    i=i, path=vhuser_nic.config.get("path")))
             host_conf.vm_ports.append(
                     ("guest_nic{}".format(i), "2{}".format(i)))
 
@@ -366,27 +265,6 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
                      .format(dpdk_port[1], vm_port[1]))
             host.run("ovs-ofctl add-flow br0 in_port={},action={}"
                      .format(vm_port[1], dpdk_port[1]))
-
-    def create_guest(self, host_conf, guest_conf):
-        host = host_conf.host
-        virtctl = guest_conf.virtctl
-        guest_xml = guest_conf.libvirt_xml
-
-        str_xml = ET.tostring(guest_xml, encoding='utf8', method='xml')
-        virtctl.createXML(str_xml.decode('utf8'))
-
-
-        guest_ip_job = host.run("gethostip -d {}".format(guest_conf.name))
-        guest_ip = guest_ip_job.stdout.strip()
-
-        guest = self.ctl.connect_host(guest_ip, timeout=60, machine_id="guest1")
-        guest_conf.host = guest
-
-        for i, nic in enumerate(guest_conf.vhost_nics):
-            guest.map_device("eth{}".format(i), dict(hwaddr=nic[1]))
-            device = getattr(guest, "eth{}".format(i))
-            guest_conf.nics.append(device)
-        return guest
 
     def guest_vfio_modprobe(self, guest_conf):
         guest = guest_conf.host
@@ -418,9 +296,3 @@ class OvSDPDKPvPRecipe(PingTestAndEvaluate, PerfRecipe):
                       path=vhost_server_path, mode='server')
         return vhost_server_path
 
-    def _pin_irqs(self, host, cpu):
-        mask = 1 << cpu
-        host.run("MASK={:x}; "
-                 "for i in `ls -d /proc/irq/[0-9]*` ; "
-                    "do echo $MASK > ${{i}}/smp_affinity ; "
-                 "done".format(cpu))
