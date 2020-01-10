@@ -37,7 +37,7 @@ class OVSPvPTestConf(BasePvPTestConf):
             self.testpmd = None
 
     def __init__(self):
-        self.generator = self.BasePvPTestConf.BaseHostConf()
+        self.generator = self.BaseHostConf()
         self.dut = self.DUTConf()
         self.guest = self.GuestConf()
 
@@ -301,4 +301,3 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
         ET.SubElement(interface, 'source', type='unix',
                       path=vhost_server_path, mode='server')
         return vhost_server_path
-
