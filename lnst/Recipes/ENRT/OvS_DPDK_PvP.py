@@ -54,6 +54,7 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
     guest_dpdk_cores = StrParam(mandatory=True)
     guest_testpmd_cores = StrParam(mandatory=True)
 
+    host1_dpdk_cores = StrParam(mandatory=True)
     host2_pmd_cores = StrParam(mandatory=True)
     host2_l_cores = StrParam(mandatory=True)
     socket_mem = IntParam(default=2048)
@@ -145,13 +146,18 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
                 cpupin=None))
 
         return PerfRecipeConf(
-                measurements=[
-                    self.params.cpu_perf_tool([config.generator.host,
-                                               config.dut.host,
-                                               config.guest.host]),
-                    TRexFlowMeasurement(flows, self.params.trex_dir)
-                    ],
-                iterations=self.params.perf_iterations)
+            measurements=[
+                self.params.cpu_perf_tool(
+                    [config.generator.host, config.dut.host, config.guest.host]
+                ),
+                TRexFlowMeasurement(
+                    flows,
+                    self.params.trex_dir,
+                    self.params.host1_dpdk_cores.split(","),
+                ),
+            ],
+            iterations=self.params.perf_iterations,
+        )
 
     def test_wide_deconfiguration(self, config):
         try:

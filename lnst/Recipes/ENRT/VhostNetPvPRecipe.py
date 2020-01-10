@@ -31,6 +31,8 @@ class VhostNetPvPRecipe(BasePvPRecipe):
     host_req.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host_req.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
+    host1_dpdk_cores = StrParam(mandatory=True)
+
     vhost_cpus = StrParam(mandatory=True)  # The CPUs used by vhost-net kernel threads
 
     # TODO: Study the possibility of adding more forwarding engines
@@ -134,13 +136,18 @@ class VhostNetPvPRecipe(BasePvPRecipe):
                          )
 
         return PerfRecipeConf(
-                measurements=[
-                    self.params.cpu_perf_tool([config.generator.host,
-                                               config.dut.host,
-                                               config.guest.host]),
-                    TRexFlowMeasurement(flows, self.params.trex_dir)
-                ],
-                iterations=self.params.perf_iterations)
+            measurements=[
+                self.params.cpu_perf_tool(
+                    [config.generator.host, config.dut.host, config.guest.host]
+                ),
+                TRexFlowMeasurement(
+                    flows,
+                    self.params.trex_dir,
+                    self.params.host1_dpdk_cores.split(","),
+                ),
+            ],
+            iterations=self.params.perf_iterations,
+        )
 
     def test_wide_deconfiguration(self, config):
         try:

@@ -16,9 +16,10 @@ from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementErro
 from lnst.Tests.TRex import TRexServer, TRexClient
 
 class TRexFlowMeasurement(BaseFlowMeasurement):
-    def __init__(self, flows, trex_dir):
+    def __init__(self, flows, trex_dir, server_cpu_cores):
         self._flows = flows
         self._trex_dir = trex_dir
+        self._server_cpu_cores = server_cpu_cores
         self._conf = dict(flows=flows, trex_dir=trex_dir)
         self._running_measurements = []
         self._finished_measurements = []
@@ -69,7 +70,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
                     TRexServer(
                         trex_dir=self._trex_dir,
                         flows=flow_tuples,
-                        cores=["2", "3", "4"]))
+                        cores=self._server_cpu_cores))
             client_job = generator.prepare_job(
                     TRexClient(
                         trex_dir=self._trex_dir,
