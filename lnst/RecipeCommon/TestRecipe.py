@@ -9,19 +9,11 @@ from lnst.Controller.Recipe import RecipeError
 
 from lnst.Tests.Netperf import Netperf
 
-from lnst.RecipeCommon.PerfRepo.PerfRepo import PerfRepoAPI
-from lnst.RecipeCommon.PerfRepo.PerfRepo import generate_perfrepo_comment
-from lnst.RecipeCommon.PerfRepo.PerfRepoUtils import netperf_baseline_template
-from lnst.RecipeCommon.PerfRepo.PerfRepoUtils import netperf_result_template
-
 from lnst.RecipeCommon.IRQ import pin_dev_irqs
 
 class TestRecipe(BaseRecipe):
     ipv = StrParam(default="both")
     mtu = IntParam(default=1500)
-
-    mapping_file = StrParam()
-    pr_user_comment = StrParam()
 
     nperf_cpupin = IntParam()
     nperf_reserve = IntParam(default=20)
@@ -43,19 +35,8 @@ class TestRecipe(BaseRecipe):
     def __init__(self, **kwargs):
         super(TestRecipe, self).__init__(**kwargs)
 
-        if "mapping_file" in self.params:
-            self.perf_api = PerfRepoAPI(self.params.mapping_file)
-            self.perf_api.connect_PerfRepo()
-
-
     def initial_setup(self):
         machines = []
-
-        if "pr_user_comment" in self.params:
-            machines = [machines.append(m) for m in self.matched]
-
-            self.pr_comment = generate_perfrepo_comment(machines,
-                                            self.params.pr_user_comment)
 
         if "nperf_cpupin" in self.params:
             for m in self.matched:
@@ -113,17 +94,8 @@ class TestRecipe(BaseRecipe):
         return Netperf(**kwargs)
 
 
-    def netperf_run(self, netserver, netperf, perfrepo_result=None):
+    def netperf_run(self, netserver, netperf):
         srv_proc = self.matched.m1.run(netserver, bg=True)
-
-        if perfrepo_result:
-            if not hasattr(self, 'perf_api'):
-                raise RecipeError("no class variable called perf_api")
-
-
-            baseline = self.perf_api.get_baseline_of_result(perfrepo_result)
-            #TODO:
-            #netperf_baseline_template(netperf, baseline)
 
         time.sleep(2)
 
@@ -132,14 +104,6 @@ class TestRecipe(BaseRecipe):
                                        self.params.netperf_duration +
                                        self.params.nperf_reserve) *
                                        self.params.netperf_runs)
-
-        if perfrepo_result:
-            netperf_result_template(perfrepo_result, res_data)
-
-            if hasattr(self, 'pr_comment'):
-                perfrepo_result.set_comment(self.params.pr_comment)
-
-            self.perf_api.save_result(perfrepo_result)
 
         srv_proc.kill(2)
 

@@ -18,7 +18,6 @@ class SimpleNetperfRecipe(TestRecipe):
                         [("gro", "on"), ("gso", "on"), ("tso", "off"), ("tx", "off"), ("rx", "on")],
                         [("gro", "on"), ("gso", "on"), ("tso", "on"), ("tx", "on"), ("rx", "off")]]
 
-    mapping_file = StrParam(default="simple_netperf.mapping")
     product_name = StrParam(default="RHEL7")
 
     m1 = HostReq()
@@ -73,28 +72,12 @@ class SimpleNetperfRecipe(TestRecipe):
             for ipver in ipv:
                 if self.params.ipv in [ipver, 'both']:
                     for ttype, ttype_name in transport_type:
-                        result = self.perf_api.new_result(ttype+"_"+ipver+"_id",
-                                                          ttype+"_"+ipver+"_result",
-                                                          hash_ignore=[
-                                                             'kernel_release',
-                                                             'redhat_release'])
-
-                        for offload in setting:
-                            result.set_parameter(offload[0], offload[1])
-
-                        result.add_tag(self.params.product_name)
-                        if self.params.nperf_mode == "multi":
-                            result.add_tag("multithreaded")
-                            result.set_parameter("num_parallel",
-                                                 self.params.nperf_num_parallel)
-
                         ip_num = 0 if ipver is 'ipv4' else 1
                         netperf = self.generate_netperf_cli(self.matched.m1.eth0.ips[ip_num],
                                                             ttype_name)
 
                         self.netperf_run(Netserver(bind=self.matched.m1.eth0.ips[ip_num]),
-                                         netperf,
-                                         result)
+                                         netperf)
                         time.sleep(5)
 
 
