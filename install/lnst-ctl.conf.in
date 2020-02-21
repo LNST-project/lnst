@@ -56,8 +56,3 @@ allow_virtual = True
 # which contains the slave machine descriptions.
 [pools]
 
-# Optional section for configuring access to a PerfRepo instance
-#[perfrepo]
-#url =
-#username =
-#password =
