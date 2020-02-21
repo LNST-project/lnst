@@ -2,10 +2,6 @@
 This module defines the Controller class that brings together individual
 implementation parts of an LNST Controller. When instantiated, it allows the
 tester to configure and run his own recipes with the LNST 'infrastructure'.
-
-Copyright 2017 Red Hat, Inc.
-Licensed under the GNU General Public License, version 2 as
-published by the Free Software Foundation; see COPYING for details.
 """
 
 __author__ = """
@@ -33,34 +29,65 @@ from lnst.Controller.Recipe import BaseRecipe, RecipeRun
 from lnst.Controller.RecipeControl import RecipeControl
 
 class Controller(object):
-    """The LNST Controller class
+    """Allows to run LNST Recipe instances
 
-    Most importantly allows the tester to run instantiated Recipe tests using
-    the LNST infrastructure.
+    This is the main mechanism that allows users to create their own executable
+    test scripts that execute LNST Recipes.
 
-    Can be configured with custom implementation of several objects used for
-    setting up the infrastructure.
+    The Controller class implementation provides the most common default values
+    for various parameters that can significantly change the way that Recipes
+    are executed. This includes custom implementations of classes that are used
+    for setting up the testing infrastructure such as the PoolManager or the
+    MachineMapper.
+
+    :param poolMgr:
+        class that implements the
+        :py:class:`lnst.Controller.SlavePoolManager.SlavePoolManager` interface
+        will be instantiated by the Controller to provide the mapper with pools
+        available for matching, also handles the creation of
+        :py:class:`Machine` objects (internal LNST class used to access the
+        slave hosts)
+    :type poolMgr:
+        :py:class:`lnst.Controller.SlavePoolManager.SlavePoolManager`
+        (this is also the default class)
+
+    :param mapper:
+        class that implements the
+        :py:class:`lnst.Controller.MachineMapper.MachineMapper` interface will
+        be instantiated by the Controller to match Recipe requirements to the
+        available pools
+    :type mapper: :py:class:`lnst.Controller.MachineMapper.MachineMapper`
+        (this is also the default class)
+
+    :param config:
+        optional LNST configuration object, if None the Controller will
+        load it's own configuration from default paths. If not provided, the
+        Controller init method will create a CtlConfig object instance
+        automatically and load it with values from default configuration file
+        paths.
+    :type config: :py:class:`lnst.Controller.Config.CtlConfig`
+
+    :param pools:
+        a list of pool names to restrict the used pool directories
+    :type pools: List[str] (default [])
+
+    :param pool_checks:
+        if False, will disable checking the online status of Slaves
+    :type pool_checks: boolean (default True)
+
+    :param debug:
+        sets the debug level of LNST
+    :type debug: integer (default 0)
+
+    Example::
+
+        lnst_controller = Controller()
+        recipe_instance = MyRecipe(test_parameter=123)
+        lnst_controller.run(recipe_instance)
     """
 
     def __init__(self, poolMgr=SlavePoolManager, mapper=MachineMapper,
                  config=None, pools=[], pool_checks=True, debug=0):
-        """
-        Args:
-            poolMgr -- class that implements the SlavePoolManager interface
-                will be instantiated by the Controller to provide the mapper
-                with pools available for matching, also handles the creation
-                of Machine objects (internal LNST class used to access the
-                slave hosts)
-            mapper -- class that implements the MachineMapper interface
-                will be instantiated by the Controller to match Recipe
-                requirements to the available pools
-            config -- optional LNST configuration object, if None the
-                Controller will load it's own configuration from default paths
-            pools -- a list of pool names to restrict the used pool directories
-            pool_checks -- boolean (default True), if False will disable
-                checking online status of Slaves
-            debug -- integer (default 0), sets debug level of LNST
-        """
         self._config = self._load_ctl_config(config)
         config = self._config
 
@@ -96,13 +123,17 @@ class Controller(object):
     def run(self, recipe, **kwargs):
         """Execute the provided Recipe
 
-        This method takes care of both finding a Slave hosts matching the Recipe
-        requirements, provisioning them and calling the 'test' method of the
+        This method takes care of both finding Slave hosts matching the Recipe
+        requirements, provisioning them and calling the *test* method of the
         Recipe object with proper references to the mapped Hosts
 
-        Args:
-            recipe -- an instantiated Recipe object (isinstance BaseRecipe)
-            kwargs -- optional keyword arguments passed to the configured Mapper
+        :param recipe:
+            an instantiated Recipe object
+        :type recipe: :py:class:`lnst.Controller.Recipe.BaseRecipe`
+
+        :param kwargs:
+            optional keyword arguments passed to the configured Mapper
+        :type kwargs: Dict[str, Any]
         """
         if not isinstance(recipe, BaseRecipe):
             raise ControllerError("recipe argument must be a BaseRecipe instance.")
@@ -133,7 +164,6 @@ class Controller(object):
                 raise
             finally:
                 self._cleanup_slaves()
-
 
     def _map_match(self, match, requested, recipe):
         self._machines = {}

@@ -4,10 +4,6 @@ This module defines the Param class, it's type specific derivatives
 Param instances. This can be used by a BaseRecipe class to specify
 optional/mandatory parameters for the entire test, or by HostReq and DeviceReq
 classes to define specific parameters needed for the matching algorithm.
-
-Copyright 2017 Red Hat, Inc.
-Licensed under the GNU General Public License, version 2 as
-published by the Free Software Foundation; see COPYING for details.
 """
 
 __author__ = """
@@ -24,12 +20,31 @@ class ParamError(LnstError):
     pass
 
 class Param(object):
+    """Base Parameter class
+
+    Can beused to define your own specific parameter type. Param derived classes
+    serve as *type checkers* to enable earlier failure of the recipe.
+
+    :param mandatory: if `True`, marks the parameter as mandatory
+    :type mandatory: bool
+
+    :param default: the default value for the parameter, is also type-checked,
+        immediately at Param object creation
+    """
     def __init__(self, mandatory=False, **kwargs):
         self.mandatory = mandatory
         if "default" in kwargs:
             self.default = self.type_check(kwargs["default"])
 
     def type_check(self, value):
+        """The type check method
+
+        Implementation depends on the specific Param derived class.
+
+        :return: the type checked or converted value
+
+        :raises: :any:`ParamError` if the type check or conversion is invalid
+        """
         return value
 
 class IntParam(Param):

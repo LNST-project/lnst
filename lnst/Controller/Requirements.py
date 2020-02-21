@@ -1,19 +1,19 @@
 """
-This module defines the DeviceReq and HostReq classes, which can be used to
+This module defines the :py:class:`lnst.Controller.Requirements.DeviceReq` and
+:py:class:`lnst.Controller.Requirements.HostReq` classes, which can be used to
 create a global description of Requirements for a network test. You can use
-these to define class attributes of a BaseRecipe derived class to specify
+these to define class attributes of a
+:py:class:`lnst.Controller.Recipe.BaseRecipe` derived class to specify
 "general" requirements for that Recipe, or you can add them to an instance of a
 Recipe derived class based on it's parameters to define requirements "specific"
 for that single test run.
 
-The module also specifies a Requirements class which serves as a container for
-HostReq objects, while HostReq classes also serve as containers for DeviceReq
-objects. The object tree created this way is translated to a dictionary used by
-the internal LNST matching algorithm against available machines.
-
-Copyright 2017 Red Hat, Inc.
-Licensed under the GNU General Public License, version 2 as
-published by the Free Software Foundation; see COPYING for details.
+The module also specifies a
+:py:class:`lnst.Controller.Requirements._Requirements` class (currently for
+internal use only) which serves as a container for HostReq objects, while
+HostReq classes also serve as containers for DeviceReq objects. The object tree
+created this way is translated to a dictionary used by the internal LNST
+matching algorithm against available machines.
 """
 
 __author__ = """
@@ -63,15 +63,22 @@ class HostReq(BaseReq):
 
     To define a Host requirement you assign a HostReq instance to a class
     attribute of a BaseRecipe derived class.
-    Example:
-    class MyRecipe(BaseRecipe):
-        m1 = HostReq()
 
-    Args:
-        kwargs -- any other arguments will be treated as arbitrary string
-            parameters that will be matched to parameters of Slave machines
-            which can define their parameter values based on the implementation
-            of the SlaveMachineParser
+    :param kwargs:
+        any argument will be treated as arbitrary string parameters that will
+        be matched to parameters of Slave machines which can define their
+        parameter values based on the implementation of the SlaveMachineParser
+
+        A special case is the use of a
+        :py:mod:`lnst.Controller.Requirements.RecipeParam` instance as value.
+        This is used to link to a value provided as a Parameter to the Recipe.
+    :type kwargs: Dict[str, Any]
+
+    Example::
+
+        class MyRecipe(BaseRecipe):
+            m1 = HostReq()
+            m2 = HostReq(architecture="x86_64")
     """
     def reinit_with_params(self, recipe_params):
         super(HostReq, self).reinit_with_params(recipe_params)
@@ -93,21 +100,32 @@ class HostReq(BaseReq):
         return res
 
 class DeviceReq(BaseReq):
-    """Specifies an Ethernet Device requirement
+    """Specifies a static test network Device requirement
+
+    This will be used to find a matching test machine in the configured slave
+    machine pools, specifically this will be used to match against a test
+    device on a slave machine that is "statically" present on the machine. In
+    other words an actual REAL network device connected to a network usable for
+    testing.
 
     To define a Device requirement you assign a DeviceReq instance to a HostReq
     instance in a BaseRecipe derived class.
-    Example:
-    class MyRecipe(BaseRecipe):
-        m1 = HostReq()
-        m1.eth0 = DeviceReq(label="net1")
 
-    Args:
-        label -- string value indicating the network the Device is connected to
-        kwargs -- any other arguments will be treated as arbitrary string
-            parameters that will be matched to parameters of Slave machines
-            which can define their parameter values based on the implementation
-            of the SlaveMachineParser
+    :param label:
+        string value indicating the network the Device is connected to
+    :type label: string
+
+    :param kwargs:
+        any other arguments will be treated as arbitrary string parameters that
+        will be matched to parameters of Slave machines which can define their
+        parameter values based on the implementation of the SlaveMachineParser
+    :type kwargs: Dict[str, Any]
+
+    Example::
+
+        class MyRecipe(BaseRecipe):
+            m1 = HostReq()
+            m1.eth0 = DeviceReq(label="net1")
     """
     def __init__(self, label, **kwargs):
         self.label = label

@@ -1,9 +1,5 @@
 """
 Module implementing the BaseRecipe class.
-
-Copyright 2017 Red Hat, Inc.
-Licensed under the GNU General Public License, version 2 as
-published by the Free Software Foundation; see COPYING for details.
 """
 
 __author__ = """
@@ -23,27 +19,30 @@ class RecipeError(ControllerError):
     pass
 
 class BaseRecipe(object):
-    """BaseRecipe class
+    """Base class for LNST Recipe definition.
 
     Every LNST Recipe written by testers should be inherited from this class.
     An LNST Recipe is composed of several parts:
+
     * Requirements definition - you define recipe requirements in a derived
-        class by defining class attributes of the HostReq type. You can further
-        specify Ethernet Device requirements by defining DeviceReq attributes
-        of the HostReq object.
-        Example:
-        m1 = HostReq(arch="x86_64")
-        m1.eth0 = DeviceReq(driver="ixgbe")
-    * Parameter definition (optional) - you can define paramaters of your Recipe
-        by defining class attributes of the Param type (or inherited). These
-        parameters can then be accessed from the test() method to change it's
-        behaviour. Parameter validity (type) is checked during the
-        instantiation of the Recipe object by the base __init__ method.
-        You can define your own __init__ method to implement more complex
-        Parameter checking if needed, but you MUST call the base __init__
-        method first.
-        Example:
-        MyRecipe(BaseRecipe):
+      class by defining class attributes of the HostReq type. You can further
+      specify Ethernet Device requirements by defining DeviceReq attributes of
+      the :py:class:`lnst.Controller.Requirements.HostReq` object. Example::
+
+        class MyRecipe(BaseRecipe):
+            m1 = HostReq(arch="x86_64")
+            m1.eth0 = DeviceReq(driver="ixgbe")
+
+    * Parameter definition (optional) - you can define paramaters of your
+      Recipe by defining class attributes of the :any:`Param` type (or
+      inherited).  These parameters can then be accessed from the test() method
+      to change it's behaviour. Parameter validity (type) is checked during the
+      instantiation of the Recipe object by the base __init__ method.  You can
+      define your own __init__ method to implement more complex Parameter
+      checking if needed, but you MUST call the base __init__ method first.
+      Example::
+
+        class MyRecipe(BaseRecipe):
             int_param = IntParam(mandatory=True)
             optional_param = IntParam()
 
@@ -55,18 +54,24 @@ class BaseRecipe(object):
         MyRecipe(int_param = 2, optional_param = 3)
 
     * Test definition - this is done by defining the test() method, in this
-        method the tester has direct access to mapped LNST slave Hosts, can
-        manipulate them and implement his tests.
+      method the tester has direct access to mapped LNST slave Hosts, can
+      manipulate them and implement his tests.
 
-    Attributes:
-        matched -- when running the Recipe the Controller will fill this
-            attribute with a Hosts object after the Mapper finds suitable slave
-            hosts.
-        req -- instantiated Requirements object, you can optionally change the
-            Recipe requirements through this object during runtime (e.g.
-            variable number of hosts or devices of a host based on a Parameter)
-        params -- instantiated Parameters object, can be used to access the
-            calculated parameters during Recipe initialization/execution
+    :ivar matched:
+        When running the Recipe the Controller will fill this attribute with a
+        Hosts object after the Mapper finds suitable slave hosts.
+    :type matched: :py:class:`lnst.Controller.Host.Hosts`
+
+    :ivar req:
+        Instantiated Requirements object, you can optionally change the Recipe
+        requirements through this object during runtime (e.g.  variable number
+        of hosts or devices of a host based on a Parameter)
+    :type req: :py:class:`lnst.Controller.Requirements._Requirements`
+
+    :ivar params:
+        Instantiated Parameters object, can be used to access the calculated
+        parameters during Recipe initialization/execution
+    :type params: :py:class:`lnst.Common.Parameters.Parameters`
     """
     def __init__(self, **kwargs):
         """

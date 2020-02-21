@@ -12,7 +12,7 @@ backwards compatibility are yet in place.
 
 This also means that many of our documentation resources outlining how to write
 recipes on the wiki are also out of date. We'll soon start working on these but
-please be paitent with us.
+please be patient with us.
 
 If you're interested in helping out we accept code contributions via Patches
 submitted to our mailing list <lnst-developers@lists.fedorahosted.org>.
@@ -33,13 +33,13 @@ Internet Resources bellow).
 
 ## Install
 
-LNST can be installed using python's distutils.
+Installation and a simple Hello world example is available at
+[Installation](docs/source/installation.rst)
 
-```bash
-su
-./setup.py install
-```
+## Documentation
 
+Documentation is available in the `docs/` directory, you can build it with
+`make html` using *Sphinx*.
 
 ## Authors/Contributors
 
@@ -53,18 +53,15 @@ su
 * Jiri Zupka (not active anymore)
 * Radek Pazdera (not active anymore)
 
+## How to contact us
 
-## Internet Resources
-
-* Project Wiki:     https://github.com/jpirko/lnst/wiki (currently out of date)
-* Documentation:    https://github.com/jpirko/lnst/wiki#learn (currently out of date)
-* Git Source Tree:  https://github.com/jpirko/lnst
-* Mailing List:     <lnst-developers@lists.fedorahosted.org>
-
+* Git Source Tree: https://github.com/jpirko/lnst
+* Mailing List:  <lnst-developers@lists.fedorahosted.org>
+* IRC channel: #lnst @ freenode.net
 
 ## License
 
-**Copyright (C) 2011-2019 Red Hat, Inc.**
+**Copyright (C) 2011-2020 Red Hat, Inc.**
 
 LNST is distributed under GNU General Public License version 2. See the file
 "COPYING" in the source distribution for information on terms & conditions
