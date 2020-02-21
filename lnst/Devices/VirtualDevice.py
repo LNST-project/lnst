@@ -97,3 +97,4 @@ class VirtualDevice(RemoteDevice):
 
         domain_ctl = self._machine.get_domain_ctl()
         domain_ctl.detach_interface(self.orig_hwaddr)
+        self.deleted = True
