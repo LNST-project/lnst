@@ -65,7 +65,7 @@ class TestRecipe(BaseRecipe):
         self.nperf_opts6 += " -6"
 
         if "nperf_cpupin" in self.params and self.params.netperf_mode != "multi":
-            self.nperf_popts6 += " -T%s,%s" % (self.params.netperf_cpupin,
+            self.nperf_opts6 += " -T%s,%s" % (self.params.netperf_cpupin,
                                      self.params.netperf_cpupin)
 
         time.sleep(15)
