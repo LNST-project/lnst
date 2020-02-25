@@ -1,6 +1,0 @@
-timeout attribute is ignored
-
-This is tested by setting different timeouts to background commands and parsing
-logs to see if the test failed because of a timeout or finished succesfully.
-
-https://github.com/jpirko/lnst/issues/67

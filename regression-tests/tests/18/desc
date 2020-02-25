@@ -1,6 +1,0 @@
-Empty task results in uhandled exception
-
-Instead we should require at least one command or end with an error, but not a
-stack trace.
-
-https://github.com/jpirko/lnst/issues/53
