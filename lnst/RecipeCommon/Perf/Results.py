@@ -106,15 +106,17 @@ class PerfList(list):
         super(PerfList, self).__iadd__(iterable)
 
     def __setitem__(self, i, item):
-        self._validate_item(item)
+        if isinstance(item, list):
+            if not isinstance(i, slice):
+                raise LnstError("{} accepts list values in slice assignment "
+                    "only".format(self.__class__.__name__))
+
+            for j in item:
+                self._validate_item(j)
+        else:
+            self._validate_item(item)
 
         super(PerfList, self).__setitem__(i, item)
-
-    def __setslice__(self, i, j, iterable):
-        for i in iterable:
-            self._validate_item(i)
-
-        super(PerfList, self).__setslice__(i, j, iterable)
 
 class SequentialPerfResult(PerfResult, PerfList):
     @property
