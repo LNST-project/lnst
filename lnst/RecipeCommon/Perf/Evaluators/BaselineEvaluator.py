@@ -29,7 +29,7 @@ class BaselineEvaluator(BaseEvaluator):
 
         recipe.add_result(comparison_result, "\n".join(result_text))
 
-    def describe_group_results(recipe, results):
+    def describe_group_results(self, recipe, results):
         return []
 
     def get_baselines(self, recipe, results):
