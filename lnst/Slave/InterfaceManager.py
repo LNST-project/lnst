@@ -21,7 +21,8 @@ from lnst.Slave.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
-from lnst.Common.DeviceError import DeviceNotFound, DeviceConfigError, DeviceDeleted
+from lnst.Common.DeviceError import (DeviceNotFound, DeviceConfigError,
+        DeviceDeleted, DeviceError)
 from lnst.Common.InterfaceManagerError import InterfaceManagerError
 from lnst.Slave.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
