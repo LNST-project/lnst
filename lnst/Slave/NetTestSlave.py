@@ -29,9 +29,6 @@ from lnst.Common.PacketCapture import PacketCapture
 from lnst.Common.Utils import die_when_parent_die
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.ResourceCache import ResourceCache
-from lnst.Common.NetTestCommand import NetTestCommandContext
-from lnst.Common.NetTestCommand import NetTestCommand
-from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Common.Utils import check_process_running
 from lnst.Common.Utils import is_installed
 from lnst.Common.ConnectionHandler import send_data
@@ -393,22 +390,6 @@ class SlaveMethods:
 
         self._system_config = {}
         return True
-
-    def get_remaining_time(self, bg_id):
-        cmd = self._command_context.get_cmd(bg_id)
-        if "timeout" in cmd._command:
-            cmd_timeout = cmd._command["timeout"]
-        else:
-            cmd_timeout = DEFAULT_TIMEOUT
-
-        start_time = cmd._start_time
-        current_time = time()
-
-        remaining = cmd_timeout - (current_time - start_time)
-        if remaining < 0:
-            remaining = 0
-
-        return int(remaining)
 
     def run_job(self, job):
         job_instance = Job(job, self._log_ctl)
