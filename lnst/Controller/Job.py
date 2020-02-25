@@ -14,9 +14,10 @@ olichtne@redhat.com (Ondrej Lichtner)
 import logging
 import signal
 from lnst.Common.JobError import JobError
-from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Controller.RecipeResults import ResultLevel
+
+DEFAULT_TIMEOUT = 60
 
 class Job(object):
     """Tester facing Job API

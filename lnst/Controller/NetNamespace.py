@@ -12,7 +12,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import logging
-from lnst.Common.NetTestCommand import DEFAULT_TIMEOUT
 from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Controller.Namespace import Namespace
