@@ -134,8 +134,8 @@ class ListParam(Param):
                 try:
                     self._type.type_check(item)
                 except ParamError as e:
-                    raise ParamError("Value {} failed type check:\n{}"
-                                     .format(str(e)))
+                    raise ParamError("Value '{}' failed type check:\n{}"
+                                     .format(item, str(e)))
         return value
 
 class Parameters(object):
