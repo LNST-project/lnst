@@ -38,7 +38,7 @@ from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.LnstError import LnstError
 from lnst.Common.DeviceError import DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigValueError
-from lnst.Common.Parameters import Parameters, DeviceParam
+from lnst.Common.Parameters import Parameters
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.Version import lnst_version
 from lnst.Slave.Job import Job, JobContext
