@@ -210,6 +210,13 @@ class Device(object, metaclass=DeviceMeta):
 
             if addr not in self._ip_addrs:
                 self._ip_addrs.append(addr)
+            else:
+                old_idx = self._ip_addrs.index(addr)
+                addr_old = self._ip_addrs[old_idx]
+                if addr.flags != addr_old.flags:
+                    self._ip_addrs.pop(old_idx)
+                    self._ip_addrs.append(addr)
+
         elif nl_msg['header']['type'] == RTM_DELADDR:
             addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'))
             addr.prefixlen = nl_msg["prefixlen"]
