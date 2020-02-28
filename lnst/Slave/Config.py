@@ -23,11 +23,6 @@ class SlaveConfig(Config):
                 "additive" : False,
                 "action" : self.optionPath,
                 "name" : "log_dir"}
-        self._options['environment']['use_nm'] = {\
-                "value" : True,
-                "additive" : False,
-                "action" : self.optionBool,
-                "name" : "use_nm"}
         self._options['environment']['rpcport'] = {\
                 "value" : DefaultRPCPort,
                 "additive" : False,

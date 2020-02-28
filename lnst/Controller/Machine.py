@@ -373,7 +373,6 @@ class Machine(object):
             self.restore_system_config()
             self.cleanup_devices()
             self.del_namespaces()
-            # self.restore_nm_option()
             self.rpc_call("bye")
         except:
             #cleanup is only meaningful on dynamic interfaces, and should
@@ -570,15 +569,6 @@ class Machine(object):
         obj_ref = self.rpc_call("init_cls", cls_name, module_name, args, kwargs)
 
         return SlaveObject(self, cls, obj_ref)
-
-    # def enable_nm(self):
-        # return self._rpc_call("enable_nm")
-
-    # def disable_nm(self):
-        # return self._rpc_call("disable_nm")
-
-    # def restore_nm_option(self):
-        # return self._rpc_call("restore_nm_option")
 
     def __str__(self):
         return "[Machine hostname(%s) libvirt_domain(%s) interfaces(%d)]" % \

@@ -96,8 +96,6 @@ class SlaveMethods:
         self._dynamic_classes = {}
         self._dynamic_objects = {}
 
-        self._bkp_nm_opt_val = slave_config.get_option("environment", "use_nm")
-
     def hello(self):
         logging.info("Recieved a controller connection.")
 
@@ -117,7 +115,6 @@ class SlaveMethods:
 
     def prepare_machine(self):
         self.machine_cleanup()
-        self.restore_nm_option()
 
         self._cache.del_old_entries()
         self.reset_file_transfers()
@@ -131,10 +128,6 @@ class SlaveMethods:
         if check_process_running("NetworkManager"):
             logging.warning("=============================================")
             logging.warning("NetworkManager is running on a slave machine!")
-            if self._slave_config.get_option("environment", "use_nm"):
-                logging.warning("Support of NM is still experimental!")
-            else:
-                logging.warning("Usage of NM is disabled!")
             logging.warning("=============================================")
 
         for device in self._if_manager.get_devices():
@@ -515,33 +508,6 @@ class SlaveMethods:
         for file_handle in self._copy_sources.values():
             file_handle.close()
         self._copy_sources = {}
-
-    def enable_nm(self):
-        logging.warning("====================================================")
-        logging.warning("Enabling use of NetworkManager on controller request")
-        logging.warning("====================================================")
-        val = self._slave_config.get_option("environment", "use_nm")
-        self._slave_config.set_option("environment", "use_nm", True)
-        return val
-
-    def disable_nm(self):
-        logging.warning("=====================================================")
-        logging.warning("Disabling use of NetworkManager on controller request")
-        logging.warning("=====================================================")
-        val = self._slave_config.get_option("environment", "use_nm")
-        self._slave_config.set_option("environment", "use_nm", False)
-        return val
-
-    def restore_nm_option(self):
-        val = self._slave_config.get_option("environment", "use_nm")
-        if val == self._bkp_nm_opt_val:
-            return val
-        logging.warning("=========================================")
-        logging.warning("Restoring use_nm option to original value")
-        logging.warning("=========================================")
-        self._slave_config.set_option("environment", "use_nm",
-                                      self._bkp_nm_opt_val)
-        return val
 
     def add_namespace(self, netns):
         if netns in self._net_namespaces:

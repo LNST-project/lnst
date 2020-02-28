@@ -25,10 +25,3 @@ expiration_period = 7days
 #in this option.
 #The option accepts one directory path that will be created if it doesn't exist.
 log_dir = @slave_logs_dir@
-
-#This option can be used to enable/disable the support of network
-#configuration using NetworkManager on slaves.
-#
-#The feature is highly experimental at the moment, so it is turned off
-#by default.
-use_nm = false
