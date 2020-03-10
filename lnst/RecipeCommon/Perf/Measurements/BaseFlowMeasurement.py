@@ -204,7 +204,7 @@ class BaseFlowMeasurement(BaseMeasurement):
                 .format(cpu=generator_cpu.average,
                         cpu_deviation=generator_cpu.std_deviation,
                         cpu_unit=generator_cpu.unit))
-        desc.append("Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2}%) {unit} per second."
+        desc.append("Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second."
                 .format(tput=receiver.average,
                         deviation=receiver.std_deviation,
                         percentage=cls._deviation_percentage(receiver),
