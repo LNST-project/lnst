@@ -30,7 +30,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     ping_bidirect = BoolParam(default=False)
     ping_count = IntParam(default=100)
     ping_interval = FloatParam(default=0.2)
-    ping_psize = IntParam(default=None)
+    ping_psize = IntParam(default=56)
 
     #common perf test params
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
