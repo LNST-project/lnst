@@ -92,9 +92,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
         description = self.generate_sub_configuration_description(config)
         self.add_result(True, "\n".join(description))
 
-    def generate_sub_configuration_description(self, config):
-        return ["Sub configuration description:"]
-
     def do_tests(self, recipe_config):
         self.do_ping_tests(recipe_config)
         self.do_perf_tests(recipe_config)

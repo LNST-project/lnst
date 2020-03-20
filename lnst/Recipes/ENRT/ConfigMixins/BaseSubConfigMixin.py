@@ -6,7 +6,7 @@ class BaseSubConfigMixin(object):
         pass
 
     def generate_sub_configuration_description(self, config):
-        return []
+        return ["Sub configuration description:"]
 
     def remove_sub_configuration(self, config):
         return
