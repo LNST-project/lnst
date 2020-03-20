@@ -27,7 +27,7 @@ class Param(object):
     def __init__(self, mandatory=False, **kwargs):
         self.mandatory = mandatory
         if "default" in kwargs:
-            self.default = kwargs["default"]
+            self.default = self.type_check(kwargs["default"])
 
     def type_check(self, value):
         return value
