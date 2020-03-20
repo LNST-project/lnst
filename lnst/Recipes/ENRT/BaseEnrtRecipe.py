@@ -29,7 +29,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     ping_parallel = BoolParam(default=False)
     ping_bidirect = BoolParam(default=False)
     ping_count = IntParam(default=100)
-    ping_interval = StrParam(default=0.2)
+    ping_interval = FloatParam(default=0.2)
     ping_psize = IntParam(default=None)
 
     #common perf test params
