@@ -2,7 +2,14 @@ import pprint
 from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam, ListParam
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    StrParam,
+    BoolParam,
+    ListParam,
+    FloatParam,
+)
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
