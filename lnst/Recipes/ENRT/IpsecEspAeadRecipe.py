@@ -161,24 +161,24 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
                     reverse_flow = self._create_reverse_flow(flow)
                     yield [reverse_flow]
 
-    def ping_test(self, ping_config):
-        m1, m2 = ping_config[0].client, ping_config[0].destination
-        ip1, ip2 = (ping_config[0].client_bind,
-            ping_config[0].destination_address)
+    def ping_test(self, ping_configs):
+        m1, m2 = ping_configs[0].client, ping_configs[0].destination
+        ip1, ip2 = (ping_configs[0].client_bind,
+            ping_configs[0].destination_address)
         if1_name = self.get_dev_by_ip(m1, ip1).name
         if2 = self.get_dev_by_ip(m2, ip2)
 
         pa_kwargs = {}
         pa_kwargs["p_filter"] = "esp"
         pa_kwargs["grep_for"] = ['ESP\(spi=' + self.spi_values[1]]
-        if ping_config[0].count:
-            pa_kwargs["p_min"] = ping_config[0].count
+        if ping_configs[0].count:
+            pa_kwargs["p_min"] = ping_configs[0].count
         pa_config = PacketAssertConf(m2, if2, **pa_kwargs)
 
         dump = m1.run("tcpdump -i %s -nn -vv" % if1_name, bg=True)
         self.packet_assert_test_start(pa_config)
         self.ctl.wait(2)
-        ping_result = super().ping_test(ping_config)
+        ping_result = super().ping_test(ping_configs)
         self.ctl.wait(2)
         pa_result = self.packet_assert_test_stop()
         dump.kill(signal=signal.SIGINT)

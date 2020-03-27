@@ -56,11 +56,11 @@ class PingConf(object):
 
 
 class PingTestAndEvaluate(BaseRecipe):
-    def ping_test(self, ping_config):
+    def ping_test(self, ping_configs):
         results = {}
 
         ping_array = []
-        for pingconf in ping_config:
+        for pingconf in ping_configs:
             ping = self.ping_init(pingconf)
             ping.start(bg = True)
             ping_array.append((pingconf, ping))
