@@ -8,13 +8,14 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices import BondDevice
 from lnst.Devices import BridgeDevice
 
-class VirtualBridgeVlansOverBondRecipe(CommonHWSubConfigMixin,
-    OffloadSubConfigMixin, BaseEnrtRecipe):
+class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
@@ -194,69 +195,6 @@ class VirtualBridgeVlansOverBondRecipe(CommonHWSubConfigMixin,
             )
 
         self.ctl.wait_for_condition(condition, timeout=5)
-
-    def do_ping_tests(self, recipe_config):
-        for ping_config in self.generate_ping_configurations(
-            recipe_config):
-            exp_fail = []
-            for pconf in ping_config:
-                cond = self.vlan_id_match(pconf.client_bind,
-                    pconf.destination_address)
-                exp_fail.append(cond)
-            result = self.ping_test(ping_config, exp_fail)
-            self.ping_evaluate_and_report(result)
-
-    def ping_test(self, ping_config, exp_fail):
-        results = {}
-
-        running_ping_array = []
-        for pingconf, fail in zip(ping_config, exp_fail):
-            ping, client = self.ping_init(pingconf)
-            running_ping = client.prepare_job(ping, fail=fail)
-            running_ping.start(bg = True)
-            running_ping_array.append((pingconf, running_ping))
-
-        for _, pingjob in running_ping_array:
-            try:
-                pingjob.wait()
-            finally:
-                pingjob.kill()
-
-        for pingconf, pingjob in running_ping_array:
-            result = pingjob.result
-            passed = pingjob.passed
-            results[pingconf] = (result, passed)
-
-        return results
-
-    def single_ping_evaluate_and_report(self, ping_config, result):
-        fmt = "From: <{0.client.hostid} ({0.client_bind})> To: " \
-              "<{0.destination.hostid} ({0.destination_address})>"
-        description = fmt.format(ping_config)
-        if result[0].get("rate", 0) > 50:
-            message = "Ping successful --- " + description
-            self.add_result(result[1], message, result[0])
-        else:
-            message = "Ping unsuccessful --- " + description
-            self.add_result(result[1], message, result[0])
-
-    def vlan_id_match(self, src_addr, dst_addr):
-        guest1, guest2, guest3, guest4 = (self.matched.guest1,
-            self.matched.guest2, self.matched.guest3, self.matched.guest4)
-
-        matching_pairs = []
-        for pair in [(guest1, guest3), (guest2, guest4)]:
-            matching_pairs.extend([pair, pair[::-1]])
-
-        devs = []
-        for dev in (guest1.devices + guest2.devices + guest3.devices +
-            guest4.devices):
-            if src_addr in dev.ips or dst_addr in dev.ips:
-                devs.append(dev)
-        try:
-            return (devs[0].host, devs[1].host) not in matching_pairs
-        except IndexError:
-            return False
 
     @property
     def offload_nics(self):
