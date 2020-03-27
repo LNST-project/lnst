@@ -52,8 +52,7 @@ class PingTestAndEvaluate(BaseRecipe):
 
         ping_array = []
         for pingconf in ping_config:
-            ping, client = self.ping_init(pingconf)
-            ping = client.prepare_job(ping)
+            ping = self.ping_init(pingconf)
             ping.start(bg = True)
             ping_array.append((pingconf, ping))
 
@@ -72,8 +71,8 @@ class PingTestAndEvaluate(BaseRecipe):
     def ping_init(self, ping_config):
         client = ping_config.client
         kwargs = self._generate_ping_kwargs(ping_config)
-        ping = Ping(**kwargs)
-        return (ping, client)
+        ping = client.prepare_job(Ping(**kwargs))
+        return ping
 
     def ping_evaluate_and_report(self, ping_config, results):
         for pingconf, result in results.items():
