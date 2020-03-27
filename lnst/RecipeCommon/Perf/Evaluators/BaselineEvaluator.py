@@ -1,7 +1,7 @@
-from lnst.RecipeCommon.Perf.Evaluators.BaseEvaluator import BaseEvaluator
+from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 
 
-class BaselineEvaluator(BaseEvaluator):
+class BaselineEvaluator(BaseResultEvaluator):
     def evaluate_results(self, recipe, results):
         filtered_results = self.filter_results(recipe, results)
 

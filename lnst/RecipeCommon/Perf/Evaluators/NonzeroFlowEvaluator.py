@@ -1,4 +1,4 @@
-from lnst.RecipeCommon.Perf.Evaluators.BaseEvaluator import BaseEvaluator
+from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import (
     FlowMeasurementResults,
@@ -6,7 +6,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import (
 )
 
 
-class NonzeroFlowEvaluator(BaseEvaluator):
+class NonzeroFlowEvaluator(BaseResultEvaluator):
     def evaluate_results(self, recipe, results):
         for flow_results in results:
             result = True
