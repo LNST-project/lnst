@@ -74,11 +74,11 @@ class PingTestAndEvaluate(BaseRecipe):
         ping = client.prepare_job(Ping(**kwargs))
         return ping
 
-    def ping_evaluate_and_report(self, results):
+    def ping_report_and_evaluate(self, results):
         for pingconf, result in results.items():
-            self.single_ping_evaluate_and_report(pingconf, result)
+            self.single_ping_report_and_evaluate(pingconf, result)
 
-    def single_ping_evaluate_and_report(self, ping_config, result):
+    def single_ping_report_and_evaluate(self, ping_config, result):
         fmt = "From: <{0.client.hostid} ({0.client_bind})> To: " \
               "<{0.destination.hostid} ({0.destination_address})>"
         description = fmt.format(ping_config)

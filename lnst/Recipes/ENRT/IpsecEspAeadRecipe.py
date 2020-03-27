@@ -186,7 +186,7 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
         return (ping_result, pa_config, pa_result)
 
     def ping_evaluate_and_report(self, ping_config, result):
-        super().ping_evaluate_and_report(result[0])
+        super().ping_report_and_evaluate(result[0])
         self.packet_assert_evaluate_and_report(result[1], result[2])
 
     def get_dev_by_ip(self, netns, ip):
