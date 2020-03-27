@@ -21,6 +21,7 @@ from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
+from lnst.RecipeCommon.Ping.Evaluators import RatePingEvaluator
 
 class EnrtConfiguration(object):
     pass
@@ -141,6 +142,10 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
                                      size = self.params.ping_psize,
                                      )
 
+                    ping_evaluators = self.generate_ping_evaluators(
+                            pconf, endpoints)
+                    pconf.register_evaluators(ping_evaluators)
+
                     ping_conf_list.append(pconf)
 
                     if self.params.ping_bidirect:
@@ -153,6 +158,9 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
 
     def generate_ping_endpoints(self, config):
         return []
+
+    def generate_ping_evaluators(self, pconf, endpoints):
+        return [RatePingEvaluator(min_rate=50)]
 
     def generate_perf_configurations(self, config):
         for flows in self.generate_flow_combinations(config):
