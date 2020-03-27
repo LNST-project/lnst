@@ -82,9 +82,10 @@ class Ping(BaseTestModule):
 
         match = re.search(stat_pttr2, stdout)
         if not match:
-            self._res_data = {"msg": "expected pattern not found"}
-            logging.error(self._res_data["msg"])
-            return False
+            if self._res_data['rate'] > 0:
+                self._res_data = {"msg": "expected pattern not found"}
+                logging.error(self._res_data["msg"])
+                return False
         else:
             tmin, tavg, tmax, tmdev = [float(x) for x in match.groups()]
             logging.debug("rtt min \"%.3f\", avg \"%.3f\", max \"%.3f\", "
