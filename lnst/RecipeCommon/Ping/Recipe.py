@@ -72,7 +72,7 @@ class PingTestAndEvaluate(BaseRecipe):
                 pingjob.kill()
 
         for pingconf, pingjob in ping_array:
-            result = pingjob.result
+            result = (pingjob.passed, pingjob.result)
             results[pingconf] = result
 
         return results
@@ -88,15 +88,20 @@ class PingTestAndEvaluate(BaseRecipe):
             self.single_ping_report_and_evaluate(pingconf, result)
 
     def single_ping_report_and_evaluate(self, ping_config, result):
+        self.single_ping_report(ping_config, result)
+
+        self.single_ping_evaluate(ping_config, result)
+
+    def single_ping_report(self, ping_config, result):
         fmt = "From: <{0.client.hostid} ({0.client_bind})> To: " \
               "<{0.destination.hostid} ({0.destination_address})>"
         description = fmt.format(ping_config)
-        if result["rate"] > 50:
-            message = "Ping successful --- " + description
-            self.add_result(True, message, result)
-        else:
-            message = "Ping unsuccessful --- " + description
-            self.add_result(False, message, result)
+        message = "Ping result --- " + description
+        self.add_result(result[0], message, result[1])
+
+    def single_ping_evaluate(self, ping_config, result):
+        for evaluator in ping_config.evaluators:
+            evaluator.evaluate_results(self, result[1])
 
     def _generate_ping_kwargs(self, ping_config):
         kwargs = dict(dst=ping_config.destination_address,
