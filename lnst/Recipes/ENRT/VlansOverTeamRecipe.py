@@ -179,7 +179,7 @@ class VlansOverTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
                     pconf.destination_address)
                 exp_fail.append(cond)
             result = self.ping_test(ping_config, exp_fail)
-            self.ping_evaluate_and_report(ping_config, result)
+            self.ping_evaluate_and_report(result)
 
     def ping_test(self, ping_config, exp_fail):
         results = {}

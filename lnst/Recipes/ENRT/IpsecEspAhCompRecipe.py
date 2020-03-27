@@ -217,7 +217,7 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
 
     def ping_evaluate_and_report(self, ping_config, result):
         for res in result:
-            super().ping_evaluate_and_report(ping_config, res[0])
+            super().ping_evaluate_and_report(res[0])
             self.packet_assert_evaluate_and_report(res[1], res[2])
 
     def get_dev_by_ip(self, netns, ip):

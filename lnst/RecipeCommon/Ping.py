@@ -74,7 +74,7 @@ class PingTestAndEvaluate(BaseRecipe):
         ping = client.prepare_job(Ping(**kwargs))
         return ping
 
-    def ping_evaluate_and_report(self, ping_config, results):
+    def ping_evaluate_and_report(self, results):
         for pingconf, result in results.items():
             self.single_ping_evaluate_and_report(pingconf, result)
 

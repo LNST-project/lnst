@@ -43,4 +43,4 @@ class PingFloodRecipe(PingTestAndEvaluate):
         pcfg=PingConf(host1, ip1, host2, ip2, count = cn, interval = iv,
             size = sz)
         result = self.ping_test([pcfg])
-        self.ping_evaluate_and_report(pcfg, result)
+        self.ping_evaluate_and_report(result)

@@ -106,7 +106,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     def do_ping_tests(self, recipe_config):
         for ping_config in self.generate_ping_configurations(recipe_config):
             result = self.ping_test(ping_config)
-            self.ping_evaluate_and_report(ping_config, result)
+            self.ping_evaluate_and_report(result)
 
     def do_perf_tests(self, recipe_config):
         for perf_config in self.generate_perf_configurations(recipe_config):
