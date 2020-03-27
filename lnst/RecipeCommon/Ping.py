@@ -50,20 +50,20 @@ class PingTestAndEvaluate(BaseRecipe):
     def ping_test(self, ping_config):
         results = {}
 
-        running_ping_array = []
+        ping_array = []
         for pingconf in ping_config:
             ping, client = self.ping_init(pingconf)
-            running_ping = client.prepare_job(ping)
-            running_ping.start(bg = True)
-            running_ping_array.append((pingconf, running_ping))
+            ping = client.prepare_job(ping)
+            ping.start(bg = True)
+            ping_array.append((pingconf, ping))
 
-        for _, pingjob in running_ping_array:
+        for _, pingjob in ping_array:
             try:
                 pingjob.wait()
             finally:
                 pingjob.kill()
 
-        for pingconf, pingjob in running_ping_array:
+        for pingconf, pingjob in ping_array:
             result = pingjob.result
             results[pingconf] = result
 
