@@ -59,6 +59,11 @@ class ConnectionHandler(object):
         return self._check_connections(connections, timeout)
 
     def _check_connections(self, connections, timeout):
+        for c in list(connections):
+            if c.closed:
+                self.remove_connection(c)
+                connections.remove(c)
+
         requests = []
         try:
             rl, wl, xl = select.select(connections, [], [], timeout)
