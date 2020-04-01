@@ -13,6 +13,8 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import select
 import socket
+import logging
+import traceback
 from multiprocessing.connection import Connection
 from pyroute2 import IPRSocket
 from lnst.Common.SecureSocket import SecureSocket, SecSocketException
@@ -61,6 +63,7 @@ class ConnectionHandler(object):
         try:
             rl, wl, xl = select.select(connections, [], [], timeout)
         except select.error:
+            logging.debug(traceback.format_exc())
             return []
         for f in rl:
             f_ready = True
