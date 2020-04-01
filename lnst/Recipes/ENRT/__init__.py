@@ -2,10 +2,16 @@ from lnst.Recipes.ENRT.SimpleNetworkRecipe import SimpleNetworkRecipe
 from lnst.Recipes.ENRT.BondRecipe import BondRecipe
 from lnst.Recipes.ENRT.DoubleBondRecipe import DoubleBondRecipe
 from lnst.Recipes.ENRT.DoubleTeamRecipe import DoubleTeamRecipe
+from lnst.Recipes.ENRT.IpsecEspAeadRecipe  import IpsecEspAeadRecipe
+from lnst.Recipes.ENRT.IpsecEspAhCompRecipe import IpsecEspAhCompRecipe
+from lnst.Recipes.ENRT.NoVirtOvsVxlanRecipe import NoVirtOvsVxlanRecipe
 from lnst.Recipes.ENRT.OvS_DPDK_PvP import OvSDPDKPvPRecipe
 from lnst.Recipes.ENRT.PingFloodRecipe import PingFloodRecipe
+from lnst.Recipes.ENRT.SimpleMacsecRecipe import SimpleMacsecRecipe
+from lnst.Recipes.ENRT.ShortLivedConnectionsRecipe import ShortLivedConnectionsRecipe
 from lnst.Recipes.ENRT.TeamRecipe import TeamRecipe
 from lnst.Recipes.ENRT.TeamVsBondRecipe import TeamVsBondRecipe
+from lnst.Recipes.ENRT.VirtOvsVxlanRecipe import VirtOvsVxlanRecipe
 from lnst.Recipes.ENRT.VirtualBridgeVlanInGuestMirroredRecipe import VirtualBridgeVlanInGuestMirroredRecipe
 from lnst.Recipes.ENRT.VirtualBridgeVlanInGuestRecipe import VirtualBridgeVlanInGuestRecipe
 from lnst.Recipes.ENRT.VirtualBridgeVlanInHostMirroredRecipe import VirtualBridgeVlanInHostMirroredRecipe
@@ -19,5 +25,7 @@ from lnst.Recipes.ENRT.VirtualOvsBridgeVlansOverBondRecipe import VirtualOvsBrid
 from lnst.Recipes.ENRT.VlansOverBondRecipe import VlansOverBondRecipe
 from lnst.Recipes.ENRT.VlansOverTeamRecipe import VlansOverTeamRecipe
 from lnst.Recipes.ENRT.VlansRecipe import VlansRecipe
+from lnst.Recipes.ENRT.VxlanMulticastRecipe import VxlanMulticastRecipe
+from lnst.Recipes.ENRT.VxlanRemoteRecipe import VxlanRemoteRecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
