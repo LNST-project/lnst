@@ -335,6 +335,10 @@ class SecureSocket(object):
     def close(self):
         return self._socket.close()
 
+    @property
+    def closed(self):
+        return self._socket.fileno == -1
+
     def shutdown(self, how):
         return self._socket.shutdown(how)
 
