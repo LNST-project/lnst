@@ -95,6 +95,8 @@ class Job(object):
         return True
 
     def _run(self):
+        self._parent_pipe.close()
+
         os.setpgrp()
         signal.signal(signal.SIGHUP, signal.SIG_DFL)
         signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -149,6 +151,11 @@ class Job(object):
     def set_finished(self, result):
         self._finished = True
         self._result = result
+
+        self._parent_pipe.close()
+        self._child_pipe.close()
+        self._parent_pipe = None
+        self._child_pipe = None
 
     def get_result(self):
         return self._result
