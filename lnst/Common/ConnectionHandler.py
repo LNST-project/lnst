@@ -48,7 +48,7 @@ class ConnectionHandler(object):
         self._connection_mapping = {}
 
     def check_connections(self, timeout=None):
-        return self._check_connections(self._connections, timeout)
+        return self._check_connections(list(self._connections), timeout)
 
     def check_connections_by_id(self, connection_ids, timeout=None):
         connections = []
