@@ -42,6 +42,14 @@ class OvsBridgeDevice(SoftDevice):
 
         return opts
 
+    def _interface_cmd(self, interface, options):
+        keyvalues = self._dict_to_keyvalues(options)
+        cmd = ""
+        if len(keyvalues):
+            cmd = " -- set Interface {} {}".format(interface, keyvalues)
+
+        return cmd
+
     def port_add(self, dev, **kwargs):
         options = ""
         for opt_name, opt_value in kwargs.items():
