@@ -38,7 +38,7 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         host1.tap0.down()
         host1.br0 = OvsBridgeDevice()
         host1.br0.port_add(host1.eth0)
-        host1.br0.port_add(host1.tap0, tag="10")
+        host1.br0.port_add(host1.tap0, port_options={'tag': 10})
 
         host2.eth0.down()
         guest1.eth0.down()

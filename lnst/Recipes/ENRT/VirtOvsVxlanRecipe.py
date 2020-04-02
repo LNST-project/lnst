@@ -67,8 +67,9 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             host.eth0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
             host.br0 = OvsBridgeDevice()
             for dev, ofport_r in [(host.tap0, '5'), (host.tap1, '6')]:
-                host.br0.port_add(dev, set_iface=True,
-                    ofport_request=ofport_r)
+                host.br0.port_add(
+                        device=dev,
+                        interface_options={'ofport_request': ofport_r})
             tunnel_opts = {"option:remote_ip" : net_addr + "." + str(2-i),
                 "option:key" : "flow", "ofport_request" : '10'}
             host.br0.tunnel_add("vxlan", tunnel_opts)

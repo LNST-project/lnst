@@ -50,15 +50,23 @@ class OvsBridgeDevice(SoftDevice):
 
         return cmd
 
-    def port_add(self, dev, **kwargs):
-        options = ""
-        for opt_name, opt_value in kwargs.items():
-            if opt_name == "set_iface" and opt_value:
-                options = (" -- set Interface %s" + options) % dev.name
-            else:
-                options += " %s=%s" % (opt_name, opt_value)
+    def port_add(self, device=None, port_options={}, interface_options={}):
+        if device is None:
+            dev_name = interface_options.get('name',
+                self._if_manager.assign_name(interface_options['type']))
+        else:
+            dev_name = device.name
 
-        exec_cmd("ovs-vsctl add-port %s %s%s" % (self.name, dev.name, options))
+        exec_cmd("ovs-vsctl add-port {} {}{}{}".format(self.name, dev_name,
+            self._dict_to_keyvalues(port_options),
+            self._interface_cmd(dev_name, interface_options)))
+
+        iface = None
+        if 'type' in interface_options and interface_options['type'] == 'internal':
+            iface = self._if_manager.get_device_by_name(dev_name)
+            iface._enable()
+
+        return iface
 
     def port_del(self, dev):
         if isinstance(dev, Device):
@@ -83,39 +91,10 @@ class OvsBridgeDevice(SoftDevice):
     def bond_del(self, dev):
         self.port_del(dev)
 
-    def internal_port_add(self, **kwargs):
-        name = self._if_manager.assign_name("int")
-
-        options = ""
-        for opt_name, opt_value in kwargs.items():
-            if opt_name == "name":
-                name = opt_value
-                continue
-
-            options += " %s=%s" % (opt_name, opt_value)
-
-        exec_cmd("ovs-vsctl add-port %s %s -- set Interface %s "\
-                 "type=internal %s" % (self.name, name,
-                                       name, options))
-
-        dev = self._if_manager.get_device_by_name(name)
-        dev._enable()
-        return dev
-
     def tunnel_add(self, tunnel_type, options):
-        name = self._if_manager.assign_name(tunnel_type)
-
-        opts = ""
-        for opt_name, opt_value in options.items():
-            if opt_name == "name":
-                name = opt_value
-                continue
-
-            opts += " %s=%s" % (opt_name, opt_value)
-
-        exec_cmd("ovs-vsctl add-port %s %s -- set Interface %s "\
-                 "type=%s %s" % (self.name, name, name,
-                                 tunnel_type, opts))
+        options_copy = options.copy()
+        options_copy['type'] = tunnel_type
+        self.port_add(device=None, interface_options=options_copy)
 
     def tunnel_del(self, name):
         self.port_del(name)

@@ -43,7 +43,7 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
             host.tap0.down()
             host.br0 = OvsBridgeDevice()
             for dev in [host.eth0, host.tap0]:
-                host.br0.port_add(dev)
+                host.br0.port_add(device=dev)
 
         guest1.eth0.down()
         guest2.eth0.down()

@@ -31,8 +31,11 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
             host.eth0.down()
             host.eth0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
             host.br0 = OvsBridgeDevice()
-            host.int0 = host.br0.internal_port_add(ofport_request='5',
-                name="int0")
+            host.int0 = host.br0.port_add(
+                    interface_options={
+                        'type': 'internal',
+                        'ofport_request': 5,
+                        'name': 'int0'})
             host.int0.ip_add(ipaddress(vxlan_net_addr + "." + str(i+1) +
                 "/24"))
             host.int0.ip_add(ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
