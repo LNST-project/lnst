@@ -201,13 +201,15 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     def generate_flow_combinations(self, config):
         for client_nic, server_nic in self.generate_perf_endpoints(config):
             for ipv in self.params.ip_versions:
+                ip_filter = {}
                 if ipv == "ipv4":
-                    family = AF_INET
+                    ip_filter.update(family = AF_INET)
                 elif ipv == "ipv6":
-                    family = AF_INET6
+                    ip_filter.update(family = AF_INET6)
+                    ip_filter.update(is_link_local = False)
 
-                client_bind = client_nic.ips_filter(family=family)[0]
-                server_bind = server_nic.ips_filter(family=family)[0]
+                client_bind = client_nic.ips_filter(**ip_filter)[0]
+                server_bind = server_nic.ips_filter(**ip_filter)[0]
 
                 for perf_test in self.params.perf_tests:
                     for size in self.params.perf_msg_sizes:
