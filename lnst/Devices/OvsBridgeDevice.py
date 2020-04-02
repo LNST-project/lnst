@@ -35,6 +35,13 @@ class OvsBridgeDevice(SoftDevice):
     def destroy(self):
         exec_cmd("ovs-vsctl del-br %s" % self.name)
 
+    def _dict_to_keyvalues(self, options):
+        opts = ""
+        for opt_name, opt_value in options.items():
+            opts += " %s=%s" % (opt_name, opt_value)
+
+        return opts
+
     def port_add(self, dev, **kwargs):
         options = ""
         for opt_name, opt_value in kwargs.items():
