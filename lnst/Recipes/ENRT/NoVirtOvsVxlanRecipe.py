@@ -67,8 +67,8 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
                 for dev in config.test_wide_devices
             ]),
             "\n".join([
-                "Configured {}.{}.internal_ports = {}".format(
-                    dev.host.hostid, dev.name, dev.internal_ports
+                "Configured {}.{}.ports = {}".format(
+                    dev.host.hostid, dev.name, dev.ports
                 )
                 for dev in [host1.br0, host2.br0]
             ]),

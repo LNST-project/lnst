@@ -50,6 +50,51 @@ class OvsBridgeDevice(SoftDevice):
 
         return cmd
 
+    def _format_ovs_json_value(self, value):
+        formatted_value = None
+        if type(value) == list:
+            value_type = value[0]
+
+            if value_type == 'map':
+                formatted_value = value[1]
+            elif value_type == 'set':
+                formatted_value = value[1]
+            elif value_type == 'uuid':
+                formatted_value = value[1]
+            else:
+                raise Exception("Unknown type in ovs json output: {}".format(
+                    value_type))
+        else:
+            formatted_value = value
+
+        return formatted_value
+
+    def _format_ovs_json(self, ovs_json):
+        headings = ovs_json['headings']
+        data = ovs_json['data']
+
+        formatted_data = []
+
+        for data_entry in data:
+            formatted_fields = {}
+            for i, entry_value in enumerate(data_entry):
+                formatted_fields[headings[i]] = self._format_ovs_json_value(entry_value)
+            formatted_data.append(formatted_fields)
+
+        return formatted_data
+
+    def _list_ports(self):
+        out_json = exec_cmd("ovs-vsctl --format json list port",
+                log_outputs=False, json=True)[0]
+
+        return self._format_ovs_json(out_json)
+
+    def _list_interfaces(self):
+        out_json = exec_cmd("ovs-vsctl --format json list interface",
+                log_outputs=False, json=True)[0]
+
+        return self._format_ovs_json(out_json)
+
     def port_add(self, device=None, port_options={}, interface_options={}):
         if device is None:
             dev_name = interface_options.get('name',
@@ -111,35 +156,31 @@ class OvsBridgeDevice(SoftDevice):
 
     @property
     def ports(self):
-        numbered_ports, port_lines = self._get_port_info()
-        ports = {}
+        ports = self._list_ports()
+        interfaces = self._list_interfaces()
 
-        for line in port_lines:
-            if not re.search('type=', line):
-                self._line_to_port_number(line, numbered_ports, ports)
+        filtered_ports = {}
 
-        return ports
+        for port in ports:
+            port_iface_uuid = port['interfaces']
+            port_ifaces = [ iface for iface in interfaces if iface['_uuid'] == port_iface_uuid ]
+            if len(port_ifaces):
+                port_iface = port_ifaces[0]
+                filtered_ports[port['name']] = {
+                        'interface': port_iface['name'],
+                        'type': port_iface['type'],
+                        'options': port_iface['options'],
+                        }
 
-    @property
-    def internal_ports(self):
-        numbered_ports, port_lines = self._get_port_info()
-        int_ports = {}
-
-        for line in port_lines:
-            if re.search('type=internal', line):
-                line = re.sub(r",?\stype=internal", "", line)
-                self._line_to_port_number(line, numbered_ports, int_ports)
-
-        return int_ports
+        return filtered_ports
 
     @property
     def tunnels(self):
-        numbered_ports, port_lines = self._get_port_info()
-        tunnels = {}
+        tunnels = self.ports.copy()
 
-        for line in port_lines:
-            if re.search('type=(?!internal)', line):
-                self._line_to_port_number(line, numbered_ports, tunnels)
+        for port in self.ports.keys():
+            if tunnels[port]['type'] in ['', 'internal']:
+                del tunnels[port]
 
         return tunnels
 
@@ -178,42 +219,3 @@ class OvsBridgeDevice(SoftDevice):
                         break
 
         return pprint.pformat(flows[1:])
-
-    def _get_port_info(self):
-        numbered_ports = {}
-        port_lines = []
-
-        dumped_ports = exec_cmd("ovs-ofctl dump-ports-desc %s" %
-            self.name, log_outputs=False)[0]
-
-        for match in re.finditer(r'(\w+)\((\w*)\)',
-            dumped_ports):
-            numbered_ports[match.groups()[1]] = match.groups()[0]
-
-        ovs_show = exec_cmd("ovs-vsctl show",
-            log_outputs=False)[0]
-        regex = r'(Port[\w\W]*?)(?=Port|ovs_version)'
-
-        for match in re.finditer(regex, ovs_show):
-            line = match.groups()[0].replace('\n', ' ')
-            line = self._port_format(line)
-            port_lines.append(line)
-
-        return numbered_ports, port_lines
-
-    def _port_format(self, line):
-        res = re.sub(r":", "", line)
-        res = re.sub(r"(\S[^,])\s(\S)", "\\1=\\2", res)
-        res = re.sub(r"\s{2,}(?=\S)", ", ", res)
-        res = re.sub(r"\s*$", "", res)
-
-        return res
-
-    def _line_to_port_number(self, line, ref, result):
-        name = re.match(r"Port=\"(\w+)\"", line).groups()[0]
-
-        try:
-            number = ref[name]
-            result[number] = line
-        except KeyError:
-            pass
