@@ -8,6 +8,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 
 class SimpleNetworkRecipe(
     CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseEnrtRecipe
@@ -56,7 +57,7 @@ class SimpleNetworkRecipe(
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
-        return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+        return [PingEndpoints(self.matched.host1.eth0, self.matched.host2.eth0)]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.eth0, self.matched.host2.eth0)]

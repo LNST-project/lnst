@@ -1,4 +1,5 @@
 import logging
+from itertools import product
 from lnst.Common.Parameters import Param, IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
@@ -7,6 +8,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import OvsBridgeDevice
 
 class VirtualOvsBridgeVlansOverBondRecipe(CommonHWSubConfigMixin,
@@ -136,8 +138,20 @@ class VirtualOvsBridgeVlansOverBondRecipe(CommonHWSubConfigMixin,
     def generate_ping_endpoints(self, config):
         guest1, guest2, guest3, guest4 = (self.matched.guest1,
             self.matched.guest2, self.matched.guest3, self.matched.guest4)
-        return [(guest1.eth0, guest3.eth0), (guest4.eth0, guest2.eth0),
-            (guest1.eth0, guest4.eth0), (guest3.eth0, guest2.eth0)]
+        dev_combinations = product(
+            [guest1.eth0, guest2.eth0],
+            [guest3.eth0, guest4.eth0]
+            )
+        return [
+            PingEndpoints(
+                comb[0], comb[1],
+                reachable=((comb[0].host, comb[1].host) in [
+                    (guest1, guest3),
+                    (guest2, guest4)
+                    ])
+                )
+                for comb in dev_combinations
+            ]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.guest1.eth0, self.matched.guest3.eth0)]

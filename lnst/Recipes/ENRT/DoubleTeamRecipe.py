@@ -6,6 +6,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import TeamDevice
 
 class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
@@ -87,8 +88,10 @@ class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
-        return [(self.matched.host1.team0, self.matched.host2.team0),
-            (self.matched.host2.team0, self.matched.host1.team0)]
+        return [
+            PingEndpoints(self.matched.host1.team0, self.matched.host2.team0),
+            PingEndpoints(self.matched.host2.team0, self.matched.host1.team0)
+        ]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.team0, self.matched.host2.team0),

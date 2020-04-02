@@ -6,6 +6,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BondDevice
 
 class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
@@ -90,7 +91,7 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
-        return [(self.matched.host1.bond0, self.matched.host2.bond0)]
+        return [PingEndpoints(self.matched.host1.bond0, self.matched.host2.bond0)]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.bond0, self.matched.host2.bond0)]

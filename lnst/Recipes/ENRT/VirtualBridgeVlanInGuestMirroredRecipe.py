@@ -7,6 +7,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices import BridgeDevice
 
@@ -121,7 +122,7 @@ class VirtualBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
-        return [(self.matched.guest1.vlan0, self.matched.guest2.vlan0)]
+        return [PingEndpoints(self.matched.guest1.vlan0, self.matched.guest2.vlan0)]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.guest1.vlan0, self.matched.guest2.vlan0)]

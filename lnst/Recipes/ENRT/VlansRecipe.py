@@ -6,6 +6,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 
 class VlansRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
@@ -101,7 +102,8 @@ class VlansRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         result = []
         for src in [host1.vlan0, host1.vlan1, host1.vlan2]:
             for dst in [host2.vlan0, host2.vlan1, host2.vlan2]:
-                result += [(src, dst)]
+                result += [PingEndpoints(src, dst,
+                    reachable=(src.vlan_id == dst.vlan_id))]
         return result
 
     def generate_perf_endpoints(self, config):

@@ -4,6 +4,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import OvsBridgeDevice
 
 class VirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
@@ -124,7 +125,15 @@ class VirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
         guest1, guest2, guest3, guest4 = (self.matched.guest1,
             self.matched.guest2, self.matched.guest3, self.matched.guest4)
         devs = [guest1.eth0, guest2.eth0, guest3.eth0, guest4.eth0]
-        return combinations(devs, 2)
+        dev_combinations = combinations(devs, 2)
+
+        return [
+            PingEndpoints(comb[0], comb[1],
+                reachable=((comb[0].host, comb[1].host) in [
+                    (guest1, guest3), (guest2, guest4)
+                ])
+            ) for comb in dev_combinations
+        ]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.guest1.eth0, self.matched.guest3.eth0)]

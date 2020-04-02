@@ -4,6 +4,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BridgeDevice, VxlanDevice
 
 class VxlanMulticastRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
@@ -100,7 +101,9 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)
         devs = [host1.vxlan0, host2.vxlan0, guest1.vxlan0]
-        return permutations(devs,2)
+        dev_permutations = permutations(devs,2)
+        return [ PingEndpoints(dev_permutation[0], dev_permutation[1]) for
+                dev_permutation in dev_permutations ]
 
     def generate_perf_endpoints(self, config):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,

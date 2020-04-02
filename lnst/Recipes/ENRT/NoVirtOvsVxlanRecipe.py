@@ -3,6 +3,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import OvsBridgeDevice
 
 class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
@@ -89,7 +90,7 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
-        return [(self.matched.host1.int0, self.matched.host2.int0)]
+        return [PingEndpoints(self.matched.host1.int0, self.matched.host2.int0)]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.int0, self.matched.host2.int0)]

@@ -114,7 +114,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
             self.perf_report_and_evaluate(result)
 
     def generate_ping_configurations(self, config):
-        for endpoint1, endpoint2 in self.generate_ping_endpoints(config):
+        for endpoints in self.generate_ping_endpoints(config):
             for ipv in self.params.ip_versions:
                 ip_filter = {}
                 if ipv == "ipv4":
@@ -123,6 +123,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
                     ip_filter.update(family = AF_INET6)
                     ip_filter.update(is_link_local = False)
 
+                endpoint1, endpoint2 = endpoints.endpoints
                 endpoint1_ips = endpoint1.ips_filter(**ip_filter)
                 endpoint2_ips = endpoint2.ips_filter(**ip_filter)
 

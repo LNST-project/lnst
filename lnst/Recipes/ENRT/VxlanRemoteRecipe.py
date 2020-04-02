@@ -3,6 +3,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VxlanDevice
 
 class VxlanRemoteRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
@@ -84,7 +85,7 @@ class VxlanRemoteRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
-        return [(self.matched.host1.vxlan0, self.matched.host2.vxlan0)]
+        return [PingEndpoints(self.matched.host1.vxlan0, self.matched.host2.vxlan0)]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.vxlan0, self.matched.host2.vxlan0)]
