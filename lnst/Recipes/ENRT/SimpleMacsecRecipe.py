@@ -70,14 +70,6 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
 
         super().test_wide_deconfiguration(config)
 
-    def wait_tentative_ips(self, devices):
-        def condition():
-            return all(
-                [not ip.is_tentative for dev in devices for ip in dev.ips]
-            )
-
-        self.ctl.wait_for_condition(condition, timeout=5)
-
     def generate_sub_configurations(self, config):
         for subconf in ConfMixin.generate_sub_configurations(self, config):
             for encryption in self.macsec_settings:

@@ -89,14 +89,6 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.bond0, self.matched.host2.eth0)]
 
-    def wait_tentative_ips(self, devices):
-        def condition():
-            return all(
-                [not ip.is_tentative for dev in devices for ip in dev.ips]
-            )
-
-        self.ctl.wait_for_condition(condition, timeout=5)
-
     @property
     def offload_nics(self):
         return [self.matched.host1.bond0, self.matched.host2.eth0]
