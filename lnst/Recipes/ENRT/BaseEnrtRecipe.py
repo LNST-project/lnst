@@ -14,7 +14,7 @@ from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 
-from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
+from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow

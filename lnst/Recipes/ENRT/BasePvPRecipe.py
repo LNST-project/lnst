@@ -4,7 +4,7 @@ from enum import Enum
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.RecipeCommon.Ping import PingTestAndEvaluate
+from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate
 from lnst.Tests import Ping
 
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe

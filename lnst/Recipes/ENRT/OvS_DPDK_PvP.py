@@ -9,7 +9,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.RecipeCommon.Ping import PingTestAndEvaluate, PingConf
+from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate, PingConf
 from lnst.Tests import Ping
 from lnst.Tests.TestPMD import TestPMD
 
