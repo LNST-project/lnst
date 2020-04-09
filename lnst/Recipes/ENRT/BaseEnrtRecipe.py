@@ -367,6 +367,9 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
         """
         for endpoints in self.generate_ping_endpoints(config):
             for ipv in self.params.ip_versions:
+                if ipv == "ipv6" and not endpoints.reachable:
+                    continue
+
                 ip_filter = {}
                 if ipv == "ipv4":
                     ip_filter.update(family = AF_INET)
