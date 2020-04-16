@@ -232,7 +232,7 @@ class BondDevice(MasterDevice):
 
     @miimon.setter
     def miimon(self, val):
-        self._set_linkinfo_data_attr("IFLA_BOND_LACP_RATE", int(val))
+        self._set_linkinfo_data_attr("IFLA_BOND_MIIMON", int(val))
         self._nl_link_sync("set")
 
     @property
