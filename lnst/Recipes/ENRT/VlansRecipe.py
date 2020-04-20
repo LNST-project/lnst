@@ -177,10 +177,30 @@ class VlansRecipe(VlanPingEvaluatorMixin,
 
     @property
     def offload_nics(self):
+        """
+        The `offload_nics` property value for this scenario is a list of the
+        physical devices carrying data of the configured VLAN tunnels:
+
+        host1.eth0 and host2.eth0
+
+        For detailed explanation of this property see :any:`OffloadSubConfigMixin`
+        class and :any:`OffloadSubConfigMixin.offload_nics`.
+        """
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
     def mtu_hw_config_dev_list(self):
+        """
+        The `mtu_hw_config_dev_list` property value for this scenario is a
+        list of all configured VLAN tunnel devices and the underlying physical
+        devices:
+
+        | host1.eth0, host1.vlan0, host1.vlan1, host1.vlan2
+        | host2.eth0, host2.vlan0, host2.vlan1, host2.vlan2
+
+        For detailed explanation of this property see :any:`MTUHWConfigMixin`
+        class and :any:`MTUHWConfigMixin.mtu_hw_config_dev_list`.
+        """
         result = []
         for host in [self.matched.host1, self.matched.host2]:
             for dev in [host.eth0, host.vlan0, host.vlan1, host.vlan2]:
@@ -189,12 +209,43 @@ class VlansRecipe(VlanPingEvaluatorMixin,
 
     @property
     def coalescing_hw_config_dev_list(self):
+        """
+        The `coalescing_hw_config_dev_list` property value for this scenario
+        is a list of the physical devices carrying data of the configured
+        VLAN tunnels:
+
+        host1.eth0 and host2.eth0
+
+        For detailed explanation of this property see :any:`CoalescingHWConfigMixin`
+        class and :any:`CoalescingHWConfigMixin.coalescing_hw_config_dev_list`.
+        """
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
+        """
+        The `dev_interrupt_hw_config_dev_list` property value for this scenario
+        is a list of the physical devices carrying data of the configured
+        VLAN tunnels:
+
+        host1.eth0 and host2.eth0
+
+        For detailed explanation of this property see :any:`DevInterruptHWConfigMixin`
+        class and :any:`DevInterruptHWConfigMixin.dev_interrupt_hw_config_dev_list`.
+        """
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
+        """
+        The `parallel_stream_qdisc_hw_config_dev_list` property value for
+        this scenario is a list of the physical devices carrying data of the
+        configured VLAN tunnels:
+
+        host1.eth0 and host2.eth0
+
+        For detailed explanation of this property see
+        :any:`ParallelStreamQDiscHWConfigMixin` class and
+        :any:`ParallelStreamQDiscHWConfigMixin.parallel_stream_qdisc_hw_config_dev_list`.
+        """
         return [self.matched.host1.eth0, self.matched.host2.eth0]
