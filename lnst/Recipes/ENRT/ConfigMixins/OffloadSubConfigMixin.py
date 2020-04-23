@@ -6,12 +6,25 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 
 
 class OffloadSubConfigMixin(BaseSubConfigMixin):
+    """
+    This class is an extension to the :any:`BaseEnrtRecipe` class that enables
+    offload configuration on the devices defined by :attr:`offload_nics`.
+
+    :param offload_combinations:
+        (optional test parameter) defines the offload features to be enabled
+        or disabled on the devices
+    """
+
     offload_combinations = Param(
         default=(dict(gro="on", gso="on", tso="on", tx="on", rx="on"),)
     )
 
     @property
     def offload_nics(self):
+        """
+        The value of this property is a list of devices for which the offload
+        settings should be configured. It has to be defined by a derived class.
+        """
         raise NotImplementedError("Subclass must implement this property")
 
     def generate_sub_configurations(self, config):

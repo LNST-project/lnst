@@ -2,8 +2,22 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 
 
 class ParallelStreamQDiscHWConfigMixin(BaseHWConfigMixin):
+    """
+    This class is an extension to the :any:`BaseEnrtRecipe` class that enables
+    the mq (multiqueing) qdisc configuration on the devices defined by
+    :attr:`parallel_stream_qdisc_hw_config_dev_list` property.
+
+    The qdisc is configured when the :any:`BaseEnrtRecipe`'s *perf_parallel_streams*
+    test parameter is set.
+
+    """
+
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
+        """
+        The value of this property is a list of devices for which the
+        mq qdisc should be configured. It has to be defined by a derived class.
+        """
         return []
 
     def hw_config(self, config):

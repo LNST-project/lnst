@@ -7,10 +7,26 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 
 
 class DevInterruptHWConfigMixin(BaseHWConfigMixin):
+    """
+    This class is an extension to the :any:`BaseEnrtRecipe` class that enables
+    the CPU affinity (CPU pinning) of the test device IRQs. The test devices
+    are defined by :attr:`dev_interrupt_hw_config_dev_list` property.
+
+     .. note::
+        Note that this Mixin also stops the irqbalance service.
+
+    :param dev_intr_cpu:
+        (optional test parameter) CPU id to which the device IRQs should be pinned
+    """
+
     dev_intr_cpu = IntParam(mandatory=False)
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
+        """
+        The value of this property is a list of devices for which the IRQ CPU
+        affinity should be configured. It has to be defined by a derived class.
+        """
         return []
 
     def hw_config(self, config):

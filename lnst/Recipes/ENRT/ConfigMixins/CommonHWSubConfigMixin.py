@@ -22,6 +22,12 @@ class CommonHWSubConfigMixin(
     MTUHWConfigMixin,
     BaseSubConfigMixin,
 ):
+    """
+    This class groups few related :any:`BaseSubConfigMixin` s for user's
+    convenience. For more details, see the documentation of the individual
+    ancestor classes.
+    """
+
     def apply_sub_configuration(self, config):
         super().apply_sub_configuration(config)
         self.hw_config(config)
