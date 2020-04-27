@@ -63,4 +63,6 @@ autodoc_default_options = {
     'member-order': 'bysource',
 }
 
+autodoc_inherit_docstrings = False
+
 master_doc = "index"
