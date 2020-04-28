@@ -47,8 +47,10 @@ class TeamDevice(MasterDevice):
 
     def _create(self):
         teamd_json = json.dumps(self.config)
-        exec_cmd(f"teamd -r -d -c '{teamd_json}' -t {self.name}"
-                 " -D" if self.dbus else "")
+        cmd = f"teamd -r -d -c '{teamd_json}' -t {self.name}"
+        if self.dbus:
+            cmd += " -D"
+        exec_cmd(cmd)
 
         retry = 0
         while self._nl_msg is None and retry < 5:
