@@ -111,3 +111,8 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     def parallel_stream_qdisc_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host1.eth1,
             self.matched.host2.eth0]
+
+     @property
+     def no_pause_frames_dev_list(self):
+         return [self.matched.host1.eth0, self.matched.host1.eth1,
+                 self.matched.host2.eth0]
