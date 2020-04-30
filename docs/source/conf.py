@@ -65,4 +65,6 @@ autodoc_default_options = {
 
 autodoc_inherit_docstrings = False
 
+autodoc_mock_imports = ["pyroute2", "libvirt", "ethtool", "lxml", "yaml"]
+
 master_doc = "index"
