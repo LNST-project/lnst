@@ -11,6 +11,40 @@ from lnst.Devices import BondDevice
 
 class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaseEnrtRecipe):
+    """
+    This recipe implements Enrt testing for a network scenario that looks
+    as follows
+
+    .. code-block:: none
+
+                                    .--------.
+                   .----------------+        |
+                   |        .-------+ switch +-------.
+                   |        |       '--------'       |
+             .-------------------.                   |
+             |     | bond0  |    |                   |
+             | .---'--. .---'--. |               .---'--.
+        .----|-| eth0 |-| eth1 |-|----.     .----| eth0 |----.
+        |    | '------' '------' |    |     |    '------'    |
+        |    '-------------------'    |     |                |
+        |                             |     |                |
+        |            host1            |     |      host2     |
+        '-----------------------------'     '----------------'
+
+    The recipe provides additional recipe parameters to configure the bonding
+    device.
+
+        :param bonding_mode:
+            (mandatory test parameter) the bonding mode to be configured on
+            the bond0 device.
+        :param miimon_value:
+            (mandatory test parameter) the miimon interval to be configured
+            on the bond0 device.
+
+    All sub configurations are included via Mixin classes.
+
+    The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
+    """
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -28,6 +62,17 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     miimon_value = IntParam(mandatory=True)
 
     def test_wide_configuration(self):
+	"""
+	Test wide configuration for this recipe involves creating a bonding
+	device using the two matched physical devices as slaves on host1.
+	The bonding mode and miimon interval is configured on the bonding device
+	according to the recipe parameters. IPv4 and IPv6 addresses are added to
+	the bonding device and to the matched ethernet device on host2.
+
+        | host1.bond0 = 192.168.101.1/24 and fc00::1/64
+        | host2.eth0 = 192.168.101.2/24 and fc00::2/64
+        """
+
         host1, host2 = self.matched.host1, self.matched.host2
         host1.bond0 = BondDevice(mode=self.params.bonding_mode,
             miimon=self.params.miimon_value)
@@ -53,6 +98,11 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         return configuration
 
     def generate_test_wide_description(self, config):
+        """
+        Test wide description is extended with the configured IP addresses, the
+        configured bonding slave interfaces, bonding mode and the miimon interval.
+        """
+
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -84,35 +134,124 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
+        """
+        The ping endpoints for this recipe are the configured bonding device on
+        host1 and the matched ethernet device on host2.
+
+        Returned as::
+
+            [PingEndpoints(self.matched.host1.bond0, self.matched.host2.eth0)
+        """
         return [PingEndpoints(self.matched.host1.bond0, self.matched.host2.eth0)]
 
     def generate_perf_endpoints(self, config):
+        """
+        The perf endpoints for this recipe are the configured bonding device on
+        host1 and the matched ethernet device on host2. The traffic egresses
+        the bonding device.
+
+        | host1.bond0
+        | host2.eth0
+
+        Returned as::
+
+            [(self.matched.host1.bond0, self.matched.host2.eth0)]
+
+        """
         return [(self.matched.host1.bond0, self.matched.host2.eth0)]
 
     @property
     def offload_nics(self):
+        """
+        The `offload_nics` property value for this scenario is a list containing
+        the configured bonding device on host1 and the matched ethernet device
+        on host2.
+
+        | host1.bond0
+        | host2.eth0
+
+        For detailed explanation of this property see :any:`OffloadSubConfigMixin`
+        class and :any:`OffloadSubConfigMixin.offload_nics`.
+        """
         return [self.matched.host1.bond0, self.matched.host2.eth0]
 
     @property
     def mtu_hw_config_dev_list(self):
+        """
+        The `mtu_hw_config_dev_list` property value for this scenario is a list
+        containing the configured bonding device on host1 and the matched ethernet
+        device on host2.
+
+        | host1.bond0
+        | host2.eth0
+
+        For detailed explanation of this property see :any:`MTUHWConfigMixin`
+        class and :any:`MTUHWConfigMixin.mtu_hw_config_dev_list`.
+        """
         return [self.matched.host1.bond0, self.matched.host2.eth0]
 
     @property
     def coalescing_hw_config_dev_list(self):
+        """
+        The `coalescing_hw_config_dev_list` property value for this scenario is a
+        list containing the matched physical devices used to create the bonding
+        device on host1 and the matched ethernet device on host2.
+
+        | host1.eth0, host.eth1
+        | host2.eth0
+
+        For detailed explanation of this property see :any:`CoalescingHWConfigMixin`
+        class and :any:`CoalescingHWConfigMixin.coalescing_hw_config_dev_list`.
+        """
         return [self.matched.host1.eth0, self.matched.host1.eth1,
             self.matched.host2.eth0]
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
+        """
+        The `dev_interrupt_hw_config_dev_list` property value for this scenario
+        is a list containing the matched physical devices used to create the
+        bonding device on host1 and the matched ethernet device on host2.
+
+        | host1.eth0, host1.eth1
+        | host2.eth0
+
+        For detailed explanation of this property see
+        :any:`DevInterruptHWConfigMixin` class and
+        :any:`CoalescingHWConfigMixin.coalescing_hw_config_dev_list`.
+        """
         return [self.matched.host1.eth0, self.matched.host1.eth1,
             self.matched.host2.eth0]
 
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
+        """
+        The `parallel_stream_qdisc_hw_config_dev_list` property value for this
+        scenario is a list containing the matched physical devices used to create
+        the bonding device on host1 and the matched ethernet device on host2.
+
+        | host1.eth0, host.eth1
+        | host2.eth0
+
+        For detailed explanation of this property see
+        :any:`ParallelStreamQDiscHWConfigMixin` class and
+        :any:`ParallelStreamQDiscHWConfigMixin.parallel_stream_qdisc_hw_config_dev_list`.
+        """
         return [self.matched.host1.eth0, self.matched.host1.eth1,
             self.matched.host2.eth0]
 
     @property
     def no_pause_frames_dev_list(self):
+        """
+        The `parallel_stream_qdisc_hw_config_dev_list` property value for this
+        scenario is a list containing the matched physical devices used to create
+        the bonding device on host1 and the matched ethernet device on host2.
+
+        | host1.eth0, host.eth1
+        | host2.eth0
+
+        For detailed explanation of this property see
+        :any:`class DisablePauseFramesHWConfigMixin`.
+        """
         return [self.matched.host1.eth0, self.matched.host1.eth1,
-                self.matched.host2.eth0]
+            self.matched.host2.eth0]
