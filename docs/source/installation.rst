@@ -15,7 +15,7 @@ installation involves the following steps:
 
 .. code-block:: bash
 
-    git clone https://github.com/jpirko/lnst
+    git clone https://github.com/LNST-project/lnst
     cd lnst
     pip3 install --requirement requirements.txt
     pip3 install .

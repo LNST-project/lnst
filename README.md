@@ -55,7 +55,7 @@ Documentation is available in the `docs/` directory, you can build it with
 
 ## How to contact us
 
-* Git Source Tree: https://github.com/jpirko/lnst
+* Git Source Tree: https://github.com/LNST-project/lnst
 * Mailing List:  <lnst-developers@lists.fedorahosted.org>
 * IRC channel: #lnst @ freenode.net
 
