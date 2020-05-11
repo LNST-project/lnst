@@ -145,22 +145,19 @@ class VlansRecipe(VlanPingEvaluatorMixin,
 
     def generate_ping_endpoints(self, config):
         """
-        The ping endpoints for this recipe are all combinations of the VLAN
-        tunnel endpoints of the hosts. Depending on the VLAN id match of each
-        tunnel endpoint combination the *reachable* flag is set.
+        The ping endpoints for this recipe are the matching VLAN tunnel
+        endpoints of the hosts.
 
         Returned as::
-
-            # list of PingEndpoints with the following pattern
-            [PingEndpoints(src, dst, reachable=(src.vlan_id == dst.vlan_id)), ...]
+            [PingEndpoints(host1.vlan0, host2.vlan0),
+             PingEndpoints(host1.vlan1, host2.vlan1),
+             PingEndpoints(host1.vlan2, host2.vlan2)]
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        result = []
-        for src in [host1.vlan0, host1.vlan1, host1.vlan2]:
-            for dst in [host2.vlan0, host2.vlan1, host2.vlan2]:
-                result += [PingEndpoints(src, dst,
-                    reachable=(src.vlan_id == dst.vlan_id))]
-        return result
+
+        return [PingEndpoints(host1.vlan0, host2.vlan0),
+                PingEndpoints(host1.vlan1, host2.vlan1),
+                PingEndpoints(host1.vlan2, host2.vlan2)]
 
     def generate_perf_endpoints(self, config):
         """

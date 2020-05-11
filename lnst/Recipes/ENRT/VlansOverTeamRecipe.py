@@ -127,12 +127,10 @@ class VlansOverTeamRecipe(VlanPingEvaluatorMixin,
 
     def generate_ping_endpoints(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
-        result = []
-        for src in [host1.vlan0, host1.vlan1, host1.vlan2]:
-            for dst in [host2.vlan0, host2.vlan1, host2.vlan2]:
-                result += [PingEndpoints(src, dst,
-                    reachable=(src.vlan_id == dst.vlan_id))]
-        return result
+
+        return [PingEndpoints(host1.vlan0, host2.vlan0),
+                PingEndpoints(host1.vlan1, host2.vlan1),
+                PingEndpoints(host1.vlan2, host2.vlan2)]
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.vlan0, self.matched.host2.vlan0)]
