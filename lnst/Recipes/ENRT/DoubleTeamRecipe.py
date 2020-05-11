@@ -34,10 +34,9 @@ class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         net_addr_1 = "192.168.10"
         net_addr6_1 = "fc00:0:0:1"
         for i, host in enumerate([host1, host2]):
-            #The config argument needs to be used with a team device
-            #normally (e.g  to specify the runner mode), but it is not used
-            #here due to a bug in the TeamDevice module
-            host.team0 = TeamDevice()
+            host.team0 = TeamDevice(
+                    config={'runner': {'name': self.params.runner_name}}
+                    )
             for dev in [host.eth0, host.eth1]:
                 dev.down()
                 host.team0.slave_add(dev)

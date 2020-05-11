@@ -34,10 +34,7 @@ class TeamVsBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        #The config argument needs to be used with a team device normally
-        #(e.g  to specify the runner mode), but it is not used here due to
-        #a bug in the TeamDevice module
-        host1.team0 = TeamDevice()
+        host1.team0 = TeamDevice(config={'runner': {'name': self.params.runner_name}})
 
         host2.bond0 = BondDevice(mode=self.params.bonding_mode,
             miimon=self.params.miimon_value)

@@ -34,10 +34,7 @@ class VlansOverTeamRecipe(VlanPingEvaluatorMixin,
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        #The config argument needs to be used with a team device normally
-        #(e.g  to specify the runner mode), but it is not used here due to
-        #a bug in the TeamDevice module
-        host1.team0 = TeamDevice()
+        host1.team0 = TeamDevice(config={'runner': {'name': self.params.runner_name}})
         for dev in [host1.eth0, host1.eth1]:
             dev.down()
             host1.team0.slave_add(dev)
