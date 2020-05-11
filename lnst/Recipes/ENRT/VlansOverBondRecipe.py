@@ -15,6 +15,43 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 class VlansOverBondRecipe(VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaseEnrtRecipe):
+    """
+    This recipe implements Enrt testing for a network scenario that looks
+    as follows
+
+    .. code-block:: none
+
+                              .--------.
+                .-------------+ switch +--------.
+                |         .---+        |        |
+                |         |   '--------'        |
+          .-----|---------|----.                |
+          | .---'--.  .---'--. |             .--'---.
+        .-|-| eth0 |--| eth1 |-|-.   .-------| eth0 |------.
+        | | '------'  '------' | |   |       '------'      |
+        | |        bond0       | |   |      /   |    \     |
+        | '-------/--|--\------' |   | vlan0  vlan1  vlan2 |
+        |        /   |   \       |   | id=10  id=20  id=30 |
+        |   vlan0  vlan1  vlan2  |   |                     |
+        |   id=10  id=20  id=30  |   |                     |
+        |                        |   |                     |
+        |          host1         |   |        host2        |
+        '------------------------'   '---------------------'
+
+    The recipe provides additional recipe parameters to configure the bonding
+    device.
+
+    :param bonding_mode:
+        (mandatory test parameter) the bonding mode to be configured on
+        the bond0 device
+    :param miimon_value:
+        (mandatory test parameter) the miimon interval to be configured
+        on the bond0 device
+
+    All sub configurations are included via Mixin classes.
+
+    The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
+    """
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -32,6 +69,25 @@ class VlansOverBondRecipe(VlanPingEvaluatorMixin,
     miimon_value = IntParam(mandatory=True)
 
     def test_wide_configuration(self):
+        """
+        Test wide configuration for this recipe involves creating one bonding
+        device on the first host. This device bonds two NICs matched by the
+        recipe. The bonding mode and miimon interval is configured on the
+        bonding device according to the recipe parameters. Then three
+        VLAN (802.1Q) tunnels are created on top of the bonding device on the
+        first host and on the matched NIC on the second host. The tunnels are
+        configured with ids 10, 20, 30.
+
+        An IPv4 and IPv6 address is configured on each tunnel endpoint.
+
+        | host1.vlan0 = 192.168.10.1/24 and fc00:0:0:1::1/64
+        | host1.vlan1 = 192.168.20.1/24 and fc00:0:0:2::1/64
+        | host1.vlan2 = 192.168.30.1/24 and fc00:0:0:3::1/64
+
+        | host2.vlan0 = 192.168.10.2/24 and fc00:0:0:1::2/64
+        | host2.vlan1 = 192.168.20.2/24 and fc00:0:0:2::2/64
+        | host2.vlan2 = 192.168.30.2/24 and fc00:0:0:3::2/64
+        """
         host1, host2 = self.matched.host1, self.matched.host2
 
         host1.bond0 = BondDevice(mode=self.params.bonding_mode,
@@ -81,6 +137,10 @@ class VlansOverBondRecipe(VlanPingEvaluatorMixin,
         return configuration
 
     def generate_test_wide_description(self, config):
+        """
+        Test wide description is extended with the configured VLAN tunnels,
+        their IP addresses and the bonding device configuration.
+        """
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -128,6 +188,16 @@ class VlansOverBondRecipe(VlanPingEvaluatorMixin,
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
+        """
+        The ping endpoints for this recipe are the matching VLAN tunnel
+        endpoints of the hosts.
+
+        Returned as::
+
+            [PingEndpoints(host1.vlan0, host2.vlan0),
+             PingEndpoints(host1.vlan1, host2.vlan1),
+             PingEndpoints(host1.vlan2, host2.vlan2)]
+        """
         host1, host2 = self.matched.host1, self.matched.host2
 
         return [PingEndpoints(host1.vlan0, host2.vlan0),
@@ -135,15 +205,45 @@ class VlansOverBondRecipe(VlanPingEvaluatorMixin,
                 PingEndpoints(host1.vlan2, host2.vlan2)]
 
     def generate_perf_endpoints(self, config):
+        """
+        The perf endpoints for this recipe are the VLAN tunnel endpoints with
+        VLAN id 10:
+
+        host1.vlan0 and host2.vlan0
+
+        Returned as::
+
+            [(self.matched.host1.vlan0, self.matched.host2.vlan0)]
+        """
         return [(self.matched.host1.vlan0, self.matched.host2.vlan0)]
 
     @property
     def offload_nics(self):
+        """
+        The `offload_nics` property value for this scenario is a list of the
+        physical devices carrying data of the configured VLAN tunnels:
+
+        host1.eth0, host1.eth1 and host2.eth0
+
+        For detailed explanation of this property see :any:`OffloadSubConfigMixin`
+        class and :any:`OffloadSubConfigMixin.offload_nics`.
+        """
         host1, host2 = self.matched.host1, self.matched.host2
         return [host1.eth0, host1.eth1, host2.eth0]
 
     @property
     def mtu_hw_config_dev_list(self):
+        """
+        The `mtu_hw_config_dev_list` property value for this scenario is a
+        list of all configured VLAN tunnel devices and the underlying bonding
+        or physical devices:
+
+        | host1.bond0, host1.vlan0, host1.vlan1, host1.vlan2
+        | host2.eth0, host2.vlan0, host2.vlan1, host2.vlan2
+
+        For detailed explanation of this property see :any:`MTUHWConfigMixin`
+        class and :any:`MTUHWConfigMixin.mtu_hw_config_dev_list`.
+        """
         host1, host2 = self.matched.host1, self.matched.host2
         result = []
         for host in [host1, host2]:
@@ -154,15 +254,46 @@ class VlansOverBondRecipe(VlanPingEvaluatorMixin,
 
     @property
     def coalescing_hw_config_dev_list(self):
+        """
+        The `coalescing_hw_config_dev_list` property value for this scenario
+        is a list of the physical devices carrying data of the configured
+        VLAN tunnels:
+
+        host1.eth0, host1.eth1 and host2.eth0
+
+        For detailed explanation of this property see :any:`CoalescingHWConfigMixin`
+        class and :any:`CoalescingHWConfigMixin.coalescing_hw_config_dev_list`.
+        """
         host1, host2 = self.matched.host1, self.matched.host2
         return [host1.eth0, host1.eth1, host2.eth0]
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
+        """
+        The `dev_interrupt_hw_config_dev_list` property value for this scenario
+        is a list of the physical devices carrying data of the configured
+        VLAN tunnels:
+
+        host1.eth0, host1.eth1 and host2.eth0
+
+        For detailed explanation of this property see :any:`DevInterruptHWConfigMixin`
+        class and :any:`DevInterruptHWConfigMixin.dev_interrupt_hw_config_dev_list`.
+        """
         host1, host2 = self.matched.host1, self.matched.host2
         return [host1.eth0, host1.eth1, host2.eth0]
 
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
+        """
+        The `parallel_stream_qdisc_hw_config_dev_list` property value for
+        this scenario is a list of the physical devices carrying data of the
+        configured VLAN tunnels:
+
+        host1.eth0, host1.eth1 and host2.eth0
+
+        For detailed explanation of this property see
+        :any:`ParallelStreamQDiscHWConfigMixin` class and
+        :any:`ParallelStreamQDiscHWConfigMixin.parallel_stream_qdisc_hw_config_dev_list`.
+        """
         host1, host2 = self.matched.host1, self.matched.host2
         return [host1.eth0, host1.eth1, host2.eth0]
