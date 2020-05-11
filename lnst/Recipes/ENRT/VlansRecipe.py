@@ -149,6 +149,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         endpoints of the hosts.
 
         Returned as::
+
             [PingEndpoints(host1.vlan0, host2.vlan0),
              PingEndpoints(host1.vlan1, host2.vlan1),
              PingEndpoints(host1.vlan2, host2.vlan2)]
