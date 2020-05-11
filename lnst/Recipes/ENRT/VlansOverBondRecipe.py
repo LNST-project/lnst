@@ -114,18 +114,12 @@ class VlansOverBondRecipe(VlanPingEvaluatorMixin,
         net_addr6 = "fc00:0:0"
 
         for i, host in enumerate([host1, host2]):
-            host.vlan0.ip_add(ipaddress(net_addr + '.10' + '.' + str(i+1)
-                + "/24"))
-            host.vlan0.ip_add(ipaddress(net_addr6 + ":1::" + str(i+1) +
-                "/64"))
-            host.vlan1.ip_add(ipaddress(net_addr + '.20' + '.' + str(i+1) +
-                "/24"))
-            host.vlan1.ip_add(ipaddress(net_addr6 + ":2::" + str(i+1) +
-                "/64"))
-            host.vlan2.ip_add(ipaddress(net_addr + '.30' + '.' + str(i+1) +
-                "/24"))
-            host.vlan2.ip_add(ipaddress(net_addr6 + ":3::" + str(i+1) +
-                "/64"))
+            host.vlan0.ip_add(ipaddress('{}.10.{}/24'.format(net_addr, i+1)))
+            host.vlan1.ip_add(ipaddress('{}.20.{}/24'.format(net_addr, i+1)))
+            host.vlan2.ip_add(ipaddress('{}.30.{}/24'.format(net_addr, i+1)))
+            host.vlan0.ip_add(ipaddress('{}:1::{}/64'.format(net_addr6, i+1)))
+            host.vlan1.ip_add(ipaddress('{}:2::{}/64'.format(net_addr6, i+1)))
+            host.vlan2.ip_add(ipaddress('{}:3::{}/64'.format(net_addr6, i+1)))
 
         for dev in [host1.eth0, host1.eth1, host1.bond0, host1.vlan0,
             host1.vlan1, host1.vlan2, host2.eth0, host2.vlan0,
