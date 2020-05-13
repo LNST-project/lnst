@@ -62,12 +62,12 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     miimon_value = IntParam(mandatory=True)
 
     def test_wide_configuration(self):
-	"""
-	Test wide configuration for this recipe involves creating a bonding
-	device using the two matched physical devices as slaves on host1.
-	The bonding mode and miimon interval is configured on the bonding device
-	according to the recipe parameters. IPv4 and IPv6 addresses are added to
-	the bonding device and to the matched ethernet device on host2.
+        """
+        Test wide configuration for this recipe involves creating a bonding
+        device using the two matched physical devices as slaves on host1.
+        The bonding mode and miimon interval is configured on the bonding device
+        according to the recipe parameters. IPv4 and IPv6 addresses are added to
+        the bonding device and to the matched ethernet device on host2.
 
         | host1.bond0 = 192.168.101.1/24 and fc00::1/64
         | host2.eth0 = 192.168.101.2/24 and fc00::2/64
