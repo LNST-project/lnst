@@ -251,7 +251,8 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         | host2.eth0
 
         For detailed explanation of this property see
-        :any:`class DisablePauseFramesHWConfigMixin`.
+        :any:`PauseFramesHWConfigMixin` and
+        :any:`PauseFramesHWConfigMixin.pause_frames_dev_list`.
         """
         return [self.matched.host1.eth0, self.matched.host1.eth1,
             self.matched.host2.eth0]
