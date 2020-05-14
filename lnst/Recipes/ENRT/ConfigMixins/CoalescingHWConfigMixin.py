@@ -44,10 +44,8 @@ class CoalescingHWConfigMixin(BaseHWConfigMixin):
 
     def describe_hw_config(self, config):
         desc = super().describe_hw_config(config)
-        desc.extend(
-            self._describe_dev_attribute(config, "adaptive_rx_coalescing")
-        )
-        desc.extend(
-            self._describe_dev_attribute(config, "adaptive_tx_coalescing")
-        )
+        for param in ["adaptive_rx_coalescing", "adaptive_tx_coalescing"]:
+            desc.extend(
+                self._describe_dev_attribute(config, param)
+            )
         return desc
