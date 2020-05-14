@@ -17,6 +17,19 @@ class BaseHWConfigMixin(object):
             setattr(dev, attr_name, value)
             attr_cfg[dev]["configured"] = getattr(dev, attr_name)
 
+    def _deconfigure_dev_attribute(self, config, dev_list, attr_name):
+        hw_config = config.hw_config
+
+        try:
+            attr_cfg = hw_config[attr_name + "_configuration"]
+        except KeyError:
+            return
+
+        for dev in dev_list:
+            value = attr_cfg[dev]["original"]
+            setattr(dev, attr_name, value)
+            del attr_cfg[dev]
+
     def _describe_dev_attribute(self, config, attr_name):
         hw_config = config.hw_config
         res = []
