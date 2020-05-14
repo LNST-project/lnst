@@ -32,6 +32,16 @@ class ParallelStreamQDiscHWConfigMixin(BaseHWConfigMixin):
                 dev.host.run("tc qdisc replace dev %s root mq" % dev.name)
                 hw_config["parallel_stream_devs"].append(dev)
 
+    def hw_deconfig(self, config):
+        hw_config = config.hw_config
+        parallel_devs = hw_config.get("parallel_stream_devs", None)
+        if parallel_devs is not None:
+            for dev in parallel_devs:
+                dev.host.run("tc qdisc del dev %s root" % dev.name)
+            del hw_config["parallel_stream_devs"]
+
+        super().hw_deconfig(config)
+
     def describe_hw_config(self, config):
         desc = super().describe_hw_config(config)
 

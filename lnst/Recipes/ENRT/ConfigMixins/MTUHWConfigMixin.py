@@ -32,6 +32,13 @@ class MTUHWConfigMixin(BaseHWConfigMixin):
                 config, self.mtu_hw_config_dev_list, "mtu", mtu_value
             )
 
+    def hw_deconfig(self, config):
+        self._deconfigure_dev_attribute(
+            config, self.mtu_hw_config_dev_list, "mtu"
+        )
+
+        super().hw_deconfig(config)
+
     def describe_hw_config(self, config):
         desc = super().describe_hw_config(config)
         return desc + self._describe_dev_attribute(config, "mtu")
