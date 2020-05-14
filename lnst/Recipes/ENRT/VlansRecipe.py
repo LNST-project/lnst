@@ -241,3 +241,17 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         :any:`ParallelStreamQDiscHWConfigMixin.parallel_stream_qdisc_hw_config_dev_list`.
         """
         return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def pause_frames_dev_list(self):
+        """
+        The `pause_frames_dev_list` property value for this scenario is a list
+        of the physical devices carrying data of the configured VLAN tunnels:
+
+        host1.eth0 and host2.eth0
+
+        For detailed explanation of this property see
+        :any:`PauseFramesHWConfigMixin` and
+        :any:`PauseFramesHWConfigMixin.pause_frames_dev_list`.
+        """
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
