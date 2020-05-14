@@ -243,9 +243,9 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     @property
     def pause_frames_dev_list(self):
         """
-        The `parallel_stream_qdisc_hw_config_dev_list` property value for this
-        scenario is a list containing the matched physical devices used to create
-        the bonding device on host1 and the matched ethernet device on host2.
+        The `pause_frames_dev_list` property value for this scenario is a list
+        containing the matched physical devices used to create the bonding
+        device on host1 and the matched ethernet device on host2.
 
         | host1.eth0, host.eth1
         | host2.eth0
