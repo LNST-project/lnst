@@ -8,14 +8,14 @@ from lnst.Recipes.ENRT.ConfigMixins.CoalescingHWConfigMixin import (
     CoalescingHWConfigMixin,
 )
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
-from lnst.Recipes.ENRT.ConfigMixins.DisablePauseFramesHWConfigMixin import (
-    DisablePauseFramesHWConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
+    PauseFramesHWConfigMixin,
 )
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 
 
 class CommonHWSubConfigMixin(
-    DisablePauseFramesHWConfigMixin,
+    PauseFramesHWConfigMixin,
     ParallelStreamQDiscHWConfigMixin,
     DevInterruptHWConfigMixin,
     CoalescingHWConfigMixin,

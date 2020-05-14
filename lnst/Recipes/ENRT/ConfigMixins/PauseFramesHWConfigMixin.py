@@ -2,7 +2,7 @@ from time import sleep
 from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 
 
-class DisablePauseFramesHWConfigMixin(BaseHWConfigMixin):
+class PauseFramesHWConfigMixin(BaseHWConfigMixin):
     """
     This class is an extension to the :any:`BaseEnrtRecipe` class to turn off
     the Ethernet pause frames on the devices defined by
