@@ -32,18 +32,15 @@ class CoalescingHWConfigMixin(BaseHWConfigMixin):
     def hw_config(self, config):
         super().hw_config(config)
 
-        self._configure_dev_attribute(
-            config,
-            self.coalescing_hw_config_dev_list,
-            "adaptive_rx_coalescing",
-            getattr(self.params, "adaptive_rx_coalescing", None),
-        )
-        self._configure_dev_attribute(
-            config,
-            self.coalescing_hw_config_dev_list,
-            "adaptive_tx_coalescing",
-            getattr(self.params, "adaptive_tx_coalescing", None),
-        )
+        for param in ["adaptive_rx_coalescing", "adaptive_tx_coalescing"]:
+            param_value = getattr(self.params, param, None)
+            if param_value is not None:
+                self._configure_dev_attribute(
+                    config,
+                    self.coalescing_hw_config_dev_list,
+                    param,
+                    param_value
+                )
 
     def describe_hw_config(self, config):
         desc = super().describe_hw_config(config)
