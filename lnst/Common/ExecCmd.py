@@ -37,6 +37,9 @@ class ExecCmdFail(LnstError):
     def get_stdout(self):
         return self._stdout
 
+    def get_retval(self):
+        return self._retval
+
     def __str__(self):
         retval = ""
         stderr = ""
