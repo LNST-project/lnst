@@ -241,7 +241,7 @@ class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
             self.matched.host2.eth0]
 
     @property
-    def no_pause_frames_dev_list(self):
+    def pause_frames_dev_list(self):
         """
         The `parallel_stream_qdisc_hw_config_dev_list` property value for this
         scenario is a list containing the matched physical devices used to create
