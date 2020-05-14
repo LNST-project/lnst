@@ -16,11 +16,12 @@ import ethtool
 import pyroute2
 import logging
 import pprint
+import time
 from abc import ABCMeta
 from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.NetUtils import normalize_hwaddr
-from lnst.Common.ExecCmd import exec_cmd
+from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
 from lnst.Common.DeviceError import DeviceFeatureNotSupported
@@ -242,6 +243,13 @@ class Device(object, metaclass=DeviceMeta):
         if_data["adaptive_rx_coalescing"] = ad_rx_coal
         if_data["adaptive_tx_coalescing"] = ad_tx_coal
 
+        try:
+            rx_pause, tx_pause = self._read_pause_frames()
+        except DeviceError:
+            rx_pause, tx_pause = None, None
+        if_data["rx_pause"] = rx_pause
+        if_data["tx_pause"] = tx_pause
+
         return if_data
 
     def _vars(self):
@@ -289,6 +297,16 @@ class Device(object, metaclass=DeviceMeta):
         self._cleanup_data["adaptive_rx_coalescing"] = ad_rx_coal
         self._cleanup_data["adaptive_tx_coalescing"] = ad_tx_coal
 
+        try:
+            rx_pause, tx_pause = self._read_pause_frames()
+        except DeviceError:
+            rx_pause, tx_pause = None, None
+        self._cleanup_data.update(
+                {
+                    "rx_pause": rx_pause,
+                    "tx_pause": tx_pause
+                })
+
     def restore_original_data(self):
         """Restores initial configuration from stored values"""
         if not self._cleanup_data:
@@ -308,6 +326,11 @@ class Device(object, metaclass=DeviceMeta):
             self.restore_coalescing()
         except DeviceError:
             pass
+
+        # the device needs to be up to configure the pause frame settings
+        self.up()
+        self.restore_pause_frames()
+        self.down()
 
         self._cleanup_data = None
 
@@ -653,6 +676,90 @@ class Device(object, metaclass=DeviceMeta):
         tx_val = self._cleanup_data["adaptive_tx_coalescing"]
         if (rx_val, tx_val) != (None, None):
             self._write_adaptive_coalescing(rx_val, tx_val)
+
+    @property
+    def rx_pause_frames(self):
+        return self._read_pause_frames()[0]
+
+    @rx_pause_frames.setter
+    def rx_pause_frames(self, value):
+        self._write_pause_frames(value, None)
+
+    @property
+    def tx_pause_frames(self):
+        return self._read_pause_frames()[1]
+
+    @tx_pause_frames.setter
+    def tx_pause_frames(self, value):
+        self._write_pause_frames(None, value)
+
+    def _read_pause_frames(self):
+        try:
+            res, _ = exec_cmd("ethtool -a %s" % self.name)
+        except:
+            raise DeviceFeatureNotSupported(
+                "No values for pause frames of %s." % self.name
+                )
+
+        # TODO: add autonegotiate
+        pause_settings = []
+        regex = "(RX|TX):.*(on|off)"
+
+        for line in res.split('\n'):
+            m = re.search(regex, line)
+            if m:
+                setting = True if m.group(2) == 'on' else False
+                pause_settings.append(setting)
+
+        if len(pause_settings) != 2:
+            raise Exception("Could not fetch pause frame settings. %s" % res)
+
+        return pause_settings
+
+    def _write_pause_frames(self, rx_val, tx_val):
+        ethtool_cmd = "ethtool -A {}".format(self.name)
+        ethtool_opts = ""
+
+        for feature, value in [('rx', rx_val), ('tx', tx_val)]:
+            if value is None:
+                continue
+
+            ethtool_opts += " {} {}".format(feature, 'on' if value else 'off')
+
+        if len(ethtool_opts) == 0:
+            return
+
+        try:
+            exec_cmd(ethtool_cmd + ethtool_opts)
+        except ExecCmdFail as e:
+            if e.get_retval() == 79:
+                raise DeviceConfigError(
+                    "Could not modify pause settings for %s." % self.name
+                )
+
+        timeout=5
+        while timeout > 0:
+            if self._pause_frames_match(rx_val, tx_val):
+                break
+            time.sleep(1)
+            timeout -= 1
+
+        if timeout == 0:
+            raise DeviceError("Pause frames not set!")
+
+    def _pause_frames_match(self, rx_expected, tx_expected):
+        rx_value, tx_value = self._read_pause_frames()
+        if ((rx_expected is not None and rx_expected != rx_value) or
+                (tx_expected is not None and tx_expected != tx_value)):
+            return False
+
+        return True
+
+    def restore_pause_frames(self):
+        rx_val = self._cleanup_data["rx_pause"]
+        tx_val = self._cleanup_data["tx_pause"]
+        if (rx_val, tx_val) != (None, None):
+            self._write_pause_frames(rx_val, tx_val)
 
     #TODO implement proper Route objects
     #consider the same as with tc?
