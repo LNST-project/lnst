@@ -143,13 +143,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
         separate performance measurement.
     :type perf_msg_sizes: List[Int] (default [123])
 
-    :param perf_reverse:
-        Parameter used by the :any:`generate_flow_combinations` generator. To
-        specify that both directions between the endpoints of a network flow
-        should be measured for the same test.
-    :type perf_reverse: :any:`BoolParam` (default False)
-
-
     :param net_perf_tool:
         Parameter used by the :any:`generate_perf_configurations` generator to
         create a PerfRecipeConf object.
@@ -185,7 +178,6 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
     perf_msg_sizes = ListParam(default=[123])
-    perf_reverse = BoolParam(default=False)
 
     net_perf_tool = Param(default=IperfFlowMeasurement)
     cpu_perf_tool = Param(default=StatCPUMeasurement)
@@ -499,22 +491,29 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
 
                 for perf_test in self.params.perf_tests:
                     for size in self.params.perf_msg_sizes:
-                        flow = PerfFlow(
-                                type = perf_test,
-                                generator = client_nic.netns,
-                                generator_bind = client_bind,
-                                receiver = server_nic.netns,
-                                receiver_bind = server_bind,
-                                msg_size = size,
-                                duration = self.params.perf_duration,
-                                parallel_streams = self.params.perf_parallel_streams,
-                                cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
-                                )
-                        yield [flow]
+                        yield [self._create_perf_flow(perf_test,
+                                                      client_nic,
+                                                      client_bind,
+                                                      server_nic,
+                                                      server_bind,
+                                                      size,
+                                                      )]
 
-                        if self.params.perf_reverse:
-                            reverse_flow = self._create_reverse_flow(flow)
-                            yield [reverse_flow]
+    def _create_perf_flow(self, perf_test, client_nic, client_bind, server_nic,
+                          server_bind, msg_size) -> PerfFlow:
+        """
+        Wrapper to create a PerfFlow. Mixins that want to change this behavior (for example, to reverse the direction)
+        can override this method as an alternative to overriding :any:`generate_flow_combinations`
+        """
+        cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
+        return PerfFlow(type=perf_test,
+                        generator=client_nic.netns, generator_bind=client_bind,
+                        receiver=server_nic.netns, receiver_bind=server_bind,
+                        msg_size=msg_size,
+                        duration=self.params.perf_duration,
+                        parallel_streams=self.params.perf_parallel_streams,
+                        cpupin=cpupin,
+                        )
 
     def generate_perf_endpoints(self, config):
         """Generator for perf endpoints
@@ -558,19 +557,7 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
 
         self.ctl.wait_for_condition(condition, timeout=5)
 
-    def _create_reverse_flow(self, flow):
-        rev_flow = PerfFlow(
-                    type = flow.type,
-                    generator = flow.receiver,
-                    generator_bind = flow.receiver_bind,
-                    receiver = flow.generator,
-                    receiver_bind = flow.generator_bind,
-                    msg_size = flow.msg_size,
-                    duration = flow.duration,
-                    parallel_streams = flow.parallel_streams,
-                    cpupin = flow.cpupin
-                    )
-        return rev_flow
+
 
     def _create_reverse_ping(self, pconf):
         return PingConf(
