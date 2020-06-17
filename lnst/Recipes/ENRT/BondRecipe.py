@@ -6,10 +6,12 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
+    PerfReversibleFlowMixin)
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BondDevice
 
-class BondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
+class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaseEnrtRecipe):
     """
     This recipe implements Enrt testing for a network scenario that looks
