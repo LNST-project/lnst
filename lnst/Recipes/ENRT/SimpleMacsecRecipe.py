@@ -39,12 +39,6 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
 
         self.wait_tentative_ips(configuration.test_wide_devices)
 
-        if (self.params.ping_parallel or self.params.ping_bidirect or
-            self.params.perf_reverse):
-            logging.debug("Parallel pings or reverse perf tests are "
-                          "not supported for this recipe, ping_parallel"
-                          "/ping_bidirect/perf_reverse will be ignored.")
-
         configuration.endpoint1 = host1.eth0
         configuration.endpoint2 = host2.eth0
         configuration.host1 = host1
@@ -80,6 +74,7 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
                 yield new_config
 
     def apply_sub_configuration(self, config):
+        super().apply_sub_configuration(config)
         if not config.encrypt:
             config.endpoint1.up()
             config.endpoint2.up()
@@ -119,6 +114,7 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe):
                 del host.msec0
         config.endpoint1.down()
         config.endpoint2.down()
+        super().remove_sub_configuration(config)
 
     def generate_ping_configurations(self, config):
         if not config.encrypt:
