@@ -207,8 +207,8 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
             result += ((ping_result2, pa_config2, pa_result2),)
         return result
 
-    def ping_evaluate_and_report(self, ping_config, result):
-        for res in result:
+    def ping_report_and_evaluate(self, results):
+        for res in results:
             super().ping_report_and_evaluate(res[0])
             self.packet_assert_evaluate_and_report(res[1], res[2])
 
