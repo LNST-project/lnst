@@ -29,8 +29,9 @@ from lnst.External.TRex.TRexLib import TRexCli, TRexSrv, TRexParams
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('iface', nargs=2, help='interfaces to use')
+    parser.add_argument('iface', nargs=2, help='interfaces to use.')
     parser.add_argument('--trex', metavar='T', type=str, nargs=1, help='trex directory', required=True)
+    parser.add_argument('--profile', metavar='P', type=str, nargs=1, help='Traffic profile to use [UDPSimple, UDPMultiflow]. Default: UDPSimple')
     parser.add_argument('--raw', metavar='R', type=str, nargs=1, help='raw output file. If set, file where the raw output will be stored (in json format)')
     parser.add_argument('--server', dest='server', action='store_const', const=True, default=False, help='Run server (default: runs client side)')
     args = parser.parse_args()
@@ -48,12 +49,18 @@ def main():
         server = TRexSrv(trex_srv_params)
         server.run()
     else:
+        module = "UDPSimple"
+        if args.profile:
+            module = args.profile[0]
+
         trex_cli_params = TRexParams (
                 trex_dir=trex_dir,
                 ports=list(range(len(flows))),
                 flows=flows,
                 duration=20,
+                module=module
                 )
+
         client = TRexCli(trex_cli_params)
         client.run()
 
