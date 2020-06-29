@@ -38,6 +38,7 @@ from pyroute2.netlink.rtnl import RTM_GETADDR
 from pyroute2.netlink.rtnl import RTM_DELADDR
 
 NL_GROUPS = RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR | RTMGRP_LINK
+PF_BRIDGE = 7
 
 class InterfaceManager(object):
     def __init__(self, server_handler):
@@ -127,6 +128,9 @@ class InterfaceManager(object):
 
                 dev._disable()
         elif msg['header']['type'] == RTM_DELLINK:
+            if msg['family'] == PF_BRIDGE:
+                return
+
             if msg['index'] in self._devices:
                 dev = self._devices[msg['index']]
                 dev._deleted = True
