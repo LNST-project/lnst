@@ -1,0 +1,194 @@
+#! /usr/bin/env python3
+
+"""
+TPerf is a TRex-based performance tool aimed to quickly inject traffic and measure
+performace.
+
+Usage:
+    tperf --trex /path/to/trex-dir --server 0000:01:01.{0,1}
+    (in another terminal)
+    tperf --trex /path/to/trex-dir --client 0000:01:01.{0,1}
+
+TODO:
+    Remove hardcoded cores
+"""
+
+import argparse
+import json
+import statistics
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+root_path = os.path.join(currentdir,"..", "..")
+sys.path.insert(0, root_path)
+from lnst.External.TRex.TRexLib import TRexCli, TRexSrv, TRexParams
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('iface', nargs=2, help='interfaces to use')
+    parser.add_argument('--trex', metavar='T', type=str, nargs=1, help='trex directory', required=True)
+    parser.add_argument('--raw', metavar='R', type=str, nargs=1, help='raw output file. If set, file where the raw output will be stored (in json format)')
+    parser.add_argument('--server', dest='server', action='store_const', const=True, default=False, help='Run server (default: runs client side)')
+    args = parser.parse_args()
+
+    flows = get_flows(args.iface)
+    trex_dir=args.trex[0]
+
+    if args.server:
+        trex_srv_params = TRexParams (
+                trex_dir=trex_dir,
+                flows=flows,
+                cores=[6, 8],
+                )
+
+        server = TRexSrv(trex_srv_params)
+        server.run()
+    else:
+        trex_cli_params = TRexParams (
+                trex_dir=trex_dir,
+                ports=list(range(len(flows))),
+                flows=flows,
+                duration=20,
+                )
+        client = TRexCli(trex_cli_params)
+        client.run()
+
+        results = client.get_results()
+
+        if args.raw:
+            with open(args.raw[0], 'w') as f:
+                json.dump(client.results, f)
+
+        print_stats(stats(digest(client.results)))
+
+
+def get_flows(ifaces):
+    flow_src1= {
+            "mac_addr":"ee:af:bf:cf:df:01",
+            "ip_addr":"192.168.1.1",
+            "pci_addr":ifaces[0]
+            }
+    flow_dest1 = {
+            "mac_addr":"ff:af:bf:cf:df:01",
+            "ip_addr":"192.168.1.2",
+            "pci_addr":""
+            }
+
+    flow_src2= {
+            "mac_addr":"ee:af:bf:cf:df:02",
+            "ip_addr":"192.168.2.1",
+            "pci_addr":ifaces[1]
+            }
+    flow_dest2 = {
+            "mac_addr":"ff:af:bf:cf:df:02",
+            "ip_addr":"192.168.2.2",
+            "pci_addr":""
+            }
+
+
+    return [(flow_src1, flow_dest1), (flow_src2, flow_dest2)]
+
+"""
+Print stats
+"""
+def print_stats(stats):
+    print("----------- Test Results -----------")
+    print("Number of samples: %d" % stats["nsamples"])
+    for port in stats["result"]:
+        print("Port %s:" % port)
+        print("     TX: %.3f Kpps" % stats["result"][port]["TX"])
+        print("     RX: %.3f Kpps" % stats["result"][port]["RX"])
+
+
+def stats(digest):
+    """
+    Given a digested result, calculate mean tx/rx kpps
+    Args: Digested samples
+    Returns:  a dictionary with the following format
+    {
+    "nsamples": 52
+    "result": {
+        0: {
+            "TX": 2352.238
+            "RX": 4581.312
+        },
+        1: ...
+    }
+    }
+    """
+    result= {}
+    for port in digest[0].get("packets"):
+        result[port]= {
+                "TX": statistics.mean(
+                    [sample["packets"][port]["tx_delta"]/
+                        sample["time_delta"] for sample in digest]) / 1000,
+                "RX": statistics.mean(
+                    [sample["packets"][0]["rx_delta"]/
+                        sample["time_delta"] for sample in digest]) / 1000
+                 }
+
+    return {
+            "nsamples": len(digest),
+            "result": result
+            }
+
+def digest(result):
+    """
+    Chew the results a bit and show a nice summary
+    Args: raw trex results
+    Returns: A list of samples with the following format:
+    [
+    {
+    "time_delta": 0.1
+    "packets"
+    [
+    "port0": {
+        "tx_delta": 12345
+        "rx_delta": 12334
+        },
+
+    "port0": {
+        "tx_delta": 12345
+        "rx_delta": 12334
+        }
+    }
+    ]
+    """
+    prev_time = result["start_time"]
+    prev_tx_val = {}
+    prev_rx_val = {}
+    digested_results=[]
+    for res in result["data"]:
+        sample={}
+        time_delta = res["timestamp"] - prev_time
+        sample["time_delta"]=time_delta
+        packets={}
+
+        for port in res["measurement"]:
+            if port == "global" or port == "total" or port == "flow_stats" or port == "latency":
+                continue
+
+            tx_delta = res["measurement"][port]["opackets"] - (prev_tx_val.get(port) or 0)
+            rx_delta = res["measurement"][port]["ipackets"] - (prev_rx_val.get(port) or 0)
+
+            packets[port] = {
+                    "tx_delta": tx_delta,
+                    "rx_delta": rx_delta
+                    }
+
+            prev_tx_val[port] = res["measurement"][port]["opackets"]
+            prev_rx_val[port] = res["measurement"][port]["ipackets"]
+
+        sample["packets"]=packets
+        digested_results.append(sample)
+
+        prev_time = res["timestamp"]
+
+    return digested_results
+
+if __name__ == "__main__":
+    main()
