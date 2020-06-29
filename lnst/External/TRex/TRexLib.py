@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 import time
@@ -11,7 +12,8 @@ TREX_CLI_DEFAULT_PARAMS = {
         "warmup_time": 5,
         "server_hostname": "localhost",
         "trex_stl_path": 'trex_client/interactive',
-        "msg_size": 64
+        "msg_size": 64,
+        "module": "UDPSimple"
         }
 
 class TRexCli:
@@ -28,6 +30,7 @@ class TRexCli:
         - warmup_time (int): Time to wait before starting to take measurements. Default: 5
         - server_hostname (str): Host where the server is running.
         - msg_size (int): Message size
+        - module(str): The python module to call for stream creation. Default (UDPSimple)
     """
     trex_stl_path = 'trex_client/interactive'
 
@@ -69,30 +72,24 @@ class TRexCli:
             self.results["msg"] = "Failed to reset ports"
             return False
 
+        module = importlib.import_module('.'.join(["lnst", "External", "TRex", self.params.module]))
+        stream_generator = module.register()
+
         for i, (src, dst) in enumerate(self.params.flows):
-            L2 = trex_api.Ether(
-                    src=str(src["mac_addr"]),
-                    dst=str(dst["mac_addr"]))
-            L3 = trex_api.IP(
-                    src=str(src["ip_addr"]),
-                    dst=str(dst["ip_addr"]))
-            L4 = trex_api.UDP()
-            base_pkt = L2/L3/L4
-
-            pad = max(0, self.params.msg_size - len(base_pkt)) * 'x'
-            packet = base_pkt/pad
-
-            trex_packet = trex_api.STLPktBuilder(pkt=packet)
-
-            trex_stream = trex_api.STLStream(
-                    packet=trex_packet,
-                    mode=trex_api.STLTXCont(percentage=100))
-
             port = self.params.ports[i]
-            client.add_streams(trex_stream, ports=[port])
+            modkwargs = {}
+            modkwargs["port_id"] = port
+            modkwargs["msg_size"] = self.params.msg_size
+            modkwargs["src_ip"] = src["ip_addr"]
+            modkwargs["dst_ip"] = dst["ip_addr"]
+            modkwargs["src_mac"] = src["mac_addr"]
+            modkwargs["dst_mac"] = dst["mac_addr"]
+
+            trex_streams = stream_generator.get_streams(direction=(port%2), **modkwargs)
+
+            client.add_streams(trex_streams, ports=[port])
 
         client.set_port_attr(ports=self.params.ports, promiscuous=True)
-
 
         measurements = []
 
