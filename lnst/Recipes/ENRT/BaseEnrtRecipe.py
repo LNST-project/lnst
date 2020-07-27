@@ -351,9 +351,11 @@ class BaseEnrtRecipe(SctpFirewallPerfTestMixin, BaseSubConfigMixin,
         for perf_config in self.generate_perf_configurations(recipe_config):
             self.apply_perf_test_tweak(perf_config)
             self.describe_perf_test_tweak(perf_config)
-            result = self.perf_test(perf_config)
-            self.remove_perf_test_tweak(perf_config)
-            self.perf_report_and_evaluate(result)
+            try:
+                result = self.perf_test(perf_config)
+                self.perf_report_and_evaluate(result)
+            finally:
+                self.remove_perf_test_tweak(perf_config)
 
     def generate_ping_configurations(self, config):
         """Base ping test configuration generator
