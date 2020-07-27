@@ -8,15 +8,17 @@ from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 class Flow(object):
     def __init__(self,
                  type,
-                 generator, generator_bind,
-                 receiver, receiver_bind,
+                 generator, generator_bind, generator_nic,
+                 receiver, receiver_bind, receiver_nic,
                  msg_size, duration, parallel_streams, cpupin):
         self._type = type
 
         self._generator = generator
         self._generator_bind = generator_bind
+        self._generator_nic = generator_nic
         self._receiver = receiver
         self._receiver_bind = receiver_bind
+        self._receiver_nic = receiver_nic
 
         self._msg_size = msg_size
         self._duration = duration
@@ -36,12 +38,20 @@ class Flow(object):
         return self._generator_bind
 
     @property
+    def generator_nic(self):
+        return self._generator_nic
+
+    @property
     def receiver(self):
         return self._receiver
 
     @property
     def receiver_bind(self):
         return self._receiver_bind
+
+    @property
+    def receiver_nic(self):
+        return self._receiver_nic
 
     @property
     def msg_size(self):
@@ -65,8 +75,10 @@ class Flow(object):
             type={type},
             generator={generator}, 
             generator_bind={generator_bind},
+            generator_nic={generator_nic},
             receiver={receiver}, 
             receiver_bind={receiver_bind},
+            receiver_nic={receiver_nic},
             msg_size={msg_size}, 
             duration={duration},
             parallel_streams={parallel_streams},
@@ -75,8 +87,10 @@ class Flow(object):
             type=self.type,
             generator=str(self.generator),
             generator_bind=self.generator_bind,
+            generator_nic=self.generator_nic,
             receiver=str(self.receiver),
             receiver_bind=self.receiver_bind,
+            receiver_nic=self.receiver_nic,
             msg_size=self.msg_size,
             duration=self.duration,
             parallel_streams=self.parallel_streams,

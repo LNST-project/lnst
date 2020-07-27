@@ -508,7 +508,9 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
         cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
         return PerfFlow(type=perf_test,
                         generator=client_nic.netns, generator_bind=client_bind,
+                        generator_nic=client_nic,
                         receiver=server_nic.netns, receiver_bind=server_bind,
+                        receiver_nic=server_nic,
                         msg_size=msg_size,
                         duration=self.params.perf_duration,
                         parallel_streams=self.params.perf_parallel_streams,
