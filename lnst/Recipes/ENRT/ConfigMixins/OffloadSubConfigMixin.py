@@ -45,12 +45,6 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
                 ethtool_offload_string += " %s %s" % (name, value)
 
             for nic in self.offload_nics:
-                if "sctp_stream" in self.params.perf_tests:
-                    nic.netns.run(
-                        "iptables -I OUTPUT ! -o %s -p sctp -j DROP" % nic.name,
-                        job_level=ResultLevel.NORMAL,
-                    )
-
                 nic.netns.run(
                     "ethtool -K {} {}".format(nic.name, ethtool_offload_string),
                     job_level=ResultLevel.NORMAL,
@@ -78,12 +72,6 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
                 ethtool_offload_string += " %s %s" % (name, "on")
 
             for nic in self.offload_nics:
-                if "sctp_stream" in self.params.perf_tests:
-                    nic.netns.run(
-                        "iptables -D OUTPUT ! -o %s -p sctp -j DROP" % nic.name,
-                        job_level=ResultLevel.NORMAL,
-                    )
-
                 # set all the offloads back to 'on' state
                 nic.netns.run(
                     "ethtool -K {} {}".format(nic.name, ethtool_offload_string),
