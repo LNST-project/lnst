@@ -337,6 +337,10 @@ class BaseEnrtRecipe(SctpFirewallPerfTestMixin, BaseSubConfigMixin,
             result = self.ping_test(ping_configs)
             self.ping_report_and_evaluate(result)
 
+    def describe_perf_test_tweak(self, perf_config):
+        description = self.generate_perf_test_tweak_description(perf_config)
+        self.add_result(True, "\n".join(description))
+
     def do_perf_tests(self, recipe_config):
         """Performance testing loop
 
@@ -346,6 +350,7 @@ class BaseEnrtRecipe(SctpFirewallPerfTestMixin, BaseSubConfigMixin,
         """
         for perf_config in self.generate_perf_configurations(recipe_config):
             self.apply_perf_test_tweak(perf_config)
+            self.describe_perf_test_tweak(perf_config)
             result = self.perf_test(perf_config)
             self.remove_perf_test_tweak(perf_config)
             self.perf_report_and_evaluate(result)
