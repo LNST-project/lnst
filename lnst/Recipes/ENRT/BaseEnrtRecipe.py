@@ -13,6 +13,7 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
+from lnst.Recipes.ENRT.PerfTestMixins import SctpFirewallPerfTestMixin
 
 from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
@@ -32,7 +33,8 @@ class EnrtConfiguration(object):
     """
     pass
 
-class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
+class BaseEnrtRecipe(SctpFirewallPerfTestMixin, BaseSubConfigMixin,
+        PingTestAndEvaluate, PerfRecipe):
     """Base Recipe class for the ENRT recipe package
 
     This class defines the shared *test* method defining the common test
@@ -343,7 +345,9 @@ class BaseEnrtRecipe(BaseSubConfigMixin, PingTestAndEvaluate, PerfRecipe):
         methods to execute, report and evaluate the results.
         """
         for perf_config in self.generate_perf_configurations(recipe_config):
+            self.apply_perf_test_tweak(perf_config)
             result = self.perf_test(perf_config)
+            self.remove_perf_test_tweak(perf_config)
             self.perf_report_and_evaluate(result)
 
     def generate_ping_configurations(self, config):
