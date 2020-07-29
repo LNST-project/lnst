@@ -6,13 +6,15 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
+    PerfReversibleFlowMixin)
 from lnst.Devices import VlanDevice
 from lnst.Devices.VlanDevice import VlanDevice as Vlan
 from lnst.Devices import BondDevice
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 
-class VlansOverBondRecipe(VlanPingEvaluatorMixin,
+class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaseEnrtRecipe):
     """
