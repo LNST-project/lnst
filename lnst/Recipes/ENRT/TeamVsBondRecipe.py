@@ -6,12 +6,14 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
+    PerfReversibleFlowMixin)
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import TeamDevice
 from lnst.Devices import BondDevice
 
-class TeamVsBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
-    BaseEnrtRecipe):
+class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
+    OffloadSubConfigMixin, BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
@@ -108,8 +110,7 @@ class TeamVsBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         ]
 
     def generate_perf_endpoints(self, config):
-        return [(self.matched.host1.team0, self.matched.host2.bond0),
-            (self.matched.host2.bond0, self.matched.host1.team0)]
+        return [(self.matched.host1.team0, self.matched.host2.bond0)]
 
     @property
     def offload_nics(self):
