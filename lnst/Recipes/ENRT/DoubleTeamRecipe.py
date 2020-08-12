@@ -25,7 +25,6 @@ class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
-    perf_reverse = BoolParam(default=True)
     runner_name = StrParam(mandatory=True)
 
     def test_wide_configuration(self):

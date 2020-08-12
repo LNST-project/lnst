@@ -28,7 +28,6 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
-    perf_reverse = BoolParam(default=True)
     runner_name = StrParam(mandatory = True)
     bonding_mode = StrParam(mandatory = True)
     miimon_value = IntParam(mandatory = True)
