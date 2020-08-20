@@ -75,7 +75,7 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
     perf_msg_size = IntParam(default=64)
-    perf_streams = IntParam(default=1)
+    perf_parallel_streams = IntParam(default=1)
 
     nr_hugepages = IntParam(default=13000)
     # TODO: Allow 1G hugepages as well
