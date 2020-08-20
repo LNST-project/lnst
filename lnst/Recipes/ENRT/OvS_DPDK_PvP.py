@@ -130,34 +130,48 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
         for src_nic, dst_nic in zip(config.generator.nics, config.dut.nics):
             src_bind = dict(mac_addr=src_nic.hwaddr,
                             pci_addr=src_nic.bus_info,
-                            ip_addr=src_nic.ips[0])
+                            ip_addr=src_nic.ips[0],
+                            family=src_nic.ips[0].family)
             dst_bind = dict(mac_addr=dst_nic.hwaddr,
                             pci_addr=dst_nic.bus_info,
-                            ip_addr=dst_nic.ips[0])
+                            ip_addr=dst_nic.ips[0],
+                            family=dst_nic.ips[0].family)
             flows.append(PerfFlow(
                 type="pvp_loop_rate",
                 generator=config.generator.host,
+                generator_nic=src_nic,
                 generator_bind=src_bind,
                 receiver=config.dut.host,
+                receiver_nic=dst_nic,
                 receiver_bind=dst_bind,
                 msg_size=self.params.perf_msg_size,
                 duration=self.params.perf_duration,
                 parallel_streams=self.params.perf_streams,
                 cpupin=None))
 
-        return PerfRecipeConf(
-            measurements=[
-                self.params.cpu_perf_tool(
-                    [config.generator.host, config.dut.host, config.guest.host]
-                ),
-                TRexFlowMeasurement(
+        perf_recipe_conf=dict(
+            recipe_config=config,
+            flows=flows,
+        )
+
+        cpu_measurement = self.params.cpu_perf_tool([config.generator.host, config.dut.host, config.guest.host], perf_recipe_conf)
+
+        flows_measurement = TRexFlowMeasurement(
                     flows,
                     self.params.trex_dir,
                     self.params.host1_dpdk_cores.split(","),
-                ),
+                    perf_recipe_conf,
+                )
+        perf_conf = PerfRecipeConf(
+            measurements=[
+                cpu_measurement,
+                flows_measurement,
             ],
             iterations=self.params.perf_iterations,
         )
+        perf_conf.register_evaluators(cpu_measurement, self.cpu_perf_evaluators)
+        perf_conf.register_evaluators(flows_measurement, self.net_perf_evaluators)
+        return perf_conf
 
     def test_wide_deconfiguration(self, config):
         try:
