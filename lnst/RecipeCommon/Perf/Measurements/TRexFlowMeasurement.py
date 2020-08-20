@@ -1,5 +1,6 @@
 import time
 import signal
+import re
 from lnst.Controller.Recipe import RecipeError
 from lnst.Controller.RecipeResults import ResultLevel
 
@@ -16,6 +17,8 @@ from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementErro
 from lnst.Tests.TRex import TRexServer, TRexClient
 
 class TRexFlowMeasurement(BaseFlowMeasurement):
+    _MEASUREMENT_VERSION = 1
+
     def __init__(self, flows, trex_dir, server_cpu_cores, recipe_conf=None):
         super(TRexFlowMeasurement, self).__init__(
             measurement_conf=dict(
@@ -31,6 +34,26 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
         self._conf = dict(flows=flows, trex_dir=trex_dir)
         self._running_measurements = []
         self._finished_measurements = []
+
+        self._hosts_versions = {}
+
+    @property
+    def version(self):
+        if not self._hosts_versions:
+            for flow in self._flows:
+                if flow.generator not in self._hosts_versions:
+                    self._hosts_versions[flow.generator] = self._get_host_trex_version(flow.generator)
+
+        return {"measurement_version": self._MEASUREMENT_VERSION,
+                "hosts_trex_versions": self._hosts_versions}
+
+    def _get_host_trex_version(self, host):
+        version_job = host.run("cd {trex_dir} ; ./t-rex-64 --help", job_level = ResultLevel.DEBUG)
+        if version_job.passed:
+            match = re.match(r"Starting  TRex (v.+?) please wait  ...", version_job.stdout)
+            if match:
+                return match.group(1)
+        return None
 
     def start(self):
         if len(self._running_measurements) > 0:
