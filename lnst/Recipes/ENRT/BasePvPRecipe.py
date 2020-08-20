@@ -10,6 +10,7 @@ from lnst.Tests import Ping
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.LibvirtControl import LibvirtControl
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
+from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 
 VirtioType = Enum('VirtType', 'VHOST_USER, VHOST_NET')
 
@@ -281,3 +282,27 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
 
     def test_wide_configuration(self, config):
         pass
+
+    @property
+    def cpu_perf_evaluators(self):
+        """CPU measurement evaluators
+
+        To be overriden by a derived class. Returns the list of evaluators to
+        use for CPU utilization measurement evaluation.
+
+        :return: a list of cpu evaluator objects
+        :rtype: List[BaseEvaluator]
+        """
+        return []
+
+    @property
+    def net_perf_evaluators(self):
+        """Network flow measurement evaluators
+
+        To be overriden bby a derived class. Returns the list of evaluators to
+        use for Network flow measurement evaluation.
+
+        :return: a list of flow evaluator objects
+        :rtype: List[BaseEvaluator]
+        """
+        return [NonzeroFlowEvaluator()]
