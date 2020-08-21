@@ -8,8 +8,18 @@ from lnst.RecipeCommon.Perf.Results import result_averages_difference
 
 
 class BaselineFlowAverageEvaluator(BaselineEvaluator):
-    def __init__(self, pass_difference):
+    def __init__(self, pass_difference, metrics_to_evaluate=None):
         self._pass_difference = pass_difference
+
+        if metrics_to_evaluate is not None:
+            self._metrics_to_evaluate = metrics_to_evaluate
+        else:
+            self._metrics_to_evaluate = [
+                "generator_results",
+                "generator_cpu_stats",
+                "receiver_results",
+                "receiver_cpu_stats",
+            ]
 
     def describe_group_results(self, recipe, results):
         result = results[0]
@@ -28,12 +38,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
             comparison_result = False
             result_text.append("No baseline found for this flow")
         else:
-            for i in [
-                "generator_results",
-                "generator_cpu_stats",
-                "receiver_results",
-                "receiver_cpu_stats",
-            ]:
+            for i in self._metrics_to_evaluate:
                 comparison, text = self._average_diff_comparison(
                     name="{} average".format(i),
                     target=getattr(result, i),
