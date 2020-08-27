@@ -70,15 +70,17 @@ class RecipeRunExporter:
         """
         data = RecipeRunData(self.recipe, run)
         if not name:
-            name = f"{self.recipe_name}-run-{run.datetime:%Y-%m-%d_%H:%M:%S}.dat"
+            name = f"{self.recipe_name}-run-{data.datetime:%Y-%m-%d_%H:%M:%S}.dat"
         if not dir:
-            dir = os.path.join(run.log_dir, name)
+            dir = run.log_dir
 
-        with open(dir, 'wb') as f:
+        path = os.path.join(dir, name)
+
+        with open(path, 'wb') as f:
             pickle.dump(data, f)
 
-        logging.info(f"Exported {self.recipe_name} data to {dir}")
-        return dir
+        logging.info(f"Exported {self.recipe_name} data to {path}")
+        return path
 
 
 def export_recipe_runs(recipe: BaseRecipe) -> List[Tuple[str, RecipeRun]]:
