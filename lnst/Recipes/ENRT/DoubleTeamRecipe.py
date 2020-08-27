@@ -92,8 +92,7 @@ class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         ]
 
     def generate_perf_endpoints(self, config):
-        return [(self.matched.host1.team0, self.matched.host2.team0),
-            (self.matched.host2.team0, self.matched.host1.team0)]
+        return [(self.matched.host1.team0, self.matched.host2.team0)]
 
     @property
     def offload_nics(self):
