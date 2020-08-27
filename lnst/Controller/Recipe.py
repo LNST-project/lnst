@@ -152,10 +152,11 @@ class BaseRecipe(object):
                                            level, data_level))
 
 class RecipeRun(object):
-    def __init__(self, match, desc=None):
+    def __init__(self, match, desc=None, log_dir=None):
         self._match = match
         self._desc = desc
         self._results = []
+        self._log_dir = log_dir
 
     def add_result(self, result):
         if not isinstance(result, BaseResult):
@@ -175,6 +176,10 @@ class RecipeRun(object):
         else:
             logging.info("Result: {}, What:".format(result_str))
             logging.info("{}".format(result.description))
+
+    @property
+    def log_dir(self):
+        return self._log_dir
 
     @property
     def match(self):

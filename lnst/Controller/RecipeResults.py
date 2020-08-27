@@ -118,6 +118,11 @@ class DeviceConfigResult(BaseResult):
     def device(self):
         return self._device
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove things that can't be pickled
+        state['_device'] = None
+        return state
 
 class DeviceCreateResult(DeviceConfigResult):
     @property

@@ -230,3 +230,10 @@ class Job(object):
         attrs.append(repr(self._what))
 
         return ", ".join(attrs)
+
+    def __getstate__(self):
+        #Remove things that can't be pickled
+        #TODO figure out better place holder values
+        state = self.__dict__.copy()
+        state['_netns'] = None
+        return state
