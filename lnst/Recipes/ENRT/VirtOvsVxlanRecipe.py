@@ -142,31 +142,18 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
         return [(self.matched.guest1.eth0, self.matched.guest3.eth0)]
 
     @property
+    def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
     def mtu_hw_config_dev_list(self):
         return [self.matched.guest1.eth0, self.matched.guest2.eth0,
             self.matched.guest3.eth0, self.matched.guest4.eth0]
 
     @property
-    def parallel_stream_qdisc_hw_config_dev_list(self):
+    def dev_interrupt_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
-    def hw_config(self, config):
-        host1, host2, guest1, guest2, guest3, guest4 = (self.matched.host1,
-            self.matched.host2, self.matched.guest1, self.matched.guest2,
-            self.matched.guest3, self.matched.guest4)
-
-        config.hw_config = {}
-        hw_config = config.hw_config
-
-        if "dev_intr_cpu" in self.params:
-            intr_cfg = hw_config["dev_intr_cpu_configuration"] = {}
-            intr_cfg["irq_devs"] = {}
-            intr_cfg["irqbalance_hosts"] = []
-
-            for host in [host1, host2, guest1, guest2, guest3, guest4]:
-                host.run("service irqbalance stop")
-                intr_cfg["irqbalance_hosts"].append(host)
-
-            for dev in [host1.eth0, host2.eth0]:
-                self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
-                intr_cfg["irq_devs"][dev] = self.params.dev_intr_cpu
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
