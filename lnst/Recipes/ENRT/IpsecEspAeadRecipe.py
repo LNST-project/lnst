@@ -12,14 +12,15 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.RecipeCommon.PacketAssert import (PacketAssertConf,
-    PacketAssertTestAndEvaluate)
+                                            PacketAssertTestAndEvaluate)
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Ping.Recipe import PingConf
 from lnst.Recipes.ENRT.XfrmTools import (configure_ipsec_esp_aead,
-    generate_key)
+                                         generate_key)
+
 
 class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
-    PacketAssertTestAndEvaluate):
+                         PacketAssertTestAndEvaluate):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
@@ -40,21 +41,21 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
         net_addr6 = "fc00:"
         for i, host in enumerate([host1, host2]):
             host.eth0.down()
-            host.eth0.ip_add(ipaddress(net_addr + str(i+99) + ".1/24"))
-            host.eth0.ip_add(ipaddress(net_addr6 + str(i+1) + "::1/64"))
+            host.eth0.ip_add(ipaddress(net_addr + str(i + 99) + ".1/24"))
+            host.eth0.ip_add(ipaddress(net_addr6 + str(i + 1) + "::1/64"))
             host.eth0.up()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
 
         if self.params.ping_parallel or self.params.ping_bidirect:
             logging.debug("Parallelism in pings is not supported for this "
-                "recipe, ping_parallel/ping_bidirect will be ignored.")
+                          "recipe, ping_parallel/ping_bidirect will be ignored.")
 
         for host, dst in [(host1, host2), (host2, host1)]:
             for family in [AF_INET, AF_INET6]:
                 host.run("ip route add %s dev %s" %
-                    (dst.eth0.ips_filter(family=family)[0],
-                        host.eth0.name))
+                         (dst.eth0.ips_filter(family=family)[0],
+                          host.eth0.name))
 
         configuration.endpoint1 = host1.eth0
         configuration.endpoint2 = host2.eth0
@@ -97,7 +98,7 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
                     new_config = copy.copy(subconf)
                     new_config.ips = (ip1, ip2)
                     new_config.ipsec_settings = (algo, g_key, icv_len,
-                        ipsec_mode, spi_values)
+                                                 ipsec_mode, spi_values)
                     yield new_config
 
     def apply_sub_configuration(self, config):
@@ -120,12 +121,12 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
         count = self.params.ping_count
         interval = self.params.ping_interval
         size = self.params.ping_psize
-        common_args = {'count' : count, 'interval' : interval,
-            'size' : size}
-        ping_conf = PingConf(client = ns1,
-                             client_bind = ip1,
-                             destination = ns2,
-                             destination_address = ip2,
+        common_args = {'count': count, 'interval': interval,
+                       'size': size}
+        ping_conf = PingConf(client=ns1,
+                             client_bind=ip1,
+                             destination=ns2,
+                             destination_address=ip2,
                              **common_args)
         yield [ping_conf]
 
@@ -135,28 +136,28 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
         for perf_test in self.params.perf_tests:
             for size in self.params.perf_msg_sizes:
                 flow = PerfFlow(
-                    type = perf_test,
-                    generator = ns1,
-                    generator_bind = ip1,
-                    receiver = ns2,
-                    receiver_bind = ip2,
-                    msg_size = size,
-                    duration = self.params.perf_duration,
-                    parallel_streams = self.params.perf_parallel_streams,
-                    cpupin = self.params.perf_tool_cpu if (
-                        "perf_tool_cpu" in self.params) else None
-                    )
+                    type=perf_test,
+                    generator=ns1,
+                    generator_bind=ip1,
+                    receiver=ns2,
+                    receiver_bind=ip2,
+                    msg_size=size,
+                    duration=self.params.perf_duration,
+                    parallel_streams=self.params.perf_parallel_streams,
+                    cpupin=self.params.perf_tool_cpu if (
+                            "perf_tool_cpu" in self.params) else None
+                )
                 yield [flow]
 
                 if ("perf_reverse" in self.params and
-                    self.params.perf_reverse):
+                        self.params.perf_reverse):
                     reverse_flow = self._create_reverse_flow(flow)
                     yield [reverse_flow]
 
     def ping_test(self, ping_configs):
         m1, m2 = ping_configs[0].client, ping_configs[0].destination
         ip1, ip2 = (ping_configs[0].client_bind,
-            ping_configs[0].destination_address)
+                    ping_configs[0].destination_address)
         if1_name = self.get_dev_by_ip(m1, ip1).name
         if2 = self.get_dev_by_ip(m2, ip2)
 
