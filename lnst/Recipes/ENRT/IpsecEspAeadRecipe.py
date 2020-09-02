@@ -63,15 +63,15 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
         return configuration
 
     def generate_test_wide_description(self, config):
-        host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
-                "Configured {}.{}.ips = {}".format(
-                    dev.host.hostid, dev.name, dev.ips
-                )
+                f"Configured {dev.host.hostid}.{dev.name}.ips = {dev.ips}"
                 for dev in config.test_wide_devices
-            ])
+            ]).join([f"Configured IPsec {self.params.ipsec_mode} mode with {algo} algorithm "
+                     f"using key length of {key_len} and icv length of {icv_len}"
+                     for algo, key_len, icv_len in self.algorithm])
+
         ]
         return desc
 
@@ -131,6 +131,7 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
         yield [ping_conf]
 
     def generate_flow_combinations(self, config):
+        nic1, nic2 = config.endpoint1, config.endpoint2
         ns1, ns2 = config.endpoint1.netns, config.endpoint2.netns
         ip1, ip2 = config.ips
         for perf_test in self.params.perf_tests:
@@ -139,8 +140,10 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
                     type=perf_test,
                     generator=ns1,
                     generator_bind=ip1,
+                    generator_nic=nic1,
                     receiver=ns2,
                     receiver_bind=ip2,
+                    receiver_nic=nic2,
                     msg_size=size,
                     duration=self.params.perf_duration,
                     parallel_streams=self.params.perf_parallel_streams,
