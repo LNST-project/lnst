@@ -45,7 +45,7 @@ class Machine(object):
     """
 
     def __init__(self, m_id, hostname, msg_dispatcher, ctl_config,
-                 libvirt_domain=None, rpcport=None, security=None):
+                 libvirt_domain=None, rpcport=None, security=None, pool_params=None):
         self._id = m_id
         self._hostname = hostname
         self._mapped = False
@@ -58,6 +58,8 @@ class Machine(object):
                                                            "identity")
         self._security["privkey"] = ctl_config.get_option("security",
                                                            "privkey")
+
+        self._pool_params = pool_params
 
         self._domain_ctl = None
         self._network_bridges = None

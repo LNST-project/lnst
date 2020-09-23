@@ -73,7 +73,7 @@ class SlavePoolManager(object):
 
                 pool[m_id] = Machine(m_id, hostname, self._msg_dispatcher,
                                      ctl_config, libvirt_domain, rpc_port,
-                                     m_spec["security"])
+                                     m_spec["security"], params)
                 pool[m_id].init_connection()
                 #TODO check if all described devices are available
 

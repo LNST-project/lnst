@@ -40,6 +40,7 @@ class Host(Namespace):
     def __init__(self, machine, **kwargs):
         super(Host, self).__init__(machine)
         self.params = Parameters()
+        self.params._from_dict(self._machine._pool_params)
         self.params._from_dict(self._machine._slave_desc)
 
         self._machine.set_initns(self)
