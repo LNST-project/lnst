@@ -45,7 +45,7 @@ class Machine(object):
     """
 
     def __init__(self, m_id, hostname, msg_dispatcher, ctl_config,
-                 libvirt_domain=None, rpcport=None, security=None, pool_params=None):
+                 libvirt_domain=None, rpcport=None, security=None, pool_params={}):
         self._id = m_id
         self._hostname = hostname
         self._mapped = False
