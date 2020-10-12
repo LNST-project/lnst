@@ -239,7 +239,7 @@ class GenericJob(object):
 class ShellExecJob(GenericJob):
     def run(self):
         try:
-            stdout, stderr = exec_cmd(self._what["command"], self._what["json"])
+            stdout, stderr = exec_cmd(self._what["command"], json=self._what["json"])
             self._result["passed"] = True
             self._result["res_data"] = {"stdout": stdout, "stderr": stderr}
         except ExecCmdFail as e:
