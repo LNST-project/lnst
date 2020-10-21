@@ -7,7 +7,11 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import copy
+import datetime
 import logging
+import lzma
+import os
+import pickle
 from lnst.Common.Parameters import Parameters, Param
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Controller.Requirements import _Requirements, HostReq
@@ -126,6 +130,7 @@ class BaseRecipe(object):
     def _set_ctl(self, ctl):
         self._ctl = ctl
 
+
     @property
     def matched(self):
         if self.ctl is None:
@@ -151,12 +156,21 @@ class BaseRecipe(object):
         self.current_run.add_result(Result(success, description, data,
                                            level, data_level))
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['_ctl'] = None
+        return state
+
+
 class RecipeRun(object):
-    def __init__(self, match, desc=None, log_dir=None):
+    def __init__(self, recipe: BaseRecipe, match, desc=None, log_dir=None):
         self._match = match
         self._desc = desc
         self._results = []
         self._log_dir = log_dir
+        self._recipe = recipe
+        self._datetime = datetime.datetime.now()
+        self._environ = os.environ.copy()
 
     def add_result(self, result):
         if not isinstance(result, BaseResult):
@@ -196,3 +210,84 @@ class RecipeRun(object):
     @property
     def overall_result(self):
         return all([i.success for i in self.results])
+
+    @property
+    def recipe(self) -> BaseRecipe:
+        return self._recipe
+
+    @property
+    def datetime(self):
+        return self._datetime
+
+    @property
+    def environ(self):
+        return self._environ
+
+
+def export_recipe_run(run: RecipeRun, export_dir: str = None, name: str = None) -> str:
+    """
+    Export a recipe run to a file. :py:class:`RecipeRun` is pickled and compressed.
+
+    :param run: `RecipeRun` object to export.
+    :type run: :py:class:`RecipeRun`
+    :param export_dir: Directory to export file to. Defaults to :py:attr:`run.log_dir`
+    :type export_dir: str
+    :param name: Name of output (exclusive of directory). Defaults to `<recipename>-run-<timestamp>.lrc`.
+    :type name: str
+    :return: Path of output file.
+    :rtype: str
+
+    Example::
+
+        ctl = Controller(...)
+        recipe = BondRecipe(...)
+        ctl.run(recipe)
+        ...
+        >>> from lnst.Controller.Recipe import export_recipe_run
+        >>> path = export_recipe_run(recipe.run[0])
+        2020-10-02 15:20:58 (localhost) - INFO: Exported BondRecipe run data to /tmp/lnst-logs/2020-10-02_15:20:18/BondRecipe_match_0/BondRecipe-run-2020-10-02_15:20:58.lrc
+        >>> print(path)
+        /tmp/lnst-logs/2020-10-02_15:20:18/BondRecipe_match_0/BondRecipe-run-2020-10-02_15:20:58.lrc
+
+    """
+    if not name:
+        name = f"{run.recipe.__class__.__name__}-run-{run.datetime:%Y-%m-%d_%H:%M:%S}.lrc"
+    if not export_dir:
+        export_dir = run.log_dir
+
+    path = os.path.join(export_dir, name)
+    with lzma.open(path, 'wb') as f:
+        pickle.dump(run, f)
+    logging.info(f"Exported {run.recipe.__class__.__name__} run to {path}")
+    return path
+
+
+def import_recipe_run(path: str) -> RecipeRun:
+    """
+    Import a recipe run that was exported using :py:meth:`export_recipe_run`
+
+    :param path: Path to file to import
+    :type path:  str
+    :return: object which contains the imported recipe run
+    :rtype:  :py:class:`RecipeRun`
+
+    Example::
+
+        >>> from lnst.Controller.Recipe import import_recipe_run
+        >>> run = import_recipe_run("/tmp/lnst-logs/2020-10-02_15:20:18/BondRecipe_match_0/BondRecipe-run-2020-10-02_15:20:58.lrc")
+        >>> type(run)
+        <class 'lnst.Controller.Recipe.RecipeRun'>
+        >>> run.recipe.__class__
+        <class 'lnst.Recipes.ENRT.BondRecipe.BondRecipe'>
+        >>> run.results[38]
+        <lnst.Controller.RecipeResults.Result object at 0x7f20727e1e20>
+        >>> run.results[38].data
+        {'cpu': [[[<lnst.RecipeCommon.Perf.Results.PerfInterval object at 0x7f20727e1e50>,...]]], ... }
+        >>> print(run.results[38].description)
+        CPU Utilization on host host1:
+        cpu 'cpu': 45.40 +-0.00 time units per second
+        cpu 'cpu0': 45.40 +-0.00 time units per second
+    """
+    with lzma.open(path, 'rb') as f:
+        run = pickle.load(f)
+    return run

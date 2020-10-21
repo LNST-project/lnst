@@ -156,7 +156,7 @@ class Controller(object):
                 logging.info(line)
             try:
                 self._map_match(match, req, recipe)
-                recipe._init_run(RecipeRun(match, log_dir=self._log_ctl.get_recipe_log_path()))
+                recipe._init_run(RecipeRun(recipe, match, log_dir=self._log_ctl.get_recipe_log_path()))
                 recipe.test()
             except Exception as exc:
                 logging.error("Recipe execution terminated by unexpected exception")
