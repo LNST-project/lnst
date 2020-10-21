@@ -591,3 +591,11 @@ class Machine(object):
 
     def get_security(self):
         return self._security
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove things that can't be pickled
+        state['_msg_dispatcher'] = None
+        if self.get_libvirt_domain():
+            state['_domain_ctl'] = None
+        return state

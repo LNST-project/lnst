@@ -133,3 +133,10 @@ class ConnectionHandler(object):
     def clear_connections(self):
         self._connections = []
         self._connection_mapping = {}
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove things that can't be pickled
+        state['_connections'] = []
+        state['_connection_mapping'] = {}
+        return state

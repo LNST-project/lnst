@@ -108,6 +108,8 @@ class RemoteDevice(object):
     def __getattr__(self, name):
         if name == "_inited":
             return False
+        if not self._inited:
+            return super(RemoteDevice, self).__getattr__(name)
 
         attr = getattr(self._dev_cls, name)
 
