@@ -1,13 +1,7 @@
 from lnst.Controller.RecipeResults import ResultLevel
 from lnst.Recipes.ENRT.PerfTestMixins import BasePerfTestTweakMixin
-from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 
 class SctpFirewallPerfTestMixin(BasePerfTestTweakMixin):
-
-    def _get_flow_measurement_from_config(self, perf_config):
-        flow_measurements = [ m for m in perf_config.measurements if isinstance(m, BaseFlowMeasurement) ]
-        return flow_measurements[0]
-
     def apply_perf_test_tweak(self, perf_config):
         super().apply_perf_test_tweak(perf_config)
 
