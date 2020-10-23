@@ -13,7 +13,7 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
-from lnst.Recipes.ENRT.PerfTestMixins import SctpFirewallPerfTestMixin
+from lnst.Recipes.ENRT.PerfTestMixins import CommonPerfTestTweakMixin
 
 from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
@@ -33,7 +33,7 @@ class EnrtConfiguration(object):
     """
     pass
 
-class BaseEnrtRecipe(SctpFirewallPerfTestMixin, BaseSubConfigMixin,
+class BaseEnrtRecipe(CommonPerfTestTweakMixin, BaseSubConfigMixin,
         PingTestAndEvaluate, PerfRecipe):
     """Base Recipe class for the ENRT recipe package
 
