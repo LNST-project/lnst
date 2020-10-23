@@ -3,6 +3,23 @@ from lnst.Controller.RecipeResults import ResultLevel
 from lnst.Recipes.ENRT.ConfigMixins import BaseSubConfigMixin
 
 class DisableTurboboostMixin(BaseSubConfigMixin):
+    """
+    This mixin class is an extension to the :any:`BaseEnrtRecipe` class that can
+    be used to disable CPU turboboost on hosts before running the tests.
+
+    Any recipe that wants to use the mixin must define the
+    :attr:`disable_turboboost_host_list` property first.
+
+    Note: The mixin uses intel_pstate sysfs interface to disable the CPU feature
+    and so it is usable only by systems with Intel CPUs.
+
+    :param disable_turboost:
+        (optional test parameter) boolean to control the CPU turboboost. When
+        the parameter is set to **True** the CPU turboboost is disabled on all
+        hosts defined by :attr:`disable_turboboost_host_list` property. Otherwise
+        this mixin has no effect.
+    """
+
     disable_turboboost = BoolParam(default=False)
 
     @property
