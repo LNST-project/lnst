@@ -14,3 +14,4 @@ ENRT Config Mixins
     config_mixin_classes/pause_frames_mixin
     config_mixin_classes/perf_reverse_mixin.rst
     config_mixin_classes/disable_turboboost_mixin.rst
+    config_mixin_classes/disable_idlestates_mixin.rst
