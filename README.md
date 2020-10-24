@@ -47,6 +47,7 @@ Documentation is available in the `docs/` directory, you can build it with
 * Jan Tluka <jtluka@redhat.com>
 * Ondrej Lichtner <olichtne@redhat.com> (current maintainer)
 * Jozef Urbanovsky <jurbanov@redhat.com>
+* Perry Gagne <pgagne@redhat.com>
 * Christos Sfakianakis (not active anymore)
 * Jiri Prochazka (not active anymore)
 * Kamil Jerabek (not active anymore)
