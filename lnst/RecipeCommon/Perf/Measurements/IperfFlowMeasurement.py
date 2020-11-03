@@ -57,6 +57,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         for flow in test_flows:
             flow.server_job.start(bg=True)
 
+        time.sleep(2)
         for flow in test_flows:
             flow.client_job.start(bg=True)
 
