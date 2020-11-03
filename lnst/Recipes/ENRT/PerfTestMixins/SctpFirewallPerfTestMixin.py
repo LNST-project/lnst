@@ -1,5 +1,5 @@
 from lnst.Controller.RecipeResults import ResultLevel
-from lnst.Recipes.ENRT.PerfTestMixins import BasePerfTestTweakMixin
+from lnst.RecipeCommon.Perf.PerfTestMixins import BasePerfTestTweakMixin
 
 class SctpFirewallPerfTestMixin(BasePerfTestTweakMixin):
     def apply_perf_test_tweak(self, perf_config):

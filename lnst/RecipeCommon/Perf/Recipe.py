@@ -7,6 +7,7 @@ from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
 from lnst.RecipeCommon.Perf.PerfTestMixins import (
+        BasePerfTestTweakMixin,
         BasePerfTestIterationTweakMixin,
 )
 
@@ -53,12 +54,18 @@ class RecipeResults(object):
                 aggregated_results, new_results)
         self._results[measurement] = aggregated_results
 
-class Recipe(BasePerfTestIterationTweakMixin, BaseRecipe):
+class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe):
     def perf_test(self, recipe_conf):
         results = RecipeResults(recipe_conf)
 
-        for i in range(recipe_conf.iterations):
-            self.perf_test_iteration(recipe_conf, results)
+        self.apply_perf_test_tweak(recipe_conf)
+        self.describe_perf_test_tweak(recipe_conf)
+
+        try:
+            for i in range(recipe_conf.iterations):
+                self.perf_test_iteration(recipe_conf, results)
+        finally:
+            self.remove_perf_test_tweak(recipe_conf)
 
         return results
 
