@@ -1,12 +1,13 @@
 from lnst.Controller.RecipeResults import ResultLevel
 from lnst.RecipeCommon.Perf.PerfTestMixins import BasePerfTestTweakMixin
+from lnst.Recipes.ENRT.PerfTestMixins.Utils import get_flow_measurements_from_config
 
 class SctpFirewallPerfTestMixin(BasePerfTestTweakMixin):
     def apply_perf_test_tweak(self, perf_config):
         super().apply_perf_test_tweak(perf_config)
 
-        flow_measurement = self._get_flow_measurement_from_config(perf_config)
-        flow = flow_measurement.conf[0]
+        flow_measurements = get_flow_measurements_from_config(perf_config)
+        flow = flow_measurements[0].conf[0]
         if flow.type == "sctp_stream":
             for nic in [flow.generator_nic, flow.receiver_nic]:
                 nic.netns.run(
@@ -18,8 +19,8 @@ class SctpFirewallPerfTestMixin(BasePerfTestTweakMixin):
             tweak_config["iptables_sctp"] = True
 
     def remove_perf_test_tweak(self, perf_config):
-        flow_measurement = self._get_flow_measurement_from_config(perf_config)
-        flow = flow_measurement.conf[0]
+        flow_measurements = get_flow_measurements_from_config(perf_config)
+        flow = flow_measurements[0].conf[0]
         if flow.type == "sctp_stream":
             for nic in [flow.generator_nic, flow.receiver_nic]:
                 nic.netns.run(
