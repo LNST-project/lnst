@@ -59,11 +59,18 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
 
         self.started_job.kill(signal=signal.SIGINT)
         self.started_job.wait()
-        result = self.started_job.result
+        if not self.started_job.passed:
+            result = {}
+        else:
+            result = self.started_job.result
         self.started_job = None
         return result
 
     def packet_assert_evaluate_and_report(self, packet_assert_config, results):
+        if not results:
+            self.add_result(False, "Packet assert results unavailable")
+            return
+
         if results["p_recv"] >= packet_assert_config.p_min and \
             (results["p_recv"] <= packet_assert_config.p_max or
              not packet_assert_config.p_max):
