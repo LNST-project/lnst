@@ -1,3 +1,4 @@
 from lnst.Recipes.ENRT.PerfTestMixins.SctpFirewallPerfTestMixin import SctpFirewallPerfTestMixin
+from lnst.Recipes.ENRT.PerfTestMixins.UdpFragmentationPerfTestMixin import UdpFragmentationPerfTestMixin
 from lnst.Recipes.ENRT.PerfTestMixins.DropCachesPerfTestMixin import DropCachesPerfTestMixin
 from lnst.Recipes.ENRT.PerfTestMixins.CommonPerfTestTweakMixin import CommonPerfTestTweakMixin

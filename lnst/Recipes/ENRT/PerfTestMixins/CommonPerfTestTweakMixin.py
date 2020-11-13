@@ -1,7 +1,13 @@
 from lnst.Recipes.ENRT.PerfTestMixins import (
-        SctpFirewallPerfTestMixin,
-        DropCachesPerfTestMixin,
-        )
+    SctpFirewallPerfTestMixin,
+    UdpFragmentationPerfTestMixin,
+    DropCachesPerfTestMixin,
+)
 
-class CommonPerfTestTweakMixin(SctpFirewallPerfTestMixin, DropCachesPerfTestMixin):
+
+class CommonPerfTestTweakMixin(
+    SctpFirewallPerfTestMixin,
+    UdpFragmentationPerfTestMixin,
+    DropCachesPerfTestMixin,
+):
     pass
