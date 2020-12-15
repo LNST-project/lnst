@@ -28,6 +28,10 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         self._hosts_versions = {}
 
     @property
+    def flows(self):
+        return self._conf
+
+    @property
     def version(self):
         if not self._hosts_versions:
             for flow in self._conf:

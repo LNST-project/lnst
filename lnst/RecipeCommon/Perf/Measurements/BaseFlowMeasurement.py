@@ -236,6 +236,10 @@ class AggregatedFlowMeasurementResults(FlowMeasurementResults):
             raise MeasurementError("Adding incorrect results.")
 
 class BaseFlowMeasurement(BaseMeasurement):
+    @property
+    def flows(self):
+        raise NotImplementedError()
+
     @classmethod
     def report_results(cls, recipe, results):
         for flow_results in results:

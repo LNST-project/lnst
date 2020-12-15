@@ -38,6 +38,10 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
         self._hosts_versions = {}
 
     @property
+    def flows(self):
+        return self._flows
+
+    @property
     def version(self):
         if not self._hosts_versions:
             for flow in self._flows:
