@@ -1,7 +1,7 @@
 from itertools import combinations
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
@@ -9,7 +9,7 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import OvsBridgeDevice
 
 class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
-    CommonHWSubConfigMixin, BaseEnrtRecipe):
+    CommonHWSubConfigMixin, VirtualEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host1.tap0 = DeviceReq(label="to_guest1")

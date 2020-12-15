@@ -6,7 +6,7 @@ from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.Parameters import StrParam
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -18,7 +18,7 @@ from lnst.RecipeCommon.Ping.Recipe import PingConf
 from lnst.Recipes.ENRT.XfrmTools import (configure_ipsec_esp_ah_comp,
     generate_key)
 
-class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
+class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     PacketAssertTestAndEvaluate):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))

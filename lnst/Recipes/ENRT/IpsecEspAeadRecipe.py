@@ -6,7 +6,7 @@ from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.Parameters import StrParam
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -19,7 +19,7 @@ from lnst.Recipes.ENRT.XfrmTools import (configure_ipsec_esp_aead,
                                          generate_key)
 
 
-class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaseEnrtRecipe,
+class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                          PacketAssertTestAndEvaluate):
     """
     This recipe implements Enrt testing for a simple IPsec scenario that looks

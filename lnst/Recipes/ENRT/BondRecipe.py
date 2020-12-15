@@ -1,7 +1,7 @@
 from lnst.Common.Parameters import Param, IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -12,7 +12,7 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BondDevice
 
 class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
-    BaseEnrtRecipe):
+    BaremetalEnrtRecipe):
     """
     This recipe implements Enrt testing for a network scenario that looks
     as follows

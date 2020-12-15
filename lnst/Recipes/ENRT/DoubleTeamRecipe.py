@@ -1,7 +1,7 @@
 from lnst.Common.Parameters import Param, StrParam, BoolParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -10,7 +10,7 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import TeamDevice
 
 class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
-    BaseEnrtRecipe):
+    BaremetalEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="tnet", driver=RecipeParam("driver"))

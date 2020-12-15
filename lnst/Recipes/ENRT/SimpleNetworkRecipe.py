@@ -1,17 +1,18 @@
 from lnst.Common.Parameters import Param
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+
 
 class SimpleNetworkRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseEnrtRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
 ):
     """
     This recipe implements Enrt testing for a simple network scenario that looks

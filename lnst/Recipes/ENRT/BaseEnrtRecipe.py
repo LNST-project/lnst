@@ -13,11 +13,6 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
-from lnst.Recipes.ENRT.PerfTestMixins import CommonPerfTestTweakMixin
-from lnst.Recipes.ENRT.ConfigMixins.DisableTurboboostMixin import (
-        DisableTurboboostMixin)
-from lnst.Recipes.ENRT.ConfigMixins.DisableIdleStatesMixin import (
-        DisableIdleStatesMixin)
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
     BaseMeasurementGenerator,
 )
@@ -39,9 +34,9 @@ class EnrtConfiguration(object):
     """
     pass
 
-class BaseEnrtRecipe(CommonPerfTestTweakMixin,
-        DisableTurboboostMixin, DisableIdleStatesMixin,
-        BaseSubConfigMixin,
+
+class BaseEnrtRecipe(
+    BaseSubConfigMixin,
     BaseMeasurementGenerator,
     PingTestAndEvaluate,
     PerfRecipe,
