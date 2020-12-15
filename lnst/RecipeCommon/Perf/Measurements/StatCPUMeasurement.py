@@ -63,7 +63,7 @@ class StatCPUMeasurement(BaseCPUMeasurement):
 
     def start(self):
         jobs = []
-        for host in self._conf:
+        for host in sorted(self._conf, key=lambda x: x.hostid):
             jobs.append(
                 host.run(
                     CPUStatMonitor(interval=1000),
