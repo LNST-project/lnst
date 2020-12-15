@@ -18,13 +18,15 @@ from lnst.Recipes.ENRT.ConfigMixins.DisableTurboboostMixin import (
         DisableTurboboostMixin)
 from lnst.Recipes.ENRT.ConfigMixins.DisableIdleStatesMixin import (
         DisableIdleStatesMixin)
+from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
+    BaseMeasurementGenerator,
+)
 
 from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate, PingConf
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
-from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
-from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement
-from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
+from lnst.RecipeCommon.Perf.Measurements.BaseCPUMeasurement import BaseCPUMeasurement
+from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 from lnst.RecipeCommon.Ping.Evaluators import RatePingEvaluator
 
@@ -40,7 +42,10 @@ class EnrtConfiguration(object):
 class BaseEnrtRecipe(CommonPerfTestTweakMixin,
         DisableTurboboostMixin, DisableIdleStatesMixin,
         BaseSubConfigMixin,
-        PingTestAndEvaluate, PerfRecipe):
+    BaseMeasurementGenerator,
+    PingTestAndEvaluate,
+    PerfRecipe,
+):
     """Base Recipe class for the ENRT recipe package
 
     This class defines the shared *test* method defining the common test
@@ -114,43 +119,6 @@ class BaseEnrtRecipe(CommonPerfTestTweakMixin,
         test.
     :type ping_psize: :any:`IntParam` (default None)
 
-    :param perf_tests:
-        Parameter used by the :any:`generate_flow_combinations` generator.
-        Tells the generator what types of network flow measurements to generate
-        perf test configurations for.
-    :type perf_tests: Tuple[str] (default ("tcp_stream", "udp_stream",
-        "sctp_stream"))
-
-    :param perf_tool_cpu:
-        Parameter used by the :any:`generate_flow_combinations` generator. To
-        indicate that the flow measurement should be pinned to a specific CPU
-        core.
-    :type perf_tool_cpu: :any:`IntParam` (optional parameter)
-
-    :param perf_duration:
-        Parameter used by the :any:`generate_perf_configurations` generator. To
-        specify the duration of the performance measurements, in seconds.
-    :type perf_duration: :any:`IntParam` (default 60)
-
-    :param perf_iterations:
-        Parameter used by the :any:`generate_perf_configurations` generator. To
-        specify how many times should each performance measurement be repeated
-        to generate cumulative results which can be statistically analyzed.
-    :type perf_iterations: :any:`IntParam` (default 5)
-
-    :param perf_parallel_streams:
-        Parameter used by the :any:`generate_flow_combinations` generator. To
-        specify how many parallel streams of the same network flow should be
-        measured at the same time.
-    :type perf_parallel_streams: :any:`IntParam` (default 1)
-
-    :param perf_msg_sizes:
-        Parameter used by the :any:`generate_flow_combinations` generator. To
-        specify what different message sizes (in bytes) used generated for the
-        network flow should be tested - each message size resulting in a
-        separate performance measurement.
-    :type perf_msg_sizes: List[Int] (default [123])
-
     :param net_perf_tool:
         Parameter used by the :any:`generate_perf_configurations` generator to
         create a PerfRecipeConf object.
@@ -178,17 +146,6 @@ class BaseEnrtRecipe(CommonPerfTestTweakMixin,
     ping_count = IntParam(default=100)
     ping_interval = FloatParam(default=0.2)
     ping_psize = IntParam(default=56)
-
-    #common perf test params
-    perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
-    perf_tool_cpu = IntParam(mandatory=False)
-    perf_duration = IntParam(default=60)
-    perf_iterations = IntParam(default=5)
-    perf_parallel_streams = IntParam(default=1)
-    perf_msg_sizes = ListParam(default=[123])
-
-    net_perf_tool = Param(default=IperfFlowMeasurement)
-    cpu_perf_tool = Param(default=StatCPUMeasurement)
 
     def test(self):
         """Main test loop shared by all the Enrt recipes
@@ -441,103 +398,27 @@ class BaseEnrtRecipe(CommonPerfTestTweakMixin,
         :return: list of Perf test configurations
         :rtype: List[:any:`PerfRecipeConf`]
         """
-        for flows in self.generate_flow_combinations(config):
-            perf_recipe_conf=dict(
-                recipe_config=config,
-                flows=flows,
-            )
-
-            flows_measurement = self.params.net_perf_tool(
-                flows,
-                perf_recipe_conf
-            )
-
-            cpu_measurement_hosts = set()
-            for flow in flows:
-                cpu_measurement_hosts.add(flow.generator)
-                cpu_measurement_hosts.add(flow.receiver)
-
-            cpu_measurement = self.params.cpu_perf_tool(
-                cpu_measurement_hosts,
-                perf_recipe_conf,
-            )
-
+        for measurements in self.generate_perf_measurements_combinations(
+            config
+        ):
             perf_conf = PerfRecipeConf(
-                measurements=[cpu_measurement, flows_measurement],
+                measurements=measurements,
                 iterations=self.params.perf_iterations,
             )
 
-            perf_conf.register_evaluators(
-                cpu_measurement, self.cpu_perf_evaluators
-            )
-            perf_conf.register_evaluators(
-                flows_measurement, self.net_perf_evaluators
-            )
+            self.register_perf_evaluators(perf_conf)
 
             yield perf_conf
 
-    def generate_flow_combinations(self, config):
-        """Base flow combination generator
-
-        The generator loops over all endpoint pairs to test performance between
-        (generated by the :any:`generate_perf_endpoints` method) then over all
-        the selected :any:`ip_versions` and uses the first IP address fitting
-        these criteria. Then the generator loops over the selected performance
-        tests as selected via :any:`perf_tests`, then message sizes from
-        :any:`msg_sizes`.
-
-        :return: list of Flow combinations to measure in parallel
-        :rtype: List[:any:`PerfFlow`]
-        """
-        for client_nic, server_nic in self.generate_perf_endpoints(config):
-            for ipv in self.params.ip_versions:
-                ip_filter = {}
-                if ipv == "ipv4":
-                    ip_filter.update(family = AF_INET)
-                elif ipv == "ipv6":
-                    ip_filter.update(family = AF_INET6)
-                    ip_filter.update(is_link_local = False)
-
-                client_bind = client_nic.ips_filter(**ip_filter)[0]
-                server_bind = server_nic.ips_filter(**ip_filter)[0]
-
-                for perf_test in self.params.perf_tests:
-                    for size in self.params.perf_msg_sizes:
-                        yield [self._create_perf_flow(perf_test,
-                                                      client_nic,
-                                                      client_bind,
-                                                      server_nic,
-                                                      server_bind,
-                                                      size,
-                                                      )]
-
-    def _create_perf_flow(self, perf_test, client_nic, client_bind, server_nic,
-                          server_bind, msg_size) -> PerfFlow:
-        """
-        Wrapper to create a PerfFlow. Mixins that want to change this behavior (for example, to reverse the direction)
-        can override this method as an alternative to overriding :any:`generate_flow_combinations`
-        """
-        cpupin = self.params.perf_tool_cpu if "perf_tool_cpu" in self.params else None
-        return PerfFlow(type=perf_test,
-                        generator=client_nic.netns, generator_bind=client_bind,
-                        generator_nic=client_nic,
-                        receiver=server_nic.netns, receiver_bind=server_bind,
-                        receiver_nic=server_nic,
-                        msg_size=msg_size,
-                        duration=self.params.perf_duration,
-                        parallel_streams=self.params.perf_parallel_streams,
-                        cpupin=cpupin,
-                        )
-
-    def generate_perf_endpoints(self, config):
-        """Generator for perf endpoints
-
-        To be overriden by a derived class.
-
-        :return: list of device pairs
-        :rtype: List[Tuple[:any:`Device`, :any:`Device`]]
-        """
-        return []
+    def register_perf_evaluators(self, perf_conf):
+        for measurement in perf_conf.measurements:
+            if isinstance(measurement, BaseCPUMeasurement):
+                evaluators = self.cpu_perf_evaluators
+            elif isinstance(measurement, BaseFlowMeasurement):
+                evaluators = self.net_perf_evaluators
+            else:
+                evaluators = []
+            perf_conf.register_evaluators(measurement, evaluators)
 
     @property
     def cpu_perf_evaluators(self):
