@@ -2,6 +2,7 @@ from lnst.Common.Parameters import Param, StrParam, IntParam, FloatParam
 from lnst.Common.Parameters import IpParam, DeviceOrIpParam
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 from lnst.External.TRex.TRexLib  import TRexCli, TRexSrv, TRexError
+from pprint import pformat
 
 
 class TRexCommon(BaseTestModule):
@@ -11,6 +12,8 @@ class TRexClient(TRexCommon):
     ports = Param(mandatory=True)
 
     flows = Param(mandatory=True)
+
+    module = StrParam(default="UDPSimple")
 
     duration = IntParam(mandatory=True)
     warmup_time = IntParam(default=5)
@@ -23,6 +26,20 @@ class TRexClient(TRexCommon):
     def __init__(self, **kwargs):
         super(TRexClient, self).__init__(**kwargs)
         self.impl = TRexCli(self.params)
+
+    def __repr__(self):
+        string = f"""
+            TrexClient(
+                trex_dir={self.impl.params.trex_dir},
+                module={self.impl.params.module},
+                msg_size={self.impl.params.msg_size},
+                ports={self.impl.params.ports},
+                server_hostname={self.impl.params.server_hostname},
+                flows={pformat(self.impl.params.flows)}
+            )
+        """
+
+        return string
 
     def runtime_estimate(self):
         _duration_overhead = 5
@@ -50,6 +67,16 @@ class TRexServer(TRexCommon):
     def __init__(self, **kwargs):
         super(TRexServer, self).__init__(**kwargs)
         self.impl = TRexSrv(self.params)
+
+    def __repr__(self):
+        string = f"""
+            TrexServer(
+                trex_dir={self.impl.params.trex_dir},
+                cores={self.impl.params.cores},
+                flows={pformat(self.impl.params.flows)}
+            )
+        """
+        return string
 
     def run(self):
         self._res_data={}
