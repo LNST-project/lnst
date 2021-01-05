@@ -48,7 +48,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
                 "hosts_trex_versions": self._hosts_versions}
 
     def _get_host_trex_version(self, host):
-        version_job = host.run("cd {trex_dir} ; ./t-rex-64 --help", job_level = ResultLevel.DEBUG)
+        version_job = host.run(f"cd {self._trex_dir} ; ./t-rex-64 --help", job_level = ResultLevel.DEBUG)
         if version_job.passed:
             match = re.match(r"Starting  TRex (v.+?) please wait  ...", version_job.stdout)
             if match:
@@ -66,7 +66,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
             test.server_job.start(bg=True)
 
         #wait for Trex server to start
-        time.sleep(5)
+        time.sleep(15)
 
         for test in tests:
             test.client_job.start(bg=True)
@@ -107,6 +107,7 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
                         trex_dir=self._trex_dir,
                         ports=list(range(len(flow_tuples))),
                         flows=flow_tuples,
+                        module=flows[0].type,
                         duration=flows[0].duration,
                         msg_size=flows[0].msg_size))
 
