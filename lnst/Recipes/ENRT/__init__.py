@@ -58,6 +58,7 @@ from lnst.Recipes.ENRT.IpsecEspAeadRecipe  import IpsecEspAeadRecipe
 from lnst.Recipes.ENRT.IpsecEspAhCompRecipe import IpsecEspAhCompRecipe
 from lnst.Recipes.ENRT.NoVirtOvsVxlanRecipe import NoVirtOvsVxlanRecipe
 from lnst.Recipes.ENRT.OvS_DPDK_PvP import OvSDPDKPvPRecipe
+from lnst.Recipes.ENRT.OvSDPDKBondRecipe import OvSDPDKBondRecipe
 from lnst.Recipes.ENRT.PingFloodRecipe import PingFloodRecipe
 from lnst.Recipes.ENRT.SimpleMacsecRecipe import SimpleMacsecRecipe
 from lnst.Recipes.ENRT.ShortLivedConnectionsRecipe import ShortLivedConnectionsRecipe
