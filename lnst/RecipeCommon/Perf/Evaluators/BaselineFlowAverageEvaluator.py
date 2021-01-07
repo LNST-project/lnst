@@ -21,7 +21,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
                 "receiver_cpu_stats",
             ]
 
-    def describe_group_results(self, recipe, results):
+    def describe_group_results(self, recipe, recipe_conf, results):
         result = results[0]
         return [
             "Baseline average evaluation of flow:",
@@ -31,7 +31,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
             ),
         ]
 
-    def compare_result_with_baseline(self, recipe, result, baseline):
+    def compare_result_with_baseline(self, recipe, recipe_conf, result, baseline):
         comparison_result = True
         result_text = []
         if baseline is None:

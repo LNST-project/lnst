@@ -151,7 +151,7 @@ class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe
         for measurement, results in list(recipe_results.aggregated_results.items()):
             evaluators = recipe_conf.evaluators.get(measurement, [])
             for evaluator in evaluators:
-                evaluator.evaluate_results(self, results)
+                evaluator.evaluate_results(self, recipe_conf, results)
 
             if len(evaluators) == 0:
                 logging.debug("No evaluator registered for measurement {}"

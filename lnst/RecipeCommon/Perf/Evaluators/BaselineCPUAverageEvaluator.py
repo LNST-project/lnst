@@ -12,7 +12,7 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
         self._pass_difference = pass_difference
         self._evaluation_filter = evaluation_filter
 
-    def filter_results(self, recipe, results):
+    def filter_results(self, recipe, recipe_conf, results):
         if self._evaluation_filter is None:
             return results
 
@@ -25,7 +25,7 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
                 filtered.append(result)
         return filtered
 
-    def group_results(self, recipe, results):
+    def group_results(self, recipe, recipe_conf, results):
         results_by_host = self._divide_results_by_host(results)
         for host_results in results_by_host.values():
             yield host_results
@@ -38,7 +38,7 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
             results_by_host[result.host].append(result)
         return results_by_host
 
-    def describe_group_results(self, recipe, results):
+    def describe_group_results(self, recipe, recipe_conf, results):
         return [
             "CPU Baseline average evaluation for Host {hostid}:".format(
                 hostid=results[0].host.hostid
@@ -48,7 +48,7 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
             ),
         ]
 
-    def compare_result_with_baseline(self, recipe, result, baseline):
+    def compare_result_with_baseline(self, recipe, recipe_conf, result, baseline):
         comparison = True
         text = []
         if baseline is None:

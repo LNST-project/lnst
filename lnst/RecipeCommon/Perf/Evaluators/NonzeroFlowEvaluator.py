@@ -7,7 +7,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import (
 
 
 class NonzeroFlowEvaluator(BaseResultEvaluator):
-    def evaluate_results(self, recipe, results):
+    def evaluate_results(self, recipe, recipe_conf, results):
         for flow_results in results:
             result = True
             result_text = [
