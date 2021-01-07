@@ -52,8 +52,9 @@ class StatCPUMeasurementResults(CPUMeasurementResults):
 
 
 class StatCPUMeasurement(BaseCPUMeasurement):
-    def __init__(self, *args):
-        super(StatCPUMeasurement, self).__init__(*args)
+    def __init__(self, hosts, recipe_conf=None):
+        super(StatCPUMeasurement, self).__init__(recipe_conf)
+        self._hosts = hosts
         self._running_measurements = []
         self._finished_measurements = []
 
@@ -61,9 +62,13 @@ class StatCPUMeasurement(BaseCPUMeasurement):
     def version(self):
         return "1"
 
+    @property
+    def hosts(self):
+        return self._hosts
+
     def start(self):
         jobs = []
-        for host in sorted(self._conf, key=lambda x: x.hostid):
+        for host in sorted(self.hosts, key=lambda x: x.hostid):
             jobs.append(
                 host.run(
                     CPUStatMonitor(interval=1000),

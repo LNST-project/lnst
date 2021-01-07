@@ -16,7 +16,7 @@ class UdpFragmentationPerfTestMixin(BasePerfTestTweakMixin):
         super().apply_perf_test_tweak(perf_config)
 
         flow_measurements = get_flow_measurements_from_config(perf_config)
-        flow = flow_measurements[0].conf[0]
+        flow = flow_measurements[0].flows[0]
         tweak_config = perf_config.perf_test_tweak_config
         if flow.type == "udp_stream":
             tweak_config["udp_fragmentation"] = {}

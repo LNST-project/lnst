@@ -20,8 +20,9 @@ from lnst.Tests.Iperf import IperfClient, IperfServer
 class IperfFlowMeasurement(BaseFlowMeasurement):
     _MEASUREMENT_VERSION = 1
 
-    def __init__(self, *args):
-        super(IperfFlowMeasurement, self).__init__(*args)
+    def __init__(self, flows, recipe_conf=None):
+        super(IperfFlowMeasurement, self).__init__(recipe_conf)
+        self._flows = flows
         self._running_measurements = []
         self._finished_measurements = []
 
@@ -29,12 +30,12 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
     @property
     def flows(self):
-        return self._conf
+        return self._flows
 
     @property
     def version(self):
         if not self._hosts_versions:
-            for flow in self._conf:
+            for flow in self.flows:
                 if flow.receiver not in self._hosts_versions:
                     self._hosts_versions[flow.receiver] = self._get_host_iperf_version(flow.receiver)
                 if flow.generator not in self._hosts_versions:
@@ -55,7 +56,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         if len(self._running_measurements) > 0:
             raise MeasurementError("Measurement already running!")
 
-        test_flows = self._prepare_test_flows(self._conf)
+        test_flows = self._prepare_test_flows(self.flows)
 
         result = None
         for flow in test_flows:

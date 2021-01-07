@@ -1,6 +1,5 @@
 class BaseMeasurement(object):
-    def __init__(self, measurement_conf, recipe_conf=None):
-        self._conf = measurement_conf
+    def __init__(self, recipe_conf=None):
         self._recipe_conf = recipe_conf
 
     @property
@@ -10,10 +9,6 @@ class BaseMeasurement(object):
     @property
     def version(self):
         raise NotImplementedError()
-
-    @property
-    def conf(self):
-        return self._conf
 
     @property
     def recipe_conf(self):
@@ -39,7 +34,7 @@ class BaseMeasurement(object):
     def __repr__(self):
         return "{}({})".format(
             self.__class__.__name__,
-            repr(self.conf),
+            repr(self.recipe_conf),
         )
 
 
