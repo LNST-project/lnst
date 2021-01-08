@@ -188,7 +188,7 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
             TestPMD(
                 coremask=self.params.testpmd_cores,
                 pmd_coremask=self.params.testpmd_dpdk_cores,
-                mode="macswap",
+                forward_mode="macswap",
                 nics=["vhost0", "vhost1"]),
             bg=True)
 
