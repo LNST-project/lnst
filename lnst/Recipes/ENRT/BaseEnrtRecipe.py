@@ -1,4 +1,5 @@
 import pprint
+import copy
 from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
@@ -399,6 +400,7 @@ class BaseEnrtRecipe(
             perf_conf = PerfRecipeConf(
                 measurements=measurements,
                 iterations=self.params.perf_iterations,
+                parent_recipe_config=copy.deepcopy(config),
             )
 
             self.register_perf_evaluators(perf_conf)

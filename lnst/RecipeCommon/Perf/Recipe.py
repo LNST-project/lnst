@@ -12,10 +12,11 @@ from lnst.RecipeCommon.Perf.PerfTestMixins import (
 )
 
 class RecipeConf(object):
-    def __init__(self, measurements, iterations):
+    def __init__(self, measurements, iterations, parent_recipe_config = None):
         self._measurements = measurements
         self._evaluators = dict()
         self._iterations = iterations
+        self._parent_recipe_config = parent_recipe_config
 
     @property
     def measurements(self):
@@ -34,6 +35,11 @@ class RecipeConf(object):
     @property
     def iterations(self):
         return self._iterations
+
+    @property
+    def parent_recipe_config(self):
+        return self._parent_recipe_config
+
 
 class RecipeResults(object):
     def __init__(self, recipe_conf):
