@@ -1,13 +1,21 @@
-from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
+from typing import List
 
-from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import (
-    FlowMeasurementResults,
-    AggregatedFlowMeasurementResults,
+from lnst.Controller.Recipe import BaseRecipe
+
+from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
+    BaseMeasurementResults as PerfMeasurementResults,
 )
+from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 
 
 class NonzeroFlowEvaluator(BaseResultEvaluator):
-    def evaluate_results(self, recipe, recipe_conf, results):
+    def evaluate_results(
+        self,
+        recipe: BaseRecipe,
+        recipe_conf: PerfRecipeConf,
+        results: List[PerfMeasurementResults],
+    ):
         for flow_results in results:
             result = True
             result_text = [

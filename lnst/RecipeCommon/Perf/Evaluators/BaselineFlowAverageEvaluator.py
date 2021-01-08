@@ -1,14 +1,23 @@
 from __future__ import division
+from typing import List, Tuple
 
+from lnst.Controller.Recipe import BaseRecipe
+
+from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
+from lnst.RecipeCommon.Perf.Results import result_averages_difference
+from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
+    BaseMeasurementResults as PerfMeasurementResults,
+)
 from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (
     BaselineEvaluator,
 )
 
-from lnst.RecipeCommon.Perf.Results import result_averages_difference
-
 
 class BaselineFlowAverageEvaluator(BaselineEvaluator):
-    def __init__(self, pass_difference, metrics_to_evaluate=None):
+    def __init__(
+        self, pass_difference: int, metrics_to_evaluate: List[str] = None
+    ):
         self._pass_difference = pass_difference
 
         if metrics_to_evaluate is not None:
@@ -21,7 +30,12 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
                 "receiver_cpu_stats",
             ]
 
-    def describe_group_results(self, recipe, recipe_conf, results):
+    def describe_group_results(
+        self,
+        recipe: BaseRecipe,
+        recipe_conf: PerfRecipeConf,
+        results: List[PerfMeasurementResults],
+    ) -> List[str]:
         result = results[0]
         return [
             "Baseline average evaluation of flow:",
@@ -31,7 +45,13 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
             ),
         ]
 
-    def compare_result_with_baseline(self, recipe, recipe_conf, result, baseline):
+    def compare_result_with_baseline(
+        self,
+        recipe: BaseRecipe,
+        recipe_conf: PerfRecipeConf,
+        result: PerfMeasurementResults,
+        baseline: PerfMeasurementResults,
+    ) -> Tuple[bool, List[str]]:
         comparison_result = True
         result_text = []
         if baseline is None:
@@ -48,7 +68,12 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
                 comparison_result = comparison_result and comparison
         return comparison_result, result_text
 
-    def _average_diff_comparison(self, name, target, baseline):
+    def _average_diff_comparison(
+        self,
+        name: str,
+        target: SequentialPerfResult,
+        baseline: SequentialPerfResult,
+    ):
         difference = result_averages_difference(target, baseline)
         result_text = "New {name} is {diff:.2f}% {direction} from the baseline {name}".format(
             name=name,

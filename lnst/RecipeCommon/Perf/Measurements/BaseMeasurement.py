@@ -44,11 +44,11 @@ class BaseMeasurement(object):
 
 
 class BaseMeasurementResults(object):
-    def __init__(self, measurement):
+    def __init__(self, measurement: BaseMeasurement):
         self._measurement = measurement
 
     @property
-    def measurement(self):
+    def measurement(self) -> BaseMeasurement:
         return self._measurement
 
     def align_data(self, start, end):
