@@ -118,6 +118,7 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
                 TestPMD(
                     coremask=self.params.guest_testpmd_cores,
                     pmd_coremask=self.params.guest_dpdk_cores,
+                    forward_mode="mac",
                     nics=[nic.bus_info for nic in config.guest.nics],
                     peer_macs=[nic.hwaddr for nic in config.generator.nics]),
                 bg=True)
