@@ -306,3 +306,12 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
         :rtype: List[BaseEvaluator]
         """
         return [NonzeroFlowEvaluator()]
+
+    def apply_perf_test_tweak(self, config):
+        pass
+
+    def describe_perf_test_tweak(self, config):
+        pass
+
+    def remove_perf_test_tweak(self, config):
+        pass
