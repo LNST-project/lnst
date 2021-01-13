@@ -162,6 +162,14 @@ class FlowMeasurementResults(BaseMeasurementResults):
     def receiver_cpu_stats(self, value):
         self._receiver_cpu_stats = value
 
+    @property
+    def start_timestamp(self):
+        return max([seq_result[0].timestamp for seq_result in self.generator_results])
+
+    @property
+    def end_timestamp(self):
+        return min([seq_result[-1].timestamp for seq_result in self.generator_results])
+
 class AggregatedFlowMeasurementResults(FlowMeasurementResults):
     def __init__(self, measurement, flow):
         super(FlowMeasurementResults, self).__init__(measurement)
