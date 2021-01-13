@@ -34,6 +34,23 @@ class StatCPUMeasurementResults(CPUMeasurementResults):
     def end_timestamp(self):
         return self._data["user"][-1].timestamp
 
+    def align_data(self, start, end):
+        result_copy = StatCPUMeasurementResults(
+                self.measurement,
+                self.host,
+                self.cpu
+                )
+        for cpu_state, intervals in self._data.items():
+            aligned_interval = [
+                    interval
+                    for interval in intervals
+                    if interval.timestamp >= start and interval.timestamp <= end
+                    ]
+
+            result_copy._data[cpu_state] = SequentialPerfResult(aligned_interval)
+        return result_copy
+
+
 class StatCPUMeasurement(BaseCPUMeasurement):
     def __init__(self, *args):
         super(StatCPUMeasurement, self).__init__(*args)
