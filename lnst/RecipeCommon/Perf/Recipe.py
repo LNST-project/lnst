@@ -39,6 +39,7 @@ class RecipeResults(object):
     def __init__(self, recipe_conf):
         self._recipe_conf = recipe_conf
         self._results = OrderedDict()
+        self._aggregated_results = OrderedDict()
 
     @property
     def recipe_conf(self):
@@ -48,11 +49,20 @@ class RecipeResults(object):
     def results(self):
         return self._results
 
+    @property
+    def aggregated_results(self):
+        return self._aggregated_results
+
     def add_measurement_results(self, measurement, new_results):
-        aggregated_results = self._results.get(measurement, None)
+        if measurement not in self._results:
+            self._results[measurement] = [new_results]
+        else:
+            self._results[measurement].append(new_results)
+
+        aggregated_results = self._aggregated_results.get(measurement, None)
         aggregated_results = measurement.aggregate_results(
                 aggregated_results, new_results)
-        self._results[measurement] = aggregated_results
+        self._aggregated_results[measurement] = aggregated_results
 
 class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe):
     def perf_test(self, recipe_conf):
@@ -99,7 +109,7 @@ class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe
             self.add_result(False, "No results available to report.")
             return
 
-        for measurement, results in list(recipe_results.results.items()):
+        for measurement, results in list(recipe_results.aggregated_results.items()):
             measurement.report_results(self, results)
 
     def perf_evaluate(self, recipe_results):
@@ -109,7 +119,7 @@ class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe
 
         recipe_conf = recipe_results.recipe_conf
 
-        for measurement, results in list(recipe_results.results.items()):
+        for measurement, results in list(recipe_results.aggregated_results.items()):
             evaluators = recipe_conf.evaluators.get(measurement, [])
             for evaluator in evaluators:
                 evaluator.evaluate_results(self, results)
