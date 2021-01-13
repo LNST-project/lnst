@@ -50,3 +50,6 @@ class BaseMeasurementResults(object):
     @property
     def measurement(self):
         return self._measurement
+
+    def align_data(self, start, end):
+        return self
