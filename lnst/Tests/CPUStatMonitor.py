@@ -50,6 +50,7 @@ class CPUStatMonitor(BaseTestModule):
             interval = self._subtract_nested_dicts(parsed_cur, parsed_prev)
             interval["duration"] = (sample["timestamp"] -
                                     prev_sample["timestamp"])
+            interval["timestamp"] = prev_sample["timestamp"]
 
             result.append(interval)
 
