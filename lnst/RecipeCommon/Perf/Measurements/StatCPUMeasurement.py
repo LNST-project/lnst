@@ -26,6 +26,14 @@ class StatCPUMeasurementResults(CPUMeasurementResults):
             self._data["system"], self._data["irq"], self._data["softirq"],
             self._data["steal"]])
 
+    @property
+    def start_timestamp(self):
+        return self._data["user"][0].timestamp
+
+    @property
+    def end_timestamp(self):
+        return self._data["user"][-1].timestamp
+
 class StatCPUMeasurement(BaseCPUMeasurement):
     def __init__(self, *args):
         super(StatCPUMeasurement, self).__init__(*args)
