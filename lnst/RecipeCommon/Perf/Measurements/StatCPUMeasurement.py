@@ -86,13 +86,14 @@ class StatCPUMeasurement(BaseCPUMeasurement):
     def _parse_sample(self, sample):
         result = {}
         duration = sample["duration"]
+        timestamp = sample["timestamp"]
         for key, value in list(sample.items()):
             if key.startswith("cpu"):
-                result[key] = self._create_cpu_intervals(duration, value)
+                result[key] = self._create_cpu_intervals(duration, value, timestamp)
         return result
 
-    def _create_cpu_intervals(self, duration, cpu_intervals):
+    def _create_cpu_intervals(self, duration, cpu_intervals, timestamp):
         result = {}
         for key, value in list(cpu_intervals.items()):
-            result[key] = PerfInterval(value, duration, "time units")
+            result[key] = PerfInterval(value, duration, "time units", timestamp)
         return result

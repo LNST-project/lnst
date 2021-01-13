@@ -27,10 +27,11 @@ class PerfResult(PerfStatMixin):
         raise NotImplementedError()
 
 class PerfInterval(PerfResult):
-    def __init__(self, value, duration, unit):
+    def __init__(self, value, duration, unit, timestamp):
         self._value = value
         self._duration = duration
         self._unit = unit
+        self._timestamp = timestamp
 
     @property
     def value(self):
@@ -43,6 +44,10 @@ class PerfInterval(PerfResult):
     @property
     def unit(self):
         return self._unit
+
+    @property
+    def timestamp(self):
+        return self._timestamp
 
     @property
     def std_deviation(self):
