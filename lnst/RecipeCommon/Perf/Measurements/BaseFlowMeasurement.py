@@ -4,6 +4,7 @@ from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementErro
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurementResults
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
+from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
 class Flow(object):
     def __init__(self,
@@ -169,6 +170,38 @@ class FlowMeasurementResults(BaseMeasurementResults):
     @property
     def end_timestamp(self):
         return min([seq_result[-1].timestamp for seq_result in self.generator_results])
+
+    def align_data(self, start, end):
+        result_copy = FlowMeasurementResults(self.measurement, self.flow)
+
+        # NOTE: iperf reports the cpu utilization for the whole test
+        # period, not each second, so the CPU samples cannot be aligned
+        result_copy.generator_cpu_stats = self.generator_cpu_stats
+        result_copy.receiver_cpu_stats = self.receiver_cpu_stats
+
+        result_copy.generator_results = ParallelPerfResult()
+        result_copy.receiver_results = ParallelPerfResult()
+
+        for stream in self.generator_results:
+            aligned_intervals = [
+                    interval
+                    for interval in stream
+                    if interval.timestamp >= start and interval.timestamp <= end
+                    ]
+
+            result_copy.generator_results.append(SequentialPerfResult(aligned_intervals))
+
+        for stream in self.receiver_results:
+            aligned_intervals = [
+                    interval
+                    for interval in stream
+                    if interval.timestamp >= start and interval.timestamp <= end
+                    ]
+
+            result_copy.receiver_results.append(SequentialPerfResult(aligned_intervals))
+
+        return result_copy
+
 
 class AggregatedFlowMeasurementResults(FlowMeasurementResults):
     def __init__(self, measurement, flow):
