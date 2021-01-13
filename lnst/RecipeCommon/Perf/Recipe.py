@@ -64,6 +64,34 @@ class RecipeResults(object):
                 aggregated_results, new_results)
         self._aggregated_results[measurement] = aggregated_results
 
+    @property
+    def time_aligned_results(self):
+        timestamps = []
+        for i in range(self.recipe_conf.iterations):
+            iteration_results_group = [
+                    measurement_iteration_result
+                    for measurement_results in self.results.values()
+                    for measurement_iteration_result in measurement_results[i]
+                    ]
+
+            timestamps.append((
+                max([res.start_timestamp for res in iteration_results_group]),
+                min([res.end_timestamp for res in iteration_results_group])
+                ))
+
+        aligned_recipe_results = RecipeResults(self._recipe_conf)
+        for measurement, measurement_results in self.results.items():
+            for i, measurement_iteration in enumerate(measurement_results):
+                aligned_measurement_results = []
+                for result in measurement_iteration:
+                    aligned_measurement_result = result.align_data(timestamps[i][0], timestamps[i][1])
+                    aligned_measurement_results.append(aligned_measurement_result)
+
+                aligned_recipe_results.add_measurement_results(measurement, aligned_measurement_results)
+
+        return aligned_recipe_results
+
+
 class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe):
     def perf_test(self, recipe_conf):
         results = RecipeResults(recipe_conf)
@@ -100,9 +128,10 @@ class Recipe(BasePerfTestTweakMixin, BasePerfTestIterationTweakMixin, BaseRecipe
         self.add_result(True, "\n".join(description))
 
     def perf_report_and_evaluate(self, results):
-        self.perf_report(results)
+        aligned_results = results.time_aligned_results
 
-        self.perf_evaluate(results)
+        self.perf_report(aligned_results)
+        self.perf_evaluate(aligned_results)
 
     def perf_report(self, recipe_results):
         if not recipe_results:
