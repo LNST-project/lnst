@@ -147,10 +147,10 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
         results.receiver_cpu_stats = SequentialPerfResult()
 
         if not job.passed:
-            results.generator_results.append(PerfInterval(0, 0, "packets"))
-            results.generator_cpu_stats.append(PerfInterval(0, 0, "cpu_percent"))
-            results.receiver_results.append(PerfInterval(0, 0, "packets"))
-            results.receiver_cpu_stats.append(PerfInterval(0, 0, "cpu_percent"))
+            results.generator_results.append(PerfInterval(0, 0, "packets", None))
+            results.generator_cpu_stats.append(PerfInterval(0, 0, "cpu_percent", None))
+            results.receiver_results.append(PerfInterval(0, 0, "packets", None))
+            results.receiver_cpu_stats.append(PerfInterval(0, 0, "cpu_percent", None))
         else:
             prev_time = job.result["start_time"]
             prev_tx_val = 0
@@ -162,11 +162,11 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
                 results.generator_results.append(PerfInterval(
                             tx_delta,
                             time_delta,
-                            "pkts"))
+                            "pkts", i["timestamp"]))
                 results.receiver_results.append(PerfInterval(
                             rx_delta,
                             time_delta,
-                            "pkts"))
+                            "pkts", i["timestamp"]))
 
                 prev_time = i["timestamp"]
                 prev_tx_val = i["measurement"][port]["opackets"]
@@ -176,9 +176,9 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
                 results.generator_cpu_stats.append(PerfInterval(
                     cpu_delta,
                     time_delta,
-                    "cpu_percent"))
+                    "cpu_percent", i["timestamp"]))
                 results.receiver_cpu_stats.append(PerfInterval(
                     cpu_delta,
                     time_delta,
-                    "cpu_percent"))
+                    "cpu_percent", i["timestamp"]))
         return results
