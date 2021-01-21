@@ -141,11 +141,12 @@ class IperfClient(IperfBase):
             test = ""
 
         cmd = ("iperf3 -c {server} -b 0/1000 -J -t {duration}"
-               " {cpu} {test} {mss} {blksize} {parallel}"
+               " {cpu} {test} {mss} {blksize} {parallel} {port}"
                " {opts}".format(
                 server=self.params.server, duration=self.params.duration,
                 cpu=cpu, test=test, mss=mss, blksize=blksize,
                 parallel=parallel,
+                port=port,
                 opts=self.params.opts if "opts" in self.params else ""))
 
         return cmd
