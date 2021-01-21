@@ -60,6 +60,7 @@ class IperfServer(IperfBase):
     def _compose_cmd(self):
         bind = ""
         port = ""
+        oneoff = ""
 
         if "bind" in self.params:
             bind = "-B {}".format(self.params.bind)
