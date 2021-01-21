@@ -449,8 +449,6 @@ class BaseEnrtRecipe(
 
         self.ctl.wait_for_condition(condition, timeout=5)
 
-
-
     def _create_reverse_ping(self, pconf):
         return PingConf(
             client = pconf.destination,
@@ -461,33 +459,3 @@ class BaseEnrtRecipe(
             interval = pconf.ping_interval,
             size = pconf.ping_psize,
         )
-
-    @property
-    def disable_turboboost_host_list(self):
-        """
-        The `disable_turboboost_host_list` property value is the list of all
-        matched hosts for the recipe. If a specific recipe needs to change
-        this it should override the :any:`baremetal_hosts` property.
-
-        For detailed explanation of this property see
-        :any:`DisableTurboboostMixin` and
-        :any:`DisableTurboboostMixin.disable_turboboost_host_list`.
-        """
-        return self.baremetal_hosts
-
-    @property
-    def disable_idlestates_host_list(self):
-        """
-        The `disable_idlestates_host_list` property value is the list of all
-        matched hosts for the recipe. If a specific recipe needs to change
-        this it should override the :any:`baremetal_hosts` property.
-
-        For detailed explanation of this property see
-        :any:`DisableIdleStatesMixin` and
-        :any:`DisableIdleStatesMixin.disable_idlestates_host_list`.
-        """
-        return self.baremetal_hosts
-
-    @property
-    def baremetal_hosts(self):
-        return self.matched
