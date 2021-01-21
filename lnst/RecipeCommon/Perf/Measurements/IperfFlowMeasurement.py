@@ -164,7 +164,6 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
                                 job_level=ResultLevel.NORMAL)
 
     def _parse_job_streams(self, job):
-        job_start = job.result["data"]["start"]["timestamp"]["timesecs"]
         result = ParallelPerfResult()
         if not job.passed:
             result.append(PerfInterval(0, 0, "bits", None))
@@ -172,6 +171,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
             for i in job.result["data"]["end"]["streams"]:
                 result.append(SequentialPerfResult())
 
+            job_start = job.result["data"]["start"]["timestamp"]["timesecs"]
             for interval in job.result["data"]["intervals"]:
                 interval_start = interval["sum"]["start"]
                 for i, stream in enumerate(interval["streams"]):
