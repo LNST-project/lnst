@@ -28,26 +28,20 @@ class StatCPUMeasurementResults(CPUMeasurementResults):
 
     @property
     def start_timestamp(self):
-        return self._data["user"][0].timestamp
+        return min([item.start_timestamp for item in self._data.values()])
 
     @property
     def end_timestamp(self):
-        return self._data["user"][-1].timestamp
+        return max([item.end_timestamp for item in self._data.values()])
 
-    def align_data(self, start, end):
+    def time_slice(self, start, end):
         result_copy = StatCPUMeasurementResults(
                 self.measurement,
                 self.host,
                 self.cpu
                 )
         for cpu_state, intervals in self._data.items():
-            aligned_interval = [
-                    interval
-                    for interval in intervals
-                    if interval.timestamp >= start and interval.timestamp <= end
-                    ]
-
-            result_copy._data[cpu_state] = SequentialPerfResult(aligned_interval)
+            result_copy._data[cpu_state] = intervals.time_slice(start, end)
         return result_copy
 
 

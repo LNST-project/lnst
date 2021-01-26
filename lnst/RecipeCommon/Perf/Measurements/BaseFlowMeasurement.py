@@ -165,40 +165,34 @@ class FlowMeasurementResults(BaseMeasurementResults):
 
     @property
     def start_timestamp(self):
-        return max([seq_result[0].timestamp for seq_result in self.generator_results])
+        return min(
+            [
+                self.generator_results.start_timestamp,
+                self.generator_cpu_stats.start_timestamp,
+                self.receiver_results.start_timestamp,
+                self.receiver_cpu_stats.start_timestamp,
+            ]
+        )
 
     @property
     def end_timestamp(self):
-        return min([seq_result[-1].timestamp for seq_result in self.generator_results])
+        return max(
+            [
+                self.generator_results.end_timestamp,
+                self.generator_cpu_stats.end_timestamp,
+                self.receiver_results.end_timestamp,
+                self.receiver_cpu_stats.end_timestamp,
+            ]
+        )
 
-    def align_data(self, start, end):
+    def time_slice(self, start, end):
         result_copy = FlowMeasurementResults(self.measurement, self.flow)
 
-        # NOTE: iperf reports the cpu utilization for the whole test
-        # period, not each second, so the CPU samples cannot be aligned
-        result_copy.generator_cpu_stats = self.generator_cpu_stats
-        result_copy.receiver_cpu_stats = self.receiver_cpu_stats
+        result_copy.generator_cpu_stats = self.generator_cpu_stats.time_slice(start, end)
+        result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(start, end)
 
-        result_copy.generator_results = ParallelPerfResult()
-        result_copy.receiver_results = ParallelPerfResult()
-
-        for stream in self.generator_results:
-            aligned_intervals = [
-                    interval
-                    for interval in stream
-                    if interval.timestamp >= start and interval.timestamp <= end
-                    ]
-
-            result_copy.generator_results.append(SequentialPerfResult(aligned_intervals))
-
-        for stream in self.receiver_results:
-            aligned_intervals = [
-                    interval
-                    for interval in stream
-                    if interval.timestamp >= start and interval.timestamp <= end
-                    ]
-
-            result_copy.receiver_results.append(SequentialPerfResult(aligned_intervals))
+        result_copy.generator_results = self.generator_results.time_slice(start, end)
+        result_copy.receiver_results = self.generator_results.time_slice(start, end)
 
         return result_copy
 

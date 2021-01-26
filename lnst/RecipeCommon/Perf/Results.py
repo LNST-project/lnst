@@ -1,6 +1,9 @@
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Utils import std_deviation
 
+class EmptySlice(LnstError):
+    pass
+
 class PerfStatMixin(object):
     @property
     def average(self):
@@ -26,6 +29,17 @@ class PerfResult(PerfStatMixin):
     def unit(self):
         raise NotImplementedError()
 
+    @property
+    def start_timestamp(self):
+        raise NotImplementedError()
+
+    @property
+    def end_timestamp(self):
+        raise NotImplementedError()
+
+    def time_slice(self, start, end):
+        raise NotImplementedError()
+
 class PerfInterval(PerfResult):
     def __init__(self, value, duration, unit, timestamp):
         self._value = value
@@ -46,8 +60,12 @@ class PerfInterval(PerfResult):
         return self._unit
 
     @property
-    def timestamp(self):
+    def start_timestamp(self):
         return self._timestamp
+
+    @property
+    def end_timestamp(self):
+        return self._timestamp + self.duration
 
     @property
     def std_deviation(self):
@@ -56,6 +74,20 @@ class PerfInterval(PerfResult):
     def __str__(self):
         return "{:.2f} {} in {:.2f} seconds".format(
                 float(self.value), self.unit, float(self.duration))
+
+    def time_slice(self, start, end):
+        if end < self.start_timestamp or start > self.end_timestamp:
+            raise EmptySlice(
+                "current start, end {} {}; request start, end {}, {}".format(
+                    self.start_timestamp, self.end_timestamp, start, end,
+                )
+            )
+
+        new_start = max(self.start_timestamp, start)
+        new_end = min(self.end_timestamp, end)
+        new_duration = new_end - new_start
+        new_value = self.value * (new_duration/self.duration)
+        return PerfInterval(new_value, new_duration, self.unit, new_start)
 
 class PerfList(list):
     def __init__(self, iterable=[]):
@@ -123,7 +155,23 @@ class PerfList(list):
 
         super(PerfList, self).__setitem__(i, item)
 
-class SequentialPerfResult(PerfResult, PerfList):
+    def time_slice(self, start, end):
+        result = self.__class__()
+        for item in self:
+            try:
+                item_slice = item.time_slice(start, end)
+                result.append(item_slice)
+            except EmptySlice:
+                continue
+        if len(result) == 0:
+            raise EmptySlice(
+                "current start, end {} {}; request start, end {}, {}".format(
+                    self.start_timestamp, self.end_timestamp, start, end,
+                )
+            )
+        return result
+
+class SequentialPerfResult(PerfList, PerfResult):
     @property
     def value(self):
         return sum([i.value for i in self])
@@ -139,14 +187,24 @@ class SequentialPerfResult(PerfResult, PerfList):
         else:
             return None
 
-class ParallelPerfResult(PerfResult, PerfList):
+    @property
+    def start_timestamp(self):
+        return self[0].start_timestamp
+
+    @property
+    def end_timestamp(self):
+        return self[-1].end_timestamp
+
+class ParallelPerfResult(PerfList, PerfResult):
     @property
     def value(self):
         return sum([i.value for i in self])
 
     @property
     def duration(self):
-        return max([i.duration for i in self])
+        min_start = min([item.start_timestamp for item in self])
+        max_end = max([item.end_timestamp for item in self])
+        return max_end - min_start
 
     @property
     def unit(self):
@@ -154,6 +212,14 @@ class ParallelPerfResult(PerfResult, PerfList):
             return self[0].unit
         else:
             return None
+
+    @property
+    def start_timestamp(self):
+        return min([i.start_timestamp for i in self])
+
+    @property
+    def end_timestamp(self):
+        return max([i.end_timestamp for i in self])
 
 def result_averages_difference(a, b):
     if a is None or b is None:

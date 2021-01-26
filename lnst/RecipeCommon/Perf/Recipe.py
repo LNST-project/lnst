@@ -3,11 +3,13 @@ from collections import OrderedDict
 from typing import Any, List, Dict
 
 from lnst.Common.LnstError import LnstError
+from lnst.Common.Logs import log_exc_traceback
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
     BaseMeasurement,
     BaseMeasurementResults,
 )
+from lnst.RecipeCommon.Perf.Results import EmptySlice
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
@@ -117,7 +119,7 @@ class RecipeResults(object):
             for i, measurement_iteration in enumerate(measurement_results):
                 aligned_measurement_results = []
                 for result in measurement_iteration:
-                    aligned_measurement_result = result.align_data(
+                    aligned_measurement_result = result.time_slice(
                         timestamps[i][0], timestamps[i][1]
                     )
                     aligned_measurement_results.append(
@@ -174,7 +176,13 @@ class Recipe(
         self.add_result(True, "\n".join(description))
 
     def perf_report_and_evaluate(self, results: RecipeResults):
-        aligned_results = results.time_aligned_results
+        try:
+            aligned_results = results.time_aligned_results
+        except EmptySlice:
+            logging.error("Result time alignment impossible, falling back to unaligned results")
+            log_exc_traceback()
+            aligned_results = results
+
 
         self.perf_report(aligned_results)
         self.perf_evaluate(aligned_results)
