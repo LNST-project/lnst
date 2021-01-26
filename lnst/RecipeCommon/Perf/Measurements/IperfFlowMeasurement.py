@@ -167,7 +167,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
     def _parse_job_streams(self, job):
         result = ParallelPerfResult()
         if not job.passed:
-            result.append(PerfInterval(0, 0, "bits", None))
+            result.append(PerfInterval(0, 0, "bits", time.time()))
         else:
             for i in job.result["data"]["end"]["streams"]:
                 result.append(SequentialPerfResult())
@@ -183,7 +183,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
     def _parse_job_cpu(self, job):
         if not job.passed:
-            return PerfInterval(0, 0, "cpu_percent", None)
+            return PerfInterval(0, 0, "cpu_percent", time.time())
         else:
             cpu_percent = job.result["data"]["end"]["cpu_utilization_percent"]["host_total"]
-            return PerfInterval(cpu_percent, 1, "cpu_percent", None)
+            job_start = job.result["data"]["start"]["timestamp"]["timesecs"]
+            duration = job.result["data"]["end"]["sum_received"]["seconds"]
+            return PerfInterval(cpu_percent*duration, duration, "cpu_percent", job_start)
