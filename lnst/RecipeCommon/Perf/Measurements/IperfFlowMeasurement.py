@@ -187,5 +187,5 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         else:
             cpu_percent = job.result["data"]["end"]["cpu_utilization_percent"]["host_total"]
             job_start = job.result["data"]["start"]["timestamp"]["timesecs"]
-            duration = job.result["data"]["end"]["sum_received"]["seconds"]
+            duration = job.result["data"]["end"]["sum"]["seconds"]
             return PerfInterval(cpu_percent*duration, duration, "cpu_percent", job_start)
