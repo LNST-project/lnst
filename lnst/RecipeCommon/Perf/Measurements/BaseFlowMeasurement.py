@@ -192,7 +192,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
         result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(start, end)
 
         result_copy.generator_results = self.generator_results.time_slice(start, end)
-        result_copy.receiver_results = self.generator_results.time_slice(start, end)
+        result_copy.receiver_results = self.receiver_results.time_slice(start, end)
 
         return result_copy
 
