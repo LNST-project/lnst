@@ -105,6 +105,7 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
                     "/64"))
                 host.eth0.up()
                 host.msec0.up()
+                self.wait_tentative_ips([host.eth0, host.msec0])
 
     def remove_sub_configuration(self, config):
         if config.encrypt:
@@ -201,39 +202,8 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
                 yield perf_conf
 
-    def generate_flow_combinations(self, config):
-        client_nic = config.host1.msec0
-        server_nic = config.host2.msec0
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
-
-        for ipv in self.params.ip_versions:
-            if ipv == "ipv4":
-                family = AF_INET
-            elif ipv == "ipv6":
-                family = AF_INET6
-
-            client_bind = client_nic.ips_filter(family=family)[0]
-            server_bind = server_nic.ips_filter(family=family)[0]
-
-            for perf_test in self.params.perf_tests:
-                for size in self.params.perf_msg_sizes:
-                    pstreams = self.params.perf_parallel_streams
-                    flow = PerfFlow(
-                        type = perf_test,
-                        generator = client_netns,
-                        generator_bind = client_bind,
-                        generator_nic = client_nic,
-                        receiver = server_netns,
-                        receiver_bind = server_bind,
-                        receiver_nic = server_nic,
-                        msg_size = size,
-                        duration = self.params.perf_duration,
-                        parallel_streams = pstreams,
-                        cpupin = self.params.perf_tool_cpu if (
-                            "perf_tool_cpu" in self.params) else None
-                            )
-                    yield [flow]
+    def generate_perf_endpoints(self, config):
+        return [(self.matched.host1.msec0, self.matched.host2.msec0)]
 
     @property
     def mtu_hw_config_dev_list(self):
