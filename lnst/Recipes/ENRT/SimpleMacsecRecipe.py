@@ -3,6 +3,7 @@ import copy
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.LnstError import LnstError
+from lnst.Common.Parameters import Param
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Devices import MacsecDevice
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -21,7 +22,7 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
-    macsec_settings = [None, 'on', 'off']
+    macsec_encryption = Param(default=['on', 'off'])
     ids = ['00', '01']
     keys = ["7a16780284000775d4f0a3c0f0e092c0",
         "3212ef5c4cc5d0e4210b17208e88779e"]
@@ -66,72 +67,60 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     def generate_sub_configurations(self, config):
         for subconf in ConfMixin.generate_sub_configurations(self, config):
-            for encryption in self.macsec_settings:
+            for encryption in self.params.macsec_encryption:
                 new_config = copy.copy(subconf)
                 new_config.encrypt = encryption
-                if encryption is not None:
-                    new_config.ip_vers = self.params.ip_versions
+                new_config.ip_vers = self.params.ip_versions
                 yield new_config
 
     def apply_sub_configuration(self, config):
         super().apply_sub_configuration(config)
-        if not config.encrypt:
-            config.endpoint1.up()
-            config.endpoint2.up()
-        else:
-            net_addr = "192.168.100"
-            net_addr6 = "fc00:0:0:0"
-            host1, host2 = config.host1, config.host2
-            k_ids = list(zip(self.ids, self.keys))
-            hosts_and_keys = [(host1, host2, k_ids), (host2, host1,
-                k_ids[::-1])]
-            for host_a, host_b, k_ids in hosts_and_keys:
-                host_a.msec0 = MacsecDevice(realdev=host_a.eth0,
-                    encrypt=config.encrypt)
-                rx_kwargs = dict(port=1, address=host_b.eth0.hwaddr)
-                tx_sa_kwargs = dict(sa=0, pn=1, enable='on',
-                    id=k_ids[0][0], key=k_ids[0][1])
-                rx_sa_kwargs = rx_kwargs.copy()
-                rx_sa_kwargs.update(tx_sa_kwargs)
-                rx_sa_kwargs['id'] = k_ids[1][0]
-                rx_sa_kwargs['key'] = k_ids[1][1]
-                host_a.msec0.rx('add', **rx_kwargs)
-                host_a.msec0.tx_sa('add', **tx_sa_kwargs)
-                host_a.msec0.rx_sa('add', **rx_sa_kwargs)
-            for i, host in enumerate([host1, host2]):
-                host.msec0.ip_add(ipaddress(net_addr + "." + str(i+1) +
-                    "/24"))
-                host.msec0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) +
-                    "/64"))
-                host.eth0.up()
-                host.msec0.up()
-                self.wait_tentative_ips([host.eth0, host.msec0])
+        net_addr = "192.168.100"
+        net_addr6 = "fc00:0:0:0"
+        host1, host2 = config.host1, config.host2
+        k_ids = list(zip(self.ids, self.keys))
+        hosts_and_keys = [(host1, host2, k_ids), (host2, host1,
+            k_ids[::-1])]
+        for host_a, host_b, k_ids in hosts_and_keys:
+            host_a.msec0 = MacsecDevice(realdev=host_a.eth0,
+                encrypt=config.encrypt)
+            rx_kwargs = dict(port=1, address=host_b.eth0.hwaddr)
+            tx_sa_kwargs = dict(sa=0, pn=1, enable='on',
+                id=k_ids[0][0], key=k_ids[0][1])
+            rx_sa_kwargs = rx_kwargs.copy()
+            rx_sa_kwargs.update(tx_sa_kwargs)
+            rx_sa_kwargs['id'] = k_ids[1][0]
+            rx_sa_kwargs['key'] = k_ids[1][1]
+            host_a.msec0.rx('add', **rx_kwargs)
+            host_a.msec0.tx_sa('add', **tx_sa_kwargs)
+            host_a.msec0.rx_sa('add', **rx_sa_kwargs)
+        for i, host in enumerate([host1, host2]):
+            host.msec0.ip_add(ipaddress(net_addr + "." + str(i+1) +
+                "/24"))
+            host.msec0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) +
+                "/64"))
+            host.eth0.up()
+            host.msec0.up()
+            self.wait_tentative_ips([host.eth0, host.msec0])
 
     def remove_sub_configuration(self, config):
-        if config.encrypt:
-            host1, host2 = config.host1, config.host2
-            for host in (host1, host2):
-                host.msec0.destroy()
-                del host.msec0
+        host1, host2 = config.host1, config.host2
+        for host in (host1, host2):
+            host.msec0.destroy()
+            del host.msec0
         config.endpoint1.down()
         config.endpoint2.down()
         super().remove_sub_configuration(config)
 
     def generate_ping_configurations(self, config):
-        if not config.encrypt:
-            client_nic = config.endpoint1
-            server_nic = config.endpoint2
-            ip_vers = ('ipv4',)
-        else:
-            client_nic = config.host1.msec0
-            server_nic = config.host2.msec0
-            ip_vers = self.params.ip_versions
+        client_nic = config.host1.msec0
+        server_nic = config.host2.msec0
+        ip_vers = self.params.ip_versions
 
         count = self.params.ping_count
         interval = self.params.ping_interval
         size = self.params.ping_psize
-        common_args = {'count' : count, 'interval' : interval,
-            'size' : size}
+        common_args = {'count': count, 'interval': interval, 'size': size}
 
         for ipv in ip_vers:
             kwargs = {}
@@ -162,45 +151,45 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
                 yield [pconf]
 
     def generate_perf_configurations(self, config):
-        if config.encrypt:
-            client_nic = config.host1.msec0
-            server_nic = config.host2.msec0
-            client_netns = client_nic.netns
-            server_netns = server_nic.netns
+        client_nic = config.host1.msec0
+        server_nic = config.host2.msec0
+        client_netns = client_nic.netns
+        server_netns = server_nic.netns
 
-            flow_combinations = self.generate_flow_combinations(
-                config
+        flow_combinations = self.generate_flow_combinations(
+            config
+        )
+
+        for flows in flow_combinations:
+            perf_recipe_conf=dict(
+                recipe_config=config,
+                flows=flows,
             )
 
-            for flows in flow_combinations:
-                perf_recipe_conf=dict(
-                    recipe_config=config,
-                    flows=flows,
-                )
+            flows_measurement = self.params.net_perf_tool(
+                flows,
+                perf_recipe_conf
+            )
 
-                flows_measurement = self.params.net_perf_tool(
-                    flows,
-                    perf_recipe_conf
-                )
+            cpu_measurement = self.params.cpu_perf_tool(
+                [client_netns, server_netns],
+                perf_recipe_conf,
+            )
 
-                cpu_measurement = self.params.cpu_perf_tool(
-                    [client_netns, server_netns],
-                    perf_recipe_conf,
-                )
+            perf_conf = PerfRecipeConf(
+                measurements=[cpu_measurement, flows_measurement],
+                iterations=self.params.perf_iterations,
+                parent_recipe_config=copy.deepcopy(config),
+            )
 
-                perf_conf = PerfRecipeConf(
-                    measurements=[cpu_measurement, flows_measurement],
-                    iterations=self.params.perf_iterations,
-                )
+            perf_conf.register_evaluators(
+                cpu_measurement, self.cpu_perf_evaluators
+            )
+            perf_conf.register_evaluators(
+                flows_measurement, self.net_perf_evaluators
+            )
 
-                perf_conf.register_evaluators(
-                    cpu_measurement, self.cpu_perf_evaluators
-                )
-                perf_conf.register_evaluators(
-                    flows_measurement, self.net_perf_evaluators
-                )
-
-                yield perf_conf
+            yield perf_conf
 
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.msec0, self.matched.host2.msec0)]
