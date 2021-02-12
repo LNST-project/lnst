@@ -3,7 +3,7 @@ import logging
 import copy
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.Parameters import StrParam
+from lnst.Common.Parameters import StrParam, Param
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -26,10 +26,11 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
-    ciphers = [('aes', 128), ('aes', 256)]
-    hashes = [('hmac(md5)', 128), ('sha256', 256)]
-    spi_values = ["0x00000001", "0x00000002", "0x00000003", "0x00000004"]
+    ciphers = Param(default=[('aes', 128), ('aes', 256)])
+    hashes = Param(default=[('hmac(md5)', 128), ('sha256', 256)])
     ipsec_mode = StrParam(default="transport")
+
+    spi_values = ["0x00000001", "0x00000002", "0x00000003", "0x00000004"]
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
@@ -93,8 +94,8 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                 ip1 = config.endpoint1.ips_filter(family=family)[0]
                 ip2 = config.endpoint2.ips_filter(family=family)[0]
 
-                for ciph_alg, ciph_len in self.ciphers:
-                    for hash_alg, hash_len in self.hashes:
+                for ciph_alg, ciph_len in self.params.ciphers:
+                    for hash_alg, hash_len in self.params.hashes:
                         ciph_key = generate_key(ciph_len)
                         hash_key = generate_key(hash_len)
                         new_config = copy.copy(subconf)
