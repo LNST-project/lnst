@@ -21,6 +21,8 @@ import errno
 import ast
 import collections
 import math
+import itertools
+from collections.abc import Iterable
 from _ast import Call, Attribute
 from lnst.Common.ExecCmd import exec_cmd
 
@@ -317,3 +319,13 @@ class Noop(object):
 
 def not_imported(*args, **kwargs):
     raise Exception("Object not imported.")
+
+
+def pairwise(iterable: Iterable) -> Iterable:
+    """
+    s -> (s0,s1), (s1,s2), (s2, s3), ...
+    https://docs.python.org/3/library/itertools.html#itertools-recipes
+    """
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
