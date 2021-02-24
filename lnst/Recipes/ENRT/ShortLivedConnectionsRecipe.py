@@ -1,20 +1,19 @@
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.LatencyEnrtRecipe import LatencyEnrtRecipe
 from lnst.Common.Parameters import Param, IntParam, ListParam
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 
-class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
+class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, LatencyEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
-    perf_tests = Param(default=("TCP_RR", "TCP_CRR"))
+    perf_tests = Param(default=("tcp_rr", "tcp_crr", "udp_rr"))
     ip_versions = Param(default=("ipv4",))
-    perf_parallel_streams = IntParam(default=2)
     perf_msg_sizes = ListParam(default=[1000, 5000, 7000, 10000, 12000])
 
     def test_wide_configuration(self):
