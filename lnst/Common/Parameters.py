@@ -153,6 +153,30 @@ class ListParam(Param):
                                      .format(item, str(e)))
         return value
 
+
+class ChoiceParam(Param):
+    """Choice Param
+    This parameter is used for sitiuation where a param can have one of
+    a specified set of valid values. For example:
+
+    >>> flow_type = ChoiceParam(type=StrParam, choices=set('tcp_rr', 'udp_rr', 'tcp_crr'))
+
+    The type check will fail if the specified value does not pass both the specified
+    subtype `type_check` or is not one of the specified choices.
+    """
+    def __init__(self, type=None, choices=set(), **kwargs):
+        self._type = type() if type is not None else None
+        self._choices = choices
+        super().__init__(**kwargs)
+
+    def type_check(self, value):
+        if self._type is not None:
+            value = self._type.type_check(value)
+        if value not in self._choices:
+            raise ParamError(f"Value '{value}' not one of {self._choices}")
+        return value
+
+
 class Parameters(object):
     def __init__(self):
         self._attrs = {}
