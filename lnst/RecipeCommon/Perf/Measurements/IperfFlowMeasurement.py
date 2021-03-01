@@ -119,14 +119,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         server_params = dict(bind = ipaddress(flow.receiver_bind),
                              oneoff = True)
 
-        if flow.cpupin is not None and flow.cpupin >= 0:
-            if flow.parallel_streams == 1:
-                server_params["cpu_bind"] = flow.cpupin
-            else:
-                raise RecipeError("Unsupported combination of single cpupin "
-                                  "with parallel perf streams.")
-        elif flow.cpupin is not None:
-            raise RecipeError("Negative perf cpupin value provided.")
+        self._set_cpupin_params(server_params, flow.cpupin)
 
         if flow.receiver_port is not None:
             server_params["port"] = flow.receiver_port
@@ -149,14 +142,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
 
-        if flow.cpupin is not None and flow.cpupin >= 0:
-            if flow.parallel_streams == 1:
-                client_params["cpu_bind"] = flow.cpupin
-            else:
-                raise RecipeError("Unsupported combination of single cpupin "
-                                  "with parallel perf streams.")
-        elif flow.cpupin is not None:
-            raise RecipeError("Negative perf cpupin value provided.")
+        self._set_cpupin_params(client_params, flow.cpupin)
 
         if flow.parallel_streams > 1:
             client_params["parallel"] = flow.parallel_streams
@@ -169,6 +155,20 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
         return host.prepare_job(IperfClient(**client_params),
                                 job_level=ResultLevel.NORMAL)
+
+    def _set_cpupin_params(self, params, cpupin):
+        if cpupin is not None:
+            for cpu in cpupin:
+                if cpu < 0:
+                    raise RecipeError("Negative perf cpupin value provided.")
+
+            # at the moment iperf does not support pinning to multiple cpus
+            # so pin to the first cpu specified in the list
+            if len(cpupin) > 1:
+                raise RecipeError("Cannot pin iperf to the specified list "\
+                    "of cpus due to missing support in iperf.")
+
+            params["cpu_bind"] = cpupin[0]
 
     def _parse_job_streams(self, job):
         result = ParallelPerfResult()
