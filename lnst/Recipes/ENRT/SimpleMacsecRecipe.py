@@ -12,7 +12,6 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
-from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Ping.Recipe import PingConf
 
 class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
