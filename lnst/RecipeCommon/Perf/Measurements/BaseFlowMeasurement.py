@@ -313,3 +313,49 @@ class BaseFlowMeasurement(BaseMeasurement):
             return (result.std_deviation/result.average) * 100
         except ZeroDivisionError:
             return float('inf') if result.std_deviation >= 0 else float("-inf")
+
+    @staticmethod
+    def aggregate_multi_flow_results(results):
+        if len(results) == 1:
+            return results
+
+        sample_result = results[0]
+        sample_flow = sample_result.flow
+        dummy_flow = Flow(
+             type=sample_flow.type,
+             generator=sample_flow.generator,
+             generator_bind=sample_flow.generator_bind,
+             generator_nic=sample_flow.generator_nic,
+             receiver=sample_flow.receiver,
+             receiver_bind=sample_flow.receiver_bind,
+             receiver_nic=sample_flow.receiver_nic,
+             receiver_port=None,
+             msg_size=sample_flow.msg_size,
+             duration=sample_flow.duration,
+             parallel_streams=sample_flow.parallel_streams,
+             cpupin=None
+        )
+
+        aggregated_result = AggregatedFlowMeasurementResults(
+                sample_result.measurement, dummy_flow)
+
+        nr_iterations = len(sample_result.individual_results)
+        for i in range(nr_iterations):
+            parallel_result = FlowMeasurementResults(
+                    measurement=sample_result.measurement,
+                    flow=dummy_flow)
+            parallel_result.generator_results = ParallelPerfResult()
+            parallel_result.generator_cpu_stats = ParallelPerfResult()
+            parallel_result.receiver_results = ParallelPerfResult()
+            parallel_result.receiver_cpu_stats = ParallelPerfResult()
+
+            for result in results:
+                flow_result = result.individual_results[i]
+                parallel_result.generator_results.append(flow_result.generator_results)
+                parallel_result.receiver_results.append(flow_result.receiver_results)
+                parallel_result.generator_cpu_stats.append(flow_result.generator_cpu_stats)
+                parallel_result.receiver_cpu_stats.append(flow_result.receiver_cpu_stats)
+
+            aggregated_result.add_results(parallel_result)
+
+        return [aggregated_result]
