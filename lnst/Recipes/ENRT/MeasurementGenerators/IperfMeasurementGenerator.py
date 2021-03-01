@@ -10,6 +10,8 @@ from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
 
+from typing import List
+
 class IperfMeasurementGenerator(BaseMeasurementGenerator):
     """
     :param perf_tests:
@@ -93,17 +95,14 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
 
                 for perf_test in self.params.perf_tests:
                     for size in self.params.perf_msg_sizes:
-                        yield [
-                            self._create_perf_flow(
-                                perf_test,
-                                client_nic,
-                                client_bind,
-                                server_nic,
-                                server_bind,
-                                None,
-                                size,
-                            )
-                        ]
+                        yield self._create_perf_flows(
+                            perf_test,
+                            client_nic,
+                            client_bind,
+                            server_nic,
+                            server_bind,
+                            size,
+                        )
 
     def generate_perf_endpoints(self, config):
         """Generator for perf endpoints
@@ -114,6 +113,30 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
         :rtype: List[Tuple[:any:`Device`, :any:`Device`]]
         """
         return []
+
+    def _create_perf_flows(
+        self,
+        perf_test,
+        client_nic,
+        client_bind,
+        server_nic,
+        server_bind,
+        msg_size,
+    ) -> List[PerfFlow]:
+        flows = []
+        flows.append(
+            self._create_perf_flow(
+                perf_test,
+                client_nic,
+                client_bind,
+                server_nic,
+                server_bind,
+                None,
+                msg_size,
+            )
+        )
+
+        return flows
 
     def _create_perf_flow(
         self,
