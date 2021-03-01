@@ -17,6 +17,7 @@ class Flow(object):
                  parallel_streams,
                  generator_nic=None,
                  receiver_nic=None,
+                 receiver_port=None,
                  msg_size=None,
                  cpupin=None):
         self._type = type
@@ -27,6 +28,7 @@ class Flow(object):
         self._receiver = receiver
         self._receiver_bind = receiver_bind
         self._receiver_nic = receiver_nic
+        self._receiver_port = receiver_port
 
         self._msg_size = msg_size
         self._duration = duration
@@ -62,6 +64,10 @@ class Flow(object):
         return self._receiver_nic
 
     @property
+    def receiver_port(self):
+        return self._receiver_port
+
+    @property
     def msg_size(self):
         return self._msg_size
 
@@ -87,6 +93,7 @@ class Flow(object):
             receiver={receiver}, 
             receiver_bind={receiver_bind},
             receiver_nic={receiver_nic},
+            receiver_port={receiver_port},
             msg_size={msg_size}, 
             duration={duration},
             parallel_streams={parallel_streams},
@@ -99,6 +106,7 @@ class Flow(object):
             receiver=str(self.receiver),
             receiver_bind=self.receiver_bind,
             receiver_nic=self.receiver_nic,
+            receiver_port=self.receiver_port,
             msg_size=self.msg_size,
             duration=self.duration,
             parallel_streams=self.parallel_streams,
