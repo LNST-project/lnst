@@ -9,9 +9,16 @@ from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 class Flow(object):
     def __init__(self,
                  type,
-                 generator, generator_bind, generator_nic,
-                 receiver, receiver_bind, receiver_nic,
-                 msg_size, duration, parallel_streams, cpupin):
+                 generator,
+                 generator_bind,
+                 receiver,
+                 receiver_bind,
+                 duration,
+                 parallel_streams,
+                 generator_nic=None,
+                 receiver_nic=None,
+                 msg_size=None,
+                 cpupin=None):
         self._type = type
 
         self._generator = generator
