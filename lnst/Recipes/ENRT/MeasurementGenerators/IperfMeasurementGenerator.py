@@ -100,6 +100,7 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
                                 client_bind,
                                 server_nic,
                                 server_bind,
+                                None,
                                 size,
                             )
                         ]
@@ -121,6 +122,7 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
         client_bind,
         server_nic,
         server_bind,
+        server_port,
         msg_size,
     ) -> PerfFlow:
         """
@@ -135,6 +137,7 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
             receiver=server_nic.netns,
             receiver_bind=server_bind,
             receiver_nic=server_nic,
+            receiver_port=server_port,
             msg_size=msg_size,
             duration=self.params.perf_duration,
             parallel_streams=self.params.perf_parallel_streams,
