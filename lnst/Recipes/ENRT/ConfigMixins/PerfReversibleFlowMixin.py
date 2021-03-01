@@ -24,11 +24,33 @@ class PerfReversibleFlowMixin(object):
     """
     perf_reverse = BoolParam(default=False)
 
-    def _create_perf_flow(self, perf_test, client_nic, client_bind, server_nic,
-                          server_bind, msg_size) -> PerfFlow:
+    def _create_perf_flow(
+        self,
+        perf_test,
+        client_nic,
+        client_bind,
+        server_nic,
+        server_bind,
+        server_port,
+        msg_size,
+    ) -> PerfFlow:
         if self.params.perf_reverse:
-            return super()._create_perf_flow(perf_test, server_nic, server_bind,
-                                             client_nic, client_bind, msg_size)
+            return super()._create_perf_flow(
+                    perf_test,
+                    server_nic,
+                    server_bind,
+                    client_nic,
+                    client_bind,
+                    server_port,
+                    msg_size,
+            )
         else:
-            return super()._create_perf_flow(perf_test, client_nic, client_bind,
-                                             server_nic, server_bind, msg_size)
+            return super()._create_perf_flow(
+                    perf_test,
+                    client_nic,
+                    client_bind,
+                    server_nic,
+                    server_bind,
+                    server_port,
+                    msg_size,
+            )
