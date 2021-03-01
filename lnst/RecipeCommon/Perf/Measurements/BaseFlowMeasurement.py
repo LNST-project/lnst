@@ -254,6 +254,13 @@ class BaseFlowMeasurement(BaseMeasurement):
         for flow_results in results:
             cls._report_flow_results(recipe, flow_results)
 
+        # report aggregated results
+        if len(results) > 1:
+            aggregated_flow_results = cls.aggregate_multi_flow_results(results)
+            for flow_results in aggregated_flow_results:
+                cls._report_flow_results(recipe, flow_results)
+
+
     @classmethod
     def _report_flow_results(cls, recipe, flow_results):
         generator = flow_results.generator_results
