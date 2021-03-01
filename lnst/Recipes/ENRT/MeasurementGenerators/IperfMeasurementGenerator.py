@@ -2,6 +2,7 @@ from lnst.Common.Parameters import (
     Param,
     IntParam,
     ListParam,
+    StrParam,
 )
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
@@ -60,7 +61,8 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
 
     # common perf test params
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
-    perf_tool_cpu = IntParam(mandatory=False)
+    perf_tool_cpu = ListParam(mandatory=False)
+    perf_tool_cpu_policy = StrParam(mandatory=False)
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
@@ -142,10 +144,32 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
                     server_bind,
                     port_offset + i,
                     msg_size,
+                    self._cpupin_based_on_policy(i),
                 )
             )
 
         return flows
+
+    def _cpupin_based_on_policy(self, process_no=None):
+        if process_no is None:
+            return None
+
+        try:
+            cpus = self.params.perf_tool_cpu
+        except:
+            return None
+
+        try:
+            policy = self.params.perf_tool_cpu_policy
+        except:
+            return cpus
+
+        if policy == 'round-robin':
+            return [cpus[process_no % len(cpus)]]
+        elif policy == 'all':
+            return cpus
+        else:
+            raise Exception(f'Unknown perf_tool_cpu_policy {policy}')
 
     def _create_perf_flow(
         self,
@@ -156,6 +180,7 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
         server_bind,
         server_port,
         msg_size,
+        cpupin,
     ) -> PerfFlow:
         """
         Wrapper to create a PerfFlow. Mixins that want to change this behavior (for example, to reverse the direction)
@@ -173,9 +198,5 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
             msg_size=msg_size,
             duration=self.params.perf_duration,
             parallel_streams=self.params.perf_parallel_streams,
-            cpupin=(
-                self.params.perf_tool_cpu
-                if "perf_tool_cpu" in self.params
-                else None
-            ),
+            cpupin=cpupin,
         )
