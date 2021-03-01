@@ -44,6 +44,12 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
         measured at the same time.
     :type perf_parallel_streams: :any:`IntParam` (default 1)
 
+    :param perf_parallel_processes:
+        Parameter used by the :any:`generate_flow_combinations` generator. To
+        specify how many parallel net_perf_tool processes of the same network flow
+        should be measured at the same time.
+    :type perf_parallel_processes: :any:`IntParam` (default 1)
+
     :param perf_msg_sizes:
         Parameter used by the :any:`generate_flow_combinations` generator. To
         specify what different message sizes (in bytes) used generated for the
@@ -58,6 +64,7 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
     perf_duration = IntParam(default=60)
     perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
+    perf_parallel_processes = IntParam(default=1)
     perf_msg_sizes = ListParam(default=[123])
 
     net_perf_tool = Param(default=IperfFlowMeasurement)
@@ -124,17 +131,19 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
         msg_size,
     ) -> List[PerfFlow]:
         flows = []
-        flows.append(
-            self._create_perf_flow(
-                perf_test,
-                client_nic,
-                client_bind,
-                server_nic,
-                server_bind,
-                None,
-                msg_size,
+        port_offset=12000
+        for i in range(self.params.perf_parallel_processes):
+            flows.append(
+                self._create_perf_flow(
+                    perf_test,
+                    client_nic,
+                    client_bind,
+                    server_nic,
+                    server_bind,
+                    port_offset + i,
+                    msg_size,
+                )
             )
-        )
 
         return flows
 
