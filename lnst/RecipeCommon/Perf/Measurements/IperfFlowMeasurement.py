@@ -128,6 +128,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         elif flow.cpupin is not None:
             raise RecipeError("Negative perf cpupin value provided.")
 
+        if flow.receiver_port is not None:
+            server_params["port"] = flow.receiver_port
+
         return host.prepare_job(IperfServer(**server_params),
                                 job_level=ResultLevel.NORMAL)
 
@@ -160,6 +163,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
         if flow.msg_size:
             client_params["blksize"] = flow.msg_size
+
+        if flow.receiver_port is not None:
+            client_params["port"] = flow.receiver_port
 
         return host.prepare_job(IperfClient(**client_params),
                                 job_level=ResultLevel.NORMAL)
