@@ -1,6 +1,6 @@
 import re
 
-from lnst.Common.Parameters import IntParam
+from lnst.Common.Parameters import ListParam
 from lnst.Controller.Recipe import RecipeError
 from lnst.Controller.RecipeResults import ResultLevel
 from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
@@ -16,10 +16,10 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
         Note that this Mixin also stops the irqbalance service.
 
     :param dev_intr_cpu:
-        (optional test parameter) CPU id to which the device IRQs should be pinned
+        (optional test parameter) CPU ids to which the device IRQs should be pinned
     """
 
-    dev_intr_cpu = IntParam(mandatory=False)
+    dev_intr_cpu = ListParam(mandatory=False)
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
@@ -80,19 +80,20 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
             desc.append("Device irq configuration skipped.")
         return desc
 
-    def _pin_dev_interrupts(self, dev, cpu):
+    def _pin_dev_interrupts(self, dev, cpus):
         netns = dev.netns
         cpu_info = netns.run("lscpu", job_level=ResultLevel.DEBUG).stdout
         regex = "CPU\(s\): *([0-9]*)"
         num_cpus = int(re.search(regex, cpu_info).groups()[0])
-        if cpu < 0 or cpu > num_cpus - 1:
-            raise RecipeError(
-                "Invalid CPU value given: %d. Accepted value %s."
-                % (
-                    cpu,
-                    "is: 0" if num_cpus == 1 else "are: 0..%d" % (num_cpus - 1),
+        for cpu in cpus:
+            if cpu < 0 or cpu > num_cpus - 1:
+                raise RecipeError(
+                    "Invalid CPU value given: %d. Accepted value %s."
+                    % (
+                        cpu,
+                        "is: 0" if num_cpus == 1 else "are: 0..%d" % (num_cpus - 1),
+                    )
                 )
-            )
 
         res = netns.run(
             "grep {} /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
@@ -110,9 +111,10 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
             )
             intrs = res.stdout
 
-        for intr in intrs.split("\n"):
+        for i, intr in enumerate(intrs.split("\n")):
             try:
                 int(intr)
+                cpu = cpus[i % len(cpus)]
                 netns.run(
                     "echo -n {} > /proc/irq/{}/smp_affinity_list".format(
                         cpu, intr.strip()
