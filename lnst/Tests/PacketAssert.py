@@ -37,25 +37,6 @@ class PacketAssert(BaseTestModule):
                     return
             self._p_recv += 1
 
-    def _is_real_err(self, err):
-
-        ignore_exprs = [r"tcpdump: verbose output suppressed, use -v or -vv for full protocol decode",
-                        r"listening on %s, link-type .* \(.*\), capture size [0-9]* bytes" %
-                        self.params.interface.name, r"\d+ packets captured",
-                        r"\d+ packets received by filter", r"\d+ packets dropped by kernel"]
-
-        for line in err.split('\n'):
-            if not line:
-                continue
-            match = False
-            for expr in ignore_exprs:
-                if re.search(expr, line):
-                    match = True
-                    break
-            if not match:
-                return True
-        return False
-
     def run(self):
         self._res_data = {}
         if not is_installed("tcpdump"):
@@ -75,17 +56,14 @@ class PacketAssert(BaseTestModule):
         except:
             raise LnstError("Could not handle interrupt properly.")
 
-        with packet_assert_process.stdout, packet_assert_process.stderr:
-            stderr=packet_assert_process.stderr.read().decode()
-            stdout=packet_assert_process.stdout.read().decode()
+        stdout, stderr = packet_assert_process.communicate()
+        stdout = stdout.decode()
+        stderr = stderr.decode()
 
         self._res_data["stderr"] = stderr
-
-        if self._is_real_err(stderr):
-            self._res_data["msg"] = "errors reported by tcpdump"
-            logging.error(self._res_data["msg"])
-            logging.error(self._res_data["stderr"])
-            return False
+        # tcpdump always reports information to stderr, there may be actual
+        # errors but also just generic debug information
+        logging.debug(self._res_data["stderr"])
 
         for line in stdout.split("\n"):
             self._check_line(line)
@@ -93,4 +71,7 @@ class PacketAssert(BaseTestModule):
         logging.debug("Capturing finised. Received %d packets." % self._p_recv)
         self._res_data["p_recv"] = self._p_recv
 
-        return True
+        if packet_assert_process.returncode != 0:
+            return False
+        else:
+            return True
