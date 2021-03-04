@@ -28,15 +28,15 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         net_addr = "192.168.0"
         vxlan_net_addr = "192.168.100"
         vxlan_net_addr6 = "fc00:0:0:0"
-        #TODO: Enable usage of a proper address (like 239.1.1.1)
-        vxlan_group_ip = "192.168.0.3"
+        vxlan_group_ip = "239.1.1.1"
 
         host1.br0 = BridgeDevice()
         host1.br0.slave_add(host1.eth0)
         host1.br0.slave_add(host1.tap0)
 
-        for machine in [host1, guest1, host2]:
-            machine.vxlan0 = VxlanDevice(vxlan_id=1, group=vxlan_group_ip)
+        host1.vxlan0 = VxlanDevice(vxlan_id=1, realdev=host1.br0, group=vxlan_group_ip)
+        for machine in [guest1, host2]:
+            machine.vxlan0 = VxlanDevice(vxlan_id=1, realdev=machine.eth0, group=vxlan_group_ip)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.br0, host1.vxlan0,
