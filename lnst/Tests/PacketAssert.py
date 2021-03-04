@@ -1,15 +1,22 @@
 import re
 import logging
 import subprocess
-from lnst.Common.Parameters import StrParam, ListParam, DeviceParam, IntParam, BoolParam
+from lnst.Common.Parameters import (
+    StrParam,
+    ListParam,
+    DeviceParam,
+    IntParam,
+    BoolParam,
+)
 from lnst.Devices.Device import Device
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Common.LnstError import LnstError
 
+
 class PacketAssert(BaseTestModule):
     interface = DeviceParam(mandatory=True)
-    p_filter = StrParam(default='')
+    p_filter = StrParam(default="")
     grep_for = ListParam(default=[])
     promiscuous = BoolParam(default=False)
     _grep_exprs = []
@@ -26,7 +33,7 @@ class PacketAssert(BaseTestModule):
             cmd += " -p"
         iface = self.params.interface.name
         filt = self.params.p_filter
-        cmd += " -nn -i %s \"%s\"" % (iface, filt)
+        cmd += ' -nn -i %s "%s"' % (iface, filt)
 
         return cmd
 
@@ -48,8 +55,13 @@ class PacketAssert(BaseTestModule):
         cmd = self._compose_cmd()
         logging.debug("compiled command: {}".format(cmd))
 
-        packet_assert_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE, close_fds=True)
+        packet_assert_process = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=True,
+        )
 
         try:
             self.wait_for_interrupt()
