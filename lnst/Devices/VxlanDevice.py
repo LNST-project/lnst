@@ -31,6 +31,9 @@ class VxlanDevice(SoftDevice):
         if "group" not in kwargs and "remote" not in kwargs:
             raise DeviceError("One of group or remote must be specified for vxlan")
 
+        if "group" in kwargs and "realdev" not in kwargs:
+            raise DeviceError("'group' requires realdev to be specified")
+
         if kwargs.get("remote", False) and ipaddress(kwargs["remote"]).is_multicast:
             logging.debug("ATTENTION: non-unicast remote IP set: %s" % str(kwargs["remote"]))
 
