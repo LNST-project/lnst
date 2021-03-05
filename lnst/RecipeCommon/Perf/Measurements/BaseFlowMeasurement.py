@@ -19,7 +19,8 @@ class Flow(object):
                  receiver_nic=None,
                  receiver_port=None,
                  msg_size=None,
-                 cpupin=None):
+                 cpupin=None,
+                 aggregated_flow=False):
         self._type = type
 
         self._generator = generator
@@ -34,6 +35,7 @@ class Flow(object):
         self._duration = duration
         self._parallel_streams = parallel_streams
         self._cpupin = cpupin
+        self._aggregated_flow=aggregated_flow
 
     @property
     def type(self):
@@ -83,6 +85,10 @@ class Flow(object):
     def cpupin(self):
         return self._cpupin
 
+    @property
+    def aggregated_flow(self):
+        return self._aggregated_flow
+
     def __repr__(self):
         string = """
         Flow(
@@ -98,6 +104,7 @@ class Flow(object):
             duration={duration},
             parallel_streams={parallel_streams},
             cpupin={cpupin},
+            aggregated_flow={aggregated_flow},
         )""".format(
             type=self.type,
             generator=str(self.generator),
@@ -111,6 +118,7 @@ class Flow(object):
             duration=self.duration,
             parallel_streams=self.parallel_streams,
             cpupin=self.cpupin,
+            aggregated_flow=self._aggregated_flow,
         )
         string = textwrap.dedent(string).strip()
         return string
@@ -340,7 +348,8 @@ class BaseFlowMeasurement(BaseMeasurement):
              msg_size=sample_flow.msg_size,
              duration=sample_flow.duration,
              parallel_streams=sample_flow.parallel_streams,
-             cpupin=None
+             cpupin=None,
+             aggregated_flow=True,
         )
 
         aggregated_result = AggregatedFlowMeasurementResults(
