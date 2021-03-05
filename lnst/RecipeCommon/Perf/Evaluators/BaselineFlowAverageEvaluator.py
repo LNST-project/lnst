@@ -30,16 +30,6 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
                 "receiver_cpu_stats",
             ]
 
-    def group_results(
-        self,
-        recipe: BaseRecipe,
-        recipe_conf: PerfRecipeConf,
-        results: List[PerfMeasurementResults],
-    ) -> List[List[PerfMeasurementResults]]:
-        new_results = results[0].measurement.aggregate_multi_flow_results(results)
-
-        return [new_results]
-
     def describe_group_results(
         self,
         recipe: BaseRecipe,
