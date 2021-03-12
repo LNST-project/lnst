@@ -33,6 +33,7 @@ class PerfReversibleFlowMixin(object):
         server_bind,
         server_port,
         msg_size,
+        cpupin,
     ) -> PerfFlow:
         if self.params.perf_reverse:
             return super()._create_perf_flow(
@@ -43,6 +44,7 @@ class PerfReversibleFlowMixin(object):
                     client_bind,
                     server_port,
                     msg_size,
+                    cpupin,
             )
         else:
             return super()._create_perf_flow(
@@ -53,4 +55,5 @@ class PerfReversibleFlowMixin(object):
                     server_bind,
                     server_port,
                     msg_size,
+                    cpupin,
             )
