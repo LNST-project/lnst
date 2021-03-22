@@ -302,7 +302,8 @@ class BaseFlowMeasurement(BaseMeasurement):
                     generator_flow_data=generator,
                     generator_cpu_data=generator_cpu,
                     receiver_flow_data=receiver,
-                    receiver_cpu_data=receiver_cpu))
+                    receiver_cpu_data=receiver_cpu,
+                    flow_results=flow_results))
 
     def aggregate_results(self, old, new):
         aggregated = []
