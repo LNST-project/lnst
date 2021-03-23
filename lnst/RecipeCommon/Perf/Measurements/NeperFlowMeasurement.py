@@ -78,6 +78,10 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         elif flow.cpupin is not None:
             raise RecipeError("Negative perf cpupin value provided.")
 
+        if flow.msg_size:
+            server_params["request_size"] = flow.msg_size
+            server_params["response_size"] = flow.msg_size
+
         return host.prepare_job(NeperServer(**server_params),
                                 job_level=ResultLevel.NORMAL)
 
