@@ -64,6 +64,9 @@ class NeperBase(BaseTestModule):
                                  universal_newlines=True, shell=True,
                                  close_fds=True, cwd=NEPER_PATH)
 
+            self._res_data["stderr"] = res.stderr
+            self._res_data["data"] = self._parse_result(res)
+
             if res.stderr != "":
                 self._res_data["msg"] = f"errors reported by {self.params.workload}"
                 logging.error(self._res_data["msg"])
@@ -75,8 +78,6 @@ class NeperBase(BaseTestModule):
                 logging.error(self._res_data["msg"])
                 return False
 
-            self._res_data["data"] = self._parse_result(res)
-            self._res_data["stderr"] = res.stderr
             self._res_data["samples"] = [r for r in csv.DictReader(sf)]
 
         return True
