@@ -20,10 +20,16 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         self._flows = flows
         self._running_measurements = []
         self._finished_measurements = []
+        self._host_versions = {}
 
     @property
     def flows(self) -> List[Flow]:
         return self._flows
+
+    @property
+    def version(self):
+        return {"measurement_version": self._MEASUREMENT_VERSION,
+                "hosts_neper_versions": self._host_versions}
 
     def start(self):
         if len(self._running_measurements) > 0:
@@ -127,10 +133,14 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
             generator_stats = self._parse_job_samples(test_flow.client_job)
             flow_results.generator_results = generator_stats[0]
             flow_results.generator_cpu_stats = generator_stats[1]
+            self._host_versions[test_flow.flow.generator] = \
+                test_flow.client_job.result["data"]["VERSION"]
 
             receiver_stats = self._parse_job_samples(test_flow.server_job)
             flow_results.receiver_results = receiver_stats[0]
             flow_results.receiver_cpu_stats = receiver_stats[1]
+            self._host_versions[test_flow.flow.receiver] = \
+                test_flow.server_job.result["data"]["VERSION"]
 
             results.append(flow_results)
 
