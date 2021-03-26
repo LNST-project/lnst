@@ -62,12 +62,12 @@ A minimal "hello world" example of an executable test script looks like this:
         machine2.nic1 = DeviceReq(label="net1")
 
         def test(self):
-            self.matched.m1.nic1.ip_add("192.168.1.1/24")
-            self.matched.m1.nic1.up()
-            self.matched.m2.nic1.ip_add("192.168.1.2/24")
-            self.matched.m2.nic1.up()
+            self.matched.machine1.nic1.ip_add("192.168.1.1/24")
+            self.matched.machine1.nic1.up()
+            self.matched.machine2.nic1.ip_add("192.168.1.2/24")
+            self.matched.machine2.nic1.up()
 
-            self.matched.m1.run("ping 192.168.1.2")
+            self.matched.machine1.run("ping 192.168.1.2")
 
     ctl = Controller()
     recipe_instance = HelloWorldRecipe()
