@@ -139,3 +139,114 @@ Note: At startup, You may receive some errors of the following form:
 LNST probes network devices using `ethtool` on initialization. If those
 network devices do not support the specific `ethtool` command, you may
 receive these benign error messages.
+
+Run additional recipes
+======================
+
+LNST contains a number of recipe classes in ``lnst/Recipes``. These can be run by
+writing an executable python script to create an instance of a Controller class
+and an instance of the Test Recipe that we want to run, and calling the Controller.run()
+method to execute it.
+
+A minimal example of this for the ``NoVirtOvsVxlanRecipe`` recipe can be seen here:
+
+.. code-block:: python
+
+        from lnst.Controller import Controller, HostReq, DeviceReq, BaseRecipe
+        from lnst.Recipes.ENRT import NoVirtOvsVxlanRecipe
+
+        ctl = Controller()
+        recipe_instance = NoVirtOvsVxlanRecipe(driver="lnst")
+        ctl.run(recipe_instance)
+
+It should be noted that some recipes may have some pre-requisites. For example, this
+recipe required the ``iperf3`` package and OVS should be running or startable by
+``systemctl start openvswitch.service``
+
+This test requires that you have 2 test machines that are directly connected to
+each other. This also shows an example of passing the `driver` parameter to the
+test class. The `driver` parameter is used to modify the HW network requirements,
+specifically to request Devices. You can see the corresponding parameter in the
+XML definition of one of the two machines in the pool used in this test:
+
+.. code-block:: xml
+
+    <slavemachine>
+        <params>
+            <param name="hostname" value="HOSTNAME"/>
+            <param name="rpc_port" value="9999"/>
+        </params>
+        <interfaces>
+            <eth label="A" id="1">
+                <params>
+                    <param name="hwaddr" value="MAC_ADDRESS"/>
+                    <param name="driver" value="lnst"/>
+                </params>
+            </eth>
+        </interfaces>
+    </slavemachine>
+
+Additional parameters may be added to a recipe instantiation to configure the
+recipe. Some parameters may be specific for a particular recipe and others may
+apply to all recipes.
+
+For example, for ``NoVirtOvsVxlanRecipe``:
+
+.. code-block:: python
+
+        recipe_instance = NoVirtOvsVxlanRecipe(driver="lnst", perf_tests=["tcp_stream", "udp_stream"], perf_msg_sizes=[1400])
+
+``perf_tests`` specifies a list of perf tests to run for this recipe
+``perf_mesg_sizes`` specifies the message size to send when doing performance tests
+
+Other examples include:
+
+``perf_duration`` specifies the duration of test runs
+``perf_iterations`` specifies the number of iterations of a performance test to run
+
+If you write all of this into a ``hello_world2.py`` file you should now be able to
+execute this script by running::
+
+    python3 hello_world2.py
+
+If you have previously created your machine pool configuration (and added the driver
+parameter as indicated above), the recipe should run to completion.
+
+Debugging when things go wrong
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additional debug information on the slaves can be seen by running the ``lnst-slave``
+application with the ``-d`` flag. Additional debug information on the controller can
+be seen by adding the ``debug`` paramter to the instantiation of the ``controller``
+class.
+
+.. code-block:: bash
+
+        ctl = Controller(debug=1)
+
+Logs should also be saved in the ``Logs`` directory.
+
+Printing summary information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also modify your ``hello_world2.py`` application to print summary information
+at the end of the run:
+
+.. code-block:: xml
+
+        from lnst.Controller import Controller, HostReq, DeviceReq, BaseRecipe
+        from lnst.Recipes.ENRT import NoVirtOvsVxlanRecipe
+
+        from lnst.Controller.RunSummaryFormatter import RunSummaryFormatter
+        from lnst.Controller.RecipeResults import ResultLevel
+        import logging
+
+        ctl = Controller(debug=1)
+        recipe_instance = NoVirtOvsVxlanRecipe(driver="lnst", perf_tests=["tcp_stream", "udp_stream"], perf_msg_sizes=[1400])
+        ctl.run(recipe_instance)
+
+        summary_fmt = RunSummaryFormatter(
+            level=ResultLevel.IMPORTANT + 0, colourize=True
+        )
+        for run in recipe_instance.runs:
+            logging.info(summary_fmt.format_run(run))
