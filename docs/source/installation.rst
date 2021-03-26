@@ -131,3 +131,11 @@ the same interface.
 
 After creating your pool, you should now be able to run the ``hello_world.py``
 script successfully and receive back some logs about what happened.
+
+Note: At startup, You may receive some errors of the following form:
+
+``ERROR: Command "ethtool -a virbr0" execution failed (exited with 76)``
+
+LNST probes network devices using `ethtool` on initialization. If those
+network devices do not support the specific `ethtool` command, you may
+receive these benign error messages.
