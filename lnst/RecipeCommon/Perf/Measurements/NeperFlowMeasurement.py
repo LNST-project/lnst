@@ -51,7 +51,7 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
             for flow in test_flows:
                 client_neper = flow.client_job.what
                 flow.client_job.wait(timeout=client_neper.runtime_estimate())
-                flow.server_job.wait(timeout=5)
+                flow.server_job.wait(timeout=10)
         finally:
             for flow in test_flows:
                 flow.server_job.kill()
