@@ -1,6 +1,8 @@
 import re
 import logging
 import subprocess
+import signal
+from select import select
 from lnst.Common.Parameters import (
     StrParam,
     ListParam,
@@ -10,9 +12,12 @@ from lnst.Common.Parameters import (
 )
 from lnst.Devices.Device import Device
 from lnst.Common.Utils import is_installed
-from lnst.Tests.BaseTestModule import BaseTestModule
+from lnst.Tests.BaseTestModule import BaseTestModule, InterruptException
 from lnst.Common.LnstError import LnstError
 
+
+def interrupt_handler(signum, frame):
+    raise InterruptException()
 
 class PacketAssert(BaseTestModule):
     interface = DeviceParam(mandatory=True)
@@ -33,7 +38,7 @@ class PacketAssert(BaseTestModule):
             cmd += " -p"
         iface = self.params.interface.name
         filt = self.params.p_filter
-        cmd += ' -nn -i %s "%s"' % (iface, filt)
+        cmd += ' -nn -U -i %s "%s"' % (iface, filt)
 
         return cmd
 
@@ -63,12 +68,27 @@ class PacketAssert(BaseTestModule):
             close_fds=True,
         )
 
+        stdout = bytearray()
+        stderr = bytearray()
         try:
-            self.wait_for_interrupt()
-        except:
-            raise LnstError("Could not handle interrupt properly.")
+            old_handler = signal.signal(signal.SIGINT, interrupt_handler)
+            # for longer, or larger streams tcpdump can fill the entire io
+            # buffer for the stdout/stderr files, because of that we need to
+            # read the files continuosly
+            while True:
+                rl, wl, xl = select([packet_assert_process.stdout, packet_assert_process.stderr], [], [])
+                if packet_assert_process.stdout in rl:
+                    stdout += packet_assert_process.stdout.readline()
+                if packet_assert_process.stderr in rl:
+                    stderr += packet_assert_process.stderr.readline()
+        except InterruptException:
+            pass
+        finally:
+            signal.signal(signal.SIGINT, old_handler)
 
-        stdout, stderr = packet_assert_process.communicate()
+        packet_assert_process.wait()
+        stdout += packet_assert_process.stdout.read()
+        stderr += packet_assert_process.stderr.read()
         stdout = stdout.decode()
         stderr = stderr.decode()
 
