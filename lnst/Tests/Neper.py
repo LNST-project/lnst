@@ -1,3 +1,4 @@
+import contextlib
 import csv
 import logging
 import os
@@ -6,9 +7,10 @@ import re
 import subprocess
 import time
 import tempfile
-from typing import List, Dict
+from typing import List, Dict, TextIO, Union
 
 from lnst.Common.Parameters import HostnameOrIpParam, StrParam, IntParam, IpParam, ChoiceParam
+from lnst.Common.Utils import nullcontext
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 NEPER_OUT_RE = re.compile(r"^(?P<key>.*)=(?P<value>.*)$", flags=re.M)
@@ -43,6 +45,9 @@ class NeperBase(BaseTestModule):
                 data[k] = v
         return data
 
+    def is_crr_server(self):
+        return self._role == "server" and self.params.workload == "tcp_crr"
+
     def run(self):
         self._res_data = {}
         if not NEPER_PATH.joinpath(self.params.workload).exists():
@@ -51,10 +56,15 @@ class NeperBase(BaseTestModule):
             logging.error(self._res_data['msg'])
             return False
 
-        with tempfile.NamedTemporaryFile('r', prefix='neper-samples-',
-                                         suffix='.csv', newline='') as sf:
+        if self.is_crr_server():
+            cm = nullcontext()
+        else:
+            cm = tempfile.NamedTemporaryFile('r', prefix='neper-samples-',
+                                         suffix='.csv', newline='')
 
-            cmd = self._compose_cmd(sf.name)
+        with cm as sf:
+
+            cmd = self._compose_cmd(sf)
             logging.debug(f"compiled command: {cmd}")
             logging.debug(f"running as {self._role}")
 
@@ -78,13 +88,16 @@ class NeperBase(BaseTestModule):
                 logging.error(self._res_data["msg"])
                 return False
 
-            self._res_data["samples"] = [r for r in csv.DictReader(sf)]
+            if not self.is_crr_server():
+                self._res_data["samples"] = [r for r in csv.DictReader(sf)]
 
         return True
 
-    def _compose_cmd(self, samples_path:str) -> str:
-        cmd = [f"./{self.params.workload}",
-               f"--all-samples={samples_path}"]
+    def _compose_cmd(self, sample_file: Union[TextIO, None]) -> str:
+        cmd = [f"./{self.params.workload}"]
+
+        if not self.is_crr_server():
+            cmd.append(f"--all-samples={sample_file.name}")
 
         if self._role == "client":
             cmd.append("-c")
