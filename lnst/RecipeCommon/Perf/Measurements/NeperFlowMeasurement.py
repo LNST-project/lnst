@@ -220,9 +220,9 @@ def get_interval(s_start: Dict, s_end: Dict, job_start: float,
     # unix time using job_start as reference
     timestamp = job_start + (s_start_time - neper_start)
     duration = s_end_time - s_start_time
-    cpu_usage = (utime_delta + stime_delta) / duration
+    cpu_usage = ((utime_delta + stime_delta) / duration) * 100
 
     interval = PerfInterval(transactions, duration, 'transactions', timestamp)
-    cpu_interval = PerfInterval(cpu_usage, duration, 'cpu_percent', timestamp)
+    cpu_interval = PerfInterval(cpu_usage * duration, duration, 'cpu_percent', timestamp)
 
     return interval, cpu_interval
