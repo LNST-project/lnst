@@ -558,6 +558,14 @@ class Device(object, metaclass=DeviceMeta):
         if ip not in self.ips:
             self._ipr_wrapper("addr", "add", index=self.ifindex,
                               address=str(ip), mask=ip.prefixlen)
+        for i in range(5):
+            logging.debug("Waiting for ip address to be added {} of 5".format(i))
+            time.sleep(1)
+            self._if_manager.rescan_devices()
+            if addr in self.ips:
+                break
+        else:
+            raise DeviceError("Failed to configure ip address {}".format(str(ip)))
 
     def ip_add(self, addr):
         """add an ip address or a list of ip addresses
