@@ -7,6 +7,7 @@ from lnst.Devices.TeamDevice import TeamDevice
 from lnst.Devices.MacvlanDevice import MacvlanDevice
 from lnst.Devices.VlanDevice import VlanDevice
 from lnst.Devices.VxlanDevice import VxlanDevice
+from lnst.Devices.GreDevice import GreDevice
 from lnst.Devices.VtiDevice import VtiDevice, Vti6Device
 from lnst.Devices.VethDevice import VethDevice, PairedVethDevice
 from lnst.Devices.VethPair import VethPair
@@ -20,6 +21,7 @@ device_classes = [
         ("MacvlanDevice", MacvlanDevice),
         ("VlanDevice", VlanDevice),
         ("VxlanDevice", VxlanDevice),
+        ("GreDevice", GreDevice),
         ("VethDevice", VethDevice),
         ("PairedVethDevice", PairedVethDevice),
         ("VtiDevice", VtiDevice),
