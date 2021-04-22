@@ -9,3 +9,4 @@ Test developer API
    controller_api
    parameters
    recipe_run_export
+   implementing_new_device
