@@ -26,5 +26,5 @@ class NetNamespace(Namespace):
     def __init__(self, name):
         super(NetNamespace, self).__init__(None)
 
-        self._nsname = name
+        self._name = name
         #self.jobs = None #TODO
