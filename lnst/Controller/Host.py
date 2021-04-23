@@ -71,7 +71,7 @@ class Host(Namespace):
     def _custom_setattr(self, name, value):
         if not super(Host, self)._custom_setattr(name, value):
             if isinstance(value, NetNamespace):
-                self._machine.add_netns(value.name)
+                self._machine.add_netns(value)
                 self._objects[name] = value
                 value._machine = self._machine
                 return True
