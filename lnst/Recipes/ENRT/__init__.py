@@ -82,3 +82,4 @@ from lnst.Recipes.ENRT.VxlanMulticastRecipe import VxlanMulticastRecipe
 from lnst.Recipes.ENRT.VxlanRemoteRecipe import VxlanRemoteRecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe

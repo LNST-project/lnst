@@ -8,5 +8,6 @@ Early Network Regression Testing (ENRT)
     :caption: ENRT Components
 
     base_enrt_class
+    base_enrt_tunnel_class
     config_mixins
     specific_scenarios
