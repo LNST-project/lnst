@@ -538,26 +538,56 @@ class SlaveMethods:
                 MS_BIND = 4096
                 MS_SLAVE = 1<<19
                 MS_REC = 16384
+                MS_SHARED = 1 << 20
                 libc = ctypes.CDLL(libc_name)
 
                 #based on ipnetns.c from the iproute2 project
                 #bind to named namespace
-                netns_path = "/var/run/netns/"
-                if not os.path.exists(netns_path):
-                    os.mkdir(netns_path, stat.S_IRWXU | stat.S_IRGRP |
+                netns_dir = "/var/run/netns/".encode("ascii")
+                if not os.path.exists(netns_dir):
+                    os.mkdir(netns_dir, stat.S_IRWXU | stat.S_IRGRP |
                                          stat.S_IXGRP | stat.S_IROTH |
                                          stat.S_IXOTH)
-                netns_path = netns_path + netns
-                f = os.open(netns_path, os.O_RDONLY | os.O_CREAT | os.O_EXCL, 0)
+
+                # this is a code mimicking the iproute2 implementation
+                # introduced by commit 58a3e8270f:
+                # modify all mounts in the files and subdirectories of
+                # /var/run/netns to be shared mount points so that unmount
+                # events can propagate, making it unlikely that "ip netns delete"
+                # will fail because a directory is mounted in another mount
+                # namespace
+                done = False
+                while libc.mount(b'', netns_dir, b'none', MS_SHARED | MS_REC, None) != 0:
+                    if done:
+                        raise OSError(ctypes.get_errno(), 'share rundir failed', netns)
+                    if libc.mount(netns_dir, netns_dir, b'none', MS_BIND | MS_REC,
+                                  None) != 0:
+                        raise OSError(ctypes.get_errno(), 'mount rundir failed', netns)
+                    done = True
+
+                netns_path = netns_dir + netns.encode("ascii")
+                try:
+                    f = os.open(netns_path, os.O_RDONLY | os.O_CREAT | os.O_EXCL, 0)
+                except FileExistsError:
+                    raise Exception("Network namespace {} already exists".format(netns))
+
                 os.close(f)
-                libc.unshare(CLONE_NEWNET)
-                libc.mount("/proc/self/ns/net", netns_path, "none", MS_BIND, 0)
+                if libc.unshare(CLONE_NEWNET) < 0:
+                    raise OSError(ctypes.get_errno(), 'unshare failed', netns)
+
+                if libc.mount(
+                        b'/proc/self/ns/net',
+                        netns_path,
+                        b'none',
+                        MS_BIND,
+                        None) < 0:
+                    raise OSError(ctypes.get_errno(), 'mount failed', netns)
 
                 #map network sysfs to new net
                 libc.unshare(CLONE_NEWNS)
-                libc.mount("", "/", "none", MS_SLAVE | MS_REC, 0)
-                libc.umount2("/sys", MNT_DETACH)
-                libc.mount(netns, "/sys", "sysfs", 0, 0)
+                libc.mount(b'', b'/', b'none', MS_SLAVE | MS_REC, None)
+                libc.umount2(b'/sys', MNT_DETACH)
+                libc.mount(netns, b'/sys', b'sysfs', 0, None)
 
                 #set ctl socket to pipe to main netns
                 self._server_handler.close_s_sock()
@@ -588,6 +618,7 @@ class SlaveMethods:
             libc_name = ctypes.util.find_library("c")
             libc = ctypes.CDLL(libc_name)
             netns_path = "/var/run/netns/" + netns
+            netns_path = netns_path.encode('ascii')
 
             netns_pid = self._net_namespaces[netns]["pid"]
             os.kill(netns_pid, signal.SIGUSR1)
@@ -597,8 +628,8 @@ class SlaveMethods:
             try:
                 libc.umount2(netns_path, MNT_DETACH)
                 os.unlink(netns_path)
-            except:
-                logging.warning("Unable to remove named namespace %s." % netns_path)
+            except Exception as e:
+                logging.warning("Unable to remove named namespace %s. %s" % (netns_path, e))
 
             logging.debug("Network namespace %s removed." % netns)
 
