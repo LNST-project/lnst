@@ -578,10 +578,10 @@ class Machine(object):
 
     def add_netns(self, netns):
         self._namespaces.append(netns)
-        return self.rpc_call("add_namespace", netns)
+        return self.rpc_call("add_namespace", netns.name)
 
     def del_netns(self, netns):
-        return self.rpc_call("del_namespace", netns)
+        return self.rpc_call("del_namespace", netns.name)
 
     def del_namespaces(self):
         for netns in self._namespaces:
