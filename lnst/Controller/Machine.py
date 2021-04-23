@@ -324,7 +324,7 @@ class Machine(object):
             module_name = cls.__module__
             self.rpc_call("map_device_class", cls_name, module_name)
 
-    def send_class(self, cls):
+    def send_class(self, cls, netns=None):
         classes = [cls]
         classes.extend(self._get_base_classes(cls))
 
@@ -340,8 +340,8 @@ class Machine(object):
             if filename[-3:] == "pyc":
                 filename = filename[:-1]
 
-            res_hash = self.sync_resource(module_name, filename)
-            self.rpc_call("load_cached_module", module_name, res_hash)
+            res_hash = self.sync_resource(module_name, filename, netns=netns)
+            self.rpc_call("load_cached_module", module_name, res_hash, netns=netns)
 
     def is_git_version(self, version):
         try:
@@ -401,7 +401,11 @@ class Machine(object):
         self._jobs[job.id] = job
 
         if job.type == "module":
-            self.send_class(job._what.__class__)
+            # we need to send the class also into the root net namespace
+            # so that the Slave instance can unpickle the message
+            if job.netns is not None:
+                self.send_class(job._what.__class__, netns=None)
+            self.send_class(job._what.__class__, netns=job.netns)
 
         logging.debug("Host %s executing job %d: %s" %
                      (self._id, job.id, str(job)))
@@ -551,18 +555,18 @@ class Machine(object):
         local_file.close()
         self.rpc_call("finish_copy_from", remote_path)
 
-    def sync_resource(self, res_name, file_path):
+    def sync_resource(self, res_name, file_path, netns=None):
         digest = sha256sum(file_path)
 
-        if not self.rpc_call("has_resource", digest):
+        if not self.rpc_call("has_resource", digest, netns=netns):
             msg = "Transfering %s to machine %s as '%s'" % (file_path,
                                                             self.get_id(),
                                                             res_name)
             logging.debug(msg)
 
-            remote_path = self.copy_file_to_machine(file_path)
+            remote_path = self.copy_file_to_machine(file_path, netns=netns)
             self.rpc_call("add_resource_to_cache",
-                           "file", remote_path, res_name)
+                           "file", remote_path, res_name, netns=netns)
         return digest
 
     def init_remote_class(self, cls, *args, **kwargs):
