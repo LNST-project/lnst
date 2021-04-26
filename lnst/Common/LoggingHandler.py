@@ -85,3 +85,15 @@ class TransmitHandler(logging.Handler):
 
     def close(self):
         logging.Handler.close(self)
+
+
+class ExportHandler(logging.Handler):
+    def __init__(self, logs):
+        logging.Handler.__init__(self)
+        self._log_list = logs
+
+    def emit(self, record):
+        self._log_list.append(record)
+
+    def close(self):
+        logging.Handler.close(self)
