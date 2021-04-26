@@ -163,11 +163,12 @@ class BaseRecipe(object):
 
 
 class RecipeRun(object):
-    def __init__(self, recipe: BaseRecipe, match, desc=None, log_dir=None):
+    def __init__(self, recipe: BaseRecipe, match, desc=None, log_dir=None, log_list=None):
         self._match = match
         self._desc = desc
         self._results = []
         self._log_dir = log_dir
+        self._log_list = log_list
         self._recipe = recipe
         self._datetime = datetime.datetime.now()
         self._environ = os.environ.copy()
@@ -194,6 +195,10 @@ class RecipeRun(object):
     @property
     def log_dir(self):
         return self._log_dir
+
+    @property
+    def log_list(self):
+        return self._log_list
 
     @property
     def match(self):
