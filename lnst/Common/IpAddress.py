@@ -15,8 +15,9 @@ import socket
 from socket import inet_pton, inet_ntop, AF_INET, AF_INET6
 from lnst.Common.LnstError import LnstError
 
-#TODO create various generators for IPNetworks and IPaddresses in the same
-#network
+#TODO Replace this with Python's builtin ipaddress module.
+# To make use of its IP address generators.
+# https://docs.python.org/3/library/ipaddress.html#module-ipaddress
 
 class BaseIpAddress(object):
     def __init__(self, addr, flags=None):
