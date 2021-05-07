@@ -12,7 +12,9 @@ from lnst.RecipeCommon.LibvirtControl import LibvirtControl
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 
-VirtioType = Enum('VirtType', 'VHOST_USER, VHOST_NET')
+class VirtioType(Enum):
+    VHOST_USER = 1
+    VHOST_NET = 2
 
 
 class VirtioDevice(object):
