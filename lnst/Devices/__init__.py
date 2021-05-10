@@ -14,6 +14,7 @@ from lnst.Devices.VtiDevice import VtiDevice, Vti6Device
 from lnst.Devices.VethDevice import VethDevice, PairedVethDevice
 from lnst.Devices.VethPair import VethPair
 from lnst.Devices.MacsecDevice import MacsecDevice
+from lnst.Devices.L2TPSessionDevice import L2TPSessionDevice
 from lnst.Devices.RemoteDevice import RemoteDevice, remotedev_decorator
 
 device_classes = [
@@ -32,7 +33,8 @@ device_classes = [
         ("Vti6Device", Vti6Device),
         ("BondDevice", BondDevice),
         ("TeamDevice", TeamDevice),
-        ("MacsecDevice", MacsecDevice)]
+        ("MacsecDevice", MacsecDevice),
+        ("L2TPSessionDevice", L2TPSessionDevice)]
 
 for name, cls in device_classes:
     globals()[name] = remotedev_decorator(cls)
