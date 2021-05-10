@@ -28,9 +28,6 @@ class SoftDevice(Device):
 
         self._bulk_enabled = True
 
-        self._init_generic = {"IFLA_LINKINFO": {
-                                "attrs": [("IFLA_INFO_KIND", self._link_type)]}}
-
         if "name" not in kwargs:
             kwargs["name"] = ifmanager.assign_name(self._name_template)
 
