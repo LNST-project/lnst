@@ -565,9 +565,6 @@ class Device(object, metaclass=DeviceMeta):
             log_exc_traceback()
             return ""
 
-    def _clear_ips(self):
-        self._ip_addrs = []
-
     def ip_add(self, addr, peer=None):
         """add an ip address
 
