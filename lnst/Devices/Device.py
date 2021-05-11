@@ -568,11 +568,17 @@ class Device(object, metaclass=DeviceMeta):
     def _clear_ips(self):
         self._ip_addrs = []
 
-    def _ip_add_one(self, addr):
+    def ip_add(self, addr):
+        """add an ip address
+
+        Args:
+            addr -- an address accepted by the ipaddress factory method
+        """
         ip = ipaddress(addr)
         if ip not in self.ips:
             self._ipr_wrapper("addr", "add", index=self.ifindex,
                               address=str(ip), mask=ip.prefixlen)
+
         for i in range(5):
             logging.debug("Waiting for ip address to be added {} of 5".format(i))
             time.sleep(1)
@@ -582,40 +588,16 @@ class Device(object, metaclass=DeviceMeta):
         else:
             raise DeviceError("Failed to configure ip address {}".format(str(ip)))
 
-    def ip_add(self, addr):
-        """add an ip address or a list of ip addresses
+    def ip_del(self, addr):
+        """remove an ip address
 
         Args:
             addr -- an address accepted by the ipaddress factory method
-                    or a list of addresses accepted by the ipaddress
-                    factory method
         """
-
-        if isinstance(addr, list):
-            for oneaddr in addr:
-                self._ip_add_one(oneaddr)
-        else:
-            self._ip_add_one(addr)
-
-    def _ip_del_one(self, addr):
         ip = ipaddress(addr)
         if ip in self.ips:
             self._ipr_wrapper("addr", "del", index=self.ifindex,
                               address=str(ip), mask=ip.prefixlen)
-
-    def ip_del(self, addr):
-        """remove an ip address or a list of ip addresses
-
-        Args:
-            addr -- an address accepted by the ipaddress factory method
-                    or a list of addresses accepted by the ipaddress
-                    factory method
-        """
-        if isinstance(addr, list):
-            for oneaddr in addr:
-                self._ip_del_one(oneaddr)
-        else:
-            self._ip_del_one(addr)
 
     def ip_flush(self, scope=0):
         """flush all ip addresses of the device"""
