@@ -13,6 +13,10 @@ class RatePingEvaluator(BaseResultEvaluator):
                     )
 
     def evaluate_results(self, recipe, result):
+        if result is None or 'rate' not in result:
+            recipe.add_result(False, 'Insufficient data for the evaluation of Ping test')
+            return
+
         result_status = True
         ping_rate = int(result['rate'])
 
