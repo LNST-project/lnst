@@ -568,16 +568,26 @@ class Device(object, metaclass=DeviceMeta):
     def _clear_ips(self):
         self._ip_addrs = []
 
-    def ip_add(self, addr):
+    def ip_add(self, addr, peer=None):
         """add an ip address
 
         Args:
             addr -- an address accepted by the ipaddress factory method
+            peer -- an address of a peer interface for point-to-point
+                    deployments, accepted by the ipaddress factory method
         """
         ip = ipaddress(addr)
         if ip not in self.ips:
-            self._ipr_wrapper("addr", "add", index=self.ifindex,
-                              address=str(ip), mask=ip.prefixlen)
+            kwargs = dict(
+                index=self.ifindex,
+                local=str(ip),
+                address=str(ip),
+                mask=ip.prefixlen
+            )
+            if peer:
+                kwargs['address'] = str(ipaddress(peer))
+
+            self._ipr_wrapper("addr", "add", **kwargs)
 
         for i in range(5):
             logging.debug("Waiting for ip address to be added {} of 5".format(i))
