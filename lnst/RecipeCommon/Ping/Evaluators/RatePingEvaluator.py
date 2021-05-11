@@ -43,9 +43,7 @@ class RatePingEvaluator(BaseResultEvaluator):
                     )
 
         if self.rate is not None:
-            rate_text = 'measured rate {} is {} rate({})'.format(
-                    ping_rate, self.rate)
-
+            rate_text = 'measured rate {} is {} rate({})'
             if ping_rate != int(self.rate):
                 result_status = False
                 result_text.append(
