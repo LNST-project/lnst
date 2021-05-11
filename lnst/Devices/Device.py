@@ -25,7 +25,7 @@ from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
 from lnst.Common.DeviceError import DeviceFeatureNotSupported
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import ipaddress, AF_INET
 from lnst.Common.HWAddress import hwaddress
 
 from pyroute2.netlink.rtnl import RTM_NEWLINK
@@ -205,8 +205,23 @@ class Device(object, metaclass=DeviceMeta):
         if nl_msg['header']['type'] == RTM_NEWLINK:
             self._nl_msg = nl_msg
         elif nl_msg['header']['type'] == RTM_NEWADDR:
-            addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'),
-                             flags=nl_msg.get_attr("IFA_FLAGS"))
+            if nl_msg['family'] == AF_INET:
+                """
+                from if_addr.h:
+                /*
+                 * Important comment:
+                 * IFA_ADDRESS is prefix address, rather than local interface address.
+                 * It makes no difference for normally configured broadcast interfaces,
+                 * but for point-to-point IFA_ADDRESS is DESTINATION address,
+                 * local address is supplied in IFA_LOCAL attribute.
+                 */
+                """
+                addr = ipaddress(nl_msg.get_attr('IFA_LOCAL'),
+                                 flags=nl_msg.get_attr("IFA_FLAGS"))
+            else:
+                addr = ipaddress(nl_msg.get_attr('IFA_ADDRESS'),
+                                 flags=nl_msg.get_attr("IFA_FLAGS"))
+
             addr.prefixlen = nl_msg["prefixlen"]
 
             if addr not in self._ip_addrs:
