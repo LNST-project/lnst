@@ -646,6 +646,9 @@ class SlaveMethods:
         #TODO check if device appeared in the destination namespace
         return True
 
+    def remap_device(self, ifindex, clsname, args=[], kwargs={}):
+        self._if_manager.remap_device(ifindex, clsname, args, kwargs)
+
     # def return_if_netns(self, if_id):
         # device = self._if_manager.get_mapped_device(if_id)
         # if device.get_netns() == None:

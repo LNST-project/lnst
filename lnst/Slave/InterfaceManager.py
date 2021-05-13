@@ -221,6 +221,20 @@ class InterfaceManager(object):
         else:
             raise DeviceError("Device creation failed")
 
+    def remap_device(self, ifindex, clsname, args=[], kwargs={}):
+        devcls = self._device_classes[clsname]
+        old_device = self.get_device(ifindex)
+        kwargs["name"] = old_device.name
+
+        try:
+            remapped_device = devcls(self, *args, **kwargs)
+        except KeyError as e:
+            raise DeviceConfigError("%s is a mandatory argument" % e)
+        remapped_device._bulk_enabled = False
+        remapped_device.ifindex = ifindex
+        self.replace_dev(ifindex, remapped_device)
+        self.rescan_devices()
+
     def replace_dev(self, if_id, dev):
         del self._devices[if_id]
         self._devices[if_id] = dev

@@ -141,6 +141,16 @@ class Machine(object):
 
     def remote_device_set_netns(self, dev, dst, src):
         self.rpc_call("set_dev_netns", dev, dst.name, netns=src)
+        dev_clsname = dev._dev_cls.__name__
+        dev_args = dev._dev_args
+        dev_kwargs = dev._dev_kwargs
+
+        self.rpc_call("remap_device",
+                dev.ifindex,
+                clsname=dev_clsname,
+                args=dev_args,
+                kwargs=dev_kwargs,
+                netns=dst)
 
     def remote_device_method(self, index, method_name, args, kwargs, netns):
         config_res = DeviceMethodCallResult(
