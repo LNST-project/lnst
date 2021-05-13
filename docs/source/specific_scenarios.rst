@@ -12,4 +12,5 @@ Specific ENRT scenarios
     ip6gre_tunnel_recipe
     sit_tunnel_recipe
     ipip_tunnel_recipe
+    ip6tnl_tunnel_recipe
     l2tp_tunnel_recipe
