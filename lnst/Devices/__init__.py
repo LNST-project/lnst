@@ -10,6 +10,7 @@ from lnst.Devices.VxlanDevice import VxlanDevice
 from lnst.Devices.GreDevice import GreDevice
 from lnst.Devices.Ip6GreDevice import Ip6GreDevice
 from lnst.Devices.SitDevice import SitDevice
+from lnst.Devices.IpIpDevice import IpIpDevice
 from lnst.Devices.VtiDevice import VtiDevice, Vti6Device
 from lnst.Devices.VethDevice import VethDevice, PairedVethDevice
 from lnst.Devices.VethPair import VethPair
@@ -27,6 +28,7 @@ device_classes = [
         ("GreDevice", GreDevice),
         ("Ip6GreDevice", Ip6GreDevice),
         ("SitDevice", SitDevice),
+        ("IpIpDevice", IpIpDevice),
         ("VethDevice", VethDevice),
         ("PairedVethDevice", PairedVethDevice),
         ("VtiDevice", VtiDevice),
