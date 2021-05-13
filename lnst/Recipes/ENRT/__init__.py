@@ -84,6 +84,7 @@ from lnst.Recipes.ENRT.GreTunnelRecipe import GreTunnelRecipe
 from lnst.Recipes.ENRT.GreTunnelOverBondRecipe import GreTunnelOverBondRecipe
 from lnst.Recipes.ENRT.Ip6GreTunnelRecipe import Ip6GreTunnelRecipe
 from lnst.Recipes.ENRT.SitTunnelRecipe import SitTunnelRecipe
+from lnst.Recipes.ENRT.IpIpTunnelRecipe import IpIpTunnelRecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
