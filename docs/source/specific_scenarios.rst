@@ -9,4 +9,5 @@ Specific ENRT scenarios
     vlans_over_bond_recipe
     gre_tunnel_recipe
     ip6gre_tunnel_recipe
+    sit_tunnel_recipe
     l2tp_tunnel_recipe
