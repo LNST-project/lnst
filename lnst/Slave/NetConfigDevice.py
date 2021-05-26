@@ -105,7 +105,7 @@ class NetConfigDeviceEth(NetConfigDeviceGeneric):
 
     def deconfigure(self):
         config = self._dev_config
-        exec_cmd("ethtool -s %s autoneg on" % config["name"])
+        exec_cmd("ethtool -s %s autoneg on" % config["name"], die_on_err=False)
         if "netem_cmd" in config:
             exec_cmd(config["netem_cmd"].replace("add", "del"))
         if "lldp" in config:
