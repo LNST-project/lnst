@@ -122,6 +122,7 @@ if ipv in [ 'ipv4', 'both' ]:
                                              r'kernel_release',
                                              r'redhat_release',
                                              r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                             r'testmachine\d+\.interface_tap\d+.devname',
                                              r'guest\d+\.hostname',
                                              r'guest\d+\.interface_eth\d+\.hwaddr',
                                              r'test_if\.hwaddr'])
@@ -156,6 +157,7 @@ if ipv in [ 'ipv4', 'both' ]:
                                              r'kernel_release',
                                              r'redhat_release',
                                              r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                             r'testmachine\d+\.interface_tap\d+.devname',
                                              r'guest\d+\.hostname',
                                              r'guest\d+\.interface_eth\d+\.hwaddr',
                                              r'test_if\.hwaddr'])
@@ -191,6 +193,7 @@ if ipv in [ 'ipv6', 'both' ]:
                                              r'kernel_release',
                                              r'redhat_release',
                                              r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                             r'testmachine\d+\.interface_tap\d+.devname',
                                              r'guest\d+\.hostname',
                                              r'guest\d+\.interface_eth\d+\.hwaddr',
                                              r'test_if\.hwaddr'])
@@ -225,6 +228,7 @@ if ipv in [ 'ipv6', 'both' ]:
                                              r'kernel_release',
                                              r'redhat_release',
                                              r'testmachine\d+\.interface_tap\d+.hwaddr',
+                                             r'testmachine\d+\.interface_tap\d+.devname',
                                              r'guest\d+\.hostname',
                                              r'guest\d+\.interface_eth\d+\.hwaddr',
                                              r'test_if\.hwaddr'])
