@@ -23,4 +23,5 @@ Specific ENRT scenarios
     geneve_ovs_tunnel_recipe
     vxlan_lwt_tunnel_recipe
     vxlan_ovs_tunnel_recipe
+    vxlan_netns_tunnel_recipe
     l2tp_tunnel_recipe
