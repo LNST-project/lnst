@@ -17,7 +17,12 @@ from lnst.Devices.SoftDevice import SoftDevice
 class GreDevice(SoftDevice):
     _name_template = "t_gre"
     _link_type = "gre"
-    _mandatory_opts = ["remote"]
+
+    def __init__(self, ifmanager, *args, **kwargs):
+        if "external" not in kwargs:
+            self._mandatory_opts = ["remote"]
+
+        super(GreDevice, self).__init__(ifmanager, *args, **kwargs)
 
     @property
     def local(self):
@@ -41,4 +46,13 @@ class GreDevice(SoftDevice):
     @remote.setter
     def remote(self, val):
         self._set_linkinfo_data_attr("IFLA_GRE_REMOTE", str(ipaddress(val)))
+
+    @property
+    def external(self):
+        return self._get_linkinfo_data_attr("IFLA_GRE_COLLECT_METADATA") is not None
+
+    @external.setter
+    def external(self, val):
+        if val:
+            self._set_linkinfo_data_attr("IFLA_GRE_COLLECT_METADATA", True)
         self._nl_link_sync("set")
