@@ -25,6 +25,7 @@ from lnst.Controller.SlaveObject import SlaveObject
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
+from lnst.Devices.LoopbackDevice import LoopbackDevice
 
 # conditional support for libvirt
 if check_process_running("libvirtd"):
@@ -194,7 +195,10 @@ class Machine(object):
                         break
 
             if new_dev is None:
-                new_dev = RemoteDevice(Device)
+                if dev_data["driver"] == "loopback":
+                    new_dev = RemoteDevice(LoopbackDevice)
+                else:
+                    new_dev = RemoteDevice(Device)
                 new_dev._machine = self
                 new_dev.ifindex = ifindex
                 #if netns is not None:
