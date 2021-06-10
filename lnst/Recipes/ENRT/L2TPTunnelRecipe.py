@@ -1,5 +1,5 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Common.IpAddress import AF_INET
+from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.Parameters import ChoiceParam, StrParam
 from lnst.RecipeCommon.L2TPManager import L2TPManager
 from lnst.Devices import L2TPSessionDevice
@@ -39,9 +39,16 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
     The test wide configuration is implemented in the :any:`BaseTunnelRecipe`
     class.
 
-    :param l2tp_encapsulation:
-        (mandatory test parameter) the encapsulation mode for the L2TP tunnel,
-        can be either **udp** or **ip**
+    The recipe provides additional parameter:
+
+        :param carrier_ipversion:
+            This parameter specifies whether IPv4 or IPv6 addresses are
+            used for the underlying (carrier) network. The value is either
+            **ipv4** or **ipv6**
+
+        :param l2tp_encapsulation:
+            (mandatory test parameter) the encapsulation mode for the L2TP tunnel,
+            can be either **udp** or **ip**
     """
 
     host1 = HostReq()
@@ -50,6 +57,7 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
+    carrier_ipversion = ChoiceParam(type=StrParam, choices=set(["ipv4", "ipv6"]))
     l2tp_encapsulation = ChoiceParam(
         type=StrParam, choices=set(["udp", "ip"]), mandatory=True
     )
@@ -63,10 +71,15 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
         host2 = self.matched.host2
 
         for i, device in enumerate([host1.eth0, host2.eth0]):
-            device.ip_add("192.168.200." + str(i + 1) + "/24")
+            if self.params.carrier_ipversion == "ipv4":
+                device.ip_add("192.168.200." + str(i + 1) + "/24")
+            else:
+                device.ip_add("fc00::" + str(i + 1) + "/64")
+
             device.up()
             configuration.test_wide_devices.append(device)
 
+        self.wait_tentative_ips(configuration.test_wide_devices)
         configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
 
     def create_tunnel(self, configuration):
@@ -78,7 +91,11 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
         endpoint1, endpoint2 = configuration.tunnel_endpoints
         host1 = endpoint1.netns
         host2 = endpoint2.netns
-        ip_filter = {"family": AF_INET}
+        if self.params.carrier_ipversion == "ipv4":
+            ip_filter = {"family": AF_INET}
+        else:
+            ip_filter = {"family": AF_INET6, "is_link_local": False}
+
         endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
         endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
 
@@ -147,7 +164,11 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
     def get_packet_assert_config(self, ping_config):
         pa_kwargs = {}
 
-        ip_filter = {"family": AF_INET}
+        if self.params.carrier_ipversion == "ipv4":
+            ip_filter = {"family": AF_INET}
+        else:
+            ip_filter = {"family": AF_INET6, "is_link_local": False}
+
         m1_carrier = self.matched.host1.eth0
         m2_carrier = self.matched.host2.eth0
         m1_carrier_ip = m1_carrier.ips_filter(**ip_filter)[0]
@@ -158,15 +179,21 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
         encap ip: 192.168.200.1 > 192.168.200.2:  ip-proto-115 106
         """
 
-        if self.params.l2tp_encapsulation == 'ip':
-            pa_kwargs["p_filter"] = "ip proto 115"
-            grep_pattern = "IP {} > {}:[ ]*ip-proto-115".format(
-                m1_carrier_ip, m2_carrier_ip
+        if self.params.l2tp_encapsulation == "ip":
+            pa_kwargs["p_filter"] = "{} proto 115".format(
+                "ip" if self.params.carrier_ipversion == "ipv4" else "ip6",
             )
-        elif self.params.l2tp_encapsulation == 'udp':
+            grep_pattern = "{} {} > {}:[ ]*ip-proto-115".format(
+                "IP" if self.params.carrier_ipversion == "ipv4" else "IP6",
+                m1_carrier_ip,
+                m2_carrier_ip,
+            )
+        elif self.params.l2tp_encapsulation == "udp":
             pa_kwargs["p_filter"] = "udp"
-            grep_pattern = "IP {}.[0-9]+ > {}.[0-9]+:[ ]*UDP".format(
-                m1_carrier_ip, m2_carrier_ip
+            grep_pattern = "{} {}.[0-9]+ > {}.[0-9]+:[ ]*UDP".format(
+                "IP" if self.params.carrier_ipversion == "ipv4" else "IP6",
+                m1_carrier_ip,
+                m2_carrier_ip,
             )
 
         pa_kwargs["grep_for"] = [grep_pattern]
