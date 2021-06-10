@@ -103,18 +103,6 @@ class Machine(object):
     def get_mapped(self):
         return self._mapped
 
-    def get_configuration(self):
-        configuration = {}
-        configuration["id"] = self._id
-        configuration["hostname"] = self._hostname
-        configuration["kernel_release"] = self._slave_desc["kernel_release"]
-        configuration["redhat_release"] = self._slave_desc["redhat_release"]
-
-        configuration["interfaces"] = {}
-        for dev in list(self._device_database.items()):
-            configuration["device_"+dev.name] = dev.get_config()
-        return configuration
-
     def add_tmp_device(self, dev):
         self._tmp_device_database.append(dev)
         dev._machine = self
