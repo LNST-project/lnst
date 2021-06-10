@@ -22,23 +22,23 @@ class VxlanDevice(SoftDevice):
     _name_template = "t_vxlan"
     _link_type = "vxlan"
 
-    _mandatory_opts = ["vxlan_id"]
-
     def __init__(self, ifmanager, *args, **kwargs):
-        if "group" in kwargs and "remote" in kwargs:
-            raise DeviceError("group and remote cannot both be specified for vxlan")
+        if "external" not in kwargs:
+            self._mandatory_opts = ["vxlan_id"]
+            if "group" in kwargs and "remote" in kwargs:
+                raise DeviceError("group and remote cannot both be specified for vxlan")
 
-        if "group" not in kwargs and "remote" not in kwargs:
-            raise DeviceError("One of group or remote must be specified for vxlan")
+            if "group" not in kwargs and "remote" not in kwargs:
+                raise DeviceError("One of group or remote must be specified for vxlan")
 
-        if "group" in kwargs and "realdev" not in kwargs:
-            raise DeviceError("'group' requires realdev to be specified")
+            if "group" in kwargs and "realdev" not in kwargs:
+                raise DeviceError("'group' requires realdev to be specified")
 
-        if kwargs.get("remote", False) and ipaddress(kwargs["remote"]).is_multicast:
-            logging.debug("ATTENTION: non-unicast remote IP set: %s" % str(kwargs["remote"]))
+            if kwargs.get("remote", False) and ipaddress(kwargs["remote"]).is_multicast:
+                logging.debug("ATTENTION: non-unicast remote IP set: %s" % str(kwargs["remote"]))
 
-        if kwargs.get("group", False) and not ipaddress(kwargs["group"]).is_multicast:
-            logging.debug("ATTENTION: non-multicast group IP set: %s" % str(kwargs["group"]))
+            if kwargs.get("group", False) and not ipaddress(kwargs["group"]).is_multicast:
+                logging.debug("ATTENTION: non-multicast group IP set: %s" % str(kwargs["group"]))
 
         super(VxlanDevice, self).__init__(ifmanager, *args, **kwargs)
 
@@ -106,4 +106,14 @@ class VxlanDevice(SoftDevice):
     @dst_port.setter
     def dst_port(self, val):
         self._set_linkinfo_data_attr("IFLA_VXLAN_PORT", int(val))
+        self._nl_link_sync("set")
+
+    @property
+    def external(self):
+        return self._get_linkinfo_data_attr("IFLA_VXLAN_COLLECT_METADATA") is not None
+
+    @external.setter
+    def external(self, val):
+        if val:
+            self._set_linkinfo_data_attr("IFLA_VXLAN_COLLECT_METADATA", True)
         self._nl_link_sync("set")
