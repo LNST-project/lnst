@@ -212,9 +212,13 @@ class Machine(object):
 
             self._add_device_to_database(ifindex, new_dev, ns_instance)
 
-    def device_delete(self, dev_data):
-        if dev_data["ifindex"] in self._device_database:
-            self._device_database[dev_data["ifindex"]].deleted = True
+    def device_delete(self, dev_data, netns=None):
+        ns_instance = self._get_netns_by_name(netns)
+        dev_index = dev_data["ifindex"]
+
+        if dev_index in self._device_database[ns_instance].keys():
+            self._device_database[ns_instance][dev_index].deleted = True
+            del self._device_database[ns_instance][dev_index]
 
     def dev_db_get_ifindex(self, ifindex, netns=None):
         ns_instance = self._get_netns_by_name(netns)
