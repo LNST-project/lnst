@@ -25,27 +25,30 @@ from lnst.Controller.Common import ControllerError
 from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Tests.BaseTestModule import BaseTestModule
 
-def deviceref_to_remote_device(machine, obj):
+def deviceref_to_remote_device(machine, obj, netns):
     if isinstance(obj, DeviceRef):
-        dev = machine.dev_db_get_ifindex(obj.ifindex)
+        dev = machine.dev_db_get_ifindex(obj.ifindex, netns)
         return dev
     elif isinstance(obj, dict):
         new_dict = {}
         for key, value in list(obj.items()):
             new_dict[key] = deviceref_to_remote_device(machine,
-                                                       value)
+                                                       value,
+                                                       netns)
         return new_dict
     elif isinstance(obj, list):
         new_list = []
         for value in obj:
             new_list.append(deviceref_to_remote_device(machine,
-                                                       value))
+                                                       value,
+                                                       netns))
         return new_list
     elif isinstance(obj, tuple):
         new_list = []
         for value in obj:
             new_list.append(deviceref_to_remote_device(machine,
-                                                       value))
+                                                       value,
+                                                       netns))
         return tuple(new_list)
     else:
         return obj
@@ -129,7 +132,8 @@ class MessageDispatcher(ConnectionHandler):
                                          set(remaining_slaves))
 
             if result is not None:
-                return deviceref_to_remote_device(machine, result["result"])
+                netns = data.get("netns", None)
+                return deviceref_to_remote_device(machine, result["result"], netns)
 
     def wait_for_condition(self, condition_check, timeout=0):
         res = True

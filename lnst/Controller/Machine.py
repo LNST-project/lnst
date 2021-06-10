@@ -125,7 +125,7 @@ class Machine(object):
                                              netns=netns)
         dev._machine = self
         dev.ifindex = ret["ifindex"]
-        self._device_database[ret["ifindex"]] = dev
+        self._add_device_to_database(ret["ifindex"], dev, netns)
 
     def remote_device_set_netns(self, dev, dst, src):
         self.rpc_call("set_dev_netns", dev, dst.name, netns=src)
@@ -143,7 +143,7 @@ class Machine(object):
     def remote_device_method(self, index, method_name, args, kwargs, netns):
         config_res = DeviceMethodCallResult(
             success=True,
-            device=self._device_database[index],
+            device=self._get_device_from_database(index, netns),
             method_name=method_name,
             args=args,
             kwargs=kwargs,
@@ -162,10 +162,13 @@ class Machine(object):
     def remote_device_setattr(self, index, attr_name, value, netns):
         config_res = DeviceAttrSetResult(
             success=True,
-            device=self._device_database[index],
+            device=self._get_device_from_database(index, netns),
             attr_name=attr_name,
             value=value,
-            old_value=getattr(self._device_database[index], attr_name),
+            old_value=getattr(
+                self._get_device_from_database(index, netns),
+                attr_name
+            ),
         )
         self._add_recipe_result(config_res)
 
@@ -180,8 +183,9 @@ class Machine(object):
         return self.rpc_call("dev_getattr", index, attr_name, netns=netns)
 
     def device_created(self, dev_data, netns=None):
+        ns_instance = self._get_netns_by_name(netns)
         ifindex = dev_data["ifindex"]
-        if ifindex not in self._device_database:
+        if ifindex not in [idx for idx in self._device_database[ns_instance].keys()]:
             new_dev = None
             if len(self._tmp_device_database) > 0:
                 for dev in self._tmp_device_database:
@@ -193,34 +197,32 @@ class Machine(object):
                 new_dev = RemoteDevice(Device)
                 new_dev._machine = self
                 new_dev.ifindex = ifindex
-                new_dev.netns = self._initns
+                #if netns is not None:
+                new_dev.netns = ns_instance
+                #else:
+                #    new_dev.netns = self._initns
             else:
                 self._tmp_device_database.remove(new_dev)
 
                 new_dev.ifindex = dev_data["ifindex"]
 
-            self._device_database[ifindex] = new_dev
+            self._add_device_to_database(ifindex, new_dev, ns_instance)
 
     def device_delete(self, dev_data):
         if dev_data["ifindex"] in self._device_database:
             self._device_database[dev_data["ifindex"]].deleted = True
 
-    def dev_db_get_ifindex(self, ifindex):
-        if ifindex in self._device_database:
-            return self._device_database[ifindex]
+    def dev_db_get_ifindex(self, ifindex, netns=None):
+        ns_instance = self._get_netns_by_name(netns)
+        if ifindex in self._device_database[ns_instance].keys():
+            return self._device_database[ns_instance][ifindex]
         else:
             return None
 
-    def dev_db_get_name(self, dev_name):
-        #TODO move these to Slave to optimize quering for each device
-        for dev in list(self._device_database.values()):
-            if dev.get_name() == dev_name:
-                return dev
-        return None
-
     def get_dev_by_hwaddr(self, hwaddr):
         #TODO move these to Slave to optimize quering for each device
-        for dev in list(self._device_database.values()):
+        #TODO the method searches only the init namespace at the moment
+        for dev in list(self._device_database[self._initns].values()):
             if dev.hwaddr == hwaddr:
                 return dev
         return None
@@ -288,19 +290,13 @@ class Machine(object):
 
     def prepare_machine(self):
         self.rpc_call("prepare_machine")
+        self._device_database = {self._initns: {}}
         self._send_device_classes()
         self.rpc_call("init_if_manager")
 
-        self._device_database = {}
-
         devices = self.rpc_call("get_devices")
         for ifindex, dev in list(devices.items()):
-            remote_dev = RemoteDevice(Device)
-            remote_dev._machine = self
-            remote_dev.ifindex = ifindex
-            remote_dev.netns = self._initns
-
-            self._device_database[ifindex] = remote_dev
+            self.device_created(dev)
 
     def start_recipe(self, recipe):
         self._recipe = recipe
@@ -580,6 +576,7 @@ class Machine(object):
 
     def add_netns(self, netns):
         self._namespaces[netns.name] = netns
+        self._device_database[netns] = {}
         return self.rpc_call("add_namespace", netns.name)
 
     def del_netns(self, netns):
@@ -612,3 +609,21 @@ class Machine(object):
                 raise MachineError("No network namespace with name {}".format(
                     netns)
                 )
+
+    def _add_device_to_database(self, ifindex, dev, netns=None):
+        if not netns in self._device_database:
+            self._device_database[netns] = {}
+
+        self._device_database[netns][ifindex] = dev
+
+    def _get_device_from_database(self, ifindex, netns=None):
+        try:
+            dev = self._device_database[netns][ifindex]
+        except:
+            raise MachineError(
+                "No device with ifindex {} in netns {} device database".format(
+                    ifindex, netns
+                    )
+                )
+
+        return dev

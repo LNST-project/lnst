@@ -71,8 +71,8 @@ class Namespace(object):
     def device_database(self):
         """List of all devices (including unmapped) available in the Namespace"""
         ret = []
-        for x in list(self._machine._device_database.values()):
-            if isinstance(x, Device) and x.netns == self:
+        for x in list(self._machine._device_database[self].values()):
+            if isinstance(x, Device):
                 ret.append(x)
         return ret
 
