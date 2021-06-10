@@ -21,7 +21,12 @@ from lnst.Devices.SoftDevice import SoftDevice
 class GeneveDevice(SoftDevice):
     _name_template = "t_gnv"
     _link_type = "geneve"
-    _mandatory_opts = ["id", "remote"]
+
+    def __init__(self, ifmanager, *args, **kwargs):
+        if "external" not in kwargs:
+            self._mandatory_opts = ["id", "remote"]
+
+        super(GeneveDevice, self).__init__(ifmanager, *args, **kwargs)
 
     @property
     def id(self):
@@ -63,3 +68,13 @@ class GeneveDevice(SoftDevice):
     def dst_port(self, val):
         self._set_linkinfo_data_attr("IFLA_GENEVE_PORT", int(val))
         self._nl_link_sync("set")
+
+    @property
+    def external(self):
+        return self._get_linkinfo_data_attr("IFLA_GENEVE_COLLECT_METADATA") is not None
+
+    @external.setter
+    def external(self, val):
+        if val:
+            self._set_linkinfo_data_attr("IFLA_GENEVE_COLLECT_METADATA", True)
+            self._nl_link_sync("set")
