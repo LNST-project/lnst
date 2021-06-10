@@ -208,7 +208,11 @@ class MessageDispatcher(ConnectionHandler):
             machine.device_created(message[1]["dev_data"], netns)
         elif message[1]["type"] == "dev_deleted":
             machine = self._machines[message[0]]
-            machine.device_delete(message[1])
+            try:
+                netns = message[1]["netns"]
+            except KeyError:
+                netns = None
+            machine.device_delete(message[1], netns)
         elif message[1]["type"] == "exception":
             raise message[1]["Exception"]
         elif message[1]["type"] == "job_finished":
