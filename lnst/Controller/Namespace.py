@@ -18,6 +18,7 @@ import logging
 from abc import ABCMeta
 from lnst.Controller.Job import DEFAULT_TIMEOUT
 from lnst.Devices.Device import Device
+from lnst.Devices.LoopbackDevice import LoopbackDevice
 from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Controller.Common import ControllerError
@@ -145,6 +146,9 @@ class Namespace(object):
 
         if isinstance(value, RemoteDevice):
             if value.ifindex is not None:
+                if isinstance(value, LoopbackDevice):
+                    raise HostError("Cannot move loopback device between network namespaces")
+
                 if value.netns is self:
                     if name not in self._objects:
                         self._objects[name] = value
@@ -174,6 +178,14 @@ class Namespace(object):
                     self._machine.add_tmp_device(value)
                     value._create()
                     self._machine.wait_for_tmp_devices(DEFAULT_TIMEOUT)
+                elif isinstance(value, LoopbackDevice):
+                    search = [d for d in self.device_database if d.driver == "loopback"]
+                    if len(search) == 0:
+                        raise Exception("Could not find loopback device in the device database")
+                    loopback_device = search[0]
+                    value._machine = self._machine
+                    value.netns = self
+                    value.ifindex = loopback_device.ifindex
                 else:
                     value._machine = self._machine
                     value.netns = self
