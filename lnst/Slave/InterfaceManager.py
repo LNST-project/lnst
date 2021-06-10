@@ -137,13 +137,25 @@ class InterfaceManager(object):
                 return
 
             if msg['index'] in self._devices:
+                def _netlink_msg_attr(msg, attr_name):
+                    for name, value in msg['attrs']:
+                        if attr_name == name:
+                            return value
+
+                    return None
+
                 dev = self._devices[msg['index']]
                 dev._deleted = True
 
                 del self._devices[msg['index']]
 
-                del_msg = {"type": "dev_deleted",
-                           "ifindex": msg['index']}
+                # the event may have been a move of device to netns
+                del_msg = {"ifindex": msg['index']}
+                if _netlink_msg_attr(msg, 'IFLA_NEW_NETNSID') is not None:
+                    del_msg["type"] = "dev_netns_changed"
+                else:
+                    del_msg["type"] = "dev_deleted"
+
                 self._server_handler.send_data_to_ctl(del_msg)
         else:
             return

@@ -213,6 +213,13 @@ class MessageDispatcher(ConnectionHandler):
             except KeyError:
                 netns = None
             machine.device_delete(message[1], netns)
+        elif message[1]["type"] == "dev_netns_changed":
+            machine = self._machines[message[0]]
+            try:
+                netns = message[1]["netns"]
+            except KeyError:
+                netns = None
+            machine.device_netns_change(message[1], netns)
         elif message[1]["type"] == "exception":
             raise message[1]["Exception"]
         elif message[1]["type"] == "job_finished":

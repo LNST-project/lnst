@@ -220,6 +220,13 @@ class Machine(object):
             self._device_database[ns_instance][dev_index].deleted = True
             del self._device_database[ns_instance][dev_index]
 
+    def device_netns_change(self, dev_data, netns=None):
+        ns_instance = self._get_netns_by_name(netns)
+        dev_index = dev_data["ifindex"]
+
+        if dev_index in self._device_database[ns_instance].keys():
+            del self._device_database[ns_instance][dev_index]
+
     def dev_db_get_ifindex(self, ifindex, netns=None):
         ns_instance = self._get_netns_by_name(netns)
         if ifindex in self._device_database[ns_instance].keys():
