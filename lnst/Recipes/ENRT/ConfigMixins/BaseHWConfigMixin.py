@@ -1,4 +1,19 @@
-class BaseHWConfigMixin(object):
+from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
+
+class BaseHWConfigMixin(BaseSubConfigMixin):
+    def apply_sub_configuration(self, config):
+        super().apply_sub_configuration(config)
+        self.hw_config(config)
+
+    def remove_sub_configuration(self, config):
+        self.hw_deconfig(config)
+        return super().remove_sub_configuration(config)
+
+    def generate_sub_configuration_description(self, config):
+        desc = super().generate_sub_configuration_description(config)
+        desc.extend(self.describe_hw_config(config))
+        return desc
+
     def hw_config(self, config):
         config.hw_config = {}
 
