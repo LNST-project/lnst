@@ -416,7 +416,10 @@ class Device(object, metaclass=DeviceMeta):
         Returns a HWAddress object representing the hardware address of the
         device as reported by the kernel.
         """
-        return hwaddress(self._nl_msg.get_attr("IFLA_ADDRESS"))
+        if self._nl_msg.get_attr("IFLA_ADDRESS"):
+            return hwaddress(self._nl_msg.get_attr("IFLA_ADDRESS"))
+        else:
+            return None
 
     @hwaddr.setter
     def hwaddr(self, addr):
