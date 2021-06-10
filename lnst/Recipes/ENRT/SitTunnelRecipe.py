@@ -10,9 +10,13 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import StrParam, ChoiceParam
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
+from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
+    PauseFramesHWConfigMixin,
+)
 
 
-class SitTunnelRecipe(BaseTunnelRecipe):
+class SitTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRecipe):
     """
     This class implements a recipe that configures a simple SIT tunnel between
     two hosts.
@@ -169,3 +173,11 @@ class SitTunnelRecipe(BaseTunnelRecipe):
         pa_config = PacketAssertConf(m2, m2_carrier, **pa_kwargs)
 
         return pa_config
+
+    @property
+    def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.sit_tunnel, self.matched.host2.sit_tunnel]
