@@ -160,6 +160,7 @@ class Namespace(object):
                 self._machine.remote_device_set_netns(value, self, old_ns)
                 value.netns = self
                 self._objects[name] = value
+                self._update_device_id(value, name)
                 return True
             else:
                 value._id = name
@@ -186,6 +187,7 @@ class Namespace(object):
                     value._machine = self._machine
                     value.netns = self
                     value.ifindex = loopback_device.ifindex
+                    self._update_device_id(value, name)
                 else:
                     value._machine = self._machine
                     value.netns = self
@@ -234,3 +236,14 @@ class Namespace(object):
             m_id=self._machine.get_id(),
             namespace=", namespace_name={}".format(self.name) if self.name else "",
         )
+
+    def _update_device_id(self, value, name):
+        dev_match = [dev for dev in self.device_database if dev.ifindex == value.ifindex]
+
+        try:
+            dev = dev_match[0]
+        except IndexError:
+            logging.warn("Could not find device with index: {}".format(value.ifindex))
+            return
+
+        dev._id = name
