@@ -93,6 +93,7 @@ from lnst.Recipes.ENRT.GeneveTunnelRecipe import GeneveTunnelRecipe
 from lnst.Recipes.ENRT.GeneveLwtTunnelRecipe import GeneveLwtTunnelRecipe
 from lnst.Recipes.ENRT.GeneveOvsTunnelRecipe import GeneveOvsTunnelRecipe
 from lnst.Recipes.ENRT.VxlanLwtTunnelRecipe import VxlanLwtTunnelRecipe
+from lnst.Recipes.ENRT.VxlanOvsTunnelRecipe import VxlanOvsTunnelRecipe
 from lnst.Recipes.ENRT.L2TPTunnelRecipe import L2TPTunnelRecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
