@@ -179,7 +179,7 @@ class Machine(object):
     def remote_device_getattr(self, index, attr_name, netns):
         return self.rpc_call("dev_getattr", index, attr_name, netns=netns)
 
-    def device_created(self, dev_data):
+    def device_created(self, dev_data, netns=None):
         ifindex = dev_data["ifindex"]
         if ifindex not in self._device_database:
             new_dev = None

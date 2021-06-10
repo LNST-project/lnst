@@ -197,7 +197,11 @@ class MessageDispatcher(ConnectionHandler):
             logging.debug(msg)
         elif message[1]["type"] == "dev_created":
             machine = self._machines[message[0]]
-            machine.device_created(message[1]["dev_data"])
+            try:
+                netns = message[1]["netns"]
+            except KeyError:
+                netns = None
+            machine.device_created(message[1]["dev_data"], netns)
         elif message[1]["type"] == "dev_deleted":
             machine = self._machines[message[0]]
             machine.device_delete(message[1])
