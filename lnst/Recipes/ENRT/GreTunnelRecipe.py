@@ -11,15 +11,20 @@ from lnst.Devices import GreDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import (
+    MTUHWConfigMixin,
+)
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
-    CommonHWSubConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
+    PauseFramesHWConfigMixin,
 )
 
 
-class GreTunnelRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe):
+class GreTunnelRecipe(
+    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+):
     """
     This class implements a recipe that configures a simple GRE tunnel between
     two hosts.
@@ -179,3 +184,11 @@ class GreTunnelRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseTunnelR
     @property
     def offload_nics(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel]
