@@ -99,6 +99,9 @@ class L2TPTunnelRecipe(CommonHWSubConfigMixin, BaseTunnelRecipe):
         endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
         endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
 
+        for host in [host1, host2]:
+            host.run("modprobe l2tp_eth")
+
         host1.l2tp = host1.init_class(L2TPManager)
         host2.l2tp = host2.init_class(L2TPManager)
 
