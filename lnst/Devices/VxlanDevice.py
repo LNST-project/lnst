@@ -127,3 +127,12 @@ class VxlanDevice(SoftDevice):
         if val:
             self._set_linkinfo_data_attr("IFLA_VXLAN_GPE", True)
         self._nl_link_sync("set")
+
+    @property
+    def learning(self):
+        return self._get_linkinfo_data_attr("IFLA_VXLAN_LEARNING")
+
+    @learning.setter
+    def learning(self, val):
+        self._set_linkinfo_data_attr("IFLA_VXLAN_LEARNING", val)
+        self._nl_link_sync("set")
