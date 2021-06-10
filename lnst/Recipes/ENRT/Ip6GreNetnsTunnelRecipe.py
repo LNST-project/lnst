@@ -11,16 +11,19 @@ from lnst.Devices import Ip6GreDevice, VethPair, BridgeDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import (
+    MTUHWConfigMixin,
+)
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
-    CommonHWSubConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
+    PauseFramesHWConfigMixin,
 )
 
 
 class Ip6GreNetnsTunnelRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a IP6GRE tunnel between
@@ -246,3 +249,13 @@ class Ip6GreNetnsTunnelRecipe(
     @property
     def offload_nics(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+
+        return [host1.newns.gre6_tunnel, host2.newns.gre6_tunnel]
