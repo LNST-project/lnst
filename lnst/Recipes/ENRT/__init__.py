@@ -82,6 +82,7 @@ from lnst.Recipes.ENRT.VxlanMulticastRecipe import VxlanMulticastRecipe
 from lnst.Recipes.ENRT.VxlanRemoteRecipe import VxlanRemoteRecipe
 from lnst.Recipes.ENRT.GreTunnelRecipe import GreTunnelRecipe
 from lnst.Recipes.ENRT.GreTunnelOverBondRecipe import GreTunnelOverBondRecipe
+from lnst.Recipes.ENRT.GreLwtTunnelRecipe import GreLwtTunnelRecipe
 from lnst.Recipes.ENRT.Ip6GreTunnelRecipe import Ip6GreTunnelRecipe
 from lnst.Recipes.ENRT.Ip6GreNetnsTunnelRecipe import Ip6GreNetnsTunnelRecipe
 from lnst.Recipes.ENRT.SitTunnelRecipe import SitTunnelRecipe
