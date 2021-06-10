@@ -11,9 +11,17 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import Param, StrParam, ChoiceParam
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
+    OffloadSubConfigMixin,
+)
+from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
+    PauseFramesHWConfigMixin,
+)
 
 
-class GeneveTunnelRecipe(BaseTunnelRecipe):
+class GeneveTunnelRecipe(
+    PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+):
     """
     This class implements a recipe that configures a simple Geneve tunnel
     between two hosts.
@@ -181,4 +189,8 @@ class GeneveTunnelRecipe(BaseTunnelRecipe):
 
     @property
     def offload_nics(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def pause_frames_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
