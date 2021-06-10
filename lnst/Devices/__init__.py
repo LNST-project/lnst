@@ -1,5 +1,6 @@
 from lnst.Common.DeviceError import DeviceError
 from lnst.Devices.Device import Device
+from lnst.Devices.LoopbackDevice import LoopbackDevice
 from lnst.Devices.BridgeDevice import BridgeDevice
 from lnst.Devices.OvsBridgeDevice import OvsBridgeDevice
 from lnst.Devices.BondDevice import BondDevice
@@ -22,6 +23,7 @@ from lnst.Devices.RemoteDevice import RemoteDevice, remotedev_decorator
 
 device_classes = [
         ("Device", Device),
+        ("LoopbackDevice", LoopbackDevice),
         ("BridgeDevice", BridgeDevice),
         ("OvsBridgeDevice", OvsBridgeDevice),
         ("MacvlanDevice", MacvlanDevice),
