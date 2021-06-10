@@ -118,7 +118,10 @@ class InterfaceManager(object):
             if msg['index'] in self._devices:
                 self._devices[msg['index']]._update_netlink(msg)
             elif msg['header']['type'] == RTM_NEWLINK:
-                dev = self._device_classes["Device"](self)
+                if msg['ifi_type'] == 772:
+                    dev = self._device_classes["LoopbackDevice"](self)
+                else:
+                    dev = self._device_classes["Device"](self)
                 dev._init_netlink(msg)
                 self._devices[msg['index']] = dev
 
@@ -126,7 +129,9 @@ class InterfaceManager(object):
                               "dev_data": dev._get_if_data()}
                 self._server_handler.send_data_to_ctl(update_msg)
 
-                dev._disable()
+                if msg['ifi_type'] != 772:
+                    dev._disable()
+
         elif msg['header']['type'] == RTM_DELLINK:
             if msg['family'] == PF_BRIDGE:
                 return
