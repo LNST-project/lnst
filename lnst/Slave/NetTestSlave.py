@@ -1070,6 +1070,7 @@ class NetTestSlave:
             self._job_context.del_job(job)
 
         elif msg["type"] == "from_netns":
+            msg["data"]["netns"] = msg["netns"]
             self._server_handler.send_data_to_ctl(msg["data"])
         elif msg["type"] == "to_netns":
             netns = msg["netns"]
