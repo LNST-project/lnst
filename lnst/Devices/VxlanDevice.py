@@ -117,3 +117,13 @@ class VxlanDevice(SoftDevice):
         if val:
             self._set_linkinfo_data_attr("IFLA_VXLAN_COLLECT_METADATA", True)
         self._nl_link_sync("set")
+
+    @property
+    def gpe(self):
+        return self._get_linkinfo_data_attr("IFLA_VXLAN_GPE") is not None
+
+    @gpe.setter
+    def gpe(self, val):
+        if val:
+            self._set_linkinfo_data_attr("IFLA_VXLAN_GPE", True)
+        self._nl_link_sync("set")
