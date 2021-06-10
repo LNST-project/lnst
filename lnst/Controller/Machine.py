@@ -78,7 +78,7 @@ class Machine(object):
         self._mac_pool = None
 
         self._interfaces = []
-        self._namespaces = []
+        self._namespaces = {}
         self._bg_cmds = {}
         self._jobs = {}
         self._job_id_seq = 0
@@ -226,7 +226,7 @@ class Machine(object):
         return None
 
     def rpc_call(self, method_name, *args, **kwargs):
-        if kwargs.get("netns") in self._namespaces:
+        if kwargs.get("netns") in self._namespaces.values():
             netns = kwargs["netns"]
             del kwargs["netns"]
             msg = {"type": "to_netns",
@@ -349,7 +349,7 @@ class Machine(object):
             return True
 
     def cleanup_devices(self):
-        for netns in self._namespaces:
+        for netns in self._namespaces.values():
             self.rpc_call("destroy_devices", netns=netns)
         self.rpc_call("destroy_devices")
 
@@ -366,7 +366,7 @@ class Machine(object):
             return
 
         try:
-            for netns in self._namespaces:
+            for netns in self._namespaces.values():
                 self.rpc_call("kill_jobs", netns=netns)
             self.rpc_call("kill_jobs")
 
@@ -482,7 +482,7 @@ class Machine(object):
 
     def restore_system_config(self):
         self.rpc_call("restore_system_config")
-        for netns in self._namespaces:
+        for netns in self._namespaces.values():
             self.rpc_call("restore_system_config", netns=netns)
         return True
 
@@ -579,16 +579,16 @@ class Machine(object):
                (self._hostname, self._libvirt_domain, len(self._interfaces))
 
     def add_netns(self, netns):
-        self._namespaces.append(netns)
+        self._namespaces[netns.name] = netns
         return self.rpc_call("add_namespace", netns.name)
 
     def del_netns(self, netns):
         return self.rpc_call("del_namespace", netns.name)
 
     def del_namespaces(self):
-        for netns in self._namespaces:
+        for netns in self._namespaces.values():
             self.del_netns(netns)
-        self._namespaces = []
+        self._namespaces = {}
         return True
 
     def get_security(self):
@@ -601,3 +601,14 @@ class Machine(object):
         if self.get_libvirt_domain():
             state['_domain_ctl'] = None
         return state
+
+    def _get_netns_by_name(self, netns):
+        if netns is None:
+            return self._initns
+        else:
+            try:
+                return self._namespaces[netns]
+            except KeyError:
+                raise MachineError("No network namespace with name {}".format(
+                    netns)
+                )
