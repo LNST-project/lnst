@@ -10,26 +10,12 @@ A lot of the 'next' functionality is ready to be used for testing purposes but
 we've yet to mark individual library APIs as 'stable' so no guarantees for
 backwards compatibility are yet in place.
 
-This also means that many of our documentation resources outlining how to write
-recipes on the wiki are also out of date. We'll soon start working on these but
-please be patient with us.
-
-If you're interested in helping out we accept code contributions via Patches
-submitted to our mailing list <lnst-developers@lists.fedorahosted.org>.
-
-Likewise if you're interested in trying out LNST and are having trouble with
-setting stuff up because of the current state of our documentation feel free to
-reach out to us either on the mailing list or on #lnst @ freenode.net irc
-channel.
-
-
 # LNST - Linux Network Stack Test #
 
 Linux Network Stack Test is a tool that supports development and execution
 of automated and portable network tests. For detailed description of the
 architecture of LNST please refer to project website (link listed on
 Internet Resources bellow).
-
 
 ## Install
 
@@ -40,6 +26,18 @@ Installation and a simple Hello world example is available at
 
 Documentation is available in the `docs/` directory, you can build it with
 `make html` using *Sphinx*.
+
+The built documentation is also available online on https://lnst.readthedocs.io/en/latest/
+
+The documentation is not fully complete so you may not find all of what you're
+looking for so feel free to reach out to us if you have any questions.
+
+## Contributing
+
+If you're interested in helping out we accept code contributions via Patches
+submitted to our mailing list <lnst-developers@lists.fedorahosted.org>.
+
+Feel free to also report issues or submit pull requests.
 
 ## Authors/Contributors
 
@@ -58,11 +56,13 @@ Documentation is available in the `docs/` directory, you can build it with
 
 * Git Source Tree: https://github.com/LNST-project/lnst
 * Mailing List:  <lnst-developers@lists.fedorahosted.org>
-* IRC channel: #lnst @ freenode.net
+
+We currently don't have an irc channel due to the freenode situation and since
+it wasn't exactly actively used we haven't created a new one yet.
 
 ## License
 
-**Copyright (C) 2011-2020 Red Hat, Inc.**
+**Copyright (C) 2011-2021 Red Hat, Inc.**
 
 LNST is distributed under GNU General Public License version 2. See the file
 "COPYING" in the source distribution for information on terms & conditions
