@@ -434,7 +434,11 @@ class Device(object, metaclass=DeviceMeta):
 
     @property
     def adaptive_rx_coalescing(self):
-        return self._read_adaptive_coalescing()[0] == 'on'
+        try:
+            res = self._read_adaptive_coalescing()
+        except DeviceFeatureNotSupported:
+            return False
+        return res[0] == 'on'
 
     @adaptive_rx_coalescing.setter
     def adaptive_rx_coalescing(self, value):
@@ -446,7 +450,12 @@ class Device(object, metaclass=DeviceMeta):
 
     @property
     def adaptive_tx_coalescing(self):
-        return self._read_adaptive_coalescing()[1] == 'on'
+        try:
+            res = self._read_adaptive_coalescing()
+        except DeviceFeatureNotSupported:
+            return False
+        return res[1] == 'on'
+
 
     @adaptive_tx_coalescing.setter
     def adaptive_tx_coalescing(self, value):
@@ -694,7 +703,12 @@ class Device(object, metaclass=DeviceMeta):
 
     @property
     def rx_pause_frames(self):
-        return self._read_pause_frames()[0]
+        try:
+            res = self._read_pause_frames()
+        except DeviceFeatureNotSupported:
+            return None
+
+        return res[0]
 
     @rx_pause_frames.setter
     def rx_pause_frames(self, value):
@@ -702,7 +716,12 @@ class Device(object, metaclass=DeviceMeta):
 
     @property
     def tx_pause_frames(self):
-        return self._read_pause_frames()[1]
+        try:
+            res = self._read_pause_frames()
+        except DeviceFeatureNotSupported:
+            return None
+
+        return res[1]
 
     @tx_pause_frames.setter
     def tx_pause_frames(self, value):
