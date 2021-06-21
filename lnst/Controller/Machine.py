@@ -130,6 +130,7 @@ class Machine(object):
         self._add_device_to_database(ret["ifindex"], dev, netns)
 
     def remote_device_set_netns(self, dev, dst, src):
+        self._add_device_to_netns_moved_devices(dev, dst, src)
         self.rpc_call("set_dev_netns", dev, dst.name, netns=src)
         dev_clsname = dev._dev_cls.__name__
         dev_args = dev._dev_args
@@ -144,7 +145,7 @@ class Machine(object):
 
     def _add_device_to_netns_moved_devices(self, dev, dst, src):
         del self._device_database[src][dev.ifindex]
-
+        dev.enable_readonly_cache()
         self._netns_moved_devices[dev] = {
             "src": src,
             "dst": dst,
@@ -205,6 +206,16 @@ class Machine(object):
                         new_dev = dev
                         break
 
+            moved_dev_match = [
+                dev for dev, dev_details in self._netns_moved_devices.items()
+                if dev_details["dst"] == ns_instance and dev_details["new_ifindex"] == ifindex
+            ]
+
+            netns_moved = False
+            if len(moved_dev_match):
+                new_dev = moved_dev_match[0]
+                netns_moved = True
+
             if new_dev is None:
                 if dev_data["driver"] == "loopback":
                     new_dev = RemoteDevice(LoopbackDevice)
@@ -214,9 +225,12 @@ class Machine(object):
                 new_dev.ifindex = ifindex
                 new_dev.netns = ns_instance
             else:
-                self._tmp_device_database.remove(new_dev)
-
-                new_dev.ifindex = dev_data["ifindex"]
+                if netns_moved:
+                    del self._netns_moved_devices[new_dev]
+                    new_dev.disable_readonly_cache()
+                else:
+                    self._tmp_device_database.remove(new_dev)
+                    new_dev.ifindex = dev_data["ifindex"]
 
             self._add_device_to_database(ifindex, new_dev, ns_instance)
 
@@ -233,7 +247,22 @@ class Machine(object):
     def device_netns_change(self, dev_data, netns=None):
         ns_instance = self._get_netns_by_name(netns)
         dev_index = dev_data["ifindex"]
+        dev_new_index = dev_data["new_ifindex"]
 
+        dev_match = [
+            dev for dev, dev_details in self._netns_moved_devices.items()
+            if dev_details["src"] == ns_instance and dev_index == dev_details["old_ifindex"]
+        ]
+
+        if len(dev_match) == 0:
+            raise MachineError(
+                "Device moved to ns {} with ifindex {} not found in cache".format(
+                    netns,
+                    dev_index
+                )
+            )
+
+        self._netns_moved_devices[dev_match[0]]["new_ifindex"] = dev_new_index
         if dev_index in self._device_database[ns_instance].keys():
             del self._device_database[ns_instance][dev_index]
 
