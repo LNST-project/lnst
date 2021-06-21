@@ -57,6 +57,8 @@ class RemoteDevice(object):
         return newone
 
     def enable_readonly_cache(self):
+        if self._cached:
+            return
         self._cache = {}
         for name, val in self:
             self._cache[name] = val
