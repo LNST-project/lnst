@@ -110,6 +110,13 @@ class RemoteDevice(object):
         peer_device = self._machine._find_device_in_any_namespace(peer_if_id, self.ifindex)
         return peer_device
 
+    @property
+    def peer_name(self):
+        if self.peer:
+            return self.peer.name
+
+        return None
+
     def __dir__(self):
         return dir(self._dev_cls)
 
