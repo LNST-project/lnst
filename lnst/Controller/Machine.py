@@ -201,10 +201,7 @@ class Machine(object):
                     new_dev = RemoteDevice(Device)
                 new_dev._machine = self
                 new_dev.ifindex = ifindex
-                #if netns is not None:
                 new_dev.netns = ns_instance
-                #else:
-                #    new_dev.netns = self._initns
             else:
                 self._tmp_device_database.remove(new_dev)
 
