@@ -217,7 +217,9 @@ class Machine(object):
         dev_index = dev_data["ifindex"]
 
         if dev_index in self._device_database[ns_instance].keys():
-            self._device_database[ns_instance][dev_index].deleted = True
+            dev = self._device_database[ns_instance][dev_index]
+            self._set_readonly_cache_for_device(dev_index, ns_instance)
+            dev.deleted = True
             del self._device_database[ns_instance][dev_index]
 
     def device_netns_change(self, dev_data, netns=None):
@@ -361,7 +363,13 @@ class Machine(object):
 
     def cleanup_devices(self):
         for netns in self._namespaces.values():
+            self._set_readonly_cache_for_all_devices(netns)
+
+        self._set_readonly_cache_for_all_devices(self._initns)
+
+        for netns in self._namespaces.values():
             self.rpc_call("destroy_devices", netns=netns)
+
         self.rpc_call("destroy_devices")
 
     def _set_readonly_cache_for_device(self, ifindex, netns):
