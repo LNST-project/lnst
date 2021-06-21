@@ -86,6 +86,7 @@ class Machine(object):
 
         self._device_database = {}
         self._tmp_device_database = []
+        self._netns_moved_devices = {}
 
         self._initns = None
 
@@ -140,6 +141,16 @@ class Machine(object):
                 args=dev_args,
                 kwargs=dev_kwargs,
                 netns=dst)
+
+    def _add_device_to_netns_moved_devices(self, dev, dst, src):
+        del self._device_database[src][dev.ifindex]
+
+        self._netns_moved_devices[dev] = {
+            "src": src,
+            "dst": dst,
+            "old_ifindex": dev.ifindex,
+            "new_ifindex": None,
+        }
 
     def remote_device_method(self, index, method_name, args, kwargs, netns):
         config_res = DeviceMethodCallResult(
