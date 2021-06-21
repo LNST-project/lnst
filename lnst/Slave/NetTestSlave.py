@@ -640,8 +640,6 @@ class SlaveMethods:
 
     def set_dev_netns(self, dev, dst):
         exec_cmd("ip link set %s netns %s" % (dev.name, dst))
-        self._if_manager.untrack_device(dev)
-        dev._deleted = True
         self._if_manager.rescan_devices()
         #TODO check if device appeared in the destination namespace
         return True
