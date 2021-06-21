@@ -364,6 +364,22 @@ class Machine(object):
             self.rpc_call("destroy_devices", netns=netns)
         self.rpc_call("destroy_devices")
 
+    def _set_readonly_cache_for_device(self, ifindex, netns):
+        try:
+            dev = self._device_database[netns][ifindex]
+        except KeyError:
+            msg = "Device with index {} not found in netns({})".format(
+                ifindex,
+                netns.name
+            )
+            raise MachineError(msg)
+
+        dev.enable_readonly_cache()
+
+    def _set_readonly_cache_for_all_devices(self, netns):
+        for dev in self._device_database[netns].values():
+            dev.enable_readonly_cache()
+
     def cleanup(self):
         """ Clean the machine up
 
