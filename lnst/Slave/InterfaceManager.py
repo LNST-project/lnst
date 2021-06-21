@@ -153,6 +153,7 @@ class InterfaceManager(object):
                 del_msg = {"ifindex": msg['index']}
                 if _netlink_msg_attr(msg, 'IFLA_NEW_NETNSID') is not None:
                     del_msg["type"] = "dev_netns_changed"
+                    del_msg["new_ifindex"] = _netlink_msg_attr(msg, 'IFLA_NEW_IFINDEX')
                 else:
                     del_msg["type"] = "dev_deleted"
 
