@@ -104,6 +104,12 @@ class RemoteDevice(object):
     def netns(self, value):
         self.__netns = value
 
+    @property
+    def peer(self):
+        peer_if_id = self.peer_if_id
+        peer_device = self._machine._find_device_in_any_namespace(peer_if_id, self.ifindex)
+        return peer_device
+
     def __dir__(self):
         return dir(self._dev_cls)
 
