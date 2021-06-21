@@ -241,6 +241,19 @@ class Machine(object):
                 return dev
         return None
 
+    def _find_device_in_any_namespace(self, ifindex, peer_ifindex=None):
+        for ns in list(self._namespaces.keys()) + [None]:
+            dev = self.dev_db_get_ifindex(ifindex, ns)
+            if dev is None:
+                continue
+            if peer_ifindex:
+                if dev.peer_if_id == peer_ifindex:
+                    return dev
+            else:
+                return dev
+
+        return None
+
     def rpc_call(self, method_name, *args, **kwargs):
         if kwargs.get("netns") in self._namespaces.values():
             netns = kwargs["netns"]
