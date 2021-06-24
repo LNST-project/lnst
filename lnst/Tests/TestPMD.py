@@ -3,6 +3,7 @@ import subprocess
 import signal
 from lnst.Common.Parameters import Param, StrParam, IntParam, FloatParam
 from lnst.Common.Parameters import IpParam, DeviceOrIpParam
+from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 from lnst.Common.LnstError import LnstError
 
@@ -16,11 +17,19 @@ class TestPMD(BaseTestModule):
     nics = Param(mandatory=True)
     peer_macs = Param(mandatory=False)
 
-    def format_command(self):
-        if self.params.forward_mode == "macswap":
-            testpmd_args = ["dpdk-testpmd", "--no-pci"]
+    @property
+    def testpmd_executable(self):
+        if is_installed("dpdk-testpmd"):
+            return "dpdk-testpmd"
+        elif is_installed("testpmd"):
+            return "testpmd"
         else:
-            testpmd_args = ["testpmd"]
+            raise TestModuleError("testpmd not installed")
+
+    def format_command(self):
+        testpmd_args = [self.testpmd_executable]
+        if self.params.forward_mode == "macswap":
+            testpmd_args.append("--no-pci")
 
         testpmd_args.extend(["-c", self.params.coremask,
                              "-n", "4", "--socket-mem", "1024,0"])
