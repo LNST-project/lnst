@@ -240,7 +240,6 @@ class Machine(object):
 
         if dev_index in self._device_database[ns_instance].keys():
             dev = self._device_database[ns_instance][dev_index]
-            self._set_readonly_cache_for_device(dev_index, ns_instance)
             dev.deleted = True
             del self._device_database[ns_instance][dev_index]
 
