@@ -58,7 +58,7 @@ class RecipeControl(object):
 
         msg_dispatcher.wait_for_condition(condition, timeout)
 
+        host = Host(m)
         self._controller._prepare_machine(m)
         m.start_recipe(self._recipe)
-        host = Host(m)
         return host
