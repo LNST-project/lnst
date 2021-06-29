@@ -52,15 +52,17 @@ def main():
 
     slave_config = SlaveConfig()
     dirname = os.path.dirname(sys.argv[0])
-    gitcfg = os.path.join(dirname, "lnst-slave.conf")
-    if os.path.isfile(gitcfg):
-        slave_config.load_config(gitcfg)
-    else:
-        slave_config.load_config('/etc/lnst-slave.conf')
 
-    usr_cfg = os.path.expanduser('~/.lnst/lnst-slave.conf')
-    if os.path.isfile(usr_cfg):
-        slave_config.load_config(usr_cfg)
+    git_cfg = os.path.join(dirname, "lnst-slave.conf")
+    user_cfg = os.path.expanduser('~/.lnst/lnst-slave.conf')
+    if os.path.isfile(git_cfg):
+        slave_config.load_config(git_cfg)
+    elif os.path.isfile(user_cfg):
+        slave_config.load_config(user_cfg)
+    else:
+        slave_config.load_config("/dev/null")
+
+
 
     debug = False
     daemon = False

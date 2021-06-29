@@ -232,10 +232,6 @@ class Controller(object):
             return config
         else:
             config = CtlConfig()
-            try:
-                config.load_config('/etc/lnst-ctl.conf')
-            except:
-                pass
 
             usr_cfg = os.path.expanduser('~/.lnst/lnst-ctl.conf')
             if os.path.isfile(usr_cfg):
