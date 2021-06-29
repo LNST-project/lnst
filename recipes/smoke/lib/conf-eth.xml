@@ -1,7 +1,0 @@
-<interfaces>
-    <eth id="testiface" label="net">
-        <addresses>
-            <address value="{$testip}"/>
-        </addresses>
-    </eth>
-</interfaces>
