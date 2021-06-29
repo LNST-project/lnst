@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "lnst"
+version = "15.8.0"
+homepage = "http://lnst-project.org"
+license = "GPL-2.0-or-later"
+readme = "README.md"
+repository = "https://github.com/LNST-project/lnst"
+description = "Linux Network Stack Test"
+authors = ["LNST Team <lnst-developers@lists.fedorahosted.org>"]
+maintainers = ["Ondrej Lichtner <olichtne@redhat.com>", "Jan Tluka <jtluka@redhat.com>",
+    "Jozef Urbanovsky <jurbanov@redhat.com>", "Perry Gagne <pgagne@redhat.com>", "Jiri Pirko <jiri@resnulli.us>"]
+
+packages = [
+    { include = "lnst"}
+]
+
+include = ["lnst_slave_cli.py", "schema-sm.rng", "install/*", "lnst-ctl.conf", "lnst-slave.conf"]
+
+[tool.poetry.dependencies]
+python = "*"
+
+pyroute2 = "*"
+pyyaml = "*"
+lxml = "*"
+libvirt-python = "*"
+ethtool = "*"
+dataclasses = "*"
+
+[tool.poetry.scripts]
+lnst-slave = 'lnst_slave_cli:main'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
