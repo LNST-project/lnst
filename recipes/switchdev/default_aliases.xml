@@ -1,6 +1,0 @@
-<define>
-    <alias name="ipv" value="both" />
-    <alias name="mtu" value="1500" />
-    <alias name="netperf_duration" value="60" />
-    <alias name="netperf_num_parallel" value="30" />
-</define>
