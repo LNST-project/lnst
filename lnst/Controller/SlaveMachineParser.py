@@ -15,12 +15,13 @@ import os
 import sys
 from lxml import etree
 from lnst.Controller.Common import ControllerError
+import lnst
 
 class SlaveMachineParser(object):
     def __init__(self, sm_path, ctl_config):
         # locate the schema file
         # try git path
-        dirname = os.path.dirname(sys.argv[0])
+        dirname = os.path.join(os.path.dirname(lnst.__file__), '..')
         schema_path = os.path.join(dirname, "schema-sm.rng")
         if not os.path.exists(schema_path):
             # try configuration
