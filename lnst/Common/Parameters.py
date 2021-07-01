@@ -218,3 +218,26 @@ class Parameters(object):
         for attr, val in list(self._attrs.items()):
             result += "%s = %s\n" % (attr, str(val))
         return result
+
+    def get(self, name, default=None):
+        """
+        This method is used similar to `dict.get()`. It can be used to check if a param
+        is in the Parameters object, and if not returns some other value.
+
+        For example::
+                if "perf_tool_cpu" in self.params
+                    cpuin = self.params.perf_tool_cpu
+                else:
+                    cpuin = 1
+
+        Becomes::
+            cpuin = self.params.get('perf_tool_cpu', 1)
+
+        :param name: The name of the parameter to query.
+        :param default: The value to return if param `name` is not specified. Default None
+        :return: The value of the parameter, if it was specified, otherwise the value of `default`.
+        """
+        if name in self:
+            return self._attrs[name]
+        else:
+            return default
