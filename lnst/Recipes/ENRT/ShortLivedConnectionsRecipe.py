@@ -1,16 +1,20 @@
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
-from lnst.Recipes.ENRT.LatencyEnrtRecipe import LatencyEnrtRecipe
-from lnst.Common.Parameters import Param, IntParam, ListParam
+from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Common.Parameters import Param, ListParam, ChoiceParam, StrParam
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 
-class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, LatencyEnrtRecipe):
+
+class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
+
+    # Neper is the only option for RR type tests.
+    net_perf_tool = ChoiceParam(default='neper', type=StrParam, choices=set(['neper']))
 
     perf_tests = Param(default=("tcp_rr", "tcp_crr", "udp_rr"))
     ip_versions = Param(default=("ipv4",))
