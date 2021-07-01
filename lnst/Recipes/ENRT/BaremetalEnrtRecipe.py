@@ -7,8 +7,8 @@ from lnst.Recipes.ENRT.ConfigMixins.DisableIdleStatesMixin import (
     DisableIdleStatesMixin,
 )
 
-from lnst.Recipes.ENRT.MeasurementGenerators.IperfMeasurementGenerator import (
-    IperfMeasurementGenerator,
+from lnst.Recipes.ENRT.MeasurementGenerators.FlowMeasurementGenerator import (
+    FlowMeasurementGenerator,
 )
 from lnst.Recipes.ENRT.MeasurementGenerators.FlowEndpointsStatCPUMeasurementGenerator import (
     FlowEndpointsStatCPUMeasurementGenerator,
@@ -20,7 +20,7 @@ class BaremetalEnrtRecipe(
     DisableTurboboostMixin,
     DisableIdleStatesMixin,
     FlowEndpointsStatCPUMeasurementGenerator,
-    IperfMeasurementGenerator,
+    FlowMeasurementGenerator,
     BaseEnrtRecipe,
 ):
     @property
