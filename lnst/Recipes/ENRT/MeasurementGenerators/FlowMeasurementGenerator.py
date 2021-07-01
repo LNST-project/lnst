@@ -3,18 +3,33 @@ from lnst.Common.Parameters import (
     IntParam,
     ListParam,
     StrParam,
+    ChoiceParam,
 )
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
-from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement
+from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement, NeperFlowMeasurement
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
 
 from typing import List
 
-class IperfMeasurementGenerator(BaseMeasurementGenerator):
+
+MEASUREMENT_LOOKUP = {
+    'iperf': IperfFlowMeasurement,
+    'neper': NeperFlowMeasurement,
+}
+
+class FlowMeasurementGenerator(BaseMeasurementGenerator):
     """
+    :param net_perf_tool:
+        Parameter used by the :any:`generate_perf_configurations` generator to
+        create a PerfRecipeConf object.
+        Specifies a network flow measurement class that accepts :any:`PerfFlow`
+        objects and can be used to measure those specified flows
+    :type net_perf_tool: :any:`BaseFlowMeasurement` (default
+        IperfFlowMeasurement)
+
     :param perf_tests:
         Parameter used by the :any:`generate_flow_combinations` generator.
         Tells the generator what types of network flow measurements to generate
@@ -27,6 +42,16 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
         indicate that the flow measurement should be pinned to a specific CPU
         core.
     :type perf_tool_cpu: :any:`IntParam` (optional parameter)
+
+    :param perf_tool_cpu_policy:
+        Allows user to control how the cpus specified through the `perf_tool_cpu`
+        parameter are assigned to instances of the performance measurement tool.
+
+        This parameter is usually used when `perf_parallel_processes` is set to a value greater than one.
+        The value can be:
+         * `round-robin` - each of the processes will be pinned to exactly ONE cpu from the list defined by perf_tool_cpu in round-robin fashion
+         * `all` - each of the processes will be pinned to all cpus in the list defined by perf_tool_cpu
+    :type perf_tool_cpu_policy: :any:`StrParam` (default `all`)
 
     :param perf_duration:
         Parameter used by the :any:`generate_perf_configurations` generator. To
@@ -69,12 +94,20 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
     perf_parallel_processes = IntParam(default=1)
     perf_msg_sizes = ListParam(default=[123])
 
-    net_perf_tool = Param(default=IperfFlowMeasurement)
+    net_perf_tool = ChoiceParam(type=StrParam, choices=MEASUREMENT_LOOKUP.keys(), default='iperf')
+
+    @property
+    def net_perf_tool_class(self):
+        cls = self.params.get('net_perf_tool', None)
+        if cls is None:
+            return IperfFlowMeasurement
+        else:
+            return MEASUREMENT_LOOKUP[cls]
 
     def generate_perf_measurements_combinations(self, config):
         combinations = super().generate_perf_measurements_combinations(config)
         for flow_combination in self.generate_flow_combinations(config):
-            combinations.append([self.params.net_perf_tool(flow_combination)])
+            combinations.append([self.net_perf_tool_class(flow_combination)])
         return combinations
 
     def generate_flow_combinations(self, config):
@@ -116,7 +149,7 @@ class IperfMeasurementGenerator(BaseMeasurementGenerator):
     def generate_perf_endpoints(self, config):
         """Generator for perf endpoints
 
-        To be overriden by a derived class.
+        To be overridden by a derived class.
 
         :return: list of device pairs
         :rtype: List[Tuple[:any:`Device`, :any:`Device`]]

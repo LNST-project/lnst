@@ -75,14 +75,7 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
                              bind = ipaddress(flow.receiver_bind),
                              test_length = flow.duration)
 
-        if flow.cpupin is not None and flow.cpupin >= 0:
-            if flow.parallel_streams == 1:
-                server_params["cpu_bind"] = flow.cpupin
-            else:
-                raise RecipeError("Unsupported combination of single cpupin "
-                                  "with parallel perf streams.")
-        elif flow.cpupin is not None:
-            raise RecipeError("Negative perf cpupin value provided.")
+        self._set_cpupin_params(server_params, flow.cpupin)
 
         if flow.msg_size:
             server_params["request_size"] = flow.msg_size
@@ -97,14 +90,7 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
                              server = ipaddress(flow.receiver_bind),
                              test_length = flow.duration)
 
-        if flow.cpupin is not None and flow.cpupin >= 0:
-            if flow.parallel_streams == 1:
-                client_params["cpu_bind"] = flow.cpupin
-            else:
-                raise RecipeError("Unsupported combination of single cpupin "
-                                  "with parallel perf streams.")
-        elif flow.cpupin is not None:
-            raise RecipeError("Negative perf cpupin value provided.")
+        self._set_cpupin_params(client_params, flow.cpupin)
 
         #TODO Figure out what to do about parallel_streams
         # (num_treads? num_flows? possible 2 instances runing at once?)
@@ -121,6 +107,20 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
 
         return host.prepare_job(NeperClient(**client_params),
                                 job_level=ResultLevel.NORMAL)
+
+    def _set_cpupin_params(self, params, cpupin):
+        if cpupin is not None:
+            for cpu in cpupin:
+                if cpu < 0:
+                    raise RecipeError("Negative perf cpupin value provided.")
+
+            # at the moment iperf does not support pinning to multiple cpus
+            # so pin to the first cpu specified in the list
+            if len(cpupin) > 1:
+                raise RecipeError("Cannot pin neper to the specified list "\
+                    "of cpus due to use not supporting it with neper.")
+
+            params["cpu_bind"] = cpupin[0]
 
     def collect_results(self) -> List[FlowMeasurementResults]:
         test_flows = self._finished_measurements
