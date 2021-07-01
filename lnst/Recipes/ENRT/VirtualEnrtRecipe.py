@@ -7,8 +7,8 @@ from lnst.Recipes.ENRT.ConfigMixins.DisableIdleStatesMixin import (
     DisableIdleStatesMixin,
 )
 
-from lnst.Recipes.ENRT.MeasurementGenerators.IperfMeasurementGenerator import (
-    IperfMeasurementGenerator,
+from lnst.Recipes.ENRT.MeasurementGenerators.FlowMeasurementGenerator import (
+    FlowMeasurementGenerator,
 )
 from lnst.Recipes.ENRT.MeasurementGenerators.HypervisorsStatCPUMeasurementGenerator import (
     HypervisorsStatCPUMeasurementGenerator,
@@ -20,7 +20,7 @@ class VirtualEnrtRecipe(
     DisableTurboboostMixin,
     DisableIdleStatesMixin,
     HypervisorsStatCPUMeasurementGenerator,
-    IperfMeasurementGenerator,
+    FlowMeasurementGenerator,
     BaseEnrtRecipe,
 ):
     @property
