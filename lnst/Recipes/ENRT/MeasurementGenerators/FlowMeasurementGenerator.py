@@ -25,10 +25,10 @@ class FlowMeasurementGenerator(BaseMeasurementGenerator):
     :param net_perf_tool:
         Parameter used by the :any:`generate_perf_configurations` generator to
         create a PerfRecipeConf object.
-        Specifies a network flow measurement class that accepts :any:`PerfFlow`
-        objects and can be used to measure those specified flows
-    :type net_perf_tool: :any:`BaseFlowMeasurement` (default
-        IperfFlowMeasurement)
+        Specifies a string name that maps to a network flow measurement class
+        that accepts :any:`PerfFlow` objects and can be used to measure those specified flows.
+        Supported options are 'iperf' or 'neper'
+    :type net_perf_tool: :any:`ChoiceParam` (default 'iperf' )
 
     :param perf_tests:
         Parameter used by the :any:`generate_flow_combinations` generator.
