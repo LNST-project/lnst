@@ -149,47 +149,6 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
                 yield [pconf]
 
-    def generate_perf_configurations(self, config):
-        client_nic = config.host1.msec0
-        server_nic = config.host2.msec0
-        client_netns = client_nic.netns
-        server_netns = server_nic.netns
-
-        flow_combinations = self.generate_flow_combinations(
-            config
-        )
-
-        for flows in flow_combinations:
-            perf_recipe_conf=dict(
-                recipe_config=config,
-                flows=flows,
-            )
-
-            flows_measurement = self.params.net_perf_tool(
-                flows,
-                perf_recipe_conf
-            )
-
-            cpu_measurement = self.params.cpu_perf_tool(
-                [client_netns, server_netns],
-                perf_recipe_conf,
-            )
-
-            perf_conf = PerfRecipeConf(
-                measurements=[cpu_measurement, flows_measurement],
-                iterations=self.params.perf_iterations,
-                parent_recipe_config=copy.deepcopy(config),
-            )
-
-            perf_conf.register_evaluators(
-                cpu_measurement, self.cpu_perf_evaluators
-            )
-            perf_conf.register_evaluators(
-                flows_measurement, self.net_perf_evaluators
-            )
-
-            yield perf_conf
-
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.msec0, self.matched.host2.msec0)]
 
