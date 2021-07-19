@@ -129,6 +129,12 @@ class BaseEnrtRecipe(
         Specifies a cpu measurement class that can be used to measure CPU
         utilization on specified hosts.
     :type cpu_perf_tool: :any:`BaseCPUMeasurement` (default StatCPUMeasurement)
+
+    :param skip_perf_evaluation:
+        Parameter used by the :any:`generate_perf_configurations` generator to
+        bypass registration of the performance measurement evaluators if set
+        to True.
+    :type skip_perf_evaluation: :any:`BoolParam` (default False)
     """
 
     driver = StrParam(default="ixgbe")
@@ -142,6 +148,9 @@ class BaseEnrtRecipe(
     ping_count = IntParam(default=100)
     ping_interval = FloatParam(default=0.2)
     ping_psize = IntParam(default=56)
+
+    # generic perf test params
+    skip_perf_evaluation = BoolParam(default=False)
 
     def test(self):
         """Main test loop shared by all the Enrt recipes
@@ -389,7 +398,8 @@ class BaseEnrtRecipe(
 
         Finally for each generated perf test configuration we register
         measurement evaluators based on the :any:`cpu_perf_evaluators` and
-        :any:`net_perf_evaluators` properties.
+        :any:`net_perf_evaluators` properties. The registration is skipped
+        if :any:`skip_perf_evaluation` parameter is **True**.
 
         :return: list of Perf test configurations
         :rtype: List[:any:`PerfRecipeConf`]
@@ -403,7 +413,8 @@ class BaseEnrtRecipe(
                 parent_recipe_config=copy.deepcopy(config),
             )
 
-            self.register_perf_evaluators(perf_conf)
+            if not self.params.skip_perf_evaluation:
+                self.register_perf_evaluators(perf_conf)
 
             yield perf_conf
 
