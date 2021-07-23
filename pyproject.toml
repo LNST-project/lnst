@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lnst"
-version = "15.8.0"
+version = "16.0.0"
 homepage = "http://lnst-project.org"
 license = "GPL-2.0-or-later"
 readme = "README.md"
@@ -17,7 +17,7 @@ packages = [
 include = ["lnst_slave_cli.py", "schema-sm.rng", "install/*", "lnst-ctl.conf", "lnst-slave.conf"]
 
 [tool.poetry.dependencies]
-python = "*"
+python = "^3.6"
 
 pyroute2 = "*"
 pyyaml = "*"
