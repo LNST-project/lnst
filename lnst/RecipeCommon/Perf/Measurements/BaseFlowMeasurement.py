@@ -268,6 +268,11 @@ class BaseFlowMeasurement(BaseMeasurement):
             for flow_results in aggregated_flow_results:
                 cls._report_flow_results(recipe, flow_results)
 
+    @staticmethod
+    def _invalid_flow_duration(result: FlowMeasurementResults) -> bool:
+        if result.duration <= 0:
+            return True
+        return False
 
     @classmethod
     def _report_flow_results(cls, recipe, flow_results):
@@ -297,8 +302,16 @@ class BaseFlowMeasurement(BaseMeasurement):
                         cpu_deviation=receiver_cpu.std_deviation,
                         cpu_unit=receiver_cpu.unit))
 
-        #TODO add flow description
-        recipe.add_result(True, "\n".join(desc), data = dict(
+        recipe_result = True
+        metrics = {"Generator": generator, "Generator process": generator_cpu,
+                   "Receiver": receiver, "Receiver process": receiver_cpu}
+        for name, result in metrics.items():
+            if cls._invalid_flow_duration(result):
+                recipe_result = False
+                desc.append("{} has invalid duration!".format(name))
+
+        # TODO add flow description
+        recipe.add_result(recipe_result, "\n".join(desc), data = dict(
                     generator_flow_data=generator,
                     generator_cpu_data=generator_cpu,
                     receiver_flow_data=receiver,
