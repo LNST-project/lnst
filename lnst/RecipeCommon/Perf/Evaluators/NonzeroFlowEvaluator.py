@@ -34,7 +34,15 @@ class NonzeroFlowEvaluator(BaseResultEvaluator):
             for metric_name in self._metrics_to_evaluate:
                 metric = getattr(flow_results, metric_name, None)
                 if metric:
-                    if metric.average > 0:
+                    if metric.average == float("inf"):
+                        result = False
+                        result_text.append(
+                            "{} reported invalid value: {}".format(
+                                metric_name,
+                                metric.average
+                            )
+                        )
+                    elif metric.average > 0:
                         result_text.append(
                             "{} reported non-zero throughput".format(
                                 metric_name
