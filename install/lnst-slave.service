@@ -5,7 +5,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/lnst-slave
+ExecStart=/usr/local/bin/lnst-slave
 StandardOutput=null
 
 [Install]
