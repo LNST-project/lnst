@@ -26,6 +26,8 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
     guest2 = HostReq()
     guest2.eth0 = DeviceReq(label="to_guest2")
 
+    vlan_id = Param(default=10)
+
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
         dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
@@ -42,7 +44,7 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
             host.eth0.down()
             host.tap0.down()
             host.br0.port_add(host.eth0)
-            host.br0.port_add(host.tap0, port_options={'tag': 10})
+            host.br0.port_add(host.tap0, port_options={'tag': self.params.vlan_id})
 
         guest1.eth0.down()
         guest2.eth0.down()
