@@ -63,6 +63,8 @@ class GreTunnelOverVlanRecipe(
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
+    vlan_id = Param(default=10)
+
     offload_combinations = Param(
         default=(
             dict(gro="on", gso="on", tso="on"),
@@ -80,22 +82,22 @@ class GreTunnelOverVlanRecipe(
         """
         host1, host2 = self.matched.host1, self.matched.host2
 
-        host1.vlan10 = VlanDevice(realdev=host1.eth0, vlan_id=10)
-        host2.vlan10 = VlanDevice(realdev=host2.eth0, vlan_id=10)
+        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan_id)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id)
 
-        for i, device in enumerate([host1.vlan10, host2.vlan10]):
+        for i, device in enumerate([host1.vlan0, host2.vlan0]):
             device.ip_add(ipaddress("192.168.101." + str(i + 1) + "/24"))
             configuration.test_wide_devices.append(device)
 
         for dev in [
             host1.eth0,
-            host1.vlan10,
+            host1.vlan0,
             host2.eth0,
-            host2.vlan10,
+            host2.vlan0,
         ]:
             dev.up()
 
-        configuration.tunnel_endpoints = (host1.vlan10, host2.vlan10)
+        configuration.tunnel_endpoints = (host1.vlan0, host2.vlan0)
 
     def create_tunnel(self, configuration):
         """
@@ -160,8 +162,8 @@ class GreTunnelOverVlanRecipe(
         and grep patterns to match the ICMP or ICMP6 echo requests.
         """
         ip_filter = {"family": AF_INET}
-        m1_carrier = self.matched.host1.vlan10
-        m2_carrier = self.matched.host2.vlan10
+        m1_carrier = self.matched.host1.vlan0
+        m2_carrier = self.matched.host2.vlan0
         m1_carrier_ip = m1_carrier.ips_filter(**ip_filter)[0]
         m2_carrier_ip = m2_carrier.ips_filter(**ip_filter)[0]
 

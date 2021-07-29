@@ -25,6 +25,8 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
+    vlan_ids = Param(default=[10, 20, 30])
+
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
         dict(gro="off", gso="on", tso="on", tx="on"),
@@ -41,12 +43,12 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
             dev.down()
             host1.team0.slave_add(dev)
 
-        host1.vlan0 = VlanDevice(realdev=host1.team0, vlan_id=10)
-        host1.vlan1 = VlanDevice(realdev=host1.team0, vlan_id=20)
-        host1.vlan2 = VlanDevice(realdev=host1.team0, vlan_id=30)
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=10)
-        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=20)
-        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=30)
+        host1.vlan0 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan_ids[0])
+        host1.vlan1 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan_ids[1])
+        host1.vlan2 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan_ids[2])
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[0])
+        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[1])
+        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[2])
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []

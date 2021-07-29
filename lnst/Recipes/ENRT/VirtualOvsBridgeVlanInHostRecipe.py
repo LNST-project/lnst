@@ -23,6 +23,8 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest")
 
+    vlan_id = Param(default=10)
+
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
         dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
@@ -38,12 +40,12 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         host1.tap0.down()
         host1.br0 = OvsBridgeDevice()
         host1.br0.port_add(host1.eth0)
-        host1.br0.port_add(host1.tap0, port_options={'tag': 10})
+        host1.br0.port_add(host1.tap0, port_options={'tag': self.params.vlan_id})
 
         host2.eth0.down()
         guest1.eth0.down()
 
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=10)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [guest1.eth0, host2.vlan0]

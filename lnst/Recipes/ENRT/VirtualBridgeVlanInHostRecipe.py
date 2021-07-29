@@ -22,6 +22,8 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest")
 
+    vlan_id = Param(default=10)
+
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
         dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
@@ -42,9 +44,9 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         guest1.eth0.down()
 
         host1_vlan_args0 = dict()
-        host2_vlan_args0 = dict(realdev=host2.eth0, vlan_id=10)
+        host2_vlan_args0 = dict(realdev=host2.eth0, vlan_id=self.params.vlan_id)
 
-        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=10,
+        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan_id,
             master=host1.br0)
         host2.vlan0 = VlanDevice(**host2_vlan_args0)
 
