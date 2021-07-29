@@ -82,7 +82,23 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
 
     def _pin_dev_interrupts(self, dev, cpus):
         netns = dev.netns
-        cpu_info = netns.run("lscpu", job_level=ResultLevel.DEBUG).stdout
+        self._check_cpu_validity(netns, cpus)
+
+        intrs = self._get_dev_interrupts(dev)
+
+        for i, intr in enumerate(intrs):
+            try:
+                cpu = cpus[i % len(cpus)]
+                netns.run(
+                    "echo -n {} > /proc/irq/{}/smp_affinity_list".format(
+                        cpu, intr
+                    )
+                )
+            except ValueError:
+                pass
+
+    def _check_cpu_validity(self, host, cpus):
+        cpu_info = host.run("lscpu", job_level=ResultLevel.DEBUG).stdout
         regex = "CPU\(s\): *([0-9]*)"
         num_cpus = int(re.search(regex, cpu_info).groups()[0])
         for cpu in cpus:
@@ -95,30 +111,24 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
                     )
                 )
 
-        res = netns.run(
-            "grep {} /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
-                dev.name
+    def _get_dev_interrupts(self, dev):
+        if "up" not in dev.state:
+            # device needs to be UP when grepping /proc/interrupts
+            dev.up()
+            set_down = True
+        else:
+            set_down = False
+
+        dev_id_regex = r"({})|({})".format(dev.name, dev.bus_info)
+        res = dev.netns.run(
+            "grep -P \"{}\" /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
+                dev_id_regex
             ),
             job_level=ResultLevel.DEBUG,
         )
-        intrs = res.stdout
-        split = res.stdout.split("\n")
-        if len(split) == 1 and split[0] == "":
-            res = netns.run(
-                "dev_irqs=/sys/class/net/{}/device/msi_irqs; "
-                "[ -d $dev_irqs ] && ls -1 $dev_irqs".format(dev.name),
-                job_level=ResultLevel.DEBUG,
-            )
-            intrs = res.stdout
 
-        for i, intr in enumerate(intrs.split("\n")):
-            try:
-                int(intr)
-                cpu = cpus[i % len(cpus)]
-                netns.run(
-                    "echo -n {} > /proc/irq/{}/smp_affinity_list".format(
-                        cpu, intr.strip()
-                    )
-                )
-            except ValueError:
-                pass
+        if set_down:
+            # set device back down if we set it up
+            dev.down()
+
+        return [int(intr.strip()) for intr in res.stdout.strip().split('\n')]
