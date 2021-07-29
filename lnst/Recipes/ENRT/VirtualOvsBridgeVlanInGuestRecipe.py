@@ -43,8 +43,6 @@ class VirtualOvsBridgeVlanInGuestRecipe(CommonHWSubConfigMixin,
         host2.eth0.down()
         guest1.eth0.down()
 
-        host2_vlan_args0 =  dict(realdev=host2.eth0, vlan_id=10)
-        guest1_vlan_args0 = dict(realdev=guest1.eth0, vlan_id=10)
         host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id)
         guest1.vlan0 = VlanDevice(realdev=guest1.eth0, vlan_id=self.params.vlan_id)
 

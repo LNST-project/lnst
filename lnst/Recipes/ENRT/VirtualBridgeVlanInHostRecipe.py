@@ -43,12 +43,9 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         host2.eth0.down()
         guest1.eth0.down()
 
-        host1_vlan_args0 = dict()
-        host2_vlan_args0 = dict(realdev=host2.eth0, vlan_id=self.params.vlan_id)
-
         host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan_id,
             master=host1.br0)
-        host2.vlan0 = VlanDevice(**host2_vlan_args0)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [guest1.eth0, host2.vlan0,
