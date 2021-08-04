@@ -121,6 +121,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
         self._set_cpupin_params(server_params, flow.cpupin)
 
+        if flow.type == "mptcp_stream":
+            server_params["mptcp"] = True
+
         if flow.receiver_port is not None:
             server_params["port"] = flow.receiver_port
 
@@ -139,6 +142,8 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
             client_params["udp"] = True
         elif flow.type == "sctp_stream":
             client_params["sctp"] = True
+        elif flow.type == "mptcp_stream":
+            client_params["mptcp"] = True
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
 
