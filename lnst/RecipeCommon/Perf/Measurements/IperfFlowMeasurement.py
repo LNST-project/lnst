@@ -139,6 +139,8 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
             client_params["udp"] = True
         elif flow.type == "sctp_stream":
             client_params["sctp"] = True
+        elif flow.type == "mptcp_stream":
+            client_params["mptcp"] = True
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
 

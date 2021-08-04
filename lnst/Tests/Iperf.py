@@ -88,6 +88,7 @@ class IperfClient(IperfBase):
     duration = IntParam(default=10)
     udp = BoolParam(default=False)
     sctp = BoolParam(default=False)
+    mptcp = BoolParam(default=False)
     port = IntParam()
     blksize = IntParam()
     mss = IntParam()
@@ -137,6 +138,8 @@ class IperfClient(IperfBase):
             test = "--udp"
         elif self.params.sctp:
             test = "--sctp"
+        elif self.params.mptcp:
+            test = "--multipath"
         else:
             test = ""
 
