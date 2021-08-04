@@ -112,6 +112,26 @@ class MPTCPManager:
             self._endpoints[ep.id] = ep
         return self._endpoints
 
+    @property
+    def subflows(self):
+        nl_msg = self._mptcp.limits("show")[0]
+        return nl_msg.get_attr("MPTCP_PM_ATTR_SUBFLOWS")
+
+    @subflows.setter
+    def subflows(self, n):
+        self._mptcp.limits("set", subflows=n)
+
+    @property
+    def add_addr_accepted(self):
+        nl_msg = self._mptcp.limits("show")[0]
+        return nl_msg.get_attr("MPTCP_PM_ATTR_RCV_ADD_ADDRS")
+
+    @add_addr_accepted.setter
+    def add_addr_accepted(self, n):
+        self._mptcp.limits("set", add_addr_accepted=n)
+
+
+
 
 
     def add_endpoints(self, endpoint_ips):
