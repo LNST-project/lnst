@@ -1,9 +1,12 @@
 from socket import AF_INET, AF_INET6
+from typing import List
 
 from lnst.Common.Parameters import Param
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Controller.Host import Host
 from lnst.RecipeCommon.MPTCPManager import MPTCPManager
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 
 
@@ -18,12 +21,12 @@ class MPTCPRecipe(
     CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
 ):
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net2", driver=RecipeParam("driver"))
+    host1.eth0 = DeviceReq(label="net", driver=RecipeParam("driver"))
+    host1.eth1 = DeviceReq(label="net", driver=RecipeParam("driver"))
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net2", driver=RecipeParam("driver"))
+    host2.eth0 = DeviceReq(label="net", driver=RecipeParam("driver"))
+    host2.eth1 = DeviceReq(label="net", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
@@ -33,9 +36,9 @@ class MPTCPRecipe(
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
     #Only use mptcp
-    perf_tests = Param(default=("mptcp_stream"))
+    perf_tests = Param(default=("mptcp_stream",))
 
-    def init_mptcp_control(self, hosts):
+    def init_mptcp_control(self, hosts: List[Host]):
         """
         TODO maybe move this to some sort of MPTCPMixin
         :param hosts:
@@ -65,8 +68,10 @@ class MPTCPRecipe(
         self.init_mptcp_control(hosts)
 
         for i, host in enumerate(hosts):
+            host.run("sysctl -w /net/mptcp/enabled=1")
             host.eth0.ip_add(ipaddress("192.168.101." + str(i+1) + "/24"))
             host.eth1.ip_add(ipaddress("192.168.102." + str(i+1) + "/24"))
+            #TODO ASK MPTCP DEVs whats the deal with v6? Can we test it at the same time as v4 or does it have to be a seperate run.
             #host.eth0.ip_add(ipaddress("fc00::" + str(i+1) + "/64"))
             #host.eth1.ip_add(ipaddress("fc01::" + str(i+1) + "/64"))
             host.eth0.up()
@@ -77,6 +82,7 @@ class MPTCPRecipe(
 
         #Configure endpoints
         #TODO Might need to redo this
+        # ASK MPTCP DEV we  might not need to configure endpoints on either side, or if we do the optioons might be different (ie subflows only on client side)
         for ep_dev in config.mptcp_endpoints:
             #TODO check with MPTCP devs about ipv6 support
             ep_dev.netns.mptcp.add_endpoints(ep_dev.ips_filter(family=AF_INET))
@@ -115,6 +121,24 @@ class MPTCPRecipe(
 
         super().test_wide_deconfiguration(config)
 
+    def generate_ping_endpoints(self, config):
+        """
+        The ping endpoints are all ports in their respective pairs
+        """
+        return [PingEndpoints(self.matched.host1.eth0, self.matched.host2.eth0),
+                PingEndpoints(self.matched.host1.eth1, self.matched.host2.eth1)]
+
+    def generate_perf_endpoints(self, config):
+        """
+        Due to the way MPTCP works, the the perf endpoints will be the 2 "primary" ports/flows
+        TODO look into other options, to get traffic to traverse the subflow.
+        """
+        return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+
+
+    #TODO
+    #ASK MPTCP DEVs
+    # Do/should we test with the features from the below methods (pause frames, offload, mtu, etc).
     @property
     def pause_frames_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host1.eth1,
