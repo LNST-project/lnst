@@ -1,5 +1,5 @@
 import logging
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import Param, IntParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
@@ -27,7 +27,7 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
     guest2 = HostReq()
     guest2.eth0 = DeviceReq(label="to_guest2")
 
-    vlan_id = Param(default=10)
+    vlan_id = IntParam(default=10)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),

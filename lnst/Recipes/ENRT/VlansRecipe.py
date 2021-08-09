@@ -1,4 +1,4 @@
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import Param, IntParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -42,7 +42,9 @@ class VlansRecipe(VlanPingEvaluatorMixin,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    vlan_ids = Param(default=[10, 20, 30])
+    vlan0_id = IntParam(default=10)
+    vlan1_id = IntParam(default=20)
+    vlan2_id = IntParam(default=30)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
@@ -55,8 +57,8 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         """
         Test wide configuration for this recipe involves creating three
         VLAN (802.1Q) tunnels on top of the matched host's NIC with vlan
-        ids from parameter vlan_id (by default: [10, 20, 30]). The same tunnels
-        are configured on the second host.
+        ids from parameters vlan0_id, vlan1_id and vlan2_id (by default: 10, 20,
+        30). The same tunnels are configured on the second host.
 
         An IPv4 and IPv6 address is configured on each tunnel endpoint.
 
@@ -74,12 +76,12 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         host1.eth0.down()
         host2.eth0.down()
 
-        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan_ids[0])
-        host1.vlan1 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan_ids[1])
-        host1.vlan2 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan_ids[2])
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[0])
-        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[1])
-        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[2])
+        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan0_id)
+        host1.vlan1 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan1_id)
+        host1.vlan2 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan2_id)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan0_id)
+        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
+        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
@@ -160,7 +162,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
     def generate_perf_endpoints(self, config):
         """
         The perf endpoints for this recipe are the VLAN tunnel endpoints with
-        VLAN id from parameter vlan_ids[0] (by default: 10):
+        VLAN id from parameter vlan0_id (by default: 10):
 
         host1.vlan0 and host2.vlan0
 

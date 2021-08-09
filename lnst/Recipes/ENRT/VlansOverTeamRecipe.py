@@ -1,4 +1,4 @@
-from lnst.Common.Parameters import Param, StrParam
+from lnst.Common.Parameters import Param, IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -25,7 +25,9 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
-    vlan_ids = Param(default=[10, 20, 30])
+    vlan0_id = IntParam(default=10)
+    vlan1_id = IntParam(default=20)
+    vlan2_id = IntParam(default=30)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
@@ -43,12 +45,12 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
             dev.down()
             host1.team0.slave_add(dev)
 
-        host1.vlan0 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan_ids[0])
-        host1.vlan1 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan_ids[1])
-        host1.vlan2 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan_ids[2])
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[0])
-        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[1])
-        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[2])
+        host1.vlan0 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan0_id)
+        host1.vlan1 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan1_id)
+        host1.vlan2 = VlanDevice(realdev=host1.team0, vlan_id=self.params.vlan2_id)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan0_id)
+        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
+        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
