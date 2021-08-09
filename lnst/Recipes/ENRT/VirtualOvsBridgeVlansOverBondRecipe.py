@@ -38,7 +38,8 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
     guest4 = HostReq()
     guest4.eth0 = DeviceReq(label="to_guest4")
 
-    vlan_ids = Param(default=[10, 20])
+    vlan0_id = IntParam(default=10)
+    vlan1_id = IntParam(default=20)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
@@ -59,8 +60,8 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
             for dev in [host.eth0, host.eth1, host.tap0, host.tap1]:
                 dev.down()
             host.br0 = OvsBridgeDevice()
-            host.br0.port_add(device=host.tap0, port_options={'tag': self.params.vlan_ids[0]})
-            host.br0.port_add(device=host.tap1, port_options={'tag': self.params.vlan_ids[1]})
+            host.br0.port_add(device=host.tap0, port_options={'tag': self.params.vlan0_id})
+            host.br0.port_add(device=host.tap1, port_options={'tag': self.params.vlan1_id})
             #miimon cannot be set due to colon in argument name -->
             #other_config:bond-miimon-interval
             host.br0.bond_add(port_name, (host.eth0, host.eth1),

@@ -61,7 +61,9 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    vlan_ids = Param(default=[10, 20, 30])
+    vlan0_id = IntParam(default=10)
+    vlan1_id = IntParam(default=20)
+    vlan2_id = IntParam(default=30)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
@@ -80,7 +82,8 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         bonding device according to the recipe parameters. Then three
         VLAN (802.1Q) tunnels are created on top of the bonding device on the
         first host and on the matched NIC on the second host. The tunnels are
-        configured with VLAN ids from vlan_ids param (by default: [10, 20, 30]).
+        configured with VLAN ids from vlan0_id, vlan1_id and vlan2_id params (by
+        default: 10, 20, 30).
 
         An IPv4 and IPv6 address is configured on each tunnel endpoint.
 
@@ -100,12 +103,12 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
             dev.down()
             host1.bond0.slave_add(dev)
 
-        host1.vlan0 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan_ids[0])
-        host1.vlan1 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan_ids[1])
-        host1.vlan2 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan_ids[2])
-        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[0])
-        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[1])
-        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_ids[2])
+        host1.vlan0 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan0_id)
+        host1.vlan1 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan1_id)
+        host1.vlan2 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan2_id)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan0_id)
+        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
+        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []

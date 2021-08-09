@@ -5,7 +5,7 @@ from lnst.Common.IpAddress import (
     Ip4Address,
     Ip6Address,
 )
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import Param, IntParam
 from lnst.Devices import GreDevice, VlanDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
@@ -63,7 +63,7 @@ class GreTunnelOverVlanRecipe(
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    vlan_id = Param(default=10)
+    vlan_id = IntParam(default=10)
 
     offload_combinations = Param(
         default=(

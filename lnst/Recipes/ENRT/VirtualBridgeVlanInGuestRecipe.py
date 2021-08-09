@@ -24,7 +24,7 @@ class VirtualBridgeVlanInGuestRecipe(CommonHWSubConfigMixin,
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest")
 
-    vlan_id = Param(default=10)
+    vlan_id = IntParam(default=10)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),

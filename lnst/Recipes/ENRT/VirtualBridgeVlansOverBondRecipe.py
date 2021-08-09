@@ -40,7 +40,8 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
     guest4 = HostReq()
     guest4.eth0 = DeviceReq(label="to_guest4")
 
-    vlan_ids = Param(default=[10, 20])
+    vlan0_id = IntParam(default=10)
+    vlan1_id = IntParam(default=20)
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
@@ -71,13 +72,13 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         for guest in (guest1, guest2, guest3, guest4):
             guest.eth0.down()
 
-        host1.vlan0 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan_ids[0],
+        host1.vlan0 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan0_id,
             master=host1.br0)
-        host1.vlan1 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan_ids[1],
+        host1.vlan1 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan1_id,
             master=host1.br1)
-        host2.vlan0 = VlanDevice(realdev=host2.bond0, vlan_id=self.params.vlan_ids[0],
+        host2.vlan0 = VlanDevice(realdev=host2.bond0, vlan_id=self.params.vlan0_id,
             master=host2.br0)
-        host2.vlan1 = VlanDevice(realdev=host2.bond0, vlan_id=self.params.vlan_ids[1],
+        host2.vlan1 = VlanDevice(realdev=host2.bond0, vlan_id=self.params.vlan1_id,
             master=host2.br1)
 
         configuration = super().test_wide_configuration()
