@@ -22,6 +22,8 @@ class SlaveObject(object):
     def __getattr__(self, name):
         if name == "_inited":
             return super(SlaveObject, self).__getattribute__(name)
+        if not self._inited:
+            return super(SlaveObject, self).__getattr__(name)
 
         attr = getattr(self.__cls, name)
 
