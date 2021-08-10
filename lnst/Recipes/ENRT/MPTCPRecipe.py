@@ -82,7 +82,8 @@ class MPTCPRecipe(
 
         #Configure endpoints
         #TODO Might need to redo this
-        # ASK MPTCP DEV we  might not need to configure endpoints on either side, or if we do the optioons might be different (ie subflows only on client side)
+        # ASK MPTCP DEV we  might not need to configure endpoints on both sides,
+        # or if we do the optioons might be different (ie subflows only on client side)
         for ep_dev in config.mptcp_endpoints:
             #TODO check with MPTCP devs about ipv6 support
             ep_dev.netns.mptcp.add_endpoints(ep_dev.ips_filter(family=AF_INET))
@@ -103,7 +104,7 @@ class MPTCPRecipe(
             for dev in config.test_wide_devices
         ]
 
-        desc += [f"Configed {dev.host.hostid}.mptcp_endpoints = {dev.ips}"
+        desc += [f"Configured {dev.host.hostid}.mptcp_endpoints = {dev.ips}"
                  for dev in config.mptcp_endpoints]
 
         return desc
