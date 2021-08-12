@@ -39,6 +39,15 @@ class IperfBase(BaseTestModule):
             logging.error(self._res_data["msg"])
             return False
 
+        try:
+            self._check_json_sanity()
+        except:
+            self._res_data["msg"] = "Iperf provided incomplete json data"
+            self._res_data["data"] = stdout
+            self._res_data["stderr"] = stderr
+            logging.error(self._res_data["msg"])
+            return False
+
         self._res_data["stderr"] = stderr
 
         if stderr != "":
@@ -53,6 +62,21 @@ class IperfBase(BaseTestModule):
             return False
 
         return True
+
+    def _check_json_sanity(self):
+        data = self._res_data["data"]
+        if "start" not in data:
+            raise Exception()
+
+        if "end" not in data:
+            raise Exception()
+
+        if len(data["intervals"]) == 0:
+            raise Exception()
+
+        if "streams" not in data["end"]:
+            raise Exception
+
 
 class IperfServer(IperfBase):
     bind = IpParam()
