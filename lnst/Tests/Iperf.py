@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import json
+from json.decoder import JSONDecodeError
 from lnst.Common.Parameters import IntParam, IpParam, StrParam, BoolParam
 from lnst.Common.Parameters import HostnameOrIpParam
 from lnst.Common.Utils import is_installed
@@ -31,8 +32,12 @@ class IperfBase(BaseTestModule):
 
         try:
             self._res_data["data"] = json.loads(stdout)
-        except:
+        except JSONDecodeError:
+            self._res_data["msg"] = "Error while parsing the iperf json output"
             self._res_data["data"] = stdout
+            self._res_data["stderr"] = stderr
+            logging.error(self._res_data["msg"])
+            return False
 
         self._res_data["stderr"] = stderr
 
