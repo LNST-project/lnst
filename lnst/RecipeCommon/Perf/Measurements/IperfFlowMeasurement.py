@@ -121,6 +121,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
         self._set_cpupin_params(server_params, flow.cpupin)
 
+        if flow.type == "mptcp_stream":
+            server_params["mptcp"] = True
+
         if flow.receiver_port is not None:
             server_params["port"] = flow.receiver_port
 

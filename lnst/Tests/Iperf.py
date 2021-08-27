@@ -7,6 +7,8 @@ from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
 class IperfBase(BaseTestModule):
+    mptcp = BoolParam(default=False)
+
     def run(self):
         self._res_data = {}
         if not is_installed("iperf3"):
@@ -76,8 +78,10 @@ class IperfServer(IperfBase):
         if "oneoff" in self.params and self.params.oneoff:
             oneoff = "-1"
 
-        cmd = "iperf3 -s {bind} -J {port} {cpu} {oneoff} {opts}".format(
-                bind=bind, port=port, cpu=cpu, oneoff=oneoff,
+        mptcp = "--multipath" if self.params.mptcp else ""
+
+        cmd = "iperf3 -s {bind} -J {port} {cpu} {oneoff} {mptcp} {opts}".format(
+                bind=bind, port=port, cpu=cpu, oneoff=oneoff, mptcp=mptcp,
                 opts=self.params.opts if "opts" in self.params else "")
 
         return cmd
@@ -88,7 +92,6 @@ class IperfClient(IperfBase):
     duration = IntParam(default=10)
     udp = BoolParam(default=False)
     sctp = BoolParam(default=False)
-    mptcp = BoolParam(default=False)
     port = IntParam()
     blksize = IntParam()
     mss = IntParam()
