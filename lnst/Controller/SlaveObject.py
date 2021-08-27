@@ -40,5 +40,5 @@ class SlaveObject(object):
         if name == "_inited" or not self._inited:
             return super(SlaveObject, self).__setattr__(name, value)
 
-        return self._machine.rpc_call("obj_setattr", self.__obj_ref, name,
+        return self.__machine.rpc_call("obj_setattr", self.__obj_ref, name,
                                       value)
