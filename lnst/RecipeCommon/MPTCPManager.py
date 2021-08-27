@@ -1,5 +1,5 @@
 from enum import IntFlag
-from typing import Dict
+from typing import Dict, List
 
 from pyroute2 import MPTCP
 from pyroute2.netlink.generic.mptcp import mptcp_msg
@@ -130,13 +130,12 @@ class MPTCPManager:
     def add_addr_accepted(self, n):
         self._mptcp.limits("set", add_addr_accepted=n)
 
-
-
-
-
-    def add_endpoints(self, endpoint_ips):
+    def add_endpoints(self, endpoint_ips: List[BaseIpAddress], flags: MPTCPFlags):
         for ip in endpoint_ips:
-            self._mptcp.endpoint("add", addr=str(ip))
+            if ip.family == AF_INET:
+                self._mptcp.endpoint("add", addr4=str(ip), flags=flags)
+            elif ip.family == AF_INET6:
+                self._mptcp.endpoint("add", addr6=str(ip), flags=flags)
 
     def delete_all(self):
         r = self._mptcp.endpoint("flush")
