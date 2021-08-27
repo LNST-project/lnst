@@ -5,7 +5,7 @@ from lnst.Common.Parameters import Param
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Host import Host
-from lnst.RecipeCommon.MPTCPManager import MPTCPManager
+from lnst.RecipeCommon.MPTCPManager import MPTCPManager, MPTCPFlags
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 
@@ -62,7 +62,7 @@ class MPTCPRecipe(
         host1, host2 = self.matched.host1, self.matched.host2
         config = super().test_wide_configuration()
         config.test_wide_devices = []
-        config.mptcp_endpoints = []
+        config.mptcp_endpoints = [host1.eth1]
         hosts = [host1, host2]
 
         self.init_mptcp_control(hosts)
@@ -71,23 +71,29 @@ class MPTCPRecipe(
             host.run("sysctl -w /net/mptcp/enabled=1")
             host.eth0.ip_add(ipaddress("192.168.101." + str(i+1) + "/24"))
             host.eth1.ip_add(ipaddress("192.168.102." + str(i+1) + "/24"))
-            #TODO ASK MPTCP DEVs whats the deal with v6? Can we test it at the same time as v4 or does it have to be a seperate run.
-            #host.eth0.ip_add(ipaddress("fc00::" + str(i+1) + "/64"))
-            #host.eth1.ip_add(ipaddress("fc01::" + str(i+1) + "/64"))
+            host.eth0.ip_add(ipaddress("fc00::" + str(i+1) + "/64"))
+            host.eth1.ip_add(ipaddress("fc01::" + str(i+1) + "/64"))
             host.eth0.up()
             host.eth1.up()
             config.test_wide_devices.append(host.eth0)
             config.test_wide_devices.append(host.eth1)
-            config.mptcp_endpoints.append(host.eth1)
 
-        #Configure endpoints
-        #TODO Might need to redo this
-        # ASK MPTCP DEV we  might not need to configure endpoints on both sides,
-        # or if we do the optioons might be different (ie subflows only on client side)
-        for ep_dev in config.mptcp_endpoints:
-            #TODO check with MPTCP devs about ipv6 support
-            ep_dev.netns.mptcp.add_endpoints(ep_dev.ips_filter(family=AF_INET))
-            #ep_dev.netns.mptcp.add_endpoints(ep_dev.ips_filter(family=AF_INET6))
+        # Configure endpoints only host1.eth1
+        if "ipv4" in self.params.ip_versions:
+            host1.mptcp.add_endpoints(host1.eth1.ips_filter(family=AF_INET), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
+            # Need route on client side to populate forwarding table
+            host1.run(f"ip route add 192.168.101.0/24 dev {host1.eth1.name} via 192.168.102.2 prio 10000")
+            # Need to disable rp_filter on server side
+            host2.run("sysctl -w net.ipv4.conf.all.rp_filter=0")
+
+        if "ipv6" in self.params.ip_versions:
+            host1.mptcp.add_endpoints(host1.eth1.ips_filter(family=AF_INET6), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
+            host1.run(f"ip route add fc00::/64 dev {host1.eth1.name} via fc01::2 prio 10000")
+            # ipv6 doesnt have rp_filter
+
+        # Configure limits
+        host1.mptcp.subflows = 1
+        host2.mptcp.subflows = 1
 
         self.wait_tentative_ips(config.test_wide_devices)
 
@@ -132,14 +138,12 @@ class MPTCPRecipe(
     def generate_perf_endpoints(self, config):
         """
         Due to the way MPTCP works, the the perf endpoints will be the 2 "primary" ports/flows
-        TODO look into other options, to get traffic to traverse the subflow.
         """
         return [(self.matched.host1.eth0, self.matched.host2.eth0)]
 
-
-    #TODO
-    #ASK MPTCP DEVs
-    # Do/should we test with the features from the below methods (pause frames, offload, mtu, etc).
+    #TODO MPTCP Devs would like it to have:
+    # eth0.mtu = default
+    # eth1.mtu = 8k.
     @property
     def pause_frames_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host1.eth1,
