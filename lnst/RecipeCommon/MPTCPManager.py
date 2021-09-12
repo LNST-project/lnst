@@ -13,16 +13,11 @@ class MPTCPFlags(IntFlag):
     MPTCP_PM_ADDR_FLAG_SUBFLOW = (1 << 1)
     MPTCP_PM_ADDR_FLAG_BACKUP = (1 << 2)
 
-#@dataclass
+
 class MPTCPEndpoint:
-    # id: int
-    # ip_address: BaseIpAddress
-    # flags: int
-
-
 
     @classmethod
-    def from_netlink(cls, msg: mptcp_msg):
+    def from_netlink(cls, nl_mptcp_ep_msg):
         """
         ..code py
         >>> r = mptcp.endpoint('show')[0]
@@ -35,25 +30,10 @@ class MPTCPEndpoint:
         <class 'pyroute2.netlink.generic.mptcp.mptcp_msg.pm_addr'>
         >>> a
         {'attrs': [('MPTCP_PM_ADDR_ATTR_FAMILY', 2), ('MPTCP_PM_ADDR_ATTR_ID', 5), ('MPTCP_PM_ADDR_ATTR_FLAGS', 1), ('MPTCP_PM_ADDR_ATTR_ADDR4', '192.168.202.1')]}
-        :param msg:
+        :param nl_mptcp_ep_msg: the netlink message from mptcp.endpoint('show')
         :return:
         """
-
-        addr = msg.get_attr("MPTCP_PM_ATTR_ADDR")
-        ep_id = addr.get_attr("MPTCP_PM_ADDR_ATTR_ID")
-        ip_type = addr.get_attr("MPTCP_PM_ADDR_ATTR_FAMILY")
-        flags = addr.get_attr("MPTCP_PM_ADDR_ATTR_FLAGS")
-
-        if ip_type == AF_INET:
-            ip = ipaddress(addr.get_attr("MPTCP_PM_ADDR_ATTR_ADDR4"))
-        else:
-            ip = ipaddress(addr.get_attr("MPTCP_PM_ADDR_ATTR_ADDR6"))
-
-        return cls(ep_id, ip, flags)
-
-    @classmethod
-    def from_netlink_new(cls, nl_msg):
-        addr = nl_msg.get_attr("MPTCP_PM_ATTR_ADDR")
+        addr = nl_mptcp_ep_msg.get_attr("MPTCP_PM_ATTR_ADDR")
         addr_attr = dict(addr['attrs'])
         return cls(addr_attr)
 
@@ -91,7 +71,7 @@ class MPTCPEndpoint:
 
     @property
     def is_subflow(self):
-        return MPTCPFlags.MPTCP_PM_ADDR_FLAG_SIGNAL in self.flags
+        return MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW in self.flags
 
     @property
     def is_backup(self):
