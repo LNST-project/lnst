@@ -40,7 +40,8 @@ class MPTCPRecipe(
 
     def init_mptcp_control(self, hosts: List[Host]):
         """
-        TODO maybe move this to some sort of MPTCPMixin
+        Initialize MPTCP RPC by sending the `MPTCPManager` to each host.
+        In the future this might be moved to some sort of `MPTCPMixin`
         :param hosts:
         :return:
         """
@@ -125,6 +126,9 @@ class MPTCPRecipe(
             ep_dev.netns.mptcp.delete_all()
 
         del config.test_wide_devices
+
+        #reset rp_filter
+        self.matched.host2.run("sysctl -w net.ipv4.conf.all.rp_filter=1")
 
         super().test_wide_deconfiguration(config)
 
