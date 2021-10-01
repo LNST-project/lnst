@@ -66,13 +66,14 @@ class MachineMapper(object):
         """
         self._mreqs = mreqs
 
-    def set_pools(self, pools):
-        """set the pools to be used by the matching algorithm
+    def set_pools_manager(self, pools_manager):
+        """set the pools manager to be used by the matching algorithm
 
+        This class does not use pools manager anymore. Method just gets the pools.
         This needs to be a specially formatted dictionary returned by get_pools
         method of a SlavePoolManager class.
         """
-        self._pools = pools
+        self._pools = pools_manager.get_pools()
 
     def reset_match_state(self):
         """resets the state of the backtracking algorithm"""

@@ -143,7 +143,7 @@ class Controller(object):
 
         req = recipe.req
 
-        self._mapper.set_pools(self._pools.get_pools())
+        self._mapper.set_pools_manager(self._pools)
         self._mapper.set_requirements(req._to_dict())
 
         i = 0
