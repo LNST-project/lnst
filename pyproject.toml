@@ -25,6 +25,7 @@ lxml = "*"
 libvirt-python = "*"
 ethtool = "*"
 dataclasses = "*"
+podman = "*"
 
 [tool.poetry.scripts]
 lnst-slave = 'lnst_slave_cli:main'

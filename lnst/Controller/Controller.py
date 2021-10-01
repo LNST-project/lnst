@@ -10,7 +10,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import os
 import sys
-import time
+from typing import Union
 import datetime
 import logging
 from lnst.Common.Logs import LoggingCtl, log_exc_traceback
@@ -22,6 +22,7 @@ from lnst.Controller.Common import ControllerError
 from lnst.Controller.Config import CtlConfig
 from lnst.Controller.MessageDispatcher import MessageDispatcher
 from lnst.Controller.SlavePoolManager import SlavePoolManager
+from lnst.Controller.ContainerPoolManager import ContainerPoolManager
 from lnst.Controller.MachineMapper import MachineMapper
 from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Host import Hosts, Host
@@ -86,8 +87,15 @@ class Controller(object):
         lnst_controller.run(recipe_instance)
     """
 
-    def __init__(self, poolMgr=SlavePoolManager, mapper=MachineMapper,
-                 config=None, pools=[], pool_checks=True, debug=0):
+    def __init__(
+        self,
+        poolMgr: Union[SlavePoolManager, ContainerPoolManager] = None,
+        mapper=MachineMapper,
+        config=None,
+        pools=[],
+        debug=0,
+        **poolMgr_kwargs
+    ):
         self._config = self._load_ctl_config(config)
         config = self._config
 
@@ -117,8 +125,12 @@ class Controller(object):
         else:
             select_pools = conf_pools
 
-        self._pools = poolMgr(select_pools, self._msg_dispatcher, config,
-                              pool_checks)
+        if poolMgr is None:
+            poolMgr = SlavePoolManager
+
+        self._pools = poolMgr(
+            select_pools, self._msg_dispatcher, config, **poolMgr_kwargs
+        )
 
     def run(self, recipe, **kwargs):
         """Execute the provided Recipe
@@ -228,6 +240,9 @@ class Controller(object):
         for bridge in list(self._network_bridges.values()):
             bridge.cleanup()
         self._network_bridges = {}
+
+        if isinstance(self._pools, ContainerPoolManager):
+            self._pools.cleanup()
 
     def _load_ctl_config(self, config):
         if isinstance(config, CtlConfig):
