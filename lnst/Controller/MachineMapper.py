@@ -346,3 +346,65 @@ class MachineMapper(object):
         if self._virtual_matching:
             mapping["virtual"] = True
         return mapping
+
+
+class ContainerMapper(object):
+    """Implements simple matching algorithm that maps containers to requirements.
+    Containers are created in :py:class:`lnst.Controller.ContainerPoolManager.ContainerPoolManager` using requirements.
+
+    """
+
+    def __init__(self):
+        self._pool_manager = None
+        self._mreqs = {}
+
+    def set_requirements(self, mreqs: dict):
+        self._mreqs = mreqs
+
+    def set_pools_manager(self, pool_manager):
+        """:py:class:`lnst.Controller.MachineMapper.ContainerMapper` does not support multiple pools but it requires pool manager."""
+        self._pool_manager = pool_manager
+
+    @staticmethod
+    def _map_machine_interface(network_name, interfaces: dict):
+        """Mapping machine interface to network using network name inside interface dict."""
+        for inf_id, interface in interfaces.items():
+            if interface["network"] == network_name:
+                return inf_id, interface
+
+    def matches(self):
+        """1:1 mapping of containers to requirements"""
+        self._pool_manager.process_reqs(self._mreqs)
+
+        mapping = {
+            "machines": {},
+            "networks": {},
+            "virtual": False,
+            "pool_name": "default",
+        }
+        pool = self._pool_manager.get_pool()
+
+        for m_id, reqs in self._mreqs.items():
+            hostname = pool[m_id]["params"]["hostname"]
+            machine = mapping["machines"][m_id] = {
+                "target": m_id,
+                "hostname": hostname,
+                "interfaces": {},
+            }
+
+            for inf_id, infs in reqs["interfaces"].items():
+                network_name = self._pool_manager.get_network_name(infs["network"])
+
+                machine_inf_id, machine_inf = self._map_machine_interface(
+                    network_name, pool[m_id]["interfaces"]
+                )
+
+                machine["interfaces"][inf_id] = {
+                    "target": machine_inf_id,
+                    "hwaddr": machine_inf["params"]["hwaddr"],
+                }
+
+        for name, network in self._pool_manager.get_networks().items():
+            mapping["networks"][name] = network.name
+
+        yield mapping
