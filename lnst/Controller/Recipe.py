@@ -215,7 +215,7 @@ class RecipeRun(object):
 
     @property
     def overall_result(self):
-        return all([i.success for i in self.results])
+        return all([i.success for i in self.results] + [self.exception is None])
 
     @property
     def recipe(self) -> BaseRecipe:
