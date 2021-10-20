@@ -172,6 +172,7 @@ class RecipeRun(object):
         self._recipe = recipe
         self._datetime = datetime.datetime.now()
         self._environ = os.environ.copy()
+        self._exception = None
 
     def add_result(self, result):
         if not isinstance(result, BaseResult):
@@ -228,6 +229,13 @@ class RecipeRun(object):
     def environ(self):
         return self._environ
 
+    @property
+    def exception(self):
+        return self._exception
+
+    @exception.setter
+    def exception(self, exception):
+        self._exception = exception
 
 def export_recipe_run(run: RecipeRun, export_dir: str = None, name: str = None) -> str:
     """
