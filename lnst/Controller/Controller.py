@@ -160,6 +160,7 @@ class Controller(object):
                                            log_list=self._log_ctl.get_recipe_log_list()))
                 recipe.test()
             except Exception as exc:
+                recipe.current_run.exception = exc
                 logging.error("Recipe execution terminated by unexpected exception")
                 log_exc_traceback()
                 raise
