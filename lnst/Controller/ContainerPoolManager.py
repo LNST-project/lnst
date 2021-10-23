@@ -15,6 +15,32 @@ class ContainerPoolManager(object):
     """This class implements managing containers and networks.
     It uses Podman API to handle operations with containers,
     the API needs to be running with root privileges.
+
+    :param pools:
+        Dictionary that contains pools.
+        In :py:class:`lnst.Controller.ContainerPoolManager.ContainerPoolManager`
+        are pools dynamically created based on recipe requirements.
+        That means this parameter is not used but it is needed to keep parameters of this class and
+        :py:class:`lnst.Controller.SlavePoolManager.SlavePoolManager` the same.
+    :type pools: dict
+
+    :param msg_dispatcher:
+    :type msg_dispatcher: :py:class:`lnst.Controller.MessageDispatcher.MessageDispatcher`
+
+    :param ctl_config:
+    :type ctl_config: :py:class:`lnst.Controller.Config.CtlConfig`
+
+    :param pool_checks:
+        if False, will disable checking the online status of Slaves
+    :type pool_checks: boolean (default True)
+
+    :param podman_uri:
+        Mandatory parameter
+    :type podman_uri: str
+
+    :param image:
+        Mandatory parameter
+    :type image: str
     """
 
     def __init__(
@@ -256,6 +282,9 @@ class ContainerPoolManager(object):
             self._connect_to_network(container, network)
 
     def process_reqs(self, mreqs: dict):
+        """This method is called by :py:class:`lnst.Controller.MachineMapper.ContainerMapper`,
+        it is responsible for creating containers and networks.
+        """
         for m_id, m_reqs in mreqs.items():
             container, machine = self._create_container(m_id, m_reqs)
             self._connect_to_networks(container, m_reqs)

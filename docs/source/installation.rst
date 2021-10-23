@@ -40,6 +40,9 @@ The Controller is a bit more complicated and requires you to:
 * create an executable test script
 * create a slave machine pool
 
+
+.. _hello-world-script:
+
 Creating an executable "HelloWorld" test script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

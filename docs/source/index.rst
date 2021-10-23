@@ -15,6 +15,7 @@ application.
    installation
    tester_api
    recipe_packages
+   extensions
 
 
 Indices and tables
