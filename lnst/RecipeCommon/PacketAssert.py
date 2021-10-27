@@ -71,12 +71,25 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
             self.add_result(False, "Packet assert results unavailable")
             return
 
+        success = False
         if results["p_recv"] >= packet_assert_config.p_min and \
             (results["p_recv"] <= packet_assert_config.p_max or
              not packet_assert_config.p_max):
-            self.add_result(True, "Packet assert succesful", results)
-        else:
-            self.add_result(False, "Packet assert unsuccesful", results)
+            success = True
+
+        cmp_msg = "packets received {}, expected min({}) max({})".format(
+            results["p_recv"],
+            packet_assert_config.p_min,
+            packet_assert_config.p_max
+        )
+        self.add_result(
+            success,
+            "Packet assert {}, {}".format(
+                "successful" if success else "unsuccessful",
+                cmp_msg
+            ),
+            results
+        )
 
     def _generate_packet_assert_kwargs(self, packet_assert_config):
         kwargs = dict(interface=packet_assert_config.iface)
