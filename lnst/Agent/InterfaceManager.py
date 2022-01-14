@@ -17,14 +17,14 @@ import select
 import socket
 import logging
 from collections import deque
-from lnst.Slave.NetConfigCommon import get_option
+from lnst.Agent.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
 from lnst.Common.DeviceError import (DeviceNotFound, DeviceConfigError,
         DeviceDeleted, DeviceError)
 from lnst.Common.InterfaceManagerError import InterfaceManagerError
-from lnst.Slave.DevlinkManager import DevlinkManager
+from lnst.Agent.DevlinkManager import DevlinkManager
 from pyroute2 import IPRSocket
 from pyroute2.netlink import NLM_F_REQUEST, NLM_F_DUMP
 from pyroute2.netlink.rtnl import RTMGRP_IPV4_IFADDR

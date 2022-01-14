@@ -41,10 +41,10 @@ from lnst.Common.DeviceError import DeviceConfigValueError
 from lnst.Common.Parameters import Parameters
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.Version import lnst_version
-from lnst.Slave.Job import Job, JobContext
-from lnst.Slave.InterfaceManager import InterfaceManager
-from lnst.Slave.BridgeTool import BridgeTool
-from lnst.Slave.SlaveSecSocket import SlaveSecSocket, SecSocketException
+from lnst.Agent.Job import Job, JobContext
+from lnst.Agent.InterfaceManager import InterfaceManager
+from lnst.Agent.BridgeTool import BridgeTool
+from lnst.Agent.SlaveSecSocket import SlaveSecSocket, SecSocketException
 
 # maximum time the server should block on select -- forces frequent Netlink
 # checks

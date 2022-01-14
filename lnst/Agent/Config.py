@@ -1,5 +1,5 @@
 """
-Defines the SlaveConfig class.
+Defines the AgentConfig class.
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -14,7 +14,7 @@ import os
 import sys
 from lnst.Common.Config import DefaultRPCPort, Config
 
-class SlaveConfig(Config):
+class AgentConfig(Config):
     def _init_options(self):
         self._options['environment'] = dict()
         self._options['environment']['log_dir'] = {\
