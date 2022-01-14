@@ -130,11 +130,11 @@ class BaseEnrtRecipe(
         utilization on specified hosts.
     :type cpu_perf_tool: :any:`BaseCPUMeasurement` (default StatCPUMeasurement)
 
-    :param skip_perf_evaluation:
-        Parameter used by the :any:`generate_perf_configurations` generator to
-        bypass registration of the performance measurement evaluators if set
-        to True.
-    :type skip_perf_evaluation: :any:`BoolParam` (default False)
+    :param perf_evaluation_strategy:
+        Parameter used by the :any:`evaluator_by_measurement` selector to
+        pick correct performance measurement evaluators based on the strategy
+        specified.
+    :type perf_evaluation_strategy: :any:`StrParam` (default "all")
     """
 
     driver = StrParam(default="ixgbe")
@@ -150,7 +150,7 @@ class BaseEnrtRecipe(
     ping_psize = IntParam(default=56)
 
     # generic perf test params
-    skip_perf_evaluation = BoolParam(default=False)
+    perf_evaluation_strategy = StrParam(default="all")
 
     def test(self):
         """Main test loop shared by all the Enrt recipes
@@ -398,8 +398,7 @@ class BaseEnrtRecipe(
 
         Finally for each generated perf test configuration we register
         measurement evaluators based on the :any:`cpu_perf_evaluators` and
-        :any:`net_perf_evaluators` properties. The registration is skipped
-        if :any:`skip_perf_evaluation` parameter is **True**.
+        :any:`net_perf_evaluators` properties.
 
         :return: list of Perf test configurations
         :rtype: List[:any:`PerfRecipeConf`]
@@ -412,21 +411,55 @@ class BaseEnrtRecipe(
                 iterations=self.params.perf_iterations,
                 parent_recipe_config=copy.deepcopy(config),
             )
-
-            if not self.params.skip_perf_evaluation:
-                self.register_perf_evaluators(perf_conf)
+            self.register_perf_evaluators(perf_conf)
 
             yield perf_conf
 
     def register_perf_evaluators(self, perf_conf):
+        """Registrator for perf evaluators
+
+        The registrator loops over all measurements collected by the
+        perf tests to pick evaluator based on the measurements using
+        the :any:`evaluator_by_measurement` method.
+
+        Once appropriate evaluator is picked, it is registered to
+        the :any:`PerfRecipeConf`.
+        """
         for measurement in perf_conf.measurements:
-            if isinstance(measurement, BaseCPUMeasurement):
-                evaluators = self.cpu_perf_evaluators
-            elif isinstance(measurement, BaseFlowMeasurement):
-                evaluators = self.net_perf_evaluators
-            else:
-                evaluators = []
+            evaluators = self.evaluator_by_measurement(measurement)
             perf_conf.register_evaluators(measurement, evaluators)
+
+    def evaluator_by_measurement(self, measurement):
+        """Selector for the evaluators based on measurements
+
+        The selector looks at the input measurement to pick
+        appropriate evaluator.
+
+        If :any: `perf_evaluation_strategy` property is set
+        to either "none" or "nonzero", selector returns
+        given evaluators based on their strategy.
+
+        :return: list of Result evaluators
+        :rtype: List[:any:`BaseResultEvaluator`]
+
+        """
+        if self.params.perf_evaluation_strategy is "none":
+            return []
+
+        if isinstance(measurement, BaseCPUMeasurement):
+            if self.params.perf_evaluation_strategy is "nonzero" or "none":
+                evaluators = []
+            else:
+                evaluators = self.cpu_perf_evaluators
+        elif isinstance(measurement, BaseFlowMeasurement):
+            if self.params.perf_evaluation_strategy is "nonzero":
+                evaluators = [NonzeroFlowEvaluator()]
+            else:
+                evaluators = self.net_perf_evaluators
+        else:
+            evaluators = []
+
+        return evaluators
 
     @property
     def cpu_perf_evaluators(self):
