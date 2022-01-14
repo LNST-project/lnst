@@ -43,6 +43,12 @@ class NonzeroFlowEvaluator(BaseResultEvaluator):
                             )
                         )
                     elif metric.average > 0:
+                        for interval in metric:
+                            if interval.value == 0:
+                                result = False
+                                result_text.append(
+                                    "{} reported zero throughput".format(metric_name)
+                                )
                         result_text.append(
                             "{} reported non-zero throughput".format(
                                 metric_name
