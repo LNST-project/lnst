@@ -29,35 +29,25 @@ class NonzeroFlowEvaluator(BaseResultEvaluator):
             result = True
             result_text = [
                 "Nonzero evaluation of flow:",
-                "{}".format(flow_results.flow),
+                f"{flow_results.flow}"
             ]
             for metric_name in self._metrics_to_evaluate:
                 metric = getattr(flow_results, metric_name, None)
                 if metric:
                     if metric.average == float("inf"):
                         result = False
-                        result_text.append(
-                            "{} reported invalid value: {}".format(
-                                metric_name,
-                                metric.average
-                            )
-                        )
+                        result_text.append(f"{metric_name} reported invalid value: {metric.average}")
                     elif metric.average > 0:
+                        report_text = f"{metric_name} reported non-zero throughput"
                         for interval in metric:
                             if interval.value == 0:
                                 result = False
-                                result_text.append(
-                                    "{} reported zero throughput".format(metric_name)
-                                )
-                        result_text.append(
-                            "{} reported non-zero throughput".format(
-                                metric_name
-                            )
-                        )
+                                report_text = f"{metric_name} reported zero throughput"
+                                break
+
+                        result_text.append(report_text)
                     else:
                         result = False
-                        result_text.append(
-                            "{} reported zero throughput".format(metric_name)
-                        )
+                        result_text.append(f"{metric_name} reported zero throughput")
 
             recipe.add_result(result, "\n".join(result_text))
