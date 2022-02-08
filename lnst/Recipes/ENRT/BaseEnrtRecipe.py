@@ -447,7 +447,7 @@ class BaseEnrtRecipe(
             return []
 
         if isinstance(measurement, BaseCPUMeasurement):
-            if self.params.perf_evaluation_strategy is "nonzero" or "none":
+            if self.params.perf_evaluation_strategy in ["nonzero", "none"]:
                 evaluators = []
             else:
                 evaluators = self.cpu_perf_evaluators
