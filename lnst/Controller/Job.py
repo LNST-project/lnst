@@ -144,6 +144,10 @@ class Job(object):
         except:
             return False
 
+    @passed.setter
+    def passed(self, result):
+        self._res["passed"] = result
+
     @property
     def finished(self):
         """Indicates whether or not the Job finished running
