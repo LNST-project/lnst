@@ -47,7 +47,7 @@ class Device(object, metaclass=DeviceMeta):
     Changing attributes of a netdevice is right now implemented by calling
     shell commands (e.g. from iproute2 package).
 
-    The Controller-Slave communication is implemented in such a way that all
+    The Controller-Agent communication is implemented in such a way that all
     public methods defined in this and derived class are directly available
     as a tester facing API.
     """
@@ -145,7 +145,7 @@ class Device(object, metaclass=DeviceMeta):
         in a "no operation", however attribute access will still work.
 
         The justification for this is to disable the Device used by the
-        Controller-Slave connection to avoid accidental disconnects.
+        Controller-Agent connection to avoid accidental disconnects.
         """
         self._enabled = False
 

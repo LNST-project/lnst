@@ -106,8 +106,8 @@ class HostnameOrIpParam(IpParam, HostnameParam):
 
 class DeviceParam(Param):
     def type_check(self, value):
-        #runtime import this because the Device class arrives on the Slave
-        #during recipe execution, not during Slave init
+        # runtime import this because the Device class arrives on the Agent
+        # during recipe execution, not during Agent init
         from lnst.Devices.Device import Device
         if isinstance(value, Device) or isinstance(value, DeviceRef):
             return value
@@ -117,8 +117,8 @@ class DeviceParam(Param):
 
 class DeviceOrIpParam(Param):
     def type_check(self, value):
-        #runtime import this because the Device class arrives on the Slave
-        #during recipe execution, not during Slave init
+        # runtime import this because the Device class arrives on the Agent
+        # during recipe execution, not during Agent init
         from lnst.Devices.Device import Device
         if (isinstance(value, Device) or isinstance(value, DeviceRef) or
             isinstance(value, BaseIpAddress)):

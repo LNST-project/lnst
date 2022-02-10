@@ -59,14 +59,14 @@ class BaseReq(object):
                             delattr(self.params, name)
 
 class HostReq(BaseReq):
-    """Specifies a Slave machine requirement
+    """Specifies a Agent machine requirement
 
     To define a Host requirement you assign a HostReq instance to a class
     attribute of a BaseRecipe derived class.
 
     :param kwargs:
         any argument will be treated as arbitrary string parameters that will
-        be matched to parameters of Slave machines which can define their
+        be matched to parameters of Agent machines which can define their
         parameter values based on the implementation of the SlaveMachineParser
 
         A special case is the use of a
@@ -117,7 +117,7 @@ class DeviceReq(BaseReq):
 
     :param kwargs:
         any other arguments will be treated as arbitrary string parameters that
-        will be matched to parameters of Slave machines which can define their
+        will be matched to parameters of Agent machines which can define their
         parameter values based on the implementation of the SlaveMachineParser
     :type kwargs: Dict[str, Any]
 

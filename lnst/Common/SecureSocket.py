@@ -3,7 +3,7 @@ This module defines a SecureSocket class that wraps the normal socket by adding
 TLS-like functionality of providing data integrity, confidentiality and
 authenticity. The reason why we're not using TLS is because the Python
 implementation enforces the use of certificates and we want to also allow
-password based authentication. This implements the common class, and the Slave
+password based authentication. This implements the common class, and the Agent
 and Controller implement their sides of the handshake algorithms.
 
 Copyright 2016 Red Hat, Inc.

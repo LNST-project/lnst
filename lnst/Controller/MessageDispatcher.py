@@ -1,9 +1,9 @@
 """
 Defines the MessageDispatcher class used by the Controller to multiplex
-communication from all the connected Slave machines.
+communication from all the connected Agent machines.
 
 In addition to that it defines functions used by the MessageDispatcher to
-transparently translate Device objects while communicating with the Slave.
+transparently translate Device objects while communicating with the Agent.
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -233,7 +233,7 @@ class MessageDispatcher(ConnectionHandler):
         disconnected_slaves = set(disconnected_slaves)
         for slave in list(disconnected_slaves):
             if not slave.get_mapped():
-                logging.warn("Slave {} soft-disconnected from the "
+                logging.warn("Agent {} soft-disconnected from the "
                              "controller.".format(slave.get_id()))
                 disconnected_slaves.remove(slave)
 

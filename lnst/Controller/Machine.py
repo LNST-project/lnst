@@ -38,7 +38,7 @@ class PrefixMissingError(ControllerError):
     pass
 
 class Machine(object):
-    """ Slave machine abstraction
+    """ Agent machine abstraction
 
         A machine object represents a handle using which the controller can
         manipulate the machine. This includes tasks such as, configuration,
@@ -273,7 +273,7 @@ class Machine(object):
             return None
 
     def get_dev_by_hwaddr(self, hwaddr):
-        #TODO move these to Slave to optimize quering for each device
+        #TODO move these to Agent to optimize quering for each device
         #TODO the method searches only the init namespace at the moment
         for dev in list(self._device_database[self._initns].values()):
             if dev.hwaddr == hwaddr:
@@ -316,7 +316,7 @@ class Machine(object):
     def init_connection(self, timeout=None):
         """ Initialize the slave connection
 
-        This will connect to the Slave, get it's description (should be
+        This will connect to the Agent, get it's description (should be
         usable for matching), and checks version compatibility
         """
         hostname = self._hostname
@@ -340,14 +340,14 @@ class Machine(object):
 
         if lnst_version != slave_version:
             if lnst_version.is_git_version:
-                msg = ("Controller ({}) and Slave '{}' ({}) versions "
+                msg = ("Controller ({}) and Agent '{}' ({}) versions "
                        "are different".format(lnst_version, hostname,
                                               slave_version))
                 logging.warning(len(msg)*"=")
                 logging.warning(msg)
                 logging.warning(len(msg)*"=")
             else:
-                msg = ("Controller ({}) and Slave '{}' ({}) versions "
+                msg = ("Controller ({}) and Agent '{}' ({}) versions "
                        "are not compatible!".format(lnst_version, hostname,
                                                     slave_version))
                 raise MachineError(msg)
@@ -484,7 +484,7 @@ class Machine(object):
 
         if job.type == "module":
             # we need to send the class also into the root net namespace
-            # so that the Slave instance can unpickle the message
+            # so that the Agent instance can unpickle the message
             if job.netns is not None:
                 self.send_class(job._what.__class__, netns=None)
             self.send_class(job._what.__class__, netns=job.netns)

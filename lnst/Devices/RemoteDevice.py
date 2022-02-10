@@ -26,7 +26,7 @@ class RemoteDevice(object):
     """Wraps all other Device classes on the Controller
 
     Ensures that all public methods of Device objects also act as the tester
-    facing API even though the Device objects are instantiated on the Slave,
+    facing API even though the Device objects are instantiated on the Agent,
     not where the recipe script is actually running.
     """
     def __init__(self, dev_cls, args=[], kwargs={}):
@@ -203,8 +203,8 @@ class PairedRemoteDevice(RemoteDevice):
 
 #register the RemoteDevice class as implementing the interface of the Device
 #class - this is true because it just proxies method/attribute calls to the
-#remote Slave where the correct method gets called.
+#remote Agent where the correct method gets called.
 #registering the RemoteDevice class as an implementation of the Device
 #Interface is required for isinstance() checks in Common code -- Device is
-#available on both Controller and Slave, but RemoteDevice only on Controller
+#available on both Controller and Agent, but RemoteDevice only on Controller
 Device.register(RemoteDevice)

@@ -576,7 +576,7 @@ class Wizard:
                     continue
                 break
             while True:
-                srv_pubkey_path = eval(input("Enter path to Slave public key: "))
+                srv_pubkey_path = eval(input("Enter path to Agent public key: "))
                 if srv_pubkey_path == "" or not os.path.isfile(srv_pubkey_path):
                     sys.stderr.write("Invalid path to public key.")
                     continue

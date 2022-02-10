@@ -135,7 +135,7 @@ class Controller(object):
     def run(self, recipe, **kwargs):
         """Execute the provided Recipe
 
-        This method takes care of both finding Slave hosts matching the Recipe
+        This method takes care of both finding Agent hosts matching the Recipe
         requirements, provisioning them and calling the *test* method of the
         Recipe object with proper references to the mapped Hosts
 
