@@ -19,4 +19,4 @@ RUN dnf install -y initscripts \
 COPY . /lnst
 RUN cd /lnst/container_files && chmod +x install.sh && sh install.sh
 
-CMD cd /lnst/.bin && ./lnst-slave
+CMD cd /lnst/.bin && ./lnst-agent
