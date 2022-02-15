@@ -955,7 +955,7 @@ def deviceref_to_device(if_manager, obj):
     else:
         return obj
 
-class NetTestSlave:
+class Agent:
     def __init__(self, log_ctl, slave_config):
         self._slave_config = slave_config
         die_when_parent_die()

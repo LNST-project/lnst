@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 """
 LNST Agent
 
@@ -12,8 +12,8 @@ import argparse
 from pathlib import Path
 from lnst.Common.Logs import LoggingCtl
 from lnst.Common.Colours import load_presets_from_config
-from .Config import AgentConfig
-from .NetTestSlave import NetTestSlave as Agent
+from lnst.Agent.Config import AgentConfig
+from lnst.Agent.Agent import Agent
 
 DEFAULT_USER_CFG = Path.home() / ".lnst" / "lnst-agent.conf"
 
