@@ -1,5 +1,5 @@
 """
-The SlaveSecSocket implements the slave (server) side of the handshake
+The AgentSecSocket implements the agent (server) side of the handshake
 protocols.
 
 Copyright 2016 Red Hat, Inc.
@@ -54,9 +54,10 @@ def cryptography_imports():
     backend = default_backend()
     cryptography_imported = True
 
-class SlaveSecSocket(SecureSocket):
+
+class AgentSecSocket(SecureSocket):
     def __init__(self, soc):
-        super(SlaveSecSocket, self).__init__(soc)
+        super(AgentSecSocket, self).__init__(soc)
         self._role = "server"
 
     def handshake(self, sec_params):
