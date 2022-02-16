@@ -1,0 +1,63 @@
+name: CI test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  FunctionalTest:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.6"
+
+    - name: Source branch checkout
+      uses: actions/checkout@v2
+
+    - name: Set up system requirements
+      run: |
+        sudo apt-get install podman -y
+        sudo systemctl enable --now podman.socket
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3.6 -
+
+    - name: Set up Podman network requirements
+      run: |
+        sudo sysctl -w net.ipv4.ip_forward=1
+        sudo sysctl net.ipv4.conf.all.forwarding=1
+        sudo iptables -P FORWARD ACCEPT
+        sudo sysctl -p
+
+    - name: Install LNST
+      run: |
+        sudo apt-get install -y iputils-* \
+        ethtool \
+        gcc \
+        python-dev \
+        libxml2-dev \
+        libxslt-dev \
+        qemu-kvm \
+        libvirt-daemon-system \
+        libvirt-clients \
+        bridge-utils \
+        libvirt-dev \
+        libnl-3-200 \
+        libnl-route-3-dev \
+        git \
+        libnl-3-dev
+        $HOME/.poetry/bin/poetry install
+
+    - name: Build LNST agents image
+      run: |
+        sudo podman build . -t lnst -f container_files/Dockerfile
+
+    - name: SimpleNetworkRecipe ping test
+      run: |
+        export PATH=$PATH:$HOME/.poetry/bin
+        venv_path=$(poetry env info -p)
+        sudo "$venv_path"/bin/python .github/runner.py
+
