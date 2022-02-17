@@ -7,7 +7,7 @@ from podman.domain.containers import Container
 from podman.domain.networks import Network
 from podman.errors import APIError
 from podman import PodmanClient
-from lnst.Controller.SlavePoolManager import PoolManagerError
+from lnst.Controller.AgentPoolManager import PoolManagerError
 from lnst.Controller.Machine import Machine
 
 
@@ -21,7 +21,7 @@ class ContainerPoolManager(object):
         In :py:class:`lnst.Controller.ContainerPoolManager.ContainerPoolManager`
         are pools dynamically created based on recipe requirements.
         That means this parameter is not used but it is needed to keep parameters of this class and
-        :py:class:`lnst.Controller.SlavePoolManager.SlavePoolManager` the same.
+        :py:class:`lnst.Controller.AgentPoolManager.AgentPoolManager` the same.
     :type pools: dict
 
     :param msg_dispatcher:

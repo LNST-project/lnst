@@ -21,7 +21,7 @@ from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.Config import CtlConfig
 from lnst.Controller.MessageDispatcher import MessageDispatcher
-from lnst.Controller.SlavePoolManager import SlavePoolManager
+from lnst.Controller.AgentPoolManager import AgentPoolManager
 from lnst.Controller.ContainerPoolManager import ContainerPoolManager
 from lnst.Controller.MachineMapper import MachineMapper
 from lnst.Controller.MachineMapper import format_match_description
@@ -43,13 +43,13 @@ class Controller(object):
 
     :param poolMgr:
         class that implements the
-        :py:class:`lnst.Controller.SlavePoolManager.SlavePoolManager` interface
+        :py:class:`lnst.Controller.AgentPoolManager.AgentPoolManager` interface
         will be instantiated by the Controller to provide the mapper with pools
         available for matching, also handles the creation of
         :py:class:`Machine` objects (internal LNST class used to access the
         slave hosts)
     :type poolMgr:
-        :py:class:`lnst.Controller.SlavePoolManager.SlavePoolManager`
+        :py:class:`lnst.Controller.AgentPoolManager.AgentPoolManager`
         (this is also the default class)
 
     :param mapper:
@@ -89,7 +89,7 @@ class Controller(object):
 
     def __init__(
         self,
-        poolMgr: Union[SlavePoolManager, ContainerPoolManager] = None,
+        poolMgr: Union[AgentPoolManager, ContainerPoolManager] = None,
         mapper=MachineMapper,
         config=None,
         pools=[],
@@ -126,7 +126,7 @@ class Controller(object):
             select_pools = conf_pools
 
         if poolMgr is None:
-            poolMgr = SlavePoolManager
+            poolMgr = AgentPoolManager
 
         self._pools = poolMgr(
             select_pools, self._msg_dispatcher, config, **poolMgr_kwargs

@@ -37,7 +37,7 @@ class MachineMapper(object):
     the API of this class as it needs to integrate with the rest of LNST.
 
     Since the API is not fully defined yet and depends on the interaction with
-    the SlavePoolManager (also needs a fully defined API), implementing your
+    the AgentPoolManager (also needs a fully defined API), implementing your
     own MachineMapper class is not recommended yet. However since, the
     Controller class accepts the 'mapper' parameter it is possible if done
     properly.
@@ -71,7 +71,7 @@ class MachineMapper(object):
 
         This class does not use pools manager anymore. Method just gets the pools.
         This needs to be a specially formatted dictionary returned by get_pools
-        method of a SlavePoolManager class.
+        method of a AgentPoolManager class.
         """
         self._pools = pools_manager.get_pools()
 
