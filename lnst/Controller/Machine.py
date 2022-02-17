@@ -21,7 +21,7 @@ from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult, DeviceCreateResult, DeviceMethodCallResult, DeviceAttrSetResult
-from lnst.Controller.SlaveObject import SlaveObject
+from lnst.Controller.AgentProxyObject import AgentProxyObject
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
@@ -656,7 +656,7 @@ class Machine(object):
         cls_name = cls.__name__
         obj_ref = self.rpc_call("init_cls", cls_name, module_name, args, kwargs)
 
-        return SlaveObject(self, cls, obj_ref)
+        return AgentProxyObject(self, cls, obj_ref)
 
     def __str__(self):
         return "[Machine hostname(%s) libvirt_domain(%s) interfaces(%d)]" % \

@@ -10,7 +10,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-class SlaveObject(object):
+class AgentProxyObject(object):
     def __init__(self, machine, cls, obj_ref):
         self._inited = False
         self.__cls = cls
@@ -21,10 +21,10 @@ class SlaveObject(object):
 
     def __getattr__(self, name):
         if name == "_inited":
-            return super(SlaveObject, self).__getattribute__(name)
+            return super(AgentProxyObject, self).__getattribute__(name)
 
         if not self._inited:
-            return super(SlaveObject, self).__getattr__(name)
+            return super(AgentProxyObject, self).__getattr__(name)
 
         attr = getattr(self.__cls, name)
 
@@ -38,7 +38,7 @@ class SlaveObject(object):
 
     def __setattr__(self, name, value):
         if name == "_inited" or not self._inited:
-            return super(SlaveObject, self).__setattr__(name, value)
+            return super(AgentProxyObject, self).__setattr__(name, value)
 
         return self.__machine.rpc_call("obj_setattr", self.__obj_ref, name,
                                       value)
