@@ -67,7 +67,7 @@ class HostReq(BaseReq):
     :param kwargs:
         any argument will be treated as arbitrary string parameters that will
         be matched to parameters of Agent machines which can define their
-        parameter values based on the implementation of the SlaveMachineParser
+        parameter values based on the implementation of the AgentMachineParser
 
         A special case is the use of a
         :py:mod:`lnst.Controller.Requirements.RecipeParam` instance as value.
@@ -118,7 +118,7 @@ class DeviceReq(BaseReq):
     :param kwargs:
         any other arguments will be treated as arbitrary string parameters that
         will be matched to parameters of Agent machines which can define their
-        parameter values based on the implementation of the SlaveMachineParser
+        parameter values based on the implementation of the AgentMachineParser
     :type kwargs: Dict[str, Any]
 
     Example::

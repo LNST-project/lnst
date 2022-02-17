@@ -1,5 +1,5 @@
 """
-This module defines SlaveMachineParser class useful to parse XML machine
+This module defines AgentMachineParser class useful to parse XML machine
 descriptions for the slave pool
 
 Copyright 2013 Red Hat, Inc.
@@ -17,7 +17,8 @@ from lxml import etree
 from lnst.Controller.Common import ControllerError
 import lnst
 
-class SlaveMachineParser(object):
+
+class AgentMachineParser(object):
     def __init__(self, sm_path, ctl_config):
         # locate the schema file
         # try git path
