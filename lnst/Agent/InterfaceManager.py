@@ -17,7 +17,6 @@ import select
 import socket
 import logging
 from collections import deque
-from lnst.Agent.NetConfigCommon import get_option
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.ConnectionHandler import recv_data
