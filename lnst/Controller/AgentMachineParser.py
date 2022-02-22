@@ -1,6 +1,6 @@
 """
 This module defines AgentMachineParser class useful to parse XML machine
-descriptions for the slave pool
+descriptions for the agent pool
 
 Copyright 2013 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -19,21 +19,21 @@ import lnst
 
 
 class AgentMachineParser(object):
-    def __init__(self, sm_path, ctl_config):
+    def __init__(self, am_path, ctl_config):
         # locate the schema file
         # try git path
         dirname = os.path.join(os.path.dirname(lnst.__file__), '..')
-        schema_path = os.path.join(dirname, "schema-sm.rng")
+        schema_path = os.path.join(dirname, "schema-am.rng")
         if not os.path.exists(schema_path):
             # try configuration
             res_dir = ctl_config.get_option("environment", "resource_dir")
-            schema_path = os.path.join(res_dir, "schema-sm.rng")
+            schema_path = os.path.join(res_dir, "schema-am.rng")
 
         if not os.path.exists(schema_path):
             raise Exception("The schema file was not found. " + \
                             "Your LNST installation is corrupt!")
 
-        self._path = sm_path
+        self._path = am_path
         relaxng_doc = etree.parse(schema_path)
         self._schema = etree.RelaxNG(relaxng_doc)
 
@@ -85,26 +85,26 @@ class AgentMachineParser(object):
             if p is not None:
                 p.remove(c)
 
-    def _process(self, sm_tag):
-        sm = {}
+    def _process(self, am_tag):
+        am = {}
 
         # params
-        params_tag = sm_tag.find("params")
+        params_tag = am_tag.find("params")
         params = self._process_params(params_tag)
         if len(params) > 0:
-            sm["params"] = params
+            am["params"] = params
 
         # interfaces
-        interfaces_tag = sm_tag.find("interfaces")
+        interfaces_tag = am_tag.find("interfaces")
         if interfaces_tag is not None and len(interfaces_tag) > 0:
-            sm["interfaces"] = []
+            am["interfaces"] = []
             for eth_tag in interfaces_tag:
                 interface = self._process_interface(eth_tag)
-                sm["interfaces"].append(interface)
+                am["interfaces"].append(interface)
 
-        security_tag = sm_tag.find("security")
-        sm["security"] = self._process_security(security_tag)
-        return sm
+        security_tag = am_tag.find("security")
+        am["security"] = self._process_security(security_tag)
+        return am
 
     def _process_params(self, params_tag):
         params = []

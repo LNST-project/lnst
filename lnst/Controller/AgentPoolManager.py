@@ -2,7 +2,7 @@
 This module contains implementaion of AgentPoolManager class that
 takes care of loading pools and checking machine availability
 
-Most of the AgentPoolManager class is copied over from the old SlavePool class.
+Most of the AgentPoolManager class is copied over from the old AgentPool class.
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as

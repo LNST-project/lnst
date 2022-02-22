@@ -31,7 +31,7 @@ class ContainerPoolManager(object):
     :type ctl_config: :py:class:`lnst.Controller.Config.CtlConfig`
 
     :param pool_checks:
-        if False, will disable checking the online status of Slaves
+        if False, will disable checking the online status of Agents
     :type pool_checks: boolean (default True)
 
     :param podman_uri:
@@ -107,7 +107,7 @@ class ContainerPoolManager(object):
         self._podman_client = client
 
     def _check_machine(self, machine: Machine):
-        """Method checks if the slave process inside of the container is running."""
+        """Method checks if the agent process inside of the container is running."""
         hostname = machine.get_hostname()
         logging.debug(f"Checking connection with machine {hostname}")
         connection = socket.socket()
@@ -123,7 +123,7 @@ class ContainerPoolManager(object):
                 sleep(1)
                 continue
 
-            logging.debug(f"Connected to slave process at machine {hostname}")
+            logging.debug(f"Connected to agent process at machine {hostname}")
             break  # successfully connected
         else:
             raise PoolManagerError(f"Could not connect to machine {hostname}")
@@ -136,7 +136,7 @@ class ContainerPoolManager(object):
         connection.shutdown(socket.SHUT_RDWR)
         connection.close()
 
-        logging.info(f"Slave process is running at {hostname}")
+        logging.info(f"Agent process is running at {hostname}")
 
     @staticmethod
     def _start_container(container: Container, machine: Machine):
@@ -186,7 +186,7 @@ class ContainerPoolManager(object):
         if self._pool_check:
             self._check_machine(
                 machine
-            )  # checks if the slave process is already running
+            )  # checks if the agent process is already running
 
         self._pool[name]["params"]["hostname"] = machine.get_hostname()
 
