@@ -5,7 +5,7 @@ LNST is logically split into two separate application use cases:
 
 * Controller - something that controlls the execution of your :any:`Test
   Recipes<BaseRecipe>`
-* Slave - a server application running on all hosts available for testing,
+* Agent - a server application running on all hosts available for testing,
   executes remote procedure calls from the Controller to either run tests or
   configure the test machine
 
@@ -21,16 +21,16 @@ installation involves the following steps:
     pip3 install .
 
 
-This installs both the Controller and the Slave code, and you'll need to run
+This installs both the Controller and the Agent code, and you'll need to run
 this on all the test machines that you want to use as well as the machine which
-you want to use as the Controller. Optionally a Controller and a Slave CAN run
+you want to use as the Controller. Optionally a Controller and a Agent CAN run
 on the same machine.
 
-You can start your Slave application immediatelly by running::
+You can start your Agent application immediately by running::
 
-    lnst-slave
+    lnst-agent
 
-Because the lnst-slave application takes care of network configuration, it
+Because the lnst-agent application takes care of network configuration, it
 **requires** to be executed with root privileges. This is **A BIG SECURITY
 RISK** so make sure you only run this application on test machines that are not
 publicly accessible or don't contain any sensitive data.
@@ -38,7 +38,7 @@ publicly accessible or don't contain any sensitive data.
 The Controller is a bit more complicated and requires you to:
 
 * create an executable test script
-* create a slave machine pool
+* create a agent machine pool
 
 
 .. _hello-world-script:
@@ -97,7 +97,7 @@ At this point in time, you don't need to change anything inside this file.
 
 At the same time, the default location for a machine pool is ``~/.lnst/pool/``,
 to create a pool you'll need to put XML files that describe your test machines
-where the ``lnst-slave`` application is running, and how they're connected. You
+where the ``lnst-agent`` application is running, and how they're connected. You
 need to create one file per test machine, so to satisfy the
 **HelloWorldRecipe** requirements, we need to create two files:
 
@@ -110,7 +110,7 @@ For the contents of the files you can use the following template:
 
 .. code-block:: xml
 
-    <slavemachine>
+    <agentmachine>
         <params>
             <param name="hostname" value="HOSTNAME"/>
             <param name="rpc_port" value="9999"/>
@@ -122,14 +122,14 @@ For the contents of the files you can use the following template:
                 </params>
             </eth>
         </interfaces>
-    </slavemachine>
+    </agentmachine>
 
 You'll need to edit the template and replace the **HOSTNAME** and
 **MAC_ADDRESS** strings with values that correspond to the hostname which the
-controller can use to connet to the slave, and the mac address of a network
+controller can use to connect to the agent, and the mac address of a network
 interface usable for testing. This **MUST** be a different interface than the
-one used for the Controller-Slave connection, as it's configuration will change
-during test execution, the Controller-Slave connection would break if you used
+one used for the Controller-Agent connection, as it's configuration will change
+during test execution, the Controller-Agent connection would break if you used
 the same interface.
 
 After creating your pool, you should now be able to run the ``hello_world.py``
@@ -174,7 +174,7 @@ XML definition of one of the two machines in the pool used in this test:
 
 .. code-block:: xml
 
-    <slavemachine>
+    <agentmachine>
         <params>
             <param name="hostname" value="HOSTNAME"/>
             <param name="rpc_port" value="9999"/>
@@ -187,7 +187,7 @@ XML definition of one of the two machines in the pool used in this test:
                 </params>
             </eth>
         </interfaces>
-    </slavemachine>
+    </agentmachine>
 
 Additional parameters may be added to a recipe instantiation to configure the
 recipe. Some parameters may be specific for a particular recipe and others may
@@ -218,7 +218,7 @@ parameter as indicated above), the recipe should run to completion.
 Debugging when things go wrong
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Additional debug information on the slaves can be seen by running the ``lnst-slave``
+Additional debug information on the agents can be seen by running the ``lnst-agent``
 application with the ``-d`` flag. Additional debug information on the controller can
 be seen by adding the ``debug`` paramter to the instantiation of the ``controller``
 class.
