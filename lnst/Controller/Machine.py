@@ -51,7 +51,7 @@ class Machine(object):
         self._hostname = hostname
         self._mapped = False
         self._ctl_config = ctl_config
-        self._slave_desc = None
+        self._agent_desc = None
         self._connection = None
         self._system_config = {}
         self._security = security
@@ -314,7 +314,7 @@ class Machine(object):
         return self._msg_dispatcher.send_message(self, msg)
 
     def init_connection(self, timeout=None):
-        """ Initialize the slave connection
+        """ Initialize the agent connection
 
         This will connect to the Agent, get it's description (should be
         usable for matching), and checks version compatibility
@@ -328,31 +328,31 @@ class Machine(object):
                                                            timeout))
         connection.handshake(self._security)
 
-        self._msg_dispatcher.add_slave(self, connection)
+        self._msg_dispatcher.add_agent(self, connection)
 
-        hello, slave_desc = self.rpc_call("hello")
+        hello, agent_desc = self.rpc_call("hello")
         if hello != "hello":
             msg = "Unable to establish RPC connection " \
                   "to machine %s, handshake failed!" % hostname
             raise MachineError(msg)
 
-        slave_version = slave_desc["lnst_version"]
+        agent_version = agent_desc["lnst_version"]
 
-        if lnst_version != slave_version:
+        if lnst_version != agent_version:
             if lnst_version.is_git_version:
                 msg = ("Controller ({}) and Agent '{}' ({}) versions "
                        "are different".format(lnst_version, hostname,
-                                              slave_version))
+                                              agent_version))
                 logging.warning(len(msg)*"=")
                 logging.warning(msg)
                 logging.warning(len(msg)*"=")
             else:
                 msg = ("Controller ({}) and Agent '{}' ({}) versions "
                        "are not compatible!".format(lnst_version, hostname,
-                                                    slave_version))
+                                                    agent_version))
                 raise MachineError(msg)
 
-        self._slave_desc = slave_desc
+        self._agent_desc = agent_desc
 
     def prepare_machine(self):
         self.rpc_call("prepare_machine")
@@ -445,7 +445,7 @@ class Machine(object):
             all the interfaces that have been configured on the machine,
             and finalize and close the rpc connection to the machine.
         """
-        #connection to the slave was closed
+        # connection to the agent was closed
         if not self._msg_dispatcher.get_connection(self):
             return
 
@@ -459,9 +459,9 @@ class Machine(object):
             self.del_namespaces()
             self.rpc_call("bye")
         except:
-            #cleanup is only meaningful on dynamic interfaces, and should
-            #always be called when deconfiguration happens- especially
-            #when something on the slave breaks during deconfiguration
+            # cleanup is only meaningful on dynamic interfaces, and should
+            # always be called when deconfiguration happens- especially
+            # when something on the agent breaks during deconfiguration
             self.cleanup_devices()
             raise
 

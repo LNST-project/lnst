@@ -98,7 +98,7 @@ class LoggingCtl:
     export_handler = None
     recipe_handlers = (None,None)
     recipe_log_path = ""
-    slaves = {}
+    agents = {}
     transmit_handler = None
     _id_seq = 0
     log_list = {}
@@ -188,38 +188,38 @@ class LoggingCtl:
         logger.removeHandler(self.recipe_handlers[1])
         self.recipe_handlers = (None, None)
 
-    def add_slave(self, slave_id):
-        slave_log_path = os.path.join(self.recipe_log_path, slave_id)
-        self._clean_folder(slave_log_path)
+    def add_agent(self, agent_id):
+        agent_log_path = os.path.join(self.recipe_log_path, agent_id)
+        self._clean_folder(agent_log_path)
 
-        logger = logging.getLogger(slave_id)
+        logger = logging.getLogger(agent_id)
         logger.setLevel(logging.DEBUG)
         logger.propagate = True
 
-        (slave_info, slave_debug) = self._create_file_handler(slave_log_path)
-        logger.addHandler(slave_info)
-        logger.addHandler(slave_debug)
+        (agent_info, agent_debug) = self._create_file_handler(agent_log_path)
+        logger.addHandler(agent_info)
+        logger.addHandler(agent_debug)
 
-        self.log_list[slave_id] = []
-        export_handler = self._create_export_handler(self.log_list[slave_id])
+        self.log_list[agent_id] = []
+        export_handler = self._create_export_handler(self.log_list[agent_id])
         logger.addHandler(export_handler)
 
-        self.slaves[slave_id] = (slave_info, slave_debug, export_handler)
+        self.agents[agent_id] = (agent_info, agent_debug, export_handler)
 
-    def remove_slave(self, slave_id):
-        logger = logging.getLogger(slave_id)
+    def remove_agent(self, agent_id):
+        logger = logging.getLogger(agent_id)
         logger.propagate = False
 
-        logger.removeHandler(self.slaves[slave_id][0])
-        logger.removeHandler(self.slaves[slave_id][1])
-        logger.removeHandler(self.slaves[slave_id][2])
+        logger.removeHandler(self.agents[agent_id][0])
+        logger.removeHandler(self.agents[agent_id][1])
+        logger.removeHandler(self.agents[agent_id][2])
 
-        del self.slaves[slave_id]
+        del self.agents[agent_id]
 
-    def add_client_log(self, slave_id, log_record):
-        logger = logging.getLogger(slave_id)
+    def add_client_log(self, agent_id, log_record):
+        logger = logging.getLogger(agent_id)
 
-        log_record['address'] = slave_id
+        log_record['address'] = agent_id
         record = logging.makeLogRecord(log_record)
         logger.handle(record)
 
@@ -233,8 +233,8 @@ class LoggingCtl:
         logger = logging.getLogger()
         logger.addHandler(self.transmit_handler)
 
-        for k in list(self.slaves.keys()):
-            self.remove_slave(k)
+        for k in list(self.agents.keys()):
+            self.remove_agent(k)
 
     def cancel_connection(self):
         if self.transmit_handler != None:
@@ -245,8 +245,8 @@ class LoggingCtl:
     def disable_logging(self):
         self.cancel_connection()
 
-        for s in list(self.slaves.keys()):
-            self.remove_slave(s)
+        for s in list(self.agents.keys()):
+            self.remove_agent(s)
 
         self.unset_recipe()
         logger = logging.getLogger()

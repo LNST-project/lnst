@@ -47,7 +47,7 @@ class Controller(object):
         will be instantiated by the Controller to provide the mapper with pools
         available for matching, also handles the creation of
         :py:class:`Machine` objects (internal LNST class used to access the
-        slave hosts)
+        agent hosts)
     :type poolMgr:
         :py:class:`lnst.Controller.AgentPoolManager.AgentPoolManager`
         (this is also the default class)
@@ -73,7 +73,7 @@ class Controller(object):
     :type pools: List[str] (default [])
 
     :param pool_checks:
-        if False, will disable checking the online status of Slaves
+        if False, will disable checking the online status of Agents
     :type pool_checks: boolean (default True)
 
     :param debug:
@@ -177,7 +177,7 @@ class Controller(object):
                 log_exc_traceback()
                 raise
             finally:
-                self._cleanup_slaves()
+                self._cleanup_agents()
 
     def _map_match(self, match, requested, recipe):
         self._machines = {}
@@ -208,13 +208,13 @@ class Controller(object):
             machine.start_recipe(recipe)
 
     def _prepare_machine(self, machine):
-        self._log_ctl.add_slave(machine.get_id())
+        self._log_ctl.add_agent(machine.get_id())
         machine.set_mac_pool(self._mac_pool)
         machine.set_network_bridges(self._network_bridges)
 
         machine.prepare_machine()
 
-    def _cleanup_slaves(self):
+    def _cleanup_agents(self):
         if self._machines == None:
             return
 
@@ -230,8 +230,8 @@ class Controller(object):
                     if isinstance(dev, VirtualDevice):
                         dev._destroy()
 
-                #clean-up slave logger
-                self._log_ctl.remove_slave(m_id)
+                #clean-up agent logger
+                self._log_ctl.remove_agent(m_id)
                 machine.set_mapped(False)
 
         self._machines.clear()
