@@ -29,7 +29,7 @@ class HostError(ControllerError):
     pass
 
 class Namespace(object):
-    """Tester facing slave API
+    """Tester facing agent API
 
     Objects of this class are created by the Controller and provided to the
     Recipe object to use from it's 'test()' method. This tester facing API
