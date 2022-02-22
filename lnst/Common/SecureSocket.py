@@ -135,7 +135,7 @@ class SecureSocket(object):
         self._master_secret = ""
 
         self._ctl_random = None
-        self._slave_random = None
+        self._agent_random = None
 
         self._current_write_spec = {"enc_key": None,
                                     "mac_key": None,
@@ -387,8 +387,8 @@ class SecureSocket(object):
 
         prf_seq = self.PRF(self._master_secret,
                            "key expansion",
-                           self._slave_random + self._ctl_random,
-                           2*aes_keysize + 2*mac_keysize)
+                           self._agent_random + self._ctl_random,
+                           2 * aes_keysize + 2 * mac_keysize)
 
         client_spec["enc_key"] = prf_seq[:aes_keysize]
         prf_seq = prf_seq[aes_keysize:]

@@ -66,11 +66,11 @@ class AgentSecSocket(SecureSocket):
             raise SecSocketException("Handshake failed.")
 
         self._ctl_random = ctl_hello["ctl_random"]
-        self._slave_random = os.urandom(28)
+        self._agent_random = os.urandom(28)
 
-        slave_hello = {"type": "slave_hello",
-                       "slave_random": self._slave_random}
-        self.send_msg(slave_hello)
+        agent_hello = {"type": "agent_hello",
+                       "agent_random": self._agent_random}
+        self.send_msg(agent_hello)
 
         if sec_params["auth_types"] == "none":
             logging.warning("===================================")
@@ -166,7 +166,7 @@ class AgentSecSocket(SecureSocket):
 
         self._master_secret = self.PRF(ZZ,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         handshake_data = ""
@@ -301,7 +301,7 @@ class AgentSecSocket(SecureSocket):
 
         self._master_secret = self.PRF(ZZ,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         self._init_cipher_spec()
@@ -385,7 +385,7 @@ class AgentSecSocket(SecureSocket):
         K = hashlib.sha256(S).digest()
         self._master_secret = self.PRF(K,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         self._init_cipher_spec()

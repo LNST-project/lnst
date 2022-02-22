@@ -61,12 +61,12 @@ class CtlSecSocket(SecureSocket):
         ctl_hello = {"type": "ctl_hello",
                      "ctl_random": self._ctl_random}
         self.send_msg(ctl_hello)
-        slave_hello = self.recv_msg()
+        agent_hello = self.recv_msg()
 
-        if slave_hello["type"] != "slave_hello":
+        if agent_hello["type"] != "agent_hello":
             raise SecSocketException("Handshake failed.")
 
-        self._slave_random = slave_hello["slave_random"]
+        self._agent_random = agent_hello["agent_random"]
 
         if sec_params["auth_type"] == "none":
             logging.warning("===================================")
@@ -162,7 +162,7 @@ class CtlSecSocket(SecureSocket):
 
         self._master_secret = self.PRF(ZZ,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         handshake_data = ""
@@ -291,7 +291,7 @@ class CtlSecSocket(SecureSocket):
 
         self._master_secret = self.PRF(ZZ,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         self._init_cipher_spec()
@@ -367,7 +367,7 @@ class CtlSecSocket(SecureSocket):
         K = hashlib.sha256(S).digest()
         self._master_secret = self.PRF(K,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         self._init_cipher_spec()
