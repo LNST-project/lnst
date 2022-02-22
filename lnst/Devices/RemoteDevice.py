@@ -129,7 +129,7 @@ class RemoteDevice(object):
         attr = getattr(self._dev_cls, name)
 
         if self.deleted and not self._cached:
-            raise DeviceDeleted("This device was deleted on the slave and does not exist anymore.")
+            raise DeviceDeleted("This device was deleted on the agent and does not exist anymore.")
 
         if callable(attr):
             if self._cached:

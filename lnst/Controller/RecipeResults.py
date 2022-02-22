@@ -79,13 +79,13 @@ class JobResult(BaseResult):
         return self.job.level+1
 
 class JobStartResult(JobResult):
-    """Generated automatically when a Job is succesfully started on a slave"""
+    """Generated automatically when a Job is successfully started on an agent"""
     @property
     def description(self):
         return "Job started: {}".format(str(self.job))
 
 class JobFinishResult(JobResult):
-    """Generated automatically when a Job is finished on a slave
+    """Generated automatically when a Job is finished on an agent
 
     success depends on the Job passed value and returns the data returned as
     a result of the Job."""

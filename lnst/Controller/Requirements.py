@@ -102,9 +102,9 @@ class HostReq(BaseReq):
 class DeviceReq(BaseReq):
     """Specifies a static test network Device requirement
 
-    This will be used to find a matching test machine in the configured slave
+    This will be used to find a matching test machine in the configured agent
     machine pools, specifically this will be used to match against a test
-    device on a slave machine that is "statically" present on the machine. In
+    device on an agent machine that is "statically" present on the machine. In
     other words an actual REAL network device connected to a network usable for
     testing.
 

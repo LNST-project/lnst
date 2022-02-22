@@ -18,7 +18,7 @@ class RecipeControl(object):
     def wait(self, sec):
         finish_time = time.time() + sec
         logging.info("Suspending recipe execution for {} seconds, "
-                     "messages from slaves will still be processed.".
+                     "messages from agent will still be processed.".
                      format(sec))
 
         def condition():

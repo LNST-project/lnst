@@ -58,12 +58,12 @@ class BaseRecipe(object):
         MyRecipe(int_param = 2, optional_param = 3)
 
     * Test definition - this is done by defining the test() method, in this
-      method the tester has direct access to mapped LNST slave Hosts, can
+      method the tester has direct access to mapped LNST agent Hosts, can
       manipulate them and implement his tests.
 
     :ivar matched:
         When running the Recipe the Controller will fill this attribute with a
-        Hosts object after the Mapper finds suitable slave hosts.
+        Hosts object after the Mapper finds suitable agent hosts.
     :type matched: :py:class:`lnst.Controller.Host.Hosts`
 
     :ivar req:
