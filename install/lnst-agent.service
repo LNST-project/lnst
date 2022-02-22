@@ -1,0 +1,12 @@
+[Unit]
+Description=Linux Network Stack Test - agent daemon
+Documentation=https://lnst.readthedocs.io/
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/lnst-agent
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
