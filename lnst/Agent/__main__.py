@@ -3,8 +3,8 @@
 LNST Agent
 
 This module defines the main entry point for running an LNST Agent.
-Running the `main` method will start the agent and wait for connections from
-LNST Controller(s)
+Running the `main` method will start the agent and wait for connections from a
+LNST Controller.
 """
 import os
 import logging

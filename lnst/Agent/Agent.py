@@ -1,5 +1,5 @@
 """
-This module defines the core Agent class which spawns and RPC server and
+This module defines the core Agent class which spawns a RPC server and
 runs controller's commands
 
 Copyright 2011 Red Hat, Inc.
