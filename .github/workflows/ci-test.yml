@@ -21,6 +21,7 @@ jobs:
 
     - name: Set up system requirements
       run: |
+        sudo apt-get update
         sudo apt-get install podman -y
         sudo systemctl enable --now podman.socket
         curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3.6 -
