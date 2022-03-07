@@ -144,14 +144,16 @@ class ListParam(Param):
         if not isinstance(value, list):
             raise ParamError("Value must be a List. Not {}".format(type(value)))
 
-        if self._type is not None:
-            for item in value:
-                try:
-                    self._type.type_check(item)
-                except ParamError as e:
-                    raise ParamError("Value '{}' failed type check:\n{}"
-                                     .format(item, str(e)))
-        return value
+        if self._type is None:
+            return value
+
+        new_value: list[str] = []
+        for item in value:
+            try:
+                new_value.append(self._type.type_check(item))
+            except ParamError as e:
+                raise ParamError(f"Value '{item}' failed type check:\n{e}")
+        return new_value
 
 
 class ChoiceParam(Param):
