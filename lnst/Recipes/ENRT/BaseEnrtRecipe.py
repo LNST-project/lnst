@@ -443,7 +443,7 @@ class BaseEnrtRecipe(
         :rtype: List[:any:`BaseResultEvaluator`]
 
         """
-        if self.params.perf_evaluation_strategy is "none":
+        if self.params.perf_evaluation_strategy == "none":
             return []
 
         if isinstance(measurement, BaseCPUMeasurement):
@@ -452,7 +452,7 @@ class BaseEnrtRecipe(
             else:
                 evaluators = self.cpu_perf_evaluators
         elif isinstance(measurement, BaseFlowMeasurement):
-            if self.params.perf_evaluation_strategy is "nonzero":
+            if self.params.perf_evaluation_strategy == "nonzero":
                 evaluators = [NonzeroFlowEvaluator()]
             else:
                 evaluators = self.net_perf_evaluators
