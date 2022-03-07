@@ -30,8 +30,6 @@ def main():
 
     if os.path.isfile(args.config):
         agent_config.load_config(args.config)
-    #else:
-    #    agent_config.load_config("/dev/null") #TODO Do we need this? Is there some other way to handle it
 
     load_presets_from_config(agent_config)
     coloured_output = not (agent_config.get_option("colours", "disable_colours") or args.no_colours)
