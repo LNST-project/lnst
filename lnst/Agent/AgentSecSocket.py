@@ -1,5 +1,5 @@
 """
-The SlaveSecSocket implements the slave (server) side of the handshake
+The AgentSecSocket implements the agent (server) side of the handshake
 protocols.
 
 Copyright 2016 Red Hat, Inc.
@@ -54,9 +54,10 @@ def cryptography_imports():
     backend = default_backend()
     cryptography_imported = True
 
-class SlaveSecSocket(SecureSocket):
+
+class AgentSecSocket(SecureSocket):
     def __init__(self, soc):
-        super(SlaveSecSocket, self).__init__(soc)
+        super(AgentSecSocket, self).__init__(soc)
         self._role = "server"
 
     def handshake(self, sec_params):
@@ -65,11 +66,11 @@ class SlaveSecSocket(SecureSocket):
             raise SecSocketException("Handshake failed.")
 
         self._ctl_random = ctl_hello["ctl_random"]
-        self._slave_random = os.urandom(28)
+        self._agent_random = os.urandom(28)
 
-        slave_hello = {"type": "slave_hello",
-                       "slave_random": self._slave_random}
-        self.send_msg(slave_hello)
+        agent_hello = {"type": "agent_hello",
+                       "agent_random": self._agent_random}
+        self.send_msg(agent_hello)
 
         if sec_params["auth_types"] == "none":
             logging.warning("===================================")
@@ -165,7 +166,7 @@ class SlaveSecSocket(SecureSocket):
 
         self._master_secret = self.PRF(ZZ,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         handshake_data = ""
@@ -300,7 +301,7 @@ class SlaveSecSocket(SecureSocket):
 
         self._master_secret = self.PRF(ZZ,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         self._init_cipher_spec()
@@ -384,7 +385,7 @@ class SlaveSecSocket(SecureSocket):
         K = hashlib.sha256(S).digest()
         self._master_secret = self.PRF(K,
                                        "master secret",
-                                       self._ctl_random + self._slave_random,
+                                       self._ctl_random + self._agent_random,
                                        48)
 
         self._init_cipher_spec()

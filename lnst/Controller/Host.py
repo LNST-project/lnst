@@ -1,6 +1,6 @@
 """
 Defines the Host class that represents the API for the init namespace of a
-slave machine.
+agent machine.
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -41,7 +41,7 @@ class Host(Namespace):
         super(Host, self).__init__(machine)
         self.params = Parameters()
         self.params._from_dict(self._machine._pool_params)
-        self.params._from_dict(self._machine._slave_desc)
+        self.params._from_dict(self._machine._agent_desc)
 
         self._machine.set_initns(self)
 

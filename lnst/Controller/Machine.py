@@ -21,7 +21,7 @@ from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult, DeviceCreateResult, DeviceMethodCallResult, DeviceAttrSetResult
-from lnst.Controller.SlaveObject import SlaveObject
+from lnst.Controller.AgentProxyObject import AgentProxyObject
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
 from lnst.Devices.RemoteDevice import RemoteDevice
@@ -38,7 +38,7 @@ class PrefixMissingError(ControllerError):
     pass
 
 class Machine(object):
-    """ Slave machine abstraction
+    """ Agent machine abstraction
 
         A machine object represents a handle using which the controller can
         manipulate the machine. This includes tasks such as, configuration,
@@ -51,7 +51,7 @@ class Machine(object):
         self._hostname = hostname
         self._mapped = False
         self._ctl_config = ctl_config
-        self._slave_desc = None
+        self._agent_desc = None
         self._connection = None
         self._system_config = {}
         self._security = security
@@ -273,7 +273,7 @@ class Machine(object):
             return None
 
     def get_dev_by_hwaddr(self, hwaddr):
-        #TODO move these to Slave to optimize quering for each device
+        #TODO move these to Agent to optimize quering for each device
         #TODO the method searches only the init namespace at the moment
         for dev in list(self._device_database[self._initns].values()):
             if dev.hwaddr == hwaddr:
@@ -314,9 +314,9 @@ class Machine(object):
         return self._msg_dispatcher.send_message(self, msg)
 
     def init_connection(self, timeout=None):
-        """ Initialize the slave connection
+        """ Initialize the agent connection
 
-        This will connect to the Slave, get it's description (should be
+        This will connect to the Agent, get it's description (should be
         usable for matching), and checks version compatibility
         """
         hostname = self._hostname
@@ -328,31 +328,31 @@ class Machine(object):
                                                            timeout))
         connection.handshake(self._security)
 
-        self._msg_dispatcher.add_slave(self, connection)
+        self._msg_dispatcher.add_agent(self, connection)
 
-        hello, slave_desc = self.rpc_call("hello")
+        hello, agent_desc = self.rpc_call("hello")
         if hello != "hello":
             msg = "Unable to establish RPC connection " \
                   "to machine %s, handshake failed!" % hostname
             raise MachineError(msg)
 
-        slave_version = slave_desc["lnst_version"]
+        agent_version = agent_desc["lnst_version"]
 
-        if lnst_version != slave_version:
+        if lnst_version != agent_version:
             if lnst_version.is_git_version:
-                msg = ("Controller ({}) and Slave '{}' ({}) versions "
+                msg = ("Controller ({}) and Agent '{}' ({}) versions "
                        "are different".format(lnst_version, hostname,
-                                              slave_version))
+                                              agent_version))
                 logging.warning(len(msg)*"=")
                 logging.warning(msg)
                 logging.warning(len(msg)*"=")
             else:
-                msg = ("Controller ({}) and Slave '{}' ({}) versions "
+                msg = ("Controller ({}) and Agent '{}' ({}) versions "
                        "are not compatible!".format(lnst_version, hostname,
-                                                    slave_version))
+                                                    agent_version))
                 raise MachineError(msg)
 
-        self._slave_desc = slave_desc
+        self._agent_desc = agent_desc
 
     def prepare_machine(self):
         self.rpc_call("prepare_machine")
@@ -445,7 +445,7 @@ class Machine(object):
             all the interfaces that have been configured on the machine,
             and finalize and close the rpc connection to the machine.
         """
-        #connection to the slave was closed
+        # connection to the agent was closed
         if not self._msg_dispatcher.get_connection(self):
             return
 
@@ -459,9 +459,9 @@ class Machine(object):
             self.del_namespaces()
             self.rpc_call("bye")
         except:
-            #cleanup is only meaningful on dynamic interfaces, and should
-            #always be called when deconfiguration happens- especially
-            #when something on the slave breaks during deconfiguration
+            # cleanup is only meaningful on dynamic interfaces, and should
+            # always be called when deconfiguration happens- especially
+            # when something on the agent breaks during deconfiguration
             self.cleanup_devices()
             raise
 
@@ -484,7 +484,7 @@ class Machine(object):
 
         if job.type == "module":
             # we need to send the class also into the root net namespace
-            # so that the Slave instance can unpickle the message
+            # so that the Agent instance can unpickle the message
             if job.netns is not None:
                 self.send_class(job._what.__class__, netns=None)
             self.send_class(job._what.__class__, netns=job.netns)
@@ -656,7 +656,7 @@ class Machine(object):
         cls_name = cls.__name__
         obj_ref = self.rpc_call("init_cls", cls_name, module_name, args, kwargs)
 
-        return SlaveObject(self, cls, obj_ref)
+        return AgentProxyObject(self, cls, obj_ref)
 
     def __str__(self):
         return "[Machine hostname(%s) libvirt_domain(%s) interfaces(%d)]" % \

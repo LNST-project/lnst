@@ -51,7 +51,7 @@ class Job(object):
         """id of the job
 
         Used internally by the Machine class to identify results coming
-        from the slave.
+        from the agent.
         TODO make private?
         """
         return self._id

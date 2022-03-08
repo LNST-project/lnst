@@ -14,7 +14,7 @@ packages = [
     { include = "lnst"}
 ]
 
-include = ["lnst_slave_cli.py", "schema-sm.rng", "install/*", "lnst-ctl.conf", "lnst-slave.conf"]
+include = ["schema-am.rng", "install/*", "lnst-ctl.conf"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
@@ -28,7 +28,7 @@ dataclasses = "*"
 podman = "*"
 
 [tool.poetry.scripts]
-lnst-slave = 'lnst_slave_cli:main'
+lnst-agent = 'lnst.Agent.__main__:main'
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"

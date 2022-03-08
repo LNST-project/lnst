@@ -1,8 +1,8 @@
 """
-This module contains implementaion of SlavePoolManager class that
+This module contains implementaion of AgentPoolManager class that
 takes care of loading pools and checking machine availability
 
-Most of the SlavePoolManager class is copied over from the old SlavePool class.
+Most of the AgentPoolManager class is copied over from the old AgentPool class.
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -22,14 +22,14 @@ import select
 from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.Machine import Machine
-from lnst.Controller.SlaveMachineParser import SlaveMachineParser
+from lnst.Controller.AgentMachineParser import AgentMachineParser
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Common.Utils import check_process_running
 
 class PoolManagerError(ControllerError):
     pass
 
-class SlavePoolManager(object):
+class AgentPoolManager(object):
     """
     This class is responsible for managing test machines that
     are available at the controler and can be used for testing.
@@ -195,7 +195,7 @@ class SlavePoolManager(object):
             dirname, basename = os.path.split(filepath)
             m_id = re.sub("\.[xX][mM][lL]$", "", basename)
 
-            parser = SlaveMachineParser(filepath, self._ctl_config)
+            parser = AgentMachineParser(filepath, self._ctl_config)
             xml_data = parser.parse()
             machine_spec = self._process_machine_xml_data(m_id, xml_data)
 

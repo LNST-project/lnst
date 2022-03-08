@@ -1,5 +1,5 @@
 """
-This module defines classes of jobs to be run on a slave
+This module defines classes of jobs to be run on a Agent
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as

@@ -13,7 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 class DeviceRef(object):
     """Device reference transferable over network
 
-    Used in Controller-Slave commucation protocol.
+    Used in Controller-Agent communication protocol.
     """
     def __init__(self, ifindex):
         self.ifindex = int(ifindex)

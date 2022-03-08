@@ -3,7 +3,7 @@ This module defines a SecureSocket class that wraps the normal socket by adding
 TLS-like functionality of providing data integrity, confidentiality and
 authenticity. The reason why we're not using TLS is because the Python
 implementation enforces the use of certificates and we want to also allow
-password based authentication. This implements the common class, and the Slave
+password based authentication. This implements the common class, and the Agent
 and Controller implement their sides of the handshake algorithms.
 
 Copyright 2016 Red Hat, Inc.
@@ -135,7 +135,7 @@ class SecureSocket(object):
         self._master_secret = ""
 
         self._ctl_random = None
-        self._slave_random = None
+        self._agent_random = None
 
         self._current_write_spec = {"enc_key": None,
                                     "mac_key": None,
@@ -387,8 +387,8 @@ class SecureSocket(object):
 
         prf_seq = self.PRF(self._master_secret,
                            "key expansion",
-                           self._slave_random + self._ctl_random,
-                           2*aes_keysize + 2*mac_keysize)
+                           self._agent_random + self._ctl_random,
+                           2 * aes_keysize + 2 * mac_keysize)
 
         client_spec["enc_key"] = prf_seq[:aes_keysize]
         prf_seq = prf_seq[aes_keysize:]

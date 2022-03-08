@@ -1,6 +1,6 @@
 """
 This module defines the common JobError exception used by both the Controller
-and the Slave
+and the Agent
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as

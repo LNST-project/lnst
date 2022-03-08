@@ -1,5 +1,5 @@
 """
-This module defines NetConfigSlave class which does spawns xmlrpc server and
+This module defines the core Agent class which spawns a RPC server and
 runs controller's commands
 
 Copyright 2011 Red Hat, Inc.
@@ -41,10 +41,10 @@ from lnst.Common.DeviceError import DeviceConfigValueError
 from lnst.Common.Parameters import Parameters
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.Version import lnst_version
-from lnst.Slave.Job import Job, JobContext
-from lnst.Slave.InterfaceManager import InterfaceManager
-from lnst.Slave.BridgeTool import BridgeTool
-from lnst.Slave.SlaveSecSocket import SlaveSecSocket, SecSocketException
+from lnst.Agent.Job import Job, JobContext
+from lnst.Agent.InterfaceManager import InterfaceManager
+from lnst.Agent.BridgeTool import BridgeTool
+from lnst.Agent.AgentSecSocket import AgentSecSocket, SecSocketException
 
 # maximum time the server should block on select -- forces frequent Netlink
 # checks
@@ -69,28 +69,29 @@ class SystemCallException(Exception):
     """Exception used to handle SIGINT waiting for system calls"""
     pass
 
-class SlaveMethods:
-    '''
-    Exported xmlrpc methods
-    '''
+
+class RemoteMethods:
+    """
+    RPC methods exposed to the Controller
+    """
     def __init__(self, job_context, log_ctl, net_namespaces,
-                 server_handler, slave_config, slave_server):
+                 server_handler, agent_config, agent_server):
         self._packet_captures = {}
         self._if_manager = None
         self._job_context = job_context
         self._log_ctl = log_ctl
         self._net_namespaces = net_namespaces
         self._server_handler = server_handler
-        self._slave_server = slave_server
-        self._slave_config = slave_config
+        self._agent_server = agent_server
+        self._agent_config = agent_config
 
         self._capture_files = {}
         self._copy_targets = {}
         self._copy_sources = {}
         self._system_config = {}
 
-        self._cache = ResourceCache(slave_config.get_option("cache", "dir"),
-                        slave_config.get_option("cache", "expiration_period"))
+        self._cache = ResourceCache(agent_config.get_option("cache", "dir"),
+                                    agent_config.get_option("cache", "expiration_period"))
 
         self._dynamic_modules = {}
         self._dynamic_classes = {}
@@ -99,19 +100,19 @@ class SlaveMethods:
     def hello(self):
         logging.info("Recieved a controller connection.")
 
-        slave_desc = {}
+        agent_desc = {}
         if check_process_running("NetworkManager"):
-            slave_desc["nm_running"] = True
+            agent_desc["nm_running"] = True
         else:
-            slave_desc["nm_running"] = False
+            agent_desc["nm_running"] = False
 
         k_release, _ = exec_cmd("uname -r", False, False, False)
         r_release, _ = exec_cmd("cat /etc/redhat-release", False, False, False)
-        slave_desc["kernel_release"] = k_release.strip()
-        slave_desc["redhat_release"] = r_release.strip()
-        slave_desc["lnst_version"] = lnst_version
+        agent_desc["kernel_release"] = k_release.strip()
+        agent_desc["redhat_release"] = r_release.strip()
+        agent_desc["lnst_version"] = lnst_version
 
-        return ("hello", slave_desc)
+        return ("hello", agent_desc)
 
     def prepare_machine(self):
         self.machine_cleanup()
@@ -127,7 +128,7 @@ class SlaveMethods:
 
         if check_process_running("NetworkManager"):
             logging.warning("=============================================")
-            logging.warning("NetworkManager is running on a slave machine!")
+            logging.warning("NetworkManager is running on a agent machine!")
             logging.warning("=============================================")
 
         for device in self._if_manager.get_devices():
@@ -521,13 +522,13 @@ class SlaveMethods:
                                                "pipe": read_pipe}
                 self._server_handler.add_netns(netns, read_pipe)
 
-                result = self._slave_server.wait_for_result(netns)
+                result = self._agent_server.wait_for_result(netns)
                 if result["result"] != True:
                     raise Exception("Namespace creation failed")
 
                 return True
             elif pid == 0:
-                self._slave_server.set_netns_sighandlers()
+                self._agent_server.set_netns_sighandlers()
                 #create new network namespace
                 libc_name = ctypes.util.find_library("c")
                 #from sched.h
@@ -660,7 +661,7 @@ class SlaveMethods:
             # msg = {"type": "command", "method_name": "return_if_netns",
                    # "args": [if_id]}
             # self._server_handler.send_data_to_netns(netns, msg)
-            # result = self._slave_server.wait_for_result(netns)
+            # result = self._agent_server.wait_for_result(netns)
             # if result["result"] != True:
                 # raise Exception("Return from netns failed.")
 
@@ -756,7 +757,7 @@ class SlaveMethods:
         return True
 
 class ServerHandler(ConnectionHandler):
-    def __init__(self, addr, slave_config):
+    def __init__(self, addr, agent_config):
         super(ServerHandler, self).__init__()
         self._netns_con_mapping = {}
         try:
@@ -773,14 +774,14 @@ class ServerHandler(ConnectionHandler):
 
         self._if_manager = None
 
-        self._security = slave_config.get_section_values("security")
+        self._security = agent_config.get_section_values("security")
 
     def set_if_manager(self, if_manager):
         self._if_manager = if_manager
 
     def accept_connection(self):
         self._c_socket, addr = self._s_socket.accept()
-        self._c_socket = (SlaveSecSocket(self._c_socket), addr[0])
+        self._c_socket = (AgentSecSocket(self._c_socket), addr[0])
         logging.info("Recieved connection from %s" % self._c_socket[1])
 
         try:
@@ -955,22 +956,23 @@ def deviceref_to_device(if_manager, obj):
     else:
         return obj
 
-class NetTestSlave:
-    def __init__(self, log_ctl, slave_config):
-        self._slave_config = slave_config
+
+class Agent:
+    def __init__(self, log_ctl, agent_config):
+        self._agent_config = agent_config
         die_when_parent_die()
 
         self._job_context = JobContext()
-        port = slave_config.get_option("environment", "rpcport")
+        port = agent_config.get_option("environment", "rpcport")
         logging.info("Using RPC port %d." % port)
-        self._server_handler = ServerHandler(("", port), slave_config)
+        self._server_handler = ServerHandler(("", port), agent_config)
 
         self._net_namespaces = {}
 
-        self._methods = SlaveMethods(self._job_context, log_ctl,
-                                     self._net_namespaces,
-                                     self._server_handler, slave_config,
-                                     self)
+        self._methods = RemoteMethods(self._job_context, log_ctl,
+                                      self._net_namespaces,
+                                      self._server_handler, agent_config,
+                                      self)
 
         self.register_die_signal(signal.SIGHUP)
         self.register_die_signal(signal.SIGINT)

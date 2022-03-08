@@ -7,7 +7,7 @@ them to be implemented in Python Recipes, with notes where relevant.
     * Device::destroy rename to delete or rename DeviceDeleted exception to
       Destroyed?
 
-* wait/sleep method that cycles handles ctl <-> slave communication in the
+* wait/sleep method that cycles handles ctl <-> agent communication in the
   background
     * should include wait for condition functionality, e.g. wait for Device
       LOWER_UP. jpirko also wants to be able to associate this with timestamps,
@@ -17,7 +17,7 @@ them to be implemented in Python Recipes, with notes where relevant.
       seconds, we will wait for additional 2 seconds, however if it has been up
       for e.g. 8 seconds the wait will return immediatelly.
     * currently supporting waiting on condition (a method) on the controller,
-      possible next work is to expand this to the slave as well (problems with
+      possible next work is to expand this to the agent as well (problems with
       object references)
 
 * netlink descriptive error logging - ask jbenc
@@ -50,14 +50,14 @@ them to be implemented in Python Recipes, with notes where relevant.
     * interactive LNST mode could also be interesting
     * we could use native python debugging facilities
     * or implement our own solution if required to satisfy unique requirements
-      of LNST -- long running connections to slaves and handling messages
+      of LNST -- long running connections to agents and handling messages
       during the breakpoint
 
-* slave machine descriptions in a different format than XML
-    * separate parsing slave descriptions into it's own class so that this can
+* agent machine descriptions in a different format than XML
+    * separate parsing agent descriptions into it's own class so that this can
       be drop-in replaced with anything
 
-* minimize the slave application (Host API abstraction)- it should only provide
+* minimize the agent application (Host API abstraction)- it should only provide
   the bare minimum functionality, all other functionality should be dynamically
   sent from the Controller (same as Device classes)
 
@@ -86,7 +86,7 @@ them to be implemented in Python Recipes, with notes where relevant.
 * disable all Devices by default and enable only those that are in the machine
   xml, also think about having an API for manual control
     - statistics during deconfiguration also for just these devices
-        - bulk slave method, remove autodump at deconfiguration, make this
+        - bulk agent method, remove autodump at deconfiguration, make this
           manual
 
 * Params should be just self.params.x, also x in self.params should tell us if

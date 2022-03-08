@@ -1,9 +1,9 @@
 """
 Defines the MessageDispatcher class used by the Controller to multiplex
-communication from all the connected Slave machines.
+communication from all the connected Agent machines.
 
 In addition to that it defines functions used by the MessageDispatcher to
-transparently translate Device objects while communicating with the Slave.
+transparently translate Device objects while communicating with the Agent.
 
 Copyright 2017 Red Hat, Inc.
 Licensed under the GNU General Public License, version 2 as
@@ -99,7 +99,7 @@ class MessageDispatcher(ConnectionHandler):
         self._log_ctl = log_ctl
         self._machines = dict()
 
-    def add_slave(self, machine, connection):
+    def add_agent(self, machine, connection):
         self._machines[machine] = machine
         self.add_connection(machine, connection)
 
@@ -108,28 +108,28 @@ class MessageDispatcher(ConnectionHandler):
         data = remote_device_to_deviceref(data)
 
         if send_data(soc, data) == False:
-            msg = "Connection error from slave %s" % machine.get_id()
+            msg = "Connection error from agent %s" % machine.get_id()
             raise ConnectionError(msg)
 
         result = None
         while True:
-            connected_slaves = list(self._connection_mapping.keys())
+            connected_agents = list(self._connection_mapping.keys())
 
             messages = self.check_connections()
             for msg in messages:
                 if msg[1]["type"] == "result" and msg[0] == machine:
                     if result is not None:
-                        msg = ("Multiple result messages from the same slave "
+                        msg = ("Multiple result messages from the same agent "
                                "'{}'".format(machine.get_id()))
                         raise ConnectionError(msg)
                     result = msg[1]
                 else:
                     self._process_message(msg)
 
-            remaining_slaves = list(self._connection_mapping.keys())
-            if connected_slaves != remaining_slaves:
-                self._handle_disconnects(set(connected_slaves)-
-                                         set(remaining_slaves))
+            remaining_agents = list(self._connection_mapping.keys())
+            if connected_agents != remaining_agents:
+                self._handle_disconnects(set(connected_agents)-
+                                         set(remaining_agents))
 
             if result is not None:
                 netns = data.get("netns", None)
@@ -152,7 +152,7 @@ class MessageDispatcher(ConnectionHandler):
 
             wait = True
             while wait:
-                connected_slaves = list(self._connection_mapping.keys())
+                connected_agents = list(self._connection_mapping.keys())
                 messages = self.check_connections(timeout=1)
                 for msg in messages:
                     try:
@@ -165,10 +165,10 @@ class MessageDispatcher(ConnectionHandler):
 
                 wait = wait and not condition_wrapper()
 
-                remaining_slaves = list(self._connection_mapping.keys())
-                if connected_slaves != remaining_slaves:
-                    self._handle_disconnects(set(connected_slaves)-
-                                             set(remaining_slaves))
+                remaining_agents = list(self._connection_mapping.keys())
+                if connected_agents != remaining_agents:
+                    self._handle_disconnects(set(connected_agents)-
+                                             set(remaining_agents))
         except WaitTimeoutError as exc:
             logging.error("Waiting for condition timed out!")
             res = False
@@ -179,17 +179,17 @@ class MessageDispatcher(ConnectionHandler):
         return res
 
     def handle_messages(self):
-        connected_slaves = list(self._connection_mapping.keys())
+        connected_agents = list(self._connection_mapping.keys())
 
         messages = self.check_connections()
 
         for msg in messages:
             self._process_message(msg)
 
-        remaining_slaves = list(self._connection_mapping.keys())
-        if connected_slaves != remaining_slaves:
-            self._handle_disconnects(set(connected_slaves)-
-                                     set(remaining_slaves))
+        remaining_agents = list(self._connection_mapping.keys())
+        if connected_agents != remaining_agents:
+            self._handle_disconnects(set(connected_agents)-
+                                     set(remaining_agents))
         return True
 
     def _process_message(self, message):
@@ -197,7 +197,7 @@ class MessageDispatcher(ConnectionHandler):
             record = message[1]["record"]
             self._log_ctl.add_client_log(message[0].get_id(), record)
         elif message[1]["type"] == "result":
-            msg = "Recieved result message from different slave %s" % message[0].get_id()
+            msg = "Received result message from different agent %s" % message[0].get_id()
             logging.debug(msg)
         elif message[1]["type"] == "dev_created":
             machine = self._machines[message[0]]
@@ -229,22 +229,22 @@ class MessageDispatcher(ConnectionHandler):
             msg = "Unknown message type: %s" % message[1]["type"]
             raise ConnectionError(msg)
 
-    def _handle_disconnects(self, disconnected_slaves):
-        disconnected_slaves = set(disconnected_slaves)
-        for slave in list(disconnected_slaves):
-            if not slave.get_mapped():
-                logging.warn("Slave {} soft-disconnected from the "
-                             "controller.".format(slave.get_id()))
-                disconnected_slaves.remove(slave)
+    def _handle_disconnects(self, disconnected_agents):
+        disconnected_agents = set(disconnected_agents)
+        for agent in list(disconnected_agents):
+            if not agent.get_mapped():
+                logging.warn("Agent {} soft-disconnected from the "
+                             "controller.".format(agent.get_id()))
+                disconnected_agents.remove(agent)
 
-        if len(disconnected_slaves) > 0:
+        if len(disconnected_agents) > 0:
             disconnected_names = [x.get_id()
-                    for x in disconnected_slaves]
-            msg = "Slaves " + str(list(disconnected_names)) + \
+                                  for x in disconnected_agents]
+            msg = "Agents " + str(list(disconnected_names)) + \
                   " hard-disconnected from the controller."
             raise ConnectionError(msg)
 
-    def disconnect_slave(self, machine):
+    def disconnect_agent(self, machine):
         soc = self.get_connection(machine)
         self.remove_connection(soc)
         del self._machines[machine]

@@ -17,7 +17,7 @@ def VethPair(*args, **kwargs):
     """Creates a pair of Veth Devices
 
     Args:
-        args, kwargs passed to the VethDevice constructor on the Slave.
+        args, kwargs passed to the VethDevice constructor on the Agent.
     """
     first = RemoteDevice(VethDevice, args, kwargs)
     second = PairedRemoteDevice(first, PairedVethDevice)

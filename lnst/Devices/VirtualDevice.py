@@ -27,7 +27,7 @@ class VirtualDevice(RemoteDevice):
 
     To support creation of new devices on virtual machines, we derive from
     the RemoteDevice class and override the create method (which would be
-    remotely called on the slave for the Device class type). Instead, the
+    remotely called on the agent for the Device class type). Instead, the
     create method is called on the controller where libvirt is running.
 
     The Tester shouldn't create instances of this class. They're created

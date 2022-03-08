@@ -59,15 +59,15 @@ class BaseReq(object):
                             delattr(self.params, name)
 
 class HostReq(BaseReq):
-    """Specifies a Slave machine requirement
+    """Specifies a Agent machine requirement
 
     To define a Host requirement you assign a HostReq instance to a class
     attribute of a BaseRecipe derived class.
 
     :param kwargs:
         any argument will be treated as arbitrary string parameters that will
-        be matched to parameters of Slave machines which can define their
-        parameter values based on the implementation of the SlaveMachineParser
+        be matched to parameters of Agent machines which can define their
+        parameter values based on the implementation of the AgentMachineParser
 
         A special case is the use of a
         :py:mod:`lnst.Controller.Requirements.RecipeParam` instance as value.
@@ -102,9 +102,9 @@ class HostReq(BaseReq):
 class DeviceReq(BaseReq):
     """Specifies a static test network Device requirement
 
-    This will be used to find a matching test machine in the configured slave
+    This will be used to find a matching test machine in the configured agent
     machine pools, specifically this will be used to match against a test
-    device on a slave machine that is "statically" present on the machine. In
+    device on an agent machine that is "statically" present on the machine. In
     other words an actual REAL network device connected to a network usable for
     testing.
 
@@ -117,8 +117,8 @@ class DeviceReq(BaseReq):
 
     :param kwargs:
         any other arguments will be treated as arbitrary string parameters that
-        will be matched to parameters of Slave machines which can define their
-        parameter values based on the implementation of the SlaveMachineParser
+        will be matched to parameters of Agent machines which can define their
+        parameter values based on the implementation of the AgentMachineParser
     :type kwargs: Dict[str, Any]
 
     Example::

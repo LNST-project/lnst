@@ -1,5 +1,5 @@
 """
-Wizard class for creating slave machine config files
+Wizard class for creating agent machine config files
 
 Copyright 2015 Red Hat Inc.
 Licensed under the GNU General Public Licence, version 2 as
@@ -279,7 +279,7 @@ class Wizard:
     def _create_xml(self, machine_interfaces=None, hostname=None,
                     pool_dir=None, filename=None, mode=None,
                     port=None, libvirt_domain=None, sec_params=None):
-        """ Creates slave machine XML file
+        """ Creates agent machine XML file
         @param machine_interfaces List of machine's interfaces
         @param hostname Hostname of the machine
         @param pool_dir Path to directory where XML file will be created
@@ -289,7 +289,7 @@ class Wizard:
         """
 
         impl = getDOMImplementation()
-        doc = impl.createDocument(None, "slavemachine", None)
+        doc = impl.createDocument(None, "agentmachine", None)
         top_el = doc.documentElement
         params_el = doc.createElement("params")
         top_el.appendChild(params_el)
@@ -394,7 +394,7 @@ class Wizard:
                "method_name": "get_devices_by_params",
                "args": [{"ifi_type": 1, "state": "DOWN"}]}
         if not send_data(sock, msg):
-            sys.stderr.write("Could not send request to slave machine\n")
+            sys.stderr.write("Could not send request to agent machine\n")
             return None
 
         while True:
@@ -576,7 +576,7 @@ class Wizard:
                     continue
                 break
             while True:
-                srv_pubkey_path = eval(input("Enter path to Slave public key: "))
+                srv_pubkey_path = eval(input("Enter path to Agent public key: "))
                 if srv_pubkey_path == "" or not os.path.isfile(srv_pubkey_path):
                     sys.stderr.write("Invalid path to public key.")
                     continue

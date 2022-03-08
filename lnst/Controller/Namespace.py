@@ -29,7 +29,7 @@ class HostError(ControllerError):
     pass
 
 class Namespace(object):
-    """Tester facing slave API
+    """Tester facing agent API
 
     Objects of this class are created by the Controller and provided to the
     Recipe object to use from it's 'test()' method. This tester facing API
@@ -99,7 +99,7 @@ class Namespace(object):
                 or a TestModule object.
             bg --  run in background flag. Default 'False'. When True, the
                 method will return immediately after the Job request is sent
-                to the Slave Host.
+                to the Agent Host.
             fail -- default 'False'. If True, a Failure will be reported as PASS
             timeout: time limit in seconds. Default is 60. Only respected for
                 jobs running in foreground (background Jobs don't have a time
@@ -112,7 +112,7 @@ class Namespace(object):
             the Job was ran on foreground, the returned Job object will be
             filled with result data. If the Job was ran in background, the
             immediately returned Job object can be used to manipulate the
-            running Job remotely and when the result data arrives from the Slave
+            running Job remotely and when the result data arrives from the Agent
             the Job object will be automatically updated.
         """
         job = self.prepare_job(what, fail, json, desc, job_level)
