@@ -174,6 +174,17 @@ class GeneveLwtTunnelRecipe(
         """
         return [PingEndpoints(self.matched.host1.lo, self.matched.host2.lo)]
 
+    def generate_perf_endpoints(self, config):
+        """
+        The perf endpoints for this recipe are the loopback devices that
+        are configured with IP addresses of the tunnelled networks.
+
+        Returned as::
+
+            [(self.matched.host1.lo, self.matched.host2.lo)]
+        """
+        return [(self.matched.host1.lo, self.matched.host2.lo)]
+
     def get_packet_assert_config(self, ping_config):
         """
         The packet assert test configuration contains filter for ip or ip6
