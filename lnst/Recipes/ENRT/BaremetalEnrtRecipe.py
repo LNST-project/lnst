@@ -13,6 +13,7 @@ from lnst.Recipes.ENRT.MeasurementGenerators.FlowMeasurementGenerator import (
 from lnst.Recipes.ENRT.MeasurementGenerators.FlowEndpointsStatCPUMeasurementGenerator import (
     FlowEndpointsStatCPUMeasurementGenerator,
 )
+from lnst.Recipes.ENRT.MeasurementGenerators.LinuxPerfMeasurementGenerator import LinuxPerfMeasurementGenerator
 
 
 class BaremetalEnrtRecipe(
@@ -20,6 +21,7 @@ class BaremetalEnrtRecipe(
     DisableTurboboostMixin,
     DisableIdleStatesMixin,
     FlowEndpointsStatCPUMeasurementGenerator,
+    LinuxPerfMeasurementGenerator,
     FlowMeasurementGenerator,
     BaseEnrtRecipe,
 ):
