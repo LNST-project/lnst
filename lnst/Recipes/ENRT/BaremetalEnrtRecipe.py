@@ -13,6 +13,7 @@ from lnst.Recipes.ENRT.MeasurementGenerators.FlowMeasurementGenerator import (
 from lnst.Recipes.ENRT.MeasurementGenerators.FlowEndpointsStatCPUMeasurementGenerator import (
     FlowEndpointsStatCPUMeasurementGenerator,
 )
+from lnst.Recipes.ENRT.MeasurementGenerators.LinuxPerfMeasurementGenerator import LinuxPerfMeasurementGenerator
 
 
 class BaremetalEnrtRecipe(
@@ -20,6 +21,7 @@ class BaremetalEnrtRecipe(
     DisableTurboboostMixin,
     DisableIdleStatesMixin,
     FlowEndpointsStatCPUMeasurementGenerator,
+    LinuxPerfMeasurementGenerator,
     FlowMeasurementGenerator,
     BaseEnrtRecipe,
 ):
@@ -46,3 +48,7 @@ class BaremetalEnrtRecipe(
         :any:`DisableTurboboostMixin.disable_turboboost_host_list`.
         """
         return self.matched
+
+    @property
+    def linuxperf_cpus(self):
+        return [self.params.dev_intr_cpu, self.params.perf_tool_cpu]
