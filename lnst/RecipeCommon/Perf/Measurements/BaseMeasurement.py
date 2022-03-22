@@ -24,11 +24,11 @@ class BaseMeasurement(object):
         raise NotImplementedError()
 
     @classmethod
-    def report_results(recipe, results):
+    def report_results(cls, recipe, results):
         raise NotImplementedError()
 
     @classmethod
-    def aggregate_results(first, second):
+    def aggregate_results(cls, first, second):
         raise NotImplementedError()
 
     def __repr__(self):
