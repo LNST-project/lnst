@@ -15,6 +15,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import logging
+from typing import Optional
 from abc import ABCMeta
 from lnst.Controller.Job import DEFAULT_TIMEOUT
 from lnst.Devices.Device import Device
@@ -84,6 +85,17 @@ class Namespace(object):
         returns None for the init namespace
         returns a string name for any other namespace"""
         return self._name
+
+    def copy_file_to_machine(
+        self,
+        local_path: str,
+        remote_path: Optional[str] = None,
+        netns: Optional['Namespace'] = None,
+    ) -> str:
+        return self._machine.copy_file_to_machine(local_path, remote_path, netns)
+
+    def copy_file_from_machine(self, remote_path: str, local_path: str):
+        self._machine.copy_file_from_machine(remote_path, local_path)
 
     def prepare_job(self, what, fail=False, json=False, desc=None,
                     job_level=ResultLevel.DEBUG):
