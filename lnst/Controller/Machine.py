@@ -609,8 +609,8 @@ class Machine(object):
         f = open(local_path, "rb")
 
         while True:
-            data = f.read(1024*1024) # 1MB buffer
-            if len(data) == 0:
+            data: bytes = f.read(1024*1024) # 1MB buffer
+            if not data:
                 break
 
             self.rpc_call("copy_part_to", remote_path, data, netns=netns)
@@ -629,8 +629,8 @@ class Machine(object):
 
         buf_size = 1024*1024 # 1MB buffer
         while True:
-            data = self.rpc_call("copy_part_from", remote_path, buf_size)
-            if data == "":
+            data: bytes = self.rpc_call("copy_part_from", remote_path, buf_size)
+            if not data:
                 break
             local_file.write(data)
 
