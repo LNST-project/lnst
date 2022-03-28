@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lnst"
-version = "16.0.0"
+version = "16.1.0"
 homepage = "http://lnst-project.org"
 license = "GPL-2.0-or-later"
 readme = "README.md"
@@ -17,14 +17,13 @@ packages = [
 include = ["schema-am.rng", "install/*", "lnst-ctl.conf"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.9"
 
 pyroute2 = "*"
 pyyaml = "*"
 lxml = "*"
 libvirt-python = "*"
 ethtool = "*"
-dataclasses = "*"
 podman = "*"
 
 [tool.poetry.scripts]
