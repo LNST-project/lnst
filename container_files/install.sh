@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="/root/.local/bin:$PATH"
 poetry install
 
 venv_path=$(poetry env info -p)
