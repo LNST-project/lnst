@@ -14,7 +14,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: "3.6"
+        python-version: "3.9"
 
     - name: Source branch checkout
       uses: actions/checkout@v2
@@ -24,7 +24,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install podman -y
         sudo systemctl enable --now podman.socket
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3.6 -
+        curl -sSL https://install.python-poetry.org | python3 - --version 1.1.13
 
     - name: Set up Podman network requirements
       run: |
@@ -50,7 +50,8 @@ jobs:
         libnl-route-3-dev \
         git \
         libnl-3-dev
-        $HOME/.poetry/bin/poetry install
+        export PATH="/root/.local/bin:$PATH"
+        poetry install
 
     - name: Build LNST agents image
       run: |
@@ -58,7 +59,7 @@ jobs:
 
     - name: SimpleNetworkRecipe ping test
       run: |
-        export PATH=$PATH:$HOME/.poetry/bin
+        export PATH="/root/.local/bin:$PATH"
         venv_path=$(poetry env info -p)
-        sudo "$venv_path"/bin/python .github/runner.py
+        sudo "$venv_path"/bin/python3 .github/runner.py
 
