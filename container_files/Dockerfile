@@ -4,7 +4,7 @@ FROM fedora:34
 RUN dnf install -y initscripts \
     iputils \
     ethtool \
-    python3.6 \
+    python3.9 \
     python-pip \
     gcc \
     python-devel \
@@ -14,7 +14,9 @@ RUN dnf install -y initscripts \
     libvirt-devel \
     libnl3 \
     git \
-    libnl3-devel && pip install 'poetry==1.1.7'
+    libnl3-devel &&  \
+    curl -sSL https://install.python-poetry.org |  \
+    python3 - --version 1.1.13
 
 COPY . /lnst
 RUN cd /lnst/container_files && chmod +x install.sh && sh install.sh
