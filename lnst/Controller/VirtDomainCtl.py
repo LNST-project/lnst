@@ -12,8 +12,6 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import logging
-import libvirt
-from libvirt import libvirtError
 from lnst.Controller.Common import ControllerError
 
 #this is a global object because opening the connection to libvirt in every
@@ -22,6 +20,14 @@ from lnst.Controller.Common import ControllerError
 _libvirt_conn = None
 
 def init_libvirt_con():
+    try:
+        import libvirt
+        from libvirt import libvirtError
+    except ModuleNotFoundError:
+        msg = "Failed to import libvirt, please install the dependency if you want to use the libvirt network management feature."
+        logging.error(msg)
+        raise ControllerError(msg)
+
     global _libvirt_conn
     if _libvirt_conn is None:
         _libvirt_conn = libvirt.open(None)
