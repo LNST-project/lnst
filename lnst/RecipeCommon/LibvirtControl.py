@@ -1,11 +1,17 @@
 import logging
-import libvirt
-from libvirt import libvirtError
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Logs import log_exc_traceback
 
 class LibvirtControl(object):
     def __init__(self):
+        try:
+            import libvirt
+            from libvirt import libvirtError
+        except ModuleNotFoundError:
+            msg = "Failed to import libvirt, please install libvirt if you want to use the LibvirtControl class."
+            logging.error(msg)
+            raise LnstError(msg)
+
         self._libvirt_conn = libvirt.open(None)
 
     def createXML(self, xml, flags=0):
