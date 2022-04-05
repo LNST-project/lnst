@@ -99,7 +99,7 @@ class ContainerPoolManager(object):
     def _podman_connect(self, podman_uri: str):
         logging.debug("Connecting to Podman API")
         try:
-            client = PodmanClient(base_url=podman_uri)
+            client = PodmanClient(base_url=podman_uri, timeout=60)
             client.info()  # info() will try to connect to the API
         except APIError as e:
             raise PoolManagerError(f"Could not connect to Podman API: {e}")
