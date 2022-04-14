@@ -37,11 +37,11 @@ class LinuxPerf(BaseTestModule):
         if stderr:
             log_output(logging.debug, "Stderr", stderr.decode())
 
-        self._res_data["filename"] = os.path.abspath(self._parse_filename_from_output(stderr.decode()))
+        self._res_data["filename"] = os.path.abspath(self.params.output_file)
         return process.returncode == -2
 
     def _compose_cmd(self) -> str:
-        cmd: str = "perf record --timestamp-filename"
+        cmd: str = "perf record"
         cmd += f" --output={self.params.output_file}"
 
         if "cpus" in self.params:
@@ -51,12 +51,3 @@ class LinuxPerf(BaseTestModule):
             cmd += f" --event={','.join(self.params.events)}"
 
         return cmd
-
-    def _parse_filename_from_output(self, output: str) -> Optional[str]:
-        for line in output.split("\n"):
-            m = re.match(r"^\[ perf record: Dump (.*?) \]$", line)
-            if m:
-                return m.group(1)
-
-        logging.error("could not parse output filename from perf-record output")
-        return None
