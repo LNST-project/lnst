@@ -10,7 +10,6 @@ from lnst.RecipeCommon.Perf.Measurements.LinuxPerfMeasurement import (
 from lnst.Common.Parameters import BoolParam, StrParam
 from lnst.Controller.Host import Host
 
-from typing import List, Any
 import os
 
 class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
@@ -18,7 +17,7 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
     linuxperf_intr_fname = StrParam(default="intr.data")
     linuxperf_iperf_fname = StrParam(default="iperf.data")
 
-    def generate_perf_measurements_combinations(self, config: Any):
+    def generate_perf_measurements_combinations(self, config):
         combinations = super().generate_perf_measurements_combinations(config)
 
         if not self.params.do_linuxperf_measurement:

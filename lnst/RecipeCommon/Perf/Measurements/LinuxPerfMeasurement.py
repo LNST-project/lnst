@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 import logging
 import signal
 import time
@@ -19,7 +19,7 @@ from lnst.Controller.RecipeResults import ResultLevel
 class LinuxPerfMeasurementResults(BaseMeasurementResults):
     _host: Host
     _filename: str
-    _cpus: List[int]
+    _cpus: list[int]
 
     _start_timestamp: float
     _end_timestamp: float
@@ -29,7 +29,7 @@ class LinuxPerfMeasurementResults(BaseMeasurementResults):
         measurement: "LinuxPerfMeasurement",
         host: Host,
         filename: str,
-        cpus: List[int],
+        cpus: list[int],
         start_timestamp: float,
         end_timestamp: float,
     ):
@@ -66,14 +66,14 @@ class LinuxPerfMeasurementResults(BaseMeasurementResults):
 
 class AggregatedLinuxPerfMeasurementResults(BaseMeasurementResults):
 
-    _individual_results: List[LinuxPerfMeasurementResults] = []
+    _individual_results: list[LinuxPerfMeasurementResults] = []
 
     def __init__(self, result: Optional[LinuxPerfMeasurementResults] = None):
         if result:
             self._individual_results = [result]
 
     @property
-    def individual_results(self) -> List[LinuxPerfMeasurementResults]:
+    def individual_results(self) -> list[LinuxPerfMeasurementResults]:
         return self._individual_results
 
     def add_results(self, result: LinuxPerfMeasurementResults):
@@ -83,26 +83,26 @@ class AggregatedLinuxPerfMeasurementResults(BaseMeasurementResults):
 class LinuxPerfMeasurement(BaseMeasurement):
     _MEASUREMENT_VERSION: int = 1
 
-    hosts: List[Host]
+    hosts: list[Host]
     intr_filename: str
-    intr_cpus: List[int]
+    intr_cpus: list[int]
     iperf_filename: str
-    iperf_cpus: List[int]
+    iperf_cpus: list[int]
     _start_timestamp: float
     _end_timestamp: float
     _data_folder: str
 
-    _version: Optional[Dict[str, Any]] = None
+    _version: Optional[dict[str, Any]] = None
     _collection_index: int = 0
-    _jobs: List[Job] = []
+    _jobs: list[Job] = []
 
     def __init__(
         self,
-        hosts: List[Host],
+        hosts: list[Host],
         intr_filename: str,
-        intr_cpus: List[int],
+        intr_cpus: list[int],
         iperf_filename: str,
-        iperf_cpus: List[int],
+        iperf_cpus: list[int],
         data_folder: str,
         recipe_conf: Any = None,
     ):
@@ -121,7 +121,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
             os.mkdir(os.path.join(self._data_folder, host.hostid))
 
     @property
-    def version(self) -> Optional[Dict[str, Any]]:
+    def version(self) -> Optional[dict[str, Any]]:
         if self._version:
             return self._version
 
@@ -165,9 +165,9 @@ class LinuxPerfMeasurement(BaseMeasurement):
                 logging.error(f"timeout while waiting for linuxperf job to finish on host {host.hostid}")
         self._end_timestamp = time.time()
 
-    def collect_results(self) -> List[BaseMeasurementResults]:
+    def collect_results(self) -> list[BaseMeasurementResults]:
         self._collection_index += 1
-        results: List[BaseMeasurementResults] = []
+        results: list[BaseMeasurementResults] = []
         for job, (host, filename, cpus) in zip(self._jobs, self._generate_configurations()):
             if job.result is None:
                 continue
@@ -195,7 +195,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
     def report_results(
         cls,
         recipe: BaseRecipe,
-        aggregated_results: List[AggregatedLinuxPerfMeasurementResults],
+        aggregated_results: list[AggregatedLinuxPerfMeasurementResults],
     ):
         for aggregated_result in aggregated_results:
             cpus: str = ",".join(map(str, aggregated_result.individual_results[0].cpus))
@@ -212,13 +212,13 @@ class LinuxPerfMeasurement(BaseMeasurement):
     @classmethod
     def aggregate_results(
         cls,
-        old: Optional[List[AggregatedLinuxPerfMeasurementResults]],
-        new: List[LinuxPerfMeasurementResults],
-    ) -> List[AggregatedLinuxPerfMeasurementResults]:
+        old: Optional[list[AggregatedLinuxPerfMeasurementResults]],
+        new: list[LinuxPerfMeasurementResults],
+    ) -> list[AggregatedLinuxPerfMeasurementResults]:
         if old is None:
             return [AggregatedLinuxPerfMeasurementResults(result) for result in new]
 
-        aggregated: List[AggregatedLinuxPerfMeasurementResults] = []
+        aggregated: list[AggregatedLinuxPerfMeasurementResults] = []
         for old_measurements, new_measurement in zip(old, new):
             aggregated.append(
                 cls._aggregate_linux_perf_results(old_measurements, new_measurement)
