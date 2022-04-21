@@ -178,7 +178,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
             dst_filepath: str = os.path.join(self._data_folder, host.hostid, new_filename)
 
             host.copy_file_from_machine(src_filepath, dst_filepath)
-            logging.debug(f"perf-record data copied from slave to {dst_filepath}")
+            logging.debug(f"perf-record data copied from agent to {dst_filepath}")
             results.append(
                 LinuxPerfMeasurementResults(
                     self,
