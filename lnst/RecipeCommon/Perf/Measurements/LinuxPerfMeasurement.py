@@ -1,4 +1,5 @@
 from typing import Any, Optional
+from datetime import datetime
 import logging
 import signal
 import time
@@ -15,6 +16,8 @@ from lnst.Controller.Host import Host
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import ResultLevel
 
+def timestamp() -> str:
+    return datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 class LinuxPerfMeasurementResults(BaseMeasurementResults):
     _host: Host
@@ -174,7 +177,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
             # copy agent's perf.data file to a controller
             src_filepath: str = job.result["filename"]
-            new_filename: str = f"{filename}.{self._collection_index}"
+            new_filename: str = f"{filename}.{self._collection_index}.{timestamp()}"
             dst_filepath: str = os.path.join(self._data_folder, host.hostid, new_filename)
 
             host.copy_file_from_machine(src_filepath, dst_filepath)
