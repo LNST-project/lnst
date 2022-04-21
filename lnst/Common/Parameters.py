@@ -16,8 +16,6 @@ from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.IpAddress import BaseIpAddress, ipaddress
 from lnst.Common.LnstError import LnstError
 
-from typing import List
-
 class ParamError(LnstError):
     pass
 
@@ -149,7 +147,7 @@ class ListParam(Param):
         if self._type is None:
             return value
 
-        new_value: List[str] = []
+        new_value: list[str] = []
         for item in value:
             try:
                 new_value.append(self._type.type_check(item))
