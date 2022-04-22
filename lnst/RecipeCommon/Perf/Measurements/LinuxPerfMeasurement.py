@@ -121,7 +121,10 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
         # create output folders
         for host in self.hosts:
-            os.mkdir(os.path.join(self._data_folder, host.hostid))
+            try:
+                os.mkdir(os.path.join(self._data_folder, host.hostid))
+            except FileExistsError:
+                pass
 
     @property
     def version(self) -> Optional[dict[str, Any]]:

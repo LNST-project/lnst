@@ -27,7 +27,10 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
         linuxperf_data_folder: str = os.path.abspath(
             os.path.join(self.current_run.log_dir, "linuxperf-data")
         )
-        os.mkdir(linuxperf_data_folder)
+        try:
+            os.mkdir(linuxperf_data_folder)
+        except FileExistsError:
+            pass
 
         for combination in combinations:
             measurement: BaseMeasurement = LinuxPerfMeasurement(
