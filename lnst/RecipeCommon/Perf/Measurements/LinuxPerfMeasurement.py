@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Iterable
 from datetime import datetime
 import logging
 import signal
@@ -87,10 +87,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
     _MEASUREMENT_VERSION: int = 1
 
     hosts: list[Host]
-    intr_filename: str
-    intr_cpus: list[int]
-    iperf_filename: str
-    iperf_cpus: list[int]
+    linuxperf_cpus: list[list[int]]
     _start_timestamp: float
     _end_timestamp: float
     _data_folder: str
@@ -102,21 +99,14 @@ class LinuxPerfMeasurement(BaseMeasurement):
     def __init__(
         self,
         hosts: list[Host],
-        intr_filename: str,
-        intr_cpus: list[int],
-        iperf_filename: str,
-        iperf_cpus: list[int],
+        linuxperf_cpus: list[list[int]],
         data_folder: str,
         recipe_conf: Any = None,
     ):
         super().__init__(recipe_conf)
 
         self.hosts = hosts
-        self.intr_filename = intr_filename
-        self.intr_cpus = intr_cpus
-        self.iperf_filename = iperf_filename
-        self.iperf_cpus = iperf_cpus
-
+        self.linuxperf_cpus = linuxperf_cpus
         self._data_folder = data_folder
 
         # create output folders
@@ -155,18 +145,19 @@ class LinuxPerfMeasurement(BaseMeasurement):
         return None
 
     @property
-    def configurations(self):
+    def configurations(self) -> Iterable[tuple[Host, list[int]]]:
         for host in self.hosts:
-            yield (host, self.intr_filename, self.intr_cpus)
-            yield (host, self.iperf_filename, self.iperf_cpus)
+            for cpu_list in self.linuxperf_cpus:
+                yield (host, cpu_list)
 
     def start(self) -> None:
         self._start_timestamp = time.time()
-        for host, filename, cpus in self.configurations:
+        for host, cpus in self.configurations:
+            filename: str = f"cpus.{'.'.join(map(str, cpus))}.data"
             self._jobs.append(host.run(LinuxPerf(output_file=filename, cpus=cpus), bg=True))
 
     def finish(self) -> None:
-        for job, (host, _, _) in zip(self._jobs, self.configurations):
+        for job, (host, _) in zip(self._jobs, self.configurations):
             job.kill(signal=signal.SIGINT)
             if not job.wait(timeout=120):
                 logging.error(f"timeout while waiting for linuxperf job to finish on host {host.hostid}")
@@ -175,13 +166,13 @@ class LinuxPerfMeasurement(BaseMeasurement):
     def collect_results(self) -> list[BaseMeasurementResults]:
         self._collection_index += 1
         results: list[BaseMeasurementResults] = []
-        for job, (host, filename, cpus) in zip(self._jobs, self.configurations):
+        for job, (host, cpus) in zip(self._jobs, self.configurations):
             if job.result is None:
                 continue
 
             # copy agent's perf.data file to a controller
             src_filepath: str = job.result["filename"]
-            new_filename: str = f"{filename}.{self._collection_index}.{timestamp()}"
+            new_filename: str = f"{os.path.basename(src_filepath)}.{self._collection_index}.{timestamp()}"
             dst_filepath: str = os.path.join(self._data_folder, host.hostid, new_filename)
 
             host.copy_file_from_machine(src_filepath, dst_filepath)
