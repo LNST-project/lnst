@@ -218,15 +218,6 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
         aggregated: list[AggregatedLinuxPerfMeasurementResults] = []
         for old_measurements, new_measurement in zip(old, new):
-            aggregated.append(
-                cls._aggregate_linux_perf_results(old_measurements, new_measurement)
-            )
+            old_measurements.add_results(new_measurement)
+            aggregated.append(old_measurements)
         return aggregated
-
-    @staticmethod
-    def _aggregate_linux_perf_results(
-        old: AggregatedLinuxPerfMeasurementResults,
-        new: LinuxPerfMeasurementResults,
-    ) -> AggregatedLinuxPerfMeasurementResults:
-        old.add_results(new)
-        return old
