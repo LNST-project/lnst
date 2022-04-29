@@ -1,7 +1,5 @@
-from typing import Optional
 import subprocess
 import logging
-import re
 import os
 
 from lnst.Tests.BaseTestModule import BaseTestModule

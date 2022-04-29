@@ -11,8 +11,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import os
-import re
-import sys
 import signal
 import logging
 import multiprocessing

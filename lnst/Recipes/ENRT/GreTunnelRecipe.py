@@ -1,7 +1,6 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
-    AF_INET6,
     ipaddress,
     Ip4Address,
     Ip6Address,

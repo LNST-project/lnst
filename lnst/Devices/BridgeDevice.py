@@ -10,7 +10,6 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Common.ExecCmd import exec_cmd
 from lnst.Devices.MasterDevice import MasterDevice
 
 class BridgeDevice(MasterDevice):

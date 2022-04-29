@@ -10,10 +10,8 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-import logging
-import pyroute2
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.DeviceError import DeviceError, DeviceConfigError
+from lnst.Common.DeviceError import DeviceConfigError
 from lnst.Devices.Device import Device
 
 class SoftDevice(Device):

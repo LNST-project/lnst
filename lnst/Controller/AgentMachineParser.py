@@ -12,7 +12,6 @@ rpazdera@redhat.com (Radek Pazdera)
 """
 
 import os
-import sys
 from lxml import etree
 from lnst.Controller.Common import ControllerError
 import lnst

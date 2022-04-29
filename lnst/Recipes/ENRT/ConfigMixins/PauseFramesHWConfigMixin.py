@@ -1,4 +1,3 @@
-from time import sleep
 from lnst.Common.Parameters import BoolParam
 from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 

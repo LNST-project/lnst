@@ -14,14 +14,14 @@ jpirko@redhat.com (Jiri Pirko)
 import signal
 import logging
 import os, stat
-import sys, traceback
+import sys
 import datetime
 import socket
 import ctypes
 import multiprocessing
 import imp
 import types
-from time import sleep, time
+from time import sleep
 from inspect import isclass
 from tempfile import NamedTemporaryFile
 from lnst.Common.Logs import log_exc_traceback
@@ -33,13 +33,11 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.Utils import is_installed
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
-from lnst.Common.Config import DefaultRPCPort
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.LnstError import LnstError
 from lnst.Common.DeviceError import DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigValueError
 from lnst.Common.Parameters import Parameters
-from lnst.Common.IpAddress import ipaddress
 from lnst.Common.Version import lnst_version
 from lnst.Agent.Job import Job, JobContext
 from lnst.Agent.InterfaceManager import InterfaceManager

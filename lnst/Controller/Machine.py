@@ -14,7 +14,6 @@ rpazdera@redhat.com (Radek Pazdera)
 import logging
 import socket
 import sys
-import signal
 from lnst.Common.Utils import sha256sum
 from lnst.Common.Utils import check_process_running
 from lnst.Common.Version import lnst_version

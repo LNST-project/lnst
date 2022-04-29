@@ -1,4 +1,3 @@
-from lnst.Common.LnstError import LnstError
 
 def generate_key(length):
     key = "0x"

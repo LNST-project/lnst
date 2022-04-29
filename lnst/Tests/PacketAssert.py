@@ -7,13 +7,10 @@ from lnst.Common.Parameters import (
     StrParam,
     ListParam,
     DeviceParam,
-    IntParam,
     BoolParam,
 )
-from lnst.Devices.Device import Device
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, InterruptException
-from lnst.Common.LnstError import LnstError
 
 
 def interrupt_handler(signum, frame):

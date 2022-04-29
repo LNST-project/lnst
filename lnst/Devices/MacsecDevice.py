@@ -1,7 +1,5 @@
-import pyroute2
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceConfigError
-from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class MacsecDevice(SoftDevice):

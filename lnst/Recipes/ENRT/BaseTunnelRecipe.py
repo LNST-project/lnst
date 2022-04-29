@@ -1,6 +1,5 @@
-from lnst.Common.IpAddress import ipaddress
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.RecipeCommon.PacketAssert import PacketAssertConf, PacketAssertTestAndEvaluate
+from lnst.RecipeCommon.PacketAssert import PacketAssertTestAndEvaluate
 
 
 class BaseTunnelRecipe(

@@ -7,8 +7,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
 from lnst.RecipeCommon.Perf.Measurements.LinuxPerfMeasurement import (
     LinuxPerfMeasurement,
 )
-from lnst.Common.Parameters import BoolParam, StrParam
-from lnst.Controller.Host import Host
+from lnst.Common.Parameters import BoolParam
 
 import os
 

@@ -10,7 +10,6 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.HWAddress import hwaddress
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.DeviceError import DeviceError, DeviceConfigError

@@ -19,7 +19,7 @@ import copy
 import signal
 from lnst.Common.ConnectionHandler import send_data
 from lnst.Common.ConnectionHandler import ConnectionHandler
-from lnst.Common.Parameters import Parameters, DeviceParam
+from lnst.Common.Parameters import Parameters
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Controller.Common import ControllerError
 from lnst.Devices.RemoteDevice import RemoteDevice

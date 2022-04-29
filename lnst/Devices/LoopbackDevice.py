@@ -10,7 +10,6 @@ __author__ = """
 jtluka@redhat.com (Jan Tluka)
 """
 
-import pyroute2
 import logging
 from lnst.Devices.Device import Device
 

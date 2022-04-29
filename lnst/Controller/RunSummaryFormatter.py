@@ -15,8 +15,8 @@ from lnst.Common.Utils import indent
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.MachineMapper import format_match_description
-from lnst.Controller.Recipe import BaseRecipe, RecipeRun
-from lnst.Controller.RecipeResults import BaseResult, JobResult, Result, DeviceConfigResult
+from lnst.Controller.Recipe import RecipeRun
+from lnst.Controller.RecipeResults import DeviceConfigResult, JobResult, Result
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
 from lnst.Controller.RecipeResults import ResultLevel
 

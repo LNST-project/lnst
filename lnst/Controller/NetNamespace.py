@@ -11,11 +11,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-import logging
-from lnst.Devices.VirtualDevice import VirtualDevice
-from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Controller.Namespace import Namespace
-from lnst.Controller.Namespace import HostError
 
 class NetNamespace(Namespace):
     """Namespace derived class for a network namespace

@@ -2,9 +2,7 @@ from enum import IntFlag
 from typing import Dict, List
 
 from pyroute2 import MPTCP
-from pyroute2.netlink.generic.mptcp import mptcp_msg
 from socket import AF_INET, AF_INET6
-from dataclasses import dataclass
 from lnst.Common.IpAddress import ipaddress, BaseIpAddress
 
 class MPTCPFlags(IntFlag):

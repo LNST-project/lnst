@@ -11,11 +11,9 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import logging
 import os
-import re
 import time
 import shutil
 import json
-from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.Utils import sha256sum
 from lnst.Common.LnstError import LnstError
 

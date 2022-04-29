@@ -10,12 +10,8 @@ __author__ = """
 jtluka@redhat.com (Jan Tluka)
 """
 
-import pyroute2
-import logging
-from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.DeviceError import DeviceError, DeviceConfigError, DeviceNotFound
+from lnst.Common.DeviceError import DeviceConfigError
 from lnst.Common.IpAddress import ipaddress, Ip4Address
-from lnst.Devices.Device import Device
 from lnst.Devices.SoftDevice import SoftDevice
 
 class GeneveDevice(SoftDevice):

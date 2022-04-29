@@ -1,12 +1,10 @@
 import time
 import signal
 import re
-from lnst.Controller.Recipe import RecipeError
 from lnst.Controller.RecipeResults import ResultLevel
 
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
-from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowTest

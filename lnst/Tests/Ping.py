@@ -2,10 +2,9 @@ import re
 import logging
 import subprocess
 from lnst.Common.Parameters import IntParam, FloatParam, HostnameOrIpParam, DeviceOrIpParam
-from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.Utils import is_installed
 from lnst.Common.IpAddress import Ip6Address
-from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
+from lnst.Tests.BaseTestModule import BaseTestModule
 
 class Ping(BaseTestModule):
     """Port of old IcmpPing test modules"""
