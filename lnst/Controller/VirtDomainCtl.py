@@ -22,7 +22,6 @@ _libvirt_conn = None
 def init_libvirt_con():
     try:
         import libvirt
-        from libvirt import libvirtError
     except ModuleNotFoundError:
         msg = "Failed to import libvirt, please install the dependency if you want to use the libvirt network management feature."
         logging.error(msg)

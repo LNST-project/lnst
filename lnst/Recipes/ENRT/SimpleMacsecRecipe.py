@@ -1,4 +1,3 @@
-import logging
 import copy
 from lnst.Common.IpAddress import ipaddress
 from lnst.Common.IpAddress import AF_INET, AF_INET6
@@ -11,7 +10,6 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
-from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Ping.Recipe import PingConf
 
 class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):

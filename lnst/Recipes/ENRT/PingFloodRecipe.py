@@ -1,4 +1,4 @@
-from lnst.Common.Parameters import Param, IntParam, StrParam
+from lnst.Common.Parameters import IntParam, StrParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.Ping.Recipe import PingConf, PingTestAndEvaluate

@@ -12,7 +12,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import re
 import pprint
-from lnst.Common.Utils import check_process_running
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.DeviceError import DeviceError
 from lnst.Devices.Device import Device

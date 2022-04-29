@@ -1,17 +1,15 @@
-import contextlib
 import csv
 import logging
-import os
 import pathlib
 import re
 import subprocess
 import time
 import tempfile
-from typing import List, Dict, TextIO, Union
+from typing import Dict, TextIO, Union
 
 from lnst.Common.Parameters import HostnameOrIpParam, StrParam, IntParam, IpParam, ChoiceParam
 from lnst.Common.Utils import nullcontext
-from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
+from lnst.Tests.BaseTestModule import BaseTestModule
 
 NEPER_OUT_RE = re.compile(r"^(?P<key>.*)=(?P<value>.*)$", flags=re.M)
 NEPER_PATH = pathlib.Path('/root/neper')

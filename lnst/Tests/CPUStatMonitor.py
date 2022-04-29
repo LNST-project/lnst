@@ -3,7 +3,7 @@ import time
 import signal
 from time import sleep
 from lnst.Common.Parameters import IntParam
-from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError, InterruptException
+from lnst.Tests.BaseTestModule import BaseTestModule, InterruptException
 
 def sigint_handler(signum, frame):
     raise InterruptException()

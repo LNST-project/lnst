@@ -13,7 +13,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 import os
 import sys
 import re
-import subprocess
 from lnst.Common.Utils import bool_it
 from lnst.Common.NetUtils import verify_mac_address
 from lnst.Common.Colours import get_preset_conf

@@ -15,7 +15,6 @@ import datetime
 import logging
 from lnst.Common.Logs import LoggingCtl, log_exc_traceback
 from lnst.Common.NetUtils import MacPool
-from lnst.Common.LnstError import LnstError
 from lnst.Common.Utils import mkdir_p
 from lnst.Devices.VirtualDevice import VirtualDevice
 from lnst.Controller.Common import ControllerError

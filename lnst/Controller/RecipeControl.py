@@ -1,8 +1,6 @@
 import time
-import socket
 import logging
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.SecureSocket import SecSocketException
 from lnst.Controller.Machine import Machine
 from lnst.Controller.Host import Host
 

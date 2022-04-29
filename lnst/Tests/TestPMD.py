@@ -1,8 +1,6 @@
 import logging
 import subprocess
-import signal
-from lnst.Common.Parameters import Param, StrParam, IntParam, FloatParam
-from lnst.Common.Parameters import IpParam, DeviceOrIpParam
+from lnst.Common.Parameters import Param, StrParam
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 from lnst.Common.LnstError import LnstError

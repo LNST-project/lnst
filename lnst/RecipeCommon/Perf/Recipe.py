@@ -10,8 +10,6 @@ from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
     BaseMeasurementResults,
 )
 from lnst.RecipeCommon.Perf.Results import EmptySlice
-from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
-from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
 from lnst.RecipeCommon.Perf.PerfTestMixins import (
     BasePerfTestTweakMixin,

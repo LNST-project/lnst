@@ -1,4 +1,3 @@
-import logging
 import time
 import signal
 import xml.etree.ElementTree as ET
@@ -7,21 +6,16 @@ from lnst.Recipes.ENRT.BasePvPRecipe import BasePvPTestConf, BasePvPRecipe
 from lnst.Recipes.ENRT.BasePvPRecipe import VirtioDevice, VirtioType
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
+from lnst.Common.Parameters import IntParam, Param, StrParam
 from lnst.Common.IpAddress import ipaddress
-from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate, PingConf
-from lnst.Tests import Ping
 from lnst.Tests.TestPMD import TestPMD
 
-from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Perf.Measurements import TRexFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 
-from lnst.RecipeCommon.LibvirtControl import LibvirtControl
 
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 class OVSPvPTestConf(BasePvPTestConf):
     class DUTConf(BasePvPTestConf.BaseHostConf):

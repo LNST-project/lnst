@@ -1,4 +1,4 @@
-from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
+from lnst.Common.Parameters import IntParam, Param, StrParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe

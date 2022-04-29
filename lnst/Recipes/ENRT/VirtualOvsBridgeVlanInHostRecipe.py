@@ -1,4 +1,3 @@
-import logging
 from lnst.Common.Parameters import Param, IntParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam

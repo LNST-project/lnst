@@ -8,7 +8,6 @@ from lnst.Common.Parameters import (
     IntParam,
     StrParam,
     BoolParam,
-    ListParam,
     FloatParam,
 )
 from lnst.Common.IpAddress import AF_INET, AF_INET6

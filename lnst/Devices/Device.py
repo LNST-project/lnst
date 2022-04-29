@@ -20,7 +20,6 @@ import time
 from abc import ABCMeta
 from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.NetUtils import normalize_hwaddr
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError

@@ -1,5 +1,4 @@
-from lnst.Common.Parameters import Param, StrParam, IntParam, FloatParam
-from lnst.Common.Parameters import IpParam, DeviceOrIpParam
+from lnst.Common.Parameters import IntParam, Param, StrParam
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 from lnst.External.TRex.TRexLib  import TRexCli, TRexSrv, TRexError
 from pprint import pformat

@@ -5,7 +5,6 @@ Performs a simple ping between two hosts.
 """
 
 import logging
-from lnst.Common.Parameters import IpParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import Controller
 from lnst.Controller import BaseRecipe

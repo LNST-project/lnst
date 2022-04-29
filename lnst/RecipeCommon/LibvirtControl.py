@@ -6,7 +6,6 @@ class LibvirtControl(object):
     def __init__(self):
         try:
             import libvirt
-            from libvirt import libvirtError
         except ModuleNotFoundError:
             msg = "Failed to import libvirt, please install libvirt if you want to use the LibvirtControl class."
             logging.error(msg)

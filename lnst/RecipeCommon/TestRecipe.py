@@ -5,7 +5,6 @@ import re
 
 from lnst.Common.Parameters import StrParam, IntParam, Param
 from lnst.Controller import BaseRecipe
-from lnst.Controller.Recipe import RecipeError
 
 from lnst.Tests.Netperf import Netperf
 

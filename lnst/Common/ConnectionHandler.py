@@ -16,7 +16,6 @@ import socket
 import logging
 import traceback
 from multiprocessing.connection import Connection
-from pyroute2 import IPRSocket
 from lnst.Common.SecureSocket import SecureSocket, SecSocketException
 
 def send_data(s, data):

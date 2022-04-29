@@ -10,7 +10,6 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
-import re
 from lnst.Common.LnstError import LnstError
 
 class HWAddress(object):

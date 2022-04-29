@@ -37,7 +37,6 @@ def cryptography_imports():
     global backend
 
     try:
-        import cryptography
         import cryptography.hazmat.primitives.serialization as ser
         from cryptography.hazmat.primitives.serialization import load_pem_private_key
         from cryptography.hazmat.primitives.serialization import load_pem_public_key

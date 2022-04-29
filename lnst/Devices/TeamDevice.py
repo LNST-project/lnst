@@ -11,7 +11,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 import json
 from lnst.Common.ExecCmd import exec_cmd
-from lnst.Common.DeviceError import DeviceError, DeviceConfigError
+from lnst.Common.DeviceError import DeviceConfigError
 from lnst.Devices.MasterDevice import MasterDevice
 
 
