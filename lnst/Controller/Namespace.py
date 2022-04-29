@@ -89,10 +89,9 @@ class Namespace(object):
     def copy_file_to_machine(
         self,
         local_path: str,
-        remote_path: Optional[str] = None,
-        netns: Optional['Namespace'] = None,
+        remote_path: Optional[str] = None
     ) -> str:
-        return self._machine.copy_file_to_machine(local_path, remote_path, netns)
+        return self._machine.copy_file_to_machine(local_path, remote_path, self)
 
     def copy_file_from_machine(self, remote_path: str, local_path: str):
         self._machine.copy_file_from_machine(remote_path, local_path)
