@@ -154,18 +154,19 @@ class LinuxPerfMeasurement(BaseMeasurement):
                 return match.group(1)
         return None
 
-    def _generate_configurations(self):
+    @property
+    def configurations(self):
         for host in self.hosts:
             yield (host, self.intr_filename, self.intr_cpus)
             yield (host, self.iperf_filename, self.iperf_cpus)
 
     def start(self) -> None:
         self._start_timestamp = time.time()
-        for host, filename, cpus in self._generate_configurations():
+        for host, filename, cpus in self.configurations:
             self._jobs.append(host.run(LinuxPerf(output_file=filename, cpus=cpus), bg=True))
 
     def finish(self) -> None:
-        for job, (host, _, _) in zip(self._jobs, self._generate_configurations()):
+        for job, (host, _, _) in zip(self._jobs, self.configurations):
             job.kill(signal=signal.SIGINT)
             if not job.wait(timeout=120):
                 logging.error(f"timeout while waiting for linuxperf job to finish on host {host.hostid}")
@@ -174,7 +175,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
     def collect_results(self) -> list[BaseMeasurementResults]:
         self._collection_index += 1
         results: list[BaseMeasurementResults] = []
-        for job, (host, filename, cpus) in zip(self._jobs, self._generate_configurations()):
+        for job, (host, filename, cpus) in zip(self._jobs, self.configurations):
             if job.result is None:
                 continue
 
