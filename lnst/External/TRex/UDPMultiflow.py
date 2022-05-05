@@ -1,5 +1,5 @@
-from trex_stl_lib.api import *
-from trex.stl.trex_stl_hltapi import *
+from lnst.Common.DependencyError import DependencyError
+
 
 class UDPMultiflow(object):
     """
@@ -9,6 +9,16 @@ class UDPMultiflow(object):
     msg_size: the size of the packet to use (default 64)
     port_id:  The port the stream will be added to
     """
+    def __init__(self):
+        self._import_optionals()
+
+    @staticmethod
+    def _import_optionals():
+        try:
+            from trex_stl_lib.api import *
+            from trex.stl.trex_stl_hltapi import *
+        except ModuleNotFoundError as e:
+            raise DependencyError(e)
 
     def create_stream (self, **kwargs):
         size = kwargs.get("msg_size", 64)

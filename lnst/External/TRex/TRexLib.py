@@ -6,7 +6,8 @@ import logging
 import subprocess
 import tempfile
 import signal
-import yaml
+from lnst.Common.DependencyError import DependencyError
+
 
 TREX_CLI_DEFAULT_PARAMS = {
         "warmup_time": 5,
@@ -35,11 +36,19 @@ class TRexCli:
     trex_stl_path = 'trex_client/interactive'
 
     def __init__(self, params):
+        self._import_optionals()
         self.params = params
         self.results = {}
         for key in TREX_CLI_DEFAULT_PARAMS:
             if key not in params.__dict__:
                 setattr(self.params, key, TREX_CLI_DEFAULT_PARAMS[key])
+
+    @staticmethod
+    def _import_optionals():
+        try:
+            from trex.stl import api as trex_api
+        except ModuleNotFoundError as e:
+            raise DependencyError(e)
 
     def get_results(self):
         return self.results
@@ -47,8 +56,6 @@ class TRexCli:
     def run(self):
         sys.path.insert(0, os.path.join(self.params.trex_dir,
                                         self.trex_stl_path))
-
-        from trex.stl import api as trex_api
 
         try:
             return self._run(trex_api)
@@ -132,6 +139,11 @@ class TRexSrv:
         return None
 
     def run(self):
+        try:
+            import yaml
+        except ModuleNotFoundError as e:
+            raise DependencyError(e)
+
         trex_server_conf = [{'port_limit': len(self.params.flows),
                              'version': 2,
                              'interfaces': [],
