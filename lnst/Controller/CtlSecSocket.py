@@ -140,7 +140,7 @@ class CtlSecSocket(SecureSocket):
     def _dh_handshake(self):
         modp_group = DH_GROUP
         #private exponent
-        ctl_privkey = int(os.urandom(modp_group["q_size"]+1).encode('hex'), 16)
+        ctl_privkey = int(os.urandom(modp_group["q_size"]+1).hex(), 16)
         ctl_privkey = ctl_privkey % modp_group["q"]
         #public key
         ctl_pubkey = pow(modp_group["g"], ctl_privkey, modp_group["p"])
