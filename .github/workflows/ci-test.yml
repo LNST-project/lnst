@@ -63,3 +63,21 @@ jobs:
         venv_path=$(poetry env info -p)
         sudo "$venv_path"/bin/python3 .github/runner.py
 
+  ImportsCheck:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Source branch checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install pylint3
+
+      - name: Imports check
+        run: |
+          pylint --disable=all --enable=W0611 lnst
