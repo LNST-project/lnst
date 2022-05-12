@@ -119,7 +119,11 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
         else:
             set_down = False
 
-        dev_id_regex = r"({})|({})".format(dev.name, dev.bus_info)
+        if dev.bus_info:
+            dev_id_regex = r"({})|({})".format(dev.name, dev.bus_info)
+        else:
+            dev_id_regex = r"{}".format(dev.name)
+
         res = dev.netns.run(
             "grep -P \"{}\" /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
                 dev_id_regex
@@ -131,4 +135,8 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
             # set device back down if we set it up
             dev.down()
 
-        return [int(intr.strip()) for intr in res.stdout.strip().split('\n')]
+        return [
+            int(intr.strip())
+            for intr in res.stdout.strip().split("\n")
+            if intr != ""
+        ]
