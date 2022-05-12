@@ -18,24 +18,26 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
     def generate_perf_measurements_combinations(self, config):
         combinations = super().generate_perf_measurements_combinations(config)
 
-        if not self.params.do_linuxperf_measurement:
-            return combinations
-
-        # create linuxperf data folder
-        linuxperf_data_folder: str = os.path.abspath(
-            os.path.join(self.current_run.log_dir, "linuxperf-data")
-        )
-        try:
-            os.mkdir(linuxperf_data_folder)
-        except FileExistsError:
-            pass
+        if self.params.do_linuxperf_measurement:
+            # create linuxperf data folder
+            linuxperf_data_folder: str = os.path.abspath(
+                os.path.join(self.current_run.log_dir, "linuxperf-data")
+            )
+            try:
+                os.mkdir(linuxperf_data_folder)
+            except FileExistsError:
+                pass
 
         for combination in combinations:
-            measurement: BaseMeasurement = LinuxPerfMeasurement(
-                self.matched,
-                self.linuxperf_cpus,
-                data_folder=linuxperf_data_folder,
-                recipe_conf=config,
-            )
+            if self.params.do_linuxperf_measurement:
+                measurement: BaseMeasurement = LinuxPerfMeasurement(
+                    self.matched,
+                    self.linuxperf_cpus,
+                    data_folder=linuxperf_data_folder,
+                    recipe_conf=config,
+                )
+                res = [measurement] + combination
+            else:
+                res = combination
 
-            yield [measurement] + combination
+            yield res
