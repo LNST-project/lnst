@@ -29,6 +29,7 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
                 pass
 
         for combination in combinations:
+            res: list[BaseMeasurement]
             if self.params.do_linuxperf_measurement:
                 measurement: BaseMeasurement = LinuxPerfMeasurement(
                     self.matched,
