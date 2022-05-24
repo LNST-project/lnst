@@ -51,7 +51,7 @@ jobs:
         git \
         libnl-3-dev
         export PATH="/root/.local/bin:$PATH"
-        poetry install
+        poetry install -E "containers"
 
     - name: Build LNST agents image
       run: |
