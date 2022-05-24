@@ -18,14 +18,21 @@ include = ["schema-am.rng", "install/*", "lnst-ctl.conf"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-
-pyroute2 = "*"
-pyyaml = "*"
 lxml = "*"
-libvirt-python = "*"
 ethtool = "*"
-podman = "*"
-cryptography = "*"
+pyroute2 = "*"
+
+libvirt-python = {version = "*", optional = true }
+podman = {version = "*", optional = true }
+cryptography = {version = "*", optional = true }
+pyyaml = {version = "*", optional = true}
+
+[tool.poetry.extras]
+virt = ["libvirt-python"]
+containers = ["podman"]
+sec_socket = ["cryptography"]
+trex = ["pyyaml"]
+
 
 [tool.poetry.scripts]
 lnst-agent = 'lnst.Agent.__main__:main'
