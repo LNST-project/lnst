@@ -17,18 +17,41 @@ installation involves the following steps:
 
     git clone https://github.com/LNST-project/lnst
     cd lnst
-    pip3 install --requirement requirements.txt
-    pip3 install .
+    poetry install
 
 
 This installs both the Controller and the Agent code, and you'll need to run
 this on all the test machines that you want to use as well as the machine which
 you want to use as the Controller. Optionally a Controller and a Agent CAN run
 on the same machine.
+Some of dependencies used across lnst are optional and could be installed using ``-E|--extras``
+parameter of poetry.
+
+Dependencies groups:
+
+* required - installed automatically by ``poetry install`` command
+
+  * ``pyroute2`` used to configure devices
+  * ``lxml`` used to parse machine xml files. ``lxml`` as one of the few, supports Relax NG schema validation.
+
+    * Required binary dependencies: ``libxml2`` and ``libxslt``
+  * ``ethtool`` used to configure network devices
+
+    * Required binary dependencies: ``libnl3-devel``, ``gcc``, ``python39-devel``
+* optional - installed using ``poetry install -E [GROUP_NAME]``
+
+  * ``virt`` - used for running lnst in virtual machines
+
+    * Required binary dependencies: ``libvirt-devel``
+  * ``containers`` - used for running lnst in containers
+
+    * Required binary dependencies: ``podman``. Using Docker instead of Podman is not supported (yet).
+  * ``sec_socket`` - used for secure communication between Controller and Agent(s)
+  * ``trex`` - ``TRex`` recipes requires ``pyyaml`` and ``trex`` - needs to be installed manually (see official installation guide) as there is no official Python trex module
 
 You can start your Agent application immediately by running::
 
-    lnst-agent
+    poetry run lnst-agent
 
 Because the lnst-agent application takes care of network configuration, it
 **requires** to be executed with root privileges. This is **A BIG SECURITY
@@ -82,7 +105,7 @@ each other.
 If you write this into a ``hello_world.py`` file you should now be able to
 execute this script by running::
 
-    python3 hello_world.py
+    poetry run python3 hello_world.py
 
 And you'll end up receiving an error about being unable to find a match in your
 configured pools, since we didn't configure any yet, this is quite expected. But
@@ -210,7 +233,7 @@ Other examples include:
 If you write all of this into a ``hello_world2.py`` file you should now be able to
 execute this script by running::
 
-    python3 hello_world2.py
+    poetry run python3 hello_world2.py
 
 If you have previously created your machine pool configuration (and added the driver
 parameter as indicated above), the recipe should run to completion.
@@ -235,7 +258,7 @@ Printing summary information
 You can also modify your ``hello_world2.py`` application to print summary information
 at the end of the run:
 
-.. code-block:: xml
+.. code-block:: python
 
         from lnst.Controller import Controller, HostReq, DeviceReq, BaseRecipe
         from lnst.Recipes.ENRT import NoVirtOvsVxlanRecipe
