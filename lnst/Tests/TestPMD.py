@@ -36,7 +36,7 @@ class TestPMD(BaseTestModule):
 
         for i, nic in enumerate(self.params.nics):
             if self.params.forward_mode == "mac":
-                testpmd_args.extend(["-w", nic])
+                testpmd_args.extend(["-a", nic])
             elif self.params.forward_mode == "macswap":
                 testpmd_args.extend([f"--vdev=net_virtio_user{i+1},path=/var/run/openvswitch/{nic}"])
             else:
