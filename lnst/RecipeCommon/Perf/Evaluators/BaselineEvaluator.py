@@ -43,20 +43,36 @@ class BaselineEvaluator(BaseResultEvaluator):
         recipe_conf: PerfRecipeConf,
         results: List[PerfMeasurementResults],
     ):
-        comparison_result = ResultType.PASS
+        cumulative_result = ResultType.PASS
+        comparisons = []
         result_text = self.describe_group_results(recipe, recipe_conf, results)
 
         baselines = self.get_baselines(recipe, recipe_conf, results)
         result_index = len(recipe.current_run.results)
-
         for i, (result, baseline) in enumerate(zip(results, baselines)):
-            comparison, text = self.compare_result_with_baseline(
+            comparison_result, text = self.compare_result_with_baseline(
                 recipe, recipe_conf, result, baseline, result_index
             )
-            comparison_result = ResultType.max_severity(comparison_result, comparison)
+            cumulative_result = ResultType.max_severity(
+                cumulative_result,
+                comparison_result,
+            )
             result_text.extend(text)
+            comparisons.append(
+                {
+                    "current_result": result,
+                    "baseline_result": baseline,
+                    "comparison_result": comparison_result,
+                    "text": text,
+                    "recipe_conf": recipe_conf,
+                }
+            )
 
-        recipe.add_result(comparison_result, "\n".join(result_text))
+        recipe.add_result(
+            cumulative_result,
+            "\n".join(result_text),
+            data={"comparisons": comparisons},
+        )
 
     def describe_group_results(
         self,
