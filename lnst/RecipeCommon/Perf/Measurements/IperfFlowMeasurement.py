@@ -132,8 +132,10 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
     def _prepare_client(self, flow):
         host = flow.generator
-        client_params = dict(server = ipaddress(flow.receiver_bind),
-                             duration = flow.duration)
+        client_params = {
+            "server": ipaddress(flow.receiver_bind),
+            "duration": flow.duration
+        }
 
         if flow.type == "tcp_stream":
             #tcp stream is the default for iperf3
