@@ -129,7 +129,9 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         for test_flow in test_flows:
             flow_results = FlowMeasurementResults(
                     measurement=self,
-                    flow=test_flow.flow)
+                    flow=test_flow.flow,
+                    warmup_duration=test_flow.flow.warmup_duration
+            )
             generator_stats = self._parse_job_samples(test_flow.client_job)
             flow_results.generator_results = generator_stats[0]
             flow_results.generator_cpu_stats = generator_stats[1]

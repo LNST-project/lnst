@@ -141,8 +141,8 @@ class NetworkFlowTest(object):
         return self._client_job
 
 class FlowMeasurementResults(BaseMeasurementResults):
-    def __init__(self, measurement, flow):
-        super(FlowMeasurementResults, self).__init__(measurement)
+    def __init__(self, measurement, flow, warmup_duration=0):
+        super(FlowMeasurementResults, self).__init__(measurement, warmup_duration)
         self._flow = flow
         self._generator_results = None
         self._generator_cpu_stats = None
@@ -208,7 +208,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
         )
 
     def time_slice(self, start, end):
-        result_copy = FlowMeasurementResults(self.measurement, self.flow)
+        result_copy = FlowMeasurementResults(self.measurement, self.flow, warmup_duration=0)
 
         result_copy.generator_cpu_stats = self.generator_cpu_stats.time_slice(start, end)
         result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(start, end)
@@ -363,6 +363,7 @@ class BaseFlowMeasurement(BaseMeasurement):
              parallel_streams=sample_flow.parallel_streams,
              cpupin=None,
              aggregated_flow=True,
+             warmup_duration=sample_flow.warmup_duration
         )
 
         aggregated_result = AggregatedFlowMeasurementResults(
@@ -372,7 +373,9 @@ class BaseFlowMeasurement(BaseMeasurement):
         for i in range(nr_iterations):
             parallel_result = FlowMeasurementResults(
                     measurement=sample_result.measurement,
-                    flow=dummy_flow)
+                    flow=dummy_flow,
+                    warmup_duration=dummy_flow.warmup_duration
+            )
             parallel_result.generator_results = ParallelPerfResult()
             parallel_result.generator_cpu_stats = ParallelPerfResult()
             parallel_result.receiver_results = ParallelPerfResult()
