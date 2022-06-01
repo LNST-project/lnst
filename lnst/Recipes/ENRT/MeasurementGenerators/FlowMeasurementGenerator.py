@@ -93,6 +93,7 @@ class FlowMeasurementGenerator(BaseMeasurementGenerator):
     perf_parallel_streams = IntParam(default=1)
     perf_parallel_processes = IntParam(default=1)
     perf_msg_sizes = ListParam(default=[123])
+    perf_warmup_duration = IntParam(default=0, mandatory=False)
 
     net_perf_tool = ChoiceParam(type=StrParam, choices=MEASUREMENT_LOOKUP.keys(), default='iperf')
 
@@ -230,6 +231,7 @@ class FlowMeasurementGenerator(BaseMeasurementGenerator):
             receiver_port=server_port,
             msg_size=msg_size,
             duration=self.params.perf_duration,
+            warmup_duration=self.params.perf_warmup_duration,
             parallel_streams=self.params.perf_parallel_streams,
             cpupin=cpupin,
         )
