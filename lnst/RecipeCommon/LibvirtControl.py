@@ -1,15 +1,13 @@
-import logging
-from lnst.Common.LnstError import LnstError
 from lnst.Common.Logs import log_exc_traceback
+from lnst.Common.DependencyError import DependencyError
+
 
 class LibvirtControl(object):
     def __init__(self):
         try:
             import libvirt
-        except ModuleNotFoundError:
-            msg = "Failed to import libvirt, please install libvirt if you want to use the LibvirtControl class."
-            logging.error(msg)
-            raise LnstError(msg)
+        except ModuleNotFoundError as e:
+            raise DependencyError(e)
 
         self._libvirt_conn = libvirt.open(None)
 
