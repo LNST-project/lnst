@@ -13,6 +13,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import logging
 from lnst.Common.LnstError import LnstError
+from lnst.Common.DependencyError import DependencyError
 
 #this is a global object because opening the connection to libvirt in every
 #object instance that uses it sometimes fails - the libvirt server probably
@@ -22,10 +23,8 @@ _libvirt_conn = None
 def init_libvirt_con():
     try:
         import libvirt
-    except ModuleNotFoundError:
-        msg = "Failed to import libvirt, please install libvirt to use the libvirt network management features."
-        logging.error(msg)
-        raise LnstError(msg)
+    except ModuleNotFoundError as e:
+        raise DependencyError(e)
 
     global _libvirt_conn
     if _libvirt_conn is None:
