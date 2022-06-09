@@ -76,7 +76,7 @@ class PerfInterval(PerfResult):
                 float(self.value), self.unit, float(self.duration))
 
     def time_slice(self, start, end):
-        if end < self.start_timestamp or start > self.end_timestamp:
+        if end <= self.start_timestamp or start >= self.end_timestamp:
             raise EmptySlice(
                 "current start, end {} {}; request start, end {}, {}".format(
                     self.start_timestamp, self.end_timestamp, start, end,
