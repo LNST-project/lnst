@@ -1,5 +1,6 @@
 import re
 import time
+from typing import List
 
 from lnst.Common.IpAddress import ipaddress
 
@@ -9,6 +10,7 @@ from lnst.Controller.RecipeResults import ResultLevel
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
+from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import Flow
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowTest
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
@@ -20,7 +22,7 @@ from lnst.Tests.Iperf import IperfClient, IperfServer
 class IperfFlowMeasurement(BaseFlowMeasurement):
     _MEASUREMENT_VERSION = 1
 
-    def __init__(self, flows, recipe_conf=None):
+    def __init__(self, flows: List[Flow], recipe_conf=None):
         super(IperfFlowMeasurement, self).__init__(recipe_conf)
         self._flows = flows
         self._running_measurements = []
@@ -136,7 +138,8 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         host = flow.generator
         client_params = {
             "server": ipaddress(flow.receiver_bind),
-            "duration": flow.duration
+            "duration": flow.duration,
+            "warmup_duration": flow.warmup_duration
         }
 
         if flow.type == "tcp_stream":

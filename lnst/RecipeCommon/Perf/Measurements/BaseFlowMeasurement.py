@@ -19,7 +19,8 @@ class Flow(object):
                  receiver_port=None,
                  msg_size=None,
                  cpupin=None,
-                 aggregated_flow=False):
+                 aggregated_flow=False,
+                 warmup_duration=0):
         self._type = type
 
         self._generator = generator
@@ -35,6 +36,7 @@ class Flow(object):
         self._parallel_streams = parallel_streams
         self._cpupin = cpupin
         self._aggregated_flow=aggregated_flow
+        self._warmup_duration = warmup_duration
 
     @property
     def type(self):
@@ -88,6 +90,10 @@ class Flow(object):
     def aggregated_flow(self):
         return self._aggregated_flow
 
+    @property
+    def warmup_duration(self):
+        return self._warmup_duration
+
     def __repr__(self):
         string = """
         Flow(
@@ -103,7 +109,8 @@ class Flow(object):
             duration={duration},
             parallel_streams={parallel_streams},
             cpupin={cpupin},
-            aggregated_flow={aggregated_flow},
+            aggregated_flow={aggregated_flow}
+            warmup_duration={warmup_duration},
         )""".format(
             type=self.type,
             generator=str(self.generator),
@@ -118,6 +125,7 @@ class Flow(object):
             parallel_streams=self.parallel_streams,
             cpupin=self.cpupin,
             aggregated_flow=self._aggregated_flow,
+            warmup_duration=self._warmup_duration
         )
         string = textwrap.dedent(string).strip()
         return string
@@ -154,7 +162,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
         return self._flow
 
     @property
-    def generator_results(self):
+    def generator_results(self) -> ParallelPerfResult:
         return self._generator_results
 
     @generator_results.setter
@@ -170,7 +178,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
         self._generator_cpu_stats = value
 
     @property
-    def receiver_results(self):
+    def receiver_results(self) -> ParallelPerfResult:
         return self._receiver_results
 
     @receiver_results.setter
