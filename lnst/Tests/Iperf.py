@@ -7,6 +7,7 @@ from lnst.Common.Parameters import HostnameOrIpParam
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 
+
 class IperfBase(BaseTestModule):
     mptcp = BoolParam(default=False)
 
@@ -119,6 +120,7 @@ class IperfServer(IperfBase):
 class IperfClient(IperfBase):
     server = HostnameOrIpParam(mandatory=True)
     duration = IntParam(default=10)
+    warmup_duration = IntParam(default=0, mandatory=False)
     udp = BoolParam(default=False)
     sctp = BoolParam(default=False)
     port = IntParam()
@@ -138,7 +140,7 @@ class IperfClient(IperfBase):
 
     def runtime_estimate(self):
         _duration_overhead = 5
-        return self.params.duration + _duration_overhead
+        return self.params.duration + self.params.warmup_duration * 2 + _duration_overhead
 
     def _compose_cmd(self):
         port = ""
@@ -175,10 +177,13 @@ class IperfClient(IperfBase):
         else:
             test = ""
 
+        duration = self.params.duration + self.params.warmup_duration * 2  # *2 to add warm up and warm down durations
+        logging.debug(f"Measuring for {duration} seconds (perf_duration + perf_warmup_duration * 2).")
+
         cmd = ("iperf3 -c {server} -b 0/1000 -J -t {duration}"
                " {cpu} {test} {mss} {blksize} {parallel} {port}"
                " {opts}".format(
-                server=self.params.server, duration=self.params.duration,
+                server=self.params.server, duration=duration,
                 cpu=cpu, test=test, mss=mss, blksize=blksize,
                 parallel=parallel,
                 port=port,
