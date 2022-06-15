@@ -9,6 +9,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
     BaseMeasurement,
     BaseMeasurementResults,
 )
+from lnst.RecipeCommon.Perf.Measurements.IperfFlowMeasurement import FlowMeasurementResults
 from lnst.RecipeCommon.Perf.Results import EmptySlice
 
 from lnst.RecipeCommon.Perf.PerfTestMixins import (
@@ -93,6 +94,21 @@ class RecipeResults(object):
         )
         self._aggregated_results[measurement] = aggregated_results
 
+    """
+        Function returns end timestamp of warmup period and start of warm down period.
+        That results to slice measurement result just for "interesting" part not including 
+        warm up and warm down periods.
+    """
+    def _get_measurement_timestamps(self, flows: List[BaseMeasurementResults]):
+        # [-1] bellow to get last measurement, measurements are started in sequence, so valid interval depends
+        # on the last measurement
+        if isinstance(flows[-1], FlowMeasurementResults):
+            logging.debug(f"Results alignment: Using times of flow measurement: {flows[-1]}")
+            return flows[-1].warmup_end, flows[-1].warmdown_start
+        else:
+            logging.debug("Results alignment: Using times from latest start and earliest end")
+            return max([res.start_timestamp for res in flows]), min([res.end_timestamp for res in flows])
+
     @property
     def time_aligned_results(self) -> "RecipeResults":
         timestamps = []
@@ -103,26 +119,22 @@ class RecipeResults(object):
                 for measurement_iteration_result in measurement_results[i]
             ]
 
-            timestamps.append(
-                (
-                    max(
-                        [res.start_timestamp for res in iteration_results_group]
-                    ),
-                    min([res.end_timestamp for res in iteration_results_group]),
-                )
-            )
+            real_times = self._get_measurement_timestamps(iteration_results_group)
+            timestamps.append(real_times)
 
         aligned_recipe_results = RecipeResults(self._recipe_conf)
         for measurement, measurement_results in self.results.items():
             for i, measurement_iteration in enumerate(measurement_results):
                 aligned_measurement_results = []
                 for result in measurement_iteration:
+
                     aligned_measurement_result = result.time_slice(
-                        timestamps[i][0], timestamps[i][1]
+                        *timestamps[i]
                     )
-                    aligned_measurement_results.append(
-                        aligned_measurement_result
-                    )
+                    if aligned_measurement_result not in aligned_measurement_results:
+                        aligned_measurement_results.append(
+                            aligned_measurement_result
+                        )
 
                 aligned_recipe_results.add_measurement_results(
                     measurement, aligned_measurement_results
