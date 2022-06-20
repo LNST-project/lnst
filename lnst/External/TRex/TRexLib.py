@@ -36,7 +36,6 @@ class TRexCli:
     trex_stl_path = 'trex_client/interactive'
 
     def __init__(self, params):
-        self._import_optionals()
         self.params = params
         self.results = {}
         for key in TREX_CLI_DEFAULT_PARAMS:
@@ -56,6 +55,7 @@ class TRexCli:
     def run(self):
         sys.path.insert(0, os.path.join(self.params.trex_dir,
                                         self.trex_stl_path))
+        self._import_optionals()
 
         try:
             return self._run(trex_api)
