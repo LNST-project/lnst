@@ -15,8 +15,10 @@ class UDPMultiflow(object):
     @staticmethod
     def _import_optionals():
         try:
-            from trex_stl_lib.api import *
-            from trex.stl.trex_stl_hltapi import *
+            from trex_stl_lib.api import Ether, IP, UDP, STLPktBuilder, STLStream, STLTXCont
+            from trex.stl.trex_stl_hltapi import STLVM
+            global Ether, IP, UDP, STLPktBuilder, STLStream, STLTXCont
+            global STLVM
         except ModuleNotFoundError as e:
             raise DependencyError(e)
 

@@ -46,6 +46,7 @@ class TRexCli:
     def _import_optionals():
         try:
             from trex.stl import api as trex_api
+            global trex_api
         except ModuleNotFoundError as e:
             raise DependencyError(e)
 
