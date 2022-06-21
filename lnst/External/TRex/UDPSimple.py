@@ -16,7 +16,8 @@ class UDPSimple(object):
     @staticmethod
     def _import_optionals():
         try:
-            from trex_stl_lib.api import *
+            from trex_stl_lib.api import Ether, IP, UDP, STLPktBuilder, STLStream, STLTXCont
+            global Ether, IP, UDP, STLPktBuilder, STLStream, STLTXCont
         except ModuleNotFoundError as e:
             raise DependencyError(e)
 
