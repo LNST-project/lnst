@@ -9,6 +9,33 @@ Requirements
 The first requirement is **Podman**, follow installation steps on
 `official Podman installation page <https://podman.io/getting-started/installation>`_.
 
+
+Configure Podman to use CNI
++++++++++++++++++++++++++++
+
+If you use Podman 4.0+ you need to change default network backend from `netavark` to `CNI` as LNST supports CNI
+only. If your Podman is already running, stop it.
+
+
+1. Remove all the LNST's leftovers from `/etc/cni/net.d/lnst_*.conflist` if you already tried to run LNST
+
+2. Set default network backend to `cni`, add following block to `containers.conf` -
+`documentation <https://github.com/containers/common/blob/main/docs/containers.conf.5.md>`_:
+
+  .. code-block:: toml
+
+    [network]
+    network_backend="cni"
+
+3. Install `CNI` plugins:
+
+  .. code-block:: bash
+
+    dnf install containernetworking-plugins
+
+4. Start your Podman instance
+
+
 Podman API is also required, follow the steps below:
 
 Enabling Podman API service:
