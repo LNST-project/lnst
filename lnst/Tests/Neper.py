@@ -25,6 +25,7 @@ class NeperBase(BaseTestModule):
     num_flows = IntParam()
     num_threads = IntParam()
     test_length = IntParam()
+    warmup_duration = IntParam(default=0, mandatory=False)
     request_size = IntParam()
     response_size = IntParam()
     opts = StrParam()
@@ -137,4 +138,4 @@ class NeperClient(NeperBase):
 
     def runtime_estimate(self):
         _overhead = 5
-        return self.params.test_length + _overhead
+        return self.params.test_length + self.params.warmup_duration * 2 + _overhead
