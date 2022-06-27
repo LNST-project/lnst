@@ -73,7 +73,8 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         host = flow.receiver
         server_params = dict(workload = flow.type,
                              bind = ipaddress(flow.receiver_bind),
-                             test_length = flow.duration)
+                             test_length = flow.duration,
+                             warmup_duration = flow.warmup_duration)
 
         self._set_cpupin_params(server_params, flow.cpupin)
 
@@ -88,7 +89,8 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         host = flow.generator
         client_params = dict(workload = flow.type,
                              server = ipaddress(flow.receiver_bind),
-                             test_length = flow.duration)
+                             test_length = flow.duration,
+                             warmup_duration = flow.warmup_duration)
 
         self._set_cpupin_params(client_params, flow.cpupin)
 
