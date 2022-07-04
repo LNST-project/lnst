@@ -61,7 +61,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         else:
             for i in self._metrics_to_evaluate:
                 comparison, text = self._average_diff_comparison(
-                    name="{} average".format(i),
+                    name=i,
                     target=getattr(result, i),
                     baseline=getattr(baseline, i),
                 )
@@ -76,13 +76,19 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         baseline: SequentialPerfResult,
     ):
         difference = result_averages_difference(target, baseline)
-        result_text = "New {name} is {diff:.2f}% {direction} from the baseline {name}".format(
+        result_text = "New {name} average is {diff:.2f}% {direction} from the baseline {name}".format(
             name=name,
             diff=abs(difference),
             direction="higher" if difference >= 0 else "lower",
         )
-        comparison = abs(difference) <= self._pass_difference
-        if comparison:  # TODO
+
+        cpu = "_cpu_" in name
+
+        #  (                 flow metrics                 ) or (                cpu metrics                )
+        if (not cpu and difference > self._pass_difference) or (cpu and difference < -self._pass_difference):
+            comparison = ResultType.WARNING
+            result_text = "IMPROVEMENT: " + result_text
+        elif (not cpu and difference >= -self._pass_difference) or (cpu and difference <= self._pass_difference):
             comparison = ResultType.PASS
         else:
             comparison = ResultType.FAIL
