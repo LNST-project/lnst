@@ -5,6 +5,7 @@ from typing import Any, List, Dict
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Controller.Recipe import BaseRecipe
+from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
     BaseMeasurement,
     BaseMeasurementResults,
@@ -183,7 +184,7 @@ class Recipe(
         description = self.generate_perf_test_iteration_tweak_description(
             recipe_conf
         )
-        self.add_result(True, "\n".join(description))
+        self.add_result(ResultType.PASS, "\n".join(description))
 
     def perf_report_and_evaluate(self, results: RecipeResults):
         try:
@@ -199,7 +200,7 @@ class Recipe(
 
     def perf_report(self, recipe_results: RecipeResults):
         if not recipe_results:
-            self.add_result(False, "No results available to report.")
+            self.add_result(ResultType.FAIL, "No results available to report.")
             return
 
         for measurement, results in list(
@@ -209,7 +210,7 @@ class Recipe(
 
     def perf_evaluate(self, recipe_results: RecipeResults):
         if not recipe_results:
-            self.add_result(False, "No results available to evaluate.")
+            self.add_result(ResultType.FAIL, "No results available to evaluate.")
             return
 
         recipe_conf = recipe_results.recipe_conf

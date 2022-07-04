@@ -19,7 +19,7 @@ from lnst.Common.Utils import check_process_running
 from lnst.Common.Version import lnst_version
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.CtlSecSocket import CtlSecSocket
-from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult, DeviceCreateResult, DeviceMethodCallResult, DeviceAttrSetResult
+from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult, DeviceCreateResult, DeviceMethodCallResult, DeviceAttrSetResult, ResultType
 from lnst.Controller.AgentProxyObject import AgentProxyObject
 from lnst.Devices import device_classes
 from lnst.Devices.Device import Device
@@ -115,7 +115,7 @@ class Machine(object):
 
         self._add_recipe_result(
             DeviceCreateResult(
-                success=True,
+                result=ResultType.PASS,
                 device=dev,
             )
         )
@@ -154,7 +154,7 @@ class Machine(object):
 
     def remote_device_method(self, index, method_name, args, kwargs, netns):
         config_res = DeviceMethodCallResult(
-            success=True,
+            result=ResultType.PASS,
             device=self._get_device_from_database(index, netns),
             method_name=method_name,
             args=args,
@@ -165,7 +165,7 @@ class Machine(object):
             res = self.rpc_call("dev_method", index, method_name, args, kwargs,
                                 netns=netns)
         except:
-            config_res.success = False
+            config_res.result = ResultType.FAIL
             raise
         finally:
             self._add_recipe_result(config_res)
@@ -173,7 +173,7 @@ class Machine(object):
 
     def remote_device_setattr(self, index, attr_name, value, netns):
         config_res = DeviceAttrSetResult(
-            success=True,
+            result=ResultType.PASS,
             device=self._get_device_from_database(index, netns),
             attr_name=attr_name,
             value=value,
@@ -187,7 +187,7 @@ class Machine(object):
         try:
             res = self.rpc_call("dev_setattr", index, attr_name, value, netns=netns)
         except:
-            config_res.success = False
+            config_res.result = ResultType.FAIL
             raise
         return res
 
@@ -494,12 +494,13 @@ class Machine(object):
         if job._desc is not None:
             logging.info("Job description: %s" % job._desc)
 
-        job_result = JobStartResult(job, True)
+        job_result = JobStartResult(job, ResultType.PASS)
         self._add_recipe_result(job_result)
-        job_result.success = self.rpc_call("run_job", job._to_dict(),
-                                           netns=job.netns)
+        job_result.result = ResultType(
+            self.rpc_call("run_job", job._to_dict(), netns=job.netns)
+        )
 
-        return job_result.success
+        return job_result.result
 
     def wait_for_job(self, job, timeout):
         if job.id not in self._jobs:

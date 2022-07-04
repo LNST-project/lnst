@@ -14,7 +14,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
 from lnst.Controller.Job import Job
 from lnst.Controller.Host import Host
 from lnst.Controller.Recipe import BaseRecipe
-from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Controller.RecipeResults import ResultLevel, ResultType
 
 def timestamp() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
@@ -203,7 +203,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
             )
 
             recipe.add_result(
-                True,
+                ResultType.PASS,
                 f"perf-record recorded CPU(s) {cpus} on {hostid} to files:\n    {files}",
             )
 

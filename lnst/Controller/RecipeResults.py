@@ -13,6 +13,7 @@ __author__ = """
 olichtne@redhat.com (Ondrej Lichtner)
 """
 
+import logging
 import time
 from enum import IntEnum
 
@@ -21,25 +22,47 @@ class ResultLevel(IntEnum):
     NORMAL = 2
     DEBUG = 3
 
+
+class ResultType(IntEnum):
+    FAIL = 0  # fail is evaluated as zero to keep compatibility with evaluators that use False == test fail
+    PASS = 1
+
+    def __str__(self):
+        if self == ResultType.FAIL:
+            return "FAIL"
+        else:
+            return "PASS"
+
+    @staticmethod
+    def max_severity(first, second):
+        if first in (ResultType.FAIL, ):
+            return first
+        return second
+
+
 class BaseResult(object):
     """Base class for storing result data
 
     should not be instantiated directly, only defines the interface"""
-    def __init__(self, success=True):
+    def __init__(self, result: ResultType = ResultType.PASS):
+        if not isinstance(result, ResultType):  # backwards compatibility
+            result = ResultType(result)
+            logging.warning("Please use ResultType for job results instead of boolean value")
+
         self._timestamp = time.time()
-        self._success = success
+        self._result = result
 
     @property
     def timestamp(self):
         return self._timestamp
 
     @property
-    def success(self):
-        return self._success
+    def result(self):
+        return self._result
 
-    @success.setter
-    def success(self, value):
-        self._success = value
+    @result.setter
+    def result(self, value: ResultType):
+        self._result = value
 
     @property
     def description(self):
@@ -61,8 +84,8 @@ class JobResult(BaseResult):
     """Base class for storing result data of Jobs
 
     should not be instantiated directly, just stores the Job instance"""
-    def __init__(self, job, success):
-        super(JobResult, self).__init__(success)
+    def __init__(self, job, result):
+        super(JobResult, self).__init__(result)
 
         self._job = job
 
@@ -90,10 +113,14 @@ class JobFinishResult(JobResult):
     success depends on the Job passed value and returns the data returned as
     a result of the Job."""
     def __init__(self, job):
-        super(JobFinishResult, self).__init__(job, None)
+        super(JobFinishResult, self).__init__(job, ResultType.FAIL)  # there is overridden .result method anyway
 
     @property
     def success(self):
+        return self._job.passed
+
+    @property
+    def result(self):
         return self._job.passed
 
     @property
@@ -106,8 +133,8 @@ class JobFinishResult(JobResult):
 
 
 class DeviceConfigResult(BaseResult):
-    def __init__(self, success, device):
-        super(DeviceConfigResult, self).__init__(success)
+    def __init__(self, result, device):
+        super(DeviceConfigResult, self).__init__(result)
         self._device = device
 
     @property
@@ -142,8 +169,8 @@ class DeviceCreateResult(DeviceConfigResult):
 
 
 class DeviceMethodCallResult(DeviceConfigResult):
-    def __init__(self, success, device, method_name, args, kwargs):
-        super(DeviceMethodCallResult, self).__init__(success, device)
+    def __init__(self, result, device, method_name, args, kwargs):
+        super(DeviceMethodCallResult, self).__init__(result, device)
         self._method_name = method_name
         self._args = args
         self._kwargs = kwargs
@@ -180,8 +207,8 @@ class DeviceMethodCallResult(DeviceConfigResult):
 
 
 class DeviceAttrSetResult(DeviceConfigResult):
-    def __init__(self, success, device, attr_name, value, old_value):
-        super(DeviceAttrSetResult, self).__init__(success, device)
+    def __init__(self, result, device, attr_name, value, old_value):
+        super(DeviceAttrSetResult, self).__init__(result, device)
         self._attr_name = attr_name
         self._value = value
         self._old_value = old_value
@@ -219,9 +246,9 @@ class Result(BaseResult):
 
     Will be created when the tester calls the Recipe interface for adding
     results."""
-    def __init__(self, success, description="", data=None,
+    def __init__(self, result, description="", data=None,
                  level=None, data_level=None):
-        super(Result, self).__init__(success)
+        super(Result, self).__init__(result)
 
         self._description = description
         self._data = data

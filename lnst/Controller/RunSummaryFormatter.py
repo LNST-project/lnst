@@ -18,7 +18,7 @@ from lnst.Controller.MachineMapper import format_match_description
 from lnst.Controller.Recipe import RecipeRun
 from lnst.Controller.RecipeResults import DeviceConfigResult, JobResult, Result
 from lnst.Controller.RecipeResults import JobStartResult, JobFinishResult
-from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Controller.RecipeResults import ResultLevel, ResultType
 
 class RunFormatterException(ControllerError):
     pass
@@ -30,15 +30,15 @@ class RunSummaryFormatter(object):
         self._level = level
         self._colourize = colourize
 
-    def _format_success(self, success):
-        if success:
-            return (decorate_with_preset("PASS", "pass")
-                    if self._colourize
-                    else "PASS")
-        else:
-            return (decorate_with_preset("FAIL", "fail")
-                    if self._colourize
-                    else "FAIL")
+    def _format_result(self, res):
+        res = str(res)
+        if self._colourize:
+            return decorate_with_preset(
+                res,
+                res.lower()
+            )
+
+        return res
 
     def _format_source(self, res):
         if isinstance(res, JobResult):
@@ -94,7 +94,7 @@ class RunSummaryFormatter(object):
         output_lines.extend(format_match_description(run.match).split('\n'))
 
         filtered_results = [res for res in run.results if
-                            res.success == False or res.level <= self._level]
+                            res.result == ResultType.FAIL or res.level <= self._level]
         for i, res in enumerate(filtered_results):
             try:
                 next_res = filtered_results[i+1]
@@ -102,13 +102,13 @@ class RunSummaryFormatter(object):
                     isinstance(next_res, JobFinishResult) and
                     res.job.host == next_res.job.host and
                     res.job.id == next_res.job.id and
-                    res.success):
+                    res.result):
                     continue
             except IndexError:
                 pass
 
             output_lines.append("{res} {src}{desc}".format(
-                res = self._format_success(res.success),
+                res = self._format_result(res.result),
                 src = self._format_source(res),
                 desc = ("\t{}".format(res.description)
                     if res.description.count('\n') == 0
@@ -118,6 +118,6 @@ class RunSummaryFormatter(object):
                 output_lines.extend(self._format_data(res.data))
 
         output_lines.append("Overall result of this Run: {}".
-                            format(self._format_success(run.overall_result)))
+                            format(self._format_result(run.overall_result)))
 
         return "\n".join(output_lines)

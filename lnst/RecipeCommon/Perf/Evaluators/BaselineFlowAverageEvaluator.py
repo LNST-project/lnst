@@ -2,6 +2,7 @@ from __future__ import division
 from typing import List, Tuple
 
 from lnst.Controller.Recipe import BaseRecipe
+from lnst.Controller.RecipeResults import ResultType
 
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Results import result_averages_difference
@@ -51,11 +52,11 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         recipe_conf: PerfRecipeConf,
         result: PerfMeasurementResults,
         baseline: PerfMeasurementResults,
-    ) -> Tuple[bool, List[str]]:
-        comparison_result = True
+    ) -> Tuple[ResultType, List[str]]:
+        comparison_result = ResultType.PASS
         result_text = []
         if baseline is None:
-            comparison_result = False
+            comparison_result = ResultType.FAIL
             result_text.append("No baseline found for this flow")
         else:
             for i in self._metrics_to_evaluate:
@@ -65,7 +66,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
                     baseline=getattr(baseline, i),
                 )
                 result_text.append(text)
-                comparison_result = comparison_result and comparison
+                comparison_result = ResultType.max_severity(comparison_result, comparison)
         return comparison_result, result_text
 
     def _average_diff_comparison(
@@ -81,4 +82,9 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
             direction="higher" if difference >= 0 else "lower",
         )
         comparison = abs(difference) <= self._pass_difference
+        if comparison:  # TODO
+            comparison = ResultType.PASS
+        else:
+            comparison = ResultType.FAIL
+
         return comparison, result_text

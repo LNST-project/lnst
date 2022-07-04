@@ -11,7 +11,7 @@ from lnst.Common.Parameters import (
     FloatParam,
 )
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-
+from lnst.Controller.RecipeResults import ResultType
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
     BaseMeasurementGenerator,
@@ -239,9 +239,9 @@ class BaseEnrtRecipe(
         passed to the recipe class instance during initialization.
         """
         description = self.generate_test_wide_description(config)
-        self.add_result(True, "Summary of used Recipe parameters:\n{}".format(
+        self.add_result(ResultType.PASS, "Summary of used Recipe parameters:\n{}".format(
                         pprint.pformat(self.params._to_dict())))
-        self.add_result(True, "\n".join(description))
+        self.add_result(ResultType.PASS, "\n".join(description))
 
     def generate_test_wide_description(self, config):
         """Generates the test wide configuration description
@@ -282,7 +282,7 @@ class BaseEnrtRecipe(
 
     def describe_sub_configuration(self, config):
         description = self.generate_sub_configuration_description(config)
-        self.add_result(True, "\n".join(description))
+        self.add_result(ResultType.PASS, "\n".join(description))
 
     def do_tests(self, recipe_config):
         """Entry point for actual tests
@@ -306,7 +306,7 @@ class BaseEnrtRecipe(
 
     def describe_perf_test_tweak(self, perf_config):
         description = self.generate_perf_test_tweak_description(perf_config)
-        self.add_result(True, "\n".join(description))
+        self.add_result(ResultType.PASS, "\n".join(description))
 
     def do_perf_tests(self, recipe_config):
         """Performance testing loop
