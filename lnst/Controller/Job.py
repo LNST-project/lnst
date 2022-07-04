@@ -15,7 +15,7 @@ import logging
 import signal
 from lnst.Common.JobError import JobError
 from lnst.Tests.BaseTestModule import BaseTestModule
-from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Controller.RecipeResults import ResultLevel, ResultType
 
 DEFAULT_TIMEOUT = 60
 
@@ -140,9 +140,9 @@ class Job(object):
         Type: Boolean
         """
         try:
-            return self._res["passed"] == self._expect
+            return ResultType.PASS if self._res["passed"] == self._expect else ResultType.FAIL
         except:
-            return False
+            return ResultType.FAIL
 
     @passed.setter
     def passed(self, result):

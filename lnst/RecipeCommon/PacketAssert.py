@@ -1,4 +1,6 @@
 import signal
+
+from lnst.Controller.RecipeResults import ResultType
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Tests import PacketAssert
 from lnst.Common.LnstError import LnstError
@@ -68,14 +70,14 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
 
     def packet_assert_evaluate_and_report(self, packet_assert_config, results):
         if not results:
-            self.add_result(False, "Packet assert results unavailable")
+            self.add_result(ResultType.FAIL, "Packet assert results unavailable")
             return
 
-        success = False
+        success = ResultType.FAIL
         if results["p_recv"] >= packet_assert_config.p_min and \
             (results["p_recv"] <= packet_assert_config.p_max or
              not packet_assert_config.p_max):
-            success = True
+            success = ResultType.PASS
 
         cmp_msg = "packets received {}, expected min({}) max({})".format(
             results["p_recv"],

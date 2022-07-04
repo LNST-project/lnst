@@ -1,3 +1,4 @@
+from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurementResults
@@ -92,7 +93,7 @@ class BaseCPUMeasurement(BaseMeasurement):
                             deviation=utilization.std_deviation,
                             unit=utilization.unit))
 
-        recipe.add_result(True, "\n".join(desc), data=cpu_data)
+        recipe.add_result(ResultType.PASS, "\n".join(desc), data=cpu_data)
 
     def _aggregate_hostcpu_results(self, old, new):
         if (old is not None and

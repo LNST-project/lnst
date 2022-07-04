@@ -1,3 +1,4 @@
+from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 
 class RatePingEvaluator(BaseResultEvaluator):
@@ -14,10 +15,10 @@ class RatePingEvaluator(BaseResultEvaluator):
 
     def evaluate_results(self, recipe, result):
         if result is None or 'rate' not in result:
-            recipe.add_result(False, 'Insufficient data for the evaluation of Ping test')
+            recipe.add_result(ResultType.FAIL, 'Insufficient data for the evaluation of Ping test')
             return
 
-        result_status = True
+        result_status = ResultType.PASS
         ping_rate = int(result['rate'])
 
         result_text = []
@@ -25,7 +26,7 @@ class RatePingEvaluator(BaseResultEvaluator):
         if self.min_rate is not None:
             rate_text = 'measured rate {} is {} than min_rate({})'
             if ping_rate < int(self.min_rate):
-                result_status = False
+                result_status = ResultType.FAIL
                 result_text.append(
                     rate_text.format(ping_rate, 'less', self.min_rate)
                     )
@@ -37,7 +38,7 @@ class RatePingEvaluator(BaseResultEvaluator):
         if self.max_rate is not None:
             rate_text = 'measured rate {} is {} than max_rate({})'
             if ping_rate > int(self.max_rate):
-                result_status = False
+                result_status = ResultType.FAIL
                 result_text.append(
                     rate_text.format(ping_rate, 'more', self.max_rate)
                     )
@@ -49,7 +50,7 @@ class RatePingEvaluator(BaseResultEvaluator):
         if self.rate is not None:
             rate_text = 'measured rate {} is {} rate({})'
             if ping_rate != int(self.rate):
-                result_status = False
+                result_status = ResultType.FAIL
                 result_text.append(
                     rate_text.format(ping_rate, 'different than', self.rate)
                     )

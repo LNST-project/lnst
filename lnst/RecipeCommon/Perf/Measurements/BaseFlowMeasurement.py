@@ -1,4 +1,6 @@
 import textwrap
+
+from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurementResults
@@ -301,12 +303,12 @@ class BaseFlowMeasurement(BaseMeasurement):
                         cpu_deviation=receiver_cpu.std_deviation,
                         cpu_unit=receiver_cpu.unit))
 
-        recipe_result = True
+        recipe_result = ResultType.PASS
         metrics = {"Generator": generator, "Generator process": generator_cpu,
                    "Receiver": receiver, "Receiver process": receiver_cpu}
         for name, result in metrics.items():
             if cls._invalid_flow_duration(result):
-                recipe_result = False
+                recipe_result = ResultType.FAIL
                 desc.append("{} has invalid duration!".format(name))
 
         # TODO add flow description
