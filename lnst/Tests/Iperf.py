@@ -2,7 +2,13 @@ import logging
 import subprocess
 import json
 from json.decoder import JSONDecodeError
-from lnst.Common.Parameters import IntParam, IpParam, StrParam, BoolParam
+from lnst.Common.Parameters import (
+    IntParam,
+    IpParam,
+    StrParam,
+    BoolParam,
+    ListParam
+)
 from lnst.Common.Parameters import HostnameOrIpParam
 from lnst.Common.Utils import is_installed
 from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
@@ -84,7 +90,7 @@ class IperfBase(BaseTestModule):
 class IperfServer(IperfBase):
     bind = IpParam()
     port = IntParam()
-    cpu_bind = IntParam()
+    cpu_bind = ListParam(type=IntParam())
     opts = StrParam()
     oneoff = BoolParam(default=False)
 
@@ -100,8 +106,8 @@ class IperfServer(IperfBase):
         if "port" in self.params:
             port = "-p {}".format(self.params.port)
 
-        if "cpu_bind" in self.params:
-            cpu = "-A {:d}".format(self.params.cpu_bind)
+        if "cpu_bind" in self.params and len(self.params.cpu_bind):
+            cpu = "taskset -c " + ','.join(str(cpu) for cpu in self.params.cpu_bind)
         else:
             cpu = ""
 
@@ -110,8 +116,9 @@ class IperfServer(IperfBase):
 
         mptcp = "--multipath" if self.params.mptcp else ""
 
-        cmd = "iperf3 -s {bind} -J {port} {cpu} {oneoff} {mptcp} {opts}".format(
-                bind=bind, port=port, cpu=cpu, oneoff=oneoff, mptcp=mptcp,
+        cmd = "{cpu} iperf3 -s {bind} -J {port} {oneoff} {mptcp} {opts}".format(
+                cpu=cpu,
+                bind=bind, port=port, oneoff=oneoff, mptcp=mptcp,
                 opts=self.params.opts if "opts" in self.params else "")
 
         return cmd
@@ -126,7 +133,7 @@ class IperfClient(IperfBase):
     port = IntParam()
     blksize = IntParam()
     mss = IntParam()
-    cpu_bind = IntParam()
+    cpu_bind = ListParam(type=IntParam())
     parallel = IntParam()
     opts = StrParam()
 
@@ -158,10 +165,11 @@ class IperfClient(IperfBase):
         else:
             mss = ""
 
-        if "cpu_bind" in self.params:
-            cpu = "-A {:d}".format(self.params.cpu_bind)
+        if "cpu_bind" in self.params and len(self.params.cpu_bind):
+            cpu = "taskset -c " + ','.join(str(cpu) for cpu in self.params.cpu_bind)
         else:
             cpu = ""
+
 
         if "parallel" in self.params:
             parallel = "-P {:d}".format(self.params.parallel)
@@ -180,11 +188,12 @@ class IperfClient(IperfBase):
         duration = self.params.duration + self.params.warmup_duration * 2  # *2 to add warm up and warm down durations
         logging.debug(f"Measuring for {duration} seconds (perf_duration + perf_warmup_duration * 2).")
 
-        cmd = ("iperf3 -c {server} -b 0/1000 -J -t {duration}"
-               " {cpu} {test} {mss} {blksize} {parallel} {port}"
+        cmd = ("{cpu} iperf3 -c {server} -b 0/1000 -J -t {duration}"
+               " {test} {mss} {blksize} {parallel} {port}"
                " {opts}".format(
+                cpu=cpu,
                 server=self.params.server, duration=duration,
-                cpu=cpu, test=test, mss=mss, blksize=blksize,
+                test=test, mss=mss, blksize=blksize,
                 parallel=parallel,
                 port=port,
                 opts=self.params.opts if "opts" in self.params else ""))
