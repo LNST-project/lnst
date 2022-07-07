@@ -91,9 +91,6 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
                     result.utilization, baseline.utilization
                 )
 
-                if abs(difference) > self._pass_difference:
-                    comparison = False
-
                 text.append(
                     "CPU {cpuid}: utilization {diff:.2f}% {direction} than baseline".format(
                         cpuid=result.cpu,
@@ -101,6 +98,9 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
                         direction="higher" if difference >= 0 else "lower",
                     )
                 )
+
+                if abs(difference) > self._pass_difference:
+                    comparison = False
             except ZeroDivisionError:
                 text.append(
                     "CPU {cpuid}: zero division by baseline".format(
