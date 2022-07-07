@@ -26,18 +26,32 @@ class ResultLevel(IntEnum):
 class ResultType(IntEnum):
     FAIL = 0  # fail is evaluated as zero to keep compatibility with evaluators that use False == test fail
     PASS = 1
+    WARNING = 2
 
     def __str__(self):
         if self == ResultType.FAIL:
             return "FAIL"
-        else:
+        elif self == ResultType.PASS:
             return "PASS"
+        else:
+            return "WARNING"
 
     @staticmethod
     def max_severity(first, second):
-        if first in (ResultType.FAIL, ):
-            return first
-        return second
+        severity = [ResultType.FAIL, ResultType.WARNING, ResultType.PASS]
+
+        for level in severity:
+            if first == level or second == level:
+                return level
+
+        return ResultType.PASS
+
+    def __bool__(self):
+        # method implemented due to compatibility reasons
+        if self == ResultType.FAIL:
+            return False
+
+        return True
 
 
 class BaseResult(object):
