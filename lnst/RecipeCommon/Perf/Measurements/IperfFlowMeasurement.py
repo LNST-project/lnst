@@ -174,13 +174,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
                 if cpu < 0:
                     raise RecipeError("Negative perf cpupin value provided.")
 
-            # at the moment iperf does not support pinning to multiple cpus
-            # so pin to the first cpu specified in the list
-            if len(cpupin) > 1:
-                raise RecipeError("Cannot pin iperf to the specified list "\
-                    "of cpus due to missing support in iperf.")
-
-            params["cpu_bind"] = cpupin[0]
+            params["cpu_bind"] = cpupin
 
     def _parse_job_streams(self, job):
         result = ParallelPerfResult()
