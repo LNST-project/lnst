@@ -13,11 +13,13 @@ import logging
 import lzma
 import os
 import pickle
+from functools import reduce
+
 from lnst.Common.Parameters import Parameters, Param
 from lnst.Common.Colours import decorate_with_preset
 from lnst.Controller.Requirements import _Requirements, HostReq
 from lnst.Controller.Common import ControllerError
-from lnst.Controller.RecipeResults import BaseResult, Result
+from lnst.Controller.RecipeResults import BaseResult, Result, ResultType
 
 class RecipeError(ControllerError):
     """Exception thrown by the BaseRecipe class"""
@@ -216,7 +218,17 @@ class RecipeRun(object):
 
     @property
     def overall_result(self):
-        return all([i.success for i in self.results] + [self.exception is None])
+        results = [i.result for i in self.results]
+
+        if (ResultType.FAIL in results) or (self.exception is not None):
+            return ResultType.FAIL
+
+        if ResultType.WARNING in results:
+            return ResultType.WARNING
+        elif reduce(ResultType.max_severity, results) == ResultType.PASS:
+            return ResultType.PASS
+        else:
+            raise NotImplementedError(f"Unsupported result type(s): {results}")
 
     @property
     def recipe(self) -> BaseRecipe:
