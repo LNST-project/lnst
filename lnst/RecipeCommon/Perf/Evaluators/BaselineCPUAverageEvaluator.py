@@ -104,11 +104,12 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
 
                 if difference < -self._pass_difference:
                     comparison = ResultType.WARNING
-                    text[-1] = "IMPROVEMENT: " + text[-1]
                 elif difference <= self._pass_difference:
                     comparison = ResultType.PASS
                 else:
                     comparison = ResultType.FAIL
+
+                text[-1] = ("IMPROVEMENT: " if comparison == ResultType.WARNING else f"{comparison}: ") + text[-1]
             except ZeroDivisionError:
                 text.append(
                     "CPU {cpuid}: zero division by baseline".format(

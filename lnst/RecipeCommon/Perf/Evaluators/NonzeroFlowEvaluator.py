@@ -36,18 +36,18 @@ class NonzeroFlowEvaluator(BaseResultEvaluator):
                 if metric:
                     if metric.average == float("inf"):
                         result = ResultType.FAIL
-                        result_text.append(f"{metric_name} reported invalid value: {metric.average}")
+                        result_text.append(f"FAIL: {metric_name} reported invalid value: {metric.average}")
                     elif metric.average > 0:
-                        report_text = f"{metric_name} reported non-zero throughput"
+                        report_text = f"PASS: {metric_name} reported non-zero throughput"
                         for interval in metric:
                             if interval.value == 0:
                                 result = ResultType.FAIL
-                                report_text = f"{metric_name} reported zero throughput"
+                                report_text = f"FAIL: {metric_name} reported zero throughput"
                                 break
 
                         result_text.append(report_text)
                     else:
                         result = ResultType.FAIL
-                        result_text.append(f"{metric_name} reported zero throughput")
+                        result_text.append(f"FAIL: {metric_name} reported zero throughput")
 
             recipe.add_result(result, "\n".join(result_text))
