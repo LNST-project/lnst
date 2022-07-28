@@ -87,10 +87,11 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         #  (                 flow metrics                 ) or (                cpu metrics                )
         if (not cpu and difference > self._pass_difference) or (cpu and difference < -self._pass_difference):
             comparison = ResultType.WARNING
-            result_text = "IMPROVEMENT: " + result_text
         elif (not cpu and difference >= -self._pass_difference) or (cpu and difference <= self._pass_difference):
             comparison = ResultType.PASS
         else:
             comparison = ResultType.FAIL
+
+        result_text = "IMPROVEMENT: " if comparison == ResultType.WARNING else f"{comparison}: " + result_text
 
         return comparison, result_text
