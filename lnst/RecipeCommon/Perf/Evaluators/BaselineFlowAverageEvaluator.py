@@ -92,6 +92,9 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         else:
             comparison = ResultType.FAIL
 
-        result_text = "IMPROVEMENT: " if comparison == ResultType.WARNING else f"{comparison}: " + result_text
+        if comparison == ResultType.WARNING:
+            result_text = f"IMPROVEMENT: {result_text}"
+        else:
+            result_text = f"{comparison}: {result_text}"
 
         return comparison, result_text
