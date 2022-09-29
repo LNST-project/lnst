@@ -17,9 +17,9 @@ from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (
 
 class BaselineCPUAverageEvaluator(BaselineEvaluator):
     def __init__(
-        self, pass_difference: int, evaluation_filter: Dict[str, str] = None
+        self, thresholds: dict, evaluation_filter: Dict[str, str] = None
     ):
-        self._pass_difference = pass_difference
+        self._thresholds = thresholds
         self._evaluation_filter = evaluation_filter
 
     def filter_results(
@@ -67,10 +67,7 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
         return [
             "CPU Baseline average evaluation for Host {hostid}:".format(
                 hostid=results[0].host.hostid
-            ),
-            "Configured {diff}% difference as acceptable".format(
-                diff=self._pass_difference
-            ),
+            )
         ]
 
     def compare_result_with_baseline(
@@ -79,32 +76,38 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
         recipe_conf: PerfRecipeConf,
         result: PerfMeasurementResults,
         baseline: PerfMeasurementResults,
+        result_index: int = 0
     ) -> Tuple[ResultType, List[str]]:
         comparison = ResultType.FAIL
         text = []
+
+        host = result.host.hostid
+        metric = f"{result_index}_{host}"
 
         if baseline is None:
             comparison = ResultType.FAIL
             text.append(
                 "CPU {cpuid}: no baseline found".format(cpuid=result.cpu)
             )
-        else:
+        elif (threshold := self._thresholds.get(metric, None)) is not None:
             try:
                 difference = result_averages_difference(
                     result.utilization, baseline.utilization
                 )
 
                 text.append(
-                    "CPU {cpuid}: utilization {diff:.2f}% {direction} than baseline".format(
+                    "CPU {cpuid}: utilization {diff:.2f}% {direction} than baseline. "
+                    "Allowed difference: {threshold}%".format(
                         cpuid=result.cpu,
                         diff=abs(difference),
                         direction="higher" if difference >= 0 else "lower",
+                        threshold=threshold
                     )
                 )
 
-                if difference < -self._pass_difference:
+                if difference < -threshold:
                     comparison = ResultType.WARNING
-                elif difference <= self._pass_difference:
+                elif difference <= threshold:
                     comparison = ResultType.PASS
                 else:
                     comparison = ResultType.FAIL
@@ -116,4 +119,8 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
                         cpuid=result.cpu
                     )
                 )
+        else:
+            comparison = ResultType.FAIL
+            text.append(f"Metric {metric}, threshold not found")
+
         return comparison, text
