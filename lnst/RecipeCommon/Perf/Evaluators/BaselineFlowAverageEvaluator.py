@@ -17,9 +17,9 @@ from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (
 
 class BaselineFlowAverageEvaluator(BaselineEvaluator):
     def __init__(
-        self, pass_difference: int, metrics_to_evaluate: List[str] = None
+        self, thresholds: dict, metrics_to_evaluate: List[str] = None
     ):
-        self._pass_difference = pass_difference
+        self._thresholds = thresholds
 
         if metrics_to_evaluate is not None:
             self._metrics_to_evaluate = metrics_to_evaluate
@@ -40,10 +40,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         result = results[0]
         return [
             "Baseline average evaluation of flow:",
-            "{}".format(result.flow),
-            "Configured {}% difference as acceptable".format(
-                self._pass_difference
-            ),
+            "{}".format(result.flow)
         ]
 
     def compare_result_with_baseline(
@@ -52,6 +49,7 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         recipe_conf: PerfRecipeConf,
         result: PerfMeasurementResults,
         baseline: PerfMeasurementResults,
+        result_index: int = 0,
     ) -> Tuple[ResultType, List[str]]:
         comparison_result = ResultType.PASS
         result_text = []
@@ -60,12 +58,19 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
             result_text.append("No baseline found for this flow")
         else:
             for i in self._metrics_to_evaluate:
-                comparison, text = self._average_diff_comparison(
-                    name=i,
-                    target=getattr(result, i),
-                    baseline=getattr(baseline, i),
-                )
-                result_text.append(text)
+                metric = f"{result_index}_{i}"
+                if (threshold := self._thresholds.get(metric, None)) is None:
+                    comparison = ResultType.FAIL
+                    result_text.append(f"Metric {metric}, threshold not found")
+                else:
+                    comparison, text = self._average_diff_comparison(
+                        name=metric,
+                        target=getattr(result, i),
+                        baseline=getattr(baseline, i),
+                        threshold=threshold
+                    )
+                    result_text.append(text)
+
                 comparison_result = ResultType.max_severity(comparison_result, comparison)
         return comparison_result, result_text
 
@@ -74,20 +79,23 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         name: str,
         target: SequentialPerfResult,
         baseline: SequentialPerfResult,
+        threshold: int
     ):
         difference = result_averages_difference(target, baseline)
-        result_text = "New {name} average is {diff:.2f}% {direction} from the baseline {name}".format(
+        result_text = "New {name} average is {diff:.2f}% {direction} from the baseline. " \
+                      "Allowed difference: {threshold}%".format(
             name=name,
             diff=abs(difference),
             direction="higher" if difference >= 0 else "lower",
+            threshold=threshold
         )
 
         cpu = "_cpu_" in name
 
-        #  (                 flow metrics                 ) or (                cpu metrics                )
-        if (not cpu and difference > self._pass_difference) or (cpu and difference < -self._pass_difference):
+        #  (           flow metrics           ) or (          cpu metrics          )
+        if (not cpu and difference > threshold) or (cpu and difference < -threshold):
             comparison = ResultType.WARNING
-        elif (not cpu and difference >= -self._pass_difference) or (cpu and difference <= self._pass_difference):
+        elif (not cpu and difference >= -threshold) or (cpu and difference <= threshold):
             comparison = ResultType.PASS
         else:
             comparison = ResultType.FAIL
