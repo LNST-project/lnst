@@ -107,8 +107,9 @@ class RunSummaryFormatter(object):
             except IndexError:
                 pass
 
-            output_lines.append("{res} {src}{desc}".format(
+            output_lines.append("{res} {result_index}_{src}{desc}".format(
                 res = self._format_result(res.result),
+                result_index=run.results.index(res),
                 src = self._format_source(res),
                 desc = ("\t{}".format(res.description)
                     if res.description.count('\n') == 0
