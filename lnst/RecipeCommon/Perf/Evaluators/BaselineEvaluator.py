@@ -1,11 +1,15 @@
 from typing import List, Tuple
 from lnst.Controller.Recipe import BaseRecipe
-from lnst.Controller.RecipeResults import ResultType
+from lnst.Controller.RecipeResults import ResultType, Result
 from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Measurements.Results import (
     BaseMeasurementResults as PerfMeasurementResults,
 )
+
+
+class BaselineEvaluationResult(Result):
+    pass
 
 
 class BaselineEvaluator(BaseResultEvaluator):
@@ -68,10 +72,12 @@ class BaselineEvaluator(BaseResultEvaluator):
                 }
             )
 
-        recipe.add_result(
-            cumulative_result,
-            "\n".join(result_text),
-            data={"comparisons": comparisons},
+        recipe.add_custom_result(
+            BaselineEvaluationResult(
+                cumulative_result,
+                "\n".join(result_text),
+                data={"comparisons": comparisons},
+            )
         )
 
     def describe_group_results(
