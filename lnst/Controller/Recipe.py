@@ -160,6 +160,9 @@ class BaseRecipe(object):
         self.current_run.add_result(Result(result, description, data,
                                            level, data_level))
 
+    def add_custom_result(self, result: BaseResult):
+        self.current_run.add_result(result)
+
     def __getstate__(self):
         state = self.__dict__.copy()
         state['_ctl'] = None
