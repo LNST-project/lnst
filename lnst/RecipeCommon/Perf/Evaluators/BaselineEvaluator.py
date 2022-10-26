@@ -1,4 +1,7 @@
-from typing import List, Tuple
+from typing import List
+from functools import reduce
+from dataclasses import dataclass
+
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import ResultType, Result
 from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
@@ -10,6 +13,13 @@ from lnst.RecipeCommon.Perf.Measurements.Results import (
 
 class BaselineEvaluationResult(Result):
     pass
+
+
+@dataclass
+class MetricComparison:
+    metric_name: str
+    result: ResultType
+    text: str
 
 
 class BaselineEvaluator(BaseResultEvaluator):
@@ -54,22 +64,29 @@ class BaselineEvaluator(BaseResultEvaluator):
         baselines = self.get_baselines(recipe, recipe_conf, results)
         result_index = len(recipe.current_run.results)
         for i, (result, baseline) in enumerate(zip(results, baselines)):
-            comparison_result, text = self.compare_result_with_baseline(
+            metric_comparisons = self.compare_result_with_baseline(
                 recipe, recipe_conf, result, baseline, result_index
             )
-            cumulative_result = ResultType.max_severity(
+            cumulative_result = reduce(
+                ResultType.max_severity,
+                [metric.result for metric in metric_comparisons],
                 cumulative_result,
-                comparison_result,
             )
-            result_text.extend(text)
-            comparisons.append(
-                {
-                    "current_result": result,
-                    "baseline_result": baseline,
-                    "comparison_result": comparison_result,
-                    "text": text,
-                    "recipe_conf": recipe_conf,
-                }
+            result_text.extend(
+                [metric.text for metric in metric_comparisons]
+            )
+            comparisons.extend(
+                [
+                    {
+                        "current_result": result,
+                        "baseline_result": baseline,
+                        "comparison_result": metric.result,
+                        "metric_name": metric.metric_name,
+                        "text": metric.text,
+                        "recipe_conf": recipe_conf,
+                    }
+                    for metric in metric_comparisons
+                ]
             )
 
         recipe.add_custom_result(
@@ -94,7 +111,9 @@ class BaselineEvaluator(BaseResultEvaluator):
         recipe_conf: PerfRecipeConf,
         results: List[PerfMeasurementResults],
     ) -> List[PerfMeasurementResults]:
-        return [self.get_baseline(recipe, recipe_conf, result) for result in results]
+        return [
+            self.get_baseline(recipe, recipe_conf, result) for result in results
+        ]
 
     def get_baseline(
         self,
@@ -110,6 +129,6 @@ class BaselineEvaluator(BaseResultEvaluator):
         recipe_conf: PerfRecipeConf,
         result: PerfMeasurementResults,
         baseline: PerfMeasurementResults,
-        result_index: int = 0
-    ) -> Tuple[ResultType, List[str]]:
-        return ResultType.FAIL, ["Result to baseline comparison not implemented"]
+        result_index: int = 0,
+    ) -> List[MetricComparison]:
+        raise NotImplementedError("Result to baseline metric comparison not implemented")

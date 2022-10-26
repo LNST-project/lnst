@@ -1,5 +1,5 @@
 from __future__ import division
-from typing import List, Tuple
+from typing import List
 
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import ResultType
@@ -11,7 +11,7 @@ from lnst.RecipeCommon.Perf.Measurements.Results import (
     BaseMeasurementResults as PerfMeasurementResults,
 )
 from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (
-    BaselineEvaluator,
+    BaselineEvaluator, MetricComparison
 )
 
 
@@ -50,29 +50,32 @@ class BaselineFlowAverageEvaluator(BaselineEvaluator):
         result: PerfMeasurementResults,
         baseline: PerfMeasurementResults,
         result_index: int = 0,
-    ) -> Tuple[ResultType, List[str]]:
-        comparison_result = ResultType.PASS
-        result_text = []
-        if baseline is None:
-            comparison_result = ResultType.FAIL
-            result_text.append("No baseline found for this flow")
-        else:
-            for i in self._metrics_to_evaluate:
-                metric = f"{result_index}_{i}"
-                if (threshold := self._thresholds.get(metric, None)) is None:
-                    comparison = ResultType.FAIL
-                    result_text.append(f"Metric {metric}, threshold not found")
-                else:
-                    comparison, text = self._average_diff_comparison(
-                        name=metric,
-                        target=getattr(result, i),
-                        baseline=getattr(baseline, i),
-                        threshold=threshold
-                    )
-                    result_text.append(text)
+    ) -> List[MetricComparison]:
+        metric_comparisons = []
+        for i in self._metrics_to_evaluate:
+            metric = f"{result_index}_{i}"
+            if baseline is None:
+                comparison_result = ResultType.FAIL
+                text = f"FAIL: Metric {metric} baseline not found for this flow"
+            elif (threshold := self._thresholds.get(metric, None)) is not None:
+                comparison_result, text = self._average_diff_comparison(
+                    name=metric,
+                    target=getattr(result, i),
+                    baseline=getattr(baseline, i),
+                    threshold=threshold
+                )
+            else:
+                comparison_result = ResultType.FAIL
+                text = f"FAIL: Metric {metric} threshold not found"
 
-                comparison_result = ResultType.max_severity(comparison_result, comparison)
-        return comparison_result, result_text
+            metric_comparisons.append(
+                MetricComparison(
+                    metric_name=metric,
+                    result=comparison_result,
+                    text=text,
+                )
+            )
+        return metric_comparisons
 
     def _average_diff_comparison(
         self,
