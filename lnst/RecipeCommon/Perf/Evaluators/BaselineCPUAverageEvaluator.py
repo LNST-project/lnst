@@ -1,5 +1,5 @@
 from __future__ import division
-from typing import List, Tuple, Dict
+from typing import List, Dict
 
 
 from lnst.Controller.Recipe import BaseRecipe
@@ -11,7 +11,7 @@ from lnst.RecipeCommon.Perf.Measurements.Results import (
     BaseMeasurementResults as PerfMeasurementResults,
 )
 from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (
-    BaselineEvaluator,
+    BaselineEvaluator, MetricComparison
 )
 
 
@@ -77,28 +77,30 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
         result: PerfMeasurementResults,
         baseline: PerfMeasurementResults,
         result_index: int = 0
-    ) -> Tuple[ResultType, List[str]]:
+    ) -> List[MetricComparison]:
         comparison = ResultType.FAIL
-        text = []
 
-        host = result.host.hostid
-        metric = f"{result_index}_{host}"
+        metric_name = f"{result_index}_utilization"
 
         if baseline is None:
-            comparison = ResultType.FAIL
-            text.append(
-                "CPU {cpuid}: no baseline found".format(cpuid=result.cpu)
-            )
-        elif (threshold := self._thresholds.get(metric, None)) is not None:
+            return [
+                MetricComparison(
+                    metric_name=metric_name,
+                    result=ResultType.FAIL,
+                    text=f"FAIL: CPU {result.cpu}: no baseline found",
+                )
+            ]
+        elif (threshold := self._thresholds.get(metric_name, None)) is not None:
             try:
                 difference = result_averages_difference(
                     result.utilization, baseline.utilization
                 )
 
-                text.append(
-                    "CPU {cpuid}: utilization {diff:.2f}% {direction} than baseline. "
+                text = (
+                    "CPU {cpuid}: {metric_name} {diff:.2f}% {direction} than baseline. "
                     "Allowed difference: {threshold}%".format(
                         cpuid=result.cpu,
+                        metric_name=metric_name,
                         diff=abs(difference),
                         direction="higher" if difference >= 0 else "lower",
                         threshold=threshold
@@ -107,20 +109,27 @@ class BaselineCPUAverageEvaluator(BaselineEvaluator):
 
                 if difference < -threshold:
                     comparison = ResultType.WARNING
+                    text = "IMPROVEMENT: " + text
                 elif difference <= threshold:
                     comparison = ResultType.PASS
+                    text = "PASS: " + text
                 else:
                     comparison = ResultType.FAIL
-
-                text[-1] = ("IMPROVEMENT: " if comparison == ResultType.WARNING else f"{comparison}: ") + text[-1]
+                    text = "FAIL: " + text
             except ZeroDivisionError:
-                text.append(
-                    "CPU {cpuid}: zero division by baseline".format(
-                        cpuid=result.cpu
-                    )
+                text = f"CPU {result.cpu}: {metric_name} zero division by baseline"
+            return [
+                MetricComparison(
+                    metric_name=metric_name,
+                    result=comparison,
+                    text=text,
                 )
+            ]
         else:
-            comparison = ResultType.FAIL
-            text.append(f"Metric {metric}, threshold not found")
-
-        return comparison, text
+            return [
+                MetricComparison(
+                    metric_name=metric_name,
+                    result=ResultType.FAIL,
+                    text=f"FAIL: CPU {result.cpu}: {metric_name} no threshold found",
+                )
+            ]
