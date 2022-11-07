@@ -8,7 +8,7 @@ from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowTest
-from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results import FlowMeasurementResults
 
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 

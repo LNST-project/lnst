@@ -7,7 +7,7 @@ from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
 from lnst.RecipeCommon.Perf.Results import result_averages_difference
 from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
-from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
+from lnst.RecipeCommon.Perf.Measurements.Results import (
     BaseMeasurementResults as PerfMeasurementResults,
 )
 from lnst.RecipeCommon.Perf.Evaluators.BaselineEvaluator import (

@@ -2,7 +2,7 @@ from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 
-from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results import FlowMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 
 nonzero_measurement = SequentialPerfResult(

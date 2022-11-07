@@ -1,55 +1,8 @@
 from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
-from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurementResults
-from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
+from lnst.RecipeCommon.Perf.Measurements.Results import AggregatedCPUMeasurementResults
 
-class CPUMeasurementResults(BaseMeasurementResults):
-    def __init__(self, measurement, host, cpu):
-        super(CPUMeasurementResults, self).__init__(measurement)
-        self._host = host
-        self._cpu = cpu
-        self._utilization = None
-
-    @property
-    def host(self):
-        return self._host
-
-    @property
-    def cpu(self):
-        return self._cpu
-
-    @property
-    def utilization(self):
-        return self._utilization
-
-    @utilization.setter
-    def utilization(self, value):
-        self._utilization = value
-
-class AggregatedCPUMeasurementResults(CPUMeasurementResults):
-    def __init__(self, measurement, host, cpu):
-        super(AggregatedCPUMeasurementResults, self).__init__(measurement, host, cpu)
-        self._individual_results = []
-
-    @property
-    def individual_results(self):
-        return self._individual_results
-
-    @property
-    def utilization(self):
-        return SequentialPerfResult([i.utilization
-                                     for i in self.individual_results])
-
-    def add_results(self, results):
-        if results is None:
-            return
-        elif isinstance(results, AggregatedCPUMeasurementResults):
-            self.individual_results.extend(results.individual_results)
-        elif isinstance(results, CPUMeasurementResults):
-            self.individual_results.append(results)
-        else:
-            raise MeasurementError("Adding incorrect results.")
 
 class BaseCPUMeasurement(BaseMeasurement):
     def aggregate_results(self, old, new):
