@@ -6,10 +6,8 @@ from lnst.Common.LnstError import LnstError
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import ResultType
-from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
-    BaseMeasurement,
-    BaseMeasurementResults,
-)
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
+from lnst.RecipeCommon.Perf.Measurements.Results import BaseMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.IperfFlowMeasurement import FlowMeasurementResults
 from lnst.RecipeCommon.Perf.Results import EmptySlice
 

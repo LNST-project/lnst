@@ -3,7 +3,7 @@ from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import ResultType
 from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
-from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
+from lnst.RecipeCommon.Perf.Measurements.Results import (
     BaseMeasurementResults as PerfMeasurementResults,
 )
 

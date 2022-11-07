@@ -13,7 +13,7 @@ from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import Flow
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import NetworkFlowTest
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
-from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import FlowMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results import FlowMeasurementResults
 
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 

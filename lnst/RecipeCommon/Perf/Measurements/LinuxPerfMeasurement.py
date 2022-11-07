@@ -7,80 +7,20 @@ import os
 import re
 
 from lnst.Tests.LinuxPerf import LinuxPerf
-from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import (
-    BaseMeasurement,
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
+from lnst.RecipeCommon.Perf.Measurements.Results import (
     BaseMeasurementResults,
+    LinuxPerfMeasurementResults,
+    AggregatedLinuxPerfMeasurementResults
 )
 from lnst.Controller.Job import Job
 from lnst.Controller.Host import Host
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import ResultLevel, ResultType
 
+
 def timestamp() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-
-class LinuxPerfMeasurementResults(BaseMeasurementResults):
-    _host: Host
-    _filename: str
-    _cpus: list[int]
-
-    _start_timestamp: float
-    _end_timestamp: float
-
-    def __init__(
-        self,
-        measurement: "LinuxPerfMeasurement",
-        host: Host,
-        filename: str,
-        cpus: list[int],
-        start_timestamp: float,
-        end_timestamp: float,
-    ):
-        super().__init__(measurement)
-        self._host = host
-        self._filename = filename
-        self._cpus = cpus
-        self._start_timestamp = start_timestamp
-        self._end_timestamp = end_timestamp
-
-    @property
-    def host(self):
-        return self._host
-
-    @property
-    def filename(self):
-        return self._filename
-
-    @property
-    def cpus(self):
-        return self._cpus
-
-    @property
-    def start_timestamp(self):
-        return self._start_timestamp
-
-    @property
-    def end_timestamp(self):
-        return self._end_timestamp
-
-    def time_slice(self, start, end):
-        return self
-
-
-class AggregatedLinuxPerfMeasurementResults(BaseMeasurementResults):
-
-    _individual_results: list[LinuxPerfMeasurementResults] = []
-
-    def __init__(self, result: Optional[LinuxPerfMeasurementResults] = None):
-        if result:
-            self._individual_results = [result]
-
-    @property
-    def individual_results(self) -> list[LinuxPerfMeasurementResults]:
-        return self._individual_results
-
-    def add_results(self, result: LinuxPerfMeasurementResults):
-        self._individual_results.append(result)
 
 
 class LinuxPerfMeasurement(BaseMeasurement):
