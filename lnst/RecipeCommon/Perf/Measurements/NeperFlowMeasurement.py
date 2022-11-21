@@ -5,8 +5,8 @@ from lnst.Controller.Job import Job
 from lnst.Common.Utils import pairwise
 from lnst.Controller.Recipe import RecipeError
 from lnst.Controller.RecipeResults import ResultLevel
-from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement, NetworkFlowTest, \
-    FlowMeasurementResults, Flow
+from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement, NetworkFlowTest, Flow
+from lnst.RecipeCommon.Perf.Measurements.Results.NeperFlowMeasurementResults import NeperFlowMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Results import PerfInterval, SequentialPerfResult, ParallelPerfResult
 from lnst.Tests.Neper import NeperServer, NeperClient
@@ -124,12 +124,12 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
 
             params["cpu_bind"] = cpupin[0]
 
-    def collect_results(self) -> List[FlowMeasurementResults]:
+    def collect_results(self) -> List[NeperFlowMeasurementResults]:
         test_flows = self._finished_measurements
 
         results = []
         for test_flow in test_flows:
-            flow_results = FlowMeasurementResults(
+            flow_results = NeperFlowMeasurementResults(
                     measurement=self,
                     flow=test_flow.flow,
                     warmup_duration=test_flow.flow.warmup_duration
