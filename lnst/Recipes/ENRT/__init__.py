@@ -100,6 +100,8 @@ from lnst.Recipes.ENRT.VxlanNetnsTunnelRecipe import VxlanNetnsTunnelRecipe
 from lnst.Recipes.ENRT.VxlanGpeTunnelRecipe import VxlanGpeTunnelRecipe
 from lnst.Recipes.ENRT.L2TPTunnelRecipe import L2TPTunnelRecipe
 from lnst.Recipes.ENRT.MPTCPRecipe import MPTCPRecipe
+from lnst.Recipes.ENRT.SRIOVNetnsOvSRecipe import SRIOVNetnsOvSRecipe
+from lnst.Recipes.ENRT.SRIOVNetnsBridgeRecipe import SRIOVNetnsBridgeRecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
