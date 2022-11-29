@@ -171,6 +171,7 @@ class Namespace(object):
                 value.netns = self
                 self._objects[name] = value
                 self._update_device_id(value, name)
+                value._enable()
                 return True
             else:
                 value._id = name
