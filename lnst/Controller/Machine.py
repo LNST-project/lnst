@@ -279,6 +279,13 @@ class Machine(object):
                 return dev
         return None
 
+    def get_dev_by_ifname(self, ifname, netns=None):
+        ns_instance = self._get_netns_by_name(netns)
+        for dev in self._device_database[ns_instance].values():
+            if dev.name == ifname:
+                return dev
+        return None
+
     def _find_device_in_any_namespace(self, ifindex, peer_ifindex=None):
         for ns in list(self._namespaces.keys()) + [None]:
             dev = self.dev_db_get_ifindex(ifindex, ns)
