@@ -79,6 +79,7 @@ class Host(Namespace):
                 self._machine.add_netns(value)
                 self._objects[name] = value
                 value._machine = self._machine
+                value.params = self.params
                 return True
             else:
                 return False
