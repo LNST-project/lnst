@@ -57,16 +57,21 @@ class Host(Namespace):
         return ret
 
     def map_device(self, dev_id, how):
-        #TODO if this is supposed to be public it should be better than dict["hwaddr"]!!!!
-        hwaddr = how["hwaddr"]
-        dev = self._machine.get_dev_by_hwaddr(hwaddr)
+        if "hwaddr" in how:
+            hwaddr = how["hwaddr"]
+            dev = self._machine.get_dev_by_hwaddr(hwaddr)
+        elif "ifname" in how:
+            ifname = how["ifname"]
+            dev = self._machine.get_dev_by_ifname(ifname)
+        else:
+            raise ControllerError(f"Unknown how ({how}) mapping method.")
+
         if dev:
             self._objects[dev_id] = dev
             dev._id = dev_id
             dev._enable()
         else:
-            raise ControllerError("Device with macaddr {} not found on {}."
-                                  .format(hwaddr, self.hostid))
+            raise ControllerError(f"Device not found on {self.hostid} when searching by {how}.")
 
     def _custom_setattr(self, name, value):
         if not super(Host, self)._custom_setattr(name, value):
