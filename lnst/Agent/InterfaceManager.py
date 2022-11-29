@@ -239,6 +239,9 @@ class InterfaceManager(object):
         old_device = self.get_device(ifindex)
         kwargs["name"] = old_device.name
 
+        if devcls == old_device.__class__:
+            return
+
         try:
             remapped_device = devcls(self, *args, **kwargs)
         except KeyError as e:
