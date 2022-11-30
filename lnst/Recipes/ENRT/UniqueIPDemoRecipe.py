@@ -25,19 +25,21 @@ def get_interface_addresses(
     for host in host_addresses:
         yield ipaddress.ip_interface((host,subnet.prefixlen))
 
+
 class UniqueIPMixinSimple:
 
     test_net_ipv4 = ListParam(type=StrParam(), default=['192.168.0.0/24'])
     test_net_ipv6 = ListParam(type=StrParam(), default=["fc00:0::/48"])
 
 
-    def ip_address_interfaces(self) -> list[tuple[Device,Device]]:
-        raise NotImplemented
-
     """
     Overwide this with
     """
-    def assign_ip_addresses(self, interface_pairs) -> Generator[Device]:
+    def assign_ip_addresses(
+            self,
+            interface_pairs: list[tuple[Device,Device]],
+            ip_versions: tuple[str] = ("ipv4","ipv6"),
+    ) -> Generator[Device]:
         """
         Generator that assigns addresses to device.
 
@@ -48,15 +50,33 @@ class UniqueIPMixinSimple:
         net_ipv4 = ipaddress.IPv4Network(self.params.test_net_ipv4[0])
         subnets_ipv4 = net_ipv4.subnets(prefixlen_diff=(len(interface_pairs)-1))
 
-        net_ipv6 = ipaddress.IPv4Network
+        net_ipv6 = ipaddress.IPv6Network(self.params.test_net_ipv6[0])
+        subnets_ipv6 = net_ipv6.subnets(
+            #prefixlen_diff=(len(interface_pairs)-1)*16,
+            new_prefix=64
+        )
 
         for iface1, iface2 in interface_pairs:
-            subnet4 = next(subnets_ipv4)
-            iface_addresses = get_interface_addresses(subnet4)
-            iface1.ip_add(next(iface_addresses).with_prefixlen)
-            #TODO Do ipv6
+
+            if "ipv4" in ip_versions:
+                subnet_ipv4 = next(subnets_ipv4)
+                iface_addresses_ipv4 = get_interface_addresses(subnet_ipv4)
+                iface1.ip_add(next(iface_addresses_ipv4).with_prefixlen)
+
+            if "ipv6" in ip_versions:
+                subnet_ipv6 = next(subnets_ipv6)
+                iface_addresses_ipv6 = get_interface_addresses(subnet_ipv6)
+                iface1.ip_add(next(iface_addresses_ipv6).with_prefixlen)
+
+            #TODO Perhaps switch this to not call `ip_add` and just yield the interface and address.
+
             yield iface1
-            iface2.ip_add(next(iface_addresses).with_prefixlen)
+
+            if "ipv4" in ip_versions:
+                iface2.ip_add(next(iface_addresses_ipv4).with_prefixlen)
+            if "ipv6" in ip_versions:
+                iface2.ip_add(next(iface_addresses_ipv6).with_prefixlen)
+
             yield iface2
 
 

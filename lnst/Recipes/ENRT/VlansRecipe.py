@@ -10,9 +10,11 @@ from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 
+from lnst.Recipes.ENRT.UniqueIPDemoRecipe import UniqueIPMixinSimple
+
 class VlansRecipe(VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
-    BaremetalEnrtRecipe):
+    BaremetalEnrtRecipe, UniqueIPMixinSimple):
     """
     This recipe implements Enrt testing for a network scenario that looks
     as follows
@@ -54,6 +56,40 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
     def test_wide_configuration(self):
+
+        host1, host2 = self.matched.host1, self.matched.host2
+        host1.eth0.down()
+        host2.eth0.down()
+
+        host1.vlan0 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan0_id)
+        host1.vlan1 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan1_id)
+        host1.vlan2 = VlanDevice(realdev=host1.eth0, vlan_id=self.params.vlan2_id)
+        host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan0_id)
+        host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
+        host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
+
+        configuration = super().test_wide_configuration()
+        configuration.test_wide_devices = []
+
+        interface_pairs = [
+            (host1.vlan0, host2.vlan0),
+            (host1.vlan1, host2.vlan1),
+            (host1.vlan2, host2.vlan2),
+        ]
+
+        host1.eth0.up()
+        host2.eth0.up()
+
+        for iface in self.assign_ip_addresses(interface_pairs):
+            configuration.test_wide_devices.append(iface)
+            iface.up()
+
+        self.wait_tentative_ips(configuration.test_wide_devices)
+
+        return configuration
+
+
+    def old_test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves creating three
         VLAN (802.1Q) tunnels on top of the matched host's NIC with vlan
