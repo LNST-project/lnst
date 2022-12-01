@@ -28,8 +28,17 @@ def get_interface_addresses(
 
 class UniqueIPMixinSimple:
 
-    test_net_ipv4 = ListParam(type=StrParam(), default=['192.168.0.0/24'])
-    test_net_ipv6 = ListParam(type=StrParam(), default=["fc00:0::/48"])
+    # TODO Should these be list of addresses or just 1 address?
+    #  Perhaps at the test param level then can be a single address.
+    #TODO What should we call it? Probably want the machine_pair var to be the same name
+    # test_networks_ipv4 or test_nets_ipv4 or perahps a dictionary.
+    test_net_ipv4 = ListParam(type=StrParam(), default=['192.168.0.0/24']) # todo For tunnel test we probably need to set a different default.
+    test_net_ipv6 = ListParam(type=StrParam(), default=["fc00:0::/48"]) #TODO Create IPv{4|6}NetworkParam 
+
+    #TODO Replace this with:
+    """
+    Each test will have parameters (ipv4_net1, ipv6_net1) job_generator take 
+    """
 
 
     """
