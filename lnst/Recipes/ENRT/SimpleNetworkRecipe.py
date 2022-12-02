@@ -1,5 +1,5 @@
-from lnst.Common.Parameters import Param
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
@@ -46,6 +46,9 @@ class SimpleNetworkRecipe(
         dict(gro="on", gso="on", tso="off", tx="off", rx="on"),
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+
     def test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
@@ -59,9 +62,12 @@ class SimpleNetworkRecipe(
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
 
-        for i, host in enumerate([host1, host2]):
-            host.eth0.ip_add(ipaddress("192.168.101." + str(i+1) + "/24"))
-            host.eth0.ip_add(ipaddress("fc00::" + str(i+1) + "/64"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
+
+        for host in [host1, host2]:
+            host.eth0.ip_add(next(ipv4_addr))
+            host.eth0.ip_add(next(ipv6_addr))
             host.eth0.up()
             configuration.test_wide_devices.append(host.eth0)
 
