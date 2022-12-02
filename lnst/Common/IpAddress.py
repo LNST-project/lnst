@@ -11,7 +11,12 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import socket
+from collections.abc import Iterator
+from ipaddress import IPv4Network, IPv6Network, IPv4Interface, IPv6Interface, ip_interface
+from itertools import dropwhile, islice
 from socket import inet_pton, inet_ntop, AF_INET, AF_INET6
+from typing import Union, Optional
+
 from lnst.Common.LnstError import LnstError
 
 #TODO Replace this with Python's builtin ipaddress module.
@@ -125,6 +130,37 @@ class Ip6Address(BaseIpAddress):
         #constant from linux/if_addr.h
         IFA_F_TENTATIVE = 0x40
         return IFA_F_TENTATIVE & self.flags
+
+
+def interface_addresses(
+        network: Union[IPv4Network, IPv6Network],
+        default_start: Optional[Union[str, IPv4Interface, IPv6Interface]] = None,
+        default_skip: Optional[int] = None,
+) -> Iterator[BaseIpAddress]:
+    """
+    Generator of BaseIpAddress objects. Used to allocate interface addresses
+    (host IP + prefix length) from a network.
+
+    When used together with `NetworkParam` it provides a convenient way to
+    generate network addresses for the host interfaces used in LNST recipes.
+
+    If `default_start` is specified it is passed to `ipaddress.ip_interface()`
+    if that interface is in `network` the iteration will start at that address.
+
+    `default_skip` (only used when `default_start` is specified) allows you to
+    skip every N addresses, it's passed to `itertools.islice`.
+    """
+    hosts = network.hosts()
+    if default_start:
+        default_start = ip_interface(default_start)
+        if default_start in network:
+            hosts = dropwhile(lambda x: x != default_start.ip, hosts)
+            if default_skip:
+                hosts = islice(hosts, 0, None, default_skip)
+
+    for addr in hosts:
+        yield ipaddress(f"{addr}/{network.prefixlen}")
+
 
 def ipaddress(addr, flags=None):
     """Factory method to create a BaseIpAddress object"""
