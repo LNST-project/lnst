@@ -12,6 +12,10 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import copy
 import re
+from ipaddress import AddressValueError, IPv4Network, IPv6Network, NetmaskValueError
+from socket import AddressFamily
+from typing import Optional, Union
+
 from lnst.Common.DeviceRef import DeviceRef
 from lnst.Common.IpAddress import BaseIpAddress, ipaddress
 from lnst.Common.LnstError import LnstError
@@ -76,11 +80,26 @@ class BoolParam(Param):
             raise ParamError("Value must be a boolean")
 
 class IpParam(Param):
+    def __init__(
+            self,
+            family: Optional[AddressFamily] = None,
+            multicast: bool = False,
+            **kwargs,
+    ):
+        self.require_family = family
+        self.require_multicast = multicast
+        super().__init__(**kwargs)
+
     def type_check(self, value):
         try:
-            return ipaddress(value)
+            value = ipaddress(value)
         except LnstError:
             raise ParamError("Value must be a BaseIpAddress object")
+        if self.require_family and value.family != self.require_family:
+            raise ParamError(f"Value must be of type {self.require_family.name}")
+        if self.require_multicast and not value.is_multicast:
+            raise ParamError("Value must be a multicast address")
+        return value
 
 class HostnameParam(Param):
     def type_check(self, value):
@@ -177,6 +196,37 @@ class ChoiceParam(Param):
         if value not in self._choices:
             raise ParamError(f"Value '{value}' not one of {self._choices}")
         return value
+
+
+class NetworkParam(Param):
+    """Network Param
+
+    Parameters of this type are used to specify a IPv4 or IPv6 networks.
+    (network address + prefix length).
+
+    For example::
+        vlan0_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+        vlan0_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
+    """
+    def __init__(self, type: Union[IPv4Network, IPv6Network], **kwargs):
+        self._type = type
+        super(NetworkParam, self).__init__(**kwargs)
+
+    def type_check(self, value: str):
+        try:
+            return self._type(value)
+        except (AddressValueError, NetmaskValueError) as e:
+            raise ParamError(f"Value {value} failed type check") from e
+
+
+class IPv4NetworkParam(NetworkParam):
+    def __init__(self, **kwargs):
+        super().__init__(IPv4Network, **kwargs)
+
+
+class IPv6NetworkParam(NetworkParam):
+    def __init__(self, **kwargs):
+        super().__init__(IPv6Network, **kwargs)
 
 
 class Parameters(object):
