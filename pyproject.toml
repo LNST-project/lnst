@@ -38,7 +38,10 @@ trex = ["pyyaml"]
 [tool.poetry.scripts]
 lnst-agent = 'lnst.Agent.__main__:main'
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
 
 [build-system]
