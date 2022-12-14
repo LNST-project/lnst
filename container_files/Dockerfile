@@ -17,7 +17,7 @@ RUN dnf install -y initscripts \
     perf \
     libnl3-devel &&  \
     curl -sSL https://install.python-poetry.org |  \
-    python3 - --version 1.1.13
+    python3 - --version 1.3.1
 
 COPY . /lnst
 RUN cd /lnst/container_files && chmod +x install.sh && sh install.sh
