@@ -295,7 +295,7 @@ def is_installed(program):
     """
     Returns True if program is detected by which, False otherwise
     """
-    cmd = "which %s" % program
+    cmd = f"command -v {program}"
     try:
         subprocess.check_call(cmd, shell=True, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
