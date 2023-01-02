@@ -26,6 +26,7 @@ libvirt-python = {version = "*", optional = true }
 podman = {version = "*", optional = true }
 cryptography = {version = "*", optional = true }
 pyyaml = {version = "*", optional = true}
+psutil = "^5.9.4"
 
 [tool.poetry.extras]
 virt = ["libvirt-python"]

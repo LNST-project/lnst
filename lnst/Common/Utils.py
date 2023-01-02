@@ -14,6 +14,7 @@ import logging
 import time
 import re
 import os
+import psutil
 import hashlib
 import tempfile
 import subprocess
@@ -171,12 +172,7 @@ def _is_newer_than(f, threshold):
     return stat.st_mtime > threshold
 
 def check_process_running(process_name):
-    try:
-        proc = subprocess.check_call(["pgrep", process_name],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    return process_name in (p.name() for p in psutil.process_iter())
 
 def mkdir_p(path):
     try:
