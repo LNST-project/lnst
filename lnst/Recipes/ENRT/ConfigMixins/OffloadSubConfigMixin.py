@@ -29,6 +29,9 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
 
     def generate_sub_configurations(self, config):
         for parent_config in super().generate_sub_configurations(config):
+            if not self.params.offload_combinations:
+                yield parent_config
+
             for offload_settings in self.params.offload_combinations:
                 new_config = copy.copy(config)
                 new_config.offload_settings = offload_settings
@@ -52,16 +55,20 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
 
     def generate_sub_configuration_description(self, config):
         description = super().generate_sub_configuration_description(config)
-        description.append(
-            "Currently configured offload combination: {}".format(
-                " ".join(
-                    [
-                        "{}={}".format(k, v)
-                        for k, v in config.offload_settings.items()
-                    ]
+        if getattr(config, "offload_settings", None):
+            description.append(
+                "Currently configured offload combination: {}".format(
+                    " ".join(
+                        [
+                            "{}={}".format(k, v)
+                            for k, v in config.offload_settings.items()
+                        ]
+                    )
                 )
             )
-        )
+        else:
+            description.append("NIC offload configuration skipped")
+
         return description
 
     def remove_sub_configuration(self, config):
