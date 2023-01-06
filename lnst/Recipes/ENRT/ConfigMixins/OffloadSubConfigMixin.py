@@ -16,7 +16,7 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
     """
 
     offload_combinations = Param(
-        default=(dict(gro="on", gso="on", tso="on", tx="on", rx="on"),)
+        default=()
     )
 
     @property
