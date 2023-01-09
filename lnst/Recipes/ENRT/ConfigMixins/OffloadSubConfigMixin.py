@@ -33,7 +33,7 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
                 yield parent_config
 
             for offload_settings in self.params.offload_combinations:
-                new_config = copy.copy(config)
+                new_config = copy.copy(parent_config)
                 new_config.offload_settings = offload_settings
 
                 yield new_config
