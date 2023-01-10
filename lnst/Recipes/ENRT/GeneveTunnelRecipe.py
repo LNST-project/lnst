@@ -2,14 +2,20 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     AF_INET6,
-    ipaddress,
     Ip4Address,
     Ip6Address,
+    interface_addresses,
 )
 from lnst.Devices import GeneveDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
-from lnst.Common.Parameters import Param, StrParam, ChoiceParam
+from lnst.Common.Parameters import (
+    Param,
+    StrParam,
+    ChoiceParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
@@ -73,6 +79,8 @@ class GeneveTunnelRecipe(
     )
 
     carrier_ipversion = ChoiceParam(type=StrParam, choices=set(["ipv4", "ipv6"]))
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
     def configure_underlying_network(self, configuration):
         """
@@ -80,11 +88,13 @@ class GeneveTunnelRecipe(
         devices on the matched hosts.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        for i, device in enumerate([host1.eth0, host2.eth0]):
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
+        for device in [host1.eth0, host2.eth0]:
             if self.params.carrier_ipversion == "ipv4":
-                device.ip_add(ipaddress("192.168.101." + str(i + 1) + "/24"))
+                device.ip_add(next(ipv4_addr))
             else:
-                device.ip_add(ipaddress("fc00::" + str(i + 1) + "/64"))
+                device.ip_add(next(ipv6_addr))
             device.up()
             configuration.test_wide_devices.append(device)
 
