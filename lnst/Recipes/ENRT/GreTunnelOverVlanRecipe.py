@@ -61,11 +61,9 @@ class GreTunnelOverVlanRecipe(
 
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     vlan_id = IntParam(default=10)
 
