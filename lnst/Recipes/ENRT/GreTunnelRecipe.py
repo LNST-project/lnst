@@ -1,11 +1,14 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
-    ipaddress,
     Ip4Address,
     Ip6Address,
+    interface_addresses,
 )
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import (
+    Param,
+    IPv4NetworkParam,
+)
 from lnst.Devices import GreDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
@@ -67,14 +70,17 @@ class GreTunnelRecipe(
         )
     )
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+
     def configure_underlying_network(self, configuration):
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        for i, device in enumerate([host1.eth0, host2.eth0]):
-            device.ip_add(ipaddress("192.168.101." + str(i + 1) + "/24"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        for device in [host1.eth0, host2.eth0]:
+            device.ip_add(next(ipv4_addr))
             device.up()
             configuration.test_wide_devices.append(device)
 
