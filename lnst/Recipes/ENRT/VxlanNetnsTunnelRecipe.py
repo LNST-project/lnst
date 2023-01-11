@@ -2,11 +2,14 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.Common.IpAddress import (
     AF_INET,
-    ipaddress,
     Ip4Address,
     Ip6Address,
+    interface_addresses,
 )
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import (
+    Param,
+    IPv4NetworkParam,
+)
 from lnst.Devices import VxlanDevice, VethPair, BridgeDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
@@ -55,7 +58,7 @@ class VxlanNetnsTunnelRecipe(
          |  | ------------ |  |         |  | ------------ |  |
          |  '--------------'  |         |  '--------------'  |
          |                    |         |                    |
-         |        host1       |         |        host1       |
+         |        host1       |         |        host2       |
          '--------------------'         '--------------------'
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
@@ -78,6 +81,8 @@ class VxlanNetnsTunnelRecipe(
             dict(gro="on", gso="on", tso="off"),
         )
     )
+
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
 
     def configure_underlying_network(self, configuration):
         """
@@ -123,13 +128,14 @@ class VxlanNetnsTunnelRecipe(
             device.up()
             configuration.test_wide_devices.append(device)
 
-        for i, device in enumerate([host1.newns.veth1, host2.newns.veth1]):
-            device.ip_add(ipaddress("192.168.101." + str(i + 1) + "/24"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        for device in [host1.newns.veth1, host2.newns.veth1]:
+            device.ip_add(next(ipv4_addr))
             device.up()
             configuration.test_wide_devices.append(device)
 
-        for i, device in enumerate([host1.veth0, host2.veth0]):
-            device.up()
+        host1.veth0.up()
+        host2.veth0.up()
 
         configuration.tunnel_endpoints = (host1.newns.veth1, host2.newns.veth1)
 
