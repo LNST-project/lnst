@@ -2,11 +2,14 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.Common.IpAddress import (
     AF_INET6,
-    ipaddress,
     Ip4Address,
     Ip6Address,
+    interface_addresses,
 )
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import (
+    Param,
+    IPv6NetworkParam,
+)
 from lnst.Devices import Ip6GreDevice, VethPair, BridgeDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
@@ -82,6 +85,8 @@ class Ip6GreNetnsTunnelRecipe(
         )
     )
 
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+
     def configure_underlying_network(self, configuration):
         """
         The underlying network for the tunnel consists of
@@ -126,13 +131,14 @@ class Ip6GreNetnsTunnelRecipe(
             device.up()
             configuration.test_wide_devices.append(device)
 
-        for i, device in enumerate([host1.newns.veth1, host2.newns.veth1]):
-            device.ip_add(ipaddress("fc00:0:0:0::" + str(i + 1) + "/64"))
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
+        for device in [host1.newns.veth1, host2.newns.veth1]:
+            device.ip_add(next(ipv6_addr))
             device.up()
             configuration.test_wide_devices.append(device)
 
-        for i, device in enumerate([host1.veth0, host2.veth0]):
-            device.up()
+        host1.veth0.up()
+        host2.veth0.up()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
         configuration.tunnel_endpoints = (host1.newns.veth1, host2.newns.veth1)
