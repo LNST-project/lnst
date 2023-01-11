@@ -2,11 +2,16 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     ipaddress,
+    interface_addresses,
 )
 from lnst.Devices import IpIpDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
-from lnst.Common.Parameters import StrParam, ChoiceParam
+from lnst.Common.Parameters import (
+    StrParam,
+    ChoiceParam,
+    IPv4NetworkParam,
+)
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
@@ -59,14 +64,17 @@ class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRec
         type=StrParam, choices=set(["any", "ipip", "mplsip"]), mandatory=True
     )
 
+    net_ipv4 = IPv4NetworkParam(default="172.16.0.0/16")
+
     def configure_underlying_network(self, configuration):
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        for i, device in enumerate([host1.eth0, host2.eth0]):
-            device.ip_add(ipaddress("172.16.200." + str(i + 1) + "/16"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="172.16.200.1/16")
+        for device in [host1.eth0, host2.eth0]:
+            device.ip_add(next(ipv4_addr))
             device.up()
             configuration.test_wide_devices.append(device)
 
