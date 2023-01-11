@@ -1,11 +1,14 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
-    ipaddress,
     Ip4Address,
     Ip6Address,
+    interface_addresses,
 )
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import (
+    Param,
+    IPv4NetworkParam,
+)
 from lnst.Devices import GreDevice, MacvlanDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
@@ -72,6 +75,8 @@ class GreTunnelOverMacvlanRecipe(
         )
     )
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+
     def configure_underlying_network(self, configuration):
         """
         The underlying network for the tunnel consists of two MACVLAN
@@ -82,8 +87,9 @@ class GreTunnelOverMacvlanRecipe(
         host1.macvlan10 = MacvlanDevice(realdev=host1.eth0, hwaddr="0A:00:00:00:00:01")
         host2.macvlan10 = MacvlanDevice(realdev=host2.eth0, hwaddr="0A:00:00:00:00:02")
 
-        for i, device in enumerate([host1.macvlan10, host2.macvlan10]):
-            device.ip_add(ipaddress("192.168.101." + str(i + 1) + "/24"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        for device in [host1.macvlan10, host2.macvlan10]:
+            device.ip_add(next(ipv4_addr))
             configuration.test_wide_devices.append(device)
 
         for dev in [
