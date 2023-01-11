@@ -2,11 +2,16 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET6,
     ipaddress,
+    interface_addresses,
 )
 from lnst.Devices import Ip6TnlDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
-from lnst.Common.Parameters import StrParam, ChoiceParam
+from lnst.Common.Parameters import (
+    StrParam,
+    ChoiceParam,
+    IPv6NetworkParam,
+)
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
@@ -59,17 +64,21 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
         type=StrParam, choices=set(["any", "ipip6", "ip6ip6"]), mandatory=True
     )
 
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+
     def configure_underlying_network(self, configuration):
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        for i, device in enumerate([host1.eth0, host2.eth0]):
-            device.ip_add(ipaddress("fc00::" + str(i + 1) + "/64"))
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
+        for device in [host1.eth0, host2.eth0]:
+            device.ip_add(next(ipv6_addr))
             device.up()
             configuration.test_wide_devices.append(device)
 
+        self.wait_tentative_ips(configuration.test_wide_devices)
         configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
 
     def create_tunnel(self, configuration):
