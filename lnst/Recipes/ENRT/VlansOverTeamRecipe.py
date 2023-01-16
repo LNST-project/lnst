@@ -1,5 +1,11 @@
-from lnst.Common.Parameters import Param, IntParam, StrParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -35,6 +41,15 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
+    vlan0_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+    vlan0_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
+
+    vlan1_ipv4 = IPv4NetworkParam(default="192.168.20.0/24")
+    vlan1_ipv6 = IPv6NetworkParam(default="fc00:0:0:2::/64")
+
+    vlan2_ipv4 = IPv4NetworkParam(default="192.168.30.0/24")
+    vlan2_ipv6 = IPv6NetworkParam(default="fc00:0:0:3::/64")
+
     runner_name = StrParam(mandatory = True)
 
     def test_wide_configuration(self):
@@ -59,16 +74,20 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
                 host.vlan1, host.vlan2])
         configuration.test_wide_devices.append(host1.team0)
 
-        net_addr = "192.168"
-        net_addr6 = "fc00:0:0"
+        vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
+        vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6)
+        vlan1_ipv4_addr = interface_addresses(self.params.vlan1_ipv4)
+        vlan1_ipv6_addr = interface_addresses(self.params.vlan1_ipv6)
+        vlan2_ipv4_addr = interface_addresses(self.params.vlan2_ipv4)
+        vlan2_ipv6_addr = interface_addresses(self.params.vlan2_ipv6)
 
-        for i, host in enumerate([host1, host2]):
-            host.vlan0.ip_add(ipaddress('{}.10.{}/24'.format(net_addr, i+1)))
-            host.vlan1.ip_add(ipaddress('{}.20.{}/24'.format(net_addr, i+1)))
-            host.vlan2.ip_add(ipaddress('{}.30.{}/24'.format(net_addr, i+1)))
-            host.vlan0.ip_add(ipaddress('{}:1::{}/64'.format(net_addr6, i+1)))
-            host.vlan1.ip_add(ipaddress('{}:2::{}/64'.format(net_addr6, i+1)))
-            host.vlan2.ip_add(ipaddress('{}:3::{}/64'.format(net_addr6, i+1)))
+        for host in [host1, host2]:
+            host.vlan0.ip_add(next(vlan0_ipv4_addr))
+            host.vlan1.ip_add(next(vlan1_ipv4_addr))
+            host.vlan2.ip_add(next(vlan2_ipv4_addr))
+            host.vlan0.ip_add(next(vlan0_ipv6_addr))
+            host.vlan1.ip_add(next(vlan1_ipv6_addr))
+            host.vlan2.ip_add(next(vlan2_ipv6_addr))
 
         for dev in [host1.eth0, host1.eth1, host1.team0, host1.vlan0,
             host1.vlan1, host1.vlan2, host2.eth0, host2.vlan0, host2.vlan1,
