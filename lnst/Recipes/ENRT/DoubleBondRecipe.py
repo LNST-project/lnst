@@ -1,5 +1,11 @@
-from lnst.Common.Parameters import Param, StrParam, IntParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -25,23 +31,25 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+
     bonding_mode = StrParam(mandatory=True)
     miimon_value = IntParam(mandatory=True)
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        net_addr = "192.168.101"
-        net_addr6 = "fc00:0:0:0"
-        for i, host in enumerate([host1, host2]):
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
+        for host in [host1, host2]:
             host.bond0 = BondDevice(mode=self.params.bonding_mode,
                 miimon=self.params.miimon_value)
             for dev in [host.eth0, host.eth1]:
                 dev.down()
                 host.bond0.slave_add(dev)
-            host.bond0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
-            host.bond0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) +
-                "/64"))
+            host.bond0.ip_add(next(ipv4_addr))
+            host.bond0.ip_add(next(ipv6_addr))
             for dev in [host.eth0, host.eth1, host.bond0]:
                 dev.up()
 
