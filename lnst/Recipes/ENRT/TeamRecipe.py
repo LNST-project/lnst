@@ -1,5 +1,10 @@
-from lnst.Common.Parameters import Param, StrParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -59,6 +64,9 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+    net_ipv6 = IPv6NetworkParam(default='fc00:0:0:1::/64')
+
     runner_name = StrParam(mandatory=True)
 
     def test_wide_configuration(self):
@@ -84,11 +92,11 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
             dev.down()
             host1.team0.slave_add(dev)
 
-        net_addr_1 = "192.168.10"
-        net_addr6_1 = "fc00:0:0:1"
-        for i, dev in enumerate([host1.team0, host2.eth0]):
-            dev.ip_add(ipaddress(net_addr_1 + "." + str(i+1) + "/24"))
-            dev.ip_add(ipaddress(net_addr6_1 + "::" + str(i+1) + "/64"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
+        for dev in [host1.team0, host2.eth0]:
+            dev.ip_add(next(ipv4_addr))
+            dev.ip_add(next(ipv6_addr))
 
         for dev in [host1.eth0, host1.eth1, host1.team0, host2.eth0]:
             dev.up()
