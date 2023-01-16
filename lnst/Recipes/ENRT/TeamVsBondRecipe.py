@@ -1,5 +1,11 @@
-from lnst.Common.Parameters import IntParam, Param, StrParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -28,6 +34,9 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+    net_ipv6 = IPv6NetworkParam(default='fc00:0:0:1::/64')
+
     runner_name = StrParam(mandatory = True)
     bonding_mode = StrParam(mandatory = True)
     miimon_value = IntParam(mandatory = True)
@@ -43,17 +52,16 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.team0, host2.bond0]
 
-        net_addr_1 = "192.168.10"
-        net_addr6_1 = "fc00:0:0:1"
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
 
-        for i, (host, dev) in enumerate([(host1, host1.team0), (host2,
-            host2.bond0)]):
+        for (host, dev) in [(host1, host1.team0), (host2, host2.bond0)]:
             host.eth0.down()
             host.eth1.down()
             dev.slave_add(host.eth0)
             dev.slave_add(host.eth1)
-            dev.ip_add(ipaddress(net_addr_1 + "." + str(i+1) + "/24"))
-            dev.ip_add(ipaddress(net_addr6_1 + "::" + str(i+1) + "/64"))
+            dev.ip_add(next(ipv4_addr))
+            dev.ip_add(next(ipv6_addr))
 
         for host, dev in [(host1, host1.team0), (host2, host2.bond0)]:
             host.eth0.up()
