@@ -6,6 +6,7 @@ from json import loads
 from lnst.Controller.AgentPoolManager import PoolManagerError
 from lnst.Controller.Machine import Machine
 from lnst.Common.DependencyError import DependencyError
+from lnst.Common.Utils import check_process_running
 
 
 class ContainerPoolManager(object):
@@ -59,6 +60,7 @@ class ContainerPoolManager(object):
         self._network_prefix = "lnst_container_net_"
         self._start_timeout = 5
         self._pool_check = pool_checks
+        self._firewalld_config = {} # interface to firewalld zone mapping
 
     @property
     def image(self):
@@ -247,7 +249,19 @@ class ContainerPoolManager(object):
 
         self._networks[name] = network
 
+        if check_process_running("firewalld"):
+            self._add_interface_to_firewalld_zone("cni-podman1", "internal")
+
         return network
+
+    def _add_interface_to_firewalld_zone(self, interface, zone):
+        logging.debug(f"Adding interface {interface} to firewalld zone {zone}")
+        output = subprocess.check_output(
+            f"firewall-cmd --zone={zone} --change-interface={interface}",
+            shell=True
+        )
+
+        self._firewalld_config[interface] = zone
 
     def _connect_to_network(self, container: "Container", network: "Network"):
         """There is no way to get MAC address of remote interface except
@@ -284,6 +298,31 @@ class ContainerPoolManager(object):
             "params": {"hwaddr": interface["address"], "driver": "veth"},
             "network": network.name,
         }
+
+        logging.debug(f"Added {eth} with {interface['address']}")
+
+        if check_process_running("firewalld"):
+            # add interface to trusted zone
+            host_interfaces = loads(
+                subprocess.check_output(
+                    "ip -json link",
+                    shell=True
+                ).decode("utf-8")
+            )
+            matched_host_interfaces = [
+                host_iface for host_iface in host_interfaces \
+                    if host_iface["ifindex"] == interface["link_index"]
+            ]
+
+            if not matched_host_interfaces:
+                raise Exception(
+                    "No match for {} in\n{}".format(
+                        interface["address"],
+                        host_interfaces
+                    )
+                )
+
+            self._add_interface_to_firewalld_zone(matched_host_interfaces[0]['ifname'], "internal")
 
         return True
 
@@ -329,3 +368,15 @@ class ContainerPoolManager(object):
     def cleanup(self):
         self.cleanup_containers()
         self.cleanup_networks()
+        if check_process_running("firewalld"):
+            self._cleanup_firewalld()
+
+    def _cleanup_firewalld(self):
+        for interface, zone in self._firewalld_config.items():
+            logging.debug(f"Removing interface {interface} from firewalld zone {zone}")
+            output = subprocess.check_output(
+                f"firewall-cmd --zone={zone} --remove-interface={interface}",
+                shell=True
+            )
+
+        self._firewalld_config = {}
