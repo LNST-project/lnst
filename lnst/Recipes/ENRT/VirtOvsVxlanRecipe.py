@@ -1,5 +1,6 @@
 from itertools import combinations
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import ipaddress, interface_addresses
+from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -32,6 +33,9 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
     guest4 = HostReq()
     guest4.eth0 = DeviceReq(label="to_guest4")
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.2.0/24")
+
+
     def test_wide_configuration(self):
         host1, host2, guest1, guest2, guest3, guest4 = (self.matched.host1,
             self.matched.host2, self.matched.guest1, self.matched.guest2,
@@ -44,7 +48,8 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
         for guest in [guest1, guest2, guest3, guest4]:
             guest.eth0.down()
 
-        net_addr = "192.168.2"
+        net_addr = interface_addresses(self.params.net_ipv4)
+        host_ips = [next(net_addr), next(net_addr)]
         vxlan_net_addr = "192.168.100"
         vxlan_net_addr6 = "fc00:0:0:0"
 
@@ -64,13 +69,13 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             guest1.eth0, guest2.eth0, guest3.eth0, guest4.eth0]
 
         for i, host in enumerate([host1, host2]):
-            host.eth0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
+            host.eth0.ip_add(host_ips[i])
             host.br0 = OvsBridgeDevice()
             for dev, ofport_r in [(host.tap0, '5'), (host.tap1, '6')]:
                 host.br0.port_add(
                         device=dev,
                         interface_options={'ofport_request': ofport_r})
-            tunnel_opts = {"option:remote_ip" : net_addr + "." + str(2-i),
+            tunnel_opts = {"option:remote_ip" : host_ips[1-i],
                 "option:key" : "flow", "ofport_request" : '10'}
             host.br0.tunnel_add("vxlan", tunnel_opts)
             host.br0.flows_add(flow_entries)
