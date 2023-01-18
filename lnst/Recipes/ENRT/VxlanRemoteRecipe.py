@@ -1,4 +1,5 @@
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import ipaddress, interface_addresses
+from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -13,20 +14,24 @@ class VxlanRemoteRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.0.0/24")
+
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
         for host in [host1, host2]:
             host.eth0.down()
 
-        net_addr = "192.168.0"
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        host1_ip = next(ipv4_addr)
+        host2_ip = next(ipv4_addr)
         vxlan_net_addr = "192.168.100"
         vxlan_net_addr6 = "fc00:0:0:0"
 
-        for i, host in enumerate([host1, host2]):
-            host.eth0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
-            host.vxlan0 = VxlanDevice(vxlan_id='1', remote=net_addr +
-                "." + str(2-i))
+        host1.eth0.ip_add(host1_ip)
+        host1.vxlan0 = VxlanDevice(vxlan_id='1', remote=host2_ip)
+        host2.eth0.ip_add(host2_ip)
+        host2.vxlan0 = VxlanDevice(vxlan_id='1', remote=host1_ip)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.eth0, host1.vxlan0,
