@@ -1,9 +1,14 @@
 import signal
 import logging
 import copy
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.Parameters import StrParam, Param
+from lnst.Common.Parameters import (
+    Param,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -26,6 +31,11 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
+    net1_ipv4 = IPv4NetworkParam(default="192.168.99.0/24")
+    net1_ipv6 = IPv6NetworkParam(default="fc00:1::/64")
+    net2_ipv4 = IPv4NetworkParam(default="192.168.100.0/24")
+    net2_ipv6 = IPv6NetworkParam(default="fc00:2::/64")
+
     ciphers = Param(default=[('aes', 128), ('aes', 256)])
     hashes = Param(default=[('hmac(md5)', 128), ('sha256', 256)])
     ipsec_mode = StrParam(default="transport")
@@ -38,12 +48,14 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.eth0, host2.eth0]
 
-        net_addr = "192.168."
-        net_addr6 = "fc00:"
-        for i, host in enumerate([host1, host2]):
+        ipv4_addr = {host1: interface_addresses(self.params.net1_ipv4),
+                     host2: interface_addresses(self.params.net2_ipv4)}
+        ipv6_addr = {host1: interface_addresses(self.params.net1_ipv6),
+                     host2: interface_addresses(self.params.net2_ipv6)}
+        for host in [host1, host2]:
             host.eth0.down()
-            host.eth0.ip_add(ipaddress(net_addr + str(i+99) + ".1/24"))
-            host.eth0.ip_add(ipaddress(net_addr6 + str(i+1) + "::1/64"))
+            host.eth0.ip_add(next(ipv4_addr[host]))
+            host.eth0.ip_add(next(ipv6_addr[host]))
             host.eth0.up()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
