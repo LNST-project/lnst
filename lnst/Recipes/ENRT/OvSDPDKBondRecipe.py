@@ -1,10 +1,16 @@
 import signal
-from lnst.Common.Parameters import StrParam, IntParam, Param
+from lnst.Common.Parameters import (
+    StrParam,
+    IntParam,
+    Param,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from dataclasses import dataclass
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
 
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
@@ -113,6 +119,11 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host2.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
+    net1_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+    net1_ipv6 = IPv6NetworkParam(default="fc00::/64")
+    net2_ipv4 = IPv4NetworkParam(default="192.168.102.0/24")
+    net2_ipv6 = IPv6NetworkParam(default="fd00::/64")
+
     bonding_mode = StrParam(mandatory=True)
     lacp_mode = StrParam(mandatory=True)
 
@@ -155,21 +166,19 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
         """
         host1, host2 = self.matched.host1, self.matched.host2
 
-        net_addr_0 = "192.168.101"
-        net_addr6_0 = "fc00:0:0:0"
+        ipv4_addr1 = interface_addresses(self.params.net1_ipv4)
+        ipv6_addr1 = interface_addresses(self.params.net1_ipv6)
 
-        net_addr_1 = "192.168.102"
-        net_addr6_1 = "fd00:0:0:0"
+        ipv4_addr2 = interface_addresses(self.params.net2_ipv4)
+        ipv6_addr2 = interface_addresses(self.params.net2_ipv6)
 
         for i, host in enumerate([host1, host2]):
             host.dummy_cfg = DummyRecipeConfig(
                 eth0=DummyEthDevice(host.eth0.bus_info, host.eth0.hwaddr, _id="eth" + str(i),
-                                    ips=[ipaddress(net_addr_0 + "." + str(i + 1) + "/24"),
-                                         ipaddress(net_addr6_0 + "::" + str(i + 1) + "/64")]
+                                    ips=[next(ipv4_addr1), next(ipv6_addr1)]
                                     ),
                 eth1=DummyEthDevice(host.eth1.bus_info, host.eth1.hwaddr, _id="eth" + str(i + 1),
-                                    ips=[ipaddress(net_addr_1 + "." + str(i + 1) + "/24"),
-                                         ipaddress(net_addr6_1 + "::" + str(i + 1) + "/64")]
+                                    ips=[next(ipv4_addr2), next(ipv6_addr2)]
                                     ),
 
                 netns=host,
