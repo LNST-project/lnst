@@ -27,3 +27,4 @@ Specific ENRT scenarios
     vxlan_gpe_tunnel_recipe
     l2tp_tunnel_recipe
     linux_bridge_recipe
+    linux_bridge_over_bond_recipe
