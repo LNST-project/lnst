@@ -1,5 +1,10 @@
-from lnst.Common.Parameters import Param, IntParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -31,6 +36,9 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         dict(gro="on", gso="on", tso="off", tx="off", rx="on"),
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
+
     def test_wide_configuration(self):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)
@@ -51,13 +59,13 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         configuration.test_wide_devices = [guest1.eth0, host2.vlan0,
             host1.br0]
 
-        net_addr_1 = "192.168.10"
-        net_addr6_1 = "fc00:0:0:1"
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::2/64")
 
-        host1.br0.ip_add(ipaddress(net_addr_1 + ".1/24"))
+        host1.br0.ip_add(next(ipv4_addr))
         for i, dev in enumerate([host2.vlan0, guest1.eth0]):
-            dev.ip_add(ipaddress(net_addr_1 + "." + str(i+2) + "/24"))
-            dev.ip_add(ipaddress(net_addr6_1 + "::" + str(i+2) + "/64"))
+            dev.ip_add(next(ipv4_addr))
+            dev.ip_add(next(ipv6_addr))
 
         for dev in [host1.eth0, host1.tap0, host1.vlan0, host1.br0,
                     host2.eth0, host2.vlan0, guest1.eth0]:
