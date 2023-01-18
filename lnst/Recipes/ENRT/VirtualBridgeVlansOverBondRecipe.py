@@ -1,7 +1,13 @@
 import logging
 from itertools import product
-from lnst.Common.Parameters import Param, IntParam, StrParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -49,6 +55,12 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         dict(gro="on", gso="off", tso="off", tx="on"),
         dict(gro="on", gso="on", tso="off", tx="off")))
 
+    vlan0_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+    vlan0_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
+
+    vlan1_ipv4 = IPv4NetworkParam(default="192.168.20.0/24")
+    vlan1_ipv6 = IPv6NetworkParam(default="fc00:0:0:2::/64")
+
     bonding_mode = StrParam(mandatory=True)
     miimon_value = IntParam(mandatory=True)
 
@@ -85,20 +97,18 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         configuration.test_wide_devices = [host1.br0, host2.br0,
             guest1.eth0, guest2.eth0, guest3.eth0, guest4.eth0]
 
-        net_addr = "192.168"
-        net_addr6 = "fc00:0:0"
-        for host, (guest_a, guest_b), n in [(host1, (guest1, guest2), 1),
-            (host2, (guest3, guest4), 3)]:
-            host.br0.ip_add(ipaddress(net_addr + ".10." + str(n) + "/24"))
-            host.br1.ip_add(ipaddress(net_addr + ".20." + str(n) + "/24"))
-            guest_a.eth0.ip_add(ipaddress(net_addr + ".10." + str(n+1) +
-                "/24"))
-            guest_a.eth0.ip_add(ipaddress(net_addr6 + ":1::" + str(n+1) +
-                "/64"))
-            guest_b.eth0.ip_add(ipaddress(net_addr + ".20." + str(n+1) +
-                "/24"))
-            guest_b.eth0.ip_add(ipaddress(net_addr6 + ":2::" + str(n+1) +
-                "/64"))
+        vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
+        vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6, default_start="fc00:0:0:1::2/64", default_skip=2)
+        vlan1_ipv4_addr = interface_addresses(self.params.vlan1_ipv4)
+        vlan1_ipv6_addr = interface_addresses(self.params.vlan1_ipv6, default_start="fc00:0:0:2::2/64", default_skip=2)
+        for host, (guest_a, guest_b) in [(host1, (guest1, guest2)),
+                                         (host2, (guest3, guest4))]:
+            host.br0.ip_add(next(vlan0_ipv4_addr))
+            host.br1.ip_add(next(vlan1_ipv4_addr))
+            guest_a.eth0.ip_add(next(vlan0_ipv4_addr))
+            guest_a.eth0.ip_add(next(vlan0_ipv6_addr))
+            guest_b.eth0.ip_add(next(vlan1_ipv4_addr))
+            guest_b.eth0.ip_add(next(vlan1_ipv6_addr))
 
         for host in [host1, host2]:
             for dev in [host.eth0, host.eth1, host.tap0, host.tap1,
