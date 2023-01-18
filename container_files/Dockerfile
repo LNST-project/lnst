@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM fedora:34
+FROM fedora:36
 
 RUN dnf install -y initscripts \
     iputils \
