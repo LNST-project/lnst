@@ -1,8 +1,8 @@
 import copy
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import Param
+from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Devices import MacsecDevice
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -19,6 +19,9 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.100.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+
     macsec_encryption = Param(default=['on', 'off'])
     ids = ['00', '01']
     keys = ["7a16780284000775d4f0a3c0f0e092c0",
@@ -30,10 +33,8 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.eth0, host2.eth0]
 
-        net_addr = "192.168.0"
-        for i, host in enumerate([host1, host2]):
-            host.eth0.down()
-            host.eth0.ip_add(ipaddress(net_addr + '.' + str(i+1) + "/24"))
+        host1.eth0.down()
+        host2.eth0.down()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
 
@@ -72,8 +73,8 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     def apply_sub_configuration(self, config):
         super().apply_sub_configuration(config)
-        net_addr = "192.168.100"
-        net_addr6 = "fc00:0:0:0"
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
         host1, host2 = config.host1, config.host2
         k_ids = list(zip(self.ids, self.keys))
         hosts_and_keys = [(host1, host2, k_ids), (host2, host1,
@@ -91,11 +92,9 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
             host_a.msec0.rx('add', **rx_kwargs)
             host_a.msec0.tx_sa('add', **tx_sa_kwargs)
             host_a.msec0.rx_sa('add', **rx_sa_kwargs)
-        for i, host in enumerate([host1, host2]):
-            host.msec0.ip_add(ipaddress(net_addr + "." + str(i+1) +
-                "/24"))
-            host.msec0.ip_add(ipaddress(net_addr6 + "::" + str(i+1) +
-                "/64"))
+        for host in [host1, host2]:
+            host.msec0.ip_add(next(ipv4_addr))
+            host.msec0.ip_add(next(ipv6_addr))
             host.eth0.up()
             host.msec0.up()
             self.wait_tentative_ips([host.eth0, host.msec0])
