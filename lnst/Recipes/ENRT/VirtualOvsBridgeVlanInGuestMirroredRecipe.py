@@ -1,6 +1,11 @@
 import logging
-from lnst.Common.Parameters import Param, IntParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    IntParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -20,6 +25,9 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
     host2.tap0 = DeviceReq(label="to_guest2")
+
+    net_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
 
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest1")
@@ -56,13 +64,11 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [guest1.vlan0, guest2.vlan0]
 
-        net_addr_1 = "192.168.10"
-        net_addr6_1 = "fc00:0:0:1"
-        for i, guest in enumerate([guest1, guest2]):
-            guest.vlan0.ip_add(ipaddress(net_addr_1 + "." + str(i+3) +
-                "/24"))
-            guest.vlan0.ip_add(ipaddress(net_addr6_1 + "::" + str(i+3) +
-                "/64"))
+        ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="192.168.10.3/24")
+        ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::3/64")
+        for guest in [guest1, guest2]:
+            guest.vlan0.ip_add(next(ipv4_addr))
+            guest.vlan0.ip_add(next(ipv6_addr))
 
         for host in [host1, host2]:
             for dev in [host.eth0, host.tap0, host.br0]:
