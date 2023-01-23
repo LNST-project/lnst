@@ -1,4 +1,5 @@
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import IPv4NetworkParam
+from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -13,10 +14,13 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.2.0/24")
+
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        net_addr = "192.168.2"
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        host_addr = [next(ipv4_addr), next(ipv4_addr)]
         vxlan_net_addr = "192.168.100"
         vxlan_net_addr6 = "fc00:0:0:0"
 
@@ -29,7 +33,7 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
         for i, host in enumerate([host1, host2]):
             host.eth0.down()
-            host.eth0.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
+            host.eth0.ip_add(host_addr[i])
             host.br0 = OvsBridgeDevice()
             host.int0 = host.br0.port_add(
                     interface_options={
@@ -40,8 +44,8 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
                 "/24"))
             host.int0.ip_add(ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
                 "/64"))
-            tunnel_opts = {"option:remote_ip" : net_addr + "." + str(2-i),
-                "option:key" : "flow", "ofport_request" : "10"}
+            tunnel_opts = {"option:remote_ip" : host_addr[1-i],
+                           "option:key" : "flow", "ofport_request" : "10"}
             host.br0.tunnel_add("vxlan", tunnel_opts)
             host.br0.flows_add(flow_entries)
             host.eth0.up()
