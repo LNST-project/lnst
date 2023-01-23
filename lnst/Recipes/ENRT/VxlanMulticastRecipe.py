@@ -1,5 +1,7 @@
 from itertools import permutations
-from lnst.Common.IpAddress import ipaddress
+from socket import AF_INET
+from lnst.Common.IpAddress import ipaddress, interface_addresses
+from lnst.Common.Parameters import IpParam, IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -18,6 +20,9 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
     guest1 = HostReq()
     guest1.eth0 = DeviceReq(label="to_guest1")
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.0.0/24")
+    vxlan_group_ip = IpParam(default="239.1.1.1", multicast=True, family=AF_INET)
+
     def test_wide_configuration(self):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)
@@ -25,18 +30,17 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         for dev in [host1.eth0, host2.eth0, guest1.eth0, host1.tap0]:
             dev.down()
 
-        net_addr = "192.168.0"
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
         vxlan_net_addr = "192.168.100"
         vxlan_net_addr6 = "fc00:0:0:0"
-        vxlan_group_ip = "239.1.1.1"
 
         host1.br0 = BridgeDevice()
         host1.br0.slave_add(host1.eth0)
         host1.br0.slave_add(host1.tap0)
 
-        host1.vxlan0 = VxlanDevice(vxlan_id=1, realdev=host1.br0, group=vxlan_group_ip)
+        host1.vxlan0 = VxlanDevice(vxlan_id=1, realdev=host1.br0, group=self.params.vxlan_group_ip)
         for machine in [guest1, host2]:
-            machine.vxlan0 = VxlanDevice(vxlan_id=1, realdev=machine.eth0, group=vxlan_group_ip)
+            machine.vxlan0 = VxlanDevice(vxlan_id=1, realdev=machine.eth0, group=self.params.vxlan_group_ip)
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.br0, host1.vxlan0,
@@ -44,7 +48,7 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
 
         for i, (machine, dev) in enumerate([(host1, host1.br0),
             (guest1, guest1.eth0), (host2, host2.eth0)]):
-            dev.ip_add(ipaddress(net_addr + "." + str(i+1) + "/24"))
+            dev.ip_add(next(ipv4_addr))
             machine.vxlan0.realdev = dev
             machine.vxlan0.ip_add(ipaddress(vxlan_net_addr + "." + str(i+1)
                 + "/24"))
