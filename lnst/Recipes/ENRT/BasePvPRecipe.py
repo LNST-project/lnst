@@ -3,9 +3,7 @@ from enum import Enum
 
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IntParam, StrParam
-from lnst.Common.IpAddress import ipaddress
 from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate
-from lnst.Tests import Ping
 
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
 from lnst.RecipeCommon.LibvirtControl import LibvirtControl
@@ -82,52 +80,6 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
 
     nr_hugepages = IntParam(default=13000)
     # TODO: Allow 1G hugepages as well
-
-    def warmup(self, ping_config):
-        """ Generate warmup pings
-        This ensures any in-between switches learn the corresponding MAC addresses
-        Args:
-            ping_config: array of tuples containing [OriginHost, OriginDevice, DestDevice].
-        """
-        try:
-            self.warmup_configuration(ping_config)
-            self.warmup_pings(ping_config)
-        finally:
-            self.warmup_deconfiguration(ping_config)
-
-    def warmup_configuration(self, ping_config):
-        if len(ping_config) > 255:
-            raise LnstError("Too many warmup elements.")
-        for i, elem in enumerate(ping_config):
-            orig = elem[1]
-            dest = elem[2]
-
-            orig.ip_add(ipaddress('192.168.{}.1/24'.format(i)))
-            dest.ip_add(ipaddress('192.168.{}.2/24'.format(i)))
-
-            orig.up()
-            dest.up()
-
-    def warmup_pings(self, ping_config):
-        jobs = []
-        for i, elem in enumerate(ping_config):
-            host = elem[0]
-            orig = elem[1]
-            dest = elem[2]
-            jobs.append(host.run(Ping(interface=orig.ips[0], dst=dest.ips[0])))
-
-        for job in jobs:
-            job.wait()
-
-        #  TODO eval
-
-    def warmup_deconfiguration(self, ping_config):
-        for i, elem in enumerate(ping_config):
-            orig = elem[1]
-            dest = elem[2]
-
-            orig.ip_flush()
-            dest.ip_flush()
 
     def base_dpdk_configuration(self, dpdk_host_cfg):
         """ Base DPDK configuration in a host
