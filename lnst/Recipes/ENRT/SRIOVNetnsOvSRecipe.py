@@ -1,7 +1,12 @@
 import time
 
-from lnst.Common.Parameters import Param, StrParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import (
+    Param,
+    StrParam,
+    IPv4NetworkParam,
+    IPv6NetworkParam,
+)
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -71,6 +76,10 @@ class SRIOVNetnsOvSRecipe(
         dict(gro="on", gso="on", tso="off", tx="off", rx="on"),
         dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
+    net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+
+
     def test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves switching the device to switchdev
@@ -87,6 +96,9 @@ class SRIOVNetnsOvSRecipe(
         host1, host2 = self.matched.host1, self.matched.host2
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
+
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        ipv6_addr = interface_addresses(self.params.net_ipv6)
 
         for i, host in enumerate([host1, host2]):
             host.run("systemctl enable openvswitch")
@@ -113,9 +125,8 @@ class SRIOVNetnsOvSRecipe(
 
             for dev in [host.eth0, host.newns.vf_eth0, host.vf_representor_eth0, host.br0]:
                 dev.up()
-
-            host.newns.vf_eth0.ip_add(ipaddress("192.168.101." + str(i + 1) + "/24"))
-            host.newns.vf_eth0.ip_add(ipaddress("fc00::" + str(i + 1) + "/64"))
+            host.newns.vf_eth0.ip_add(next(ipv4_addr))
+            host.newns.vf_eth0.ip_add(next(ipv6_addr))
 
             configuration.test_wide_devices.append(host.newns.vf_eth0)
 
