@@ -50,7 +50,6 @@ class VhostNetPvPRecipe(BasePvPRecipe):
 
     def test(self):
         self.check_params()
-        self.warmup(self.gen_ping_config())
 
         config = VhostPvPTestConf()
         self.pvp_test(config)

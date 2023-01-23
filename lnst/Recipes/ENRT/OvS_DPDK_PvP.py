@@ -67,7 +67,6 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
     def test(self):
         self.check_dependencies()
         ping_config = self.gen_ping_config()
-        self.warmup(ping_config)
 
         config = OVSPvPTestConf()
         self.pvp_test(config)
