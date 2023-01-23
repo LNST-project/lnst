@@ -1,7 +1,13 @@
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.Common.Parameters import Param, ListParam, ChoiceParam, StrParam
+from lnst.Common.Parameters import (
+    Param,
+    ListParam,
+    ChoiceParam,
+    StrParam,
+    IPv4NetworkParam,
+)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 
@@ -12,6 +18,8 @@ class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
+
+    net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
 
     # Neper is the only option for RR type tests.
     net_perf_tool = ChoiceParam(default='neper', type=StrParam, choices=set(['neper']))
@@ -26,10 +34,10 @@ class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.eth0, host2.eth0]
 
-        net_addr = "192.168.101"
-        for i, host in enumerate([host1, host2], 10):
+        ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="192.168.101.10/24")
+        for host in [host1, host2]:
             host.eth0.down()
-            host.eth0.ip_add(ipaddress(net_addr + "." + str(i) + "/24"))
+            host.eth0.ip_add(next(ipv4_addr))
             host.eth0.up()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
