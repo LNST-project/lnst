@@ -6,8 +6,8 @@ from lnst.Recipes.ENRT.BasePvPRecipe import BasePvPTestConf, BasePvPRecipe
 from lnst.Recipes.ENRT.BasePvPRecipe import VirtioDevice, VirtioType
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.Parameters import IntParam, Param, StrParam
-from lnst.Common.IpAddress import ipaddress
+from lnst.Common.Parameters import IntParam, Param, StrParam, IPv4NetworkParam
+from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
 
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
@@ -44,6 +44,8 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
     m2 = HostReq(with_guest="yes")
     m2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     m2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+
+    net_ipv4 = IPv4NetworkParam(default="192.168.1.0/24")
 
     guest_dpdk_cores = StrParam(mandatory=True)
     guest_testpmd_cores = StrParam(mandatory=True)
@@ -85,15 +87,23 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
         config.generator.host = self.matched.m1
         config.generator.nics.append(self.matched.m1.eth0)
         config.generator.nics.append(self.matched.m1.eth1)
-        self.matched.m1.eth0.ip_add(ipaddress("192.168.1.1/24"))
-        self.matched.m1.eth1.ip_add(ipaddress("192.168.1.3/24"))
+
+        ipv4_addr = interface_addresses(self.params.net_ipv4)
+        nic_addrs = {
+            self.matched.m1.eth0: next(ipv4_addr),
+            self.matched.m2.eth0: next(ipv4_addr),
+            self.matched.m1.eth1: next(ipv4_addr),
+            self.matched.m2.eth1: next(ipv4_addr),
+        }
+        self.matched.m1.eth0.ip_add(nic_addrs[self.matched.m1.eth0])
+        self.matched.m1.eth1.ip_add(nic_addrs[self.matched.m1.eth1])
         self.base_dpdk_configuration(config.generator)
 
         config.dut.host = self.matched.m2
         config.dut.nics.append(self.matched.m2.eth0)
         config.dut.nics.append(self.matched.m2.eth1)
-        self.matched.m2.eth0.ip_add(ipaddress("192.168.1.2/24"))
-        self.matched.m2.eth1.ip_add(ipaddress("192.168.1.4/24"))
+        self.matched.m2.eth0.ip_add(nic_addrs[self.matched.m2.eth0])
+        self.matched.m2.eth1.ip_add(nic_addrs[self.matched.m2.eth1])
         self.base_dpdk_configuration(config.dut)
         self.ovs_dpdk_bridge_configuration(config.dut)
 
