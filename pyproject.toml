@@ -20,7 +20,7 @@ include = ["schema-am.rng", "install/*", "lnst-ctl.conf"]
 python = "^3.9"
 lxml = "*"
 ethtool = "*"
-pyroute2 = "*"
+pyroute2 = "0.7.3"
 
 libvirt-python = {version = "*", optional = true }
 podman = {version = "*", optional = true }
