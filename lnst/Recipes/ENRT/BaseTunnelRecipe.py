@@ -137,3 +137,11 @@ class BaseTunnelRecipe(
         :rtype: :any:`PacketAssertConf`
         """
         raise NotImplementedError
+
+    def generate_perf_endpoints(self, config):
+        """
+        The perf endpoints for recipes derived from this class are usually
+        the tunnel endpoints. The derived class can override the endpoints
+        if needed.
+        """
+        return [tuple(config.tunnel_devices)]
