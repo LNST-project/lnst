@@ -3,11 +3,17 @@ from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
-    CommonHWSubConfigMixin)
+    CommonHWSubConfigMixin
+)
+from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
+    OffloadSubConfigMixin,
+)
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VxlanDevice
 
-class VxlanRemoteRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
+class VxlanRemoteRecipe(
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
+):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
@@ -105,4 +111,8 @@ class VxlanRemoteRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def offload_nics(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
