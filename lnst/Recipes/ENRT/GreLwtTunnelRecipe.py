@@ -235,6 +235,17 @@ class GreLwtTunnelRecipe(
 
         return pa_config
 
+    def generate_perf_endpoints(self, config):
+        """
+        The perf endpoints for this recipe are the loopback devices that
+        are configured with IP addresses of the tunnelled networks.
+
+        Returned as::
+
+            [(self.matched.host1.lo, self.matched.host2.lo)]
+        """
+        return [(self.matched.host1.lo, self.matched.host2.lo)]
+
     @property
     def offload_nics(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
