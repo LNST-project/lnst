@@ -131,6 +131,7 @@ class RemoteMethods:
 
         for device in self._if_manager.get_devices():
             try:
+                device.down()
                 device.store_cleanup_data()
             except DeviceDisabled:
                 pass
