@@ -33,9 +33,6 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.eth0, host2.eth0]
 
-        host1.eth0.down()
-        host2.eth0.down()
-
         self.wait_tentative_ips(configuration.test_wide_devices)
 
         configuration.endpoint1 = host1.eth0
