@@ -8,3 +8,4 @@ from lnst.RecipeCommon.Perf.Measurements.Results.CPUMeasurementResults import CP
 from lnst.RecipeCommon.Perf.Measurements.Results.FlowMeasurementResults import FlowMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.Results.LinuxPerfMeasurementResults import LinuxPerfMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.Results.StatCPUMeasurementResults import StatCPUMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results.TcRunMeasurementResults import TcRunMeasurementResults
