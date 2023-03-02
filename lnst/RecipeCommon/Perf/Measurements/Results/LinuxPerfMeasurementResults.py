@@ -12,7 +12,7 @@ class LinuxPerfMeasurementResults(BaseMeasurementResults):
 
     def __init__(
         self,
-        measurement: "LinuxPerfMeasurementResults",
+        measurement,
         host: Host,
         filename: str,
         cpus: list[int],

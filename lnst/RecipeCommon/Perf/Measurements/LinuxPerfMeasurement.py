@@ -13,6 +13,7 @@ from lnst.RecipeCommon.Perf.Measurements.Results import (
     LinuxPerfMeasurementResults,
     AggregatedLinuxPerfMeasurementResults
 )
+
 from lnst.Controller.Job import Job
 from lnst.Controller.Host import Host
 from lnst.Controller.Recipe import BaseRecipe
