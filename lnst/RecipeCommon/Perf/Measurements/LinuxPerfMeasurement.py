@@ -34,7 +34,8 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
     _version: Optional[dict[str, Any]] = None
     _collection_index: int = 0
-    _jobs: list[Job] = []
+    _running_jobs: list[Job] = []
+    _finished_jobs: list[Job] = []
 
     def __init__(
         self,
@@ -94,19 +95,24 @@ class LinuxPerfMeasurement(BaseMeasurement):
         self._start_timestamp = time.time()
         for host, cpu_list_id, cpus in self.configurations:
             filename: str = f"cpu_list{cpu_list_id}.cpus.{'.'.join(map(str, cpus))}.data"
-            self._jobs.append(host.run(LinuxPerf(output_file=filename, cpus=cpus), bg=True))
+            self._running_jobs.append(host.run(LinuxPerf(output_file=filename, cpus=cpus), bg=True))
 
     def finish(self) -> None:
-        for job, (host, _, _) in zip(self._jobs, self.configurations):
+        for job in self._running_jobs:
             job.kill(signal=signal.SIGINT)
+
+        for job, (host, _, _) in zip(self._running_jobs, self.configurations):
             if not job.wait(timeout=120):
                 logging.error(f"timeout while waiting for linuxperf job to finish on host {host.hostid}")
+
         self._end_timestamp = time.time()
+        self._finished_jobs = self._running_jobs
+        self._running_jobs = []
 
     def collect_results(self) -> list[BaseMeasurementResults]:
         self._collection_index += 1
         results: list[BaseMeasurementResults] = []
-        for job, (host, _, cpus) in zip(self._jobs, self.configurations):
+        for job, (host, _, cpus) in zip(self._finished_jobs, self.configurations):
             if job.result is None:
                 continue
 
