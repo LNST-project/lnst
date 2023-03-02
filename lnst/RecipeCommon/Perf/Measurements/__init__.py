@@ -3,3 +3,4 @@ from lnst.RecipeCommon.Perf.Measurements.IperfFlowMeasurement import IperfFlowMe
 from lnst.RecipeCommon.Perf.Measurements.TRexFlowMeasurement import TRexFlowMeasurement
 from lnst.RecipeCommon.Perf.Measurements.StatCPUMeasurement import StatCPUMeasurement
 from lnst.RecipeCommon.Perf.Measurements.NeperFlowMeasurement import NeperFlowMeasurement
+from lnst.RecipeCommon.Perf.Measurements.LinuxPerfMeasurement import LinuxPerfMeasurement
