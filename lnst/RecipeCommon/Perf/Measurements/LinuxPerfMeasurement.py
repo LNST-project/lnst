@@ -104,6 +104,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
         for job, (host, _, _) in zip(self._running_jobs, self.configurations):
             if not job.wait(timeout=120):
                 logging.error(f"timeout while waiting for linuxperf job to finish on host {host.hostid}")
+                job.kill()
 
         self._end_timestamp = time.time()
         self._finished_jobs = self._running_jobs
