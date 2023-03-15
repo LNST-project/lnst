@@ -172,7 +172,7 @@ def _is_newer_than(f, threshold):
     return stat.st_mtime > threshold
 
 def check_process_running(process_name):
-    return process_name in (p.name() for p in psutil.process_iter())
+    return process_name in (p.info["name"] for p in psutil.process_iter(["name"]))
 
 def mkdir_p(path):
     try:
