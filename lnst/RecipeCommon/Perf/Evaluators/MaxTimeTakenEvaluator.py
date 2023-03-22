@@ -13,7 +13,7 @@ class MaxTimeTakenEvaluator(BaseResultEvaluator):
         self._max_time = max_time
 
     def _check_interval(self, timed_run: TcRunMeasurementResults) -> ResultType:
-        if timed_run.run_interval.duration <= self._max_time:
+        if timed_run.rule_install_rate.duration <= self._max_time:
             return ResultType.PASS
         return ResultType.FAIL
 

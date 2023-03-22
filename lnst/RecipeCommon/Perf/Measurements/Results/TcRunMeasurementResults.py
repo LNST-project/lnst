@@ -15,7 +15,7 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     ):
         super().__init__(measurement, warmup_rules)
         self._device = device
-        self._run_interval: PerfInterval = None
+        self._rule_install_rate: PerfInterval = None
         self._run_success: bool = None
 
     @property
@@ -27,8 +27,12 @@ class TcRunMeasurementResults(BaseMeasurementResults):
         return self.device.host
 
     @property
-    def run_interval(self) -> PerfInterval:
-        return self._run_interval
+    def rule_install_rate(self) -> PerfInterval:
+        return self._rule_install_rate
+
+    @rule_install_rate.setter
+    def rule_install_rate(self, interval: PerfInterval):
+        self._rule_install_rate = interval
 
     @property
     def run_success(self) -> bool:
@@ -38,24 +42,20 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     def run_success(self, v: bool):
         self._run_success = v
 
-    @run_interval.setter
-    def run_interval(self, interval: PerfInterval):
-        self._run_interval = interval
-
     @property
     def description(self):
         return f"{self.device.host.hostid}.{self.device.name}" \
-               f" tc run with {self.run_interval.value} rules" \
-               f" took {self.run_interval.duration} seconds"
+               f" tc run with {self.rule_install_rate.value} rules" \
+               f" took {self.rule_install_rate.duration} seconds"
 
     @property
     def time_taken(self):
-        return self.run_interval.duration
+        return self.rule_install_rate.duration
 
     @property
     def start_timestamp(self):
-        return self.run_interval.start_timestamp
+        return self.rule_install_rate.start_timestamp
 
     @property
     def end_timestamp(self):
-        return self.run_interval.end_timestamp
+        return self.rule_install_rate.end_timestamp

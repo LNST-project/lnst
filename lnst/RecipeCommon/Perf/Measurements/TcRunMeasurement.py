@@ -196,7 +196,7 @@ class TcRunMeasurement(BaseMeasurement):
                 measurement=self,
                 device=self.device,
             )
-            run_result.run_interval = PerfInterval(
+            run_result.rule_install_rate = PerfInterval(
                 value=self._rules_per_instance,
                 duration=job.result['data']['time_taken'],
                 unit='rules',
@@ -219,8 +219,7 @@ class TcRunMeasurement(BaseMeasurement):
             r_type,
             f"{r_type} {result.description}",
             data=dict(
-                num_rules=result.run_interval.value,
-                time_taken=result.run_interval.duration,
+                rule_install_rate=result.rule_install_rate,
             )
         )
 
