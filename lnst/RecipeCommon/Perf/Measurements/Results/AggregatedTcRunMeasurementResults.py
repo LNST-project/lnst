@@ -27,17 +27,17 @@ class AggregatedTcRunMeasurementResults(TcRunMeasurementResults):
                f" num_rules={self.num_rules}"
 
     @property
-    def run_interval(self) -> SequentialPerfResult:
-        return SequentialPerfResult([i.run_interval for i in self.individual_results])
+    def rule_install_rate(self) -> SequentialPerfResult:
+        return SequentialPerfResult([i.rule_install_rate for i in self.individual_results])
 
     @property
     def time_taken(self) -> float:
         # Return average time for all runs
-        return mean([i.duration for i in self.run_interval])
+        return mean([i.duration for i in self.rule_install_rate])
 
     @property
     def num_rules(self) -> tuple[int]:
-        return tuple([r.value for r in self.run_interval])
+        return tuple([r.value for r in self.rule_install_rate])
 
     @property
     def num_instances(self):

@@ -18,7 +18,7 @@ class BaselineTcRunAverageEvaluator(BaselineEvaluator):
             result_index: int = 0,
     ) -> list[MetricComparison]:
 
-        metric_name = f"{result_index}_time_taken"
+        metric_name = f"{result_index}_rule_install_rate"
 
         if baseline is None:
             return [
@@ -29,14 +29,15 @@ class BaselineTcRunAverageEvaluator(BaselineEvaluator):
                 )
             ]
         elif (threshold := self._thresholds.get(metric_name, None)) is not None:
-            difference = ((result.time_taken / baseline.time_taken) * 100 ) - 100
+            difference = ((result.rule_install_rate.average / baseline.rule_install_rate.average) * 100) - 100
             direction = "higher" if difference >= 0 else "lower"
             text = [
                 f"{self.__class__.__name__} of tc run with {metric_name}",
                 f"{result.description}",
-                f"baseline time_taken={baseline.time_taken}",
-                f"{difference:2f} {direction} than baseline ",
-                f"Allowed differences: {threshold}% ",
+                f"Baseline: {baseline.rule_install_rate.average} rules/sec",
+                f"Measured: {result.rule_install_rate.average} rules/sec",
+                f"{abs(difference):2f}% {direction} than baseline ",
+                f"Allowed difference: {threshold}% ",
             ]
             if difference < -threshold:
                 comparison = ResultType.WARNING
