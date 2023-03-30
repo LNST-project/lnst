@@ -130,6 +130,10 @@ class TcRunMeasurement(BaseMeasurement):
         return self._num_instances
 
     @property
+    def rules_per_instance(self):
+        return self._rules_per_instance
+
+    @property
     def version(self):
         # TODO Need to figure out how best to
         # categorize tc version, `tc -V` gives:
