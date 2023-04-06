@@ -3,7 +3,7 @@ from __future__ import annotations
 from lnst.Controller.Namespace import Namespace
 from lnst.Devices import Device
 from lnst.RecipeCommon.Perf.Measurements.Results import BaseMeasurementResults
-from lnst.RecipeCommon.Perf.Results import PerfInterval
+from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
 
 class TcRunMeasurementResults(BaseMeasurementResults):
@@ -15,7 +15,7 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     ):
         super().__init__(measurement, warmup_rules)
         self._device = device
-        self._rule_install_rate: PerfInterval = None
+        self._rule_install_rate: ParallelPerfResult = None
         self._run_success: bool = None
 
     @property
@@ -27,12 +27,12 @@ class TcRunMeasurementResults(BaseMeasurementResults):
         return self.device.host
 
     @property
-    def rule_install_rate(self) -> PerfInterval:
+    def rule_install_rate(self) -> ParallelPerfResult:
         return self._rule_install_rate
 
     @rule_install_rate.setter
-    def rule_install_rate(self, interval: PerfInterval):
-        self._rule_install_rate = interval
+    def rule_install_rate(self, result: ParallelPerfResult):
+        self._rule_install_rate = result
 
     @property
     def run_success(self) -> bool:
@@ -46,7 +46,9 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     def description(self):
         return f"{self.device.host.hostid}.{self.device.name}" \
                f" tc run with {self.rule_install_rate.value} rules" \
-               f" took {self.rule_install_rate.duration} seconds"
+               f" num_instances={self.measurement.num_instances}" \
+               f" took {self.rule_install_rate.duration} seconds " \
+               f"({self.rule_install_rate.average} rules/sec)"
 
     @property
     def time_taken(self):

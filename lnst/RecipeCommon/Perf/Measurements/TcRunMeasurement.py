@@ -9,7 +9,7 @@ from lnst.Controller.RecipeResults import ResultLevel, ResultType
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.Results.AggregatedTcRunMeasurementResults import AggregatedTcRunMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.Results.TcRunMeasurementResults import TcRunMeasurementResults
-from lnst.RecipeCommon.Perf.Results import PerfInterval
+from lnst.RecipeCommon.Perf.Results import PerfInterval, ParallelPerfResult
 from lnst.Tests.TrafficControl import TrafficControlRunner
 from lnst.Controller.Job import Job
 from lnst.Controller.Namespace import Device, Namespace
@@ -159,16 +159,12 @@ class TcRunMeasurement(BaseMeasurement):
             self._running_jobs.append(job)
 
     def _prepare_jobs(self) -> list[Job]:
-        jobs = []
-        for instance in self.instance_configs:
-            batchfile = instance.generate_batchfile()
-            job = instance.host.prepare_job(
-                TrafficControlRunner(batchfile=batchfile),
-                job_level=ResultLevel.NORMAL,
-            )
-            instance.instance_job = job
-            jobs.append(job)
-        return jobs
+        batchfiles = [i.generate_batchfile() for i in self.instance_configs]
+        job = self.host.prepare_job(
+            TrafficControlRunner(batchfiles=batchfiles),
+            job_level=ResultLevel.NORMAL,
+        )
+        return [job]
 
     def finish(self):
         jobs = self._running_jobs
@@ -194,22 +190,29 @@ class TcRunMeasurement(BaseMeasurement):
         return configs
 
     def collect_results(self) -> list[TcRunMeasurementResults]:
-        results: list[TcRunMeasurementResults] = []
-        for job in self._finished_jobs:
-            run_result = TcRunMeasurementResults(
-                measurement=self,
-                device=self.device,
-            )
-            run_result.rule_install_rate = PerfInterval(
-                value=self._rules_per_instance,
-                duration=job.result['data']['time_taken'],
-                unit='rules',
-                timestamp=job.result['data']['start_timestamp'],
-            )
-            run_result.run_success = job.passed
-            results.append(run_result)
+        run_result = TcRunMeasurementResults(
+            measurement=self,
+            device=self.device,
+        )
+        if len(self._finished_jobs) > 1:
+            raise MeasurementError("Too many jobs")
+        job = self._finished_jobs[0]
+        instance_data = job.result["data"]["instance_results"]
 
-        return results
+        run_result.rule_install_rate = ParallelPerfResult(
+            [self._get_instance_interval(d) for d in instance_data]
+        )
+        run_result.run_success = job.passed
+
+        return [run_result]
+
+    def _get_instance_interval(self, instance_data: dict):
+        return PerfInterval(
+            value=self._rules_per_instance,
+            duration=instance_data['time_taken'],
+            unit='rules',
+            timestamp=instance_data['start_timestamp'],
+        )
 
     @classmethod
     def report_results(cls, recipe: BaseRecipe, results: list[TcRunMeasurementResults]):
@@ -249,18 +252,3 @@ class TcRunMeasurement(BaseMeasurement):
         new_result.add_results(old)
         new_result.add_results(new)
         return new_result
-
-    @classmethod
-    def aggregate_parallel_run_results(cls, results: list[TcRunMeasurementResults]):
-        if len(results) <= 1:
-            return results
-
-        aggregated_result = AggregatedTcRunMeasurementResults(
-            measurement=results[0].measurement,
-            device=results[0].device
-        )
-
-        for result in results:
-            aggregated_result.add_results(result)
-
-        return [aggregated_result]
