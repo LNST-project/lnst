@@ -33,10 +33,6 @@ them to be implemented in Python Recipes, with notes where relevant.
     Device classes, but we have the capability to sync arbitrary python code so
     this shouldn't be too big a problem
 
-* RPM:
-    * add python-ethtool as dependency
-    * pyroute2 dependency needs an update to the version, some devices (vti
-      require newer versions)
 
 * Port test_modules
     * Netperf needs to be resynced with the legacy version there are some
