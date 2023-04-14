@@ -62,7 +62,7 @@ it wasn't exactly actively used we haven't created a new one yet.
 
 ## License
 
-**Copyright (C) 2011-2022 Red Hat, Inc.**
+**Copyright (C) 2011-2023 Red Hat, Inc.**
 
 LNST is distributed under GNU General Public License version 2. See the file
 "COPYING" in the source distribution for information on terms & conditions
