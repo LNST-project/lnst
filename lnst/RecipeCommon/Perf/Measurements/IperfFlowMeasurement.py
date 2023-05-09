@@ -123,7 +123,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         server_params = dict(bind = ipaddress(flow.receiver_bind),
                              oneoff = True)
 
-        self._set_cpupin_params(server_params, flow.cpupin)
+        self._set_cpupin_params(server_params, flow.receiver_cpupin)
 
         if flow.type == "mptcp_stream":
             server_params["mptcp"] = True
@@ -154,7 +154,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         else:
             raise RecipeError("Unsupported flow type '{}'".format(flow.type))
 
-        self._set_cpupin_params(client_params, flow.cpupin)
+        self._set_cpupin_params(client_params, flow.generator_cpupin)
 
         if flow.parallel_streams > 1:
             client_params["parallel"] = flow.parallel_streams
