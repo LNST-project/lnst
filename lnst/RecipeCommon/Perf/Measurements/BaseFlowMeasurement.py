@@ -19,7 +19,8 @@ class Flow(object):
                  receiver_nic=None,
                  receiver_port=None,
                  msg_size=None,
-                 cpupin=None,
+                 generator_cpupin=None,
+                 receiver_cpupin=None,
                  aggregated_flow=False,
                  warmup_duration=0):
         self._type = type
@@ -35,7 +36,8 @@ class Flow(object):
         self._msg_size = msg_size
         self._duration = duration
         self._parallel_streams = parallel_streams
-        self._cpupin = cpupin
+        self._generator_cpupin = generator_cpupin
+        self._receiver_cpupin = receiver_cpupin
         self._aggregated_flow=aggregated_flow
         self._warmup_duration = warmup_duration
 
@@ -84,8 +86,12 @@ class Flow(object):
         return self._parallel_streams
 
     @property
-    def cpupin(self):
-        return self._cpupin
+    def generator_cpupin(self):
+        return self._generator_cpupin
+
+    @property
+    def receiver_cpupin(self):
+        return self._receiver_cpupin
 
     @property
     def aggregated_flow(self):
@@ -109,7 +115,8 @@ class Flow(object):
             msg_size={msg_size}, 
             duration={duration},
             parallel_streams={parallel_streams},
-            cpupin={cpupin},
+            generator_cpupin={generator_cpupin},
+            receiver_cpupin={receiver_cpupin},
             aggregated_flow={aggregated_flow}
             warmup_duration={warmup_duration},
         )""".format(
@@ -124,7 +131,8 @@ class Flow(object):
             msg_size=self.msg_size,
             duration=self.duration,
             parallel_streams=self.parallel_streams,
-            cpupin=self.cpupin,
+            generator_cpupin=self.generator_cpupin,
+            receiver_cpupin=self.receiver_cpupin,
             aggregated_flow=self._aggregated_flow,
             warmup_duration=self._warmup_duration
         )
@@ -260,7 +268,8 @@ class BaseFlowMeasurement(BaseMeasurement):
              msg_size=sample_flow.msg_size,
              duration=sample_flow.duration,
              parallel_streams=sample_flow.parallel_streams,
-             cpupin=None,
+             generator_cpupin=None,
+             receiver_cpupin=None,
              aggregated_flow=True,
              warmup_duration=sample_flow.warmup_duration
         )
