@@ -165,6 +165,9 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         if flow.receiver_port is not None:
             client_params["port"] = flow.receiver_port
 
+        if flow.generator_port is not None:
+            client_params["client_port"] = flow.generator_port
+
         return host.prepare_job(IperfClient(**client_params),
                                 job_level=ResultLevel.NORMAL)
 

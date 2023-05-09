@@ -131,6 +131,7 @@ class IperfClient(IperfBase):
     udp = BoolParam(default=False)
     sctp = BoolParam(default=False)
     port = IntParam()
+    client_port = IntParam()
     blksize = IntParam()
     mss = IntParam()
     cpu_bind = ListParam(type=IntParam())
@@ -154,6 +155,9 @@ class IperfClient(IperfBase):
 
         if "port" in self.params:
             port = "-p {:d}".format(self.params.port)
+
+        if "client_port" in self.params:
+            client_port = "--cport {:d}".format(self.params.client_port)
 
         if "blksize" in self.params:
             blksize = "-l {:d}".format(self.params.blksize)
@@ -189,13 +193,14 @@ class IperfClient(IperfBase):
         logging.debug(f"Measuring for {duration} seconds (perf_duration + perf_warmup_duration * 2).")
 
         cmd = ("{cpu} iperf3 -c {server} -b 0/1000 -J -t {duration}"
-               " {test} {mss} {blksize} {parallel} {port}"
+               " {test} {mss} {blksize} {parallel} {port} {client_port}"
                " {opts}".format(
                 cpu=cpu,
                 server=self.params.server, duration=duration,
                 test=test, mss=mss, blksize=blksize,
                 parallel=parallel,
                 port=port,
+                client_port=client_port,
                 opts=self.params.opts if "opts" in self.params else ""))
 
         return cmd

@@ -16,6 +16,7 @@ class Flow(object):
                  duration,
                  parallel_streams,
                  generator_nic=None,
+                 generator_port=None,
                  receiver_nic=None,
                  receiver_port=None,
                  msg_size=None,
@@ -28,6 +29,7 @@ class Flow(object):
         self._generator = generator
         self._generator_bind = generator_bind
         self._generator_nic = generator_nic
+        self._generator_port = generator_port
         self._receiver = receiver
         self._receiver_bind = receiver_bind
         self._receiver_nic = receiver_nic
@@ -56,6 +58,10 @@ class Flow(object):
     @property
     def generator_nic(self):
         return self._generator_nic
+
+    @property
+    def generator_port(self):
+        return self._generator_port
 
     @property
     def receiver(self):
@@ -108,6 +114,7 @@ class Flow(object):
             generator={generator}, 
             generator_bind={generator_bind},
             generator_nic={generator_nic},
+            generator_port={generator_port},
             receiver={receiver}, 
             receiver_bind={receiver_bind},
             receiver_nic={receiver_nic},
@@ -124,6 +131,7 @@ class Flow(object):
             generator=str(self.generator),
             generator_bind=self.generator_bind,
             generator_nic=self.generator_nic,
+            generator_port=self.generator_port,
             receiver=str(self.receiver),
             receiver_bind=self.receiver_bind,
             receiver_nic=self.receiver_nic,
