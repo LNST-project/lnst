@@ -17,17 +17,16 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
-from lnst.Devices import BridgeDevice
 
 
-class SRIOVNetnsBridgeRecipe(
+class SRIOVNetnsTcRecipe(
     CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
 ):
     """
     This recipe implements Enrt testing for a SRIOV network scenario
     with VF located in the network namespace to mimic container network.
-    PF with VF representor is plugged into the Linux bridge
-    and setups looks following.
+    Tc rules are created to achieve full connectivity between VF of
+    the hosts.
 
     .. code-block:: none
 
@@ -41,7 +40,7 @@ class SRIOVNetnsBridgeRecipe(
     |  |       |      |  |  |  |       |      |  |
     |  |vf_representor|  |  |  |vf_representor|  |
     |  |              |  |  |  |              |  |
-    |  +-Linux bridge-+  |  |  +-Linux bridge-+  |
+    |  +--TC filter---+  |  |  +--TC filter---+  |
     |         |          |  |         |          |
     |    +-namespace-+   |  |    +-namespace-+   |
     |   |    vf0     |   |  |   |    vf0     |   |
@@ -62,7 +61,7 @@ class SRIOVNetnsBridgeRecipe(
     """
     This parameter was created due to the difference between various kernel and distro
     versions, not having consistent naming scheme of virtual function.
-    
+
     Solution here is to expect deterministic VF name, which is derived from the PF name.
     With specific kernel parameter `biosdevname=1` we can expect default suffix on 
     VF to be created to be `_n`, where n is the index of VF created.
@@ -114,17 +113,91 @@ class SRIOVNetnsBridgeRecipe(
             vf_representor_ifname = dict(ifname="eth0")
             host.map_device("vf_representor_eth0", vf_representor_ifname)
 
-            host.br0 = BridgeDevice()
-            host.br0.slave_add(host.eth0)
-            host.br0.slave_add(host.vf_representor_eth0)
+            host.run(f"ethtool -K {host.vf_representor_eth0.name} hw-tc-offload on")
+            host.run(f"ethtool -K {host.eth0.name} hw-tc-offload on")
 
-            for dev in [host.eth0, host.newns.vf_eth0, host.vf_representor_eth0, host.br0]:
+            host.run(f"tc qdisc add dev {host.vf_representor_eth0.name} ingress")
+            host.run(f"tc qdisc add dev {host.eth0.name} ingress")
+
+            for dev in [host.eth0, host.newns.vf_eth0, host.vf_representor_eth0]:
                 dev.up()
 
             host.newns.vf_eth0.ip_add(next(ipv4_addr))
             host.newns.vf_eth0.ip_add(next(ipv6_addr))
 
             configuration.test_wide_devices.append(host.newns.vf_eth0)
+
+        host1.run(f"tc filter add dev {host1.eth0.name} "
+                  f"protocol ip ingress flower skip_sw "
+                  f"src_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host1.vf_representor_eth0.name}")
+
+        host1.run(f"tc filter add dev {host1.eth0.name} "
+                  f"protocol arp ingress flower " 
+                  f"src_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host1.vf_representor_eth0.name}")
+
+        host1.run(f"tc filter add dev {host1.eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"dst_mac FF:FF:FF:FF:FF:FF "
+                  f"action mirred egress redirect dev {host1.vf_representor_eth0.name}")
+
+        host1.run(f"tc filter add dev {host1.vf_representor_eth0.name} "
+                  f"protocol ip ingress flower skip_sw "
+                  f"src_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host1.eth0.name}")
+
+        host1.run(f"tc filter add dev {host1.vf_representor_eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host1.eth0.name}")
+
+        host1.run(f"tc filter add dev {host1.vf_representor_eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"dst_mac FF:FF:FF:FF:FF:FF "
+                  f"action mirred egress redirect dev {host1.eth0.name}")
+
+        host2.run(f"tc filter add dev {host2.eth0.name} "
+                  f"protocol ip ingress flower skip_sw "
+                  f"src_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host2.vf_representor_eth0.name}")
+
+        host2.run(f"tc filter add dev {host2.eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host2.vf_representor_eth0.name}")
+
+        host2.run(f"tc filter add dev {host2.eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"dst_mac FF:FF:FF:FF:FF:FF "
+                  f"action mirred egress redirect dev {host2.vf_representor_eth0.name}")
+
+        host2.run(f"tc filter add dev {host2.vf_representor_eth0.name} "
+                  f"protocol ip ingress flower skip_sw "
+                  f"src_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host2.eth0.name}")
+
+        host2.run(f"tc filter add dev {host2.vf_representor_eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"dst_mac {host1.newns.vf_eth0.hwaddr} "
+                  f"action mirred egress redirect dev {host2.eth0.name}")
+
+        host2.run(f"tc filter add dev {host2.vf_representor_eth0.name} "
+                  f"protocol arp ingress flower "
+                  f"src_mac {host2.newns.vf_eth0.hwaddr} "
+                  f"dst_mac FF:FF:FF:FF:FF:FF "
+                  f"action mirred egress redirect dev {host2.eth0.name}")
 
         self.wait_tentative_ips(configuration.test_wide_devices)
 
@@ -139,13 +212,12 @@ class SRIOVNetnsBridgeRecipe(
                 f"Created virtual function on {host.hostid}.{host.eth0.name} = {host.newns.vf_eth0.name}\n"
                 f"Created network_namespace on {host.hostid} = {host.newns.name}\n"
                 f"Moved interface {host.newns.vf_eth0.name} from {host.hostid} root namespace to {host.hostid}.{host.newns.name} namespace\n"
-                f"Created Linux bridge on {host.hostid} = {host.br0.name}\n"
-                f"Configured {host.hostid}.{host.br0.name}.slaves = {host.eth0.name}, {host.vf_representor_eth0.name}"
+                f"Created tc rules for the connectivity between virtual functions\n"
             ]
         desc += [
             f"Configured {dev.host.hostid}.{dev.name}.ips = {dev.ips}"
-                    for dev in config.test_wide_devices
-                 ]
+            for dev in config.test_wide_devices
+        ]
         return desc
 
     def test_wide_deconfiguration(self, config):
@@ -160,6 +232,7 @@ class SRIOVNetnsBridgeRecipe(
             time.sleep(2)
             host.run(f"devlink dev eswitch set pci/{host.eth0.bus_info} mode legacy")
             time.sleep(3)
+            #TODO remove tc filters and qdiscs
         del config.test_wide_devices
 
         super().test_wide_deconfiguration(config)
@@ -211,4 +284,3 @@ class SRIOVNetnsBridgeRecipe(
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
         return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
-
