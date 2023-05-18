@@ -28,6 +28,8 @@ cryptography = {version = "*", optional = true }
 pyyaml = {version = "*", optional = true}
 psutil = "^5.9.4"
 
+urllib3 = "<2"
+
 [tool.poetry.extras]
 virt = ["libvirt-python"]
 containers = ["podman"]
