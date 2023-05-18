@@ -99,11 +99,6 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
         if getattr(config, "offload_settings", None):
             for flow in flows:
                 if (
-                    flow.type == "udp_stream"
-                    and config.offload_settings.get("gro", "on") == "off"
-                ):
-                    return True
-                elif (
                     flow.type == "sctp_stream"
                     and "off" in config.offload_settings.values()
                     and config.offload_settings.get("gso", "on") == "on"
