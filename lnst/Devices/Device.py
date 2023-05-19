@@ -324,6 +324,8 @@ class Device(object, metaclass=DeviceMeta):
                     "tx_pause": tx_pause
                 })
 
+        self._cleanup_data["coalescing_settings"] = self._read_coalescing_settings()
+
     def restore_original_data(self):
         """Restores initial configuration from stored values"""
         if not self._cleanup_data:
@@ -341,8 +343,8 @@ class Device(object, metaclass=DeviceMeta):
 
         try:
             self.restore_coalescing()
-        except DeviceError:
-            pass
+        except DeviceError as e:
+            logging.warn(e)
 
         # the device needs to be up to configure the pause frame settings
         self.up()
@@ -466,6 +468,50 @@ class Device(object, metaclass=DeviceMeta):
             tx_val = 'on'
         rx_val = self._read_adaptive_coalescing()[0]
         self._write_adaptive_coalescing(rx_val, tx_val)
+
+    @property
+    def coalescing_rx_usecs(self):
+        try:
+            return self._read_coalescing_settings()["rx-usecs"]
+        except KeyError:
+            return None
+
+    @coalescing_rx_usecs.setter
+    def coalescing_rx_usecs(self, value):
+        self._write_coalescing_setting("rx-usecs", value)
+
+    @property
+    def coalescing_tx_usecs(self):
+        try:
+            return self._read_coalescing_settings()["tx-usecs"]
+        except KeyError:
+            return None
+
+    @coalescing_tx_usecs.setter
+    def coalescing_tx_usecs(self, value):
+        self._write_coalescing_setting("tx-usecs", value)
+
+    @property
+    def coalescing_rx_frames(self):
+        try:
+            return self._read_coalescing_settings()["rx-frames"]
+        except KeyError:
+            return None
+
+    @coalescing_rx_frames.setter
+    def coalescing_rx_frames(self, value):
+        self._write_coalescing_setting("rx-frames", value)
+
+    @property
+    def coalescing_tx_frames(self):
+        try:
+            return self._read_coalescing_settings()["tx-frames"]
+        except KeyError:
+            return None
+
+    @coalescing_tx_frames.setter
+    def coalescing_tx_frames(self, value):
+        self._write_coalescing_setting("tx-frames", value)
 
     @property
     def state(self):
@@ -706,10 +752,37 @@ class Device(object, metaclass=DeviceMeta):
             )
 
     def restore_coalescing(self):
+        for setting, value in self._cleanup_data["coalescing_settings"].items():
+            if value != 'n/a':
+                self._write_coalescing_setting(setting, value)
+
         rx_val = self._cleanup_data["adaptive_rx_coalescing"]
         tx_val = self._cleanup_data["adaptive_tx_coalescing"]
         if (rx_val, tx_val) != (None, None):
             self._write_adaptive_coalescing(rx_val, tx_val)
+
+    def _read_coalescing_settings(self):
+        settings = {}
+        output, _ = exec_cmd("ethtool -c %s" % self.name, die_on_err=False)
+
+        regex = re.compile("^([a-z-]+): (n/a|\d+)$")
+
+        for line in output.split('\n'):
+            if not (m := regex.match(line)):
+                continue
+            setting = m.group(1)
+            value = m.group(2)
+            settings[setting] = value
+
+        return settings
+
+    def _write_coalescing_setting(self, setting, value):
+        try:
+            exec_cmd(f"ethtool -C {self.name} {setting} {value}")
+        except:
+            raise DeviceFeatureNotSupported(
+                f"Not allowed to modify coalescence settings {setting} for {self.name}."
+            )
 
     @property
     def rx_pause_frames(self):
