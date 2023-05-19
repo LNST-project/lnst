@@ -150,6 +150,7 @@ class SRIOVNetnsOvSRecipe(
             f"Configured {dev.host.hostid}.{dev.name}.ips = {dev.ips}"
             for dev in config.test_wide_devices
         ]
+        return desc
 
     def test_wide_deconfiguration(self, config):
         """
