@@ -106,6 +106,7 @@ from lnst.Recipes.ENRT.SRIOVNetnsTcRecipe import SRIOVNetnsTcRecipe
 from lnst.Recipes.ENRT.LinuxBridgeRecipe import LinuxBridgeRecipe
 from lnst.Recipes.ENRT.LinuxBridgeOverBondRecipe import LinuxBridgeOverBondRecipe
 from lnst.Recipes.ENRT.TrafficControlRecipe import TrafficControlRecipe
+from lnst.Recipes.ENRT.BaseLACPRecipe import BaseLACPRecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
