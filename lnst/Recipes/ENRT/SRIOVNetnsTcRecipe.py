@@ -230,9 +230,10 @@ class SRIOVNetnsTcRecipe(
         for i, host in enumerate([host1, host2]):
             host.run(f"echo 0 > /sys/class/net/{host.eth0.name}/device/sriov_numvfs")
             time.sleep(2)
+            host.run(f"tc qdisc del dev {host.eth0.name} ingress")
+            time.sleep(2)
             host.run(f"devlink dev eswitch set pci/{host.eth0.bus_info} mode legacy")
             time.sleep(3)
-            #TODO remove tc filters and qdiscs
         del config.test_wide_devices
 
         super().test_wide_deconfiguration(config)
