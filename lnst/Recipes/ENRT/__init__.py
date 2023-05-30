@@ -51,6 +51,7 @@ in a specific way:
 
 '''
 from lnst.Recipes.ENRT.SimpleNetworkRecipe import SimpleNetworkRecipe
+from lnst.Recipes.ENRT.SimpleNetworkTunableRecipe import SimpleNetworkTunableRecipe
 from lnst.Recipes.ENRT.BondRecipe import BondRecipe
 from lnst.Recipes.ENRT.DoubleBondRecipe import DoubleBondRecipe
 from lnst.Recipes.ENRT.DoubleTeamRecipe import DoubleTeamRecipe
