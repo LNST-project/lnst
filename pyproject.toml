@@ -27,6 +27,7 @@ podman = {version = "*", optional = true }
 cryptography = {version = "*", optional = true }
 pyyaml = {version = "*", optional = true}
 psutil = "^5.9.4"
+requests = "^2.30.0"
 
 urllib3 = "<2"
 
