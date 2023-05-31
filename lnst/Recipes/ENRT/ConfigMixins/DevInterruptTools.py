@@ -3,7 +3,7 @@ from lnst.Controller.Recipe import RecipeError
 from lnst.Controller.RecipeResults import ResultLevel
 
 
-def pin_dev_interrupts(dev, cpus):
+def pin_dev_interrupts(dev, cpus, policy=None):
     netns = dev.netns
     check_cpu_validity(netns, cpus)
 
@@ -11,11 +11,13 @@ def pin_dev_interrupts(dev, cpus):
 
     for i, intr in enumerate(intrs):
         try:
-            cpu = cpus[i % len(cpus)]
+            if policy in [ "round-robin", None ]:
+                cpu = cpus[i % len(cpus)]
+            elif policy == "all":
+                cpu = ",".join([str(cpu) for cpu in cpus])
+
             netns.run(
-                "echo -n {} > /proc/irq/{}/smp_affinity_list".format(
-                    cpu, intr
-                )
+                "echo -n {} > /proc/irq/{}/smp_affinity_list".format(cpu, intr)
             )
         except ValueError:
             pass
