@@ -1,9 +1,6 @@
-import re
-
 from lnst.Common.Parameters import ListParam
-from lnst.Controller.Recipe import RecipeError
-from lnst.Controller.RecipeResults import ResultLevel
 from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
+from lnst.Recipes.ENRT.ConfigMixins.DevInterruptTools import pin_dev_interrupts
 
 
 class DevInterruptHWConfigMixin(BaseHWConfigMixin):
@@ -49,7 +46,7 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
 
             for dev in self.dev_interrupt_hw_config_dev_list:
                 # TODO better service handling through HostAPI
-                self._pin_dev_interrupts(dev, self.params.dev_intr_cpu)
+                pin_dev_interrupts(dev, self.params.dev_intr_cpu)
                 intr_cfg["irq_devs"][dev] = self.params.dev_intr_cpu
 
     def hw_deconfig(self, config):
@@ -79,64 +76,3 @@ class DevInterruptHWConfigMixin(BaseHWConfigMixin):
         else:
             desc.append("Device irq configuration skipped.")
         return desc
-
-    def _pin_dev_interrupts(self, dev, cpus):
-        netns = dev.netns
-        self._check_cpu_validity(netns, cpus)
-
-        intrs = self._get_dev_interrupts(dev)
-
-        for i, intr in enumerate(intrs):
-            try:
-                cpu = cpus[i % len(cpus)]
-                netns.run(
-                    "echo -n {} > /proc/irq/{}/smp_affinity_list".format(
-                        cpu, intr
-                    )
-                )
-            except ValueError:
-                pass
-
-    def _check_cpu_validity(self, host, cpus):
-        cpu_info = host.run("lscpu", job_level=ResultLevel.DEBUG).stdout
-        regex = "CPU\(s\): *([0-9]*)"
-        num_cpus = int(re.search(regex, cpu_info).groups()[0])
-        for cpu in cpus:
-            if cpu < 0 or cpu > num_cpus - 1:
-                raise RecipeError(
-                    "Invalid CPU value given: %d. Accepted value %s."
-                    % (
-                        cpu,
-                        "is: 0" if num_cpus == 1 else "are: 0..%d" % (num_cpus - 1),
-                    )
-                )
-
-    def _get_dev_interrupts(self, dev):
-        if "up" not in dev.state:
-            # device needs to be UP when grepping /proc/interrupts
-            dev.up()
-            set_down = True
-        else:
-            set_down = False
-
-        if dev.bus_info:
-            dev_id_regex = r"({})|({})".format(dev.name, dev.bus_info)
-        else:
-            dev_id_regex = r"{}".format(dev.name)
-
-        res = dev.netns.run(
-            "grep -P \"{}\" /proc/interrupts | cut -f1 -d: | sed 's/ //'".format(
-                dev_id_regex
-            ),
-            job_level=ResultLevel.DEBUG,
-        )
-
-        if set_down:
-            # set device back down if we set it up
-            dev.down()
-
-        return [
-            int(intr.strip())
-            for intr in res.stdout.strip().split("\n")
-            if intr != ""
-        ]
