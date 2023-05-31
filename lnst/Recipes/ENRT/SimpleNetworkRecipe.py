@@ -1,6 +1,7 @@
 from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -11,40 +12,12 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
 )
 
 
-class SimpleNetworkRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
-):
-    """
-    This recipe implements Enrt testing for a simple network scenario that looks
-    as follows
-
-    .. code-block:: none
-
-                    +--------+
-             +------+ switch +-----+
-             |      +--------+     |
-          +--+-+                 +-+--+
-        +-|eth0|-+             +-|eth0|-+
-        | +----+ |             | +----+ |
-        | host1  |             | host2  |
-        +--------+             +--------+
-
-    All sub configurations are included via Mixin classes.
-
-    The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
-    """
+class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    offload_combinations = Param(default=(
-        dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
-        dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
-        dict(gro="on", gso="off", tso="off", tx="on", rx="on"),
-        dict(gro="on", gso="on", tso="off", tx="off", rx="on"),
-        dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
@@ -117,6 +90,36 @@ class SimpleNetworkRecipe(
             [(self.matched.host1.eth0, self.matched.host2.eth0)]
         """
         return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+
+
+class SimpleNetworkRecipe(
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseSimpleNetworkRecipe, BaremetalEnrtRecipe
+):
+    """
+    This recipe implements Enrt testing for a simple network scenario that looks
+    as follows
+
+    .. code-block:: none
+
+                    +--------+
+             +------+ switch +-----+
+             |      +--------+     |
+          +--+-+                 +-+--+
+        +-|eth0|-+             +-|eth0|-+
+        | +----+ |             | +----+ |
+        | host1  |             | host2  |
+        +--------+             +--------+
+
+    All sub configurations are included via Mixin classes.
+
+    The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
+    """
+    offload_combinations = Param(default=(
+        dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
+        dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
+        dict(gro="on", gso="off", tso="off", tx="on", rx="on"),
+        dict(gro="on", gso="on", tso="off", tx="off", rx="on"),
+        dict(gro="on", gso="on", tso="on", tx="on", rx="off")))
 
     @property
     def pause_frames_dev_list(self):
