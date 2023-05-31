@@ -26,7 +26,7 @@ class BaseHWConfigMixin(BaseSubConfigMixin):
     def _configure_dev_attribute(self, config, dev_list, attr_name, value):
         hw_config = config.hw_config
         if len(dev_list) > 0:
-            attr_cfg = hw_config[attr_name + "_configuration"] = {}
+            attr_cfg = hw_config.setdefault(attr_name + "_configuration", {})
 
         for dev in dev_list:
             attr_cfg[dev] = {}
