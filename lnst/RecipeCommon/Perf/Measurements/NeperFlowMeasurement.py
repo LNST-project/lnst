@@ -76,7 +76,7 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
                              test_length = flow.duration,
                              warmup_duration = flow.warmup_duration)
 
-        self._set_cpupin_params(server_params, flow.cpupin)
+        self._set_cpupin_params(server_params, flow.receiver_cpupin)
 
         if flow.msg_size:
             server_params["request_size"] = flow.msg_size
@@ -92,7 +92,7 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
                              test_length = flow.duration,
                              warmup_duration = flow.warmup_duration)
 
-        self._set_cpupin_params(client_params, flow.cpupin)
+        self._set_cpupin_params(client_params, flow.generator_cpupin)
 
         #TODO Figure out what to do about parallel_streams
         # (num_treads? num_flows? possible 2 instances runing at once?)
