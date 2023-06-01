@@ -16,14 +16,20 @@ from lnst.Recipes.ENRT.MeasurementGenerators.FlowEndpointsStatCPUMeasurementGene
 from lnst.Recipes.ENRT.MeasurementGenerators.LinuxPerfMeasurementGenerator import LinuxPerfMeasurementGenerator
 
 
-class BaremetalEnrtRecipe(
-    CommonPerfTestTweakMixin,
-    DisableTurboboostMixin,
-    DisableIdleStatesMixin,
+class BaremetalEnrtMeasurementGenerators(
     FlowEndpointsStatCPUMeasurementGenerator,
     LinuxPerfMeasurementGenerator,
     FlowMeasurementGenerator,
-    BaseEnrtRecipe,
+):
+    @property
+    def linuxperf_cpus(self):
+        return [self.params.dev_intr_cpu, self.params.perf_tool_cpu]
+
+
+class BaremetalEnrtCommonMixins(
+    DisableTurboboostMixin,
+    DisableIdleStatesMixin,
+    CommonPerfTestTweakMixin,
 ):
     @property
     def disable_idlestates_host_list(self):
@@ -49,6 +55,10 @@ class BaremetalEnrtRecipe(
         """
         return self.matched
 
-    @property
-    def linuxperf_cpus(self):
-        return [self.params.dev_intr_cpu, self.params.perf_tool_cpu]
+
+class BaremetalEnrtRecipe(
+    BaremetalEnrtCommonMixins,
+    BaremetalEnrtMeasurementGenerators,
+    BaseEnrtRecipe,
+):
+    pass
