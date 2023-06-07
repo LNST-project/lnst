@@ -26,6 +26,7 @@ from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
 from lnst.Common.DeviceError import DeviceFeatureNotSupported
 from lnst.Common.IpAddress import ipaddress, AF_INET
 from lnst.Common.HWAddress import hwaddress
+from lnst.Common.Utils import wait_for_condition
 
 from pyroute2.netlink.rtnl import RTM_NEWLINK
 from pyroute2.netlink.rtnl import RTM_NEWADDR
@@ -645,6 +646,14 @@ class Device(object, metaclass=DeviceMeta):
         """set device down"""
         self._nl_link_update["state"] = "down"
         self._nl_link_sync("set")
+
+    def up_and_wait(self, timeout: int):
+        self.up()
+        wait_for_condition(lambda: "up" in self.state, timeout=timeout)
+
+    def down_and_wait(self, timeout: int):
+        self.down()
+        wait_for_condition(lambda: "up" not in self.state, timeout=timeout)
 
     #TODO looks like python ethtool module doesn't support these so we'll keep
     #exec_cmd for now...

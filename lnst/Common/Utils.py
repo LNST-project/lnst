@@ -23,7 +23,7 @@ import ast
 import collections
 import math
 import itertools
-from collections.abc import Iterable
+from collections.abc import Iterable, Callable
 from contextlib import AbstractContextManager
 from _ast import Call, Attribute
 from lnst.Common.ExecCmd import exec_cmd
@@ -350,3 +350,14 @@ class nullcontext(AbstractContextManager):
 
     def __exit__(self, *excinfo):
         pass
+
+
+def wait_for_condition(condition: Callable[[], bool], timeout: int):
+    attempts = 0
+    while True:
+        attempts += 1
+        if condition():
+            return
+        if attempts == timeout:
+            raise TimeoutError(f"Timeout while waiting for condition")
+        time.sleep(1)
