@@ -61,8 +61,8 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
             host.br0 = BridgeDevice()
             host.eth0.down()
             host.br0.slave_add(host.eth0)
-            host.eth0.up()
-            host.br0.up()
+            host.eth0.up_and_wait()
+            host.br0.up_and_wait()
             host.br0.ip_add(next(ipv4_addr))
             host.br0.ip_add(next(ipv6_addr))
 

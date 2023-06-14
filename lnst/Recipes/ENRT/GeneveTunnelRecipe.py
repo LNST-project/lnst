@@ -95,7 +95,7 @@ class GeneveTunnelRecipe(
                 device.ip_add(next(ipv4_addr))
             else:
                 device.ip_add(next(ipv6_addr))
-            device.up()
+            device.up_and_wait()
             configuration.test_wide_devices.append(device)
 
         self.wait_tentative_ips(configuration.test_wide_devices)
@@ -127,13 +127,13 @@ class GeneveTunnelRecipe(
 
         # A
         m1.gnv_tunnel.mtu = 1400
-        m1.gnv_tunnel.up()
+        m1.gnv_tunnel.up_and_wait()
         m1.gnv_tunnel.ip_add(a_ip4)
         m1.gnv_tunnel.ip_add(a_ip6)
 
         # B
         m2.gnv_tunnel.mtu = 1400
-        m2.gnv_tunnel.up()
+        m2.gnv_tunnel.up_and_wait()
         m2.gnv_tunnel.ip_add(b_ip4)
         m2.gnv_tunnel.ip_add(b_ip6)
 

@@ -86,7 +86,7 @@ class LinuxBridgeOverBondRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
             host.br0.slave_add(host.bond0)
 
             for dev in [host.eth0, host.eth1, host.bond0, host.br0]:
-                dev.up()
+                dev.up_and_wait()
 
             host.br0.ip_add(next(ipv4_addr))
             host.br0.ip_add(next(ipv6_addr))
