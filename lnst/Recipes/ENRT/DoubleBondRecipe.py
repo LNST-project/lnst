@@ -51,7 +51,7 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
             host.bond0.ip_add(next(ipv4_addr))
             host.bond0.ip_add(next(ipv6_addr))
             for dev in [host.eth0, host.eth1, host.bond0]:
-                dev.up()
+                dev.up_and_wait()
 
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = [host1.bond0, host2.bond0]

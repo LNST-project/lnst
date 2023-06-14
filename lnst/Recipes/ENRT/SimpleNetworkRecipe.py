@@ -68,7 +68,7 @@ class SimpleNetworkRecipe(
         for host in [host1, host2]:
             host.eth0.ip_add(next(ipv4_addr))
             host.eth0.ip_add(next(ipv6_addr))
-            host.eth0.up()
+            host.eth0.up_and_wait()
             configuration.test_wide_devices.append(host.eth0)
 
         self.wait_tentative_ips(configuration.test_wide_devices)

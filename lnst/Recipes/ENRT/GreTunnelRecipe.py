@@ -81,7 +81,7 @@ class GreTunnelRecipe(
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         for device in [host1.eth0, host2.eth0]:
             device.ip_add(next(ipv4_addr))
-            device.up()
+            device.up_and_wait()
             configuration.test_wide_devices.append(device)
 
         self.wait_tentative_ips(configuration.test_wide_devices)
@@ -113,14 +113,14 @@ class GreTunnelRecipe(
         m2.gre_tunnel = GreDevice(local=endpoint2_ip, remote=endpoint1_ip)
 
         # A
-        m1.gre_tunnel.up()
+        m1.gre_tunnel.up_and_wait()
         m1.gre_tunnel.ip_add(a_ip4)
         m1.gre_tunnel.ip_add(a_ip6)
         m1.run("ip -4 route add {} dev {}".format(b_net4, m1.gre_tunnel.name))
         m1.run("ip -6 route add {} dev {}".format(b_net6, m1.gre_tunnel.name))
 
         # B
-        m2.gre_tunnel.up()
+        m2.gre_tunnel.up_and_wait()
         m2.gre_tunnel.ip_add(b_ip4)
         m2.gre_tunnel.ip_add(b_ip6)
         m2.run("ip -4 route add {} dev {}".format(a_net4, m2.gre_tunnel.name))

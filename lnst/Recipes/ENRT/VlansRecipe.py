@@ -113,7 +113,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
             host.vlan1.ip_add(next(vlan1_ipv6_addr))
             host.vlan2.ip_add(next(vlan2_ipv6_addr))
             for dev in [host.eth0, host.vlan0, host.vlan1, host.vlan2]:
-                dev.up()
+                dev.up_and_wait()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
 

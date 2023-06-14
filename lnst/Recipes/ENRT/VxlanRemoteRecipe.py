@@ -51,8 +51,8 @@ class VxlanRemoteRecipe(
                 + "/64"))
 
         for host in [host1, host2]:
-            host.eth0.up()
-            host.vxlan0.up()
+            host.eth0.up_and_wait()
+            host.vxlan0.up_and_wait()
 
         self.wait_tentative_ips(configuration.test_wide_devices)
 
