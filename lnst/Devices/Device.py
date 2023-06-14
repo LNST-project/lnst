@@ -32,6 +32,8 @@ from pyroute2.netlink.rtnl import RTM_NEWLINK
 from pyroute2.netlink.rtnl import RTM_NEWADDR
 from pyroute2.netlink.rtnl import RTM_DELADDR
 
+TOGGLE_STATE_TIMEOUT = 15 + 3  # as a reserve
+
 class DeviceMeta(ABCMeta):
     def __instancecheck__(self, other):
         try:
@@ -647,11 +649,11 @@ class Device(object, metaclass=DeviceMeta):
         self._nl_link_update["state"] = "down"
         self._nl_link_sync("set")
 
-    def up_and_wait(self, timeout: int):
+    def up_and_wait(self, timeout: int = TOGGLE_STATE_TIMEOUT):
         self.up()
         wait_for_condition(lambda: "up" in self.state, timeout=timeout)
 
-    def down_and_wait(self, timeout: int):
+    def down_and_wait(self, timeout: int = TOGGLE_STATE_TIMEOUT):
         self.down()
         wait_for_condition(lambda: "up" not in self.state, timeout=timeout)
 
