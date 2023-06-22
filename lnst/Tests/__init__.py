@@ -16,5 +16,6 @@ from lnst.Tests.Ping import Ping
 from lnst.Tests.PacketAssert import PacketAssert
 from lnst.Tests.Iperf import IperfClient, IperfServer
 from lnst.Tests.RDMABandwidth import RDMABandwidthClient, RDMABandwidthServer
+from lnst.Tests.PktGen import PktGen
 
 #TODO add support for test classes from lnst-ctl.conf
