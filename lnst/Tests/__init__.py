@@ -15,5 +15,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 from lnst.Tests.Ping import Ping
 from lnst.Tests.PacketAssert import PacketAssert
 from lnst.Tests.Iperf import IperfClient, IperfServer
+from lnst.Tests.RDMABandwidth import RDMABandwidthClient, RDMABandwidthServer
 
 #TODO add support for test classes from lnst-ctl.conf

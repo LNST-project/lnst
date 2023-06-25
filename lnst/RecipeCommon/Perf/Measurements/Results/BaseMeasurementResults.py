@@ -1,4 +1,4 @@
-from lnst.RecipeCommon.Perf.Measurements import BaseMeasurement
+from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 
 
 class BaseMeasurementResults(object):

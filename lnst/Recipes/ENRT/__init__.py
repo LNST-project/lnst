@@ -108,6 +108,7 @@ from lnst.Recipes.ENRT.LinuxBridgeOverBondRecipe import LinuxBridgeOverBondRecip
 from lnst.Recipes.ENRT.TrafficControlRecipe import TrafficControlRecipe
 from lnst.Recipes.ENRT.BaseLACPRecipe import BaseLACPRecipe
 from lnst.Recipes.ENRT.DellLACPRecipe import DellLACPRecipe
+from lnst.Recipes.ENRT.SoftwareRDMARecipe import SoftwareRDMARecipe
 
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
