@@ -34,14 +34,20 @@ class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
         host1, host2 = self.matched.host1, self.matched.host2
         configuration = super().test_wide_configuration()
         configuration.test_wide_devices = []
+        configuration.ipv4s = []
+        configuration.ipv6s = []
 
-        ipv4_addr = interface_addresses(self.params.net_ipv4)
-        ipv6_addr = interface_addresses(self.params.net_ipv6)
+        ipv4_addr_pool = interface_addresses(self.params.net_ipv4)
+        ipv6_addr_pool = interface_addresses(self.params.net_ipv6)
 
         for host in [host1, host2]:
-            host.eth0.ip_add(next(ipv4_addr))
-            host.eth0.ip_add(next(ipv6_addr))
+            ipv4_address = next(ipv4_addr_pool)
+            ipv6_address = next(ipv6_addr_pool)
+            host.eth0.ip_add(ipv4_address)
+            host.eth0.ip_add(ipv6_address)
             host.eth0.up_and_wait()
+            configuration.ipv4s.append(ipv4_address)
+            configuration.ipv6s.append(ipv6_address)
             configuration.test_wide_devices.append(host.eth0)
 
         self.wait_tentative_ips(configuration.test_wide_devices)

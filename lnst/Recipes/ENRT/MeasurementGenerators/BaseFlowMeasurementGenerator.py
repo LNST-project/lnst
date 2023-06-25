@@ -10,7 +10,10 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
-from lnst.RecipeCommon.Perf.Measurements import IperfFlowMeasurement, NeperFlowMeasurement
+from lnst.RecipeCommon.Perf.Measurements import (
+    IperfFlowMeasurement,
+    NeperFlowMeasurement,
+)
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
 
@@ -84,7 +87,7 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
     def generate_perf_measurements_combinations(self, config):
         combinations = super().generate_perf_measurements_combinations(config)
         for flow_combination in self.generate_flow_combinations(config):
-            combinations.append([self.net_perf_tool_class(flow_combination)])
+            combinations.append([self.net_perf_tool_class(flow_combination, recipe_conf=config)])
         return combinations
 
     def generate_flow_combinations(self, config):

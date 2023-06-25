@@ -2,7 +2,8 @@ from dataclasses import dataclass
 import textwrap
 from typing import Optional, Union
 from lnst.Common.IpAddress import BaseIpAddress
-from lnst.Controller import Job, Namespace
+from lnst.Controller.Job import Job
+from lnst.Controller.Namespace import Namespace
 
 from lnst.Controller.RecipeResults import ResultType
 from lnst.Devices import Device

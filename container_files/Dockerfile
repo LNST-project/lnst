@@ -15,6 +15,7 @@ RUN dnf install -y initscripts \
     libnl3 \
     git \
     perf \
+    perftest \
     tcpdump \
     libnl3-devel &&  \
     curl -sSL https://install.python-poetry.org |  \
