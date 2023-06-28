@@ -34,17 +34,9 @@ class BaseCPUMeasurement(BaseMeasurement):
         if not len(results):
             return
 
-        cpu_data = {}
-        desc = ["CPU Utilization on host {host}:".format(
-                    host=results[0].host.hostid)]
-        for result in results:
-            utilization = result.utilization
-            cpu_data[result.cpu] = utilization
-            desc.append("cpu '{cpu}': {average:.2f} +-{deviation:.2f} {unit} per second"
-                    .format(cpu=result.cpu,
-                            average=utilization.average,
-                            deviation=utilization.std_deviation,
-                            unit=utilization.unit))
+        cpu_data = {result.cpu: result.utilization for result in results}
+
+        desc = [result.describe() for result in results]
 
         recipe.add_result(ResultType.PASS, "\n".join(desc), data=cpu_data)
 
