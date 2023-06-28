@@ -1,4 +1,6 @@
-from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import BaseMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import (
+    BaseMeasurementResults,
+)
 
 
 class CPUMeasurementResults(BaseMeasurementResults):
@@ -23,3 +25,12 @@ class CPUMeasurementResults(BaseMeasurementResults):
     @utilization.setter
     def utilization(self, value):
         self._utilization = value
+
+    def describe(self):
+        return "host {host} cpu '{cpu}' utilization: {average:.2f} +-{deviation:.2f} {unit} per second".format(
+            host=self.host.hostid,
+            cpu=self.cpu,
+            average=self.utilization.average,
+            deviation=self.utilization.std_deviation,
+            unit=self.utilization.unit,
+        )

@@ -16,3 +16,6 @@ class BaseMeasurementResults(object):
 
     def align_data(self, start, end):
         return self
+
+    def describe(self):
+        return ""

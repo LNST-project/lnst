@@ -103,3 +103,36 @@ class FlowMeasurementResults(BaseMeasurementResults):
         result_copy.receiver_results = self.receiver_results.time_slice(start, end)
 
         return result_copy
+
+    def describe(self):
+        generator = self.generator_results
+        generator_cpu = self.generator_cpu_stats
+        receiver = self.receiver_results
+        receiver_cpu = self.receiver_cpu_stats
+        desc = []
+        desc.append("Generator measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second."
+                .format(tput=generator.average,
+                        deviation=generator.std_deviation,
+                        percentage=self._deviation_percentage(generator),
+                        unit=generator.unit))
+        desc.append("Generator process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second."
+                .format(cpu=generator_cpu.average,
+                        cpu_deviation=generator_cpu.std_deviation,
+                        cpu_unit=generator_cpu.unit))
+        desc.append("Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second."
+                .format(tput=receiver.average,
+                        deviation=receiver.std_deviation,
+                        percentage=self._deviation_percentage(receiver),
+                        unit=receiver.unit))
+        desc.append("Receiver process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second."
+                .format(cpu=receiver_cpu.average,
+                        cpu_deviation=receiver_cpu.std_deviation,
+                        cpu_unit=receiver_cpu.unit))
+        return "\n".join(desc)
+
+    @staticmethod
+    def _deviation_percentage(result):
+        try:
+            return (result.std_deviation/result.average) * 100
+        except ZeroDivisionError:
+            return float('inf') if result.std_deviation >= 0 else float("-inf")
