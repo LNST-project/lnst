@@ -68,3 +68,56 @@ class BaseHWConfigMixin(BaseSubConfigMixin):
             )
 
         return res
+
+    def _parse_device_settings(self, settings={}):
+        """
+        This method can be used to transform the individual device configurations
+        specified through recipe parameters into mapping of device instance to
+        device specific configiuration.
+
+        This is typical for multi-device config mixins such as DevQueuesConfigMixin.
+
+        The method expects that mixins use following common format of the recipe
+        parameter for the devices configuration:
+        {
+            "host1": {
+                "eth1": device_specific_config1 # can be any type, depends on the mixin implementation
+            },
+            "host2": {
+                "eth1": device_specific_config2 # can be any type, depends on the mixin implementation
+            }
+        }
+
+        The first level keys in the dictionary are the host ids defined through
+        the `HostReq`s in individual recipes.
+        The second level keys are device ids defined through `DeviceReq` in
+        individual recipes.
+
+        The method returns a dictionary where resolved device `DeviceReq`s are
+        mapped to device_specific_configs.
+        """
+        result_mapping = {}
+        for host in settings:
+            try:
+                matched_host = getattr(self.matched, host)
+            except AttributeError:
+                raise Exception(
+                    f"Host {host} not found in matched hosts, while parsing {settings}"
+                )
+
+            for device, device_setting in settings[host].items():
+                try:
+                    matched_device = getattr(matched_host, device)
+                except AttributeError:
+                    raise Exception(
+                        f"Device {device} not found on {host}, while parsing {settings}"
+                    )
+
+                if matched_device not in result_mapping:
+                    result_mapping[matched_device] = device_setting
+                else:
+                    raise Exception(
+                        f"Device host {host} device {device} specified multiple times"
+                    )
+
+        return result_mapping
