@@ -295,7 +295,8 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
                 msg_size=self.params.perf_msg_size,
                 duration=self.params.perf_duration,
                 parallel_streams=1,
-                cpupin=None))
+                generator_cpupin=None,
+                receiver_cpupin=None))
 
         perf_recipe_conf = dict(
             recipe_config=config,
