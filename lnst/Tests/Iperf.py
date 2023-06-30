@@ -158,6 +158,8 @@ class IperfClient(IperfBase):
 
         if "client_port" in self.params:
             client_port = "--cport {:d}".format(self.params.client_port)
+        else:
+            client_port = ""
 
         if "blksize" in self.params:
             blksize = "-l {:d}".format(self.params.blksize)
