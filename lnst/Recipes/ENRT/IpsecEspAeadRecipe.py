@@ -207,7 +207,9 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                     duration=self.params.perf_duration,
                     warmup_duration=self.params.perf_warmup_duration,
                     parallel_streams=self.params.perf_parallel_streams,
-                    cpupin=self.params.perf_tool_cpu if (
+                    generator_cpupin=self.params.perf_tool_cpu if (
+                            "perf_tool_cpu" in self.params) else None,
+                    receiver_cpupin=self.params.perf_tool_cpu if (
                             "perf_tool_cpu" in self.params) else None
                 )
                 yield [flow]

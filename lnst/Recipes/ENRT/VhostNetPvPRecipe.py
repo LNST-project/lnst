@@ -134,7 +134,8 @@ class VhostNetPvPRecipe(BasePvPRecipe):
                                   msg_size=self.params.perf_msg_size,
                                   duration=self.params.perf_duration,
                                   parallel_streams=self.params.perf_streams,
-                                  cpupin=None)
+                                  generator_cpupin=None,
+                                  receiver_cpupin=None)
                          )
 
         return PerfRecipeConf(
