@@ -47,9 +47,8 @@ class MultiCoalescingHWConfigMixin(BaseHWConfigMixin):
                 )
 
     def hw_deconfig(self, config):
-        for device, device_setting in zip(
-            self.coalescing_hw_config_dev_list, self.params.get("coalescing_settings")
-        ):
+        device_settings = self._parse_device_settings(self.params.coalescing_settings)
+        for device, device_setting in device_settings.items():
             device_setting_copy = copy(device_setting)
             for param in device_setting:
                 if param in ["adaptive-tx", "adaptive-rx"]:
