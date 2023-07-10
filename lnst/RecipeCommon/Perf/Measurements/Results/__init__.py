@@ -12,3 +12,5 @@ from lnst.RecipeCommon.Perf.Measurements.Results.LinuxPerfMeasurementResults imp
 from lnst.RecipeCommon.Perf.Measurements.Results.RDMABandwidthMeasurementResults import RDMABandwidthMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.Results.StatCPUMeasurementResults import StatCPUMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.Results.TcRunMeasurementResults import TcRunMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results.XDPBenchMeasurementResults import XDPBenchMeasurementResults
+
