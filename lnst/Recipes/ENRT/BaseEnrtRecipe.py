@@ -129,6 +129,12 @@ class BaseEnrtRecipe(
         utilization on specified hosts.
     :type cpu_perf_tool: :any:`BaseCPUMeasurement` (default StatCPUMeasurement)
 
+    :param perf_iterations:
+        Parameter used by the :any:`generate_perf_configurations` generator. To
+        specify how many times should each performance measurement be repeated
+        to generate cumulative results which can be statistically analyzed.
+    :type perf_iterations: :any:`IntParam` (default 5)
+
     :param perf_evaluation_strategy:
         Parameter used by the :any:`evaluator_by_measurement` selector to
         pick correct performance measurement evaluators based on the strategy
@@ -149,6 +155,7 @@ class BaseEnrtRecipe(
     ping_psize = IntParam(default=56)
 
     # generic perf test params
+    perf_iterations = IntParam(default=5)
     perf_evaluation_strategy = StrParam(default="all")
 
     def test(self):
