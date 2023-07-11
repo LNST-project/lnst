@@ -43,12 +43,6 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         specify the duration of the performance measurements, in seconds.
     :type perf_duration: :any:`IntParam` (default 60)
 
-    :param perf_iterations:
-        Parameter used by the :any:`generate_perf_configurations` generator. To
-        specify how many times should each performance measurement be repeated
-        to generate cumulative results which can be statistically analyzed.
-    :type perf_iterations: :any:`IntParam` (default 5)
-
     :param perf_parallel_streams:
         Parameter used by the :any:`generate_flow_combinations` generator. To
         specify how many parallel streams of the same network flow should be
@@ -72,7 +66,6 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
     # common perf test params
     perf_tests = Param(default=("tcp_stream", "udp_stream", "sctp_stream"))
     perf_duration = IntParam(default=60)
-    perf_iterations = IntParam(default=5)
     perf_parallel_streams = IntParam(default=1)
     perf_parallel_processes = IntParam(default=1)
     perf_msg_sizes = ListParam(default=[123])
