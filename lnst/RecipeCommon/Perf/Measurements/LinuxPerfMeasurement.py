@@ -27,8 +27,7 @@ def timestamp() -> str:
 class LinuxPerfMeasurement(BaseMeasurement):
     _MEASUREMENT_VERSION: int = 1
 
-    hosts: list[Host]
-    linuxperf_cpus: list[list[int]]
+    linuxperf_cpus: dict[Host, list[list[int]]]
     _start_timestamp: float
     _end_timestamp: float
     _data_folder: str
@@ -40,14 +39,12 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
     def __init__(
         self,
-        hosts: list[Host],
-        linuxperf_cpus: list[list[int]],
+        linuxperf_cpus: dict[Host, list[list[int]]],
         data_folder: str,
         recipe_conf: Any = None,
     ):
         super().__init__(recipe_conf)
 
-        self.hosts = hosts
         self.linuxperf_cpus = linuxperf_cpus
         self._data_folder = data_folder
 
@@ -57,6 +54,10 @@ class LinuxPerfMeasurement(BaseMeasurement):
                 os.mkdir(os.path.join(self._data_folder, host.hostid))
             except FileExistsError:
                 pass
+
+    @property
+    def hosts(self) -> list[Host]:
+        return list(self.linuxperf_cpus.keys())
 
     @property
     def version(self) -> Optional[dict[str, Any]]:
@@ -89,7 +90,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
     @property
     def configurations(self) -> Iterable[tuple[Host, int, list[int]]]:
         for host in self.hosts:
-            for cpu_list_id, cpu_list in enumerate(self.linuxperf_cpus):
+            for cpu_list_id, cpu_list in enumerate(self.linuxperf_cpus[host]):
                 yield (host, cpu_list_id, cpu_list)
 
     def start(self) -> None:
