@@ -23,7 +23,9 @@ class BaremetalEnrtMeasurementGenerators(
 ):
     @property
     def linuxperf_cpus(self):
-        return [self.params.dev_intr_cpu, self.params.perf_tool_cpu]
+        return {
+            host: [self.params.dev_intr_cpu, self.params.perf_tool_cpu] for host in self.matched
+        }
 
 
 class BaremetalEnrtCommonMixins(
