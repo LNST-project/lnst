@@ -1,3 +1,5 @@
+import os
+
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
     BaseMeasurementGenerator,
 )
@@ -13,8 +15,7 @@ from lnst.Common.Parameters import (
     ListParam,
 )
 from lnst.Common.LnstError import LnstError
-
-import os
+from lnst.Controller.Host import Host
 
 
 class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
@@ -34,11 +35,11 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
             except FileExistsError:
                 pass
 
-        profiled_cpu_groups: list[list[int]] = []
+        profiled_cpu_groups: dict[Host, list[list[int]]] = {}
         if self.params.get("linuxperf_cpus_override"):
-            profiled_cpu_groups = self.params.linuxperf_cpus_override
+            profiled_cpu_groups = self._parse_override_param(self.params.linuxperf_cpus_override)
         else:
-            profiled_cpu_groups = getattr(self, "linuxperf_cpus", [])
+            profiled_cpu_groups = getattr(self, "linuxperf_cpus", {})
 
         # TODO: in case no group of cpus is in the list, we may simply run
         # profiler without the cpu specified, however this requires additional
@@ -53,7 +54,6 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
             res: list[BaseMeasurement]
             if self.params.do_linuxperf_measurement:
                 measurement: BaseMeasurement = LinuxPerfMeasurement(
-                    self.matched,
                     profiled_cpu_groups,
                     data_folder=linuxperf_data_folder,
                     recipe_conf=config,
@@ -63,3 +63,18 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
                 res = combination
 
             yield res
+
+    def _parse_override_param(self, param):
+        result = {}
+
+        for host in param:
+            try:
+                matched_host = getattr(self.matched, host)
+            except AttributeError:
+                raise Exception(
+                    f"Host {host} not found in matched hosts, while parsing {param}"
+                )
+
+            result[matched_host] = param[host]
+
+        return result
