@@ -1,169 +1,64 @@
+from dataclasses import dataclass
 import textwrap
+from typing import Optional, Union
+from lnst.Common.IpAddress import BaseIpAddress
+from lnst.Controller import Job, Namespace
 
 from lnst.Controller.RecipeResults import ResultType
+from lnst.Devices import Device
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.Results import FlowMeasurementResults, AggregatedFlowMeasurementResults
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
-class Flow(object):
-    def __init__(self,
-                 type,
-                 generator,
-                 generator_bind,
-                 receiver,
-                 receiver_bind,
-                 duration,
-                 parallel_streams,
-                 generator_nic=None,
-                 generator_port=None,
-                 receiver_nic=None,
-                 receiver_port=None,
-                 msg_size=None,
-                 generator_cpupin=None,
-                 receiver_cpupin=None,
-                 aggregated_flow=False,
-                 warmup_duration=0):
-        self._type = type
 
-        self._generator = generator
-        self._generator_bind = generator_bind
-        self._generator_nic = generator_nic
-        self._generator_port = generator_port
-        self._receiver = receiver
-        self._receiver_bind = receiver_bind
-        self._receiver_nic = receiver_nic
-        self._receiver_port = receiver_port
-
-        self._msg_size = msg_size
-        self._duration = duration
-        self._parallel_streams = parallel_streams
-        self._generator_cpupin = generator_cpupin
-        self._receiver_cpupin = receiver_cpupin
-        self._aggregated_flow=aggregated_flow
-        self._warmup_duration = warmup_duration
-
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def generator(self):
-        return self._generator
-
-    @property
-    def generator_bind(self):
-        return self._generator_bind
-
-    @property
-    def generator_nic(self):
-        return self._generator_nic
-
-    @property
-    def generator_port(self):
-        return self._generator_port
-
-    @property
-    def receiver(self):
-        return self._receiver
-
-    @property
-    def receiver_bind(self):
-        return self._receiver_bind
-
-    @property
-    def receiver_nic(self):
-        return self._receiver_nic
-
-    @property
-    def receiver_port(self):
-        return self._receiver_port
-
-    @property
-    def msg_size(self):
-        return self._msg_size
-
-    @property
-    def duration(self):
-        return self._duration
-
-    @property
-    def parallel_streams(self):
-        return self._parallel_streams
-
-    @property
-    def generator_cpupin(self):
-        return self._generator_cpupin
-
-    @property
-    def receiver_cpupin(self):
-        return self._receiver_cpupin
-
-    @property
-    def aggregated_flow(self):
-        return self._aggregated_flow
-
-    @property
-    def warmup_duration(self):
-        return self._warmup_duration
+@dataclass
+class Flow:
+    type: str
+    generator: Namespace
+    generator_bind: BaseIpAddress
+    receiver: Namespace
+    receiver_bind: BaseIpAddress
+    duration: int
+    parallel_streams: int
+    generator_nic: Optional[Union[Device, str]] = None
+    generator_port: Optional[int] = None
+    receiver_nic: Optional[Union[Device, str]] = None
+    receiver_port: Optional[int] = None
+    msg_size: Optional[int] = None
+    generator_cpupin: Optional[list[int]] = None
+    receiver_cpupin: Optional[list[int]] = None
+    aggregated_flow: bool = False
+    warmup_duration: int = 0
 
     def __repr__(self):
-        string = """
+        string = f"""
         Flow(
-            type={type},
-            generator={generator}, 
-            generator_bind={generator_bind},
-            generator_nic={generator_nic},
-            generator_port={generator_port},
-            receiver={receiver}, 
-            receiver_bind={receiver_bind},
-            receiver_nic={receiver_nic},
-            receiver_port={receiver_port},
-            msg_size={msg_size}, 
-            duration={duration},
-            parallel_streams={parallel_streams},
-            generator_cpupin={generator_cpupin},
-            receiver_cpupin={receiver_cpupin},
-            aggregated_flow={aggregated_flow}
-            warmup_duration={warmup_duration},
-        )""".format(
-            type=self.type,
-            generator=str(self.generator),
-            generator_bind=self.generator_bind,
-            generator_nic=self.generator_nic,
-            generator_port=self.generator_port,
-            receiver=str(self.receiver),
-            receiver_bind=self.receiver_bind,
-            receiver_nic=self.receiver_nic,
-            receiver_port=self.receiver_port,
-            msg_size=self.msg_size,
-            duration=self.duration,
-            parallel_streams=self.parallel_streams,
-            generator_cpupin=self.generator_cpupin,
-            receiver_cpupin=self.receiver_cpupin,
-            aggregated_flow=self._aggregated_flow,
-            warmup_duration=self._warmup_duration
-        )
-        string = textwrap.dedent(string).strip()
-        return string
+            type={self.type},
+            generator={self.generator},
+            generator_bind={self.generator_bind},
+            generator_nic={self.generator_nic},
+            generator_port={self.generator_port},
+            receiver={self.receiver},
+            receiver_bind={self.receiver_bind},
+            receiver_nic={self.receiver_nic},
+            receiver_port={self.receiver_port},
+            msg_size={self.msg_size},
+            duration={self.duration},
+            parallel_streams={self.parallel_streams},
+            generator_cpupin={self.generator_cpupin},
+            receiver_cpupin={self.receiver_cpupin},
+            aggregated_flow={self.aggregated_flow}
+            warmup_duration={self.warmup_duration},
+        )"""
+        return textwrap.dedent(string).strip()
 
-class NetworkFlowTest(object):
-    def __init__(self, flow, server_job, client_job):
-        self._flow = flow
-        self._server_job = server_job
-        self._client_job = client_job
 
-    @property
-    def flow(self):
-        return self._flow
-
-    @property
-    def server_job(self):
-        return self._server_job
-
-    @property
-    def client_job(self):
-        return self._client_job
+@dataclass
+class NetworkFlowTest:
+    flow: Flow
+    server_job: Job
+    client_job: Job
 
 
 class BaseFlowMeasurement(BaseMeasurement):
