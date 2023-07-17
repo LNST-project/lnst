@@ -17,5 +17,5 @@ from lnst.Tests.PacketAssert import PacketAssert
 from lnst.Tests.Iperf import IperfClient, IperfServer
 from lnst.Tests.RDMABandwidth import RDMABandwidthClient, RDMABandwidthServer
 from lnst.Tests.PktGen import PktGen
-
+from lnst.Tests.XDPBench import XDPBench
 #TODO add support for test classes from lnst-ctl.conf
