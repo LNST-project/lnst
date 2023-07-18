@@ -39,10 +39,10 @@ class BaselineTcRunAverageEvaluator(BaselineEvaluator):
                 f"{abs(difference):2f}% {direction} than baseline ",
                 f"Allowed difference: {threshold}% ",
             ]
-            if difference < -threshold:
+            if difference > threshold:
                 comparison = ResultType.WARNING
                 text[0] = f"IMPROVEMENT: {text[0]}"
-            elif difference <= threshold:
+            elif difference >= -threshold:
                 comparison = ResultType.PASS
                 text[0] = f"PASS: {text[0]}"
             else:
