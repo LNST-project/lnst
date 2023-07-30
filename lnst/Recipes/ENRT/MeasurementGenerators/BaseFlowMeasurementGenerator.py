@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 
 from lnst.Common.Parameters import (
     Param,
@@ -89,7 +90,7 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
             combinations.append([self.net_perf_tool_class(flow_combination, recipe_conf=config)])
         return combinations
 
-    def generate_flow_combinations(self, config):
+    def generate_flow_combinations(self, config) -> Iterator[list[PerfFlow]]:
         """Base flow combination generator
 
         The generator loops over all endpoint pairs to test performance between
