@@ -1,3 +1,4 @@
+from collections.abc import Collection
 import logging
 from lnst.Common.Parameters import (
     Param,
@@ -7,6 +8,8 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -121,8 +124,8 @@ class VirtualOvsBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.guest1.vlan0, self.matched.guest2.vlan0)]
 
-    def generate_perf_endpoints(self, config):
-        return [(self.matched.guest1.vlan0, self.matched.guest2.vlan0)]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+        return [ip_endpoint_pairs(config, (self.matched.guest1.vlan0, self.matched.guest2.vlan0))]
 
     @property
     def offload_nics(self):
