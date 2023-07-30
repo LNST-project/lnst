@@ -1,6 +1,9 @@
+from collections.abc import Collection
 from lnst.Common.Parameters import Param, IntParam, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -162,18 +165,14 @@ class VlansRecipe(VlanPingEvaluatorMixin,
                 PingEndpoints(host1.vlan1, host2.vlan1),
                 PingEndpoints(host1.vlan2, host2.vlan2)]
 
-    def generate_perf_endpoints(self, config):
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the VLAN tunnel endpoints with
         VLAN id from parameter vlan0_id (by default: 10):
 
         host1.vlan0 and host2.vlan0
-
-        Returned as::
-
-            [(self.matched.host1.vlan0, self.matched.host2.vlan0)]
         """
-        return [(self.matched.host1.vlan0, self.matched.host2.vlan0)]
+        return [ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))]
 
     @property
     def offload_nics(self):

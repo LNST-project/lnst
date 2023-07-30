@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from socket import AF_INET, AF_INET6
 from typing import List
 
@@ -7,6 +8,8 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Host import Host
 from lnst.RecipeCommon.MPTCPManager import MPTCPManager, MPTCPFlags
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
@@ -154,11 +157,11 @@ class MPTCPRecipe(
         return [PingEndpoints(self.matched.host1.eth0, self.matched.host2.eth0),
                 PingEndpoints(self.matched.host1.eth1, self.matched.host2.eth1)]
 
-    def generate_perf_endpoints(self, config):
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
         """
         Due to the way MPTCP works, the the perf endpoints will be the 2 "primary" ports/flows
         """
-        return [(self.matched.host1.eth0, self.matched.host2.eth0)]
+        return [ip_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))]
 
     #TODO MPTCP Devs would like it to have:
     # eth0.mtu = default

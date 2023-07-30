@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -7,6 +8,8 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -95,8 +98,8 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.host1.bond0, self.matched.host2.bond0)]
 
-    def generate_perf_endpoints(self, config):
-        return [(self.matched.host1.bond0, self.matched.host2.bond0)]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+        return [ip_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.bond0))]
 
     @property
     def offload_nics(self):

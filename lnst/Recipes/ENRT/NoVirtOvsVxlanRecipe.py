@@ -1,6 +1,9 @@
+from collections.abc import Collection
 from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -92,8 +95,8 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.host1.int0, self.matched.host2.int0)]
 
-    def generate_perf_endpoints(self, config):
-        return [(self.matched.host1.int0, self.matched.host2.int0)]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+        return [ip_endpoint_pairs(config, (self.matched.host1.int0, self.matched.host2.int0))]
 
     @property
     def mtu_hw_config_dev_list(self):

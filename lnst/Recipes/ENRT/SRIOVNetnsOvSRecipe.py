@@ -1,3 +1,4 @@
+from collections.abc import Collection
 import time
 
 from lnst.Common.Parameters import (
@@ -9,6 +10,8 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -177,17 +180,13 @@ class SRIOVNetnsOvSRecipe(
         """
         return [PingEndpoints(self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0)]
 
-    def generate_perf_endpoints(self, config):
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are simply the two matched NICs:
 
         host1.newns.vf_eth0 and host2.newns.vf_eth0
-
-        Returned as::
-
-            [(self.matched.host1.eth0, self.matched.host2.eth0)]
         """
-        return [(self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0)]
+        return [ip_endpoint_pairs(config, (self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0))]
 
     @property
     def pause_frames_dev_list(self):

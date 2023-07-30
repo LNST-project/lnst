@@ -1,7 +1,10 @@
+from collections.abc import Collection
 from itertools import combinations
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -137,8 +140,8 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             ) for comb in dev_combinations
         ]
 
-    def generate_perf_endpoints(self, config):
-        return [(self.matched.guest1.eth0, self.matched.guest3.eth0)]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+        return [ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))]
 
     @property
     def pause_frames_dev_list(self):

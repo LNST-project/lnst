@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
@@ -19,6 +20,8 @@ from lnst.Common.Parameters import (
 )
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -227,16 +230,12 @@ class VxlanGpeTunnelRecipe(
 
         return pa_config
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration):
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.
-
-        Returned as::
-
-            [(self.matched.host1.lo, self.matched.host2.lo)]
         """
-        return [(self.matched.host1.lo, self.matched.host2.lo)]
+        return [ip_endpoint_pairs(config, (self.matched.host1.lo, self.matched.host2.lo))]
 
     @property
     def offload_nics(self):
