@@ -1,5 +1,7 @@
-from collections.abc import Iterator
+from collections.abc import Iterator, Collection
+import itertools
 
+from lnst.Common.IpAddress import BaseIpAddress, Ip4Address
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -7,13 +9,14 @@ from lnst.Common.Parameters import (
     StrParam,
     ChoiceParam,
 )
-from lnst.Common.IpAddress import AF_INET, AF_INET6
 
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Perf.Measurements import (
     IperfFlowMeasurement,
     NeperFlowMeasurement,
 )
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
 
@@ -103,64 +106,62 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         :return: list of Flow combinations to measure in parallel
         :rtype: Iterator[:any:`PerfFlow`]
         """
-        for client_nic, server_nic in self.generate_perf_endpoints(config):
-            for ipv in self.params.ip_versions:
+        def ip_version_string(ip_address: BaseIpAddress) -> str:
+            return "ipv4" if isinstance(ip_address, Ip4Address) else "ipv6"
+
+        for parallel_endpoint_pairs in self.generate_perf_endpoints(config):
+            for ip_version in self.params.ip_versions:
+                filtered_parallel_endpoints = [
+                    endpoint_pair
+                    for endpoint_pair in parallel_endpoint_pairs
+                    if ip_version_string(endpoint_pair.first.address) == ip_version
+                ]
+
+                # skip test if no endpoints left after ip filtering
+                if not filtered_parallel_endpoints:
+                    continue
+
                 for perf_test in self.params.perf_tests:
                     for size in self.params.perf_msg_sizes:
                         yield self._create_perf_flows(
+                            filtered_parallel_endpoints,
                             perf_test,
-                            ipv,
-                            client_nic,
-                            server_nic,
                             size,
                         )
 
-    def generate_perf_endpoints(self, config):
-        """Generator for perf endpoints
-
-        To be overridden by a derived class.
-
-        :return: list of device pairs
-        :rtype: List[Tuple[:any:`Device`, :any:`Device`]]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+        """
+        Returns sequential list of parallel endpoint-pairs that should be performance-tested.
         """
         return []
 
     def _create_perf_flows(
         self,
-        perf_test,
-        ipv,
-        client_nic,
-        server_nic,
+        endpoint_pairs: list[EndpointPair[IPEndpoint]],
+        perf_test: str,
         msg_size,
     ) -> list[PerfFlow]:
-
-        ip_filter = {}
-        if ipv == "ipv4":
-            ip_filter.update(family=AF_INET)
-        elif ipv == "ipv6":
-            ip_filter.update(family=AF_INET6)
-            ip_filter.update(is_link_local=False)
-
-        client_ips = client_nic.ips_filter(**ip_filter)
-        server_ips = server_nic.ips_filter(**ip_filter)
+        port_iter = itertools.count(12000)
 
         flows = []
-        port_offset=12000
-        for i in range(self.params.perf_parallel_processes):
-            flows.append(
-                self._create_perf_flow(
-                    perf_test,
-                    client_nic,
-                    client_ips[i % len(client_ips)],
-                    port_offset + i,
-                    server_nic,
-                    server_ips[i % len(server_ips)],
-                    port_offset + i,
-                    msg_size,
-                    self.generator_cpupin(i),
-                    self.receiver_cpupin(i),
+        for endpoint_pair in endpoint_pairs:
+            client, server = endpoint_pair
+            for i in range(self.params.perf_parallel_processes):
+                port = next(port_iter)
+                flows.append(
+                    self._create_perf_flow(
+                        perf_test,
+                        client.device,
+                        client.address,
+                        port,
+                        server.device,
+                        server.address,
+                        port,
+                        msg_size,
+                        self.generator_cpupin(i),
+                        self.receiver_cpupin(i),
+                    )
                 )
-            )
 
         return flows
 
