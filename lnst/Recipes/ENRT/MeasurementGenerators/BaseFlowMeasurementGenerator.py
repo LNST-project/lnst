@@ -1,4 +1,3 @@
-from typing import List
 
 from lnst.Common.Parameters import (
     Param,
@@ -63,7 +62,7 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         specify what different message sizes (in bytes) used generated for the
         network flow should be tested - each message size resulting in a
         separate performance measurement.
-    :type perf_msg_sizes: List[Int] (default [123])
+    :type perf_msg_sizes: list[int] (default [123])
     """
 
     # common perf test params
@@ -101,7 +100,7 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         :any:`msg_sizes`.
 
         :return: list of Flow combinations to measure in parallel
-        :rtype: List[:any:`PerfFlow`]
+        :rtype: Iterator[:any:`PerfFlow`]
         """
         for client_nic, server_nic in self.generate_perf_endpoints(config):
             for ipv in self.params.ip_versions:
@@ -132,7 +131,7 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         client_nic,
         server_nic,
         msg_size,
-    ) -> List[PerfFlow]:
+    ) -> list[PerfFlow]:
 
         ip_filter = {}
         if ipv == "ipv4":
