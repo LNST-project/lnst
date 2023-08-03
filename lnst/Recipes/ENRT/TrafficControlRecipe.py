@@ -8,6 +8,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
 from lnst.RecipeCommon import BaseResultEvaluator
 from lnst.RecipeCommon.Perf.Evaluators.MaxTimeTakenEvaluator import MaxTimeTakenEvaluator
+from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
 from lnst.RecipeCommon.Perf.Measurements.TcRunMeasurement import TcRunMeasurement
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf, Recipe as PerfRecipe, RecipeResults
 
@@ -51,13 +52,16 @@ class TrafficControlRecipe(PerfRecipe):
 
     def test_wide_configuration(self) -> TcRecipeConfiguration:
         host = self.matched.host1
+        cpu_measurement = StatCPUMeasurement(
+            hosts=[host],
+        )
         measurement = TcRunMeasurement(
             host.eth0,
             self.params.parallel_instances,
             self.params.num_rules,
         )
         config = TcRecipeConfiguration(
-           measurements=[measurement],
+           measurements=[cpu_measurement, measurement],
            iterations=1,
        )
         config.register_evaluators(measurement, self.tc_run_evaluators)
