@@ -15,8 +15,8 @@ git checkout mptcp_udp_retry_cherrypick
 echo "================== Successfully installed iperf  ======================"
 
 echo "================== Installing neper  ======================"
-git clone -b lnst-production https://github.com/LNST-project/neper.git
-cd neper
+git clone -b lnst-production https://github.com/LNST-project/neper.git /root/neper
+cd /root/neper
 git --no-pager show --summary HEAD
 make -s
 echo "================== Successfully installed neper  ======================"
