@@ -3,7 +3,7 @@ import time
 from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import StrParam, IntParam, ChoiceParam
+from lnst.Common.Parameters import ListParam, StrParam, IntParam, ChoiceParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
 from lnst.RecipeCommon import BaseResultEvaluator
@@ -31,6 +31,8 @@ class TrafficControlRecipe(PerfRecipe):
 
     num_rules = IntParam(default=1000)
     parallel_instances = IntParam(default=4)
+    cpu_bind = ListParam(type=IntParam())
+    cpu_bind_policy = ChoiceParam(type=StrParam, choices={"all", "round-robin"}, default="round-robin")
 
     steering_mode = ChoiceParam(
         type=StrParam,
@@ -56,9 +58,11 @@ class TrafficControlRecipe(PerfRecipe):
             hosts=[host],
         )
         measurement = TcRunMeasurement(
-            host.eth0,
-            self.params.parallel_instances,
-            self.params.num_rules,
+            device=host.eth0,
+            num_instances=self.params.parallel_instances,
+            rules_per_instance=self.params.num_rules,
+            cpu_bind=self.params.cpu_bind,
+            cpu_bind_policy=self.params.cpu_bind_policy,
         )
         config = TcRecipeConfiguration(
            measurements=[cpu_measurement, measurement],
