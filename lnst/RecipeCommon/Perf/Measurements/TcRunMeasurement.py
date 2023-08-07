@@ -114,6 +114,8 @@ class TcRunMeasurement(BaseMeasurement):
             num_instances: int,
             rules_per_instance: int,
             timeout: int = 120,
+            cpu_bind: Optional[list[int]] = None,
+            cpu_bind_policy: str = "round-robin",
             parent_recipe_conf=None,
     ):
         super().__init__(recipe_conf=parent_recipe_conf)
@@ -123,6 +125,8 @@ class TcRunMeasurement(BaseMeasurement):
         self._running_jobs: list[Job] = []
         self._finished_jobs: dict[Job] = []
         self._timeout = timeout
+        self._cpu_bind = cpu_bind
+        self._cpu_bind_policy = cpu_bind_policy
         self.instance_configs = self._make_instances_cfgs()
 
     @property
@@ -160,8 +164,15 @@ class TcRunMeasurement(BaseMeasurement):
 
     def _prepare_jobs(self) -> list[Job]:
         batchfiles = [i.generate_batchfile() for i in self.instance_configs]
+        params: dict = {
+            "batchfiles": batchfiles,
+        }
+        if self._cpu_bind is not None:
+            params["cpu_bind"] = self._cpu_bind
+            params["cpu_bind_policy"] = self._cpu_bind_policy
+
         job = self.host.prepare_job(
-            TrafficControlRunner(batchfiles=batchfiles),
+            TrafficControlRunner(**params),
             job_level=ResultLevel.NORMAL,
         )
         return [job]
