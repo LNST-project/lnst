@@ -8,7 +8,7 @@ from lnst.Tests.BaseTestModule import BaseTestModule
 
 
 class TrafficControlRunner(BaseTestModule):
-    batchfiles = ListParam(type=StrParam(), required=True)
+    batchfiles = ListParam(type=StrParam(), mandatory=True)
 
     def run(self) -> bool:
         self._res_data = {}
