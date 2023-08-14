@@ -1,5 +1,4 @@
 import logging
-from os import PathLike
 from tempfile import NamedTemporaryFile
 from typing import Optional
 
@@ -19,20 +18,20 @@ from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 class TcRunInstance:
     MAX_ID = 0xFFFF
 
-    def __init__(self, device: Device, num_rules: int, instance_id:int):
+    def __init__(self, device: Device, num_rules: int, instance_id: int, batchfile_path: Optional[str] = None):
         self._device = device
         self._num_rules = num_rules
         self._instance_id = instance_id
-        self._batchfile_path: PathLike = None
+
+        if batchfile_path is None:
+            batchfile_path = self._generate_batchfile()
+        self._batchfile_path = batchfile_path
+
         self.validate()
 
     @property
     def batchfile_path(self):
         return self._batchfile_path
-
-    @batchfile_path.setter
-    def batchfile_path(self, p: PathLike):
-        self._batchfile_path = p
 
     def validate(self):
         if self._instance_id > self.MAX_ID:
@@ -68,7 +67,7 @@ class TcRunInstance:
     def end_mac(self) -> str:
         return f"{self.pool_oui}:ff:ff:ff"
 
-    def generate_batchfile(self) -> str:
+    def _generate_batchfile(self) -> str:
         logging.info(f"Generating tc batchfile for {self.device.name} instance {self._instance_id} num_rules={self.num_rules}")
         rules = self.generate_rules()
         with NamedTemporaryFile(
@@ -78,7 +77,6 @@ class TcRunInstance:
                 f.write(r)
 
             remote_path = self.host.copy_file_to_machine(f.name)
-        self.batchfile_path = remote_path
         logging.info(f"tc batchfile written to {self.host.hostname}:{remote_path}")
         return remote_path
 
@@ -154,9 +152,8 @@ class TcRunMeasurement(BaseMeasurement):
             self._running_jobs.append(job)
 
     def _prepare_jobs(self) -> list[Job]:
-        batchfiles = [i.generate_batchfile() for i in self.instance_configs]
         params: dict = {
-            "batchfiles": batchfiles,
+            "batchfiles": [i.batchfile_path for i in self.instance_configs],
         }
         if self._cpu_bind is not None:
             params["cpu_bind"] = self._cpu_bind
