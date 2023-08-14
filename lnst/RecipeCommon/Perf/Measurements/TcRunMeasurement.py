@@ -24,16 +24,7 @@ class TcRunInstance:
         self._num_rules = num_rules
         self._instance_id = instance_id
         self._batchfile_path: PathLike = None
-        self._instance_job: Job = None
         self.validate()
-
-    @property
-    def instance_job(self):
-        return self._instance_job
-
-    @instance_job.setter
-    def instance_job(self, job: Job):
-        self._instance_job = job
 
     @property
     def batchfile_path(self):
