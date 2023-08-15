@@ -8,6 +8,7 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -39,6 +40,7 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
@@ -48,19 +50,16 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
             for dev in [host.eth0, host.eth1]:
                 dev.down()
                 host.bond0.slave_add(dev)
-            host.bond0.ip_add(next(ipv4_addr))
-            host.bond0.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(host.bond0, next(ipv4_addr))
+            config.configure_and_track_ip(host.bond0, next(ipv6_addr))
             for dev in [host.eth0, host.eth1, host.bond0]:
                 dev.up_and_wait()
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.bond0, host2.bond0]
+        self.wait_tentative_ips(config.configured_devices)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        return config
 
-        return configuration
-
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -68,7 +67,7 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.slaves = {}".format(
@@ -76,26 +75,24 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
                     ['.'.join([dev.host.hostid, slave.name])
                         for slave in dev.slaves]
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.mode = {}".format(
                     dev.host.hostid, dev.name, dev.mode
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.miimon = {}".format(
                     dev.host.hostid, dev.name, dev.miimon
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ])
         ]
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

@@ -281,7 +281,7 @@ class BaseEnrtRecipe(
                         pprint.pformat(self.params._to_dict())))
         self.add_result(ResultType.PASS, "\n".join(description))
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """Generates the test wide configuration description
 
         Another class inteded to be used with the collaborative version of the

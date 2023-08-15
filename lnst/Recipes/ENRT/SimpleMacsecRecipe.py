@@ -6,6 +6,7 @@ from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Devices import MacsecDevice
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -29,22 +30,16 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.eth0, host2.eth0]
+        config.endpoint1 = host1.eth0
+        config.endpoint2 = host2.eth0
+        config.host1 = host1
+        config.host2 = host2
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-
-        configuration.endpoint1 = host1.eth0
-        configuration.endpoint2 = host2.eth0
-        configuration.host1 = host1
-        configuration.host2 = host2
-
-        return configuration
+        return config
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_sub_configurations(self, config):
@@ -55,7 +50,7 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
                 new_config.ip_vers = self.params.ip_versions
                 yield new_config
 
-    def apply_sub_configuration(self, config):
+    def apply_sub_configuration(self, config: EnrtConfiguration):
         super().apply_sub_configuration(config)
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
@@ -77,13 +72,13 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
             host_a.msec0.tx_sa('add', **tx_sa_kwargs)
             host_a.msec0.rx_sa('add', **rx_sa_kwargs)
         for host in [host1, host2]:
-            host.msec0.ip_add(next(ipv4_addr))
-            host.msec0.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(host.msec0, next(ipv4_addr))
+            config.configure_and_track_ip(host.msec0, next(ipv6_addr))
             host.eth0.up()
             host.msec0.up()
             self.wait_tentative_ips([host.eth0, host.msec0])
 
-    def generate_sub_configuration_description(self, config):
+    def generate_sub_configuration_description(self, config: EnrtConfiguration):
         desc = super().generate_sub_configuration_description(config)
         desc += [
             "\n".join([
@@ -98,6 +93,7 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     def remove_sub_configuration(self, config):
         host1, host2 = config.host1, config.host2
         for host in (host1, host2):
+            config.untrack_device(host.msec0)
             host.msec0.destroy()
             del host.msec0
         config.endpoint1.down()

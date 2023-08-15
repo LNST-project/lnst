@@ -11,6 +11,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -64,7 +65,7 @@ class SRIOVNetnsOvSRecipe(
     versions, not having consistent naming scheme of virtual function.
 
     Solution here is to expect deterministic VF name, which is derived from the PF name.
-    With specific kernel parameter `biosdevname=1` we can expect default suffix on 
+    With specific kernel parameter `biosdevname=1` we can expect default suffix on
     VF to be created to be `_n`, where n is the index of VF created.
     """
     vf_suffix = StrParam(default="_0")
@@ -94,8 +95,7 @@ class SRIOVNetnsOvSRecipe(
         host2.eth0 = 192.168.101.2/24 and fc00::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = []
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
@@ -113,7 +113,7 @@ class SRIOVNetnsOvSRecipe(
             vf_ifname = dict(ifname=f"{host.eth0.name}{self.params.vf_suffix}")
             host.map_device("vf_eth0", vf_ifname)
 
-            host.newns = NetNamespace(f"lnst")
+            host.newns = NetNamespace("lnst")
             host.newns.vf_eth0 = host.vf_eth0
 
             vf_representor_ifname = dict(ifname="eth0")
@@ -125,16 +125,14 @@ class SRIOVNetnsOvSRecipe(
 
             for dev in [host.eth0, host.newns.vf_eth0, host.vf_representor_eth0, host.br0]:
                 dev.up()
-            host.newns.vf_eth0.ip_add(next(ipv4_addr))
-            host.newns.vf_eth0.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(host.newns.vf_eth0, next(ipv4_addr))
+            config.configure_and_track_ip(host.newns.vf_eth0, next(ipv6_addr))
 
-            configuration.test_wide_devices.append(host.newns.vf_eth0)
+        self.wait_tentative_ips(config.configured_devices)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        return config
 
-        return configuration
-
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         desc = super().generate_test_wide_description(config)
         host1, host2 = self.matched.host1, self.matched.host2
         for i, host in enumerate([host1, host2]):
@@ -148,7 +146,7 @@ class SRIOVNetnsOvSRecipe(
             ]
         desc += [
             f"Configured {dev.host.hostid}.{dev.name}.ips = {dev.ips}"
-            for dev in config.test_wide_devices
+            for dev in config.configured_devices
         ]
         return desc
 
@@ -164,7 +162,6 @@ class SRIOVNetnsOvSRecipe(
             time.sleep(2)
             host.run(f"devlink dev eswitch set pci/{host.eth0.bus_info} mode legacy")
             time.sleep(3)
-        del config.test_wide_devices
 
         super().test_wide_deconfiguration(config)
 

@@ -8,6 +8,7 @@ from lnst.Common.Parameters import (
     StrParam,
     IPv4NetworkParam,
 )
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 
@@ -31,35 +32,31 @@ class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.eth0, host2.eth0]
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="192.168.101.10/24")
         for host in [host1, host2]:
             host.eth0.down()
-            host.eth0.ip_add(next(ipv4_addr))
+            config.configure_and_track_ip(host.eth0, next(ipv4_addr))
             host.eth0.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
-        host1, host2 = self.matched.host1, self.matched.host2
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ])
         ]
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_perf_endpoints(self, config):

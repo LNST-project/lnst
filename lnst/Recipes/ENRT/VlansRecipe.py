@@ -2,6 +2,7 @@ from lnst.Common.Parameters import Param, IntParam, IPv4NetworkParam, IPv6Networ
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -92,11 +93,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
         host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = []
-        for host in [host1, host2]:
-            configuration.test_wide_devices.extend([host.vlan0, host.vlan1,
-                host.vlan2])
+        config = super().test_wide_configuration()
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
         vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6)
@@ -106,53 +103,50 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         vlan2_ipv6_addr = interface_addresses(self.params.vlan2_ipv6)
 
         for host in [host1, host2]:
-            host.vlan0.ip_add(next(vlan0_ipv4_addr))
-            host.vlan1.ip_add(next(vlan1_ipv4_addr))
-            host.vlan2.ip_add(next(vlan2_ipv4_addr))
-            host.vlan0.ip_add(next(vlan0_ipv6_addr))
-            host.vlan1.ip_add(next(vlan1_ipv6_addr))
-            host.vlan2.ip_add(next(vlan2_ipv6_addr))
+            config.configure_and_track_ip(host.vlan0, next(vlan0_ipv4_addr))
+            config.configure_and_track_ip(host.vlan1, next(vlan1_ipv4_addr))
+            config.configure_and_track_ip(host.vlan2, next(vlan2_ipv4_addr))
+            config.configure_and_track_ip(host.vlan0, next(vlan0_ipv6_addr))
+            config.configure_and_track_ip(host.vlan1, next(vlan1_ipv6_addr))
+            config.configure_and_track_ip(host.vlan2, next(vlan2_ipv6_addr))
             for dev in [host.eth0, host.vlan0, host.vlan1, host.vlan2]:
                 dev.up_and_wait()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """
         Test wide description is extended with the configured VLAN tunnels
         and their IP addresses
         """
-        host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.vlan_id = {}".format(
                     dev.host.hostid, dev.name, dev.vlan_id
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.realdev = {}".format(
                     dev.host.hostid, dev.name,
                     '.'.join([dev.host.hostid, dev.realdev.name])
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ])
         ]
         return desc
 
     def test_wide_deconfiguration(self, config):
         ""  # overriding the parent docstring
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

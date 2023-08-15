@@ -12,6 +12,7 @@ from lnst.Common.Parameters import (
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -45,8 +46,7 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.eth0, host2.eth0]
+        config = super().test_wide_configuration()
 
         ipv4_addr = {host1: interface_addresses(self.params.net1_ipv4),
                      host2: interface_addresses(self.params.net2_ipv4)}
@@ -54,43 +54,38 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                      host2: interface_addresses(self.params.net2_ipv6)}
         for host in [host1, host2]:
             host.eth0.down()
-            host.eth0.ip_add(next(ipv4_addr[host]))
-            host.eth0.ip_add(next(ipv6_addr[host]))
+            config.configure_and_track_ip(host.eth0, next(ipv4_addr[host]))
+            config.configure_and_track_ip(host.eth0, next(ipv6_addr[host]))
             host.eth0.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
         if self.params.ping_parallel or self.params.ping_bidirect:
             logging.debug("Parallelism in pings is not supported for this"
                 "recipe, ping_parallel/ping_bidirect will be ignored.")
 
         for host, dst in [(host1, host2), (host2, host1)]:
-            for family in [AF_INET, AF_INET6]:
-                host.run("ip route add %s dev %s" %
-                    (dst.eth0.ips_filter(family=family)[0],
-                        host.eth0.name))
+            for ip in config.ips_for_device(dst.eth0):
+                host.run(f"ip route add {ip} dev {host.eth0.name}")
 
-        configuration.endpoint1 = host1.eth0
-        configuration.endpoint2 = host2.eth0
+        config.endpoint1 = host1.eth0
+        config.endpoint2 = host2.eth0
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
-        host1, host2 = self.matched.host1, self.matched.host2
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ])
         ]
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_sub_configurations(self, config):
@@ -98,13 +93,10 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
         spi_values = self.spi_values
         for subconf in ConfMixin.generate_sub_configurations(self, config):
             for ipv in self.params.ip_versions:
-                if ipv == "ipv4":
-                    family = AF_INET
-                elif ipv == "ipv6":
-                    family = AF_INET6
+                family = AF_INET if ipv == "ipv4" else AF_INET6
 
-                ip1 = config.endpoint1.ips_filter(family=family)[0]
-                ip2 = config.endpoint2.ips_filter(family=family)[0]
+                ip1 = config.ips_for_device(config.endpoint1, family=family)[0]
+                ip2 = config.ips_for_device(config.endpoint2, family=family)[0]
 
                 for ciph_alg, ciph_len in self.params.ciphers:
                     for hash_alg, hash_len in self.params.hashes:

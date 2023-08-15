@@ -2,6 +2,7 @@ from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin
 )
@@ -24,6 +25,7 @@ class VxlanRemoteRecipe(
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         for host in [host1, host2]:
             host.eth0.down()
@@ -34,31 +36,27 @@ class VxlanRemoteRecipe(
         vxlan_net_addr = "192.168.100"
         vxlan_net_addr6 = "fc00:0:0:0"
 
-        host1.eth0.ip_add(host1_ip)
+        config.configure_and_track_ip(host1.eth0, host1_ip)
         host1.vxlan0 = VxlanDevice(vxlan_id='1', remote=host2_ip)
-        host2.eth0.ip_add(host2_ip)
+        config.configure_and_track_ip(host2.eth0, host2_ip)
         host2.vxlan0 = VxlanDevice(vxlan_id='1', remote=host1_ip)
-
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.eth0, host1.vxlan0,
-            host2.eth0, host2.vxlan0]
 
         for i, host in enumerate([host1, host2]):
             host.vxlan0.realdev = host.eth0
-            host.vxlan0.ip_add(ipaddress(vxlan_net_addr + "." + str(i+1) +
+            config.configure_and_track_ip(host.vxlan0, ipaddress(vxlan_net_addr + "." + str(i+1) +
                 "/24"))
-            host.vxlan0.ip_add(ipaddress(vxlan_net_addr6 + "::" + str(i+1)
+            config.configure_and_track_ip(host.vxlan0, ipaddress(vxlan_net_addr6 + "::" + str(i+1)
                 + "/64"))
 
         for host in [host1, host2]:
             host.eth0.up_and_wait()
             host.vxlan0.up_and_wait()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -66,7 +64,7 @@ class VxlanRemoteRecipe(
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.vxlan_id = {}".format(
@@ -91,8 +89,6 @@ class VxlanRemoteRecipe(
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

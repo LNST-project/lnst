@@ -2,6 +2,7 @@ from itertools import combinations
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
@@ -64,12 +65,10 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             "output:6")
         flow_entries.append("table=0,priority=100,actions=drop")
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.eth0, host2.eth0,
-            guest1.eth0, guest2.eth0, guest3.eth0, guest4.eth0]
+        config = super().test_wide_configuration()
 
         for i, host in enumerate([host1, host2]):
-            host.eth0.ip_add(host_ips[i])
+            config.configure_and_track_ip(host.eth0, host_ips[i])
             host.br0 = OvsBridgeDevice()
             for dev, ofport_r in [(host.tap0, '5'), (host.tap1, '6')]:
                 host.br0.port_add(
@@ -83,17 +82,17 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
                 dev.up()
 
         for i, guest in enumerate([guest1, guest2, guest3, guest4]):
-            guest.eth0.ip_add(ipaddress(vxlan_net_addr + "." + str(i+1) +
+            config.configure_and_track_ip(guest.eth0, ipaddress(vxlan_net_addr + "." + str(i+1) +
                 "/24"))
-            guest.eth0.ip_add(ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
+            config.configure_and_track_ip(guest.eth0, ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
                 "/64"))
             guest.eth0.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -101,7 +100,7 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.ports = {}".format(
@@ -125,8 +124,6 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

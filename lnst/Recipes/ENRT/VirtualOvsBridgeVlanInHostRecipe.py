@@ -1,6 +1,7 @@
 from lnst.Common.Parameters import Param, IntParam, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
@@ -49,24 +50,23 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
 
         host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [guest1.eth0, host2.vlan0]
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="192.168.10.2/24")
         ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::2/64")
         for i, dev in enumerate([host2.vlan0, guest1.eth0]):
-            dev.ip_add(next(ipv4_addr))
-            dev.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(dev, next(ipv4_addr))
+            config.configure_and_track_ip(dev, next(ipv6_addr))
 
         for dev in [host1.eth0, host1.tap0, host1.br0, host2.eth0,
             host2.vlan0, guest1.eth0]:
             dev.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -74,7 +74,7 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "Configured {}.{}.vlan_id = {}".format(
                 host2.hostid, host2.vlan0.name, host2.vlan0.vlan_id
@@ -90,8 +90,6 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

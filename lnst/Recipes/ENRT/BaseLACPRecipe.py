@@ -39,6 +39,7 @@ class BaseLACPRecipe(DoubleBondRecipe):
         it calls switch configuration method.
         """
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
@@ -51,23 +52,20 @@ class BaseLACPRecipe(DoubleBondRecipe):
                 dev.down()
                 host.bond0.slave_add(dev)
 
-            host.bond0.ip_add(next(ipv4_addr))
-            host.bond0.ip_add(next(ipv4_addr))
+            config.configure_and_track_ip(host.bond0, next(ipv4_addr))
+            config.configure_and_track_ip(host.bond0, next(ipv4_addr))
 
-            host.bond0.ip_add(next(ipv6_addr))
-            host.bond0.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(host.bond0, next(ipv6_addr))
+            config.configure_and_track_ip(host.bond0, next(ipv6_addr))
 
             for dev in [host.eth0, host.eth1, host.bond0]:
                 dev.up()
 
         self.test_wide_switch_configuration()
 
-        configuration = super(DoubleBondRecipe, self).test_wide_configuration()
-        configuration.test_wide_devices = [host1.bond0, host2.bond0]
+        self.wait_tentative_ips(config.configured_devices)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-
-        return configuration
+        return config
 
     def test_wide_switch_deconfiguration(self):
         raise NotImplementedError()

@@ -9,6 +9,7 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
@@ -93,9 +94,7 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         host2.vlan1 = VlanDevice(realdev=host2.bond0, vlan_id=self.params.vlan1_id,
             master=host2.br1)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.br0, host2.br0,
-            guest1.eth0, guest2.eth0, guest3.eth0, guest4.eth0]
+        config = super().test_wide_configuration()
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
         vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6, default_start="fc00:0:0:1::2/64", default_skip=2)
@@ -103,12 +102,12 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         vlan1_ipv6_addr = interface_addresses(self.params.vlan1_ipv6, default_start="fc00:0:0:2::2/64", default_skip=2)
         for host, (guest_a, guest_b) in [(host1, (guest1, guest2)),
                                          (host2, (guest3, guest4))]:
-            host.br0.ip_add(next(vlan0_ipv4_addr))
-            host.br1.ip_add(next(vlan1_ipv4_addr))
-            guest_a.eth0.ip_add(next(vlan0_ipv4_addr))
-            guest_a.eth0.ip_add(next(vlan0_ipv6_addr))
-            guest_b.eth0.ip_add(next(vlan1_ipv4_addr))
-            guest_b.eth0.ip_add(next(vlan1_ipv6_addr))
+            config.configure_and_track_ip(host.br0, next(vlan0_ipv4_addr))
+            config.configure_and_track_ip(host.br1, next(vlan1_ipv4_addr))
+            config.configure_and_track_ip(guest_a.eth0, next(vlan0_ipv4_addr))
+            config.configure_and_track_ip(guest_a.eth0, next(vlan0_ipv6_addr))
+            config.configure_and_track_ip(guest_b.eth0, next(vlan1_ipv4_addr))
+            config.configure_and_track_ip(guest_b.eth0, next(vlan1_ipv6_addr))
 
         for host in [host1, host2]:
             for dev in [host.eth0, host.eth1, host.tap0, host.tap1,
@@ -122,11 +121,11 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
                 self.params.perf_tool_cpu)
             self.params.perf_tool_cpu = None
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -134,7 +133,7 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.slaves = {}".format(
@@ -176,8 +175,6 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

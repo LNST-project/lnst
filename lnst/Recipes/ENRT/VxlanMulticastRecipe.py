@@ -3,6 +3,7 @@ from socket import AF_INET
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IpParam, IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
@@ -42,28 +43,27 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         for machine in [guest1, host2]:
             machine.vxlan0 = VxlanDevice(vxlan_id=1, realdev=machine.eth0, group=self.params.vxlan_group_ip)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.br0, host1.vxlan0,
-            guest1.eth0, guest1.vxlan0, host2.eth0, host2.vxlan0]
+        config = super().test_wide_configuration()
 
         for i, (machine, dev) in enumerate([(host1, host1.br0),
             (guest1, guest1.eth0), (host2, host2.eth0)]):
+            config.configure_and_track_ip(dev, next(ipv4_addr))
             dev.ip_add(next(ipv4_addr))
             machine.vxlan0.realdev = dev
-            machine.vxlan0.ip_add(ipaddress(vxlan_net_addr + "." + str(i+1)
+            config.configure_and_track_ip(machine.vxlan0, ipaddress(vxlan_net_addr + "." + str(i+1)
                 + "/24"))
-            machine.vxlan0.ip_add(ipaddress(vxlan_net_addr6 + "::" +
+            config.configure_and_track_ip(machine.vxlan0, ipaddress(vxlan_net_addr6 + "::" +
                 str(i+1) + "/64"))
 
         for dev in [host1.eth0, host2.eth0, guest1.eth0, host1.tap0,
                     host1.br0, host1.vxlan0, host2.vxlan0, guest1.vxlan0]:
             dev.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)
         desc = super().generate_test_wide_description(config)
@@ -72,7 +72,7 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.vxlan_id = {}".format(
@@ -97,8 +97,6 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

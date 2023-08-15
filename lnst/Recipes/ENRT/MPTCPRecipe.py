@@ -8,6 +8,7 @@ from lnst.Controller.Host import Host
 from lnst.RecipeCommon.MPTCPManager import MPTCPManager, MPTCPFlags
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -67,7 +68,6 @@ class MPTCPRecipe(
         """
         host1, host2 = self.matched.host1, self.matched.host2
         config = super().test_wide_configuration()
-        config.test_wide_devices = []
         config.mptcp_endpoints = [host1.eth1]
         hosts = [host1, host2]
 
@@ -82,20 +82,18 @@ class MPTCPRecipe(
 
         for host in hosts:
             host.run("sysctl -w /net/mptcp/enabled=1")
-            host.eth0.ip_add(next(ipv4_addr1))
-            host.eth0.ip_add(next(ipv6_addr1))
-            host.eth1.ip_add(save_addr4 := next(ipv4_addr2))
-            host.eth1.ip_add(save_addr6 := next(ipv6_addr2))
+            config.configure_and_track_ip(host.eth0, next(ipv4_addr1))
+            config.configure_and_track_ip(host.eth0, next(ipv6_addr1))
+            config.configure_and_track_ip(host.eth1, save_addr4 := next(ipv4_addr2))
+            config.configure_and_track_ip(host.eth1, save_addr6 := next(ipv6_addr2))
             save_addrs[host.eth1] = {AF_INET: save_addr4, AF_INET6: save_addr6}
 
             host.eth0.up()
             host.eth1.up()
-            config.test_wide_devices.append(host.eth0)
-            config.test_wide_devices.append(host.eth1)
 
         # Configure endpoints only host1.eth1
         if "ipv4" in self.params.ip_versions:
-            host1.mptcp.add_endpoints(host1.eth1.ips_filter(family=AF_INET), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
+            host1.mptcp.add_endpoints(config.ips_for_device(host1.eth1, family=AF_INET), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
             # Need route on client side to populate forwarding table
             host1.run(
                 f"ip route add {self.params.net1_ipv4} dev {host1.eth1.name}"
@@ -105,7 +103,7 @@ class MPTCPRecipe(
             host2.run("sysctl -w net.ipv4.conf.all.rp_filter=0")
 
         if "ipv6" in self.params.ip_versions:
-            host1.mptcp.add_endpoints(host1.eth1.ips_filter(family=AF_INET6), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
+            host1.mptcp.add_endpoints(config.ips_for_device(host1.eth1, family=AF_INET6), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
             host1.run(
                 f"ip route add {self.params.net1_ipv6} dev {host1.eth1.name}"
                 f" via {save_addrs[host2.eth1][AF_INET6]} prio 10000"
@@ -116,19 +114,18 @@ class MPTCPRecipe(
         host1.mptcp.subflows = 1
         host2.mptcp.subflows = 1
 
-        self.wait_tentative_ips(config.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
         return config
 
-
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """
         Test wide description is extended with the configured addresses
         """
         desc = super().generate_test_wide_description(config)
         desc += [
             f"Configured {dev.host.hostid}.{dev.name}.ips = {dev.ips}"
-            for dev in config.test_wide_devices
+            for dev in config.configured_devices
         ]
 
         desc += [f"Configured {dev.host.hostid}.mptcp_endpoints = {dev.ips}"
@@ -136,16 +133,14 @@ class MPTCPRecipe(
 
         return desc
 
-    def test_wide_deconfiguration(self, config):
+    def test_wide_deconfiguration(self, config: EnrtConfiguration):
         """
 
         :param config:
         :return:
         """
-        for ep_dev in config.test_wide_devices:
+        for ep_dev in config.configured_devices:
             ep_dev.netns.mptcp.delete_all()
-
-        del config.test_wide_devices
 
         #reset rp_filter
         self.matched.host2.run("sysctl -w net.ipv4.conf.all.rp_filter=1")
