@@ -25,7 +25,7 @@ from lnst.Tests.Netperf import Netperf, Netserver
 import signal
 
 
-from lnst.Controller.RunSummaryFormatters import RunSummaryFormatter
+from lnst.Controller.RunSummaryFormatters import HumanReadableRunSummaryFormatter
 
 class MyRecipe(BaseRecipe):
     m1 = HostReq()
@@ -122,6 +122,6 @@ ctl = Controller(debug=1)
 r = MyRecipe()
 ctl.run(r, allow_virt=True)
 
-summary_fmt = RunSummaryFormatter()
+summary_fmt = HumanReadableRunSummaryFormatter()
 for run in r.runs:
     logging.info(summary_fmt.format_run(run))
