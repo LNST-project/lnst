@@ -7,6 +7,7 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -85,8 +86,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         teamd_config = {'runner': {'name': self.params.runner_name}}
         host1.team0 = TeamDevice(config=teamd_config)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.team0, host2.eth0]
+        config = super().test_wide_configuration()
 
         for dev in [host1.eth0, host1.eth1]:
             dev.down()
@@ -95,17 +95,17 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
         for dev in [host1.team0, host2.eth0]:
-            dev.ip_add(next(ipv4_addr))
-            dev.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(dev, next(ipv4_addr))
+            config.configure_and_track_ip(dev, next(ipv6_addr))
 
         for dev in [host1.eth0, host1.eth1, host1.team0, host2.eth0]:
             dev.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """
         Test wide description is extended with the configured IP addresses, the
         configured team device ports, and runner name.
@@ -117,7 +117,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "Configured {}.{}.slaves = {}".format(
                 host1.hostid, host1.team0.name,
@@ -132,8 +132,6 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

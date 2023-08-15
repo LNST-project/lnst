@@ -8,7 +8,7 @@ from lnst.Common.Parameters import (
 )
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
 from dataclasses import dataclass
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
@@ -334,7 +334,7 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
         result = self.perf_test(perf_config)
         self.perf_report_and_evaluate(result)
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """
         Test wide description is extended with the bus info of the configured interfaces
         used for the DPDK purposes.
@@ -386,9 +386,6 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
 
     def generate_ping_endpoints(self, config):
         return []
-
-    def generate_perf_endpoints(self, config):
-        return [(self.matched.host1.dummy_cfg, self.matched.host2.dummy_cfg)]
 
     def apply_perf_test_tweak(self, config):
         pass

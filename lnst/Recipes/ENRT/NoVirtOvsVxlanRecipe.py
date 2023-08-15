@@ -2,6 +2,7 @@ from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
@@ -18,6 +19,7 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         host_addr = [next(ipv4_addr), next(ipv4_addr)]
@@ -33,16 +35,16 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
         for i, host in enumerate([host1, host2]):
             host.eth0.down()
-            host.eth0.ip_add(host_addr[i])
+            config.configure_and_track_ip(host.eth0, host_addr[i])
             host.br0 = OvsBridgeDevice()
             host.int0 = host.br0.port_add(
                     interface_options={
                         'type': 'internal',
                         'ofport_request': 5,
                         'name': 'int0'})
-            host.int0.ip_add(ipaddress(vxlan_net_addr + "." + str(i+1) +
+            config.configure_and_track_ip(host.int0, ipaddress(vxlan_net_addr + "." + str(i+1) +
                 "/24"))
-            host.int0.ip_add(ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
+            config.configure_and_track_ip(host.int0, ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
                 "/64"))
             tunnel_opts = {"option:remote_ip" : host_addr[1-i],
                            "option:key" : "flow", "ofport_request" : "10"}
@@ -52,15 +54,11 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
             host.int0.up()
             host.br0.up()
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.eth0, host1.int0,
-            host2.eth0, host2.int0]
+        self.wait_tentative_ips(config.configured_devices)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        return config
 
-        return configuration
-
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -68,7 +66,7 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.ports = {}".format(
@@ -92,8 +90,6 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

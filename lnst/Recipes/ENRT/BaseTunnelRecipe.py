@@ -1,5 +1,6 @@
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.PacketAssert import PacketAssertTestAndEvaluate
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 
 class BaseTunnelRecipe(
@@ -36,7 +37,6 @@ class BaseTunnelRecipe(
         """
 
         configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = []
         configuration.tunnel_endpoints = None
         configuration.tunnel_devices = []
 
@@ -83,7 +83,7 @@ class BaseTunnelRecipe(
         """
         raise NotImplementedError
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """
         Test wide description is extended with the configured addresses
         of the underlying network devices and the configured tunnel devices
@@ -91,7 +91,7 @@ class BaseTunnelRecipe(
         desc = super().generate_test_wide_description(config)
         desc += [
             "Configured {}.{}.ips = {}".format(dev.host.hostid, dev.name, dev.ips)
-            for dev in config.test_wide_devices
+            for dev in config.configured_devices
         ]
         desc += [
             "Configured tunnel endpoint {}.{}.ips = {}".format(
@@ -104,7 +104,6 @@ class BaseTunnelRecipe(
     def test_wide_deconfiguration(self, config):
         ""  # overriding the parent docstring
         del config.tunnel_devices
-        del config.test_wide_devices
 
         super().test_wide_deconfiguration(config)
 

@@ -7,6 +7,7 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
@@ -62,18 +63,16 @@ class VirtualBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
         host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id,
             master=host2.br0)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.vlan0, host2.vlan0,
-            host1.br0, host2.br0]
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::3/64")
 
-        host1.br0.ip_add(next(ipv4_addr))
-        host2.br0.ip_add(next(ipv4_addr))
+        config.configure_and_track_ip(host1.br0, next(ipv4_addr))
+        config.configure_and_track_ip(host2.br0, next(ipv4_addr))
         for guest in [guest1, guest2]:
-            guest.eth0.ip_add(next(ipv4_addr))
-            guest.eth0.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(guest.eth0, next(ipv4_addr))
+            config.configure_and_track_ip(guest.eth0, next(ipv6_addr))
 
         for host in [host1, host2]:
             for dev in [host.eth0, host.tap0, host.vlan0, host.br0]:
@@ -86,11 +85,11 @@ class VirtualBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
                 self.params.perf_tool_cpu)
             self.params.perf_tool_cpu = None
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -98,7 +97,7 @@ class VirtualBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.vlan_id = {}".format(
@@ -125,8 +124,6 @@ class VirtualBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

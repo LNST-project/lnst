@@ -8,6 +8,7 @@ from lnst.Common.Parameters import (
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -49,9 +50,7 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
         host2.bond0 = BondDevice(mode=self.params.bonding_mode,
             miimon=self.params.miimon_value)
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [host1.team0, host2.bond0]
-
+        config = super().test_wide_configuration()
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
 
@@ -60,19 +59,19 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
             host.eth1.down()
             dev.slave_add(host.eth0)
             dev.slave_add(host.eth1)
-            dev.ip_add(next(ipv4_addr))
-            dev.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(dev, next(ipv4_addr))
+            config.configure_and_track_ip(dev, next(ipv6_addr))
 
         for host, dev in [(host1, host1.team0), (host2, host2.bond0)]:
             host.eth0.up()
             host.eth1.up()
             dev.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -80,7 +79,7 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.slaves = {}".format(
@@ -88,7 +87,7 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
                     ['.'.join([dev.host.hostid, slave.name])
                     for slave in dev.slaves]
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "Configured {}.{}.runner_name = {}".format(
                 host1.hostid, host1.team0.name,
@@ -106,8 +105,6 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

@@ -9,6 +9,7 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
@@ -84,9 +85,7 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         guest3.eth0.down()
         guest4.eth0.down()
 
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = [guest1.eth0, guest2.eth0,
-            guest3.eth0, guest4.eth0]
+        config = super().test_wide_configuration()
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
         vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6)
@@ -94,12 +93,12 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         vlan1_ipv6_addr = interface_addresses(self.params.vlan1_ipv6)
 
         for guest in [guest1, guest3]:
-            guest.eth0.ip_add(next(vlan0_ipv4_addr))
-            guest.eth0.ip_add(next(vlan0_ipv6_addr))
+            config.configure_and_track_ip(guest.eth0, next(vlan0_ipv4_addr))
+            config.configure_and_track_ip(guest.eth0, next(vlan0_ipv6_addr))
 
         for guest in [guest2, guest4]:
-            guest.eth0.ip_add(next(vlan1_ipv4_addr))
-            guest.eth0.ip_add(next(vlan1_ipv6_addr))
+            config.configure_and_track_ip(guest.eth0, next(vlan1_ipv4_addr))
+            config.configure_and_track_ip(guest.eth0, next(vlan1_ipv6_addr))
 
         for host in [host1, host2]:
             for dev in [host.eth0, host.eth1, host.tap0, host.tap1,
@@ -113,11 +112,11 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
                 self.params.perf_tool_cpu)
             self.params.perf_tool_cpu = None
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        self.wait_tentative_ips(config.configured_devices)
 
-        return configuration
+        return config
 
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
@@ -125,7 +124,7 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
                 "Configured {}.{}.ips = {}".format(
                     dev.host.hostid, dev.name, dev.ips
                 )
-                for dev in config.test_wide_devices
+                for dev in config.configured_devices
             ]),
             "\n".join([
                 "Configured {}.{}.ports = {}".format(
@@ -143,8 +142,6 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         return desc
 
     def test_wide_deconfiguration(self, config):
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):

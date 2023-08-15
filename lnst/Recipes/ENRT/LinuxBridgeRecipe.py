@@ -3,6 +3,7 @@ from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Devices import BridgeDevice
 
@@ -51,8 +52,7 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
         host2.br0 = 192.168.101.2/24 and fc00::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        configuration = super().test_wide_configuration()
-        configuration.test_wide_devices = []
+        config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
@@ -63,16 +63,14 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
             host.br0.slave_add(host.eth0)
             host.eth0.up_and_wait()
             host.br0.up_and_wait()
-            host.br0.ip_add(next(ipv4_addr))
-            host.br0.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(host.br0, next(ipv4_addr))
+            config.configure_and_track_ip(host.br0, next(ipv6_addr))
 
-            configuration.test_wide_devices.append(host.br0)
+        self.wait_tentative_ips(config.configured_devices)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
+        return config
 
-        return configuration
-
-    def generate_test_wide_description(self, config):
+    def generate_test_wide_description(self, config: EnrtConfiguration):
         """
         Test wide description is extended with the configured addresses
         """
@@ -84,7 +82,7 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
                         dev.name,
                         dev.host.hostid,
                     )
-                    for dev in config.test_wide_devices
+                    for dev in config.configured_devices
                 ]
             ),
             "\n".join(
@@ -94,7 +92,7 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
                         br_dev.name,
                         dev.host.hostid,
                     )
-                    for br_dev in config.test_wide_devices
+                    for br_dev in config.configured_devices
                     for dev in br_dev.slaves
                 ]
             ),
@@ -103,7 +101,7 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
                     "Configured {}.{}.ips = {}".format(
                         dev.host.hostid, dev.name, dev.ips
                     )
-                    for dev in config.test_wide_devices
+                    for dev in config.configured_devices
                 ]
             ),
         ]
@@ -111,8 +109,6 @@ class LinuxBridgeRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
 
     def test_wide_deconfiguration(self, config):
         """"""  # overriding the parent docstring
-        del config.test_wide_devices
-
         super().test_wide_deconfiguration(config)
 
     def generate_ping_endpoints(self, config):
