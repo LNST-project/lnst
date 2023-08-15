@@ -1,6 +1,7 @@
 import pprint
 import copy
 from contextlib import contextmanager
+from typing import Literal, Optional
 
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import (
@@ -10,8 +11,9 @@ from lnst.Common.Parameters import (
     BoolParam,
     FloatParam,
 )
-from lnst.Common.IpAddress import AF_INET, AF_INET6
+from lnst.Common.IpAddress import AF_INET, AF_INET6, BaseIpAddress
 from lnst.Controller.RecipeResults import ResultType
+from lnst.Devices import RemoteDevice
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
     BaseMeasurementGenerator,
@@ -25,14 +27,43 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeas
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 from lnst.RecipeCommon.Ping.Evaluators import RatePingEvaluator
 
-class EnrtConfiguration(object):
+
+class EnrtConfiguration:
     """Container object for configuration
 
-    Intentionally left empty as it is intended to be used as a container to
-    store any values relevant to configuration being applied during the lifetime
-    of the Recipe.
+    Stores configured devices and IPs configured on them. Can also be
+    used to store any values relevant to configuration being applied
+    during the lifetime of the Recipe.
     """
-    pass
+    def __init__(self):
+        self._device_ips = {}
+
+    @property
+    def configured_devices(self) -> list[RemoteDevice]:
+        return list(self._device_ips.keys())
+
+    def ips_for_device(
+        self, device: RemoteDevice, family: Optional[Literal[AF_INET, AF_INET6]] = None
+    ) -> list[BaseIpAddress]:
+        if family is None:
+            return self._device_ips[device]
+        return [ip for ip in self._device_ips[device] if ip.family == family]
+
+    def track_device(self, device: RemoteDevice) -> None:
+        self._device_ips.setdefault(device, [])
+
+    def untrack_device(self, device: RemoteDevice) -> None:
+        del self._device_ips[device]
+
+    def configure_and_track_ip(
+        self,
+        device: RemoteDevice,
+        ip_address: BaseIpAddress,
+        peer: Optional[BaseIpAddress] = None,
+    ) -> None:
+        """Configure IP for device and"""
+        device.ip_add(ip_address, peer=peer)
+        self._device_ips.setdefault(device, []).append(ip_address)
 
 
 class BaseEnrtRecipe(
