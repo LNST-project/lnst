@@ -25,7 +25,7 @@ from lnst.Tests.Netperf import Netperf, Netserver
 import signal
 
 
-from lnst.Controller.RunSummaryFormatter import RunSummaryFormatter
+from lnst.Controller.RunSummaryFormatters import RunSummaryFormatter
 
 class MyRecipe(BaseRecipe):
     m1 = HostReq()
