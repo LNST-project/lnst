@@ -1,1 +1,1 @@
-from .RunSummaryFormatter import RunSummaryFormatter, RunFormatterException
+from .HumanReadableRunSummaryFormatter import HumanReadableRunSummaryFormatter, RunFormatterException
