@@ -85,9 +85,6 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_sub_configurations(self, config):
         ipsec_mode = self.params.ipsec_mode
         spi_values = self.spi_values

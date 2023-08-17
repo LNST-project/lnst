@@ -110,10 +110,6 @@ class BaseTunnelRecipe(
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        ""  # overriding the parent docstring
-        super().test_wide_deconfiguration(config)
-
     def ping_test(self, ping_configs):
         pa_config = self.get_packet_assert_config(ping_configs[0])
         self.packet_assert_test_start(pa_config)

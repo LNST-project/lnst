@@ -116,9 +116,6 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_sub_configurations(self, config):
         """
         Test wide configuration is extended with subconfiguration containing

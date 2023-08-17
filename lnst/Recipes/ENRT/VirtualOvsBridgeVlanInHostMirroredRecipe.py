@@ -95,9 +95,6 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.guest1.eth0, self.matched.guest2.eth0)]
 

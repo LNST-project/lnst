@@ -56,9 +56,6 @@ class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_perf_endpoints(self, config):
         return [(self.matched.host1.eth0, self.matched.host2.eth0)]
 

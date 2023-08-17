@@ -139,9 +139,6 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_ping_endpoints(self, config):
         """
         The ping endpoints for this recipe are the configured bonding device on
