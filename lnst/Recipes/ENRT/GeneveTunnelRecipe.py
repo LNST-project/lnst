@@ -6,7 +6,7 @@ from lnst.Common.IpAddress import (
     Ip6Address,
     interface_addresses,
 )
-from lnst.Devices import GeneveDevice
+from lnst.Devices import GeneveDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import (
@@ -17,6 +17,7 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -82,7 +83,7 @@ class GeneveTunnelRecipe(
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
@@ -92,29 +93,27 @@ class GeneveTunnelRecipe(
         ipv6_addr = interface_addresses(self.params.net_ipv6)
         for device in [host1.eth0, host2.eth0]:
             if self.params.carrier_ipversion == "ipv4":
-                device.ip_add(next(ipv4_addr))
+                config.configure_and_track_ip(device, next(ipv4_addr))
             else:
-                device.ip_add(next(ipv6_addr))
+                config.configure_and_track_ip(device, next(ipv6_addr))
             device.up_and_wait()
-            configuration.test_wide_devices.append(device)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-        configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
+        return (host1.eth0, host2.eth0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The Geneve tunnel devices are configured with IPv4 and IPv6 addresses.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        if self.params.carrier_ipversion == "ipv4":
-            ip_filter = {"family": AF_INET}
-        else:
-            ip_filter = {"family": AF_INET6, "is_link_local": False}
 
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
         a_ip4 = Ip4Address("20.0.0.10/8")
         b_ip4 = Ip4Address("20.0.0.20/8")
@@ -128,17 +127,16 @@ class GeneveTunnelRecipe(
         # A
         m1.gnv_tunnel.mtu = 1400
         m1.gnv_tunnel.up_and_wait()
-        m1.gnv_tunnel.ip_add(a_ip4)
-        m1.gnv_tunnel.ip_add(a_ip6)
+        config.configure_and_track_ip(m1.gnv_tunnel, a_ip4)
+        config.configure_and_track_ip(m1.gnv_tunnel, a_ip6)
 
         # B
         m2.gnv_tunnel.mtu = 1400
         m2.gnv_tunnel.up_and_wait()
-        m2.gnv_tunnel.ip_add(b_ip4)
-        m2.gnv_tunnel.ip_add(b_ip6)
+        config.configure_and_track_ip(m2.gnv_tunnel, b_ip4)
+        config.configure_and_track_ip(m2.gnv_tunnel, b_ip6)
 
-        configuration.tunnel_devices.extend([m1.gnv_tunnel, m2.gnv_tunnel])
-        self.wait_tentative_ips(configuration.tunnel_devices)
+        return (m1.gnv_tunnel, m2.gnv_tunnel)
 
     def generate_ping_endpoints(self, config):
         """

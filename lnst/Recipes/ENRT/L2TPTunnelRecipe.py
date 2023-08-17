@@ -11,10 +11,11 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.RecipeCommon.L2TPManager import L2TPManager
-from lnst.Devices import L2TPSessionDevice
+from lnst.Devices import L2TPSessionDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
@@ -74,7 +75,7 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.200.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
@@ -86,23 +87,25 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
         ipv6_addr = interface_addresses(self.params.net_ipv6)
         for device in [host1.eth0, host2.eth0]:
             if self.params.carrier_ipversion == "ipv4":
-                device.ip_add(next(ipv4_addr))
+                config.configure_and_track_ip(device, next(ipv4_addr))
             else:
-                device.ip_add(next(ipv6_addr))
+                config.configure_and_track_ip(device, next(ipv6_addr))
 
             device.up()
-            configuration.test_wide_devices.append(device)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-        configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
+        return (host1.eth0, host2.eth0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         One L2TP tunnel is configured on both hosts using the
         :any:`L2TPManager`. Each host configures one L2TP session for the
         tunnel. IPv4 addresses are assigned to the l2tp session devices.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         host1 = endpoint1.netns
         host2 = endpoint2.netns
         if self.params.carrier_ipversion == "ipv4":
@@ -153,10 +156,10 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
 
         ip1 = "10.42.1.1/8"
         ip2 = "10.42.1.2/8"
-        host1.l2tp_session1.ip_add(ip1, peer=ip2)
-        host2.l2tp_session1.ip_add(ip2, peer=ip1)
+        config.configure_and_track_ip(host1.l2tp_session1, ip1, peer=ip2)
+        config.configure_and_track_ip(host2.l2tp_session1, ip2, peer=ip1)
 
-        configuration.tunnel_devices.extend([host1.l2tp_session1, host2.l2tp_session1])
+        return (host1.l2tp_session1, host2.l2tp_session1)
 
     def test_wide_deconfiguration(self, config):
         for host in [self.matched.host1, self.matched.host2]:

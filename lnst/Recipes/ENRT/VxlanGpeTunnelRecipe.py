@@ -7,7 +7,7 @@ from lnst.Common.IpAddress import (
     Ip6Address,
     interface_addresses,
 )
-from lnst.Devices import VxlanDevice, LoopbackDevice
+from lnst.Devices import VxlanDevice, LoopbackDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import (
@@ -18,6 +18,7 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -86,7 +87,7 @@ class VxlanGpeTunnelRecipe(
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
@@ -96,16 +97,18 @@ class VxlanGpeTunnelRecipe(
         ipv6_addr = interface_addresses(self.params.net_ipv6)
         for device in [host1.eth0, host2.eth0]:
             if self.params.carrier_ipversion == "ipv4":
-                device.ip_add(next(ipv4_addr))
+                config.configure_and_track_ip(device, next(ipv4_addr))
             else:
-                device.ip_add(next(ipv6_addr))
+                config.configure_and_track_ip(device, next(ipv6_addr))
             device.up()
-            configuration.test_wide_devices.append(device)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-        configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
+        return (host1.eth0, host2.eth0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The Vxlan tunnel devices are created with external flag specified
         so that the encapsulation can be defined externally by routes.
@@ -119,16 +122,12 @@ class VxlanGpeTunnelRecipe(
         the loopback devices of the matched hosts.
 
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        if self.params.carrier_ipversion == "ipv4":
-            ip_filter = {"family": AF_INET}
-        else:
-            ip_filter = {"family": AF_INET6, "is_link_local": False}
 
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
         m1_dummy_ip = ipaddress("172.16.10.1/32")
         m1_dummy_ip6 = ipaddress("fc00:a::1/128")
@@ -141,14 +140,14 @@ class VxlanGpeTunnelRecipe(
         m2.lo = LoopbackDevice()
 
         # A
-        m1.lo.ip_add(m1_dummy_ip)
-        m1.lo.ip_add(m1_dummy_ip6)
+        config.configure_and_track_ip(m1.lo, m1_dummy_ip)
+        config.configure_and_track_ip(m1.lo, m1_dummy_ip6)
         m1.vxlan_tunnel.mtu = 1400
         m1.vxlan_tunnel.up()
 
         # B
-        m2.lo.ip_add(m2_dummy_ip)
-        m2.lo.ip_add(m2_dummy_ip6)
+        config.configure_and_track_ip(m2.lo, m2_dummy_ip)
+        config.configure_and_track_ip(m2.lo, m2_dummy_ip6)
         m2.vxlan_tunnel.mtu = 1400
         m2.vxlan_tunnel.up()
 
@@ -175,8 +174,7 @@ class VxlanGpeTunnelRecipe(
             )
         )
 
-        configuration.tunnel_devices.extend([m1.vxlan_tunnel, m2.vxlan_tunnel])
-        self.wait_tentative_ips([m1.lo, m2.lo])
+        return (m1.vxlan_tunnel, m2.vxlan_tunnel)
 
     def generate_ping_endpoints(self, config):
         """
@@ -229,7 +227,7 @@ class VxlanGpeTunnelRecipe(
 
         return pa_config
 
-    def generate_perf_endpoints(self, config):
+    def generate_perf_endpoints(self, config: EnrtConfiguration):
         """
         The perf endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.

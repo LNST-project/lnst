@@ -4,7 +4,7 @@ from lnst.Common.IpAddress import (
     ipaddress,
     interface_addresses,
 )
-from lnst.Devices import IpIpDevice
+from lnst.Devices import IpIpDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import (
@@ -13,6 +13,7 @@ from lnst.Common.Parameters import (
     IPv4NetworkParam,
 )
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
@@ -66,7 +67,7 @@ class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRec
 
     net_ipv4 = IPv4NetworkParam(default="172.16.0.0/16")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
@@ -74,22 +75,24 @@ class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRec
         host1, host2 = self.matched.host1, self.matched.host2
         ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="172.16.200.1/16")
         for device in [host1.eth0, host2.eth0]:
-            device.ip_add(next(ipv4_addr))
+            config.configure_and_track_ip(device, next(ipv4_addr))
             device.up()
-            configuration.test_wide_devices.append(device)
 
-        configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
+        return (host1.eth0, host2.eth0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The ipip tunnel devices are configured with IPv4 addresses.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        ip_filter = {"family": AF_INET}
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
         a_ip4 = ipaddress("192.168.200.1/24")
         b_ip4 = ipaddress("192.168.200.2/24")
@@ -109,13 +112,13 @@ class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRec
 
         # A
         m1.ipip_tunnel.up()
-        m1.ipip_tunnel.ip_add(a_ip4)
+        config.configure_and_track_ip(m1.ipip_tunnel, a_ip4)
 
         # B
         m2.ipip_tunnel.up()
-        m2.ipip_tunnel.ip_add(b_ip4)
+        config.configure_and_track_ip(m2.ipip_tunnel, b_ip4)
 
-        configuration.tunnel_devices.extend([m1.ipip_tunnel, m2.ipip_tunnel])
+        return (m1.ipip_tunnel, m2.ipip_tunnel)
 
     def generate_ping_endpoints(self, config):
         """

@@ -12,8 +12,9 @@ from lnst.Common.Parameters import (
 )
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
-from lnst.Devices import OvsBridgeDevice
+from lnst.Devices import OvsBridgeDevice, RemoteDevice
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -73,7 +74,7 @@ class VxlanOvsTunnelRecipe(
 
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
@@ -81,14 +82,16 @@ class VxlanOvsTunnelRecipe(
         host1, host2 = self.matched.host1, self.matched.host2
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         for device in [host1.eth0, host2.eth0]:
-            device.ip_add(next(ipv4_addr))
+            config.configure_and_track_ip(device, next(ipv4_addr))
             device.up()
-            configuration.test_wide_devices.append(device)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-        configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
+        return (host1.eth0, host2.eth0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         OvS bridges are created on each of the matched hosts with two ports.
         One port as an integration port and another port of type VXLAN acting
@@ -97,21 +100,19 @@ class VxlanOvsTunnelRecipe(
         Integration ports are configured with IPv4 and IPv6 addresses
         of the tunneled networks.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        ip_filter = {"family": AF_INET}
 
         for i, (host, endpoint) in enumerate([(m1, endpoint2), (m2, endpoint1)]):
-            remote_ip = endpoint.ips_filter(**ip_filter)[0]
             host.br0 = OvsBridgeDevice()
             host.int0 = host.br0.port_add(
                 interface_options={"type": "internal", "ofport_request": 5}
             )
-            configuration.tunnel_devices.append(host.int0)
-            host.int0.ip_add(ipaddress("192.168.200." + str(i + 1) + "/24"))
-            host.int0.ip_add(ipaddress("fc00::" + str(i + 1) + "/64"))
+            config.configure_and_track_ip(host.int0, ipaddress("192.168.200." + str(i + 1) + "/24"))
+            config.configure_and_track_ip(host.int0, ipaddress("fc00::" + str(i + 1) + "/64"))
 
+            remote_ip = config.ips_for_device(endpoint)[0]
             host.br0.tunnel_add(
                 "vxlan",
                 {
@@ -132,7 +133,7 @@ class VxlanOvsTunnelRecipe(
             host.br0.up()
             host.int0.up()
 
-        self.wait_tentative_ips(configuration.tunnel_devices)
+        return (m1.int0, m2.int0)
 
     def generate_ping_endpoints(self, config):
         """
