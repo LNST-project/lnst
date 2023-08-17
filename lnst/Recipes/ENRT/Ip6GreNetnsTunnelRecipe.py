@@ -10,10 +10,11 @@ from lnst.Common.Parameters import (
     Param,
     IPv6NetworkParam,
 )
-from lnst.Devices import Ip6GreDevice, VethPair, BridgeDevice
+from lnst.Devices import Ip6GreDevice, VethPair, BridgeDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import (
     MTUHWConfigMixin,
 )
@@ -87,7 +88,7 @@ class Ip6GreNetnsTunnelRecipe(
 
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of
 
@@ -120,6 +121,7 @@ class Ip6GreNetnsTunnelRecipe(
         host2.bridge.slave_add(host2.veth0)
         host2.bridge.slave_add(host2.eth0)
 
+
         for device in [
             host1.veth0,
             host2.veth0,
@@ -129,21 +131,23 @@ class Ip6GreNetnsTunnelRecipe(
             host2.eth0,
         ]:
             device.up()
-            configuration.test_wide_devices.append(device)
+            config.track_device(device)
 
         ipv6_addr = interface_addresses(self.params.net_ipv6)
         for device in [host1.newns.veth1, host2.newns.veth1]:
-            device.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(device, next(ipv6_addr))
             device.up()
-            configuration.test_wide_devices.append(device)
 
         host1.veth0.up()
         host2.veth0.up()
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-        configuration.tunnel_endpoints = (host1.newns.veth1, host2.newns.veth1)
+        return (host1.newns.veth1, host2.newns.veth1)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The GRE tunnel devices are created in the network namespaces and
         configured with local and remote ip addresses matching the veth
@@ -152,12 +156,11 @@ class Ip6GreNetnsTunnelRecipe(
         The IP6GRE tunnel devices are configured with IPv4 and IPv6 addresses
         of individual networks. Routes are configured accordingly.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        ip_filter = {"family": AF_INET6, "is_link_local": False}
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
         a_ip4 = Ip4Address("192.168.6.2/24")
         a_net4 = "192.168.6.0/24"
@@ -174,20 +177,19 @@ class Ip6GreNetnsTunnelRecipe(
 
         # A
         m1.gre6_tunnel.up()
-        m1.gre6_tunnel.ip_add(a_ip4)
-        m1.gre6_tunnel.ip_add(a_ip6)
+        config.configure_and_track_ip(m1.gre6_tunnel, a_ip4)
+        config.configure_and_track_ip(m1.gre6_tunnel, a_ip6)
         m1.run("ip -4 route add {} dev {}".format(b_net4, m1.gre6_tunnel.name))
         m1.run("ip -6 route add {} dev {}".format(b_net6, m1.gre6_tunnel.name))
 
         # B
         m2.gre6_tunnel.up()
-        m2.gre6_tunnel.ip_add(b_ip4)
-        m2.gre6_tunnel.ip_add(b_ip6)
+        config.configure_and_track_ip(m2.gre6_tunnel, b_ip4)
+        config.configure_and_track_ip(m2.gre6_tunnel, b_ip6)
         m2.run("ip -4 route add {} dev {}".format(a_net4, m2.gre6_tunnel.name))
         m2.run("ip -6 route add {} dev {}".format(a_net6, m2.gre6_tunnel.name))
 
-        configuration.tunnel_devices.extend([m1.gre6_tunnel, m2.gre6_tunnel])
-        self.wait_tentative_ips(configuration.tunnel_devices)
+        return (m1.gre6_tunnel, m2.gre6_tunnel)
 
     def generate_ping_endpoints(self, config):
         """

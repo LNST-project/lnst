@@ -4,7 +4,7 @@ from lnst.Common.IpAddress import (
     ipaddress,
     interface_addresses,
 )
-from lnst.Devices import Ip6TnlDevice
+from lnst.Devices import Ip6TnlDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import (
@@ -13,6 +13,7 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
@@ -66,7 +67,7 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
 
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of the Ethernet
         devices on the matched hosts.
@@ -74,23 +75,24 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
         host1, host2 = self.matched.host1, self.matched.host2
         ipv6_addr = interface_addresses(self.params.net_ipv6)
         for device in [host1.eth0, host2.eth0]:
-            device.ip_add(next(ipv6_addr))
+            config.configure_and_track_ip(device, next(ipv6_addr))
             device.up()
-            configuration.test_wide_devices.append(device)
 
-        self.wait_tentative_ips(configuration.test_wide_devices)
-        configuration.tunnel_endpoints = (host1.eth0, host2.eth0)
+        return (host1.eth0, host2.eth0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The ip6tnl tunnel devices are configured with IPv6 addresses.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        ip_filter = {"family": AF_INET6}
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
         a_ip6 = ipaddress("3001:db8:ac10:fe01::2/64")
         b_ip6 = ipaddress("3001:db8:ac10:fe01::3/64")
@@ -110,14 +112,13 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
 
         # A
         m1.ip6tnl.up()
-        m1.ip6tnl.ip_add(a_ip6)
+        config.configure_and_track_ip(m1.ip6tnl, a_ip6)
 
         # B
         m2.ip6tnl.up()
-        m2.ip6tnl.ip_add(b_ip6)
+        config.configure_and_track_ip(m2.ip6tnl, b_ip6)
 
-        configuration.tunnel_devices.extend([m1.ip6tnl, m2.ip6tnl])
-        self.wait_tentative_ips(configuration.tunnel_devices)
+        return (m1.ip6tnl, m2.ip6tnl)
 
     def generate_ping_endpoints(self, config):
         """

@@ -10,10 +10,11 @@ from lnst.Common.Parameters import (
     IntParam,
     IPv4NetworkParam,
 )
-from lnst.Devices import GreDevice, VlanDevice
+from lnst.Devices import GreDevice, VlanDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import (
     MTUHWConfigMixin,
 )
@@ -78,7 +79,7 @@ class GreTunnelOverVlanRecipe(
 
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
 
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The underlying network for the tunnel consists of two Ethernet
         devices on the matched hosts. A VLAN is configured on top of each
@@ -91,8 +92,7 @@ class GreTunnelOverVlanRecipe(
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         for device in [host1.vlan0, host2.vlan0]:
-            device.ip_add(next(ipv4_addr))
-            configuration.test_wide_devices.append(device)
+            config.configure_and_track_ip(device, next(ipv4_addr))
 
         for dev in [
             host1.eth0,
@@ -102,9 +102,13 @@ class GreTunnelOverVlanRecipe(
         ]:
             dev.up()
 
-        configuration.tunnel_endpoints = (host1.vlan0, host2.vlan0)
+        return (host1.vlan0, host2.vlan0)
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         The GRE tunnel devices are configured with local and remote ip addresses
         matching the VLAN device IP addresses.
@@ -112,12 +116,11 @@ class GreTunnelOverVlanRecipe(
         The GRE tunnel devices are configured with IPv4 and IPv6 addresses
         of individual networks. Routes are configured accordingly.
         """
-        endpoint1, endpoint2 = configuration.tunnel_endpoints
+        endpoint1, endpoint2 = tunnel_endpoints
         m1 = endpoint1.netns
         m2 = endpoint2.netns
-        ip_filter = {"family": AF_INET}
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
         a_ip4 = Ip4Address("192.168.6.2/24")
         a_net4 = "192.168.6.0/24"
@@ -134,20 +137,19 @@ class GreTunnelOverVlanRecipe(
 
         # A
         m1.gre_tunnel.up()
-        m1.gre_tunnel.ip_add(a_ip4)
-        m1.gre_tunnel.ip_add(a_ip6)
+        config.configure_and_track_ip(m1.gre_tunnel, a_ip4)
+        config.configure_and_track_ip(m1.gre_tunnel, a_ip6)
         m1.run("ip -4 route add {} dev {}".format(b_net4, m1.gre_tunnel.name))
         m1.run("ip -6 route add {} dev {}".format(b_net6, m1.gre_tunnel.name))
 
         # B
         m2.gre_tunnel.up()
-        m2.gre_tunnel.ip_add(b_ip4)
-        m2.gre_tunnel.ip_add(b_ip6)
+        config.configure_and_track_ip(m2.gre_tunnel, b_ip4)
+        config.configure_and_track_ip(m2.gre_tunnel, b_ip6)
         m2.run("ip -4 route add {} dev {}".format(a_net4, m2.gre_tunnel.name))
         m2.run("ip -6 route add {} dev {}".format(a_net6, m2.gre_tunnel.name))
 
-        configuration.tunnel_devices.extend([m1.gre_tunnel, m2.gre_tunnel])
-        self.wait_tentative_ips(configuration.tunnel_devices)
+        return (m1.gre_tunnel, m2.gre_tunnel)
 
     def generate_ping_endpoints(self, config):
         """

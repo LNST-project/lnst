@@ -1,3 +1,4 @@
+from lnst.Devices import RemoteDevice
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.PacketAssert import PacketAssertTestAndEvaluate
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -25,7 +26,7 @@ class BaseTunnelRecipe(
     * :meth:`get_packet_assert_config`
     """
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self) -> EnrtConfiguration:
         """
         The base class defines common steps to create the test wide
         configuration of a tunnel recipe.
@@ -35,17 +36,13 @@ class BaseTunnelRecipe(
         then the tunnel is created between the specified endpoints in
         :meth:`create_tunnel`.
         """
+        config = super().test_wide_configuration()
+        config.tunnel_endpoints = self.configure_underlying_network(config)
+        config.tunnel_devices = self.create_tunnel(config, config.tunnel_endpoints)
+        self.wait_tentative_ips(config.configured_devices)
+        return config
 
-        configuration = super().test_wide_configuration()
-        configuration.tunnel_endpoints = None
-        configuration.tunnel_devices = []
-
-        self.configure_underlying_network(configuration)
-        self.create_tunnel(configuration)
-
-        return configuration
-
-    def configure_underlying_network(self, configuration):
+    def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
         This method must be implemented by the child class.
 
@@ -57,29 +54,41 @@ class BaseTunnelRecipe(
         etc.
 
         The method must also update the ``tunnel_endpoints`` attribute of the
-        ``configuration`` object with a tuple of two Device objects that will
+        ``config`` object with a tuple of two Device objects that will
         be used as tunnel endpoints in :meth:`create_tunnel`
 
-        :param configuration:
-            An EnrtConfiguration instance that will be populated with the
-            configured network devices and tunnel endpoints.
-        :type configuration: :any:`EnrtConfiguration`
+        :param config:
+            Used to configure IP addresses and store them inside the config
+        :type config: `EnrtConfiguration`
+
+        :return: returns a tuple of two Device objects that will
+            be used as tunnel endpoints in :meth:`create_tunnel`
+        :rtype: `tuple[RemoteDevice, RemoteDevice]`
         """
         raise NotImplementedError
 
-    def create_tunnel(self, configuration):
+    def create_tunnel(
+        self,
+        config: EnrtConfiguration,
+        tunnel_endpoints: tuple[RemoteDevice, RemoteDevice],
+    ) -> tuple[RemoteDevice, RemoteDevice]:
         """
         This method must be implemented by the child class.
 
-        The child class should create a network tunnel between endpoints
-        provided in the ``configuration``. That usually includes creating
-        tunnel devices such as :any:`GreDevice`, :any:`VxlanDevice`, etc.
-        and configuring the IP addresses.
+        The child class should create a network tunnel between the provided
+        endpoints. That usually includes creating tunnel devices such as
+        :any:`GreDevice`, :any:`VxlanDevice`, etc. and configuring the IP addresses.
 
-        :param configuration:
-            An EnrtConfiguration instance that should have ``tunnel_endpoints``
-            attribute populated with the tunnel endpoints.
-        :type configuration: :any:`EnrtConfiguration`
+        :param config:
+            Configuration object useful for assigning IP addresses to devices
+        :type config: `EnrtConfiguration`
+
+        :param tunnel_endpoints:
+            A tuple of the tunnel endpoints.
+        :type tunnel_endpoints: `tuple[RemoteDevice, RemoteDevice]`
+
+        :return: A tuple of the configured tunnel devices.
+        :rtype: `tuple[RemoteDevice, RemoteDevice]
         """
         raise NotImplementedError
 
@@ -103,8 +112,6 @@ class BaseTunnelRecipe(
 
     def test_wide_deconfiguration(self, config):
         ""  # overriding the parent docstring
-        del config.tunnel_devices
-
         super().test_wide_deconfiguration(config)
 
     def ping_test(self, ping_configs):
@@ -137,7 +144,7 @@ class BaseTunnelRecipe(
         """
         raise NotImplementedError
 
-    def generate_perf_endpoints(self, config):
+    def generate_perf_endpoints(self, config: EnrtConfiguration):
         """
         The perf endpoints for recipes derived from this class are usually
         the tunnel endpoints. The derived class can override the endpoints
