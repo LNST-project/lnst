@@ -49,14 +49,12 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         config = super().test_wide_configuration()
 
         for i, (machine, dev) in enumerate([(host1, host1.br0),
-            (guest1, guest1.eth0), (host2, host2.eth0)]):
+            (guest1, guest1.eth0), (host2, host2.eth0)], 1):
             config.configure_and_track_ip(dev, next(ipv4_addr))
             dev.ip_add(next(ipv4_addr))
             machine.vxlan0.realdev = dev
-            config.configure_and_track_ip(machine.vxlan0, ipaddress(vxlan_net_addr + "." + str(i+1)
-                + "/24"))
-            config.configure_and_track_ip(machine.vxlan0, ipaddress(vxlan_net_addr6 + "::" +
-                str(i+1) + "/64"))
+            config.configure_and_track_ip(machine.vxlan0, ipaddress(f"{vxlan_net_addr}.{i}/24"))
+            config.configure_and_track_ip(machine.vxlan0, ipaddress(f"{vxlan_net_addr6}::{i}/64"))
 
         for dev in [host1.eth0, host2.eth0, guest1.eth0, host1.tap0,
                     host1.br0, host1.vxlan0, host2.vxlan0, guest1.vxlan0]:

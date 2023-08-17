@@ -36,20 +36,18 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
             "output:5")
         flow_entries.append("table=0,priority=100,actions=drop")
 
-        for i, host in enumerate([host1, host2]):
+        for i, host in enumerate([host1, host2], 1):
             host.eth0.down()
-            config.configure_and_track_ip(host.eth0, host_addr[i])
+            config.configure_and_track_ip(host.eth0, host_addr[i-1])
             host.br0 = OvsBridgeDevice()
             host.int0 = host.br0.port_add(
                     interface_options={
                         'type': 'internal',
                         'ofport_request': 5,
                         'name': 'int0'})
-            config.configure_and_track_ip(host.int0, ipaddress(vxlan_net_addr + "." + str(i+1) +
-                "/24"))
-            config.configure_and_track_ip(host.int0, ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
-                "/64"))
-            tunnel_opts = {"option:remote_ip" : host_addr[1-i],
+            config.configure_and_track_ip(host.int0, ipaddress(f"{vxlan_net_addr}.{i}/24"))
+            config.configure_and_track_ip(host.int0, ipaddress(f"{vxlan_net_addr6}::{i}/64"))
+            tunnel_opts = {"option:remote_ip" : host_addr[2-i],
                            "option:key" : "flow", "ofport_request" : "10"}
             host.br0.tunnel_add("vxlan", tunnel_opts)
             host.br0.flows_add(flow_entries)
