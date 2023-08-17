@@ -42,19 +42,6 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
         return configuration
 
-    def generate_test_wide_description(self, config):
-        host1, host2 = self.matched.host1, self.matched.host2
-        desc = super().generate_test_wide_description(config)
-        desc += [
-            "\n".join([
-                "Configured {}.{}.ips = {}".format(
-                    dev.host.hostid, dev.name, dev.ips
-                )
-                for dev in config.test_wide_devices
-            ])
-        ]
-        return desc
-
     def test_wide_deconfiguration(self, config):
         del config.test_wide_devices
 
@@ -95,6 +82,18 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
             host.eth0.up()
             host.msec0.up()
             self.wait_tentative_ips([host.eth0, host.msec0])
+
+    def generate_sub_configuration_description(self, config):
+        desc = super().generate_sub_configuration_description(config)
+        desc += [
+            "\n".join([
+                "Configured {}.{}.ips = {}".format(
+                    dev.host.hostid, dev.name, dev.ips
+                )
+                for dev in config.configured_devices
+            ])
+        ]
+        return desc
 
     def remove_sub_configuration(self, config):
         host1, host2 = config.host1, config.host2
