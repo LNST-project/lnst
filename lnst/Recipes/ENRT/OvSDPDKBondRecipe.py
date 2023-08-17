@@ -174,10 +174,10 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
 
         for i, host in enumerate([host1, host2]):
             host.dummy_cfg = DummyRecipeConfig(
-                eth0=DummyEthDevice(host.eth0.bus_info, host.eth0.hwaddr, _id="eth" + str(i),
+                eth0=DummyEthDevice(host.eth0.bus_info, host.eth0.hwaddr, _id=f"eth{i}",
                                     ips=[next(ipv4_addr1), next(ipv6_addr1)]
                                     ),
-                eth1=DummyEthDevice(host.eth1.bus_info, host.eth1.hwaddr, _id="eth" + str(i + 1),
+                eth1=DummyEthDevice(host.eth1.bus_info, host.eth1.hwaddr, _id=f"eth{i+1}",
                                     ips=[next(ipv4_addr2), next(ipv6_addr2)]
                                     ),
 

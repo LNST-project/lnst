@@ -104,13 +104,13 @@ class VxlanOvsTunnelRecipe(
         m1 = endpoint1.netns
         m2 = endpoint2.netns
 
-        for i, (host, endpoint) in enumerate([(m1, endpoint2), (m2, endpoint1)]):
+        for i, (host, endpoint) in enumerate([(m1, endpoint2), (m2, endpoint1)], 1):
             host.br0 = OvsBridgeDevice()
             host.int0 = host.br0.port_add(
                 interface_options={"type": "internal", "ofport_request": 5}
             )
-            config.configure_and_track_ip(host.int0, ipaddress("192.168.200." + str(i + 1) + "/24"))
-            config.configure_and_track_ip(host.int0, ipaddress("fc00::" + str(i + 1) + "/64"))
+            config.configure_and_track_ip(host.int0, ipaddress(f"192.168.200.{i}/24"))
+            config.configure_and_track_ip(host.int0, ipaddress(f"fc00::{i}/64"))
 
             remote_ip = config.ips_for_device(endpoint)[0]
             host.br0.tunnel_add(

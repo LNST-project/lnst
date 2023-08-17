@@ -84,11 +84,9 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             for dev in [host.eth0, host.tap0, host.tap1, host.br0]:
                 dev.up()
 
-        for i, guest in enumerate([guest1, guest2, guest3, guest4]):
-            config.configure_and_track_ip(guest.eth0, ipaddress(vxlan_net_addr + "." + str(i+1) +
-                "/24"))
-            config.configure_and_track_ip(guest.eth0, ipaddress(vxlan_net_addr6 + "::" + str(i+1) +
-                "/64"))
+        for i, guest in enumerate([guest1, guest2, guest3, guest4], 1):
+            config.configure_and_track_ip(guest.eth0, ipaddress(f"{vxlan_net_addr}.{i}/24"))
+            config.configure_and_track_ip(guest.eth0, ipaddress(f"{vxlan_net_addr6}::{i}/64"))
             guest.eth0.up()
 
         self.wait_tentative_ips(config.configured_devices)

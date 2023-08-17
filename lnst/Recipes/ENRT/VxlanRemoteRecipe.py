@@ -44,12 +44,10 @@ class VxlanRemoteRecipe(
         config.configure_and_track_ip(host2.eth0, host2_ip)
         host2.vxlan0 = VxlanDevice(vxlan_id='1', remote=host1_ip)
 
-        for i, host in enumerate([host1, host2]):
+        for i, host in enumerate([host1, host2], 1):
             host.vxlan0.realdev = host.eth0
-            config.configure_and_track_ip(host.vxlan0, ipaddress(vxlan_net_addr + "." + str(i+1) +
-                "/24"))
-            config.configure_and_track_ip(host.vxlan0, ipaddress(vxlan_net_addr6 + "::" + str(i+1)
-                + "/64"))
+            config.configure_and_track_ip(host.vxlan0, ipaddress(f"{vxlan_net_addr}.{i}/24"))
+            config.configure_and_track_ip(host.vxlan0, ipaddress(f"{vxlan_net_addr6}::{i}/64"))
 
         for host in [host1, host2]:
             host.eth0.up_and_wait()
