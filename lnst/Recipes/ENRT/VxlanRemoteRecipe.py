@@ -88,9 +88,6 @@ class VxlanRemoteRecipe(
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.host1.vxlan0, self.matched.host2.vxlan0)]
 

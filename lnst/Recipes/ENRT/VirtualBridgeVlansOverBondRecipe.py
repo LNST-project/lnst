@@ -174,9 +174,6 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_ping_endpoints(self, config):
         guest1, guest2, guest3, guest4 = (self.matched.guest1,
             self.matched.guest2, self.matched.guest3, self.matched.guest4)

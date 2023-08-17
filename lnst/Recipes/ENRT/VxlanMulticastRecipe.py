@@ -96,9 +96,6 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_ping_endpoints(self, config):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)

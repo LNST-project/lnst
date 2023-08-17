@@ -39,9 +39,6 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
         return config
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_sub_configurations(self, config):
         for subconf in ConfMixin.generate_sub_configurations(self, config):
             for encryption in self.params.macsec_encryption:

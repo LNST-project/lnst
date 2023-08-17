@@ -133,9 +133,6 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def test_wide_deconfiguration(self, config):
-        super().test_wide_deconfiguration(config)
-
     def generate_ping_endpoints(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
 
