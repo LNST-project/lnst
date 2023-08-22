@@ -5,3 +5,4 @@ from lnst.RecipeCommon.Perf.Evaluators.BaselineCPUAverageEvaluator import Baseli
 
 from lnst.RecipeCommon.Perf.Evaluators.MaxTimeTakenEvaluator import MaxTimeTakenEvaluator
 from lnst.RecipeCommon.Perf.Evaluators.BaselineTcRunAverageEvaluator import BaselineTcRunAverageEvaluator
+from lnst.RecipeCommon.Perf.Evaluators.BaselineRDMABandwidthAverageEvaluator import BaselineRDMABandwidthAverageEvaluator
