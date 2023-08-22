@@ -16,6 +16,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 import logging
 import time
 from enum import IntEnum
+from typing import Optional, Union
 
 class ResultLevel(IntEnum):
     IMPORTANT = 1
@@ -288,3 +289,23 @@ class Result(BaseResult):
     @property
     def data_level(self):
         return self._data_level
+
+
+class MeasurementResult(Result):
+    def __init__(
+        self,
+        measurement_type: str,
+        result: Union[ResultType, bool] = ResultType.PASS,
+        description: str = "",
+        data: Optional[dict] = None,
+    ):
+        self._measurement_type = measurement_type
+        super().__init__(
+            result,
+            description,
+            data=data or {},
+        )
+
+    @property
+    def measurement_type(self) -> str:
+        return self._measurement_type

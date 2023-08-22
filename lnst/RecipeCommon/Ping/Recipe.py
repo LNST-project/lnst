@@ -1,4 +1,5 @@
 from lnst.Controller.Recipe import BaseRecipe
+from lnst.Controller.RecipeResults import MeasurementResult
 from lnst.Tests import Ping
 
 class PingConf(object):
@@ -97,7 +98,7 @@ class PingTestAndEvaluate(BaseRecipe):
               "<{0.destination.hostid} ({0.destination_address})>"
         description = fmt.format(ping_config)
         message = "Ping result --- " + description
-        self.add_result(result[0], message, result[1])
+        self.add_custom_result(MeasurementResult("ping", result[0], message, result[1]))
 
     def single_ping_evaluate(self, ping_config, result):
         for evaluator in ping_config.evaluators:
