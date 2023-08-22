@@ -4,7 +4,7 @@ from typing import Optional
 
 from lnst.Common.NetUtils import MacPool
 from lnst.Controller import BaseRecipe
-from lnst.Controller.RecipeResults import ResultLevel, ResultType
+from lnst.Controller.RecipeResults import MeasurementResult, ResultLevel, ResultType
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.Results.AggregatedTcRunMeasurementResults import AggregatedTcRunMeasurementResults
 from lnst.RecipeCommon.Perf.Measurements.Results.TcRunMeasurementResults import TcRunMeasurementResults
@@ -221,13 +221,12 @@ class TcRunMeasurement(BaseMeasurement):
     @classmethod
     def _report_result(cls,  recipe: BaseRecipe, result: TcRunMeasurementResults):
         r_type = ResultType.PASS if result.run_success else ResultType.FAIL
-        recipe.add_result(
-            r_type,
-            f"{r_type} {result.description}",
-            data=dict(
-                rule_install_rate=result.rule_install_rate,
-            )
+        measurement_result = MeasurementResult(
+            "tc",
+            description=f"{r_type} {result.description}",
+            data={"rule_install_rate": result.rule_install_rate},
         )
+        recipe.add_custom_result(measurement_result)
 
     @classmethod
     def aggregate_results(cls, old: Optional[list[TcRunMeasurementResults]], new: list[TcRunMeasurementResults]):

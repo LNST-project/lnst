@@ -17,7 +17,7 @@ from lnst.RecipeCommon.Perf.Measurements.Results import (
 from lnst.Controller.Job import Job
 from lnst.Controller.Host import Host
 from lnst.Controller.Recipe import BaseRecipe
-from lnst.Controller.RecipeResults import ResultLevel, ResultType
+from lnst.Controller.RecipeResults import MeasurementResult, ResultLevel
 
 
 def timestamp() -> str:
@@ -151,9 +151,11 @@ class LinuxPerfMeasurement(BaseMeasurement):
                 result.filename for result in aggregated_result.individual_results
             )
 
-            recipe.add_result(
-                ResultType.PASS,
-                f"perf-record recorded CPU(s) {cpus} on {hostid} to files:\n    {files}",
+            recipe.add_custom_result(
+                MeasurementResult(
+                    "linuxperf",
+                    description=f"perf-record recorded CPU(s) {cpus} on {hostid} to files:\n    {files}",
+                )
             )
 
     @classmethod

@@ -1,4 +1,4 @@
-from lnst.Controller.RecipeResults import ResultType
+from lnst.Controller.RecipeResults import MeasurementResult
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.Results import AggregatedCPUMeasurementResults
@@ -38,7 +38,7 @@ class BaseCPUMeasurement(BaseMeasurement):
 
         desc = [result.describe() for result in results]
 
-        recipe.add_result(ResultType.PASS, "\n".join(desc), data=cpu_data)
+        recipe.add_custom_result(MeasurementResult("cpu", description="\n".join(desc), data=cpu_data))
 
     def _aggregate_hostcpu_results(self, old, new):
         if (old is not None and

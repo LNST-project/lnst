@@ -3,7 +3,7 @@ import time
 
 from lnst.Controller.Job import Job
 from lnst.Controller.Recipe import BaseRecipe
-from lnst.Controller.RecipeResults import ResultType
+from lnst.Controller.RecipeResults import MeasurementResult
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import Flow, NetworkFlowTest
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 from lnst.Tests.RDMABandwidth import RDMABandwidthServer, RDMABandwidthClient
@@ -138,4 +138,4 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
         aggregated_results: list[AggregatedRDMABandwidthMeasurementResults],
     ) -> None:
         for aggregated_result in aggregated_results:
-            recipe.add_result(ResultType.PASS, aggregated_result.describe())
+            recipe.add_custom_result(MeasurementResult("rdma-bandwidth", description=aggregated_result.describe()))

@@ -5,7 +5,7 @@ from lnst.Common.IpAddress import BaseIpAddress
 from lnst.Controller.Job import Job
 from lnst.Controller.Namespace import Namespace
 
-from lnst.Controller.RecipeResults import ResultType
+from lnst.Controller.RecipeResults import MeasurementResult, ResultType
 from lnst.Devices import Device
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
@@ -104,12 +104,18 @@ class BaseFlowMeasurement(BaseMeasurement):
                 desc.append("{} has invalid duration!".format(name))
 
         # TODO add flow description
-        recipe.add_result(recipe_result, "\n".join(desc), data = dict(
-                    generator_flow_data=generator,
-                    generator_cpu_data=generator_cpu,
-                    receiver_flow_data=receiver,
-                    receiver_cpu_data=receiver_cpu,
-                    flow_results=flow_results))
+        recipe_result = MeasurementResult(
+            "flow",
+            description="\n".join(desc),
+            data={
+                "generator_flow_data": generator,
+                "generator_cpu_data": generator_cpu,
+                "receiver_flow_data": receiver,
+                "receiver_cpu_data": receiver_cpu,
+                "flow_results": flow_results,
+            },
+        )
+        recipe.add_custom_result(recipe_result)
 
     def aggregate_results(self, old, new):
         aggregated = []
