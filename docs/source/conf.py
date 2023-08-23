@@ -51,6 +51,10 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
+if os.environ.get("READTHEDOCS") == "True":
+    html_theme = 'sphinx_rtd_theme'
+else:
+    html_theme = 'classic'
 # html_theme = 'classic'
 # html_theme_options = {
 #     "body_min_width": "100%",
