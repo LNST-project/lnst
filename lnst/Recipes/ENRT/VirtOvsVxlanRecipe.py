@@ -70,14 +70,14 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
 
         config = super().test_wide_configuration()
 
-        for i, host in enumerate([host1, host2]):
-            config.configure_and_track_ip(host.eth0, host_ips[i])
+        for host, self_ip, other_ip in zip([host1, host2], host_ips, reversed(host_ips)):
+            config.configure_and_track_ip(host.eth0, self_ip)
             host.br0 = OvsBridgeDevice()
             for dev, ofport_r in [(host.tap0, '5'), (host.tap1, '6')]:
                 host.br0.port_add(
                         device=dev,
                         interface_options={'ofport_request': ofport_r})
-            tunnel_opts = {"option:remote_ip" : host_ips[1-i],
+            tunnel_opts = {"option:remote_ip" : other_ip,
                 "option:key" : "flow", "ofport_request" : '10'}
             host.br0.tunnel_add("vxlan", tunnel_opts)
             host.br0.flows_add(flow_entries)
