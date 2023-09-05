@@ -142,7 +142,7 @@ class BaseEnrtRecipe(
     :type perf_evaluation_strategy: :any:`StrParam` (default "all")
     """
 
-    driver = StrParam(default="ixgbe")
+    driver = StrParam()
 
     #common test parameters
     ip_versions = Param(default=("ipv4", "ipv6"))

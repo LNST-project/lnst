@@ -4,7 +4,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.Ping.Recipe import PingConf, PingTestAndEvaluate
 
 class PingFloodRecipe(PingTestAndEvaluate):
-    driver = StrParam(default='ixgbe')
+    driver = StrParam()
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
