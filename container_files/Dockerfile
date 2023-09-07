@@ -13,6 +13,7 @@ RUN dnf install -y initscripts \
     libvirt \
     libvirt-devel \
     libnl3 \
+    lksctp-tools-devel \
     git \
     perf \
     perftest \
