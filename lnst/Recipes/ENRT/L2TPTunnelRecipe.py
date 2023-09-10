@@ -105,16 +105,8 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
         :any:`L2TPManager`. Each host configures one L2TP session for the
         tunnel. IPv4 addresses are assigned to the l2tp session devices.
         """
-        endpoint1, endpoint2 = tunnel_endpoints
-        host1 = endpoint1.netns
-        host2 = endpoint2.netns
-        if self.params.carrier_ipversion == "ipv4":
-            ip_filter = {"family": AF_INET}
-        else:
-            ip_filter = {"family": AF_INET6, "is_link_local": False}
-
-        endpoint1_ip = endpoint1.ips_filter(**ip_filter)[0]
-        endpoint2_ip = endpoint2.ips_filter(**ip_filter)[0]
+        host1 = self.matched.host1
+        host2 = self.matched.host2
 
         for host in [host1, host2]:
             host.run("modprobe l2tp_eth")
@@ -122,6 +114,11 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
         host1.l2tp = host1.init_class(L2TPManager)
         host2.l2tp = host2.init_class(L2TPManager)
 
+        endpoint1, endpoint2 = tunnel_endpoints
+        endpoint1_ip = config.ips_for_device(endpoint1)[0]
+        endpoint2_ip = config.ips_for_device(endpoint2)[0]
+
+        self.wait_tentative_ips(tunnel_endpoints)
         host1.l2tp.create_tunnel(
             tunnel_id=1000,
             peer_tunnel_id=1000,
