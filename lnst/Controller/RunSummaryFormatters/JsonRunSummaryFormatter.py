@@ -13,14 +13,22 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
         self.pretty = pretty
 
     def format_run(self, run: RecipeRun) -> str:
-        measurement_results = [
+        recipe_results = [
             transformed
             for result in run.results
             if (transformed := self._transform_result(result)) is not None
         ]
 
+        if exc := run.exception:
+            exception_result = {
+                "result": "FAIL",
+                "type": "exception",
+                "message": str(exc),
+            }
+            recipe_results.append(exception_result)
+
         return json.dumps(
-            measurement_results,
+            recipe_results,
             indent=4 if self.pretty else None,
         )
 
