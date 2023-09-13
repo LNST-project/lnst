@@ -5,7 +5,7 @@ import os
 from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Common.Parameters import StrParam, IntParam, ListParam
 from lnst.Common.Utils import is_installed
-from lnst.Common.ExecCmd import log_output
+from lnst.Common.ExecCmd import exec_cmd, log_output
 
 class LinuxPerf(BaseTestModule):
     output_file = StrParam(mandatory=True)
@@ -19,9 +19,12 @@ class LinuxPerf(BaseTestModule):
             logging.error(self._res_data["msg"])
             return False
 
-        # can't use lnst.Common.ExecCmd.exec_cmd directly, because expected returncode is not zero
-        cmd: str = self._compose_cmd()
+        # If HOME is unset, perf assumes a debug-sym directory of `/.debug` instead of `~/.debug`
+        # This makes perf-archive unable to find build-id files. Setting $HOME to /root fixes this.
+        cmd = f"HOME=/root {self._compose_cmd()}"
         logging.debug(f"Executing: \"{cmd}\"")
+
+        # can't use lnst.Common.ExecCmd.exec_cmd directly, because expected returncode is not zero
         process = subprocess.Popen(
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True
         )
@@ -36,6 +39,10 @@ class LinuxPerf(BaseTestModule):
             log_output(logging.debug, "Stderr", stderr.decode())
 
         self._res_data["filename"] = os.path.abspath(self.params.output_file)
+
+        exec_cmd(f"HOME=/root perf archive {self._res_data['filename']}")
+        self._res_data["archive_filename"] = self._res_data["filename"] + ".tar.bz2"
+
         return process.returncode == -2
 
     def _compose_cmd(self) -> str:
