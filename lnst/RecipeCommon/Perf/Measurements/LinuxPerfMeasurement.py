@@ -119,13 +119,18 @@ class LinuxPerfMeasurement(BaseMeasurement):
             if job.result is None:
                 continue
 
-            # copy agent's perf.data file to a controller
-            src_filepath: str = job.result["filename"]
+            # copy perf.data to controller
+            src_filepath = job.result["filename"]
             new_filename: str = f"{os.path.basename(src_filepath)}.{self._collection_index}.{timestamp()}"
             dst_filepath: str = os.path.join(self._data_folder, host.hostid, new_filename)
-
             host.copy_file_from_machine(src_filepath, dst_filepath)
             logging.debug(f"perf-record data copied from agent to {dst_filepath}")
+
+            # copy debug symbols to controller
+            archive_filepath = job.result.get("archive_filename")
+            host.copy_file_from_machine(archive_filepath, f"{dst_filepath}.tar.bz2")
+            logging.debug(f"perf-record debug symbols copied from agent to {dst_filepath}.tar.bz2")
+
             results.append(
                 LinuxPerfMeasurementResults(
                     self,
