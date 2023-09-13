@@ -105,16 +105,3 @@ class SimpleNetworkTunableRecipe(
     @property
     def coalescing_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
-
-    @property
-    def linuxperf_cpus(self):
-        result = {
-            self.matched.host1: [self.params.perf_tool_generator_cpu],
-            self.matched.host2: [self.params.perf_tool_receiver_cpu],
-        }
-
-        device_settings = self._parse_device_settings(self.params.multi_dev_interrupt_config)
-        for dev, dev_config in device_settings.items():
-            result[dev.host].append(dev_config["cpus"])
-
-        return result

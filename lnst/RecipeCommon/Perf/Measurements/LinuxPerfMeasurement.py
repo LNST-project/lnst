@@ -1,4 +1,4 @@
-from typing import Any, Optional, Iterable
+from typing import Any, Optional
 from datetime import datetime
 import logging
 import signal
@@ -27,7 +27,6 @@ def timestamp() -> str:
 class LinuxPerfMeasurement(BaseMeasurement):
     _MEASUREMENT_VERSION: int = 1
 
-    linuxperf_cpus: dict[Host, list[list[int]]]
     _start_timestamp: float
     _end_timestamp: float
     _data_folder: str
@@ -39,13 +38,13 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
     def __init__(
         self,
-        linuxperf_cpus: dict[Host, list[list[int]]],
+        hosts: list[Host],
         data_folder: str,
         recipe_conf: Any = None,
     ):
         super().__init__(recipe_conf)
 
-        self.linuxperf_cpus = linuxperf_cpus
+        self.hosts = hosts
         self._data_folder = data_folder
 
         # create output folders
@@ -54,10 +53,6 @@ class LinuxPerfMeasurement(BaseMeasurement):
                 os.mkdir(os.path.join(self._data_folder, host.hostid))
             except FileExistsError:
                 pass
-
-    @property
-    def hosts(self) -> list[Host]:
-        return list(self.linuxperf_cpus.keys())
 
     @property
     def version(self) -> Optional[dict[str, Any]]:
@@ -87,25 +82,19 @@ class LinuxPerfMeasurement(BaseMeasurement):
                 return match.group(1)
         return None
 
-    @property
-    def configurations(self) -> Iterable[tuple[Host, int, list[int]]]:
-        for host in self.hosts:
-            for cpu_list_id, cpu_list in enumerate(self.linuxperf_cpus[host]):
-                yield (host, cpu_list_id, cpu_list)
-
     def start(self) -> None:
         self._start_timestamp = time.time()
-        for host, cpu_list_id, cpus in self.configurations:
-            filename: str = f"cpu_list{cpu_list_id}.cpus.{'.'.join(map(str, cpus))}.data"
-            self._running_jobs.append(host.run(LinuxPerf(output_file=filename, cpus=cpus), bg=True))
+        for host in self.hosts:
+            filename = "perf.data"
+            self._running_jobs.append(host.run(LinuxPerf(output_file=filename), bg=True))
 
     def finish(self) -> None:
         for job in self._running_jobs:
             job.kill(signal=signal.SIGINT)
 
-        for job, (host, _, _) in zip(self._running_jobs, self.configurations):
+        for job in self._running_jobs:
             if not job.wait(timeout=120):
-                logging.error(f"timeout while waiting for linuxperf job to finish on host {host.hostid}")
+                logging.error(f"timeout while waiting for linuxperf job to finish on host {job.host.hostid}")
                 job.kill()
 
         self._end_timestamp = time.time()
@@ -115,7 +104,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
     def collect_results(self) -> list[BaseMeasurementResults]:
         self._collection_index += 1
         results: list[BaseMeasurementResults] = []
-        for job, (host, _, cpus) in zip(self._finished_jobs, self.configurations):
+        for job, host in zip(self._finished_jobs, self.hosts):
             if job.result is None:
                 continue
 
@@ -136,7 +125,6 @@ class LinuxPerfMeasurement(BaseMeasurement):
                     self,
                     host,
                     dst_filepath,
-                    cpus,
                     self._start_timestamp,
                     self._end_timestamp,
                 )
@@ -150,7 +138,6 @@ class LinuxPerfMeasurement(BaseMeasurement):
         aggregated_results: list[AggregatedLinuxPerfMeasurementResults],
     ):
         for aggregated_result in aggregated_results:
-            cpus: str = ",".join(map(str, aggregated_result.individual_results[0].cpus))
             hostid: str = aggregated_result.individual_results[0].host.hostid
             files: str = "\n    ".join(
                 result.filename for result in aggregated_result.individual_results
@@ -159,7 +146,7 @@ class LinuxPerfMeasurement(BaseMeasurement):
             recipe.add_custom_result(
                 MeasurementResult(
                     "linuxperf",
-                    description=f"perf-record recorded CPU(s) {cpus} on {hostid} to files:\n    {files}",
+                    description=f"perf-record recorded all CPUs on {hostid} to files:\n    {files}",
                 )
             )
 

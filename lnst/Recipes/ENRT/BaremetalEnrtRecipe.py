@@ -21,11 +21,7 @@ class BaremetalEnrtMeasurementGenerators(
     LinuxPerfMeasurementGenerator,
     FlowMeasurementGenerator,
 ):
-    @property
-    def linuxperf_cpus(self):
-        return {
-            host: [self.params.dev_intr_cpu, self.params.perf_tool_cpu] for host in self.matched
-        }
+    pass
 
 
 class BaremetalEnrtCommonMixins(

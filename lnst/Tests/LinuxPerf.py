@@ -49,10 +49,10 @@ class LinuxPerf(BaseTestModule):
         cmd: str = "perf record"
         cmd += f" --output={self.params.output_file}"
 
-        if "cpus" in self.params:
-            cmd += f" --cpu={','.join(map(str, self.params.cpus))}"
+        if cpus := self.params.get("cpus", []):
+            cmd += f" --cpu={','.join(map(str, cpus))}"
 
-        if "events" in self.params:
-            cmd += f" --event={','.join(self.params.events)}"
+        if events := self.params.get("events", []):
+            cmd += f" --event={','.join(events)}"
 
         return cmd

@@ -5,7 +5,6 @@ from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import B
 class LinuxPerfMeasurementResults(BaseMeasurementResults):
     _host: Host
     _filename: str
-    _cpus: list[int]
 
     _start_timestamp: float
     _end_timestamp: float
@@ -15,14 +14,12 @@ class LinuxPerfMeasurementResults(BaseMeasurementResults):
         measurement,
         host: Host,
         filename: str,
-        cpus: list[int],
         start_timestamp: float,
         end_timestamp: float,
     ):
         super().__init__(measurement)
         self._host = host
         self._filename = filename
-        self._cpus = cpus
         self._start_timestamp = start_timestamp
         self._end_timestamp = end_timestamp
 
@@ -33,10 +30,6 @@ class LinuxPerfMeasurementResults(BaseMeasurementResults):
     @property
     def filename(self):
         return self._filename
-
-    @property
-    def cpus(self):
-        return self._cpus
 
     @property
     def start_timestamp(self):
