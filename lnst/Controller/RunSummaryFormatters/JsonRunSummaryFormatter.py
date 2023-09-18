@@ -94,11 +94,14 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                 "measurement_type": result.measurement_type,
                 "data": measurement_data,
             }
-        elif isinstance(result, Result) and result.data is None:
-            return ret | {
-                "type": "unknown",
-                "description": result.description,
-            }
+        elif isinstance(result, Result):
+            if result.data is None:
+                return ret | {
+                    "type": "unknown",
+                    "description": result.description,
+                }
+            else:
+                logging.warning(f"unhandled recipe result type: {repr(result)} with data of type {type(result.data)}")
         else:
             logging.warning(f"unhandled recipe result type: {repr(result)}")
             return None
