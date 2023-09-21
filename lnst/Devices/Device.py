@@ -12,8 +12,6 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import re
-import ethtool
-import pyroute2
 import logging
 import pprint
 import time
@@ -55,6 +53,10 @@ class Device(object, metaclass=DeviceMeta):
     """
 
     def __init__(self, if_manager):
+        import ethtool
+        import pyroute2
+        global ethtool
+        global pyroute2
         self.ifindex = None
         self._nl_msg = None
         self._devlink = None
