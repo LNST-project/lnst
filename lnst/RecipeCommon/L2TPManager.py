@@ -13,8 +13,6 @@ jtluka@redhat.com (Jan Tluka)
 """
 
 import logging
-from pyroute2.netlink import NetlinkError
-from pyroute2.netlink.generic.l2tp import L2tp
 from lnst.Common.LnstError import LnstError
 
 
@@ -84,6 +82,8 @@ class L2TPManager:
                 )
     """
     def __init__(self):
+        from pyroute2.netlink import NetlinkError
+        from pyroute2.netlink.generic.l2tp import L2tp
         self._tunnels = []
 
         try:
