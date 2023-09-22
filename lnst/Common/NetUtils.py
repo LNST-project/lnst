@@ -13,7 +13,6 @@ rpazdera@redhat.com (Radek Pazdera)
 import re
 import socket
 import subprocess
-from pyroute2 import IPRoute
 
 
 def normalize_hwaddr(hwaddr):
@@ -24,6 +23,7 @@ def normalize_hwaddr(hwaddr):
 
 
 def scan_netdevs():
+    from pyroute2 import IPRoute
     scan = []
 
     with IPRoute() as ipr:
