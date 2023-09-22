@@ -10,8 +10,6 @@ __author__ = """
 jtluka@redhat.com (Jan Tluka)
 """
 
-from pyroute2.netlink import NetlinkError
-from pyroute2.netlink.generic.l2tp import L2tp
 from lnst.Common.DeviceError import DeviceError, DeviceConfigError
 from lnst.Devices.Device import Device
 
@@ -55,6 +53,11 @@ class L2TPSessionDevice(Device):
     _mandatory_opts = ["tunnel_id", "session_id", "peer_session_id"]
 
     def __init__(self, ifmanager, *args, **kwargs):
+        from pyroute2.netlink import NetlinkError
+        from pyroute2.netlink.generic.l2tp import L2tp
+        global NetlinkError
+        global L2tp
+
         self._name = None
         for i in self._mandatory_opts:
             if i not in kwargs:
