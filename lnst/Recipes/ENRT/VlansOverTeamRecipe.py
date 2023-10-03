@@ -8,8 +8,9 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -19,7 +20,6 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
     PerfReversibleFlowMixin)
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices.VlanDevice import VlanDevice as Vlan
 from lnst.Devices import TeamDevice
@@ -136,12 +136,12 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         host1, host2 = self.matched.host1, self.matched.host2
 
-        return [PingEndpoints(host1.vlan0, host2.vlan0),
-                PingEndpoints(host1.vlan1, host2.vlan1),
-                PingEndpoints(host1.vlan2, host2.vlan2)]
+        yield ping_endpoint_pairs(config, (host1.vlan0, host2.vlan0))
+        yield ping_endpoint_pairs(config, (host1.vlan1, host2.vlan1))
+        yield ping_endpoint_pairs(config, (host1.vlan2, host2.vlan2))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))

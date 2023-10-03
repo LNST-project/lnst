@@ -7,8 +7,9 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -17,7 +18,6 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
     PerfReversibleFlowMixin)
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import TeamDevice
 
 
@@ -134,20 +134,13 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the configured team device on
         host1 and the matched ethernet device on host2.
-
-        Returned as::
-
-            [PingEndpoints(self.matched.host1.team0, self.matched.host2.eth0),
-            PingEndpoints(self.matched.host2.eth0, self.matched.host1.team0)]
         """
-        return [
-            PingEndpoints(self.matched.host1.team0, self.matched.host2.eth0),
-            PingEndpoints(self.matched.host2.eth0, self.matched.host1.team0)
-        ]
+        yield ping_endpoint_pairs(config, (self.matched.host1.team0, self.matched.host2.eth0))
+        yield ping_endpoint_pairs(config, (self.matched.host2.eth0, self.matched.host1.team0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """

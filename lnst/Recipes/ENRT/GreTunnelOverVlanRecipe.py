@@ -1,3 +1,4 @@
+from collections.abc import Collection, Iterator
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
@@ -11,7 +12,7 @@ from lnst.Common.Parameters import (
     IPv4NetworkParam,
 )
 from lnst.Devices import GreDevice, VlanDevice, RemoteDevice
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
@@ -24,6 +25,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.helpers import ping_endpoint_pairs
 
 
 class GreTunnelOverVlanRecipe(
@@ -151,17 +153,11 @@ class GreTunnelOverVlanRecipe(
 
         return (m1.gre_tunnel, m2.gre_tunnel)
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
-
-        Returned as::
-
-            [PingEndpoints(self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel)]
         """
-        return [
-            PingEndpoints(self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel)
-        ]
+        yield ping_endpoint_pairs(config, (self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel))
 
     def get_packet_assert_config(self, ping_config):
         """

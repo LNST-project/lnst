@@ -10,7 +10,7 @@ from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 from lnst.Tests import Ping
 
 
-@dataclass
+@dataclass(eq=False)
 class PingConf:
     client: Namespace
     client_bind: BaseIpAddress

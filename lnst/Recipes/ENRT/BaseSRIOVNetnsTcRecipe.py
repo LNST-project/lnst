@@ -16,7 +16,7 @@ from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
@@ -266,7 +266,7 @@ class BaseSRIOVNetnsTcRecipe(
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpoinPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the virtual function devices
 
@@ -280,7 +280,7 @@ class BaseSRIOVNetnsTcRecipe(
 
         host1.newns.vf_eth0 and host2.newns.vf_eth0
         """
-        yield ip_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))
 
     @property
     def pause_frames_dev_list(self):

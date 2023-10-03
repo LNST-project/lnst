@@ -7,9 +7,9 @@ from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Host import Host
 from lnst.RecipeCommon.MPTCPManager import MPTCPManager
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 
@@ -162,12 +162,12 @@ class MPTCPRecipe(
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         """
         The ping endpoints are all ports in their respective pairs
         """
-        return [PingEndpoints(self.matched.host1.eth0, self.matched.host2.eth0),
-                PingEndpoints(self.matched.host1.eth1, self.matched.host2.eth1)]
+        yield ping_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
+        yield ping_endpoint_pairs(config, (self.matched.host1.eth1, self.matched.host2.eth1))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """

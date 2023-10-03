@@ -1,8 +1,8 @@
 import pprint
 import copy
 from contextlib import contextmanager
+from collections.abc import Iterator, Collection
 
-from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -10,8 +10,9 @@ from lnst.Common.Parameters import (
     BoolParam,
     FloatParam,
 )
-from lnst.Common.IpAddress import AF_INET, AF_INET6
+from lnst.Common.IpAddress import Ip6Address
 from lnst.Controller.RecipeResults import ResultType
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
@@ -25,6 +26,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseCPUMeasurement import BaseCPUMeasur
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 from lnst.RecipeCommon.Ping.Evaluators import RatePingEvaluator
+from lnst.Recipes.ENRT.helpers import filter_ip_endpoint_pairs
 
 
 class BaseEnrtRecipe(
@@ -318,7 +320,7 @@ class BaseEnrtRecipe(
             result = self.perf_test(perf_config)
             self.perf_report_and_evaluate(result)
 
-    def generate_ping_configurations(self, config):
+    def generate_ping_configurations(self, config: EnrtConfiguration) -> Iterator[Collection[PingConf]]:
         """Base ping test configuration generator
 
         The generator loops over all endpoint pairs to test ping between
@@ -329,57 +331,48 @@ class BaseEnrtRecipe(
         :return: list of Ping configurations to test in parallel
         :rtype: List[:any:`PingConf`]
         """
-        for endpoints in self.generate_ping_endpoints(config):
-            for ipv in self.params.ip_versions:
-                if ipv == "ipv6" and not endpoints.reachable:
-                    continue
+        for parallel_endpoint_pairs in self.generate_ping_endpoints(config):
+            # collect only endpoints with ip types requested by ip_versions param
+            parallel_endpoint_pairs = filter_ip_endpoint_pairs(self.params.ip_versions, parallel_endpoint_pairs)
 
-                ip_filter = {}
-                if ipv == "ipv4":
-                    ip_filter.update(family = AF_INET)
-                elif ipv == "ipv6":
-                    ip_filter.update(family = AF_INET6)
-                    ip_filter.update(is_link_local = False)
+            # don't check for unreachability of ipv6 endpoints
+            parallel_endpoint_pairs = [
+                endpoint_pair
+                for endpoint_pair in parallel_endpoint_pairs
+                if not (isinstance(endpoint_pair.first.address, Ip6Address) and not endpoint_pair.should_be_reachable)
+            ]
+            if not parallel_endpoint_pairs:
+                continue
 
-                endpoint1, endpoint2 = endpoints.endpoints
-                endpoint1_ips = endpoint1.ips_filter(**ip_filter)
-                endpoint2_ips = endpoint2.ips_filter(**ip_filter)
+            ping_confs = []
+            for endpoint_pair in parallel_endpoint_pairs:
+                client, server = endpoint_pair
 
-                if len(endpoint1_ips) != len(endpoint2_ips):
-                    raise LnstError("Source/destination ip lists are of different size.")
+                pconf = PingConf(
+                    client=client.host,
+                    client_bind=client.address,
+                    destination=server.host,
+                    destination_address=server.address,
+                    count=self.params.ping_count,
+                    interval=self.params.ping_interval,
+                    size=self.params.ping_psize,
+                )
+                pconf.evaluators = self.generate_ping_evaluators(pconf, endpoint_pair)
+                ping_confs.append(pconf)
 
-                ping_conf_list = []
-                for src_addr, dst_addr in zip(endpoint1_ips, endpoint2_ips):
-                    pconf = PingConf(client = endpoint1.netns,
-                                     client_bind = src_addr,
-                                     destination = endpoint2.netns,
-                                     destination_address = dst_addr,
-                                     count = self.params.ping_count,
-                                     interval = self.params.ping_interval,
-                                     size = self.params.ping_psize,
-                                     )
+                if self.params.ping_bidirect:
+                    ping_confs.append(self._create_reverse_ping(pconf))
+            yield ping_confs
 
-                    pconf.evaluators = self.generate_ping_evaluators(pconf, endpoint_pair)
-
-                    ping_conf_list.append(pconf)
-
-                    if self.params.ping_bidirect:
-                        ping_conf_list.append(self._create_reverse_ping(pconf))
-
-                    if not self.params.ping_parallel:
-                        break
-
-                yield ping_conf_list
-
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         """Generator for ping endpoints
 
         To be overriden by a derived class.
 
-        :return: list of device pairs
-        :rtype: List[Tuple[:any:`Device`, :any:`Device`]]
+        :return: lists of endpoint pair groups
+        :rtype: Iterator[Collection[:any:`PingEndpointPair`]]
         """
-        return []
+        yield from []
 
     def generate_ping_evaluators(self, pconf, endpoints):
         return [RatePingEvaluator(min_rate=50)]
