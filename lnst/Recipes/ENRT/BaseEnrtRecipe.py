@@ -398,9 +398,7 @@ class BaseEnrtRecipe(
                                      size = self.params.ping_psize,
                                      )
 
-                    ping_evaluators = self.generate_ping_evaluators(
-                            pconf, endpoints)
-                    pconf.register_evaluators(ping_evaluators)
+                    pconf.evaluators = self.generate_ping_evaluators(pconf, endpoint_pair)
 
                     ping_conf_list.append(pconf)
 

@@ -1,59 +1,25 @@
+from dataclasses import dataclass, field
+from collections.abc import Sequence
+from typing import Optional
+
+from lnst.Common.IpAddress import BaseIpAddress
+from lnst.Controller.Namespace import Namespace
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Controller.RecipeResults import MeasurementResult
+from lnst.RecipeCommon.BaseResultEvaluator import BaseResultEvaluator
 from lnst.Tests import Ping
 
-class PingConf(object):
-    def __init__(self,
-                 client, client_bind,
-                 destination, destination_address,
-                 count=None, interval=None, size=None):
-        self._client = client
-        self._client_bind = client_bind
-        self._destination = destination
-        self._destination_address = destination_address
-        self._count = count
-        self._interval = interval
-        self._size = size
-        self._evaluators = list()
 
-    @property
-    def client(self):
-        return self._client
-
-    @property
-    def client_bind(self):
-        return self._client_bind
-
-    @property
-    def destination(self):
-        return self._destination
-
-    @property
-    def destination_address(self):
-        return self._destination_address
-
-    @property
-    def count(self):
-        return self._count
-
-    @property
-    def interval(self):
-        return self._interval
-
-    @property
-    def size(self):
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        self._size = value
-
-    @property
-    def evaluators(self):
-        return self._evaluators
-
-    def register_evaluators(self, evaluators):
-        self._evaluators = list(evaluators)
+@dataclass
+class PingConf:
+    client: Namespace
+    client_bind: BaseIpAddress
+    destination: Namespace
+    destination_address: BaseIpAddress
+    count: Optional[int] = None
+    interval: Optional[int] = None
+    size: Optional[int] = None
+    evaluators: Sequence[BaseResultEvaluator] = field(default_factory=list)
 
 
 class PingTestAndEvaluate(BaseRecipe):
