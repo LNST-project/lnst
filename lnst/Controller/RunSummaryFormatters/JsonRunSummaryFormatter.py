@@ -3,7 +3,13 @@ import logging
 import json
 
 from lnst.Controller.Recipe import RecipeRun
-from lnst.Controller.RecipeResults import DeviceMethodCallResult, JobResult, JobStartResult, MeasurementResult, Result
+from lnst.Controller.RecipeResults import (
+    DeviceMethodCallResult,
+    JobResult,
+    JobStartResult,
+    MeasurementResult,
+    BaseResult,
+)
 from .RunSummaryFormatter import RunSummaryFormatter
 
 
@@ -32,7 +38,7 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
             indent=4 if self.pretty else None,
         )
 
-    def _transform_result(self, result: Result) -> Optional[dict]:
+    def _transform_result(self, result: BaseResult) -> Optional[dict]:
         ret = {
             "result": str(result.result),
         }
@@ -85,23 +91,20 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                 }
             elif result.measurement_type == "linuxperf":
                 # linuxperf measurement just generates files
-                return None
+                measurement_data = {}
             else:
                 logging.warning(f"unhandled measurement result type: {result.measurement_type}")
-                return None
+                measurement_data = None
             return ret | {
                 "type": "measurement",
                 "measurement_type": result.measurement_type,
                 "data": measurement_data,
             }
-        elif isinstance(result, Result):
-            if result.data is None:
-                return ret | {
-                    "type": "unknown",
-                    "description": result.description,
-                }
-            else:
-                logging.warning(f"unhandled recipe result type: {repr(result)} with data of type {type(result.data)}")
         else:
-            logging.warning(f"unhandled recipe result type: {repr(result)}")
-            return None
+            if result.data is not None:
+                logging.warning(f"unhandled recipe result type: {repr(result)}, can't format its data")
+
+            return ret | {
+                "type": "unknown",
+                "description": result.description,
+            }
