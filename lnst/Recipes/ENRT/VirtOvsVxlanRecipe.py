@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from itertools import combinations
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
@@ -138,8 +138,8 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             ) for comb in dev_combinations
         ]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))
 
     @property
     def pause_frames_dev_list(self):

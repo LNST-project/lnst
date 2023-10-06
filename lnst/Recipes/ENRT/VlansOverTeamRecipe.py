@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -143,8 +143,8 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
                 PingEndpoints(host1.vlan1, host2.vlan1),
                 PingEndpoints(host1.vlan2, host2.vlan2)]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))
 
     @property
     def offload_nics(self):

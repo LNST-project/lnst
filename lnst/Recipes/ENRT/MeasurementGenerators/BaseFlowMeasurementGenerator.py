@@ -129,11 +129,11 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
                             size,
                         )
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """
         Returns sequential list of parallel endpoint-pairs that should be performance-tested.
         """
-        return []
+        yield from []
 
     def _create_perf_flows(
         self,

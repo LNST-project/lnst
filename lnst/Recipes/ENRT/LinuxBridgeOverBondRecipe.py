@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -164,13 +164,13 @@ class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, B
         """
         return [PingEndpoints(self.matched.host1.br0, self.matched.host2.br0)]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the created bridge devices:
 
         host1.br0 and host2.br0
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.br0, self.matched.host2.br0))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.br0, self.matched.host2.br0))
 
     @property
     def pause_frames_dev_list(self):

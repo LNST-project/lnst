@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -220,14 +220,14 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
                 PingEndpoints(host1.vlan2, host2.vlan2)]
 
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the VLAN tunnel endpoints with
         VLAN id from parameter vlan_ids[0] (by default: 10):
 
         host1.vlan0 and host2.vlan0
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))
 
     @property
     def offload_nics(self):

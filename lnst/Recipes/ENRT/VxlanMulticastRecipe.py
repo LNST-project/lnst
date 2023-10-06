@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from itertools import permutations
 from socket import AF_INET
 from lnst.Common.IpAddress import ipaddress, interface_addresses
@@ -105,8 +105,8 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         return [ PingEndpoints(dev_permutation[0], dev_permutation[1]) for
                 dev_permutation in dev_permutations ]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.host1.vxlan0, self.matched.host2.vxlan0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.host1.vxlan0, self.matched.host2.vxlan0))
 
     @property
     def mtu_hw_config_dev_list(self):

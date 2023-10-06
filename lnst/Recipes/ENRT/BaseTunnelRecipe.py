@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 
 from lnst.Devices import RemoteDevice
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
@@ -144,11 +144,11 @@ class BaseTunnelRecipe(
         """
         raise NotImplementedError
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for recipes derived from this class are usually
         the tunnel endpoints. The derived class can override the endpoints
         if needed.
         """
         dev1, dev2 = config.tunnel_devices
-        return [ip_endpoint_pairs(config, (dev1, dev2))]
+        yield ip_endpoint_pairs(config, (dev1, dev2))

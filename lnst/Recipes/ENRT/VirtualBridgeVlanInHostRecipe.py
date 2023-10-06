@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -111,8 +111,8 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.guest1.eth0, self.matched.host2.vlan0)]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))
 
     @property
     def offload_nics(self):

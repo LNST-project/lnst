@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 import itertools
 
 from lnst.Common.IpAddress import Ip4Address, Ip6Address

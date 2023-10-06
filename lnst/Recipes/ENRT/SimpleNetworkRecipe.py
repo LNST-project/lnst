@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
@@ -73,13 +73,13 @@ class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
         """
         return [PingEndpoints(self.matched.host1.eth0, self.matched.host2.eth0)]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are simply the two matched NICs:
 
         host1.eth0 and host2.eth0
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
 
 
 class SimpleNetworkRecipe(

@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import Optional
@@ -274,13 +274,13 @@ class BaseSRIOVNetnsTcRecipe(
         """
         return [PingEndpoints(self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0])]
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the virtual function devices
 
         host1.newns.vf_eth0 and host2.newns.vf_eth0
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))
 
     @property
     def pause_frames_dev_list(self):
