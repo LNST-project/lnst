@@ -4,6 +4,9 @@ import json
 
 from lnst.Controller.Recipe import RecipeRun
 from lnst.Controller.RecipeResults import (
+    DeviceAttrSetResult,
+    DeviceConfigResult,
+    DeviceCreateResult,
     DeviceMethodCallResult,
     JobResult,
     JobStartResult,
@@ -58,18 +61,43 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                 "action": "start" if isinstance(result, JobStartResult) else "end",
                 "job": job_info,
             }
-        elif isinstance(result, DeviceMethodCallResult):
+        elif isinstance(result, DeviceConfigResult):
+            if isinstance(result, DeviceCreateResult):
+                action_info = {
+                    "action": "create",
+                    "device": {
+                        "cls_name": result.device._dev_cls.__name__,
+                        "args": [repr(arg) for arg in result.device._dev_args],
+                        "kwargs": [f"{k}={v!r}" for k, v in result.device._dev_kwargs.items()],
+                    },
+                }
+            elif isinstance(result, DeviceMethodCallResult):
+                action_info = {
+                    "action": "method_call",
+                    "method": {
+                        "name": result.method_name,
+                        "args": [repr(arg) for arg in result.args],
+                        "kwargs": [f"{k}={v!r}" for k, v in result.kwargs.items()],
+                    },
+                }
+            elif isinstance(result, DeviceAttrSetResult):
+                action_info = {
+                    "action": "attr_set",
+                    "attr": {
+                        "name": result.attr_name,
+                        "value": result.value,
+                        "old_value": result.old_value,
+                    },
+                }
+            else:
+                logging.warning(f"unhandled device config result: {result.__class__.__name__}")
+                action_info = {"action": "unknown"}
             return ret | {
-                "type": "device_method_call",
+                "type": "device_config",
                 "host": result.device.host.hostid,
                 "netns": result.device.netns.name if result.device.netns and result.device.netns.name else "",
                 "dev_id": result.device._id,
-                "method": {
-                    "name": result.method_name,
-                    "args": [repr(arg) for arg in result.args],
-                    "kwargs": [f"{k}={v!r}" for k, v in result.kwargs.items()],
-                },
-            }
+            } | action_info
         elif isinstance(result, MeasurementResult):
             if result.measurement_type == "ping":
                 measurement_data = result.data
