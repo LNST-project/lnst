@@ -78,6 +78,7 @@ class BaselineEvaluator(BaseResultEvaluator):
             comparisons.extend(
                 [
                     {
+                        "measurement_type": result.measurement.__class__.__name__,
                         "current_result": result,
                         "baseline_result": baseline,
                         "comparison_result": metric.result,
