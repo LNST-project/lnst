@@ -205,9 +205,10 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
             log_exc_traceback()
 
         try:
-            for nic in config.generator.nics:
-                config.generator.host.run(
-                    "driverctl unset-override {}".format(nic.bus_info))
+            if self.params.driverctl_override:
+                for nic in config.generator.nics:
+                    config.generator.host.run(
+                        "driverctl unset-override {}".format(nic.bus_info))
 
             config.generator.host.run("service irqbalance start")
         except:

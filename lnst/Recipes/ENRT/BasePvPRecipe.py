@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from enum import Enum
 
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import Param, IntParam, StrParam
+from lnst.Common.Parameters import Param, IntParam, StrParam, BoolParam
 from lnst.RecipeCommon.Ping.Recipe import PingTestAndEvaluate
 
 from lnst.RecipeCommon.Perf.Recipe import Recipe as PerfRecipe
@@ -53,6 +53,7 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
     """
 
     driver = StrParam(mandatory=True)
+    driverctl_override = BoolParam(default=True)
 
     trex_dir = StrParam(mandatory=True)
 
@@ -99,9 +100,10 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
         host.run("echo -n {} /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages"
                  .format(self.params.nr_hugepages))
 
-        host.run("modprobe vfio-pci")
-        for nic in dpdk_host_cfg.nics:
-            host.run("driverctl set-override {} vfio-pci".format(nic.bus_info))
+        if self.params.driverctl_override:
+            host.run("modprobe vfio-pci")
+            for nic in dpdk_host_cfg.nics:
+                host.run("driverctl set-override {} vfio-pci".format(nic.bus_info))
 
     def base_dpdk_deconfiguration(self, dpdk_host_cfg, service_list=[]):
         """ Undo Base DPDK configuration in a host
@@ -111,6 +113,9 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
                 from being able to unset-override the host's interfaces.
                 They will get restarted.
         """
+        if not self.params.driverctl_override:
+            return
+
         host = dpdk_host_cfg.host
         #  TODO service should be a host method
         host.run("service irqbalance start")
