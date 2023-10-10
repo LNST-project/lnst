@@ -171,7 +171,7 @@ class TRexSrv:
             os.chdir(self.params.trex_dir)
             server = subprocess.Popen(
                     [os.path.join(self.params.trex_dir, "t-rex-64"),
-                        "--cfg", cfg_file.name, "-i"],
+                        "--cfg", cfg_file.name, "-i", "--no-ofed-check"],
                     stdin=open('/dev/null'), stdout=open('/dev/null','w'),
                     stderr=subprocess.PIPE, close_fds=True)
 
