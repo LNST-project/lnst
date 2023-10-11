@@ -1,9 +1,8 @@
 import signal
-import logging
 import copy
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.Parameters import StrParam, IPv4NetworkParam, IPv6NetworkParam
+from lnst.Common.Parameters import ConstParam, StrParam, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -61,6 +60,9 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     spi_values = ["0x00001000", "0x00001001"]
     ipsec_mode = StrParam(default="transport")
 
+    # parallel pings are not supported for this recipe
+    ping_bidirect = ConstParam(False)
+
     def test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
@@ -85,10 +87,6 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
             host.eth0.up()
 
         self.wait_tentative_ips(config.configured_devices)
-
-        if self.params.ping_bidirect:
-            logging.debug("Parallelism in pings is not supported for this "
-                          "recipe, ping_bidirect will be ignored.")
 
         for host, dst in [(host1, host2), (host2, host1)]:
             for ip in config.ips_for_device(dst.eth0):
