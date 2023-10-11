@@ -1,20 +1,19 @@
 from collections.abc import Collection, Iterator
 import copy
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Devices import MacsecDevice
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
-from lnst.RecipeCommon.Ping.Recipe import PingConf
+
 
 class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     host1 = HostReq()
@@ -100,43 +99,8 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         config.endpoint2.down()
         super().remove_sub_configuration(config)
 
-    def generate_ping_configurations(self, config):
-        client_nic = config.host1.msec0
-        server_nic = config.host2.msec0
-        ip_vers = self.params.ip_versions
-
-        count = self.params.ping_count
-        interval = self.params.ping_interval
-        size = self.params.ping_psize
-        common_args = {'count': count, 'interval': interval, 'size': size}
-
-        for ipv in ip_vers:
-            kwargs = {}
-            if ipv == "ipv4":
-                kwargs.update(family = AF_INET)
-            elif ipv == "ipv6":
-                kwargs.update(family = AF_INET6)
-                kwargs.update(is_link_local = False)
-
-            client_ips = client_nic.ips_filter(**kwargs)
-            server_ips = server_nic.ips_filter(**kwargs)
-            if ipv == "ipv6":
-                client_ips = client_ips[::-1]
-                server_ips = server_ips[::-1]
-
-            if len(client_ips) != len(server_ips) or (len(client_ips) *
-                len(server_ips) == 0):
-                raise LnstError("Source/destination ip lists are of "
-                    "different size or empty.")
-
-            for src_addr, dst_addr in zip(client_ips, server_ips):
-                pconf = PingConf(client = client_nic.netns,
-                                 client_bind = src_addr,
-                                 destination = server_nic.netns,
-                                 destination_address = dst_addr,
-                                 **common_args)
-
-                yield [pconf]
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+        yield ping_endpoint_pairs(config, (self.matched.host1.msec0, self.matched.host2.msec0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.msec0, self.matched.host2.msec0))
