@@ -204,11 +204,6 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                 )
                 yield [flow]
 
-                if ("perf_reverse" in self.params and
-                        self.params.perf_reverse):
-                    reverse_flow = self._create_reverse_flow(flow)
-                    yield [reverse_flow]
-
     def ping_test(self, ping_configs):
         """
         Ping test is utilizing PacketAssert class to search

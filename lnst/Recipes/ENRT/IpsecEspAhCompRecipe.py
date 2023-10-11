@@ -160,11 +160,6 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                     )
                 yield [flow]
 
-                if ("perf_reverse" in self.params and
-                    self.params.perf_reverse):
-                    reverse_flow = self._create_reverse_flow(flow)
-                    yield [reverse_flow]
-
     def ping_test(self, ping_configs):
         m1, m2 = ping_configs[0].client, ping_configs[0].destination
         ip1, ip2 = (ping_configs[0].client_bind,
