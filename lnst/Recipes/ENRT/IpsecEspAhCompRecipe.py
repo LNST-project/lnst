@@ -1,5 +1,6 @@
 import signal
 import copy
+from collections.abc import Iterator, Collection
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.Parameters import (
@@ -11,6 +12,8 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
+from lnst.RecipeCommon.endpoints import IPEndpoint
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
@@ -20,7 +23,6 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
 from lnst.RecipeCommon.PacketAssert import (PacketAssertConf,
     PacketAssertTestAndEvaluate)
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
-from lnst.RecipeCommon.Ping.Recipe import PingConf
 from lnst.Recipes.ENRT.XfrmTools import (configure_ipsec_esp_ah_comp,
     generate_key)
 
@@ -119,20 +121,13 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
             ns.run("ip xfrm state flush")
         super().remove_sub_configuration(config)
 
-    def generate_ping_configurations(self, config):
-        ns1, ns2 = config.endpoint1.netns, config.endpoint2.netns
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         ip1, ip2 = config.ips
-        count = self.params.ping_count
-        interval = self.params.ping_interval
-        size = self.params.ping_psize
-        common_args = {'count' : count, 'interval' : interval,
-            'size' : size}
-        ping_conf = PingConf(client = ns1,
-                             client_bind = ip1,
-                             destination = ns2,
-                             destination_address = ip2,
-                             **common_args)
-        yield [ping_conf]
+        endpoint_pair = PingEndpointPair(
+            IPEndpoint(config.endpoint1, ip1),
+            IPEndpoint(config.endpoint2, ip2),
+        )
+        yield [endpoint_pair]
 
     def generate_flow_combinations(self, config):
         ns1, ns2 = config.endpoint1.netns, config.endpoint2.netns
