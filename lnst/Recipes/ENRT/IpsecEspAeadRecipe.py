@@ -86,9 +86,9 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
 
         self.wait_tentative_ips(config.configured_devices)
 
-        if self.params.ping_parallel or self.params.ping_bidirect:
+        if self.params.ping_bidirect:
             logging.debug("Parallelism in pings is not supported for this "
-                          "recipe, ping_parallel/ping_bidirect will be ignored.")
+                          "recipe, ping_bidirect will be ignored.")
 
         for host, dst in [(host1, host2), (host2, host1)]:
             for ip in config.ips_for_device(dst.eth0):

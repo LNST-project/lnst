@@ -80,12 +80,6 @@ class BaseEnrtRecipe(
         Parameter that determines which IP protocol versions will be tested.
     :type ip_versions: Tuple[Str] (default ("ipv4", "ipv6"))
 
-    :param ping_parallel:
-        Parameter used by the :any:`generate_ping_configurations` generator.
-        Tells the generator method to create :any:`PingConf` objects that will
-        be run in parallel.
-    :type ping_parallel: :any:`BoolParam` (default False)
-
     :param ping_bidirect:
         Parameter used by the :any:`generate_ping_configurations` generator.
         Tells the generator method to create :any:`PingConf` objects for both
@@ -142,7 +136,6 @@ class BaseEnrtRecipe(
     ip_versions = Param(default=("ipv4", "ipv6"))
 
     #common ping test params
-    ping_parallel = BoolParam(default=False)
     ping_bidirect = BoolParam(default=False)
     ping_count = IntParam(default=100)
     ping_interval = FloatParam(default=0.2)
