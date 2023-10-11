@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as dataclass_replace
 from collections.abc import Iterator
 from typing import Generic, TypeVar
 
@@ -58,3 +58,7 @@ class EndpointPair(Generic[TEndpoint_co]):
     def __iter__(self) -> Iterator[TEndpoint_co]:
         yield self.first
         yield self.second
+
+    # TODO: replace return type with typing.Self in python3.11
+    def reversed(self) -> EndpointPair:
+        return dataclass_replace(self, first=self.second, second=self.first)

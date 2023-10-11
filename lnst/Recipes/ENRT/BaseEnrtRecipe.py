@@ -344,6 +344,11 @@ class BaseEnrtRecipe(
             if not parallel_endpoint_pairs:
                 continue
 
+            if self.params.ping_bidirect:
+                # purposely constructing a list to avoid infinite generation
+                reversed_pairs = [pair.reversed() for pair in parallel_endpoint_pairs]
+                parallel_endpoint_pairs.extend(reversed_pairs)
+
             ping_confs = []
             for endpoint_pair in parallel_endpoint_pairs:
                 client, server = endpoint_pair
@@ -360,8 +365,6 @@ class BaseEnrtRecipe(
                 pconf.evaluators = self.generate_ping_evaluators(pconf, endpoint_pair)
                 ping_confs.append(pconf)
 
-                if self.params.ping_bidirect:
-                    ping_confs.append(self._create_reverse_ping(pconf))
             yield ping_confs
 
     def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
@@ -481,14 +484,3 @@ class BaseEnrtRecipe(
             )
 
         self.ctl.wait_for_condition(condition, timeout=5)
-
-    def _create_reverse_ping(self, pconf):
-        return PingConf(
-            client = pconf.destination,
-            client_bind = pconf.destination_address,
-            destination = pconf.client,
-            destination_address = pconf.client_bind,
-            count = pconf.ping_count,
-            interval = pconf.ping_interval,
-            size = pconf.ping_psize,
-        )
