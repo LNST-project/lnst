@@ -5,7 +5,7 @@ import itertools
 from lnst.Common.IpAddress import BaseIpAddress, Ip4Address, Ip6Address
 from lnst.Devices import RemoteDevice
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 
 
 def ip_endpoint_pairs(

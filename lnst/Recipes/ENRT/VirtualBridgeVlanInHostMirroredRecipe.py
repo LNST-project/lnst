@@ -8,15 +8,15 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices import BridgeDevice
 
@@ -126,8 +126,8 @@ class VirtualBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
-        return [PingEndpoints(self.matched.guest1.eth0, self.matched.guest2.eth0)]
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+        yield ping_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest2.eth0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest2.eth0))

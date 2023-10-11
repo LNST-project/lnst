@@ -13,7 +13,7 @@ from lnst.Devices import GreDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,

@@ -14,7 +14,7 @@ from lnst.Devices import GreDevice, VlanDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import (
     MTUHWConfigMixin,
 )

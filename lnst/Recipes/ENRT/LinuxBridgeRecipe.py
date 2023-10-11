@@ -2,11 +2,12 @@ from collections.abc import Collection, Iterator
 from lnst.Common.Parameters import IPv4NetworkParam, IPv6NetworkParam, Param
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
@@ -118,17 +119,13 @@ class LinuxBridgeRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, Baremetal
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the created bridge devices:
 
         host1.br0 and host2.br0
-
-        Returned as::
-
-            [PingEndpoints(self.matched.host1.br0, self.matched.host2.br0)]
         """
-        return [PingEndpoints(self.matched.host1.br0, self.matched.host2.br0)]
+        yield ping_endpoint_pairs(config, (self.matched.host1.br0, self.matched.host2.br0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """

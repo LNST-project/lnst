@@ -15,7 +15,7 @@ from lnst.RecipeCommon.Perf.Measurements import (
     NeperFlowMeasurement,
 )
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
 from lnst.Recipes.ENRT.helpers import filter_ip_endpoint_pairs

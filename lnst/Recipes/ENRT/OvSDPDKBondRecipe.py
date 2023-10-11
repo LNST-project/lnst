@@ -1,3 +1,4 @@
+from collections.abc import Collection, Iterator
 import signal
 from lnst.Common.Parameters import (
     StrParam,
@@ -8,7 +9,9 @@ from lnst.Common.Parameters import (
 )
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from dataclasses import dataclass
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
@@ -384,8 +387,8 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
         host2.run(f"driverctl unset-override {host2.dummy_cfg.eth0.bus_info}")
         host2.run(f"driverctl unset-override {host2.dummy_cfg.eth1.bus_info}")
 
-    def generate_ping_endpoints(self, config):
-        return []
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+        yield from []
 
     def apply_perf_test_tweak(self, config):
         pass
