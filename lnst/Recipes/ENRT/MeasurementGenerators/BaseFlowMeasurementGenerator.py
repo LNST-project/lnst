@@ -1,7 +1,6 @@
 from collections.abc import Iterator, Collection
 import itertools
 
-from lnst.Common.IpAddress import BaseIpAddress, Ip4Address
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -19,6 +18,7 @@ from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
+from lnst.Recipes.ENRT.helpers import filter_ip_endpoint_pairs
 
 
 
@@ -106,28 +106,20 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         :return: list of Flow combinations to measure in parallel
         :rtype: Iterator[:any:`PerfFlow`]
         """
-        def ip_version_string(ip_address: BaseIpAddress) -> str:
-            return "ipv4" if isinstance(ip_address, Ip4Address) else "ipv6"
-
         for parallel_endpoint_pairs in self.generate_perf_endpoints(config):
-            for ip_version in self.params.ip_versions:
-                filtered_parallel_endpoints = [
-                    endpoint_pair
-                    for endpoint_pair in parallel_endpoint_pairs
-                    if ip_version_string(endpoint_pair.first.address) == ip_version
-                ]
+            parallel_endpoint_pairs = filter_ip_endpoint_pairs(self.params.ip_versions, parallel_endpoint_pairs)
 
-                # skip test if no endpoints left after ip filtering
-                if not filtered_parallel_endpoints:
-                    continue
+            # skip test if no endpoints left after ip filtering
+            if not parallel_endpoint_pairs:
+                continue
 
-                for perf_test in self.params.perf_tests:
-                    for size in self.params.perf_msg_sizes:
-                        yield self._create_perf_flows(
-                            filtered_parallel_endpoints,
-                            perf_test,
-                            size,
-                        )
+            for perf_test in self.params.perf_tests:
+                for size in self.params.perf_msg_sizes:
+                    yield self._create_perf_flows(
+                        parallel_endpoint_pairs,
+                        perf_test,
+                        size,
+                    )
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
         """

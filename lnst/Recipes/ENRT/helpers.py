@@ -1,7 +1,8 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterable
+from typing import TypeVar
 import itertools
 
-from lnst.Common.IpAddress import Ip4Address, Ip6Address
+from lnst.Common.IpAddress import BaseIpAddress, Ip4Address, Ip6Address
 from lnst.Devices import RemoteDevice
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -29,3 +30,16 @@ def ip_endpoint_pairs(
                 )
 
     return endpoint_pairs
+
+
+TIPEndpointPair = TypeVar("TIPEndpointPair", bound=EndpointPair[IPEndpoint])
+
+def filter_ip_endpoint_pairs(ip_versions: Collection[str], endpoint_pairs: Iterable[TIPEndpointPair]) -> list[TIPEndpointPair]:
+    def ip_version_string(ip_address: BaseIpAddress) -> str:
+        return "ipv4" if isinstance(ip_address, Ip4Address) else "ipv6"
+
+    return [
+        endpoint_pair
+        for endpoint_pair in endpoint_pairs
+        if ip_version_string(endpoint_pair.first.address) in ip_versions
+    ]
