@@ -30,7 +30,7 @@ class XDPBenchMeasurementResults(FlowMeasurementResults):
 
         return result_copy
 
-    def describe(self):
+    def describe(self) -> str:
         generator = self.generator_results
         receiver = self.receiver_results
 
@@ -47,4 +47,4 @@ class XDPBenchMeasurementResults(FlowMeasurementResults):
             )
         )
 
-        return desc
+        return "\n".join(desc)

@@ -169,7 +169,7 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
         receiver = flow_results.receiver_results
 
         desc = []
-        desc.extend(flow_results.describe())
+        desc.append(flow_results.describe())
 
         recipe_result = ResultType.PASS
         metrics = {"Generator": generator, "Receiver": receiver}
