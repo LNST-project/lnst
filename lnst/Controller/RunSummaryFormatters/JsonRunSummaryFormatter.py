@@ -85,8 +85,8 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                     "action": "attr_set",
                     "attr": {
                         "name": result.attr_name,
-                        "value": result.value,
-                        "old_value": result.old_value,
+                        "value": repr(result.value),
+                        "old_value": repr(result.old_value),
                     },
                 }
             else:
