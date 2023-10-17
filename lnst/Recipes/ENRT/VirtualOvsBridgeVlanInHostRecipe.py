@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Common.Parameters import Param, IntParam, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
@@ -92,10 +92,10 @@ class VirtualOvsBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         yield ping_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))
 
     @property

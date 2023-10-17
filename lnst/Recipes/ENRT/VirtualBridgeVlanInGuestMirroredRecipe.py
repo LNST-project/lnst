@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 import logging
 from lnst.Common.Parameters import (
     Param,
@@ -126,10 +126,10 @@ class VirtualBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         yield ping_endpoint_pairs(config, (self.matched.guest1.vlan0, self.matched.guest2.vlan0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.guest1.vlan0, self.matched.guest2.vlan0))
 
     @property

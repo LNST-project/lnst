@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from socket import AF_INET, AF_INET6
 from typing import List
 
@@ -162,14 +162,14 @@ class MPTCPRecipe(
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints are all ports in their respective pairs
         """
         yield ping_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
         yield ping_endpoint_pairs(config, (self.matched.host1.eth1, self.matched.host2.eth1))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         Due to the way MPTCP works, the the perf endpoints will be the 2 "primary" ports/flows
         """

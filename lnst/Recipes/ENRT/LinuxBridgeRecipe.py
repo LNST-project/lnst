@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Common.Parameters import IPv4NetworkParam, IPv6NetworkParam, Param
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
@@ -118,7 +118,7 @@ class LinuxBridgeRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, Baremetal
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the created bridge devices:
 
@@ -126,7 +126,7 @@ class LinuxBridgeRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, Baremetal
         """
         yield ping_endpoint_pairs(config, (self.matched.host1.br0, self.matched.host2.br0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the created bridge devices:
 

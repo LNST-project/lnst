@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Common.Parameters import Param, IntParam, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
@@ -148,7 +148,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the matching VLAN tunnel
         endpoints of the hosts.
@@ -159,7 +159,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         yield ping_endpoint_pairs(config, (host1.vlan1, host2.vlan1))
         yield ping_endpoint_pairs(config, (host1.vlan2, host2.vlan2))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the VLAN tunnel endpoints with
         VLAN id from parameter vlan0_id (by default: 10):

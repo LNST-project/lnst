@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Common.Parameters import (
     Param,
     StrParam,
@@ -134,7 +134,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the configured team device on
         host1 and the matched ethernet device on host2.
@@ -142,7 +142,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         yield ping_endpoint_pairs(config, (self.matched.host1.team0, self.matched.host2.eth0))
         yield ping_endpoint_pairs(config, (self.matched.host2.eth0, self.matched.host1.team0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the configured team device on
         host1 and the matched ethernet device on host2. The traffic egresses

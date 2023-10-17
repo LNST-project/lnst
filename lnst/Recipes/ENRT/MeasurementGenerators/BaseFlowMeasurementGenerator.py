@@ -1,4 +1,4 @@
-from collections.abc import Iterator, Collection
+from collections.abc import Iterator
 import itertools
 
 from lnst.Common.Parameters import (
@@ -121,7 +121,7 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
                         size,
                     )
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         Returns sequential list of parallel endpoint-pairs that should be performance-tested.
         """

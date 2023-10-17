@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
@@ -179,7 +179,7 @@ class VxlanGpeTunnelRecipe(
 
         return (m1.vxlan_tunnel, m2.vxlan_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.
@@ -226,7 +226,7 @@ class VxlanGpeTunnelRecipe(
 
         return pa_config
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.

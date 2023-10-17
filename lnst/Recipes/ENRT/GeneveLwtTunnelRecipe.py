@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
@@ -176,14 +176,14 @@ class GeneveLwtTunnelRecipe(
 
         return (m1.gnv_tunnel, m2.gnv_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.
         """
         yield ping_endpoint_pairs(config, (self.matched.host1.lo, self.matched.host2.lo))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.

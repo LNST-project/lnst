@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET6,
@@ -122,7 +122,7 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
 
         return (m1.ip6tnl, m2.ip6tnl)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """

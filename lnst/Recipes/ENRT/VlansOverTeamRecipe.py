@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -136,14 +136,14 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         host1, host2 = self.matched.host1, self.matched.host2
 
         yield ping_endpoint_pairs(config, (host1.vlan0, host2.vlan0))
         yield ping_endpoint_pairs(config, (host1.vlan1, host2.vlan1))
         yield ping_endpoint_pairs(config, (host1.vlan2, host2.vlan2))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))
 
     @property

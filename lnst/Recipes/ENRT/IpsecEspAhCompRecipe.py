@@ -1,6 +1,6 @@
 import signal
 import copy
-from collections.abc import Iterator, Collection
+from collections.abc import Iterator
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.Parameters import (
@@ -121,7 +121,7 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
             ns.run("ip xfrm state flush")
         super().remove_sub_configuration(config)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         ip1, ip2 = config.ips
         endpoint_pair = PingEndpointPair(
             IPEndpoint(config.endpoint1, ip1),

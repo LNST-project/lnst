@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 import logging
 from itertools import product
 from lnst.Common.Parameters import (
@@ -144,7 +144,7 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         guest1, guest2, guest3, guest4 = (self.matched.guest1, self.matched.guest2, self.matched.guest3, self.matched.guest4)
 
         endpoint_pairs = []
@@ -156,7 +156,7 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
 
         yield endpoint_pairs
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))
 
     @property

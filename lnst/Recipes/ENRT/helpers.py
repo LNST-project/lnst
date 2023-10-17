@@ -11,7 +11,7 @@ from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 
 def ip_endpoint_pairs(
     config: EnrtConfiguration, *device_pairs: tuple[RemoteDevice, RemoteDevice]
-) -> Collection[EndpointPair[IPEndpoint]]:
+) -> list[EndpointPair[IPEndpoint]]:
     """Helper function for use in generate_perf_endpoints method.
 
     Generates a sequential endpoint pair list for each input device pair.
@@ -37,7 +37,7 @@ def ping_endpoint_pairs(
     config: EnrtConfiguration,
     *device_pairs: tuple[RemoteDevice, RemoteDevice],
     should_be_reachable: bool = True,
-) -> Collection[PingEndpointPair]:
+) -> list[PingEndpointPair]:
     """Helper function for use in generate_ping_endpoints method.
 
     Generates a sequential endpoint pair list for each input device pair.

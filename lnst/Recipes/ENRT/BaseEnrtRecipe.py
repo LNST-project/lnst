@@ -360,7 +360,7 @@ class BaseEnrtRecipe(
 
             yield ping_confs
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
         """Generator for ping endpoints
 
         To be overriden by a derived class.

@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterator
+from collections.abc import Iterator
 from lnst.Common.Parameters import (
     Param,
     StrParam,
@@ -92,7 +92,7 @@ class DoubleTeamRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         yield ping_endpoint_pairs(config, (self.matched.host1.team0, self.matched.host2.team0))
         yield ping_endpoint_pairs(config, (self.matched.host2.team0, self.matched.host1.team0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.team0, self.matched.host2.team0))
 
     @property
