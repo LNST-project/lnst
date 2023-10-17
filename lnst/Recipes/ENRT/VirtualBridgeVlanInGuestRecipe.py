@@ -73,7 +73,7 @@ class VirtualBridgeVlanInGuestRecipe(CommonHWSubConfigMixin,
         return config
 
     def generate_test_wide_description(self, config: EnrtConfiguration):
-        host1, host2 = self.matched.host1, self.matched.host2
+        host1 = self.matched.host1
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([

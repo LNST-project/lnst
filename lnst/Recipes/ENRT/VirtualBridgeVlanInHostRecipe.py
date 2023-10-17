@@ -65,7 +65,7 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::2/64")
 
         config.configure_and_track_ip(host1.br0, next(ipv4_addr))
-        for i, dev in enumerate([host2.vlan0, guest1.eth0]):
+        for dev in [host2.vlan0, guest1.eth0]:
             config.configure_and_track_ip(dev, next(ipv4_addr))
             config.configure_and_track_ip(dev, next(ipv6_addr))
 

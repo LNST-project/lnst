@@ -114,10 +114,8 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
-        host1, host2 = (self.matched.host1, self.matched.host2)
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
-        host1, host2 = (self.matched.host1, self.matched.host2)
         return [self.matched.host1.eth0, self.matched.host2.eth0]

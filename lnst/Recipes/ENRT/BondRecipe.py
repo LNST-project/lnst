@@ -100,7 +100,7 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
 
-        for i, dev in enumerate([host1.bond0, host2.eth0]):
+        for dev in [host1.bond0, host2.eth0]:
             config.configure_and_track_ip(dev, next(ipv4_addr))
             config.configure_and_track_ip(dev, next(ipv6_addr))
 
@@ -117,7 +117,7 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         configured bonding slave interfaces, bonding mode and the miimon interval.
         """
 
-        host1, host2 = self.matched.host1, self.matched.host2
+        host1 = self.matched.host1
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([

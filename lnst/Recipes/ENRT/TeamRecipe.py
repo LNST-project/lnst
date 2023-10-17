@@ -113,7 +113,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         Test wide description is extended with the configured IP addresses, the
         configured team device ports, and runner name.
         """
-        host1, host2 = self.matched.host1, self.matched.host2
+        host1 = self.matched.host1
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([

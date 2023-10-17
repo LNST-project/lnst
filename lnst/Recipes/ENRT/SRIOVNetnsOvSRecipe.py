@@ -103,7 +103,7 @@ class SRIOVNetnsOvSRecipe(
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
 
-        for i, host in enumerate([host1, host2]):
+        for host in [host1, host2]:
             host.run("systemctl enable openvswitch")
             host.run("systemctl start openvswitch")
             host.run("ovs-vsctl set Open_vSwitch . other_config:hw-offload=true")
@@ -138,7 +138,7 @@ class SRIOVNetnsOvSRecipe(
     def generate_test_wide_description(self, config: EnrtConfiguration):
         desc = super().generate_test_wide_description(config)
         host1, host2 = self.matched.host1, self.matched.host2
-        for i, host in enumerate([host1, host2]):
+        for host in [host1, host2]:
             desc += [
                 f"Configured {host.hostid}.{host.eth0.name}.driver = switchdev\n"
                 f"Created virtual function on {host.hostid}.{host.eth0.name} = {host.newns.vf_eth0.name}\n"
@@ -160,7 +160,7 @@ class SRIOVNetnsOvSRecipe(
         Finally virtual function is deleted.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        for i, host in enumerate([host1, host2]):
+        for host in [host1, host2]:
             host.run(f"echo 0 > /sys/class/net/{host.eth0.name}/device/sriov_numvfs")
             time.sleep(2)
             host.run(f"devlink dev eswitch set pci/{host.eth0.bus_info} mode legacy")

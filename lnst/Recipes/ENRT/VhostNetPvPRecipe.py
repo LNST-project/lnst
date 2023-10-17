@@ -250,7 +250,7 @@ class VhostNetPvPRecipe(BasePvPRecipe):
         guest_conf.libvirt_xml = guest_xml
 
         guest_conf.virtio_devs = []
-        for i, nic in enumerate(host_conf.nics):
+        for i in range(len(host_conf.nics)):
             self._xml_add_vhostnet_dev(guest_xml,
                                        "vhostnet-{i}".format(i=i),
                                        host_conf.bridges[i],

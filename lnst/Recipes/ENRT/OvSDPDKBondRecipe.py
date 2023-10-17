@@ -358,8 +358,8 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
             f"Created dpdkbond on {host1.dummy_cfg.bond_br} with bonding_mode set to "
             f"{self.params.bonding_mode} using lacp_mode set to "
             f"{self.params.lacp_mode}",
-            f"Interconnected OvS bridges with patch ports: test_patch and bond_patch",
-            f"Deleted all flows on both bridges and created a new one with \"actions=NORMAL\"",
+            "Interconnected OvS bridges with patch ports: test_patch and bond_patch",
+            "Deleted all flows on both bridges and created a new one with \"actions=NORMAL\"",
             f"TestPMD in a forward-mode macswap started on the host1 {host1.dummy_cfg.test_br} vhost0 port"]
 
         return desc
