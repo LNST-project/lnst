@@ -387,7 +387,7 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
         host2.run(f"driverctl unset-override {host2.dummy_cfg.eth0.bus_info}")
         host2.run(f"driverctl unset-override {host2.dummy_cfg.eth1.bus_info}")
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         yield from []
 
     def apply_perf_test_tweak(self, config):

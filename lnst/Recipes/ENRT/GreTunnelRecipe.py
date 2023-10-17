@@ -128,11 +128,11 @@ class GreTunnelRecipe(
 
         return (m1.gre_tunnel, m2.gre_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel))
 
     def get_packet_assert_config(self, ping_config):
         """

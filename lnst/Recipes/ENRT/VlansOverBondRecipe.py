@@ -202,16 +202,16 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are the matching VLAN tunnel
         endpoints of the hosts.
         """
         host1, host2 = self.matched.host1, self.matched.host2
 
-        yield ping_endpoint_pairs(config, (host1.vlan0, host2.vlan0))
-        yield ping_endpoint_pairs(config, (host1.vlan1, host2.vlan1))
-        yield ping_endpoint_pairs(config, (host1.vlan2, host2.vlan2))
+        yield from ping_endpoint_pairs(config, (host1.vlan0, host2.vlan0))
+        yield from ping_endpoint_pairs(config, (host1.vlan1, host2.vlan1))
+        yield from ping_endpoint_pairs(config, (host1.vlan2, host2.vlan2))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """

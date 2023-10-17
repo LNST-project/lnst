@@ -142,12 +142,12 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are the configured bonding device on
         host1 and the matched ethernet device on host2.
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.eth0))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.eth0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """

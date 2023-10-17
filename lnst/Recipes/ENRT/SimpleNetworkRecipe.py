@@ -62,13 +62,13 @@ class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the two matched NICs:
 
         host1.eth0 and host2.eth0
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """

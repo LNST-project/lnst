@@ -193,11 +193,11 @@ class Ip6GreNetnsTunnelRecipe(
 
         return (m1.gre6_tunnel, m2.gre6_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.newns.gre6_tunnel, self.matched.host2.newns.gre6_tunnel))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.newns.gre6_tunnel, self.matched.host2.newns.gre6_tunnel))
 
     def get_packet_assert_config(self, ping_config):
         """

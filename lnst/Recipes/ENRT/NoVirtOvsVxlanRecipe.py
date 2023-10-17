@@ -92,8 +92,8 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
-        yield ping_endpoint_pairs(config, (self.matched.host1.int0, self.matched.host2.int0))
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from ping_endpoint_pairs(config, (self.matched.host1.int0, self.matched.host2.int0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.int0, self.matched.host2.int0))

@@ -192,11 +192,11 @@ class VxlanNetnsTunnelRecipe(
 
         return (m1.vxlan_tunnel, m2.vxlan_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.newns.vxlan_tunnel, self.matched.host2.newns.vxlan_tunnel))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.newns.vxlan_tunnel, self.matched.host2.newns.vxlan_tunnel))
 
     def get_packet_assert_config(self, ping_config):
         """

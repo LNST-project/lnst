@@ -99,8 +99,8 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
         config.endpoint2.down()
         super().remove_sub_configuration(config)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
-        yield ping_endpoint_pairs(config, (self.matched.host1.msec0, self.matched.host2.msec0))
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from ping_endpoint_pairs(config, (self.matched.host1.msec0, self.matched.host2.msec0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.msec0, self.matched.host2.msec0))

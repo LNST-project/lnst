@@ -126,8 +126,8 @@ class VirtualBridgeVlanInGuestMirroredRecipe(CommonHWSubConfigMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
-        yield ping_endpoint_pairs(config, (self.matched.guest1.vlan0, self.matched.guest2.vlan0))
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from ping_endpoint_pairs(config, (self.matched.guest1.vlan0, self.matched.guest2.vlan0))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.guest1.vlan0, self.matched.guest2.vlan0))

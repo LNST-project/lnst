@@ -122,11 +122,11 @@ class GeneveOvsTunnelRecipe(
 
         return (m1.int0, m2.int0)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.int0, self.matched.host2.int0))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.int0, self.matched.host2.int0))
 
     def get_packet_assert_config(self, ping_config):
         """

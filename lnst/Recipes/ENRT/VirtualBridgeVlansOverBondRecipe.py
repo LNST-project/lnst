@@ -177,17 +177,12 @@ class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         guest1, guest2, guest3, guest4 = (self.matched.guest1, self.matched.guest2, self.matched.guest3, self.matched.guest4)
 
-        endpoint_pairs = []
         for dev1, dev2 in product([guest1.eth0, guest2.eth0], [guest3.eth0, guest4.eth0]):
             should_be_reachable = (dev1.host, dev2.host) in [(guest1, guest3), (guest2, guest4)]
-            endpoint_pairs.extend(
-                ping_endpoint_pairs(config, (dev1, dev2), should_be_reachable=should_be_reachable)
-            )
-
-        yield endpoint_pairs
+            yield from ping_endpoint_pairs(config, (dev1, dev2), should_be_reachable=should_be_reachable)
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))

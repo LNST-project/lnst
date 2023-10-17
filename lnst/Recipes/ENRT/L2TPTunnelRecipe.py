@@ -166,11 +166,11 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.l2tp_session1, self.matched.host2.l2tp_session1))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.l2tp_session1, self.matched.host2.l2tp_session1))
 
     def get_packet_assert_config(self, ping_config):
         pa_kwargs = {}

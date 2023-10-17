@@ -179,12 +179,12 @@ class VxlanGpeTunnelRecipe(
 
         return (m1.vxlan_tunnel, m2.vxlan_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.lo, self.matched.host2.lo))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.lo, self.matched.host2.lo))
 
     def get_packet_assert_config(self, ping_config):
         """

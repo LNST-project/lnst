@@ -122,11 +122,11 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
 
         return (m1.ip6tnl, m2.ip6tnl)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.ip6tnl, self.matched.host2.ip6tnl))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.ip6tnl, self.matched.host2.ip6tnl))
 
     def get_packet_assert_config(self, ping_config):
         """

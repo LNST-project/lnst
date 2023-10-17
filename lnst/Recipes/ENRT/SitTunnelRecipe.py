@@ -130,11 +130,11 @@ class SitTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelReci
 
         return (m1.sit_tunnel, m2.sit_tunnel)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
         """
-        yield ping_endpoint_pairs(config, (self.matched.host1.sit_tunnel, self.matched.host2.sit_tunnel))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.sit_tunnel, self.matched.host2.sit_tunnel))
 
     def get_packet_assert_config(self, ping_config):
         """

@@ -121,13 +121,12 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
             ns.run("ip xfrm state flush")
         super().remove_sub_configuration(config)
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         ip1, ip2 = config.ips
-        endpoint_pair = PingEndpointPair(
+        yield PingEndpointPair(
             IPEndpoint(config.endpoint1, ip1),
             IPEndpoint(config.endpoint2, ip2),
         )
-        yield [endpoint_pair]
 
     def generate_flow_combinations(self, config):
         ns1, ns2 = config.endpoint1.netns, config.endpoint2.netns

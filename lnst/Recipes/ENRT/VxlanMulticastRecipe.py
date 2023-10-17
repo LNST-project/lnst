@@ -97,11 +97,11 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         ]
         return desc
 
-    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[list[PingEndpointPair]]:
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         host1, host2, guest1 = (self.matched.host1, self.matched.host2, self.matched.guest1)
         devs = [host1.vxlan0, host2.vxlan0, guest1.vxlan0]
         for dev1, dev2 in permutations(devs, 2):
-            yield ping_endpoint_pairs(config, (dev1, dev2))
+            yield from ping_endpoint_pairs(config, (dev1, dev2))
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         yield ip_endpoint_pairs(config, (self.matched.host1.vxlan0, self.matched.host2.vxlan0))
