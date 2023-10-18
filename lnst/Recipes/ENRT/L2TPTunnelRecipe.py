@@ -3,6 +3,7 @@ from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     AF_INET6,
+    Ip4Address,
     interface_addresses,
 )
 from lnst.Common.Parameters import (
@@ -153,8 +154,8 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
         for device in [host1.l2tp_session1, host2.l2tp_session1]:
             device.up()
 
-        ip1 = "10.42.1.1/8"
-        ip2 = "10.42.1.2/8"
+        ip1 = Ip4Address("10.42.1.1/8")
+        ip2 = Ip4Address("10.42.1.2/8")
         config.configure_and_track_ip(host1.l2tp_session1, ip1, peer=ip2)
         config.configure_and_track_ip(host2.l2tp_session1, ip2, peer=ip1)
 
