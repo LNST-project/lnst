@@ -110,7 +110,7 @@ class SRIOVNetnsTcRecipe(
             vf_ifname = dict(ifname=f"{host.eth0.name}{self.params.vf_suffix}")
             host.map_device("vf_eth0", vf_ifname)
 
-            host.newns = NetNamespace(f"lnst")
+            host.newns = NetNamespace("lnst")
             host.newns.vf_eth0 = host.vf_eth0
 
             vf_representor_ifname = dict(ifname="eth0")
@@ -206,8 +206,7 @@ class SRIOVNetnsTcRecipe(
 
     def generate_test_wide_description(self, config: EnrtConfiguration):
         desc = super().generate_test_wide_description(config)
-        host1, host2 = self.matched.host1, self.matched.host2
-        for i, host in enumerate([host1, host2]):
+        for host in [self.matched.host1, self.matched.host2]:
             desc += [
                 f"Configured {host.hostid}.{host.eth0.name}.driver = switchdev\n"
                 f"Created virtual function on {host.hostid}.{host.eth0.name} = {host.newns.vf_eth0.name}\n"
@@ -227,8 +226,7 @@ class SRIOVNetnsTcRecipe(
         control over the physical function to base driver.
         Finally virtual function is deleted.
         """
-        host1, host2 = self.matched.host1, self.matched.host2
-        for i, host in enumerate([host1, host2]):
+        for host in [self.matched.host1, self.matched.host2]:
             host.run(f"echo 0 > /sys/class/net/{host.eth0.name}/device/sriov_numvfs")
             time.sleep(2)
             host.run(f"tc qdisc del dev {host.eth0.name} ingress")
