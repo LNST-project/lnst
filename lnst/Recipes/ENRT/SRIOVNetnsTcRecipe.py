@@ -88,8 +88,8 @@ class SRIOVNetnsTcRecipe(
         mode, adding single VF and mapping the VF, as well as its representor.
         New namespace is created to mimic container networking, where the VF is moved.
         Next, VF is assigned an IPv4 and IPv6 address on both hosts.
-        Finally, new Linux bridge is created, where PF and VF representor are added, to
-        ensure correct switching of network traffic between the hosts.
+        Tc qdiscs and filters are used to bypass the software path and instead
+        use the tc hardware offload functionality in the network devices.
 
         host1.eth0 = 192.168.101.1/24 and fc00::1/64
 
