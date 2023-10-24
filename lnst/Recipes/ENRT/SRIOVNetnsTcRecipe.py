@@ -14,6 +14,7 @@ from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.Perf.Recipe import RecipeConf
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
@@ -203,6 +204,17 @@ class SRIOVNetnsTcRecipe(
         self.wait_tentative_ips(config.configured_devices)
 
         return config
+
+    def perf_test(self, recipe_conf: RecipeConf):
+        result = super().perf_test(recipe_conf)
+        self._dump_tc_rules()
+
+        return result
+
+    def _dump_tc_rules(self):
+        for host in self.matched:
+            for dev in [host.eth0, host.vf_representor_eth0]:
+                host.run(f"tc -s filter show dev {dev.name} ingress")
 
     def generate_test_wide_description(self, config: EnrtConfiguration):
         desc = super().generate_test_wide_description(config)
