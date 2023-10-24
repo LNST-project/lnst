@@ -39,7 +39,7 @@ class BaseLACPRecipe(DoubleBondRecipe):
         it calls switch configuration method.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super(DoubleBondRecipe, self).test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
