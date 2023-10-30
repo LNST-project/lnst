@@ -138,4 +138,9 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
         aggregated_results: list[AggregatedRDMABandwidthMeasurementResults],
     ) -> None:
         for aggregated_result in aggregated_results:
-            recipe.add_custom_result(MeasurementResult("rdma-bandwidth", description=aggregated_result.describe()))
+            measurement_result = MeasurementResult(
+                "rdma-bandwidth",
+                description=aggregated_result.describe(),
+                data={"bandwidth": aggregated_result.bandwidth}
+            )
+            recipe.add_custom_result(measurement_result)
