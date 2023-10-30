@@ -104,6 +104,7 @@ from lnst.Recipes.ENRT.MPTCPRecipe import MPTCPRecipe
 from lnst.Recipes.ENRT.SRIOVNetnsOvSRecipe import SRIOVNetnsOvSRecipe
 from lnst.Recipes.ENRT.SRIOVNetnsTcRecipe import SRIOVNetnsTcRecipe
 from lnst.Recipes.ENRT.SRIOVNetnsVxlanTcRecipe import SRIOVNetnsVxlanTcRecipe
+from lnst.Recipes.ENRT.SRIOVNetnsGeneveTcRecipe import SRIOVNetnsGeneveTcRecipe
 from lnst.Recipes.ENRT.LinuxBridgeRecipe import LinuxBridgeRecipe
 from lnst.Recipes.ENRT.LinuxBridgeOverBondRecipe import LinuxBridgeOverBondRecipe
 from lnst.Recipes.ENRT.TrafficControlRecipe import TrafficControlRecipe
