@@ -120,6 +120,10 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
             elif result.measurement_type == "linuxperf":
                 # linuxperf measurement just generates files
                 measurement_data = {}
+            elif result.measurement_type == "rdma-bandwidth":
+                measurement_data = {
+                    "bandwidth": result.data["bandwidth"].average,
+                }
             else:
                 logging.warning(f"unhandled measurement result type: {result.measurement_type}")
                 measurement_data = None
