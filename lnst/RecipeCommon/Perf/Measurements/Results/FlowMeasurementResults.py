@@ -1,15 +1,28 @@
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
-from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import BaseMeasurementResults
+from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import (
+    BaseMeasurementResults,
+)
 
 
 class FlowMeasurementResults(BaseMeasurementResults):
     def __init__(self, measurement, flow, warmup_duration=0):
-        super(FlowMeasurementResults, self).__init__(measurement, warmup_duration)
+        super(FlowMeasurementResults, self).__init__(
+            measurement, warmup_duration
+        )
         self._flow = flow
         self._generator_results = None
         self._generator_cpu_stats = None
         self._receiver_results = None
         self._receiver_cpu_stats = None
+
+    @property
+    def metrics(self) -> list[str]:
+        return [
+            "generator_results",
+            "generator_cpu_stats",
+            "receiver_results",
+            "receiver_cpu_stats",
+        ]
 
     @property
     def flow(self):
@@ -77,7 +90,10 @@ class FlowMeasurementResults(BaseMeasurementResults):
         return max(
             [
                 parallel[self.warmup_duration - 1].end_timestamp
-                for parallel in (*self.generator_results, *self.receiver_results)
+                for parallel in (
+                    *self.generator_results,
+                    *self.receiver_results,
+                )
             ]
         )
 
@@ -89,18 +105,31 @@ class FlowMeasurementResults(BaseMeasurementResults):
         return min(
             [
                 parallel[-self.warmup_duration].start_timestamp
-                for parallel in (*self.generator_results, *self.receiver_results)
+                for parallel in (
+                    *self.generator_results,
+                    *self.receiver_results,
+                )
             ]
         )
 
     def time_slice(self, start, end):
-        result_copy = FlowMeasurementResults(self.measurement, self.flow, warmup_duration=0)
+        result_copy = FlowMeasurementResults(
+            self.measurement, self.flow, warmup_duration=0
+        )
 
-        result_copy.generator_cpu_stats = self.generator_cpu_stats.time_slice(start, end)
-        result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(start, end)
+        result_copy.generator_cpu_stats = self.generator_cpu_stats.time_slice(
+            start, end
+        )
+        result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(
+            start, end
+        )
 
-        result_copy.generator_results = self.generator_results.time_slice(start, end)
-        result_copy.receiver_results = self.receiver_results.time_slice(start, end)
+        result_copy.generator_results = self.generator_results.time_slice(
+            start, end
+        )
+        result_copy.receiver_results = self.receiver_results.time_slice(
+            start, end
+        )
 
         return result_copy
 
@@ -110,29 +139,41 @@ class FlowMeasurementResults(BaseMeasurementResults):
         receiver = self.receiver_results
         receiver_cpu = self.receiver_cpu_stats
         desc = []
-        desc.append("Generator measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second."
-                .format(tput=generator.average,
-                        deviation=generator.std_deviation,
-                        percentage=self._deviation_percentage(generator),
-                        unit=generator.unit))
-        desc.append("Generator process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second."
-                .format(cpu=generator_cpu.average,
-                        cpu_deviation=generator_cpu.std_deviation,
-                        cpu_unit=generator_cpu.unit))
-        desc.append("Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second."
-                .format(tput=receiver.average,
-                        deviation=receiver.std_deviation,
-                        percentage=self._deviation_percentage(receiver),
-                        unit=receiver.unit))
-        desc.append("Receiver process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second."
-                .format(cpu=receiver_cpu.average,
-                        cpu_deviation=receiver_cpu.std_deviation,
-                        cpu_unit=receiver_cpu.unit))
+        desc.append(
+            "Generator measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
+                tput=generator.average,
+                deviation=generator.std_deviation,
+                percentage=self._deviation_percentage(generator),
+                unit=generator.unit,
+            )
+        )
+        desc.append(
+            "Generator process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second.".format(
+                cpu=generator_cpu.average,
+                cpu_deviation=generator_cpu.std_deviation,
+                cpu_unit=generator_cpu.unit,
+            )
+        )
+        desc.append(
+            "Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
+                tput=receiver.average,
+                deviation=receiver.std_deviation,
+                percentage=self._deviation_percentage(receiver),
+                unit=receiver.unit,
+            )
+        )
+        desc.append(
+            "Receiver process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second.".format(
+                cpu=receiver_cpu.average,
+                cpu_deviation=receiver_cpu.std_deviation,
+                cpu_unit=receiver_cpu.unit,
+            )
+        )
         return "\n".join(desc)
 
     @staticmethod
     def _deviation_percentage(result):
         try:
-            return (result.std_deviation/result.average) * 100
+            return (result.std_deviation / result.average) * 100
         except ZeroDivisionError:
-            return float('inf') if result.std_deviation >= 0 else float("-inf")
+            return float("inf") if result.std_deviation >= 0 else float("-inf")

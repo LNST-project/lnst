@@ -11,6 +11,10 @@ class XDPBenchMeasurementResults(FlowMeasurementResults):
         self._generator_results = ParallelPerfResult()  # multiple instances of pktgen
         self._receiver_results = ParallelPerfResult()  # single instance of xdpbench
 
+    @property
+    def metrics(self) -> list[str]:
+        return ['generator_results', 'receiver_results']
+
     def add_results(self, results):
         if results is None:
             return

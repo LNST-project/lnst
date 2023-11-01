@@ -26,6 +26,10 @@ class CPUMeasurementResults(BaseMeasurementResults):
     def utilization(self, value):
         self._utilization = value
 
+    @property
+    def metrics(self) -> list[str]:
+        return ['utilization']
+
     def describe(self):
         return "host {host} cpu '{cpu}' utilization: {average:.2f} +-{deviation:.2f} {unit} per second".format(
             host=self.host.hostid,
