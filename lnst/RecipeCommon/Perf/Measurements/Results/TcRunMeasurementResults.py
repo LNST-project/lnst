@@ -19,6 +19,10 @@ class TcRunMeasurementResults(BaseMeasurementResults):
         self._run_success: bool = None
 
     @property
+    def metrics(self) -> list[str]:
+        return ['rule_install_rate']
+
+    @property
     def device(self) -> Device:
         return self._device
 

@@ -14,6 +14,10 @@ class BaseMeasurementResults(object):
     def warmup_duration(self):
         return self._warmup_duration
 
+    @property
+    def metrics(self) -> list[str]:
+        return []
+
     def align_data(self, start, end):
         return self
 

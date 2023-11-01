@@ -10,6 +10,10 @@ class RDMABandwidthMeasurementResults(BaseMeasurementResults):
         self._flow = flow
 
     @property
+    def metrics(self) -> list[str]:
+        return ['bandwidth']
+
+    @property
     def flow(self):
         return self._flow
 
