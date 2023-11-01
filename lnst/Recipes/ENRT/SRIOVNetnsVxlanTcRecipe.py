@@ -57,11 +57,10 @@ class SRIOVNetnsVxlanTcRecipe(
 
         for host in [host1, host2]:
             # TODO: support also IPv6
-            ip_filter = {"family": AF_INET}
             host.vxlan10 = VxlanDevice(
                 vxlan_id=10,
                 realdev=host.eth0,
-                remote=host2.eth0.ips_filter(**ip_filter)[0] if host == host1 else host1.eth0.ips_filter(**ip_filter)[0],
+                remote=config.ips_for_device(host2.eth0, family=AF_INET)[0] if host == host1 else config.ips_for_device(host1.eth0, family=AF_INET)[0],
                 dst_port=4789,
             )
 
@@ -92,21 +91,21 @@ class SRIOVNetnsVxlanTcRecipe(
         host1.run(
             f"tc filter add dev {host1.vf_representor_eth0.name} protocol ip ingress prio 1 "
             f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
-            f"action tunnel_key set src_ip {host1.eth0.ips_filter(family=AF_INET)[0]} dst_ip {host2.eth0.ips_filter(family=AF_INET)[0]} "
+            f"action tunnel_key set src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"dst_port 4789 id 10 "
             f"action mirred egress redirect dev {host1.vxlan10.name} "
         )
         host1.run(
             f"tc filter add dev {host1.vf_representor_eth0.name} protocol arp ingress prio 2 "
             f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
-            f"action tunnel_key set src_ip {host1.eth0.ips_filter(family=AF_INET)[0]} dst_ip {host2.eth0.ips_filter(family=AF_INET)[0]} "
+            f"action tunnel_key set src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"dst_port 4789 id 10 "
             f"action mirred egress redirect dev {host1.vxlan10.name} "
         )
         host1.run(
             f"tc filter add dev {host1.vf_representor_eth0.name} protocol arp ingress prio 3 "
             f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
-            f"action tunnel_key set src_ip {host1.eth0.ips_filter(family=AF_INET)[0]} dst_ip {host2.eth0.ips_filter(family=AF_INET)[0]} "
+            f"action tunnel_key set src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"dst_port 4789 id 10 "
             f"action mirred egress redirect dev {host1.vxlan10.name} "
         )
@@ -115,21 +114,21 @@ class SRIOVNetnsVxlanTcRecipe(
         host2.run(
             f"tc filter add dev {host2.vf_representor_eth0.name} protocol ip ingress prio 1  "
             f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr}  "
-            f"action tunnel_key set src_ip {host2.eth0.ips_filter(family=AF_INET)[0]} dst_ip {host1.eth0.ips_filter(family=AF_INET)[0]} "
+            f"action tunnel_key set src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"dst_port 4789 id 10 "
             f"action mirred egress redirect dev {host2.vxlan10.name} "
         )
         host2.run(
             f"tc filter add dev {host2.vf_representor_eth0.name} protocol arp ingress prio 2 "
             f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr} "
-            f"action tunnel_key set src_ip {host2.eth0.ips_filter(family=AF_INET)[0]} dst_ip {host1.eth0.ips_filter(family=AF_INET)[0]} "
+            f"action tunnel_key set src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"dst_port 4789 id 10 "
             f"action mirred egress redirect dev {host2.vxlan10.name} "
         )
         host2.run(
             f"tc filter add dev {host2.vf_representor_eth0.name} protocol arp ingress prio 3 "
             f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
-            f"action tunnel_key set src_ip {host2.eth0.ips_filter(family=AF_INET)[0]} dst_ip {host1.eth0.ips_filter(family=AF_INET)[0]} "
+            f"action tunnel_key set src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"dst_port 4789 id 10 "
             f"action mirred egress redirect dev {host2.vxlan10.name} "
         )
@@ -139,7 +138,7 @@ class SRIOVNetnsVxlanTcRecipe(
         host1.run(
             f"tc filter add dev {host1.vxlan10.name} protocol ip ingress prio 1 "
             f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr} "
-            f"enc_src_ip {host2.eth0.ips_filter(family=AF_INET)[0]} enc_dst_ip {host1.eth0.ips_filter(family=AF_INET)[0]} "
+            f"enc_src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 4789 enc_key_id 10 "
             f"action tunnel_key unset "
             f"action mirred egress redirect dev {host1.vf_representor_eth0.name} "
@@ -147,7 +146,7 @@ class SRIOVNetnsVxlanTcRecipe(
         host1.run(
             f"tc filter add dev {host1.vxlan10.name} protocol arp ingress prio 2 "
             f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr} "
-            f"enc_src_ip {host2.eth0.ips_filter(family=AF_INET)[0]} enc_dst_ip {host1.eth0.ips_filter(family=AF_INET)[0]} "
+            f"enc_src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 4789 enc_key_id 10 "
             f"action tunnel_key unset "
             f"action mirred egress redirect dev {host1.vf_representor_eth0.name} "
@@ -155,7 +154,7 @@ class SRIOVNetnsVxlanTcRecipe(
         host1.run(
             f"tc filter add dev {host1.vxlan10.name} protocol arp ingress prio 3 "
             f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
-            f"enc_src_ip {host2.eth0.ips_filter(family=AF_INET)[0]} enc_dst_ip {host1.eth0.ips_filter(family=AF_INET)[0]} "
+            f"enc_src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 4789 enc_key_id 10 "
             f"action tunnel_key unset "
             f"action mirred egress redirect dev {host1.vf_representor_eth0.name} "
@@ -165,7 +164,7 @@ class SRIOVNetnsVxlanTcRecipe(
         host2.run(
             f"tc filter add dev {host2.vxlan10.name} protocol ip ingress prio 1 "
             f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
-            f"enc_src_ip {host1.eth0.ips_filter(family=AF_INET)[0]} enc_dst_ip {host2.eth0.ips_filter(family=AF_INET)[0]} "
+            f"enc_src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 4789 enc_key_id 10 "
             f"action tunnel_key unset "
             f"action mirred egress redirect dev {host2.vf_representor_eth0.name} "
@@ -173,7 +172,7 @@ class SRIOVNetnsVxlanTcRecipe(
         host2.run(
             f"tc filter add dev {host2.vxlan10.name} protocol arp ingress prio 2 "
             f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
-            f"enc_src_ip {host1.eth0.ips_filter(family=AF_INET)[0]} enc_dst_ip {host2.eth0.ips_filter(family=AF_INET)[0]} "
+            f"enc_src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 4789 enc_key_id 10 "
             f"action tunnel_key unset "
             f"action mirred egress redirect dev {host2.vf_representor_eth0.name} "
@@ -181,7 +180,7 @@ class SRIOVNetnsVxlanTcRecipe(
         host2.run(
             f"tc filter add dev {host2.vxlan10.name} protocol arp ingress prio 3 "
             f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
-            f"enc_src_ip {host1.eth0.ips_filter(family=AF_INET)[0]} enc_dst_ip {host2.eth0.ips_filter(family=AF_INET)[0]} "
+            f"enc_src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 4789 enc_key_id 10 "
             f"action tunnel_key unset "
             f"action mirred egress redirect dev {host2.vf_representor_eth0.name} "
