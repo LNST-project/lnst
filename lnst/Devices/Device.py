@@ -18,6 +18,7 @@ import logging
 import pprint
 import time
 from abc import ABCMeta
+from itertools import product
 from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
@@ -40,6 +41,21 @@ class DeviceMeta(ABCMeta):
             return issubclass(other._dev_cls, self)
         except AttributeError:
             return super(DeviceMeta, self).__instancecheck__(other)
+
+def sriov_capable(func):
+    """
+    Decorator for Device class methods that checks whether the Device is
+    capable of SR-IOV.
+    """
+    def wrapper(self, *args, **kwargs):
+        try:
+            exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
+        except ExecCmdFail:
+            raise DeviceFeatureNotSupported(f"Device {self.name} not SR-IOV capable")
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 class Device(object, metaclass=DeviceMeta):
     """The base Device class
@@ -380,10 +396,20 @@ class Device(object, metaclass=DeviceMeta):
         if self.master:
             self.master.cleanup()
             self.master = None
+
+        try:
+            if self.state != "up":
+                self.up_and_wait()
+
+            self.delete_vfs()
+        except DeviceFeatureNotSupported:
+            pass
+
         self.down()
         self.ip_flush()
         self._clear_tc_qdisc()
         self._clear_tc_filters()
+
         self.restore_original_data()
 
     @property
@@ -877,6 +903,117 @@ class Device(object, metaclass=DeviceMeta):
         tx_val = self._cleanup_data["tx_pause"]
         if (rx_val, tx_val) != (None, None):
             self._write_pause_frames(rx_val, tx_val)
+
+    @sriov_capable
+    def create_vfs(self, number_of_vfs=1):
+        try:
+            exec_cmd(f"echo {number_of_vfs} > /sys/class/net/{self.name}/device/sriov_numvfs")
+        except ExecCmdFail as e:
+            raise DeviceError(
+                f"Error while creating vfs for {self.name}:\n{e.get_stderr()}"
+            )
+
+        # wait for devices to appear on the netlink
+        if not self._wait_for_vf_devices(number_of_vfs, 10):
+            raise DeviceError(f"Error while waiting for vfs for {self.name}")
+
+        for vf_dev in (vf_devices := self._get_vf_devices()):
+            vf_dev._enable()
+
+        return vf_devices
+
+    def _wait_for_vf_devices(self, vfs_count, timeout):
+        if timeout > 0:
+            logging.info(f"Waiting for vf(s) creation on PF {self.name} for {timeout} seconds")
+        elif timeout == 0:
+            logging.info(f"Waiting for vf(s) creation on PF {self.name}")
+
+        def condition():
+            return all(
+                [
+                    self._vf_is_ready(vf_index) for vf_index in range(0, vfs_count)
+                ]
+            )
+
+        try:
+            wait_for_condition(condition, timeout=timeout)
+        except TimeoutError:
+            logging.info(f"Timeout while waiting for vfs creation on PF {self.name}")
+            raise
+
+        logging.info(f"vfs on PF {self.name} successfully created")
+
+        return True
+
+    @sriov_capable
+    def delete_vfs(self):
+        try:
+            exec_cmd(f"echo 0 > /sys/class/net/{self.name}/device/sriov_numvfs")
+        except ExecCmdFail as e:
+            raise DeviceError(
+                f"Error while deleting vfs for {self.name}:\n{e.get_stderr()}"
+            )
+
+    def _vf_is_ready(self, vf_index):
+        logging.debug(f"Waiting for {self.name} vf with index {vf_index}")
+        # search for vf
+        vf_device = self._get_vf(vf_index)
+
+        if not vf_device:
+            logging.debug(f"vf {vf_index} for {self.name} not ready")
+            return False
+
+        logging.debug(f"vf {vf_index} for {self.name} ready")
+
+        return True
+
+    @sriov_capable
+    def _get_vf_devices(self):
+        return [
+            self._get_vf(vf_index)
+            for vf_index in range(self._get_vf_count())
+        ]
+
+    def _get_vf_count(self):
+        # TODO: create sysfs api for Device, then run self.[get|set]_sysfs("device/sriov_numvfs")
+        stdout, _ = exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
+
+        return int(stdout)
+
+    def _get_vf(self, vf_index: int):
+        all_devices = self._if_manager.get_devices()
+
+        """
+        1st message
+        ('IFLA_PARENT_DEV_BUS_NAME', 'pci')
+        ('IFLA_PARENT_DEV_NAME', '0000:01:02.0'), is different from PF device
+
+        2nd message, contains alternative device name derived from the PF device
+        ('IFLA_PROP_LIST', {'attrs': [('IFLA_ALT_IFNAME', 'enp1s0f0v0')]}, 32768),
+        """
+        vfs_match = [
+            dev for dev in all_devices if (
+                dev != self and
+                any(
+                    [
+                        pf_dev_name.find(vf_dev_name.rsplit(f"v{vf_index}")[0]) != -1
+                        for vf_dev_name, pf_dev_name in product(dev.alt_if_names, self.alt_if_names)
+                    ]
+                )
+            )
+        ]
+
+        try:
+            return vfs_match[0]
+        except IndexError:
+            return None
+
+    @property
+    def alt_if_names(self):
+        try:
+            return self._nl_msg.get_attr("IFLA_PROP_LIST").get_attrs("IFLA_ALT_IFNAME")
+        except:
+            return []
 
     #TODO implement proper Route objects
     #consider the same as with tc?
