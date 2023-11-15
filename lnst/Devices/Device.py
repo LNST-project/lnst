@@ -663,8 +663,7 @@ class Device(object, metaclass=DeviceMeta):
         try:
             return ethtool.get_businfo(self.name)
         except IOError as e:
-            log_exc_traceback()
-            return ""
+            raise DeviceFeatureNotSupported(f"No bus info for {self.name}")
 
     def ip_add(self, addr, peer=None):
         """add an ip address
