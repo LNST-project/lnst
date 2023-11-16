@@ -57,6 +57,21 @@ def sriov_capable(func):
 
     return wrapper
 
+def switchdev_capable(func):
+    """
+    Decorator for Device class methods that checks whether the Device can be
+    used in switchdev mode.
+    """
+    def wrapper(self, *args, **kwargs):
+        try:
+            _ = self.eswitch_mode
+        except DeviceFeatureNotSupported:
+            raise
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
+
 class Device(object, metaclass=DeviceMeta):
     """The base Device class
 
@@ -904,6 +919,38 @@ class Device(object, metaclass=DeviceMeta):
         if (rx_val, tx_val) != (None, None):
             self._write_pause_frames(rx_val, tx_val)
 
+    @property
+    def eswitch_mode(self):
+        try:
+            # TODO: do this through device._devlink?
+            stdout, _ = exec_cmd(f"devlink dev eswitch show pci/{self.bus_info}")
+        except ExecCmdFail as e:
+            if e.get_stderr().find("Operation not supported") > -1 or e.get_stderr().find("No such device"):
+                raise DeviceFeatureNotSupported(f"Device {self.name} not compatible with switchdev")
+            else:
+                raise DeviceError(
+                    f"Error while querying device {self.name} eswitch mode:\n{e.get_stderr()}"
+                )
+
+        m = re.search("mode (legacy|switchdev)", stdout)
+        try:
+            return m.group(1)
+        except AttributeError:
+            raise DeviceError(f"Could not parse device {self.name} eswitch mode")
+
+    @eswitch_mode.setter
+    def eswitch_mode(self, mode):
+        if self.eswitch_mode == mode:
+            return
+
+        try:
+            # TODO: do this through device._devlink?
+            exec_cmd(f"devlink dev eswitch set pci/{self.bus_info} mode {mode}")
+        except ExecCmdFail as e:
+            raise DeviceError(
+                f"Error while setting device {self.name} eswitch mode:\n{e.get_stderr()}"
+            )
+
     @sriov_capable
     def create_vfs(self, number_of_vfs=1):
         try:
@@ -920,7 +967,23 @@ class Device(object, metaclass=DeviceMeta):
         for vf_dev in (vf_devices := self._get_vf_devices()):
             vf_dev._enable()
 
-        return vf_devices
+        try:
+            eswitch_mode = self.eswitch_mode
+        except DeviceFeatureNotSupported:
+            return vf_devices, None
+
+        if eswitch_mode == "switchdev":
+            # wait for representor devices to appear on the netlink
+            if not self._wait_for_vf_rep_devices(number_of_vfs, 10):
+                raise DeviceError(f"Error while waiting for vf_reps for {self.name}")
+
+            for vf_rep_dev in (vf_rep_devices := self._get_vf_rep_devices()):
+                vf_rep_dev._enable()
+
+            return vf_devices, vf_rep_devices
+
+        # for any other cases, just return vf devices
+        return vf_devices, None
 
     def _wait_for_vf_devices(self, vfs_count, timeout):
         if timeout > 0:
@@ -942,6 +1005,29 @@ class Device(object, metaclass=DeviceMeta):
             raise
 
         logging.info(f"vfs on PF {self.name} successfully created")
+
+        return True
+
+    def _wait_for_vf_rep_devices(self, vfs_count, timeout):
+        if timeout > 0:
+            logging.info(f"Waiting for vf_rep(s) creation on PF {self.name} for {timeout} seconds")
+        elif timeout == 0:
+            logging.info(f"Waiting for vf_rep(s) creation on PF {self.name}")
+
+        def condition():
+            return all(
+                [
+                    self._vf_rep_is_ready(vf_index) for vf_index in range(0, vfs_count)
+                ]
+            )
+
+        try:
+            wait_for_condition(condition, timeout=timeout)
+        except TimeoutError:
+            logging.info(f"Timeout while waiting for vf_reps creation on PF {self.name}")
+            raise
+
+        logging.info(f"vf_reps on PF {self.name} successfully created")
 
         return True
 
@@ -967,10 +1053,31 @@ class Device(object, metaclass=DeviceMeta):
 
         return True
 
+    def _vf_rep_is_ready(self, vf_index):
+        logging.debug(f"Waiting for {self.name} vf_representor with index {vf_index}")
+
+        # search for vf representor
+        vf_rep_device = self._get_vf_representor(vf_index)
+
+        if not vf_rep_device:
+            logging.debug(f"vf representor {vf_index} for {self.name} not ready")
+            return False
+
+        logging.debug(f"vf representor {vf_index} for {self.name} ready")
+
+        return True
+
     @sriov_capable
     def _get_vf_devices(self):
         return [
             self._get_vf(vf_index)
+            for vf_index in range(self._get_vf_count())
+        ]
+
+    @switchdev_capable
+    def _get_vf_rep_devices(self):
+        return [
+            self._get_vf_representor(vf_index)
             for vf_index in range(self._get_vf_count())
         ]
 
@@ -979,6 +1086,38 @@ class Device(object, metaclass=DeviceMeta):
         stdout, _ = exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
 
         return int(stdout)
+
+    def _get_vf_representor(self, vf_index: int):
+        pf_number = int(self.phys_port_name[1:])
+
+        vf_rep_device_phys_port_name = f"pf{pf_number}vf{vf_index}"
+        all_devices = self._if_manager.get_devices()
+
+        """
+        netlink message content for vf representor devices
+        1st message
+        ('IFLA_PHYS_PORT_NAME', 'pf0vf0'),
+        ('IFLA_PHYS_SWITCH_ID', '10:f7:d5:fe:ff:1a:3d:e4'),
+        ('IFLA_PARENT_DEV_BUS_NAME', 'pci')
+        ('IFLA_PARENT_DEV_NAME', '0000:01:00.0') is same as PF device
+
+        2nd message, contains alternative device name derived from the PF device
+        ('IFLA_PHYS_PORT_NAME', 'pf0vf0'),
+        ('IFLA_PROP_LIST', {'attrs': [('IFLA_ALT_IFNAME', 'enp1s0f0npf0vf0')]}, 32768),
+        ('IFLA_PARENT_DEV_NAME', '0000:01:00.0'),
+        """
+        vf_reps_match = [
+            dev for dev in all_devices if (
+                dev.phys_port_name == vf_rep_device_phys_port_name and
+                dev.parent_dev_bus_name == self.parent_dev_bus_name and
+                dev.parent_dev_name == self.parent_dev_name
+            )
+        ]
+
+        try:
+            return vf_reps_match[0]
+        except IndexError:
+            return None
 
     def _get_vf(self, vf_index: int):
         all_devices = self._if_manager.get_devices()
@@ -1007,6 +1146,18 @@ class Device(object, metaclass=DeviceMeta):
             return vfs_match[0]
         except IndexError:
             return None
+
+    @property
+    def phys_port_name(self):
+        return self._nl_msg.get("IFLA_PHYS_PORT_NAME")
+
+    @property
+    def parent_dev_bus_name(self):
+        return self._nl_msg.get("IFLA_PARENT_DEV_BUS_NAME")
+
+    @property
+    def parent_dev_name(self):
+        return self._nl_msg.get("IFLA_PARENT_DEV_NAME")
 
     @property
     def alt_if_names(self):
