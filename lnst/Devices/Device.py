@@ -765,7 +765,7 @@ class Device(object, metaclass=DeviceMeta):
         settings = {}
         output, _ = exec_cmd("ethtool -c %s" % self.name, die_on_err=False)
 
-        regex = re.compile("^([a-z-]+): (n/a|\d+)$")
+        regex = re.compile("^([a-z-]+):\s+(n/a|\d+)$")
 
         for line in output.split('\n'):
             if not (m := regex.match(line)):
