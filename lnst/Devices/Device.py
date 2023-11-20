@@ -1136,7 +1136,7 @@ class Device(object, metaclass=DeviceMeta):
                 any(
                     [
                         pf_dev_name.find(vf_dev_name.rsplit(f"v{vf_index}")[0]) != -1
-                        for vf_dev_name, pf_dev_name in product(dev.alt_if_names, self.alt_if_names)
+                        for vf_dev_name, pf_dev_name in product(dev.alt_if_names + [dev.name], self.alt_if_names + [self.name])
                     ]
                 )
             )
