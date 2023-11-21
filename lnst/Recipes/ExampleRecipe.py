@@ -39,21 +39,33 @@ class MyRecipe(BaseRecipe):
         self.matched.m1.eth0.up()
         self.matched.m2.eth0.ip_add(ipaddress("192.168.1.2/24"))
         self.matched.m2.eth0.up()
-        ping_job = self.matched.m1.run(Ping(dst=self.matched.m2.eth0,
-                                                interval=0,
-                                                iface=self.matched.m1.eth0))
 
-        netserver_job = self.matched.m1.run(Netserver(bind=self.matched.m1.eth0),
-                                            bg=True)
+        self.matched.m1.run(
+            Ping(
+                dst="192.168.1.2/24",
+                interface=self.matched.m1.eth0,
+            )
+        )
 
-        netperf_job = self.matched.m2.run(Netperf(server=self.matched.m1.eth0,
-                                                  duration=1,
-                                                  confidence="99,5",
-                                                  runs="5",
-                                                  debug=0,
-                                                  max_deviation={'type':"percent",
-                                                                 'value':20.0},
-                                                  testname="TCP_STREAM"))
+        netserver_job = self.matched.m1.run(
+            Netserver(bind="192.168.1.1/24"),
+            bg=True,
+        )
+
+        self.matched.m2.run(
+            Netperf(
+                server="192.168.1.1/24",
+                duration=1,
+                confidence="99,5",
+                runs="5",
+                debug=0,
+                max_deviation={
+                    'type':"percent",
+                    'value':20.0,
+                },
+                testname="TCP_STREAM",
+            )
+        )
 
         netserver_job.kill(signal=signal.SIGINT)
 
@@ -117,7 +129,7 @@ class MyRecipe(BaseRecipe):
         self.matched.m1.run("ip a")
         m1.vxlan0.destroy()
 
-ctl = Controller(debug=1)
+ctl = Controller(debug=True)
 
 r = MyRecipe()
 ctl.run(r, allow_virt=True)
