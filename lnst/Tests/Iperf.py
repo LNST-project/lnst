@@ -1,4 +1,5 @@
 import logging
+import signal
 import subprocess
 import json
 from json.decoder import JSONDecodeError
@@ -34,57 +35,52 @@ class IperfBase(BaseTestModule):
 
         try:
             stdout, stderr = server.communicate()
-            stdout = stdout.decode()
-            stderr = stderr.decode()
         except KeyboardInterrupt:
-            pass
+            server.send_signal(signal.SIGINT)
+        finally:
+            stdout, stderr = server.communicate()
+            stdout = stdout.decode().strip()
+            stderr = stderr.decode().strip()
+
+        if server.returncode > 0:
+            msg = f"iperf {self._role} returncode = {server.returncode}"
+            logging.error(msg)
+            logging.error(f"iperf stderr: {stderr}")
+            logging.debug(f"iperf stdout: {stdout}")
+            self._res_data["msg"] = msg
+            self._res_data["stderr"] = stderr
+            return False
 
         try:
             self._res_data["data"] = json.loads(stdout)
         except JSONDecodeError:
-            self._res_data["msg"] = "Error while parsing the iperf json output"
-            self._res_data["data"] = stdout
+            msg = "Error while parsing the iperf json output"
+            logging.error(msg)
+            logging.error(f"iperf stderr: {stderr}")
+            logging.debug(f"iperf stdout: {stdout}")
+            self._res_data["msg"] = msg
             self._res_data["stderr"] = stderr
-            logging.error(self._res_data["msg"])
             return False
 
-        try:
-            self._check_json_sanity()
-        except:
-            self._res_data["msg"] = "Iperf provided incomplete json data"
-            self._res_data["data"] = stdout
+        if not self._is_json_complete(self._res_data["data"]):
+            msg = "Iperf provided incomplete json data"
+            logging.error(msg)
+            logging.error(f"iperf stderr: {stderr}")
+            logging.debug(f"iperf stdout: {stdout}")
+            self._res_data["msg"] = msg
             self._res_data["stderr"] = stderr
-            logging.error(self._res_data["msg"])
-            return False
-
-        self._res_data["stderr"] = stderr
-
-        if stderr != "":
-            self._res_data["msg"] = "errors reported by iperf"
-            logging.error(self._res_data["msg"])
-            logging.error(self._res_data["stderr"])
-
-        if server.returncode > 0:
-            self._res_data["msg"] = "{} returncode = {}".format(
-                    self._role, server.returncode)
-            logging.error(self._res_data["msg"])
             return False
 
         return True
 
-    def _check_json_sanity(self):
-        data = self._res_data["data"]
-        if "start" not in data:
-            raise Exception()
-
-        if "end" not in data:
-            raise Exception()
-
-        if len(data["intervals"]) == 0:
-            raise Exception()
-
-        if "streams" not in data["end"]:
-            raise Exception
+    @staticmethod
+    def _is_json_complete(data: dict) -> bool:
+        return (
+            "start" in data
+            and "end" in data
+            and len(data["intervals"]) > 0
+            and "streams" in data["end"]
+        )
 
 
 class IperfServer(IperfBase):
