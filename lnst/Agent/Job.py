@@ -131,13 +131,12 @@ class Job(object):
             os.killpg(self._pid, sig)
 
             if sig == signal.SIGKILL:
-                self.set_finished(dict(type = "job_finished",
-                                       job_id = self._id,
-                                       result = dict(passed = False,
-                                                     res_data = "Job killed",
-                                                     type = "result")))
-
-                send_data(self._child_pipe, self.get_result())
+                result = dict(type = "job_finished",
+                              job_id = self._id,
+                              result = dict(passed = False,
+                                            res_data = "Job killed",
+                                            type = "result"))
+                send_data(self._child_pipe, result)
             return True
         except OSError as exc:
             logging.error(str(exc))
