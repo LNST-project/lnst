@@ -92,7 +92,6 @@ class BaseFlowMeasurement(BaseMeasurement):
         receiver_cpu = flow_results.receiver_cpu_stats
 
         desc = []
-        desc.append(str(flow_results.flow))
         desc.append(flow_results.describe())
 
         recipe_result = ResultType.PASS
