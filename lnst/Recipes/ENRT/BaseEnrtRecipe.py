@@ -165,12 +165,6 @@ class BaseEnrtRecipe(
         specify how many times should each performance measurement be repeated
         to generate cumulative results which can be statistically analyzed.
     :type perf_iterations: :any:`IntParam` (default 5)
-
-    :param perf_evaluation_strategy:
-        Parameter used by the :any:`evaluator_by_measurement` selector to
-        pick correct performance measurement evaluators based on the strategy
-        specified.
-    :type perf_evaluation_strategy: :any:`StrParam` (default "all")
     """
 
     driver = StrParam()
@@ -187,7 +181,6 @@ class BaseEnrtRecipe(
 
     # generic perf test params
     perf_iterations = IntParam(default=5)
-    perf_evaluation_strategy = StrParam(default="all")
 
     def test(self):
         """Main test loop shared by all the Enrt recipes
@@ -472,27 +465,14 @@ class BaseEnrtRecipe(
         The selector looks at the input measurement to pick
         appropriate evaluator.
 
-        If :any: `perf_evaluation_strategy` property is set
-        to either "none" or "nonzero", selector returns
-        given evaluators based on their strategy.
-
         :return: list of Result evaluators
         :rtype: List[:any:`BaseResultEvaluator`]
 
         """
-        if self.params.perf_evaluation_strategy == "none":
-            return []
-
         if isinstance(measurement, BaseCPUMeasurement):
-            if self.params.perf_evaluation_strategy in ["nonzero", "none"]:
-                evaluators = []
-            else:
-                evaluators = self.cpu_perf_evaluators
+            evaluators = self.cpu_perf_evaluators
         elif isinstance(measurement, BaseFlowMeasurement):
-            if self.params.perf_evaluation_strategy == "nonzero":
-                evaluators = [NonzeroFlowEvaluator()]
-            else:
-                evaluators = self.net_perf_evaluators
+            evaluators = self.net_perf_evaluators
         else:
             evaluators = []
 
