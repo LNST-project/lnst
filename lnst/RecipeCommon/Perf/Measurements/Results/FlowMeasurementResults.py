@@ -139,6 +139,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
         receiver = self.receiver_results
         receiver_cpu = self.receiver_cpu_stats
         desc = []
+        desc.append(str(self.flow))
         desc.append(
             "Generator measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=generator.average,
