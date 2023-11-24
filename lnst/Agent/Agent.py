@@ -11,6 +11,7 @@ __author__ = """
 jpirko@redhat.com (Jiri Pirko)
 """
 
+import importlib.machinery
 import signal
 import logging
 import os, stat
@@ -19,7 +20,6 @@ import datetime
 import socket
 import ctypes
 import multiprocessing
-import imp
 import types
 from time import sleep
 from inspect import isclass
@@ -161,7 +161,8 @@ class RemoteMethods:
         if module_name in self._dynamic_modules:
             return
         module_path = self._cache.get_path(res_hash)
-        module = imp.load_source(module_name, module_path)
+        module_loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+        module = module_loader.load_module()
         self._dynamic_modules[module_name] = module
 
     def init_cls(self, cls_name, module_name, args, kwargs):
