@@ -102,8 +102,13 @@ class MPTCPRecipe(
                 f"ip route add {self.params.net1_ipv4} dev {host1.eth1.name}"
                 f" via {save_addrs[host2.eth1][AF_INET]} prio 10000"
             )
-            # Need to disable rp_filter on server side
-            host2.run("sysctl -w net.ipv4.conf.all.rp_filter=0")
+
+            # allow hosts to respond to packets on a different interface
+            # than the one the packet originated from
+            for host in hosts:
+                host.run("sysctl -w net.ipv4.conf.all.rp_filter=0")
+                host.run(f"sysctl -w net.ipv4.conf.{host.eth0.name}.rp_filter=0")
+                host.run(f"sysctl -w net.ipv4.conf.{host.eth1.name}.rp_filter=0")
 
         if "ipv6" in self.params.ip_versions:
             host1.mptcp.add_endpoints(config.ips_for_device(host1.eth1, family=AF_INET6), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
@@ -111,9 +116,11 @@ class MPTCPRecipe(
                 f"ip route add {self.params.net1_ipv6} dev {host1.eth1.name}"
                 f" via {save_addrs[host2.eth1][AF_INET6]} prio 10000"
             )
-            # ipv6 doesnt have rp_filter
 
-        # Configure limits
+            # TODO: For IPv6, rp_filter should be disabled via firewalld or ip6tables
+            # see https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/security_guide/sec-securing_network_access#sect-Security_Guide-Server_Security-Reverse_Path_Forwarding
+
+        # set additional mptcp subflows to 1
         host1.mptcp.subflows = 1
         host2.mptcp.subflows = 1
 
@@ -136,17 +143,15 @@ class MPTCPRecipe(
 
         return desc
 
-    def test_wide_deconfiguration(self, config: EnrtConfiguration):
-        """
-
-        :param config:
-        :return:
-        """
+    def test_wide_deconfiguration(self, config: EnrtConfiguration) -> None:
         for ep_dev in config.configured_devices:
             ep_dev.netns.mptcp.delete_all()
 
-        #reset rp_filter
-        self.matched.host2.run("sysctl -w net.ipv4.conf.all.rp_filter=1")
+        # use strict mode
+        for host in [self.matched.host1, self.matched.host2]:
+            host.run("sysctl -w net.ipv4.conf.all.rp_filter=1")
+            host.run(f"sysctl -w net.ipv4.conf.{host.eth0.name}.rp_filter=1")
+            host.run(f"sysctl -w net.ipv4.conf.{host.eth1.name}.rp_filter=1")
 
         super().test_wide_deconfiguration(config)
 
