@@ -6,7 +6,7 @@ from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Host import Host
-from lnst.RecipeCommon.MPTCPManager import MPTCPManager, MPTCPFlags
+from lnst.RecipeCommon.MPTCPManager import MPTCPManager
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
@@ -96,7 +96,11 @@ class MPTCPRecipe(
 
         # Configure endpoints only host1.eth1
         if "ipv4" in self.params.ip_versions:
-            host1.mptcp.add_endpoints(config.ips_for_device(host1.eth1, family=AF_INET), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
+            host1.run(
+                f"ip mptcp endpoint add {save_addrs[host1.eth1][AF_INET]}"
+                f" dev {host1.eth1.name} subflow"
+            )
+
             # Need route on client side to populate forwarding table
             host1.run(
                 f"ip route add {self.params.net1_ipv4} dev {host1.eth1.name}"
@@ -111,7 +115,10 @@ class MPTCPRecipe(
                 host.run(f"sysctl -w net.ipv4.conf.{host.eth1.name}.rp_filter=0")
 
         if "ipv6" in self.params.ip_versions:
-            host1.mptcp.add_endpoints(config.ips_for_device(host1.eth1, family=AF_INET6), flags=MPTCPFlags.MPTCP_PM_ADDR_FLAG_SUBFLOW)
+            host1.run(
+                f"ip mptcp endpoint add {save_addrs[host1.eth1][AF_INET6]}"
+                f" dev {host1.eth1.name} subflow"
+            )
             host1.run(
                 f"ip route add {self.params.net1_ipv6} dev {host1.eth1.name}"
                 f" via {save_addrs[host2.eth1][AF_INET6]} prio 10000"
