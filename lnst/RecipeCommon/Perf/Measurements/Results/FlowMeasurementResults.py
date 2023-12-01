@@ -141,7 +141,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
         desc = []
         desc.append(str(self.flow))
         desc.append(
-            "Generator measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
+            "Generator measured throughput (generator_results): {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=generator.average,
                 deviation=generator.std_deviation,
                 percentage=self._deviation_percentage(generator),
@@ -149,14 +149,14 @@ class FlowMeasurementResults(BaseMeasurementResults):
             )
         )
         desc.append(
-            "Generator process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second.".format(
+            "Generator process CPU data (generator_cpu_stats): {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second.".format(
                 cpu=generator_cpu.average,
                 cpu_deviation=generator_cpu.std_deviation,
                 cpu_unit=generator_cpu.unit,
             )
         )
         desc.append(
-            "Receiver measured throughput: {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
+            "Receiver measured throughput (receiver_results): {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=receiver.average,
                 deviation=receiver.std_deviation,
                 percentage=self._deviation_percentage(receiver),
@@ -164,7 +164,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
             )
         )
         desc.append(
-            "Receiver process CPU data: {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second.".format(
+            "Receiver process CPU data (receiver_cpu_stats): {cpu:.2f} +-{cpu_deviation:.2f} {cpu_unit} per second.".format(
                 cpu=receiver_cpu.average,
                 cpu_deviation=receiver_cpu.std_deviation,
                 cpu_unit=receiver_cpu.unit,

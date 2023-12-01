@@ -52,7 +52,7 @@ class TcRunMeasurementResults(BaseMeasurementResults):
                f" tc run with {self.rule_install_rate.value} rules" \
                f" num_instances={self.measurement.num_instances}" \
                f" took {self.rule_install_rate.duration} seconds " \
-               f"({self.rule_install_rate.average} rules/sec)"
+               f"(rule_install_rate={self.rule_install_rate.average} rules/sec)"
 
     @property
     def time_taken(self):
