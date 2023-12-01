@@ -41,12 +41,12 @@ class XDPBenchMeasurementResults(FlowMeasurementResults):
         desc = []
         desc.append(str(self.flow))
         desc.append(
-            "Generator generated: {tput:,f} {unit} per second.".format(
+            "Generator generated (generator_results): {tput:,f} {unit} per second.".format(
                 tput=generator.average, unit=generator.unit
             )
         )
         desc.append(
-            "Receiver processed: {tput:,f} {unit} per second.".format(
+            "Receiver processed (receiver_results): {tput:,f} {unit} per second.".format(
                 tput=receiver.average, unit=receiver.unit
             )
         )
