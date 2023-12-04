@@ -19,8 +19,8 @@ include = ["schema-am.rng", "install/*", "lnst-ctl.conf"]
 [tool.poetry.dependencies]
 python = "^3.9"
 lxml = "*"
-ethtool = "*"
-pyroute2 = "*"
+ethtool = {version = "*", platform = 'linux'}
+pyroute2 = {version = "*", platform = 'linux'}
 
 libvirt-python = {version = "*", optional = true }
 podman = {version = "*", optional = true }

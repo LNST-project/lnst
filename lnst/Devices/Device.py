@@ -12,13 +12,10 @@ olichtne@redhat.com (Ondrej Lichtner)
 """
 
 import re
-import ethtool
-import pyroute2
 import logging
 import pprint
 import time
 from abc import ABCMeta
-from pyroute2.netlink.rtnl import ifinfmsg
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
@@ -27,10 +24,6 @@ from lnst.Common.DeviceError import DeviceFeatureNotSupported
 from lnst.Common.IpAddress import ipaddress, AF_INET
 from lnst.Common.HWAddress import hwaddress
 from lnst.Common.Utils import wait_for_condition
-
-from pyroute2.netlink.rtnl import RTM_NEWLINK
-from pyroute2.netlink.rtnl import RTM_NEWADDR
-from pyroute2.netlink.rtnl import RTM_DELADDR
 
 TOGGLE_STATE_TIMEOUT = 15 + 3  # as a reserve
 
@@ -55,6 +48,20 @@ class Device(object, metaclass=DeviceMeta):
     """
 
     def __init__(self, if_manager):
+        import ethtool
+        import pyroute2
+        global ethtool
+        global pyroute2
+
+        from pyroute2.netlink.rtnl import ifinfmsg
+        from pyroute2.netlink.rtnl import RTM_NEWLINK
+        from pyroute2.netlink.rtnl import RTM_NEWADDR
+        from pyroute2.netlink.rtnl import RTM_DELADDR
+        global ifinfmsg
+        global RTM_NEWLINK
+        global RTM_NEWADDR
+        global RTM_DELADDR
+
         self.ifindex = None
         self._nl_msg = None
         self._devlink = None

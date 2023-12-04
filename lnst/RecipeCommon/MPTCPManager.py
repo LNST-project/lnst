@@ -1,7 +1,6 @@
 from enum import IntFlag
 from typing import Dict, List
 
-from pyroute2 import MPTCP
 from socket import AF_INET, AF_INET6
 from lnst.Common.IpAddress import ipaddress, BaseIpAddress
 
@@ -78,6 +77,8 @@ class MPTCPEndpoint:
 
 class MPTCPManager:
     def __init__(self):
+        from pyroute2 import MPTCP
+
         self._mptcp = MPTCP()
         self._endpoints = {}
 
