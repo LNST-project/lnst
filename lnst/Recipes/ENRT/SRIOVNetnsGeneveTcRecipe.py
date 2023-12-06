@@ -64,7 +64,7 @@ class SRIOVNetnsGeneveTcRecipe(
                 dst_port=6081,
             )
 
-            for dev in [host.newns.vf_eth0, host.vf_representor_eth0]:
+            for dev in host.sriov_devices[0]:
                 # TODO: support IPv6
                 dev.mtu = 1442
 
@@ -81,30 +81,34 @@ class SRIOVNetnsGeneveTcRecipe(
         config.ingress_devices = []
         # tc configuration
         for host in [host1, host2]:
+            vf_representor = host.sriov_devices.vf_reps[0]
             host.run(f"tc qdisc add dev {host.eth0.name} ingress")
-            host.run(f"tc qdisc add dev {host.vf_representor_eth0.name} ingress")
+            host.run(f"tc qdisc add dev {vf_representor.name} ingress")
             host.run(f"tc qdisc add dev {host.gnv10.name} ingress")
-            config.ingress_devices.extend([host.eth0, host.vf_representor_eth0, host.gnv10])
+            config.ingress_devices.extend([host.eth0, vf_representor, host.gnv10])
+
+        host1_vf_dev, host1_vf_rep_dev = host1.sriov_devices[0]
+        host2_vf_dev, host2_vf_rep_dev = host2.sriov_devices[0]
 
         # encap rules
         # host1
         host1.run(
-            f"tc filter add dev {host1.vf_representor_eth0.name} protocol ip ingress prio 1 "
-            f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
+            f"tc filter add dev {host1_vf_rep_dev.name} protocol ip ingress prio 1 "
+            f"flower src_mac {host1_vf_dev.hwaddr} dst_mac {host2_vf_dev.hwaddr} "
             f"action tunnel_key set src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"dst_port 6081 id 10 "
             f"action mirred egress redirect dev {host1.gnv10.name} "
         )
         host1.run(
-            f"tc filter add dev {host1.vf_representor_eth0.name} protocol arp ingress prio 2 "
-            f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
+            f"tc filter add dev {host1_vf_rep_dev.name} protocol arp ingress prio 2 "
+            f"flower src_mac {host1_vf_dev.hwaddr} dst_mac {host2_vf_dev.hwaddr} "
             f"action tunnel_key set src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"dst_port 6081 id 10 "
             f"action mirred egress redirect dev {host1.gnv10.name} "
         )
         host1.run(
-            f"tc filter add dev {host1.vf_representor_eth0.name} protocol arp ingress prio 3 "
-            f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
+            f"tc filter add dev {host1_vf_rep_dev.name} protocol arp ingress prio 3 "
+            f"flower src_mac {host1_vf_dev.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
             f"action tunnel_key set src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"dst_port 6081 id 10 "
             f"action mirred egress redirect dev {host1.gnv10.name} "
@@ -112,22 +116,22 @@ class SRIOVNetnsGeneveTcRecipe(
 
         # host2
         host2.run(
-            f"tc filter add dev {host2.vf_representor_eth0.name} protocol ip ingress prio 1  "
-            f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr}  "
+            f"tc filter add dev {host2_vf_rep_dev.name} protocol ip ingress prio 1  "
+            f"flower src_mac {host2_vf_dev.hwaddr} dst_mac {host1_vf_dev.hwaddr}  "
             f"action tunnel_key set src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"dst_port 6081 id 10 "
             f"action mirred egress redirect dev {host2.gnv10.name} "
         )
         host2.run(
-            f"tc filter add dev {host2.vf_representor_eth0.name} protocol arp ingress prio 2 "
-            f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr} "
+            f"tc filter add dev {host2_vf_rep_dev.name} protocol arp ingress prio 2 "
+            f"flower src_mac {host2_vf_dev.hwaddr} dst_mac {host1_vf_dev.hwaddr} "
             f"action tunnel_key set src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"dst_port 6081 id 10 "
             f"action mirred egress redirect dev {host2.gnv10.name} "
         )
         host2.run(
-            f"tc filter add dev {host2.vf_representor_eth0.name} protocol arp ingress prio 3 "
-            f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
+            f"tc filter add dev {host2_vf_rep_dev.name} protocol arp ingress prio 3 "
+            f"flower src_mac {host2_vf_dev.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
             f"action tunnel_key set src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"dst_port 6081 id 10 "
             f"action mirred egress redirect dev {host2.gnv10.name} "
@@ -137,79 +141,79 @@ class SRIOVNetnsGeneveTcRecipe(
         # host1
         host1.run(
             f"tc filter add dev {host1.gnv10.name} protocol ip ingress prio 1 "
-            f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr} "
+            f"flower src_mac {host2_vf_dev.hwaddr} dst_mac {host1_vf_dev.hwaddr} "
             f"enc_src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 6081 enc_key_id 10 "
             f"action tunnel_key unset "
-            f"action mirred egress redirect dev {host1.vf_representor_eth0.name} "
+            f"action mirred egress redirect dev {host1_vf_rep_dev.name} "
         )
         host1.run(
             f"tc filter add dev {host1.gnv10.name} protocol arp ingress prio 2 "
-            f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac {host1.newns.vf_eth0.hwaddr} "
+            f"flower src_mac {host2_vf_dev.hwaddr} dst_mac {host1_vf_dev.hwaddr} "
             f"enc_src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 6081 enc_key_id 10 "
             f"action tunnel_key unset "
-            f"action mirred egress redirect dev {host1.vf_representor_eth0.name} "
+            f"action mirred egress redirect dev {host1_vf_rep_dev.name} "
         )
         host1.run(
             f"tc filter add dev {host1.gnv10.name} protocol arp ingress prio 3 "
-            f"flower src_mac {host2.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
+            f"flower src_mac {host2_vf_dev.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
             f"enc_src_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 6081 enc_key_id 10 "
             f"action tunnel_key unset "
-            f"action mirred egress redirect dev {host1.vf_representor_eth0.name} "
+            f"action mirred egress redirect dev {host1_vf_rep_dev.name} "
         )
 
         # host2
         host2.run(
             f"tc filter add dev {host2.gnv10.name} protocol ip ingress prio 1 "
-            f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
+            f"flower src_mac {host1_vf_dev.hwaddr} dst_mac {host2_vf_dev.hwaddr} "
             f"enc_src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 6081 enc_key_id 10 "
             f"action tunnel_key unset "
-            f"action mirred egress redirect dev {host2.vf_representor_eth0.name} "
+            f"action mirred egress redirect dev {host2_vf_rep_dev.name} "
         )
         host2.run(
             f"tc filter add dev {host2.gnv10.name} protocol arp ingress prio 2 "
-            f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac {host2.newns.vf_eth0.hwaddr} "
+            f"flower src_mac {host1_vf_dev.hwaddr} dst_mac {host2_vf_dev.hwaddr} "
             f"enc_src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 6081 enc_key_id 10 "
             f"action tunnel_key unset "
-            f"action mirred egress redirect dev {host2.vf_representor_eth0.name} "
+            f"action mirred egress redirect dev {host2_vf_rep_dev.name} "
         )
         host2.run(
             f"tc filter add dev {host2.gnv10.name} protocol arp ingress prio 3 "
-            f"flower src_mac {host1.newns.vf_eth0.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
+            f"flower src_mac {host1_vf_dev.hwaddr} dst_mac ff:ff:ff:ff:ff:ff "
             f"enc_src_ip {config.ips_for_device(host1.eth0, family=AF_INET)[0]} enc_dst_ip {config.ips_for_device(host2.eth0, family=AF_INET)[0]} "
             f"enc_dst_port 6081 enc_key_id 10 "
             f"action tunnel_key unset "
-            f"action mirred egress redirect dev {host2.vf_representor_eth0.name} "
+            f"action mirred egress redirect dev {host2_vf_rep_dev.name} "
         )
 
     @property
     def dump_tc_rules_devices(self):
-        return [dev for host in self.matched for dev in [host.gnv10, host.vf_representor_eth0]]
+        return [dev for host in self.matched for dev in [host.gnv10, host.sriov_devices.vf_reps[0]]]
 
     @property
     def pause_frames_dev_list(self):
-        return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
+        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 
     @property
     def offload_nics(self):
-        return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
+        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 
     @property
     def mtu_hw_config_dev_list(self):
-        return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
+        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 
     @property
     def coalescing_hw_config_dev_list(self):
-        return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
+        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 
     @property
     def dev_interrupt_hw_config_dev_list(self):
-        return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
+        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 
     @property
     def parallel_stream_qdisc_hw_config_dev_list(self):
-        return [self.matched.host1.newns.vf_eth0, self.matched.host2.newns.vf_eth0]
+        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
