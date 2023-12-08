@@ -935,7 +935,7 @@ class Device(object, metaclass=DeviceMeta):
         try:
             return m.group(1)
         except AttributeError:
-            raise DeviceError(f"Could not parse device {self.name} eswitch mode")
+            raise DeviceFeatureNotSupported(f"Could not parse device {self.name} eswitch mode")
 
     @eswitch_mode.setter
     def eswitch_mode(self, mode):
