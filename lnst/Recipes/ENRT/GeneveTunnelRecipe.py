@@ -18,16 +18,14 @@ from lnst.Common.Parameters import (
 )
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
-)
-from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
-    PauseFramesHWConfigMixin,
 )
 
 
 class GeneveTunnelRecipe(
-    PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a simple Geneve tunnel
@@ -201,4 +199,20 @@ class GeneveTunnelRecipe(
 
     @property
     def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.gnv_tunnel, self.matched.host2.gnv_tunnel]
+
+    @property
+    def coalescing_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]

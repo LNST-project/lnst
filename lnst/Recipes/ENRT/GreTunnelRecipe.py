@@ -14,19 +14,14 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
-from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import (
-    MTUHWConfigMixin,
-)
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
-)
-from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
-    PauseFramesHWConfigMixin,
 )
 
 
 class GreTunnelRecipe(
-    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a simple GRE tunnel between
@@ -198,3 +193,15 @@ class GreTunnelRecipe(
     @property
     def mtu_hw_config_dev_list(self):
         return [self.matched.host1.gre_tunnel, self.matched.host2.gre_tunnel]
+
+    @property
+    def coalescing_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
