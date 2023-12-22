@@ -1,5 +1,6 @@
 from collections.abc import Collection
 from lnst.Common.Parameters import (
+    Param,
     IntParam,
     StrParam,
     IPv4NetworkParam,
@@ -12,13 +13,16 @@ from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
-from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubConfigMixin
+from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
+    OffloadSubConfigMixin,
+)
 from lnst.Devices import BondDevice, BridgeDevice
 from lnst.Devices.BridgeDevice import BridgeDevice as BridgeDeviceType
 from lnst.Devices.BondDevice import BondDevice as BondDeviceType
 
 
-class LinuxBridgeOverBondRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
+class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe):
     """
     This recipe implements Enrt testing for a network scenario that looks
     as follows
@@ -44,6 +48,9 @@ class LinuxBridgeOverBondRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
     """
+    offload_combinations = Param(
+        default=(dict(gro="on", gso="on", tso="on", tx="on"),)
+    )
 
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -166,5 +173,28 @@ class LinuxBridgeOverBondRecipe(MTUHWConfigMixin, BaremetalEnrtRecipe):
         return [ip_endpoint_pairs(config, (self.matched.host1.br0, self.matched.host2.br0))]
 
     @property
-    def mtu_hw_config_dev_list(self):
+    def pause_frames_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def offload_nics(self):
+        return [self.matched.host1.bond0, self.matched.host2.bond0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.bond0, self.matched.host2.bond0]
+
+    @property
+    def coalescing_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+        return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+        return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]
+
+    @property
+    def parallel_stream_qdisc_hw_config_dev_list(self):
+        host1, host2 = self.matched.host1, self.matched.host2
+        return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]
