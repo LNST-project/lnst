@@ -44,6 +44,9 @@ class JobContext(object):
         else:
             return None
 
+    def pop_job(self, id: int) -> "Job":
+        return self._dict.pop(id)
+
     def _kill_all_jobs(self):
         for id in self._dict:
             if not self._dict[id]._finished:
@@ -52,7 +55,6 @@ class JobContext(object):
     def cleanup(self):
         logging.debug("Cleaning up leftover processes.")
         self._kill_all_jobs()
-        self._dict = {}
 
     def get_parent_pipes(self):
         pipes = {}
