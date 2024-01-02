@@ -1061,13 +1061,11 @@ class Agent:
             self._job_context.del_cmd(job)
             self._server_handler.send_data_to_ctl(msg)
         elif msg["type"] == "job_finished":
-            job = self._job_context.get_job(msg["job_id"])
+            job = self._job_context.pop_job(msg["job_id"])
             job.join()
 
             job.set_finished(msg["result"])
             self._server_handler.send_data_to_ctl(msg)
-
-            self._job_context.del_job(job)
 
         elif msg["type"] == "from_netns":
             msg["data"]["netns"] = msg["netns"]
