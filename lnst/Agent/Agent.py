@@ -404,12 +404,12 @@ class RemoteMethods:
 
     def kill_jobs(self):
         logging.info("Killing all forked processes.")
-        self._job_context.cleanup()
+        self._job_context.kill_all_jobs()
         return "Commands killed"
 
     def machine_cleanup(self):
         logging.info("Performing machine cleanup.")
-        self._job_context.cleanup()
+        self._job_context.kill_all_jobs()
 
         self.restore_system_config()
 
