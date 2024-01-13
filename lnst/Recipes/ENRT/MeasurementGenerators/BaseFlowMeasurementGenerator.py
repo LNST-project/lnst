@@ -147,16 +147,16 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         for endpoint_pair in endpoint_pairs:
             client, server = endpoint_pair
             for i in range(self.params.perf_parallel_processes):
-                port = next(port_iter)
+                server_port = client_port = next(port_iter)
                 flows.append(
                     self._create_perf_flow(
                         perf_test,
                         client.device,
                         client.address,
-                        port,
+                        client_port if perf_test != "mptcp_stream" else None,
                         server.device,
                         server.address,
-                        port,
+                        server_port,
                         msg_size,
                         self.generator_cpupin(i),
                         self.receiver_cpupin(i),
