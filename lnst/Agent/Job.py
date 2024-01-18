@@ -96,7 +96,7 @@ class Job(object):
 
         os.setpgrp()
         signal.signal(signal.SIGHUP, signal.SIG_DFL)
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        signal.signal(signal.SIGINT, signal.default_int_handler)
         signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
         self._log_ctl.disable_logging()
