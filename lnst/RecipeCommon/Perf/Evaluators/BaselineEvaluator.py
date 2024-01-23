@@ -17,9 +17,9 @@ class MetricComparison:
     measurement_type: str
     current_result: PerfMeasurementResults
     baseline_result: Optional[PerfMeasurementResults]
-    threshold: float
+    threshold: Optional[float]
     metric_name: str
-    difference: float
+    difference: Optional[float]
     comparison_result: ResultType
     text: str
 
