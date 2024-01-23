@@ -1,4 +1,5 @@
 import time
+import logging
 from typing import List, Dict, Tuple
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller.Job import Job
@@ -45,6 +46,21 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
 
         self._running_measurements = test_flows
 
+    def simulate_start(self):
+        if len(self._running_measurements) > 0:
+            raise MeasurementError("Measurement already running!")
+
+        test_flows = self._prepare_test_flows(self.flows)
+
+        result = None
+        for flow in test_flows:
+            flow.server_job = flow.server_job.netns.run('echo simulated start', bg=True)
+
+        for flow in test_flows:
+            flow.client_job = flow.client_job.netns.run('echo simulated start', bg=True)
+
+        self._running_measurements = test_flows
+
     def finish(self):
         test_flows = self._running_measurements
         try:
@@ -56,6 +72,17 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
             for flow in test_flows:
                 flow.server_job.kill()
                 flow.client_job.kill()
+
+        self._running_measurements = []
+        self._finished_measurements = test_flows
+
+    def simulate_finish(self):
+        logging.info("Simulating minimal 1s measurement duration")
+        time.sleep(1)
+        test_flows = self._running_measurements
+        for flow in test_flows:
+            flow.client_job.wait()
+            flow.server_job.wait()
 
         self._running_measurements = []
         self._finished_measurements = test_flows

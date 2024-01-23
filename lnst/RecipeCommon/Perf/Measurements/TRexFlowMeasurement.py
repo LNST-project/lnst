@@ -1,6 +1,7 @@
 import time
 import signal
 import re
+import logging
 from lnst.Controller.RecipeResults import ResultLevel
 
 from lnst.RecipeCommon.Perf.Results import PerfInterval
@@ -67,6 +68,21 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
 
         self._running_measurements = tests
 
+    def simulate_start(self):
+        if len(self._running_measurements) > 0:
+            raise MeasurementError("Measurement already running!")
+
+        tests = self._prepare_tests(self._flows)
+
+        result = None
+        for test in tests:
+            test.server_job = test.server_job.netns.run("echo simulated start", bg=True)
+
+        for test in tests:
+            test.client_job = test.client_job.netns.run("echo simulated start", bg=True)
+
+        self._running_measurements = tests
+
     def finish(self):
         tests = self._running_measurements
         try:
@@ -80,6 +96,17 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
             for test in tests:
                 test.server_job.kill()
                 test.client_job.kill()
+
+        self._running_measurements = []
+        self._finished_measurements = tests
+
+    def simulate_finish(self):
+        logging.info("Simulating minimal 1s measurement duration")
+        time.sleep(1)
+        tests = self._running_measurements
+        for test in tests:
+            test.client_job.wait()
+            test.server_job.wait()
 
         self._running_measurements = []
         self._finished_measurements = tests

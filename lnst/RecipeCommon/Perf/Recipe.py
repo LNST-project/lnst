@@ -24,15 +24,21 @@ class RecipeConf(object):
         measurements: List[BaseMeasurement],
         iterations: int,
         parent_recipe_config: Any = None,
+        simulate_measurements: bool = False,
     ):
         self._measurements = measurements
         self._evaluators = dict()
         self._iterations = iterations
         self._parent_recipe_config = parent_recipe_config
+        self._simulate_measurements = simulate_measurements
 
     @property
     def measurements(self):
         return self._measurements
+
+    @property
+    def simulate_measurements(self):
+        return self._simulate_measurements
 
     @property
     def evaluators(self):
@@ -167,11 +173,23 @@ class Recipe(
 
         try:
             for measurement in recipe_conf.measurements:
-                measurement.start()
+                if recipe_conf.simulate_measurements:
+                    logging.info(f"Simulating start of measurement {measurement}")
+                    measurement.simulate_start()
+                else:
+                    measurement.start()
             for measurement in reversed(recipe_conf.measurements):
-                measurement.finish()
+                if recipe_conf.simulate_measurements:
+                    logging.info(f"Simulating finish of measurement {measurement}")
+                    measurement.simulate_finish()
+                else:
+                    measurement.finish()
             for measurement in recipe_conf.measurements:
-                measurement_results = measurement.collect_results()
+                if recipe_conf.simulate_measurements:
+                    logging.info(f"Simulating result collection of measurement {measurement}")
+                    measurement_results = measurement.collect_simulated_results()
+                else:
+                    measurement_results = measurement.collect_results()
                 results.add_measurement_results(
                     measurement, measurement_results
                 )

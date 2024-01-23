@@ -17,11 +17,20 @@ class BaseMeasurement(object):
     def start(self):
         raise NotImplementedError()
 
+    def simulate_start(self):
+        return self.start()
+
     def finish(self):
         raise NotImplementedError()
 
+    def simulate_finish(self):
+        return self.finish()
+
     def collect_results(self):
         raise NotImplementedError()
+
+    def collect_simulated_results(self):
+        return self.collect_results()
 
     @classmethod
     def report_results(cls, recipe, results):

@@ -1,5 +1,6 @@
 from typing import Any, Optional
 import time
+import logging
 
 from lnst.Controller.Job import Job
 from lnst.Controller.Recipe import BaseRecipe
@@ -41,6 +42,16 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
         for endpoint_test in self._endpoint_tests:
             endpoint_test.client_job.start(bg=True)
 
+    def simulate_start(self):
+        self._endpoint_tests.extend(self._prepare_endpoint_tests())
+
+        for endpoint_test in self._endpoint_tests:
+            endpoint_test.server_job = endpoint_test.server_job.netns.run("echo simulated start", bg=True)
+
+        self._start_timestamp = time.time()
+        for endpoint_test in self._endpoint_tests:
+            endpoint_test.client_job = endpoint_test.client_job.netns.run("echo simulated start", bg=True)
+
     def finish(self) -> None:
         try:
             for endpoint_test in self._endpoint_tests:
@@ -51,6 +62,11 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
             for endpoint_test in self._endpoint_tests:
                 endpoint_test.client_job.kill()
                 endpoint_test.server_job.kill()
+
+    def simulate_finish(self):
+        logging.info("Simulating minimal 1s measurement duration")
+        time.sleep(1)
+        self.finish()
 
     def collect_results(self) -> list[RDMABandwidthMeasurementResults]:
         results: list[RDMABandwidthMeasurementResults] = []
