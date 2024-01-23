@@ -6,7 +6,7 @@ from lnst.Recipes.ENRT.BasePvPRecipe import BasePvPTestConf, BasePvPRecipe
 from lnst.Recipes.ENRT.BasePvPRecipe import VirtioDevice, VirtioType
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.Logs import log_exc_traceback
-from lnst.Common.Parameters import IntParam, Param, StrParam, IPv4NetworkParam
+from lnst.Common.Parameters import IntParam, Param, StrParam, IPv4NetworkParam, BoolParam
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
 
@@ -63,6 +63,8 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
 
     #doesn't do anything for now...
     perf_streams = IntParam(default=1)
+
+    perf_test_simulation = BoolParam(default=False)
 
     def test(self):
         self.check_dependencies()
@@ -173,6 +175,7 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
                 flows_measurement,
             ],
             iterations=self.params.perf_iterations,
+            simulate_measurements=self.params.perf_test_simulation,
         )
         perf_conf.register_evaluators(cpu_measurement, self.cpu_perf_evaluators)
         perf_conf.register_evaluators(flows_measurement, self.net_perf_evaluators)

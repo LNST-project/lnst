@@ -3,7 +3,7 @@ import time
 from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
-from lnst.Common.Parameters import ListParam, StrParam, IntParam, ChoiceParam
+from lnst.Common.Parameters import ListParam, StrParam, IntParam, ChoiceParam, BoolParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
 from lnst.RecipeCommon import BaseResultEvaluator
@@ -40,6 +40,8 @@ class TrafficControlRecipe(PerfRecipe):
         default="off",
     )
 
+    perf_test_simulation = BoolParam(default=False)
+
     def test(self):
         with self._test_wide_context() as config:
             self.do_tc_test_perf_recipe(config)
@@ -67,6 +69,7 @@ class TrafficControlRecipe(PerfRecipe):
         config = TcRecipeConfiguration(
            measurements=[cpu_measurement, measurement],
            iterations=1,
+           simulate_measurements=self.params.perf_test_simulation,
        )
         config.register_evaluators(measurement, self.tc_run_evaluators)
 

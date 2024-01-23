@@ -1,3 +1,6 @@
+import time
+import logging
+
 from lnst.RecipeCommon.Perf.Measurements.Results.AggregatedXDPBenchMeasurementResults import (
     AggregatedXDPBenchMeasurementResults,
 )
@@ -42,6 +45,16 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
         for flow in net_flows:
             flow.server_job.start(bg=True)
             flow.client_job.start(bg=True)
+            # server starts immediately, no need to wait
+            self._running_measurements.append(flow)
+
+        self._running_measurements = net_flows
+
+    def simulate_start(self):
+        net_flows = self._prepare_flows()
+        for flow in net_flows:
+            flow.server_job = flow.server_job.netns.run("echo simulated start", bg=True)
+            flow.client_job = flow.client_job.netns.run("echo simulated start", bg=True)
             # server starts immediately, no need to wait
             self._running_measurements.append(flow)
 
@@ -94,6 +107,15 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
             for flow in self._running_measurements:
                 flow.server_job.kill()
                 flow.client_job.kill()
+        self._finished_measurements = self._running_measurements
+        self._running_measurements = []
+
+    def simulate_finish(self):
+        logging.info("Simulating minimal 1s measurement duration")
+        time.sleep(1)
+        for flow in self._running_measurements:
+            flow.server_job.wait()
+            flow.client_job.wait()
         self._finished_measurements = self._running_measurements
         self._running_measurements = []
 

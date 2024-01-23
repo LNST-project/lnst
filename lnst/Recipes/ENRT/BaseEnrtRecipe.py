@@ -165,6 +165,12 @@ class BaseEnrtRecipe(
         specify how many times should each performance measurement be repeated
         to generate cumulative results which can be statistically analyzed.
     :type perf_iterations: :any:`IntParam` (default 5)
+
+    :param perf_test_simulation:
+        Parameter that will switch the performance testing into a simulation
+        mode only - no measurements will actually be started and they'll simply
+        generate 0 value measurement results as if they ran
+    :type perf_test_simulation: :any:`BoolParam` (default False)
     """
 
     driver = StrParam()
@@ -181,6 +187,7 @@ class BaseEnrtRecipe(
 
     # generic perf test params
     perf_iterations = IntParam(default=5)
+    perf_test_simulation = BoolParam(default=False)
 
     def test(self):
         """Main test loop shared by all the Enrt recipes
@@ -440,6 +447,7 @@ class BaseEnrtRecipe(
                 measurements=measurements,
                 iterations=self.params.perf_iterations,
                 parent_recipe_config=copy.deepcopy(config),
+                simulate_measurements=self.params.perf_test_simulation,
             )
             self.register_perf_evaluators(perf_conf)
 

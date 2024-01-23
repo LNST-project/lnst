@@ -1,3 +1,4 @@
+import time
 import logging
 from tempfile import NamedTemporaryFile
 from typing import Optional
@@ -151,6 +152,16 @@ class TcRunMeasurement(BaseMeasurement):
             job.start(bg=True)
             self._running_jobs.append(job)
 
+    def simulate_start(self):
+        if len(self._running_jobs) > 0:
+            raise MeasurementError("Measurement already running!")
+
+        jobs = self._prepare_jobs()
+
+        for job in jobs:
+            job = job.netns.run("echo simulated start", bg=True)
+            self._running_jobs.append(job)
+
     def _prepare_jobs(self) -> list[Job]:
         params: dict = {
             "batchfiles": [i.batchfile_path for i in self.instance_configs],
@@ -175,6 +186,11 @@ class TcRunMeasurement(BaseMeasurement):
                 job.kill()
         self._running_jobs = []
         self._finished_jobs = jobs
+
+    def simulate_finish(self):
+        logging.info("Simulating minimal 1s measurement duration")
+        time.sleep(1)
+        self.finish()
 
     def _make_instances_cfgs(self) -> list[TcRunInstance]:
         #TODO perhaps make this be something the recipe or a ResultGenerator creates
@@ -203,6 +219,17 @@ class TcRunMeasurement(BaseMeasurement):
         )
         run_result.run_success = job.passed
 
+        return [run_result]
+
+    def collect_simulated_results(self):
+        run_result = TcRunMeasurementResults(
+            measurement=self,
+            device=self.device,
+        )
+        run_result.rule_install_rate = ParallelPerfResult(
+            [PerfInterval(0, 1, "rules", time.time())]
+        )
+        run_result.run_success = True
         return [run_result]
 
     def _get_instance_interval(self, instance_data: dict):

@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 import textwrap
 from typing import Optional, Union
@@ -10,6 +11,8 @@ from lnst.Devices import Device
 from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementError
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.Results import FlowMeasurementResults, AggregatedFlowMeasurementResults
+from lnst.RecipeCommon.Perf.Results import PerfInterval
+from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 from lnst.RecipeCommon.Perf.Results import ParallelPerfResult
 
 
@@ -184,3 +187,44 @@ class BaseFlowMeasurement(BaseMeasurement):
             aggregated_result.add_results(parallel_result)
 
         return [aggregated_result]
+
+    def collect_simulated_results(self):
+        res = []
+        for test_flow in self.flows:
+            flow_results = FlowMeasurementResults(
+                measurement=self,
+                flow=test_flow,
+                warmup_duration=test_flow.warmup_duration,
+            )
+            flow_results.generator_results = ParallelPerfResult(
+                [
+                    SequentialPerfResult(
+                        [PerfInterval(0, 1, "bits", time.time())]
+                        * (test_flow.warmup_duration * 2 + test_flow.duration)
+                    )
+                ]
+            )
+            flow_results.generator_cpu_stats = PerfInterval(
+                0,
+                (test_flow.warmup_duration * 2 + test_flow.duration),
+                "cpu_percent",
+                time.time(),
+            )
+
+            flow_results.receiver_results = ParallelPerfResult(
+                [
+                    SequentialPerfResult(
+                        [PerfInterval(0, 1, "bits", time.time())]
+                        * (test_flow.warmup_duration * 2 + test_flow.duration)
+                    )
+                ]
+            )
+            flow_results.receiver_cpu_stats = PerfInterval(
+                0,
+                (test_flow.warmup_duration * 2 + test_flow.duration),
+                "cpu_percent",
+                time.time(),
+            )
+
+            res.append(flow_results)
+        return res
