@@ -75,7 +75,7 @@ class OffloadSubConfigMixin(BaseSubConfigMixin):
         offload_settings = getattr(config, "offload_settings", None)
         if offload_settings:
             ethtool_offload_string = ""
-            for name, value in list(offload_settings.items()):
+            for name in offload_settings.keys():
                 ethtool_offload_string += " %s %s" % (name, "on")
 
             for nic in self.offload_nics:

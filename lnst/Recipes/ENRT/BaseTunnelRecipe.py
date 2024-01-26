@@ -1,11 +1,11 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 
 from lnst.Devices import RemoteDevice
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.RecipeCommon.PacketAssert import PacketAssertTestAndEvaluate
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 
 
 class BaseTunnelRecipe(
@@ -144,11 +144,11 @@ class BaseTunnelRecipe(
         """
         raise NotImplementedError
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for recipes derived from this class are usually
         the tunnel endpoints. The derived class can override the endpoints
         if needed.
         """
         dev1, dev2 = config.tunnel_devices
-        return [ip_endpoint_pairs(config, (dev1, dev2))]
+        yield ip_endpoint_pairs(config, (dev1, dev2))

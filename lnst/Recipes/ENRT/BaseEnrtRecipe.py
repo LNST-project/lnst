@@ -1,9 +1,8 @@
 import pprint
 import copy
 from contextlib import contextmanager
-from typing import Literal, Optional
+from collections.abc import Iterator
 
-from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -11,10 +10,11 @@ from lnst.Common.Parameters import (
     BoolParam,
     FloatParam,
 )
-from lnst.Common.IpAddress import AF_INET, AF_INET6, BaseIpAddress
+from lnst.Common.IpAddress import Ip6Address
 from lnst.Controller.RecipeResults import ResultType
-from lnst.Devices import RemoteDevice
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import BaseSubConfigMixin
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
     BaseMeasurementGenerator,
 )
@@ -26,44 +26,7 @@ from lnst.RecipeCommon.Perf.Measurements.BaseCPUMeasurement import BaseCPUMeasur
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 from lnst.RecipeCommon.Perf.Evaluators import NonzeroFlowEvaluator
 from lnst.RecipeCommon.Ping.Evaluators import RatePingEvaluator
-
-
-class EnrtConfiguration:
-    """Container object for configuration
-
-    Stores configured devices and IPs configured on them. Can also be
-    used to store any values relevant to configuration being applied
-    during the lifetime of the Recipe.
-    """
-    def __init__(self):
-        self._device_ips = {}
-
-    @property
-    def configured_devices(self) -> list[RemoteDevice]:
-        return list(self._device_ips.keys())
-
-    def ips_for_device(
-        self, device: RemoteDevice, family: Optional[Literal[AF_INET, AF_INET6]] = None
-    ) -> list[BaseIpAddress]:
-        if family is None:
-            return self._device_ips[device]
-        return [ip for ip in self._device_ips[device] if ip.family == family]
-
-    def track_device(self, device: RemoteDevice) -> None:
-        self._device_ips.setdefault(device, [])
-
-    def untrack_device(self, device: RemoteDevice) -> None:
-        del self._device_ips[device]
-
-    def configure_and_track_ip(
-        self,
-        device: RemoteDevice,
-        ip_address: BaseIpAddress,
-        peer: Optional[BaseIpAddress] = None,
-    ) -> None:
-        """Configure IP for device and"""
-        device.ip_add(ip_address, peer=peer)
-        self._device_ips.setdefault(device, []).append(ip_address)
+from lnst.Recipes.ENRT.helpers import filter_ip_endpoint_pairs
 
 
 class BaseEnrtRecipe(
@@ -117,31 +80,25 @@ class BaseEnrtRecipe(
         Parameter that determines which IP protocol versions will be tested.
     :type ip_versions: Tuple[Str] (default ("ipv4", "ipv6"))
 
-    :param ping_parallel:
-        Parameter used by the :any:`generate_ping_configurations` generator.
-        Tells the generator method to create :any:`PingConf` objects that will
-        be run in parallel.
-    :type ping_parallel: :any:`BoolParam` (default False)
-
     :param ping_bidirect:
-        Parameter used by the :any:`generate_ping_configurations` generator.
-        Tells the generator method to create :any:`PingConf` objects for both
+        Parameter used by the :any:`generate_ping_configuration` method.
+        Tells the method method to create :any:`PingConf` objects for both
         directions between the ping endpoints.
     :type ping_bidirect: :any:`BoolParam` (default False)
 
     :param ping_count:
-        Parameter used by the :any:`generate_ping_configurations` generator.
-        Tells the generator how many pings should be sent for each ping test.
+        Parameter used by the :any:`generate_ping_configuration` method.
+        Tells the method how many pings should be sent for each ping test.
     :type ping_count: :any:`IntParam` (default 100)
 
     :param ping_interval:
-        Parameter used by the :any:`generate_ping_configurations` generator.
-        Tells the generator how fast should the pings be sent in each ping test.
+        Parameter used by the :any:`generate_ping_configuration` method.
+        Tells the method how fast should the pings be sent in each ping test.
     :type ping_interval: :any:`FloatParam` (default 0.2)
 
     :param ping_psize:
-        Parameter used by the :any:`generate_ping_configurations` generator.
-        Tells the generator how big should the pings packets be in each ping
+        Parameter used by the :any:`generate_ping_configuration` method.
+        Tells the method how big should the pings packets be in each ping
         test.
     :type ping_psize: :any:`IntParam` (default None)
 
@@ -179,7 +136,6 @@ class BaseEnrtRecipe(
     ip_versions = Param(default=("ipv4", "ipv6"))
 
     #common ping test params
-    ping_parallel = BoolParam(default=False)
     ping_bidirect = BoolParam(default=False)
     ping_count = IntParam(default=100)
     ping_interval = FloatParam(default=0.2)
@@ -334,13 +290,13 @@ class BaseEnrtRecipe(
     def do_ping_tests(self, recipe_config):
         """Ping testing loop
 
-        Loops over all various ping configurations generated by the
-        :any:`generate_ping_configurations` method, then uses the PingRecipe
-        methods to execute, report and evaluate the results.
+        Uses the PingRecipe methods to execute, report and
+        evaluate the various ping configurations generated by the
+        :any:`generate_ping_configuration` method.
         """
-        for ping_configs in self.generate_ping_configurations(recipe_config):
-            result = self.ping_test(ping_configs)
-            self.ping_report_and_evaluate(result)
+        ping_configs = self.generate_ping_configuration(recipe_config)
+        result = self.ping_test(ping_configs)
+        self.ping_report_and_evaluate(result)
 
     def describe_perf_test_tweak(self, perf_config):
         description = self.generate_perf_test_tweak_description(perf_config)
@@ -357,7 +313,7 @@ class BaseEnrtRecipe(
             result = self.perf_test(perf_config)
             self.perf_report_and_evaluate(result)
 
-    def generate_ping_configurations(self, config):
+    def generate_ping_configuration(self, config: EnrtConfiguration) -> list[PingConf]:
         """Base ping test configuration generator
 
         The generator loops over all endpoint pairs to test ping between
@@ -368,59 +324,51 @@ class BaseEnrtRecipe(
         :return: list of Ping configurations to test in parallel
         :rtype: List[:any:`PingConf`]
         """
-        for endpoints in self.generate_ping_endpoints(config):
-            for ipv in self.params.ip_versions:
-                if ipv == "ipv6" and not endpoints.reachable:
-                    continue
+        # collect only endpoints with ip types requested by ip_versions param
+        endpoint_pairs = list(self.generate_ping_endpoints(config))
+        endpoint_pairs = filter_ip_endpoint_pairs(self.params.ip_versions, endpoint_pairs)
 
-                ip_filter = {}
-                if ipv == "ipv4":
-                    ip_filter.update(family = AF_INET)
-                elif ipv == "ipv6":
-                    ip_filter.update(family = AF_INET6)
-                    ip_filter.update(is_link_local = False)
+        # don't check for unreachability of ipv6 endpoints
+        endpoint_pairs = [
+            endpoint_pair
+            for endpoint_pair in endpoint_pairs
+            if not (isinstance(endpoint_pair.first.address, Ip6Address) and not endpoint_pair.should_be_reachable)
+        ]
+        if not endpoint_pairs:
+            return []
 
-                endpoint1, endpoint2 = endpoints.endpoints
-                endpoint1_ips = endpoint1.ips_filter(**ip_filter)
-                endpoint2_ips = endpoint2.ips_filter(**ip_filter)
+        if self.params.ping_bidirect:
+            # purposely constructing a list to avoid infinite generation
+            reversed_pairs = [pair.reversed() for pair in endpoint_pairs]
+            endpoint_pairs.extend(reversed_pairs)
 
-                if len(endpoint1_ips) != len(endpoint2_ips):
-                    raise LnstError("Source/destination ip lists are of different size.")
+        ping_confs = []
+        for endpoint_pair in endpoint_pairs:
+            client, server = endpoint_pair
 
-                ping_conf_list = []
-                for src_addr, dst_addr in zip(endpoint1_ips, endpoint2_ips):
-                    pconf = PingConf(client = endpoint1.netns,
-                                     client_bind = src_addr,
-                                     destination = endpoint2.netns,
-                                     destination_address = dst_addr,
-                                     count = self.params.ping_count,
-                                     interval = self.params.ping_interval,
-                                     size = self.params.ping_psize,
-                                     )
+            pconf = PingConf(
+                client=client.host,
+                client_bind=client.address,
+                destination=server.host,
+                destination_address=server.address,
+                count=self.params.ping_count,
+                interval=self.params.ping_interval,
+                size=self.params.ping_psize,
+            )
+            pconf.evaluators = self.generate_ping_evaluators(pconf, endpoint_pair)
+            ping_confs.append(pconf)
 
-                    ping_evaluators = self.generate_ping_evaluators(
-                            pconf, endpoints)
-                    pconf.register_evaluators(ping_evaluators)
+        return ping_confs
 
-                    ping_conf_list.append(pconf)
-
-                    if self.params.ping_bidirect:
-                        ping_conf_list.append(self._create_reverse_ping(pconf))
-
-                    if not self.params.ping_parallel:
-                        break
-
-                yield ping_conf_list
-
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """Generator for ping endpoints
 
-        To be overriden by a derived class.
+        Generates ping endpoints that'll be tested in parallel.
 
-        :return: list of device pairs
-        :rtype: List[Tuple[:any:`Device`, :any:`Device`]]
+        :return: generator of endpoint pairs
+        :rtype: Iterator[:any:`PingEndpointPair`]
         """
-        return []
+        yield from []
 
     def generate_ping_evaluators(self, pconf, endpoints):
         return [RatePingEvaluator(min_rate=50)]
@@ -529,14 +477,3 @@ class BaseEnrtRecipe(
             )
 
         self.ctl.wait_for_condition(condition, timeout=5)
-
-    def _create_reverse_ping(self, pconf):
-        return PingConf(
-            client = pconf.destination,
-            client_bind = pconf.destination_address,
-            destination = pconf.client,
-            destination_address = pconf.client_bind,
-            count = pconf.ping_count,
-            interval = pconf.ping_interval,
-            size = pconf.ping_psize,
-        )

@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     AF_INET6,
+    Ip4Address,
     interface_addresses,
 )
 from lnst.Common.Parameters import (
@@ -12,13 +14,14 @@ from lnst.Common.Parameters import (
 )
 from lnst.RecipeCommon.L2TPManager import L2TPManager
 from lnst.Devices import L2TPSessionDevice, RemoteDevice
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.helpers import ping_endpoint_pairs
 
 
 class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
@@ -151,8 +154,8 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
         for device in [host1.l2tp_session1, host2.l2tp_session1]:
             device.up()
 
-        ip1 = "10.42.1.1/8"
-        ip2 = "10.42.1.2/8"
+        ip1 = Ip4Address("10.42.1.1/8")
+        ip2 = Ip4Address("10.42.1.2/8")
         config.configure_and_track_ip(host1.l2tp_session1, ip1, peer=ip2)
         config.configure_and_track_ip(host2.l2tp_session1, ip2, peer=ip1)
 
@@ -164,19 +167,11 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are simply the tunnel endpoints
-
-        Returned as::
-
-            [PingEndpoints(self.matched.host1.l2tp_session1, self.matched.host2.l2tp_session1)]
         """
-        return [
-            PingEndpoints(
-                self.matched.host1.l2tp_session1, self.matched.host2.l2tp_session1
-            )
-        ]
+        yield from ping_endpoint_pairs(config, (self.matched.host1.l2tp_session1, self.matched.host2.l2tp_session1))
 
     def get_packet_assert_config(self, ping_config):
         pa_kwargs = {}

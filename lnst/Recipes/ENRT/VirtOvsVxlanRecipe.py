@@ -1,16 +1,16 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from itertools import combinations
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import OvsBridgeDevice
 
 class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
@@ -124,22 +124,17 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         guest1, guest2, guest3, guest4 = (self.matched.guest1,
             self.matched.guest2, self.matched.guest3, self.matched.guest4)
         devs = [guest1.eth0, guest2.eth0, guest3.eth0, guest4.eth0]
-        dev_combinations = combinations(devs, 2)
 
-        return [
-            PingEndpoints(comb[0], comb[1],
-                reachable=((comb[0].host, comb[1].host) in [
-                    (guest1, guest3), (guest2, guest4)
-                ])
-            ) for comb in dev_combinations
-        ]
+        for dev1, dev2 in combinations(devs, 2):
+            should_be_reachable = (dev1.host, dev2.host) in [(guest1, guest3), (guest2, guest4)]
+            yield from ping_endpoint_pairs(config, (dev1, dev2), should_be_reachable=should_be_reachable)
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.guest3.eth0))
 
     @property
     def pause_frames_dev_list(self):

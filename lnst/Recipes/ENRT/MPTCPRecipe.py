@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from socket import AF_INET, AF_INET6
 from typing import List
 
@@ -7,11 +7,11 @@ from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Host import Host
 from lnst.RecipeCommon.MPTCPManager import MPTCPManager
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 
 
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
@@ -162,18 +162,18 @@ class MPTCPRecipe(
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints are all ports in their respective pairs
         """
-        return [PingEndpoints(self.matched.host1.eth0, self.matched.host2.eth0),
-                PingEndpoints(self.matched.host1.eth1, self.matched.host2.eth1)]
+        yield from ping_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
+        yield from ping_endpoint_pairs(config, (self.matched.host1.eth1, self.matched.host2.eth1))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         Due to the way MPTCP works, the the perf endpoints will be the 2 "primary" ports/flows
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.eth0, self.matched.host2.eth0))
 
     #TODO MPTCP Devs would like it to have:
     # eth0.mtu = default

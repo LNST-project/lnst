@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -8,10 +8,11 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -22,7 +23,6 @@ from lnst.Devices import VlanDevice
 from lnst.Devices.VlanDevice import VlanDevice as Vlan
 from lnst.Devices import BondDevice
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 
 class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
@@ -161,7 +161,7 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         Test wide description is extended with the configured VLAN tunnels,
         their IP addresses and the bonding device configuration.
         """
-        host1, host2 = self.matched.host1, self.matched.host2
+        host1 = self.matched.host1
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
@@ -202,32 +202,25 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are the matching VLAN tunnel
         endpoints of the hosts.
-
-        Returned as::
-
-            [PingEndpoints(host1.vlan0, host2.vlan0),
-             PingEndpoints(host1.vlan1, host2.vlan1),
-             PingEndpoints(host1.vlan2, host2.vlan2)]
         """
         host1, host2 = self.matched.host1, self.matched.host2
 
-        return [PingEndpoints(host1.vlan0, host2.vlan0),
-                PingEndpoints(host1.vlan1, host2.vlan1),
-                PingEndpoints(host1.vlan2, host2.vlan2)]
+        yield from ping_endpoint_pairs(config, (host1.vlan0, host2.vlan0))
+        yield from ping_endpoint_pairs(config, (host1.vlan1, host2.vlan1))
+        yield from ping_endpoint_pairs(config, (host1.vlan2, host2.vlan2))
 
-
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the VLAN tunnel endpoints with
         VLAN id from parameter vlan_ids[0] (by default: 10):
 
         host1.vlan0 and host2.vlan0
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.vlan0, self.matched.host2.vlan0))
 
     @property
     def offload_nics(self):

@@ -1,20 +1,12 @@
-class PingEndpoints():
-    def __init__(self, endpoint1, endpoint2, reachable=True):
-        self.endpoints = [endpoint1, endpoint2]
-        self.reachable = reachable
+from dataclasses import dataclass
 
-    @property
-    def endpoints(self):
-        return self._endpoints
+from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 
-    @endpoints.setter
-    def endpoints(self, endpoints):
-        self._endpoints = endpoints
 
-    @property
-    def reachable(self):
-        return self._reachable
-
-    @reachable.setter
-    def reachable(self, reachable):
-        self._reachable = reachable
+@dataclass
+class PingEndpointPair(EndpointPair[IPEndpoint]):
+    """
+    On top of the basic EndpointPair functionality, we want to ensure that
+    endpoints that shouldn't be reachable are not reachable.
+    """
+    should_be_reachable: bool = True

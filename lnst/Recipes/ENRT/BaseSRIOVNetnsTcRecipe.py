@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import Optional
@@ -14,10 +14,10 @@ from lnst.Controller.NetNamespace import NetNamespace
 from lnst.Devices import RemoteDevice
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
@@ -266,21 +266,21 @@ class BaseSRIOVNetnsTcRecipe(
 
         super().test_wide_deconfiguration(config)
 
-    def generate_ping_endpoints(self, config):
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         """
         The ping endpoints for this recipe are the virtual function devices
 
         host1.newns.vf_eth0 and host2.newns.vf_eth0
         """
-        return [PingEndpoints(self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0])]
+        yield from ping_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the virtual function devices
 
         host1.newns.vf_eth0 and host2.newns.vf_eth0
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))]
+        yield ip_endpoint_pairs(config, (self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]))
 
     @property
     def pause_frames_dev_list(self):

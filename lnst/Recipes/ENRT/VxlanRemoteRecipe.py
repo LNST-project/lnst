@@ -1,18 +1,18 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin
 )
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VxlanDevice
 
 class VxlanRemoteRecipe(
@@ -89,11 +89,11 @@ class VxlanRemoteRecipe(
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
-        return [PingEndpoints(self.matched.host1.vxlan0, self.matched.host2.vxlan0)]
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from ping_endpoint_pairs(config, (self.matched.host1.vxlan0, self.matched.host2.vxlan0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.host1.vxlan0, self.matched.host2.vxlan0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.host1.vxlan0, self.matched.host2.vxlan0))
 
     @property
     def mtu_hw_config_dev_list(self):

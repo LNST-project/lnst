@@ -1,13 +1,15 @@
 import signal
-import logging
 import copy
+from collections.abc import Iterator
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.Parameters import StrParam, IPv4NetworkParam, IPv6NetworkParam
+from lnst.Common.Parameters import ConstParam, StrParam, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.LnstError import LnstError
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
+from lnst.RecipeCommon.endpoints import IPEndpoint
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
     BaseSubConfigMixin as ConfMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
@@ -15,7 +17,6 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
 from lnst.RecipeCommon.PacketAssert import (PacketAssertConf,
                                             PacketAssertTestAndEvaluate)
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
-from lnst.RecipeCommon.Ping.Recipe import PingConf
 from lnst.Recipes.ENRT.XfrmTools import (configure_ipsec_esp_aead,
                                          generate_key)
 
@@ -61,6 +62,9 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     spi_values = ["0x00001000", "0x00001001"]
     ipsec_mode = StrParam(default="transport")
 
+    # parallel pings are not supported for this recipe
+    ping_bidirect = ConstParam(False)
+
     def test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
@@ -85,10 +89,6 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
             host.eth0.up()
 
         self.wait_tentative_ips(config.configured_devices)
-
-        if self.params.ping_parallel or self.params.ping_bidirect:
-            logging.debug("Parallelism in pings is not supported for this "
-                          "recipe, ping_parallel/ping_bidirect will be ignored.")
 
         for host, dst in [(host1, host2), (host2, host1)]:
             for ip in config.ips_for_device(dst.eth0):
@@ -156,24 +156,12 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
             ns.run("ip xfrm state flush")
         super().remove_sub_configuration(config)
 
-    def generate_ping_configurations(self, config):
-        """
-        The ping endpoints for this recipe are the configured endpoints of
-        the IPsec tunnel on both hosts.
-        """
-        ns1, ns2 = config.endpoint1.netns, config.endpoint2.netns
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
         ip1, ip2 = config.ips
-        count = self.params.ping_count
-        interval = self.params.ping_interval
-        size = self.params.ping_psize
-        common_args = {'count': count, 'interval': interval,
-                       'size': size}
-        ping_conf = PingConf(client=ns1,
-                             client_bind=ip1,
-                             destination=ns2,
-                             destination_address=ip2,
-                             **common_args)
-        yield [ping_conf]
+        yield PingEndpointPair(
+            IPEndpoint(config.endpoint1, ip1),
+            IPEndpoint(config.endpoint2, ip2),
+        )
 
     def generate_flow_combinations(self, config):
         """
@@ -203,11 +191,6 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
                             "perf_tool_cpu" in self.params) else None
                 )
                 yield [flow]
-
-                if ("perf_reverse" in self.params and
-                        self.params.perf_reverse):
-                    reverse_flow = self._create_reverse_flow(flow)
-                    yield [reverse_flow]
 
     def ping_test(self, ping_configs):
         """

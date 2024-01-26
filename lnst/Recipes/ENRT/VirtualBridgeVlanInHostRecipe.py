@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -7,15 +7,15 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices import BridgeDevice
 
@@ -65,7 +65,7 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::2/64")
 
         config.configure_and_track_ip(host1.br0, next(ipv4_addr))
-        for i, dev in enumerate([host2.vlan0, guest1.eth0]):
+        for dev in [host2.vlan0, guest1.eth0]:
             config.configure_and_track_ip(dev, next(ipv4_addr))
             config.configure_and_track_ip(dev, next(ipv6_addr))
 
@@ -108,11 +108,11 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
-        return [PingEndpoints(self.matched.guest1.eth0, self.matched.host2.vlan0)]
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from ping_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.guest1.eth0, self.matched.host2.vlan0))
 
     @property
     def offload_nics(self):

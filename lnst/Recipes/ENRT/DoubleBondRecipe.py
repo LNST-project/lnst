@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Iterator
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -8,15 +8,15 @@ from lnst.Common.Parameters import (
 )
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
-from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs, ping_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
-from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
-from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BondDevice
 
 class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
@@ -63,7 +63,6 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         return config
 
     def generate_test_wide_description(self, config: EnrtConfiguration):
-        host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
@@ -95,11 +94,11 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         ]
         return desc
 
-    def generate_ping_endpoints(self, config):
-        return [PingEndpoints(self.matched.host1.bond0, self.matched.host2.bond0)]
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from ping_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.bond0))
 
-    def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.bond0))]
+    def generate_perf_endpoints(self, config: EnrtConfiguration) -> Iterator[list[EndpointPair[IPEndpoint]]]:
+        yield ip_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.bond0))
 
     @property
     def offload_nics(self):

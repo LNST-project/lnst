@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 import signal
 from lnst.Common.Parameters import (
     StrParam,
@@ -8,7 +9,9 @@ from lnst.Common.Parameters import (
 )
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
-from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpointPair
+from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.EnrtConfiguration import EnrtConfiguration
 from dataclasses import dataclass
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
@@ -355,8 +358,8 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
             f"Created dpdkbond on {host1.dummy_cfg.bond_br} with bonding_mode set to "
             f"{self.params.bonding_mode} using lacp_mode set to "
             f"{self.params.lacp_mode}",
-            f"Interconnected OvS bridges with patch ports: test_patch and bond_patch",
-            f"Deleted all flows on both bridges and created a new one with \"actions=NORMAL\"",
+            "Interconnected OvS bridges with patch ports: test_patch and bond_patch",
+            "Deleted all flows on both bridges and created a new one with \"actions=NORMAL\"",
             f"TestPMD in a forward-mode macswap started on the host1 {host1.dummy_cfg.test_br} vhost0 port"]
 
         return desc
@@ -384,8 +387,8 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
         host2.run(f"driverctl unset-override {host2.dummy_cfg.eth0.bus_info}")
         host2.run(f"driverctl unset-override {host2.dummy_cfg.eth1.bus_info}")
 
-    def generate_ping_endpoints(self, config):
-        return []
+    def generate_ping_endpoints(self, config: EnrtConfiguration) -> Iterator[PingEndpointPair]:
+        yield from []
 
     def apply_perf_test_tweak(self, config):
         pass
