@@ -38,4 +38,4 @@ class BaseRESTConfigMixin:
 
         logging.debug("API response: %s", response.content)
 
-        return response.content
+        return response
