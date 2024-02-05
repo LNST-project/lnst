@@ -126,8 +126,8 @@ class XDPBench(BaseTestModule):
         self._res_data = []
 
     def run(self):
-        logging.debug("Starting xdp-bench")
         command = self._prepare_command()
+        logging.debug(f"Starting xdp-bench: `{command}`")
 
         bench = Popen(command, stdout=PIPE)
         output_parser = XDPBenchOutputParser(bench)
