@@ -23,13 +23,13 @@ class VhostPvPTestConf(BasePvPTestConf):
 
 
 class VhostNetPvPRecipe(BasePvPRecipe):
-    generator_req = HostReq()
-    generator_req.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    generator_req.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1 = HostReq()
+    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    host_req = HostReq(with_guest="yes")
-    host_req.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host_req.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2 = HostReq(with_guest="yes")
+    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
 
@@ -64,39 +64,39 @@ class VhostNetPvPRecipe(BasePvPRecipe):
 
     def gen_ping_config(self):
         return [
-            (self.matched.generator_req,
-             self.matched.generator_req.eth0,
-             self.matched.host_req.eth0),
-            (self.matched.generator_req,
-             self.matched.generator_req.eth1,
-             self.matched.host_req.eth1),
-            (self.matched.host_req,
-             self.matched.host_req.eth0,
-             self.matched.generator_req.eth0),
-            (self.matched.host_req,
-             self.matched.host_req.eth1,
-             self.matched.host_req.eth1)
+            (self.matched.host1,
+             self.matched.host1.eth0,
+             self.matched.host2.eth0),
+            (self.matched.host1,
+             self.matched.host1.eth1,
+             self.matched.host2.eth1),
+            (self.matched.host2,
+             self.matched.host2.eth0,
+             self.matched.host1.eth0),
+            (self.matched.host2,
+             self.matched.host2.eth1,
+             self.matched.host2.eth1)
         ]
 
     def test_wide_configuration(self, config):
 
-        config.generator.host = self.matched.generator_req
-        config.generator.nics.append(self.matched.generator_req.eth0)
-        config.generator.nics.append(self.matched.generator_req.eth1)
+        config.generator.host = self.matched.host1
+        config.generator.nics.append(self.matched.host1.eth0)
+        config.generator.nics.append(self.matched.host1.eth1)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
-        self.matched.generator_req.eth0.ip_add(next(ipv4_addr))
-        self.matched.generator_req.eth1.ip_add(next(ipv4_addr))
-        self.matched.generator_req.eth0.up()
-        self.matched.generator_req.eth1.up()
+        self.matched.host1.eth0.ip_add(next(ipv4_addr))
+        self.matched.host1.eth1.ip_add(next(ipv4_addr))
+        self.matched.host1.eth0.up()
+        self.matched.host1.eth1.up()
 
         self.base_dpdk_configuration(config.generator)
 
-        config.dut.host = self.matched.host_req
-        config.dut.nics.append(self.matched.host_req.eth0)
-        config.dut.nics.append(self.matched.host_req.eth1)
-        self.matched.host_req.eth0.up()
-        self.matched.host_req.eth1.up()
+        config.dut.host = self.matched.host2
+        config.dut.nics.append(self.matched.host2.eth0)
+        config.dut.nics.append(self.matched.host2.eth1)
+        self.matched.host2.eth0.up()
+        self.matched.host2.eth1.up()
 
         self.host_forwarding_configuration(config.dut)
 
