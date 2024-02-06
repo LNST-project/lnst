@@ -37,13 +37,13 @@ class OVSPvPTestConf(BasePvPTestConf):
 
 
 class OvSDPDKPvPRecipe(BasePvPRecipe):
-    m1 = HostReq()
-    m1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    m1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1 = HostReq()
+    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    m2 = HostReq(with_guest="yes")
-    m2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    m2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2 = HostReq(with_guest="yes")
+    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     net_ipv4 = IPv4NetworkParam(default="192.168.1.0/24")
 
@@ -76,33 +76,33 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
 
     def gen_ping_config(self):
         return [
-            (self.matched.m1, self.matched.m1.eth0, self.matched.m2.eth0),
-            (self.matched.m1, self.matched.m1.eth1, self.matched.m2.eth1),
-            (self.matched.m2, self.matched.m2.eth0, self.matched.m1.eth0),
-            (self.matched.m2, self.matched.m2.eth1, self.matched.m2.eth1)
+            (self.matched.host1, self.matched.host1.eth0, self.matched.host2.eth0),
+            (self.matched.host1, self.matched.host1.eth1, self.matched.host2.eth1),
+            (self.matched.host2, self.matched.host2.eth0, self.matched.host1.eth0),
+            (self.matched.host2, self.matched.host2.eth1, self.matched.host2.eth1)
         ]
 
     def test_wide_configuration(self, config):
-        config.generator.host = self.matched.m1
-        config.generator.nics.append(self.matched.m1.eth0)
-        config.generator.nics.append(self.matched.m1.eth1)
+        config.generator.host = self.matched.host1
+        config.generator.nics.append(self.matched.host1.eth0)
+        config.generator.nics.append(self.matched.host1.eth1)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         nic_addrs = {
-            self.matched.m1.eth0: next(ipv4_addr),
-            self.matched.m2.eth0: next(ipv4_addr),
-            self.matched.m1.eth1: next(ipv4_addr),
-            self.matched.m2.eth1: next(ipv4_addr),
+            self.matched.host1.eth0: next(ipv4_addr),
+            self.matched.host2.eth0: next(ipv4_addr),
+            self.matched.host1.eth1: next(ipv4_addr),
+            self.matched.host2.eth1: next(ipv4_addr),
         }
-        self.matched.m1.eth0.ip_add(nic_addrs[self.matched.m1.eth0])
-        self.matched.m1.eth1.ip_add(nic_addrs[self.matched.m1.eth1])
+        self.matched.host1.eth0.ip_add(nic_addrs[self.matched.host1.eth0])
+        self.matched.host1.eth1.ip_add(nic_addrs[self.matched.host1.eth1])
         self.base_dpdk_configuration(config.generator)
 
-        config.dut.host = self.matched.m2
-        config.dut.nics.append(self.matched.m2.eth0)
-        config.dut.nics.append(self.matched.m2.eth1)
-        self.matched.m2.eth0.ip_add(nic_addrs[self.matched.m2.eth0])
-        self.matched.m2.eth1.ip_add(nic_addrs[self.matched.m2.eth1])
+        config.dut.host = self.matched.host2
+        config.dut.nics.append(self.matched.host2.eth0)
+        config.dut.nics.append(self.matched.host2.eth1)
+        self.matched.host2.eth0.ip_add(nic_addrs[self.matched.host2.eth0])
+        self.matched.host2.eth1.ip_add(nic_addrs[self.matched.host2.eth1])
         self.base_dpdk_configuration(config.dut)
         self.ovs_dpdk_bridge_configuration(config.dut)
 
@@ -228,7 +228,7 @@ class OvSDPDKPvPRecipe(BasePvPRecipe):
         host.run("systemctl restart openvswitch")
 
         #  TODO use an actual OvS Device object
-        #  TODO config.dut.nics.append(CachedRemoteDevice(m2.ovs))
+        #  TODO config.dut.nics.append(CachedRemoteDevice(host2.ovs))
         host.run("ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev")
 
         host_conf.dpdk_ports = []
