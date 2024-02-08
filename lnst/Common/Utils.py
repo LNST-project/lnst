@@ -21,7 +21,7 @@ import subprocess
 import errno
 import ast
 import collections
-import math
+import statistics
 import itertools
 from collections.abc import Iterable, Callable
 from contextlib import AbstractContextManager
@@ -287,10 +287,9 @@ def dict_to_dot(original_dict, prefix=""):
     return return_list
 
 def std_deviation(values):
-    if len(values) <= 0:
+    if len(values) <= 1:
         return 0.0
-    avg = sum(values) / float(len(values))
-    return math.sqrt(sum([(float(i) - avg)**2 for i in values])/len(values))
+    return statistics.stdev(values)
 
 def deprecated(func):
     """
