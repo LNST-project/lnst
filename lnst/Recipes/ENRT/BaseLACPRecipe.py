@@ -5,6 +5,7 @@ from lnst.Common.Parameters import (
 )
 from lnst.Devices import BondDevice
 from lnst.Common.IpAddress import interface_addresses
+from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.DoubleBondRecipe import DoubleBondRecipe
 
 
@@ -74,3 +75,7 @@ class BaseLACPRecipe(DoubleBondRecipe):
         self.test_wide_switch_deconfiguration()
 
         super().test_wide_deconfiguration(config)
+
+    def generate_perf_endpoints(self, config):
+        return [ip_endpoint_pairs(config, (self.matched.host1.bond0, self.matched.host2.bond0), combination_func=zip)]
+
