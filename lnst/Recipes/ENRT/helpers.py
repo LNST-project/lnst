@@ -8,7 +8,9 @@ from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 
 def ip_endpoint_pairs(
-    config: EnrtConfiguration, *device_pairs: tuple[RemoteDevice, RemoteDevice]
+    config: EnrtConfiguration,
+    *device_pairs: tuple[RemoteDevice, RemoteDevice],
+    combination_func: callable = itertools.product
 ) -> Collection[EndpointPair[IPEndpoint]]:
     """Helper function for use in generate_perf_endpoints method.
 
@@ -20,7 +22,7 @@ def ip_endpoint_pairs(
             dev1_ips = [ip for ip in config.ips_for_device(dev1) if isinstance(ip, ip_type)]
             dev2_ips = [ip for ip in config.ips_for_device(dev2) if isinstance(ip, ip_type)]
 
-            for ip1, ip2 in itertools.product(dev1_ips, dev2_ips):
+            for ip1, ip2 in combination_func(dev1_ips, dev2_ips):
                 endpoint_pairs.append(
                     EndpointPair(
                         IPEndpoint(dev1, ip1),
