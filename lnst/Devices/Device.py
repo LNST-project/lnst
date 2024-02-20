@@ -422,8 +422,11 @@ class Device(object, metaclass=DeviceMeta):
 
         self.down()
         self.ip_flush()
-        self._clear_tc_qdisc()
-        self._clear_tc_filters()
+        try:
+            self._clear_tc_qdisc()
+            self._clear_tc_filters()
+        except ExecCmdFail:
+            pass
 
         self.restore_original_data()
 
