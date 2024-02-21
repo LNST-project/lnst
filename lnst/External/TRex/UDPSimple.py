@@ -23,8 +23,8 @@ class UDPSimple(object):
 
     def create_stream (self, **kwargs):
         # Use port's configured mac and ip addresses
-        L2 = Ether()
-        L3 = IP()
+        L2 = Ether(src=kwargs["src_mac"], dst=kwargs["dst_mac"])
+        L3 = IP(src=kwargs["src_ip"], dst=kwargs["dst_ip"])
         L4 = UDP()
 
         size = kwargs.get("msg_size", 64)
