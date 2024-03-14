@@ -56,12 +56,13 @@ def log_output(log_func, out_type, out):
              "----------------------------"
              % (out_type, out))
 
-def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False, json=False):
+def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False, json=False, stdin=None):
     cmd = cmd.rstrip(" ")
     logging.debug("Executing: \"%s\"" % cmd)
     subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, close_fds=True)
-    (data_stdout, data_stderr) = subp.communicate()
+                            stderr=subprocess.PIPE, stdin=subprocess.PIPE,
+                            close_fds=True)
+    (data_stdout, data_stderr) = subp.communicate(input = stdin)
     data_stdout = data_stdout.decode()
     data_stderr = data_stderr.decode()
 
