@@ -295,10 +295,6 @@ class BaseSRIOVNetnsTcRecipe(
         raise NotImplementedError()
 
     @property
-    def coalescing_hw_config_dev_list(self):
-        raise NotImplementedError()
-
-    @property
     def dev_interrupt_hw_config_dev_list(self):
         raise NotImplementedError()
 

@@ -265,21 +265,6 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         return result
 
     @property
-    def coalescing_hw_config_dev_list(self):
-        """
-        The `coalescing_hw_config_dev_list` property value for this scenario
-        is a list of the physical devices carrying data of the configured
-        VLAN tunnels:
-
-        host1.eth0, host1.eth1 and host2.eth0
-
-        For detailed explanation of this property see :any:`CoalescingHWConfigMixin`
-        class and :any:`CoalescingHWConfigMixin.coalescing_hw_config_dev_list`.
-        """
-        host1, host2 = self.matched.host1, self.matched.host2
-        return [host1.eth0, host1.eth1, host2.eth0]
-
-    @property
     def dev_interrupt_hw_config_dev_list(self):
         """
         The `dev_interrupt_hw_config_dev_list` property value for this scenario

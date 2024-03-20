@@ -129,10 +129,6 @@ class SRIOVNetnsTcRecipe(BaseSRIOVNetnsTcRecipe):
         return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 
     @property
-    def coalescing_hw_config_dev_list(self):
-        return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
-
-    @property
     def dev_interrupt_hw_config_dev_list(self):
         return [self.matched.host1.sriov_devices.vfs[0], self.matched.host2.sriov_devices.vfs[0]]
 

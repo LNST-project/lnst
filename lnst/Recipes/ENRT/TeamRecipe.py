@@ -191,22 +191,6 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         return [self.matched.host1.team0, self.matched.host2.eth0]
 
     @property
-    def coalescing_hw_config_dev_list(self):
-        """
-        The `coalescing_hw_config_dev_list` property value for this scenario is a
-        list containing the matched physical devices used to create the teaming
-        device on host1 and the matched ethernet device on host2.
-
-        | host1.eth0, host.eth1
-        | host2.eth0
-
-        For detailed explanation of this property see :any:`CoalescingHWConfigMixin`
-        class and :any:`CoalescingHWConfigMixin.coalescing_hw_config_dev_list`.
-        """
-        host1, host2 = self.matched.host1, self.matched.host2
-        return [host1.eth0, host1.eth1, host2.eth0]
-
-    @property
     def dev_interrupt_hw_config_dev_list(self):
         """
         The `dev_interrupt_hw_config_dev_list` property value for this scenario
