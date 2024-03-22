@@ -13,8 +13,8 @@ from lnst.Recipes.ENRT.MeasurementGenerators.LinuxPerfMeasurementGenerator impor
     LinuxPerfMeasurementGenerator,
 )
 
-from lnst.Recipes.ENRT.ConfigMixins.MultiCoalescingHWConfigMixin import (
-    MultiCoalescingHWConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.CoalescingHWConfigMixin import (
+    CoalescingHWConfigMixin,
 )
 from lnst.Recipes.ENRT.ConfigMixins.MultiDevInterruptHWConfigMixin import (
     MultiDevInterruptHWConfigMixin,
@@ -42,7 +42,7 @@ class SimpleNetworkTunableRecipe(
     DevNfcRxFlowHashConfigMixin,
     DevQueuesConfigMixin,
     PauseFramesHWConfigMixin,
-    MultiCoalescingHWConfigMixin,
+    CoalescingHWConfigMixin,
     MultiDevInterruptHWConfigMixin,
     MTUHWConfigMixin,
     OffloadSubConfigMixin,
@@ -74,7 +74,7 @@ class SimpleNetworkTunableRecipe(
     * nfc rx flow hash - :any:`DevNfcRxFlowHashConfigMixin`
     * rx hash function - :any:`DevRxHashFunctionConfigMixin`
     * per-device IRQ pinning - :any:`MultiDevInterruptHWConfigMixin`
-    * per-device coalescing setting through :any:`MultiCoalescingHWConfigMixin`
+    * per-device coalescing setting through :any:`CoalescingHWConfigMixin`
 
     Also the recipe uses :any:`FlowMeasurementMultiCpupinGenerator`, that allows
     per-host CPU pinning strategies.
