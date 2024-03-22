@@ -7,13 +7,37 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 class CoalescingHWConfigMixin(BaseHWConfigMixin):
     """
     This class is an extension to the :any:`BaseEnrtRecipe` class that enables
-    interrupt coalescing configuration on the devices defined by
-    :attr:`coalescing_hw_config_dev_list` property.
+    interrupt coalescing configuration on any device defined in recipe's
+    device requirements.
 
-    This mixin is a "multi device" variant of the :any:`CoalescingHWConfigMixin`
-    and allows configuration of individual devices instead of sharing the same
-    configuration. This may be required when different interrupt coalescing is
-    required by a flow generator and receiver host.
+    Typically the user would disable adaptive interrupt coalescing and configure
+    specific values.
+
+    For example the SimpleNetworkRecipe defines `host1.eth0` and `host2.eth0`
+    device requirements, so to configure the interrupt coalescing you can do:
+
+    ```python
+    recipe = SimpleNetworkRecipe(
+        coalescing_settings={
+            "host1": {
+                "eth0": {
+                    "adaptive-rx": "off", "adaptive-tx": "off",
+                    "rx-usecs": 16, "rx-frames": 32,
+                    "tx-usecs": 128, "tx-frames": 128
+                }
+            },
+            "host2": {
+                "eth0": {
+                    "adaptive-rx": "off", "adaptive-tx": "off",
+                    "rx-usecs": 16, "rx-frames": 32,
+                    "tx-usecs": 128, "tx-frames": 128
+                }
+            }
+        }
+    )
+    ```
+
+    The keys in the coalescing settings match the `ethtool -C` command syntax.
 
     :param coalescing_settings:
         (optional test parameter) dictionary to specify coalescing settings
