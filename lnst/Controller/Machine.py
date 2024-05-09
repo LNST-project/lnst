@@ -135,8 +135,11 @@ class Machine(object):
         dev_args = dev._dev_args
         dev_kwargs = dev._dev_kwargs
 
-        if dev.peer_name:
-            dev_kwargs['peer_name'] = dev.peer_name
+        try:
+            if dev.peer_name:
+                dev_kwargs['peer_name'] = dev.peer_name
+        except AttributeError:
+            pass
 
         self.rpc_call("remap_device",
                 dev.ifindex,
