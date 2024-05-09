@@ -247,6 +247,7 @@ class InterfaceManager(object):
         except KeyError as e:
             raise DeviceConfigError("%s is a mandatory argument" % e)
         remapped_device._bulk_enabled = False
+        remapped_device._nl_link_update = {}
         remapped_device.ifindex = ifindex
         self.replace_dev(ifindex, remapped_device)
         self.rescan_devices()
