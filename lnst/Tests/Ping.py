@@ -52,11 +52,13 @@ class Ping(BaseTestModule):
         except KeyboardInterrupt:
             pass
 
+        self._res_data["stdout"] = stdout
+        self._res_data["stderr"] = stderr
+
         if ping_process.returncode > 1:
             self._res_data["msg"] = "returncode = {}".format(ping_process.returncode)
             logging.error(self._res_data["msg"])
             if stderr != "":
-                self._res_data["stderr"] = stderr
                 logging.error("errors reported by ping")
                 logging.error(self._res_data["stderr"])
             return False
