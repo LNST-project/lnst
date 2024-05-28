@@ -235,8 +235,8 @@ class Config():
         return dirs
 
     def optionTimeval(self, option, cfg_path):
-        timeval_re = "^(([0-9]+)days?)?\s*(([0-9]+)hours?)?\s*" \
-                     "(([0-9]+)minutes?)?\s*(([0-9]+)seconds?)?$"
+        timeval_re = r"^(([0-9]+)days?)?\s*(([0-9]+)hours?)?\s*" \
+                     r"(([0-9]+)minutes?)?\s*(([0-9]+)seconds?)?$"
         timeval_match = re.match(timeval_re, option)
         if timeval_match:
             values = timeval_match.groups()

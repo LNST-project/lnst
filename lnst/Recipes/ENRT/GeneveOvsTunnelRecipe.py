@@ -147,14 +147,14 @@ class GeneveOvsTunnelRecipe(
         pa_kwargs = {}
         pa_kwargs["p_filter"] = "ip"
 
-        grep_pattern = "IP {}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2: ".format(
+        grep_pattern = r"IP {}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2: ".format(
             m1_carrier_ip, m2_carrier_ip
         )
 
         if isinstance(ip2, Ip4Address):
-            grep_pattern += "IP {} > {}: ICMP".format(ip1, ip2)
+            grep_pattern += r"IP {} > {}: ICMP".format(ip1, ip2)
         elif isinstance(ip2, Ip6Address):
-            grep_pattern += "IP6 {} > {}: ICMP6".format(ip1, ip2)
+            grep_pattern += r"IP6 {} > {}: ICMP6".format(ip1, ip2)
 
         pa_kwargs["grep_for"] = [grep_pattern]
 

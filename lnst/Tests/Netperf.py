@@ -262,7 +262,7 @@ class Netperf(BaseTestModule):
     def _parse_omni_output(self, output):
         res_val = {}
 
-        pattern_throughput = "THROUGHPUT=(\d+\.\d+)"
+        pattern_throughput = r"THROUGHPUT=(\d+\.\d+)"
         throughput = re.search(pattern_throughput, output)
 
         if throughput is None:
@@ -275,12 +275,12 @@ class Netperf(BaseTestModule):
 
         if "cpu_util" in self.params:
             if self.params.cpu_util == "local" or self.params.cpu_util == "both":
-                pattern_loc_cpu_util = "LOCAL_CPU_UTIL=([-]?\d+\.\d+)"
+                pattern_loc_cpu_util = r"LOCAL_CPU_UTIL=([-]?\d+\.\d+)"
                 loc_cpu_util = re.search(pattern_loc_cpu_util, output)
                 res_val["LOCAL_CPU_UTIL"] = float(loc_cpu_util.group(1))
 
             if self.params.cpu_util == "remote" or self.params.cpu_util == "both":
-                pattern_rem_cpu_util = "REMOTE_CPU_UTIL=([-]?\d+\.\d+)"
+                pattern_rem_cpu_util = r"REMOTE_CPU_UTIL=([-]?\d+\.\d+)"
                 rem_cpu_util = re.search(pattern_rem_cpu_util, output)
                 res_val["REMOTE_CPU_UTIL"] = float(rem_cpu_util.group(1))
 
@@ -291,10 +291,10 @@ class Netperf(BaseTestModule):
 
         # pattern for SCTP streams and other tests
         # decimal decimal decimal float (float)
-        pattern = "\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(?:\.\d+){0,1})"
+        pattern = r"\d+\s+\d+\s+\d+\s+\d+\.\d+\s+(\d+(?:\.\d+){0,1})"
         if "cpu_util" in self.params:
             # cpu utilization data in format: float float
-            pattern += "\s+(\d+(?:\.\d+){0,1})\s+(\d+(?:\.\d+){0,1})"
+            pattern += r"\s+(\d+(?:\.\d+){0,1})\s+(\d+(?:\.\d+){0,1})"
 
         r2 = re.search(pattern, output.lower())
 
@@ -318,8 +318,8 @@ class Netperf(BaseTestModule):
             return self._parse_confidence_non_omni(output)
 
     def _parse_confidence_omni(self, output):
-        pattern_throughput_confid = "THROUGHPUT_CONFID=([-]?\d+\.\d+)"
-        pattern_confidence_level = "CONFIDENCE_LEVEL=(\d+)"
+        pattern_throughput_confid = r"THROUGHPUT_CONFID=([-]?\d+\.\d+)"
+        pattern_confidence_level = r"CONFIDENCE_LEVEL=(\d+)"
 
         throughput_confid = re.search(pattern_throughput_confid, output)
         confidence_level = re.search(pattern_confidence_level, output)

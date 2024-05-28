@@ -174,8 +174,8 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
 
         pa_kwargs = {}
         pa_kwargs["p_filter"] = "ah"
-        pa_kwargs["grep_for"] = ["AH\(spi=" + self.spi_values[2],
-            "ESP\(spi=" + self.spi_values[1]]
+        pa_kwargs["grep_for"] = [r"AH\(spi=" + self.spi_values[2],
+            r"ESP\(spi=" + self.spi_values[1]]
         if ping_configs[0].count:
             pa_kwargs["p_min"] = 2 * ping_configs[0].count
         pa_config = PacketAssertConf(m2, if2, **pa_kwargs)

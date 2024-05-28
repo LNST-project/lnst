@@ -209,21 +209,21 @@ class GreLwtTunnelRecipe(
         pa_kwargs["p_filter"] = "proto gre"
 
         if isinstance(ip2, Ip4Address):
-            pat1 = "{} > {}: GREv0, .* IP {} > {}: ICMP echo request".format(
+            pat1 = r"{} > {}: GREv0, .* IP {} > {}: ICMP echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            pat2 = "{} > {}: GREv0 \| {} > {}: ICMP echo request".format(
+            pat2 = r"{} > {}: GREv0 \| {} > {}: ICMP echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            grep_pattern = ["({})|({})".format(pat1, pat2)]
+            grep_pattern = [r"({})|({})".format(pat1, pat2)]
         elif isinstance(ip2, Ip6Address):
-            pat1 = "{} > {}: GREv0, .* IP6 {} > {}: ICMP6, echo request".format(
+            pat1 = r"{} > {}: GREv0, .* IP6 {} > {}: ICMP6, echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            pat2 = "{} > {}: GREv0 \| {} > {}: ICMP6, echo request".format(
+            pat2 = r"{} > {}: GREv0 \| {} > {}: ICMP6, echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            grep_pattern = ["({})|({})".format(pat1, pat2)]
+            grep_pattern = [r"({})|({})".format(pat1, pat2)]
         else:
             raise Exception("The destination address is nor IPv4 or IPv6 address")
 

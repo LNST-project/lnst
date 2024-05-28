@@ -26,7 +26,7 @@ from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
 class VxlanNetnsTunnelRecipe(
     PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
 ):
-    """
+    r"""
     This class implements a recipe that configures a VXLAN tunnel between
     two network namespaces on two hosts.
 
