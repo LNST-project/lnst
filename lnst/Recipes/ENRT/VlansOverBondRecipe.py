@@ -27,7 +27,7 @@ from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
-    """
+    r"""
     This recipe implements Enrt testing for a network scenario that looks
     as follows
 
