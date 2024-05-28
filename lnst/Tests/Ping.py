@@ -61,6 +61,8 @@ class Ping(BaseTestModule):
                 logging.error(self._res_data["stderr"])
             return False
 
+        logging.debug(f"Ping stdout:\n{stdout}")
+
         stat_pttr1 = r'(\d+) packets transmitted, (\d+) received'
         stat_pttr2 = r'rtt min/avg/max/mdev = (\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+) ms'
 
