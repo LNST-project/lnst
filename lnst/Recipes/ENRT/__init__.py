@@ -113,6 +113,6 @@ from lnst.Recipes.ENRT.DellLACPRecipe import DellLACPRecipe
 from lnst.Recipes.ENRT.SoftwareRDMARecipe import SoftwareRDMARecipe
 from lnst.Recipes.ENRT.XDPDropRecipe import XDPDropRecipe
 from lnst.Recipes.ENRT.CTInsertionRateNftablesRecipe import CTInsertionRateNftablesRecipe
-
+from .CTFulltableInsertionRateRecipe import CTFulltableInsertionRateRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
