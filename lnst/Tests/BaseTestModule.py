@@ -13,8 +13,8 @@ olichtne@redhat.com (Ondrej Lichtner)
 import copy
 import signal
 from lnst.Common.Parameters import Parameters, Param
+from lnst.Common.BaseModule import BaseModule
 from lnst.Common.LnstError import LnstError
-
 
 class TestModuleError(LnstError):
     """Exception used by BaseTestModule and derived classes"""
@@ -24,7 +24,8 @@ class InterruptException(TestModuleError):
     """Exception used to handle SIGINT waiting"""
     pass
 
-class BaseTestModule(object):
+
+class BaseTestModule(BaseModule):
     """Base class for test modules
 
     All user defined testmodule classes should inherit from this class. The
@@ -57,7 +58,7 @@ class BaseTestModule(object):
                 to class attributes (Param type). Values will be parsed and
                 set to Param instances under the self.params object.
         """
-        self._orig_kwargs = kwargs.copy()
+        super().__init__(**kwargs)
         #by defaults loads the params into self.params - no checks pseudocode:
         self.params = Parameters()
 
@@ -81,11 +82,6 @@ class BaseTestModule(object):
             for name in list(kwargs.keys()):
                 raise TestModuleError("Unknown parameter {}".format(name))
 
-        self._res_data = None
-
-    def run(self):
-        raise NotImplementedError("Method 'run' MUST be defined")
-
     def wait_for_interrupt(self):
         def handler(signum, frame):
             raise InterruptException()
@@ -98,16 +94,3 @@ class BaseTestModule(object):
         finally:
             signal.signal(signal.SIGINT, old_handler)
 
-    def _get_res_data(self):
-        return self._res_data
-
-    def __repr__(self):
-        return "{}({})".format(
-            self.__class__.__name__,
-            ", ".join(
-                [
-                    "{}={}".format(k, repr(v))
-                    for k, v in self._orig_kwargs.items()
-                ]
-            ),
-        )
