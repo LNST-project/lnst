@@ -13,8 +13,8 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import logging
 import signal
+from lnst.Common.BaseModule import BaseModule
 from lnst.Common.JobError import JobError
-from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Controller.RecipeResults import ResultLevel, ResultType
 
 DEFAULT_TIMEOUT = 60
@@ -68,7 +68,7 @@ class Job(object):
 
     @property
     def type(self):
-        if isinstance(self.what, BaseTestModule):
+        if isinstance(self.what, BaseModule):
             return "module"
         elif isinstance(self.what, str):
             return "shell"
