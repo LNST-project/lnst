@@ -265,3 +265,9 @@ class Namespace(object):
             return
 
         dev._id = name
+
+    def keep_addrs_on_dev_down(self, device: Device) -> None:
+        self.run(f"echo 1 > /proc/sys/net/ipv6/conf/{device.name}/keep_addr_on_down")
+
+    def remove_addrs_on_dev_down(self, device: Device):
+        self.run(f"echo 0 > /proc/sys/net/ipv6/conf/{device.name}/keep_addr_on_down")
