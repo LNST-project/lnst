@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from lnst.Recipes.ENRT.ConfigMixins import BaseSubConfigMixin
 from lnst.RecipeCommon.FirewallControl import FirewallControl
 import copy
 
-class FirewallMixin(BaseSubConfigMixin, ABC):
+class FirewallMixin(BaseSubConfigMixin):
     """
     A config mixin to apply custom firewall rulesets on hosts.
     Do not inherit directly, use one of the derived classes below instead.
