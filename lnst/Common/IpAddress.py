@@ -174,3 +174,8 @@ def ipaddress(addr, flags=None):
     else:
         raise LnstError("Value must be a BaseIpAddress or string object."
                         " Not {}".format(type(addr)))
+
+
+def ip_version_string(ip_address: BaseIpAddress) -> str:
+    return "ipv4" if isinstance(ip_address, Ip4Address) else "ipv6"
+

@@ -1,0 +1,6 @@
+from .CTInsertionRateNftablesRecipe import CTInsertionRateNftablesRecipe
+from .ConfigMixins.LongLivedConnectionsMixin import LongLivedConnectionsMixin
+
+class CTFulltableInsertionRateRecipe(LongLivedConnectionsMixin, CTInsertionRateNftablesRecipe):
+    pass
+

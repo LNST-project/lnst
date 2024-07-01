@@ -24,6 +24,7 @@ from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.Job import Job
 from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Agent.conditions.WaitForConditionModule import WaitForConditionModule
 
 class HostError(ControllerError):
     pass
@@ -128,6 +129,12 @@ class Namespace(object):
         job = self.prepare_job(what, fail, json, desc, job_level)
         job.start(bg, timeout)
         return job
+    
+    def wait_for_condition(self, condition: WaitForConditionModule):
+        job = self.prepare_job(condition)
+        job.start(bg=True)
+
+        return self._machine.wait_for_job(job, condition.timeout)
 
     def __getattr__(self, name):
         """direct access to Device objects
@@ -258,3 +265,9 @@ class Namespace(object):
             return
 
         dev._id = name
+
+    def keep_addrs_on_dev_down(self, device: Device) -> None:
+        self.run(f"echo 1 > /proc/sys/net/ipv6/conf/{device.name}/keep_addr_on_down")
+
+    def remove_addrs_on_dev_down(self, device: Device):
+        self.run(f"echo 0 > /proc/sys/net/ipv6/conf/{device.name}/keep_addr_on_down")

@@ -1,7 +1,6 @@
 from collections.abc import Iterator, Collection
 import itertools
 
-from lnst.Common.IpAddress import BaseIpAddress, Ip4Address
 from lnst.Common.Parameters import (
     Param,
     IntParam,
@@ -10,6 +9,7 @@ from lnst.Common.Parameters import (
     ChoiceParam,
 )
 
+from lnst.Common.IpAddress import ip_version_string
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Perf.Measurements import (
     IperfFlowMeasurement,
@@ -19,7 +19,6 @@ from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 
 from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import BaseMeasurementGenerator
-
 
 
 MEASUREMENT_LOOKUP = {
@@ -106,9 +105,6 @@ class BaseFlowMeasurementGenerator(BaseMeasurementGenerator):
         :return: list of Flow combinations to measure in parallel
         :rtype: Iterator[:any:`PerfFlow`]
         """
-        def ip_version_string(ip_address: BaseIpAddress) -> str:
-            return "ipv4" if isinstance(ip_address, Ip4Address) else "ipv6"
-
         for parallel_endpoint_pairs in self.generate_perf_endpoints(config):
             for ip_version in self.params.ip_versions:
                 filtered_parallel_endpoints = [
