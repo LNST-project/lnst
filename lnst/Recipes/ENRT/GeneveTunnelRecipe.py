@@ -170,19 +170,19 @@ class GeneveTunnelRecipe(
         pa_kwargs = {}
         if self.params.carrier_ipversion == "ipv4":
             pa_kwargs["p_filter"] = "ip host {}".format(m1_carrier_ip)
-            grep_pattern = "IP "
+            grep_pattern = r"IP "
         else:
             pa_kwargs["p_filter"] = "ip6"
-            grep_pattern = "IP6 "
+            grep_pattern = r"IP6 "
 
-        grep_pattern += "{}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2: ".format(
+        grep_pattern += r"{}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2: ".format(
             m1_carrier_ip, m2_carrier_ip
         )
 
         if isinstance(ip2, Ip4Address):
-            grep_pattern += "IP {} > {}: ICMP".format(ip1, ip2)
+            grep_pattern += r"IP {} > {}: ICMP".format(ip1, ip2)
         elif isinstance(ip2, Ip6Address):
-            grep_pattern += "IP6 {} > {}: ICMP6".format(ip1, ip2)
+            grep_pattern += r"IP6 {} > {}: ICMP6".format(ip1, ip2)
 
         pa_kwargs["grep_for"] = [grep_pattern]
 

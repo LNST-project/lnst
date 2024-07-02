@@ -111,7 +111,7 @@ def decorate_string(string, fg_colour=None, bg_colour=None, bold=False):
             decorate_string(s, "red", "light-gray")
     """
 
-    extended_re = "^extended\(([0-9]+)\)$"
+    extended_re = r"^extended\(([0-9]+)\)$"
 
     # parameters for the colouring functions (fg_num, bg_num)
     # the bold flag is handled separately
@@ -161,7 +161,7 @@ def decorate_with_preset(string, preset):
     return decorate_string(string, p[0], p[1], p[2])
 
 def strip_colours(text):
-   return re.sub("\033\[[0-9]+(;[0-9]+){0,2}m", "", text)
+   return re.sub(r"\033\[[0-9]+(;[0-9]+){0,2}m", "", text)
 
 def get_preset_conf(preset_name):
     preset = PRESETS[preset_name]
@@ -174,7 +174,7 @@ def load_presets_from_config(lnst_config):
             continue
         fg, bg, bf = preset
 
-        extended_re = "^extended\([0-9]+\)$"
+        extended_re = r"^extended\([0-9]+\)$"
 
         if fg == "default":
             fg = None

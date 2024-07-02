@@ -23,7 +23,7 @@ from lnst.Devices.BondDevice import BondDevice as BondDeviceType
 
 
 class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe):
-    """
+    r"""
     This recipe implements Enrt testing for a network scenario that looks
     as follows
 

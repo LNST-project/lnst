@@ -191,9 +191,9 @@ class AgentPoolManager(object):
     def add_file(self, pool_name, dir_path, dirent):
         filepath = dir_path + "/" + dirent
         pool = self._pools[pool_name]
-        if os.path.isfile(filepath) and re.search("\.xml$", filepath, re.I):
+        if os.path.isfile(filepath) and re.search(r"\.xml$", filepath, re.I):
             dirname, basename = os.path.split(filepath)
-            m_id = re.sub("\.[xX][mM][lL]$", "", basename)
+            m_id = re.sub(r"\.[xX][mM][lL]$", "", basename)
 
             parser = AgentMachineParser(filepath, self._ctl_config)
             xml_data = parser.parse()

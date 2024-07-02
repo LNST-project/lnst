@@ -17,7 +17,7 @@ from lnst.Devices import VlanDevice
 class VlansRecipe(VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
-    """
+    r"""
     This recipe implements Enrt testing for a network scenario that looks
     as follows
 

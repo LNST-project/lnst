@@ -163,23 +163,23 @@ class Ip6GreTunnelRecipe(
         pa_kwargs["p_filter"] = "ip6"
 
         if isinstance(ip2, Ip4Address):
-            pat1 = "{} > {}:( DSTOPT)? GREv0, .* IP {} > {}: ICMP echo request".format(
+            pat1 = r"{} > {}:( DSTOPT)? GREv0, .* IP {} > {}: ICMP echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            pat2 = "{} > {}:( DSTOPT)? GREv0 \| {} > {}: ICMP echo request".format(
+            pat2 = r"{} > {}:( DSTOPT)? GREv0 \| {} > {}: ICMP echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            grep_pattern = ["({})|({})".format(pat1, pat2)]
+            grep_pattern = [r"({})|({})".format(pat1, pat2)]
         elif isinstance(ip2, Ip6Address):
             pat1 = (
-                "{} > {}:( DSTOPT)? GREv0, .* IP6 {} > {}: ICMP6, echo request".format(
+                r"{} > {}:( DSTOPT)? GREv0, .* IP6 {} > {}: ICMP6, echo request".format(
                     m1_carrier_ip, m2_carrier_ip, ip1, ip2
                 )
             )
-            pat2 = "{} > {}:( DSTOPT)? GREv0 \| {} > {}: ICMP6, echo request".format(
+            pat2 = r"{} > {}:( DSTOPT)? GREv0 \| {} > {}: ICMP6, echo request".format(
                 m1_carrier_ip, m2_carrier_ip, ip1, ip2
             )
-            grep_pattern = ["({})|({})".format(pat1, pat2)]
+            grep_pattern = [r"({})|({})".format(pat1, pat2)]
         else:
             raise Exception("The destination address is nor IPv4 or IPv6 address")
 

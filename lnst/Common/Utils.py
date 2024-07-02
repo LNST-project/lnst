@@ -76,7 +76,7 @@ def kmod_in_use(modulename, tries = 1):
     handle = open(mod_file, "r")
     for line in handle:
         match = re.match(r'^(\S+)\s\d+\s(\d+).*$', line)
-        if not match or not match.groups()[0] in re.split('\s+', modulename):
+        if not match or not match.groups()[0] in re.split(r'\s+', modulename):
             continue
         if int(match.groups()[1]) != 0:
             ret = True
@@ -94,7 +94,7 @@ def kmod_loaded(modulename, tries = 1):
     handle = open(mod_file, "r")
     for line in handle:
         match = re.match(r'^(\S+)\s\d+\s\d+\s\S+\s(Live|Loading|Unloading).*$', line)
-        if not match or not match.groups()[0] in re.split('\s+', modulename):
+        if not match or not match.groups()[0] in re.split(r'\s+', modulename):
             continue
         if match.groups()[1] == "Live":
             ret = True
@@ -114,9 +114,9 @@ def int_it(val):
 
 def bool_it(val):
     if isinstance(val, str):
-        if re.match("^\s*(true|yes)", val, flags=re.IGNORECASE):
+        if re.match(r"^\s*(true|yes)", val, flags=re.IGNORECASE):
             return True
-        elif re.match("^\s*(false|no)", val, flags=re.IGNORECASE):
+        elif re.match(r"^\s*(false|no)", val, flags=re.IGNORECASE):
             return False
     return True if int_it(val) else False
 

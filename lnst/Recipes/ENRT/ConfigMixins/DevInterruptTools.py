@@ -24,7 +24,7 @@ def pin_dev_interrupts(dev, cpus, policy=None):
 
 def check_cpu_validity(host, cpus):
     cpu_info = host.run("lscpu", job_level=ResultLevel.DEBUG).stdout
-    regex = "CPU\(s\): *([0-9]*)"
+    regex = r"CPU\(s\): *([0-9]*)"
     num_cpus = int(re.search(regex, cpu_info).groups()[0])
     for cpu in cpus:
         if cpu < 0 or cpu > num_cpus - 1:

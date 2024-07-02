@@ -115,8 +115,8 @@ class HostnameParam(Param):
         if not isinstance(value, str) or len(value) > 255:
             raise ParamError("Value must be a valid hostname string")
 
-        hostname_re = ("^([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9])"
-                       "(\.([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9]))*$")
+        hostname_re = (r"^([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9])"
+                       r"(\.([A-Z0-9]|[A-Z0-9][A-Z0-9\-]{0,61}[A-Z0-9]))*$")
         if re.match(hostname_re, value, re.IGNORECASE):
             return value
         else:
