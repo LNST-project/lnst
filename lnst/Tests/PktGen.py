@@ -215,4 +215,4 @@ class PktGen(BaseTestModule):
             f.write(f"{cmd}\n")
 
     def runtime_estimate(self):
-        return self.params.duration + 2
+        return self.params.duration + 5
