@@ -24,6 +24,7 @@ from lnst.Devices.RemoteDevice import RemoteDevice
 from lnst.Controller.Common import ControllerError
 from lnst.Controller.Job import Job
 from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Common.conditions.WaitForConditionModule import WaitForConditionModule
 
 class HostError(ControllerError):
     pass
@@ -128,6 +129,12 @@ class Namespace(object):
         job = self.prepare_job(what, fail, json, desc, job_level)
         job.start(bg, timeout)
         return job
+    
+    def wait_for_condition(self, condition: WaitForConditionModule):
+        job = self.prepare_job(condition)
+        job.start(bg=True)
+
+        return self._machine.wait_for_job(job, condition.timeout)
 
     def __getattr__(self, name):
         """direct access to Device objects
