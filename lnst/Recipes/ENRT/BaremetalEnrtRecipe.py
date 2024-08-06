@@ -1,4 +1,5 @@
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
+from lnst.Recipes.ENRT.UseVfsMixin import UseVfsMixin
 from lnst.Recipes.ENRT.PerfTestMixins import CommonPerfTestTweakMixin
 from lnst.Recipes.ENRT.ConfigMixins.DisableTurboboostMixin import (
     DisableTurboboostMixin,
@@ -55,6 +56,7 @@ class BaremetalEnrtCommonMixins(
 
 
 class BaremetalEnrtRecipe(
+    UseVfsMixin,
     BaremetalEnrtCommonMixins,
     BaremetalEnrtMeasurementGenerators,
     BaseEnrtRecipe,
