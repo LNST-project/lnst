@@ -42,8 +42,9 @@ class SRIOVDevices():
         for vf_index, vf in enumerate(self.vfs):
             phys_dev.host.map_device(f"{phys_dev._id}_vf{vf_index}", {"ifname": vf.name})
 
-        for vf_rep_index, vf_rep in enumerate(self.vf_reps):
-            phys_dev.host.map_device(f"{phys_dev._id}_vf_rep{vf_rep_index}", {"ifname": vf_rep.name})
+        if self.vf_reps is not None:
+            for vf_rep_index, vf_rep in enumerate(self.vf_reps):
+                phys_dev.host.map_device(f"{phys_dev._id}_vf_rep{vf_rep_index}", {"ifname": vf_rep.name})
 
     def __iter__(self):
         if self.vf_reps:
