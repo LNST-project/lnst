@@ -50,3 +50,16 @@ class UseVfsMixin:
                     sriov_devices.phys_dev.delete_vfs()
 
         super().test_wide_deconfiguration(config)
+
+    def generate_test_wide_description(self, config):
+        description = super().generate_test_wide_description(config)
+
+        if self.params.use_vfs:
+            description += [
+                f"Using vf device {vf_dev.name} of pf {sriov_devices.phys_dev.name} for DeviceReq {host.hostid}.{vf_dev._id}"
+                for host, sriov_devices_list in config.vf_config.items()
+                for sriov_devices in sriov_devices_list
+                for vf_dev in sriov_devices.vfs
+            ]
+
+        return description
