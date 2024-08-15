@@ -85,11 +85,10 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         | host2.eth0 = 192.168.10.2/24 and fc00:0:0:1::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         teamd_config = {'runner': {'name': self.params.runner_name}}
         host1.team0 = TeamDevice(config=teamd_config)
-
-        config = super().test_wide_configuration()
 
         for dev in [host1.eth0, host1.eth1]:
             dev.down()

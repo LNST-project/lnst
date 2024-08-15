@@ -47,13 +47,12 @@ class TeamVsBondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin,
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         host1.team0 = TeamDevice(config={'runner': {'name': self.params.runner_name}})
-
         host2.bond0 = BondDevice(mode=self.params.bonding_mode,
             miimon=self.params.miimon_value)
 
-        config = super().test_wide_configuration()
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
 

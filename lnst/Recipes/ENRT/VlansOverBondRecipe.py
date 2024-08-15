@@ -115,6 +115,7 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         | host2.vlan2 = 192.168.30.2/24 and fc00:0:0:3::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         host1.bond0 = BondDevice(mode=self.params.bonding_mode,
             miimon=self.params.miimon_value)
@@ -129,7 +130,6 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
         host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
 
-        config = super().test_wide_configuration()
         config.track_device(host1.bond0)
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)

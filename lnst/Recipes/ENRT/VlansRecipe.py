@@ -85,6 +85,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
 
         """
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         host1.eth0.down()
         host2.eth0.down()
@@ -95,8 +96,6 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan0_id)
         host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
         host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
-
-        config = super().test_wide_configuration()
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
         vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6)

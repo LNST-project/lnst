@@ -89,9 +89,10 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         """
 
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
+
         host1.bond0 = BondDevice(mode=self.params.bonding_mode,
             miimon=self.params.miimon_value)
-        config = super().test_wide_configuration()
 
         for dev in [host1.eth0, host1.eth1]:
             dev.down()
