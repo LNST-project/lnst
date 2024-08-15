@@ -71,7 +71,7 @@ class LongLivedServer(BaseLongLivedTestModule):
 
         self._listening_thread.join()
         self._polling_thread.join()
-        
+
         self._result = (
             True if len(self._connections) == self.params.connections_count else False
         )
@@ -144,6 +144,7 @@ class LongLivedClient(BaseLongLivedTestModule):
 
     def _start_connection(self):
         sck = socket.socket(self.params.server_ip.family, socket.SOCK_STREAM)
+        sck.setsockopt(socket.IPPROTO_IP, 0x18, 1)
         sck.bind(
             (str(self.params.client_ip), 0)
         )  # needs to be binded to specific IP to respect flow IPs
