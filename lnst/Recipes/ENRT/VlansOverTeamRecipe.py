@@ -58,6 +58,7 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
 
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
+        config = super().test_wide_configuration()
 
         host1.team0 = TeamDevice(config={'runner': {'name': self.params.runner_name}})
         for dev in [host1.eth0, host1.eth1]:
@@ -71,7 +72,6 @@ class VlansOverTeamRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         host2.vlan1 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan1_id)
         host2.vlan2 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan2_id)
 
-        config = super().test_wide_configuration()
         config.track_device(host1.team0)
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
