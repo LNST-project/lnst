@@ -171,6 +171,25 @@ class PerfList(list):
             )
         return result
 
+    def samples_slice(self, slicer: callable):
+        """Function slices samples in deepest PerfList object recursively
+        and returns new PerfList object (the same type as self), hierarchy
+        of nested PerfList objects is preserved.
+        """
+        result = self.__class__()
+
+        if len(self) == 0:
+            raise EmptySlice("No samples to slice.")
+
+        if isinstance(self[0], PerfInterval):
+            result.extend(self[slicer])
+        elif isinstance(self[0], PerfList):
+            for item in self:
+                result.append(item.samples_slice(slicer))
+
+        return result
+
+
 class SequentialPerfResult(PerfList, PerfResult):
     @property
     def value(self):
