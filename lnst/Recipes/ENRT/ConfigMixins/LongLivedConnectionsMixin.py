@@ -182,6 +182,9 @@ class LongLivedConnectionsMixin(BasePerfTestTweakMixin):
         for client_job, _ in config.long_lived_connections:
             client_job.start(bg=True)
 
+        self.wait_for_long_lived_connections()
+
+    def wait_for_long_lived_connections(self):
         for version in self.params.ip_versions:
             for stream in self.params.perf_tests:
                 addr = (
@@ -198,6 +201,10 @@ class LongLivedConnectionsMixin(BasePerfTestTweakMixin):
         logging.info("Long-lived connections established")
 
     def remove_perf_test_tweak(self, config):
+        self.stop_jobs(config)
+        return super().remove_perf_test_tweak(config)
+
+    def stop_jobs(self, config):
         for client_job, server_job in config.long_lived_connections:
             kwargs = {}
 
@@ -216,5 +223,3 @@ class LongLivedConnectionsMixin(BasePerfTestTweakMixin):
                 server_job.kill()
 
         del config.long_lived_connections
-
-        return super().remove_perf_test_tweak(config)
