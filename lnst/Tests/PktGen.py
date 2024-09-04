@@ -1,7 +1,7 @@
 import re
 import time
 import logging
-from subprocess import Popen
+from subprocess import Popen, check_output, CalledProcessError
 from threading import Thread
 from typing import Iterator, Union
 
@@ -139,9 +139,7 @@ class PktGen(BaseTestModule):
         self._output_parser = None
 
     def run(self):
-        if not kmod_loaded("pktgen"):
-            raise TestModuleError("pktgen module is not loaded")
-
+        self._load_pktgen_module()
         self._pg_ctrl("reset")
         self._configure_generator()
 
@@ -160,6 +158,15 @@ class PktGen(BaseTestModule):
 
         self._deconfigure_generator()
         return True
+
+    def _load_pktgen_module(self):
+        try:
+            check_output(["/usr/sbin/modprobe", "pktgen"])
+        except CalledProcessError as e:
+            logging.debug(f"Modprobe of pktgen failed {e.output}")
+
+        if not kmod_loaded("pktgen"):
+            raise TestModuleError("pktgen module is not loaded")
 
     def _configure_generator(self):
         logging.debug("Configuring generator")
