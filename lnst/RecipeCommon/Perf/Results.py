@@ -155,6 +155,26 @@ class PerfList(list):
 
         super(PerfList, self).__setitem__(i, item)
 
+    def merge_with(self, iterable):
+        for i in iterable:
+            self._validate_item(i)
+
+        result = self.__class__()
+
+        for val1, val2 in zip(self, iterable):
+            if type(val1) != type(val2):
+                raise LnstError("Cannot merge different types of PerfList objects.")
+
+            if isinstance(val1[0], PerfInterval):
+                container = val1.__class__()
+                container.extend(val1)
+                container.extend(val2)
+                result.append(container)
+            elif isinstance(val1[0], PerfList):
+                result.append(val1.merge_with(val2))
+
+        return result
+
     def time_slice(self, start, end):
         result = self.__class__()
         for item in self:
