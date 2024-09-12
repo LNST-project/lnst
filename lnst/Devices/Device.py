@@ -1167,12 +1167,19 @@ class Device(object, metaclass=DeviceMeta):
             return self._nl_msg.get_attr("IFLA_PROP_LIST").get_attrs("IFLA_ALT_IFNAME")
         except:
             return []
-    
+
     def keep_addrs_on_down(self):
         exec_cmd(f"echo 1 > /proc/sys/net/ipv6/conf/{self.name}/keep_addr_on_down")
 
     def remove_addrs_on_down(self):
         exec_cmd(f"echo 0 > /proc/sys/net/ipv6/conf/{self.name}/keep_addr_on_down")
+
+    # TODO: implement through pyroute once supported
+    def vf_trust(self, vf_index: int, trusted: str):
+        if trusted not in ["on", "off"]:
+            raise DeviceConfigError(f"Incorrect value for vf trust: {trusted}")
+
+        exec_cmd(f"ip link set dev {self.name} vf {vf_index} trust {trusted}")
 
     #TODO implement proper Route objects
     #consider the same as with tc?
