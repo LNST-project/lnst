@@ -1167,12 +1167,42 @@ class Device(object, metaclass=DeviceMeta):
             return self._nl_msg.get_attr("IFLA_PROP_LIST").get_attrs("IFLA_ALT_IFNAME")
         except:
             return []
-    
+
     def keep_addrs_on_down(self):
         exec_cmd(f"echo 1 > /proc/sys/net/ipv6/conf/{self.name}/keep_addr_on_down")
 
     def remove_addrs_on_down(self):
         exec_cmd(f"echo 0 > /proc/sys/net/ipv6/conf/{self.name}/keep_addr_on_down")
+
+    # TODO: implement through pyroute once supported
+    @property
+    def vf_trust(self) -> dict[int, str]:
+        return self._vf_trust_read()
+
+    @vf_trust.setter
+    def vf_trust(self, values: dict[int, str]):
+        self._vf_trust_write(values)
+        check = self._vf_trust_read()
+        if check != values:
+            raise DeviceConfigError(
+                f"vf trust values not correctly set!\ncurrent:\n{check}\nexpected:\n{values}")
+
+    def _vf_trust_read(self) -> dict[int, str]:
+        vf_trust_state = {}
+
+        json_data, _ = exec_cmd("ip --json link show dev %s" % self.name, die_on_err=False, json=True)
+        phys_dev_info = json_data[0]
+        for vf_info in phys_dev_info.get("vfinfo_list", []):
+            vf_trust_state[vf_info["vf"]] = "on" if vf_info.get("trust") else "off"
+
+        return vf_trust_state
+
+    def _vf_trust_write(self, values: dict[int, str]):
+        for vf_index, trusted in values.items():
+            if trusted not in ["on", "off"]:
+                raise DeviceConfigError(f"Incorrect value for vf trust: {vf_index}:{trusted}")
+
+            exec_cmd(f"ip link set dev {self.name} vf {vf_index} trust {trusted}")
 
     #TODO implement proper Route objects
     #consider the same as with tc?
