@@ -40,6 +40,43 @@ class PerfResult(PerfStatMixin):
     def time_slice(self, start, end):
         raise NotImplementedError()
 
+class ScalarSample(PerfResult):
+    def __init__(self, value, unit, timestamp):
+        self._value = value
+        self._unit = unit
+        self._timestamp = timestamp
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def duration(self):
+        return 1  # just to make it compatible with other PerfInterval objects
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @property
+    def start_timestamp(self):
+        return self._timestamp
+
+    @property
+    def end_timestamp(self):
+        return self._timestamp
+
+    def time_slice(self, start, end):
+        if end <= self.start_timestamp or start >= self.end_timestamp:
+            raise EmptySlice(
+                "current start, end {} {}; request start, end {}, {}".format(
+                    self.start_timestamp, self.end_timestamp, start, end,
+                )
+            )
+
+        return ScalarSample(self.value, self.unit, self.start_timestamp)
+    
+
 class PerfInterval(PerfResult):
     def __init__(self, value, duration, unit, timestamp):
         self._value = value
@@ -110,7 +147,8 @@ class PerfList(list):
 
     def _validate_item_type(self, item):
         if (not isinstance(item, PerfInterval) and
-            not isinstance(item, PerfList)):
+            not isinstance(item, PerfList) and
+            not isinstance(item, ScalarSample)):
             raise LnstError("{} only accepts PerfInterval or PerfList objects."
                             .format(self.__class__.__name__))
 
@@ -165,7 +203,7 @@ class PerfList(list):
             if type(val1) != type(val2):
                 raise LnstError("Cannot merge different types of PerfList objects.")
 
-            if isinstance(val1[0], PerfInterval):
+            if isinstance(val1[0], PerfInterval) or isinstance(val1[0], ScalarSample):
                 container = val1.__class__()
                 container.extend(val1)
                 container.extend(val2)
@@ -201,7 +239,7 @@ class PerfList(list):
         if len(self) == 0:
             raise EmptySlice("No samples to slice.")
 
-        if isinstance(self[0], PerfInterval):
+        if isinstance(self[0], PerfInterval) or isinstance(self[0], ScalarSample):
             result.extend(self[slicer])
         elif isinstance(self[0], PerfList):
             for item in self:
@@ -234,6 +272,11 @@ class SequentialPerfResult(PerfList, PerfResult):
     def end_timestamp(self):
         return self[-1].end_timestamp
 
+
+class SequentialScalarResult(SequentialPerfResult):
+    pass
+
+
 class ParallelPerfResult(PerfList, PerfResult):
     @property
     def value(self):
@@ -259,6 +302,15 @@ class ParallelPerfResult(PerfList, PerfResult):
     @property
     def end_timestamp(self):
         return max([i.end_timestamp for i in self])
+
+
+class ParallelScalarResult(ParallelPerfResult):
+    @property
+    def average(self):
+        samples_count = sum([len(i) for i in self])
+
+        return self.value / samples_count
+
 
 def result_averages_difference(a, b):
     if a is None or b is None:
