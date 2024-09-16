@@ -3,6 +3,7 @@ import logging
 import socket
 from time import sleep
 from json import loads
+from typing import Optional
 from lnst.Controller.AgentPoolManager import PoolManagerError
 from lnst.Controller.Machine import Machine
 from lnst.Common.DependencyError import DependencyError
@@ -38,10 +39,15 @@ class ContainerPoolManager(object):
     :param image:
         Mandatory parameter
     :type image: str
+
+    :param network_plugin:
+        Podman network plugin, 'cni' or 'netavark', if unset, the network backend is auto-detected
+    :type network_plugin: Optional[str]
     """
 
     def __init__(
-        self, pools, msg_dispatcher, ctl_config, podman_uri, image, pool_checks=True
+        self, pools, msg_dispatcher, ctl_config, podman_uri, image,
+        network_plugin='netavark', pool_checks=True
     ):
         self._import_optionals()
         self._pool = {}
@@ -54,6 +60,7 @@ class ContainerPoolManager(object):
         self._image = ""
         self._podman_connect(podman_uri)
         self.image = image
+        self.network_plugin = network_plugin
 
         self._networks = {}
         self._network_prefix = "lnst_container_net_"
@@ -77,10 +84,12 @@ class ContainerPoolManager(object):
             global APIError
             global Container
             global Network
+            global IPAMConfig
 
             from podman.errors import APIError
             from podman.domain.containers import Container
             from podman.domain.networks import Network
+            from podman.domain.ipam import IPAMConfig
 
         except ModuleNotFoundError as e:
             raise DependencyError(e)
@@ -207,7 +216,21 @@ class ContainerPoolManager(object):
 
         return container, machine
 
-    def _create_network(self, network_name: str):
+    def _create_network(self, network_name: str, plugin: Optional[str]):
+        if not plugin:
+            podman_info = self._podman_client.info()
+            plugin = podman_info["host"]["networkBackend"]
+
+        logging.debug(f"Using {plugin} network backend for containers")
+
+        if plugin == "netavark":
+            return self._create_network_netavark(network_name)
+        elif plugin == "cni":
+            return self._create_network_cni(network_name)
+        else:
+            raise PoolManagerError(f"Unknown podman network plugin {plugin}")
+
+    def _create_network_cni(self, network_name: str):
         """Networks are created "manually" because podman does not
         support creating L2 [1] networks. IPs in these networks are managed
         by controller.
@@ -239,6 +262,32 @@ class ContainerPoolManager(object):
         }
 """
                 )
+            network = self._podman_client.networks.get(name)
+        except APIError as e:
+            raise PoolManagerError(f"Could not create network {name}: {e}")
+        except IOError as e:
+            raise PoolManagerError(f"Could not create network configuration file: {e}")
+
+        self._networks[name] = network
+
+        return network
+
+    def _create_network_netavark(self, network_name: str):
+        name = self.get_network_name(network_name)
+        if name in self._networks:
+            return self._networks[name]
+
+        ipam_config = IPAMConfig(
+            driver="none",
+        )
+        logging.info(f"Creating network {name}")
+        try:
+            self._podman_client.networks.create(
+                name,
+                internal=True,
+                enable_ipv6=True,
+                ipam=ipam_config,
+            )
             network = self._podman_client.networks.get(name)
         except APIError as e:
             raise PoolManagerError(f"Could not create network {name}: {e}")
@@ -292,7 +341,7 @@ class ContainerPoolManager(object):
             name = params["network"]
             logging.debug(f"Connecting {container.name} to {name}")
 
-            network = self._create_network(name)
+            network = self._create_network(name, self.network_plugin)
 
             self._connect_to_network(container, network)
 
