@@ -1,8 +1,6 @@
 from collections.abc import Collection
 from lnst.Common.Parameters import (
     Param,
-    IntParam,
-    StrParam,
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
@@ -18,11 +16,11 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
     PerfReversibleFlowMixin)
+from lnst.Recipes.ENRT.BondingMixin import BondingMixin
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
-from lnst.Devices import BondDevice
 from lnst.Devices import RemoteDevice
 
-class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
+class BondRecipe(BondingMixin, PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
     """
     This recipe implements Enrt testing for a network scenario that looks
@@ -44,15 +42,8 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         |            host1            |     |      host2     |
         '-----------------------------'     '----------------'
 
-    The recipe provides additional recipe parameters to configure the bonding
+    Refer to :any:`BondingMixin` for parameters to configure the bonding
     device.
-
-        :param bonding_mode:
-            (mandatory test parameter) the bonding mode to be configured on
-            the bond0 device.
-        :param miimon_value:
-            (mandatory test parameter) the miimon interval to be configured
-            on the bond0 device.
 
     All sub configurations are included via Mixin classes.
 
@@ -74,9 +65,6 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    bonding_mode = StrParam(mandatory=True)
-    miimon_value = IntParam(mandatory=True)
-
     def test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves creating a bonding
@@ -92,12 +80,14 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         host1, host2 = self.matched.host1, self.matched.host2
         config = super().test_wide_configuration()
 
-        host1.bond0 = BondDevice(mode=self.params.bonding_mode,
-            miimon=self.params.miimon_value)
 
-        for dev in [host1.eth0, host1.eth1]:
-            dev.down()
-            host1.bond0.slave_add(dev)
+        self.create_bond_devices(
+            {
+                "host1": {
+                    "bond0": [host1.eth0, host1.eth1]
+                }
+            }
+        )
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
@@ -142,6 +132,12 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
                 host1.bond0.miimon
             )
         ]
+
+        if self.params.bonding_mode in ["active-backup", "1"]:
+            desc += ["Configured {}.{}.fail_over_mac = {}".format(
+                host1.hostid, host1.bond0.name,
+                self.params.fail_over_mac
+            )]
         return desc
 
     def generate_ping_endpoints(self, config):
