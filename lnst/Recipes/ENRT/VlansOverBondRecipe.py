@@ -2,7 +2,6 @@ from collections.abc import Collection
 from lnst.Common.Parameters import (
     Param,
     IntParam,
-    StrParam,
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
@@ -18,13 +17,13 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
     PerfReversibleFlowMixin)
+from lnst.Recipes.ENRT.BondingMixin import BondingMixin
 from lnst.Devices import VlanDevice
 from lnst.Devices.VlanDevice import VlanDevice as Vlan
-from lnst.Devices import BondDevice
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 
-class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
+class VlansOverBondRecipe(BondingMixin, PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
     r"""
@@ -50,15 +49,8 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         |          host1         |   |        host2        |
         '------------------------'   '---------------------'
 
-    The recipe provides additional recipe parameters to configure the bonding
+    Refer to :any:`BondingMixin` for parameters to configure the bonding
     device.
-
-    :param bonding_mode:
-        (mandatory test parameter) the bonding mode to be configured on
-        the bond0 device
-    :param miimon_value:
-        (mandatory test parameter) the miimon interval to be configured
-        on the bond0 device
 
     All sub configurations are included via Mixin classes.
 
@@ -90,9 +82,6 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     vlan2_ipv4 = IPv4NetworkParam(default="192.168.30.0/24")
     vlan2_ipv6 = IPv6NetworkParam(default="fc00:0:0:3::/64")
 
-    bonding_mode = StrParam(mandatory=True)
-    miimon_value = IntParam(mandatory=True)
-
     def test_wide_configuration(self):
         """
         Test wide configuration for this recipe involves creating one bonding
@@ -117,11 +106,15 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         host1, host2 = self.matched.host1, self.matched.host2
         config = super().test_wide_configuration()
 
-        host1.bond0 = BondDevice(mode=self.params.bonding_mode,
-            miimon=self.params.miimon_value)
-        for dev in [host1.eth0, host1.eth1]:
-            dev.down()
-            host1.bond0.slave_add(dev)
+        self.create_bond_devices(
+            config,
+            {
+                "host1":
+                {
+                    "bond0": [host1.eth0, host1.eth1]
+                }
+            }
+        )
 
         host1.vlan0 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan0_id)
         host1.vlan1 = VlanDevice(realdev=host1.bond0, vlan_id=self.params.vlan1_id)
@@ -157,11 +150,6 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
         return config
 
     def generate_test_wide_description(self, config: EnrtConfiguration):
-        """
-        Test wide description is extended with the configured VLAN tunnels,
-        their IP addresses and the bonding device configuration.
-        """
-        host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
@@ -186,20 +174,8 @@ class VlansOverBondRecipe(PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
                 for dev in config.configured_devices if isinstance(dev,
                     Vlan)
             ]),
-            "Configured {}.{}.slaves = {}".format(
-                host1.hostid, host1.bond0.name,
-                ['.'.join([host1.hostid, slave.name])
-                for slave in host1.bond0.slaves]
-            ),
-            "Configured {}.{}.mode = {}".format(
-                host1.hostid, host1.bond0.name,
-                host1.bond0.mode
-            ),
-            "Configured {}.{}.miimon = {}".format(
-                host1.hostid, host1.bond0.name,
-                host1.bond0.miimon
-            )
         ]
+
         return desc
 
     def generate_ping_endpoints(self, config):
