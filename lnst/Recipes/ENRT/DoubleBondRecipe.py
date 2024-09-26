@@ -1,8 +1,6 @@
 from collections.abc import Collection
 from lnst.Common.Parameters import (
     Param,
-    IntParam,
-    StrParam,
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
@@ -16,11 +14,39 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.BondingMixin import BondingMixin
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
-from lnst.Devices import BondDevice
 
-class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
+
+class DoubleBondRecipe(BondingMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
+    """
+    This recipe implements Enrt testing for a network scenario that looks
+    as follows
+
+    .. code-block:: none
+
+                                    .--------.
+                   .----------------+        +------------------.
+                   |        .-------+ switch +---------.        |
+                   |        |       '--------'         |        |
+             .-------------------.               .-------------------.
+             |     | bond0  |    |               |     | bond0  |    |
+             | .---'--. .---'--. |               | .---'--. .---'--. |
+        .----|-| eth0 |-| eth1 |-|----.     .----|-| eth0 |-| eth1 |-|----.
+        |    | '------' '------' |    |     |    | '------' '------' |    |
+        |    '-------------------'    |     |    '-------------------'    |
+        |                             |     |                             |
+        |            host1            |     |            host2            |
+        '-----------------------------'     '-----------------------------'
+
+    Refer to :any:`BondingMixin` for parameters to configure the bonding
+    device.
+
+    All sub configurations are included via Mixin classes.
+
+    The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
+    """
     host1 = HostReq()
     host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
     host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
@@ -38,21 +64,26 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    bonding_mode = StrParam(mandatory=True)
-    miimon_value = IntParam(mandatory=True)
-
     def test_wide_configuration(self):
         host1, host2 = self.matched.host1, self.matched.host2
         config = super().test_wide_configuration()
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)
+
+        self.create_bond_devices(
+            config,
+            {
+                "host1": {
+                    "bond0": [host1.eth0, host1.eth1]
+                },
+                "host2": {
+                    "bond0": [host2.eth0, host2.eth1]
+                }
+            }
+        )
+
         for host in [host1, host2]:
-            host.bond0 = BondDevice(mode=self.params.bonding_mode,
-                miimon=self.params.miimon_value)
-            for dev in [host.eth0, host.eth1]:
-                dev.down()
-                host.bond0.slave_add(dev)
             config.configure_and_track_ip(host.bond0, next(ipv4_addr))
             config.configure_and_track_ip(host.bond0, next(ipv6_addr))
             for dev in [host.eth0, host.eth1, host.bond0]:
@@ -63,7 +94,6 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
         return config
 
     def generate_test_wide_description(self, config: EnrtConfiguration):
-        host1, host2 = self.matched.host1, self.matched.host2
         desc = super().generate_test_wide_description(config)
         desc += [
             "\n".join([
@@ -71,28 +101,9 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
                     dev.host.hostid, dev.name, dev.ips
                 )
                 for dev in config.configured_devices
-            ]),
-            "\n".join([
-                "Configured {}.{}.slaves = {}".format(
-                    dev.host.hostid, dev.name,
-                    ['.'.join([dev.host.hostid, slave.name])
-                        for slave in dev.slaves]
-                )
-                for dev in config.configured_devices
-            ]),
-            "\n".join([
-                "Configured {}.{}.mode = {}".format(
-                    dev.host.hostid, dev.name, dev.mode
-                )
-                for dev in config.configured_devices
-            ]),
-            "\n".join([
-                "Configured {}.{}.miimon = {}".format(
-                    dev.host.hostid, dev.name, dev.miimon
-                )
-                for dev in config.configured_devices
             ])
         ]
+
         return desc
 
     def generate_ping_endpoints(self, config):
