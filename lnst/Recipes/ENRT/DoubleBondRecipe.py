@@ -18,6 +18,7 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BondDevice
+from lnst.Devices import RemoteDevice
 
 class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
@@ -118,3 +119,7 @@ class DoubleBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin,
     def parallel_stream_qdisc_hw_config_dev_list(self):
         host1, host2 = self.matched.host1, self.matched.host2
         return [host1.eth0, host1.eth1, host2.eth0, host2.eth1]
+
+    @property
+    def vf_trust_device_list(self) -> list[RemoteDevice]:
+        return [sriov_devices.phys_dev for sriov_devices_list in self.vf_config.values() for sriov_devices in sriov_devices_list]
