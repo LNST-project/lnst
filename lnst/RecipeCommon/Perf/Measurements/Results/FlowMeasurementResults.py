@@ -84,33 +84,11 @@ class FlowMeasurementResults(BaseMeasurementResults):
 
     @property
     def warmup_end(self):
-        if self.warmup_duration == 0:
-            return self.start_timestamp
-
-        return max(
-            [
-                parallel[self.warmup_duration - 1].end_timestamp
-                for parallel in (
-                    *self.generator_results,
-                    *self.receiver_results,
-                )
-            ]
-        )
+        return self.start_timestamp+self.warmup_duration
 
     @property
     def warmdown_start(self):
-        if self.warmup_duration == 0:
-            return self.end_timestamp
-
-        return min(
-            [
-                parallel[-self.warmup_duration].start_timestamp
-                for parallel in (
-                    *self.generator_results,
-                    *self.receiver_results,
-                )
-            ]
-        )
+        return self.end_timestamp-self.warmup_duration
 
     def time_slice(self, start, end):
         result_copy = FlowMeasurementResults(
