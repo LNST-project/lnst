@@ -48,7 +48,7 @@ class UseVfsMixin:
 
         if self.params.get("vf_trust"):
             for dev in self.vf_trust_device_list:
-                dev.vf_trust(0, self.params.vf_trust)
+                dev.vf_trust = {0: self.params.vf_trust}
 
         return config
 
@@ -60,6 +60,8 @@ class UseVfsMixin:
                     host.map_device(vf_dev._id, {"ifname": sriov_devices.phys_dev.name})
                     sriov_devices.phys_dev.delete_vfs()
 
+        self.vf_config = {}
+
         super().test_wide_deconfiguration(config)
 
     def generate_test_wide_description(self, config):
@@ -67,7 +69,7 @@ class UseVfsMixin:
 
         if self.params.use_vfs:
             description += [
-                f"Using vf device {vf_dev.name} of pf {sriov_devices.phys_dev.name} for DeviceReq {host.hostid}.{vf_dev._id}" + (f" trusted={self.params.vf_trust}" if self.params.get("vf_trust") and sriov_devices.phys_dev in self.vf_trust_device_list else "")
+                f"Using vf device {vf_dev.name} of pf {sriov_devices.phys_dev.name} for DeviceReq {host.hostid}.{vf_dev._id}" + (f" trusted={sriov_devices.phys_dev.vf_trust[0]}" if sriov_devices.phys_dev in self.vf_trust_device_list and sriov_devices.phys_dev.vf_trust.get(0) else "")
                 for host, sriov_devices_list in self.vf_config.items()
                 for sriov_devices in sriov_devices_list
                 for vf_dev in sriov_devices.vfs
