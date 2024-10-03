@@ -225,7 +225,7 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
 
     def _parse_job_cpu(self, job):
         if not job.passed:
-            return PerfInterval(0, 0, "cpu_percent", time.time())
+            return PerfInterval(0, 1, "cpu_percent", time.time())
         else:
             cpu_percent = job.result["data"]["end"]["cpu_utilization_percent"]["host_total"]
             job_start = job.result["data"]["start"]["timestamp"]["timesecs"]
