@@ -12,7 +12,7 @@ class NeperFlowMeasurementResults(FlowMeasurementResults):
 
         return max(
             [
-                parallel[self.warmup_duration - 1].end_timestamp
+                parallel.start_timestamp + self.warmup_duration
                 for parallel in self.generator_results
             ]
         )
@@ -27,7 +27,7 @@ class NeperFlowMeasurementResults(FlowMeasurementResults):
 
         return min(
             [
-                parallel[-self.warmup_duration].start_timestamp
+                parallel.end_timestamp - self.warmup_duration
                 for parallel in self.generator_results
             ]
         )
