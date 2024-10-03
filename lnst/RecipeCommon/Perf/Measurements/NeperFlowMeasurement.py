@@ -200,8 +200,8 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         cpu_results = SequentialPerfResult()
 
         if not job.passed:
-            results.append(PerfInterval(0, 0, "transactions", time.time()))
-            cpu_results.append(PerfInterval(0, 0, "cpu_percent", time.time()))
+            results.append(PerfInterval(0, 1, "transactions", time.time()))
+            cpu_results.append(PerfInterval(0, 1, "cpu_percent", time.time()))
         elif job.what.is_crr_server():
             # Neper doesn't support server stats for tcp_crr due to memory issues.
             # Use perf_interval of 0.
