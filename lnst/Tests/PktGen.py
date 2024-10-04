@@ -177,10 +177,10 @@ class PktGen(BaseTestModule):
 
             self._pg_thread(cpu, f"add_device {dev}")
 
-            self._pg_set(cpu, f"flag QUEUE_MAP_CPU")
+            self._pg_set(cpu, "flag QUEUE_MAP_CPU")
             self._pg_set(cpu, f"count {self.params.count}")
             self._pg_set(cpu, f"pkt_size {self.params.pkt_size}")
-            self._pg_set(cpu, f"flag NO_TIMESTAMP")
+            self._pg_set(cpu, "flag NO_TIMESTAMP")
 
             self._pg_set(cpu, f"dst_mac {self.params.dst_mac}")
             self._pg_set(cpu, f"src_mac {self.params.src_if.hwaddr}")
