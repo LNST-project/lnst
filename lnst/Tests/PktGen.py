@@ -171,13 +171,6 @@ class PktGen(BaseTestModule):
     def _configure_generator(self):
         logging.debug("Configuring generator")
 
-        ipv6 = True
-        if isinstance(self.params.src_ip, Ip4Address):
-            ipv6 = False
-
-        src = f"src{6 if ipv6 else ''}"
-        dest = f"dst{6 if ipv6 else ''}"
-
         for cpu in self.params.cpus:
             dev = f"{self.params.src_if.name}@{cpu}"
             logging.debug(f"Adding interface {self.params.src_if.name} to cpu {cpu}")
@@ -192,10 +185,14 @@ class PktGen(BaseTestModule):
             self._pg_set(cpu, f"dst_mac {self.params.dst_mac}")
             self._pg_set(cpu, f"src_mac {self.params.src_if.hwaddr}")
 
-            self._pg_set(cpu, f"{dest}_min {self.params.dst_ip}")
-            self._pg_set(cpu, f"{dest}_max {self.params.dst_ip}")
-            self._pg_set(cpu, f"{src}_min {self.params.src_ip}")
-            self._pg_set(cpu, f"{src}_max {self.params.src_ip}")
+            if isinstance(self.params.src_ip, Ip4Address):
+                self._pg_set(cpu, f"dst_min {self.params.dst_ip}")
+                self._pg_set(cpu, f"dst_max {self.params.dst_ip}")
+                self._pg_set(cpu, f"src_min {self.params.src_ip}")
+                self._pg_set(cpu, f"src_max {self.params.src_ip}")
+            else:
+                self._pg_set(cpu, f"dst6 {self.params.dst_ip}")
+                self._pg_set(cpu, f"src6 {self.params.src_ip}")
 
             self._pg_set(cpu, f"burst {self.params.burst}")
             self._devices.append(dev)
