@@ -20,6 +20,7 @@ from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
     PerfReversibleFlowMixin)
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BondDevice
+from lnst.Devices import RemoteDevice
 
 class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
@@ -245,3 +246,7 @@ class BondRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         """
         return [self.matched.host1.eth0, self.matched.host1.eth1,
             self.matched.host2.eth0]
+
+    @property
+    def vf_trust_device_list(self) -> list[RemoteDevice]:
+        return [sriov_devices.phys_dev for sriov_devices in self.vf_config[self.matched.host1]]
