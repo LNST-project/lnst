@@ -27,13 +27,26 @@ from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeas
 
 
 class XDPBenchMeasurement(BaseFlowMeasurement):
-    def __init__(self, flows: list[Flow], xdp_command: str, recipe_conf=None):
+    def __init__(
+        self,
+        flows: list[Flow],
+        xdp_command: str,
+        xdp_mode: str,
+        xdp_load_mode: str = None,
+        xdp_packet_operation: str = None,
+        xdp_remote_action: str = None,
+        recipe_conf=None,
+    ):
         super().__init__(recipe_conf)
         self._flows = flows
         self._running_measurements = []
         self._finished_measurements = []
 
         self.command = xdp_command
+        self.mode = xdp_mode
+        self.load_mode = xdp_load_mode
+        self.packet_operation = xdp_packet_operation
+        self.remote_action = xdp_remote_action
 
     def version(self):
         return 1.0
@@ -65,6 +78,10 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
     def _prepare_server(self, flow: Flow):
         params = {
             "command": self.command,
+            "xdp_mode": self.mode,
+            "load_mode": self.load_mode,
+            "packet_operation": self.packet_operation,
+            "remote_action": self.remote_action,
             "interface": flow.receiver_nic,
             "duration": flow.duration + flow.warmup_duration * 2,
         }
