@@ -6,9 +6,7 @@ from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import (
 
 class FlowMeasurementResults(BaseMeasurementResults):
     def __init__(self, measurement, flow, warmup_duration=0):
-        super(FlowMeasurementResults, self).__init__(
-            measurement, warmup_duration
-        )
+        super(FlowMeasurementResults, self).__init__(measurement, warmup_duration)
         self._flow = flow
         self._generator_results = None
         self._generator_cpu_stats = None
@@ -84,32 +82,32 @@ class FlowMeasurementResults(BaseMeasurementResults):
 
     @property
     def warmup_end(self):
-        if self.warmup_duration == 0:
-            return self.start_timestamp
-
-        return max(
-            [
-                parallel[self.warmup_duration - 1].end_timestamp
-                for parallel in (
-                    *self.generator_results,
-                    *self.receiver_results,
-                )
-            ]
+        return (
+            max(
+                [
+                    [
+                        self.generator_results.start_timestamp,
+                        self.generator_cpu_stats.start_timestamp,
+                        self.receiver_results.start_timestamp,
+                        self.receiver_cpu_stats.start_timestamp,
+                    ]
+                ]
+            )
+            + self.warmup_duration
         )
 
     @property
     def warmdown_start(self):
-        if self.warmup_duration == 0:
-            return self.end_timestamp
-
-        return min(
-            [
-                parallel[-self.warmup_duration].start_timestamp
-                for parallel in (
-                    *self.generator_results,
-                    *self.receiver_results,
-                )
-            ]
+        return (
+            min(
+                [
+                    self.generator_results.end_timestamp,
+                    self.generator_cpu_stats.end_timestamp,
+                    self.receiver_results.end_timestamp,
+                    self.receiver_cpu_stats.end_timestamp,
+                ]
+            )
+            - self.warmup_duration
         )
 
     def time_slice(self, start, end):
@@ -120,16 +118,10 @@ class FlowMeasurementResults(BaseMeasurementResults):
         result_copy.generator_cpu_stats = self.generator_cpu_stats.time_slice(
             start, end
         )
-        result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(
-            start, end
-        )
+        result_copy.receiver_cpu_stats = self.receiver_cpu_stats.time_slice(start, end)
 
-        result_copy.generator_results = self.generator_results.time_slice(
-            start, end
-        )
-        result_copy.receiver_results = self.receiver_results.time_slice(
-            start, end
-        )
+        result_copy.generator_results = self.generator_results.time_slice(start, end)
+        result_copy.receiver_results = self.receiver_results.time_slice(start, end)
 
         return result_copy
 
