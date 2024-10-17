@@ -63,7 +63,7 @@ class XDPBenchOutputParser:
         return results
 
     def _parse_line(self, line: str) -> tuple:
-        match = re.search(r"Summary\s+([\d,]+)\srx/s\s+([\d,]+)\serr/s?", line)
+        match = re.search(r"Summary\s+([\d,]+)\srx/s\s+([\d,]+)\serr(,drop)?/s?", line)
 
         if not match:  # skip summary line at the end + corrupted lines
             raise ValueError("Invalid line format")
