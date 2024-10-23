@@ -63,7 +63,7 @@ class XDPBenchOutputParser:
         return results
 
     def _parse_line(self, line: str) -> tuple:
-        match = re.search(r"Summary\s+([\d,]+)\srx/s\s+([\d,]+)\serr/s?", line)
+        match = re.search(r"Summary\s+([\d,]+)\srx/s\s+([\d,]+)\serr(,drop)?/s?", line)
 
         if not match:  # skip summary line at the end + corrupted lines
             raise ValueError("Invalid line format")
@@ -84,6 +84,11 @@ XDP_BENCH_COMMANDS = (
     "redirect-map",
     "redirect-multi",
 )
+
+XDP_MODES = ("native", "skb")
+XDP_LOAD_MODES = ("dpa", "load-bytes", "")
+XDP_PACKET_OPERATIONS = ("no-touch", "read-data", "parse-ip", "swap-macs", "")
+XDP_REMOTE_ACTIONS = ("disabled", "drop", "pass", "redirect", "")
 
 
 class XDPBench(BaseTestModule):
@@ -108,15 +113,13 @@ class XDPBench(BaseTestModule):
     interval = IntParam(default=1)
 
     redirect_device = DeviceParam()
-    xdp_mode = ChoiceParam(type=StrParam, choices=("native", "skb"), default="native")
-    load_mode = ChoiceParam(type=StrParam, choices=("dpa", "load-bytes"))
+    xdp_mode = ChoiceParam(type=StrParam, choices=XDP_MODES, default="native")
+    load_mode = ChoiceParam(type=StrParam, choices=XDP_LOAD_MODES)
     packet_operation = ChoiceParam(
-        type=StrParam, choices=("no-touch", "read-data", "parse-ip", "swap-macs")
-    )
+        type=StrParam, choices=XDP_PACKET_OPERATIONS)
     qsize = IntParam()
     remote_action = ChoiceParam(
-        type=StrParam, choices=("disabled", "drop", "pass", "redirect")
-    )
+        type=StrParam, choices=XDP_REMOTE_ACTIONS)
 
     # NOTE: order and names of params above matters. xdp-bench accepts params in that way
     duration = IntParam(default=60, mandatory=True)
@@ -146,6 +149,9 @@ class XDPBench(BaseTestModule):
     def _prepare_arguments(self):
         args = []
         for param, value in self.params:
+            if value == "":
+                continue  # skip empty (default) values
+
             if param == "duration":
                 continue  # not a xdp-bench argument
 
