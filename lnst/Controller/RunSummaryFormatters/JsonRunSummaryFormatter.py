@@ -124,6 +124,11 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                 measurement_data = {
                     "bandwidth": result.data["bandwidth"].average,
                 }
+            elif result.measurement_type == "xdp-bench":
+                measurement_data = {
+                    "generator_results": result.data["generator_results"].average,
+                    "receiver_results": result.data["receiver_results"].average,
+                }
             else:
                 logging.warning(f"unhandled measurement result type: {result.measurement_type}")
                 measurement_data = None

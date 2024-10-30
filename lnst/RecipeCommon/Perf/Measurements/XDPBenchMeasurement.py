@@ -1,6 +1,7 @@
 import time
 import logging
 
+from lnst.Controller.Recipe import BaseRecipe
 from lnst.RecipeCommon.Perf.Measurements.Results.AggregatedXDPBenchMeasurementResults import (
     AggregatedXDPBenchMeasurementResults,
 )
@@ -21,6 +22,7 @@ from lnst.RecipeCommon.Perf.Results import (
 from lnst.Tests.PktGen import PktGen
 from lnst.Tests.XDPBench import XDPBench
 from lnst.Controller.Job import Job
+from lnst.Controller.RecipeResults import MeasurementResult
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 
 
@@ -186,26 +188,28 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
         return new_result
 
     @classmethod
-    def _report_flow_results(cls, recipe, flow_results):
-        generator = flow_results.generator_results
-        receiver = flow_results.receiver_results
+    def report_results(cls, recipe: BaseRecipe, results: list[AggregatedXDPBenchMeasurementResults]):
+        for result in results:
+            generator = result.generator_results
+            receiver = result.receiver_results
 
-        desc = []
-        desc.append(flow_results.describe())
+            desc = []
+            desc.append(result.describe())
 
-        recipe_result = ResultType.PASS
-        metrics = {"Generator": generator, "Receiver": receiver}
-        for name, result in metrics.items():
-            if cls._invalid_flow_duration(result):
-                recipe_result = ResultType.FAIL
-                desc.append("{} has invalid duration!".format(name))
+            recipe_result = ResultType.PASS
+            metrics = {"Generator": generator, "Receiver": receiver}
+            for name, result in metrics.items():
+                if cls._invalid_flow_duration(result):
+                    recipe_result = ResultType.FAIL
+                    desc.append("{} has invalid duration!".format(name))
 
-        recipe.add_result(
-            recipe_result,
-            "\n".join(desc),
-            data=dict(
-                generator_flow_data=generator,
-                receiver_flow_data=receiver,
-                flow_results=flow_results,
-            ),
-        )
+            recipe_result = MeasurementResult(
+                "xdp-bench",
+                description="\n".join(desc),
+                data={
+                    "generator_results": generator,
+                    "receiver_results": receiver,
+                    "flow_results": result,
+                },
+            )
+            recipe.add_custom_result(recipe_result)
