@@ -55,7 +55,7 @@ jobs:
 
     - name: Build LNST agents image
       run: |
-        sudo -E XDG_RUNTIME_DIR= podman build . -t lnst -f container_files/Dockerfile
+        sudo -E XDG_RUNTIME_DIR= podman build . -t lnst -f container_files/agent/Dockerfile
 
     - name: SimpleNetworkRecipe ping test
       run: |

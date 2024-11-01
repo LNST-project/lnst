@@ -82,7 +82,7 @@ Use -t argument to name your image, this name is later used.
 .. code-block:: bash
 
     cd your_lnst_project_directory
-    podman build . -t lnst -f container_files/Dockerfile
+    podman build . -t lnst -f container_files/agent/Dockerfile
 
 
 Now is everything ready to run LNST in containers.
