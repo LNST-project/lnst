@@ -45,7 +45,9 @@ Feel free to also report issues or submit pull requests.
 * Jan Tluka <jtluka@redhat.com>
 * Ondrej Lichtner <olichtne@redhat.com> (current maintainer)
 * Jozef Urbanovsky <jurbanov@redhat.com>
-* Perry Gagne <pgagne@redhat.com>
+* Samuel Dobron <sdobron@redhat.com>
+* Jakub Rozek (not active anymore)
+* Perry Gagne (not active anymore)
 * Christos Sfakianakis (not active anymore)
 * Jiri Prochazka (not active anymore)
 * Kamil Jerabek (not active anymore)
