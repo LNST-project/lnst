@@ -6,10 +6,17 @@ from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 
 
 class AggregatedXDPBenchMeasurementResults(XDPBenchMeasurementResults):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, measurement, flow):
+        super().__init__(measurement, True, flow)
         self._generator_results = SequentialPerfResult()
         self._receiver_results = SequentialPerfResult()
+
+    @property
+    def measurement_success(self) -> bool:
+        if self.individual_results:
+            return all(res.measurement_success for res in self.individual_results)
+        else:
+            return False
 
     def add_results(self, results):
         if results is None:

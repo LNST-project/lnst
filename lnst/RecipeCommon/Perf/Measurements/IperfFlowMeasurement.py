@@ -118,9 +118,12 @@ class IperfFlowMeasurement(BaseFlowMeasurement):
         results = []
         for test_flow in test_flows:
             flow_results = FlowMeasurementResults(
-                    measurement=self,
-                    flow=test_flow.flow,
-                    warmup_duration=test_flow.flow.warmup_duration
+                measurement=self,
+                measurement_success=(
+                    test_flow.client_job.passed and test_flow.server_job.passed
+                ),
+                flow=test_flow.flow,
+                warmup_duration=test_flow.flow.warmup_duration,
             )
             flow_results.generator_results = self._parse_job_streams(
                     test_flow.client_job)

@@ -158,6 +158,9 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
         for test_flow in test_flows:
             flow_results = NeperFlowMeasurementResults(
                     measurement=self,
+                    measurement_success=(
+                        test_flow.client_job.passed and test_flow.server_job.passed
+                    ),
                     flow=test_flow.flow,
                     warmup_duration=test_flow.flow.warmup_duration
             )

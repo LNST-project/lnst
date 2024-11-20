@@ -205,15 +205,16 @@ class TcRunMeasurement(BaseMeasurement):
         return configs
 
     def collect_results(self) -> list[TcRunMeasurementResults]:
-        run_result = TcRunMeasurementResults(
-            measurement=self,
-            device=self.device,
-        )
         if len(self._finished_jobs) > 1:
             raise MeasurementError("Too many jobs")
         job = self._finished_jobs[0]
         instance_data = job.result["data"]["instance_results"]
 
+        run_result = TcRunMeasurementResults(
+            measurement=self,
+            measurement_success=job.passed,
+            device=self.device,
+        )
         run_result.rule_install_rate = ParallelPerfResult(
             [self._get_instance_interval(d) for d in instance_data]
         )
@@ -224,6 +225,7 @@ class TcRunMeasurement(BaseMeasurement):
     def collect_simulated_results(self):
         run_result = TcRunMeasurementResults(
             measurement=self,
+            measurement_success=True,
             device=self.device,
         )
         run_result.rule_install_rate = ParallelPerfResult(

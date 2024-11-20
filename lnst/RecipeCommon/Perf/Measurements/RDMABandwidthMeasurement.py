@@ -75,6 +75,9 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
             duration = endpoint_test.flow.duration
             result = RDMABandwidthMeasurementResults(
                 measurement=self,
+                measurement_success=(
+                    endpoint_test.client_job.passed and endpoint_test.server_job.passed
+                ),
                 flow=endpoint_test.flow,
             )
             result.bandwidth = PerfInterval(

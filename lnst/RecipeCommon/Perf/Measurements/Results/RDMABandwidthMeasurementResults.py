@@ -4,8 +4,8 @@ from lnst.RecipeCommon.Perf.Results import PerfInterval, PerfResult
 
 
 class RDMABandwidthMeasurementResults(BaseMeasurementResults):
-    def __init__(self, measurement: BaseMeasurement, flow: "Flow"):
-        super().__init__(measurement)
+    def __init__(self, measurement: BaseMeasurement, measurement_success: bool, flow: "Flow"):
+        super().__init__(measurement, measurement_success)
 
         self._flow = flow
 
@@ -34,7 +34,7 @@ class RDMABandwidthMeasurementResults(BaseMeasurementResults):
         return self._bandwidth.end_timestamp
 
     def time_slice(self, start, end):
-        result_copy = RDMABandwidthMeasurementResults(self.measurement, self.flow)
+        result_copy = RDMABandwidthMeasurementResults(self.measurement, self.measurement_success, self.flow)
         result_copy.bandwidth = self.bandwidth.time_slice(start, end)
         return result_copy
 

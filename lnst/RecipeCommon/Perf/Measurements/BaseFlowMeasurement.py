@@ -169,6 +169,7 @@ class BaseFlowMeasurement(BaseMeasurement):
         for i in range(nr_iterations):
             parallel_result = FlowMeasurementResults(
                     measurement=sample_result.measurement,
+                    measurement_success=all(result.measurement_success for result in results),
                     flow=dummy_flow,
                     warmup_duration=dummy_flow.warmup_duration
             )
@@ -193,6 +194,7 @@ class BaseFlowMeasurement(BaseMeasurement):
         for test_flow in self.flows:
             flow_results = FlowMeasurementResults(
                 measurement=self,
+                measurement_success=True,
                 flow=test_flow,
                 warmup_duration=test_flow.warmup_duration,
             )

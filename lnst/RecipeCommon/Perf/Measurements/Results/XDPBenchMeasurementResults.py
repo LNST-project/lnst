@@ -6,8 +6,8 @@ from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementErro
 
 
 class XDPBenchMeasurementResults(BaseMeasurementResults):
-    def __init__(self, measurement, flow, warmup_duration=0):
-        super().__init__(measurement, warmup_duration)
+    def __init__(self, measurement, measurement_success, flow, warmup_duration=0):
+        super().__init__(measurement, measurement_success, warmup_duration)
 
         self._flow = flow
 
@@ -75,7 +75,7 @@ class XDPBenchMeasurementResults(BaseMeasurementResults):
 
     def time_slice(self, start, end) -> "XDPBenchMeasurementResults":
         result_copy = XDPBenchMeasurementResults(
-            self.measurement, self.flow, warmup_duration=0
+            self.measurement, self.measurement_success, self.flow, warmup_duration=0
         )
 
         result_copy.generator_results = self.generator_results.time_slice(start, end)

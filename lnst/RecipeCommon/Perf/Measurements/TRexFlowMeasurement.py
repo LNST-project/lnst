@@ -164,7 +164,12 @@ class TRexFlowMeasurement(BaseFlowMeasurement):
         return result
 
     def _parse_results_by_port(self, job, port, flow):
-        results = FlowMeasurementResults(measurement=self, flow=flow, warmup_duration=flow.warmup_duration)
+        results = FlowMeasurementResults(
+            measurement=self,
+            measurement_success=job.passed,
+            flow=flow,
+            warmup_duration=flow.warmup_duration
+        )
         results.generator_results = SequentialPerfResult()
         results.generator_cpu_stats = SequentialPerfResult()
 

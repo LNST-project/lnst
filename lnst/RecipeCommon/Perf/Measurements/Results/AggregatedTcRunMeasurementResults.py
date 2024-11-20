@@ -15,9 +15,16 @@ class AggregatedTcRunMeasurementResults(TcRunMeasurementResults):
             device: Device,
             warmup_rules=0,
     ):
-        super().__init__(measurement, device, warmup_rules=warmup_rules)
+        super().__init__(measurement, True, device, warmup_rules=warmup_rules)
         self._individual_results: list[TcRunMeasurementResults] = []
         self._rule_install_rate: SequentialPerfResult = SequentialPerfResult()
+
+    @property
+    def measurement_success(self) -> bool:
+        if self.individual_results:
+            return all(res.measurement_success for res in self.individual_results)
+        else:
+            return False
 
     @property
     def rule_install_rate(self) -> SequentialPerfResult:
