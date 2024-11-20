@@ -97,18 +97,19 @@ class BaseFlowMeasurement(BaseMeasurement):
         desc = []
         desc.append(flow_results.describe())
 
-        recipe_result = ResultType.PASS
         metrics = {"Generator": generator, "Generator process": generator_cpu,
                    "Receiver": receiver, "Receiver process": receiver_cpu}
         for name, result in metrics.items():
             if cls._invalid_flow_duration(result):
-                recipe_result = ResultType.FAIL
                 desc.append("{} has invalid duration!".format(name))
 
         # TODO add flow description
         recipe_result = MeasurementResult(
             "flow",
             description="\n".join(desc),
+            result=(
+                ResultType.PASS if flow_results.measurement_success else ResultType.FAIL
+            ),
             data={
                 "generator_flow_data": generator,
                 "generator_cpu_data": generator_cpu,

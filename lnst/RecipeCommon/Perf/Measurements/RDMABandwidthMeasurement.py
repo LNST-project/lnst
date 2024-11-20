@@ -4,7 +4,7 @@ import logging
 
 from lnst.Controller.Job import Job
 from lnst.Controller.Recipe import BaseRecipe
-from lnst.Controller.RecipeResults import MeasurementResult
+from lnst.Controller.RecipeResults import MeasurementResult, ResultType
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import Flow, NetworkFlowTest
 from lnst.RecipeCommon.Perf.Results import PerfInterval
 from lnst.Tests.RDMABandwidth import RDMABandwidthServer, RDMABandwidthClient
@@ -159,6 +159,11 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
         for aggregated_result in aggregated_results:
             measurement_result = MeasurementResult(
                 "rdma-bandwidth",
+                result=(
+                    ResultType.PASS
+                    if aggregated_result.measurement_success
+                    else ResultType.FAIL
+                ),
                 description=aggregated_result.describe(),
                 data={"bandwidth": aggregated_result.bandwidth}
             )

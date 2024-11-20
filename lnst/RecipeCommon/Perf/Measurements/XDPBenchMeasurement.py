@@ -22,7 +22,7 @@ from lnst.RecipeCommon.Perf.Results import (
 from lnst.Tests.PktGen import PktGen
 from lnst.Tests.XDPBench import XDPBench
 from lnst.Controller.Job import Job
-from lnst.Controller.RecipeResults import MeasurementResult
+from lnst.Controller.RecipeResults import MeasurementResult, ResultType
 from lnst.RecipeCommon.Perf.Measurements.BaseFlowMeasurement import BaseFlowMeasurement
 
 
@@ -225,6 +225,11 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
 
             recipe_result = MeasurementResult(
                 "xdp-bench",
+                result=(
+                    ResultType.PASS
+                    if result.measurement_success
+                    else ResultType.FAIL
+                ),
                 description="\n".join(desc),
                 data={
                     "generator_results": generator,

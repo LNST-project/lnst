@@ -248,9 +248,10 @@ class TcRunMeasurement(BaseMeasurement):
 
     @classmethod
     def _report_result(cls,  recipe: BaseRecipe, result: TcRunMeasurementResults):
-        r_type = ResultType.PASS if result.run_success else ResultType.FAIL
+        r_type = ResultType.PASS if result.measurement_success else ResultType.FAIL
         measurement_result = MeasurementResult(
             "tc",
+            result=r_type,
             description=f"{r_type} {result.description}",
             data={"rule_install_rate": result.rule_install_rate},
         )
