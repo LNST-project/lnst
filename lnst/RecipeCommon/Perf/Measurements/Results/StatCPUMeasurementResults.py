@@ -31,6 +31,7 @@ class StatCPUMeasurementResults(CPUMeasurementResults):
     def time_slice(self, start, end):
         result_copy = StatCPUMeasurementResults(
                 self.measurement,
+                self.measurement_success,
                 self.host,
                 self.cpu
                 )

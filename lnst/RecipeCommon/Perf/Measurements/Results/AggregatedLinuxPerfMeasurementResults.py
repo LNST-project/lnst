@@ -12,6 +12,13 @@ class AggregatedLinuxPerfMeasurementResults(BaseMeasurementResults):
             self._individual_results = [result]
 
     @property
+    def measurement_success(self) -> bool:
+        if self.individual_results:
+            return all(res.measurement_success for res in self.individual_results)
+        else:
+            return False
+
+    @property
     def individual_results(self) -> list[LinuxPerfMeasurementResults]:
         return self._individual_results
 

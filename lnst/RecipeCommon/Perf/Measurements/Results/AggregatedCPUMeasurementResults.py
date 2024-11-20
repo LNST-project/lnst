@@ -5,8 +5,15 @@ from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementErro
 
 class AggregatedCPUMeasurementResults(CPUMeasurementResults):
     def __init__(self, measurement, host, cpu):
-        super(AggregatedCPUMeasurementResults, self).__init__(measurement, host, cpu)
+        super(AggregatedCPUMeasurementResults, self).__init__(measurement, True, host, cpu)
         self._individual_results = []
+
+    @property
+    def measurement_success(self) -> bool:
+        if self.individual_results:
+            return all(res.measurement_success for res in self.individual_results)
+        else:
+            return False
 
     @property
     def individual_results(self):

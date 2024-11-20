@@ -5,13 +5,20 @@ from lnst.RecipeCommon.Perf.Measurements.MeasurementError import MeasurementErro
 
 class AggregatedFlowMeasurementResults(FlowMeasurementResults):
     def __init__(self, measurement, flow):
-        super(FlowMeasurementResults, self).__init__(measurement)
+        super(FlowMeasurementResults, self).__init__(measurement, True)
         self._flow = flow
         self._generator_results = SequentialPerfResult()
         self._generator_cpu_stats = SequentialPerfResult()
         self._receiver_results = SequentialPerfResult()
         self._receiver_cpu_stats = SequentialPerfResult()
         self._individual_results = []
+
+    @property
+    def measurement_success(self) -> bool:
+        if self.individual_results:
+            return all(res.measurement_success for res in self.individual_results)
+        else:
+            return False
 
     @property
     def individual_results(self):

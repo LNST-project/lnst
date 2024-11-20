@@ -117,11 +117,12 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
             results.append(
                 LinuxPerfMeasurementResults(
-                    self,
-                    host,
-                    dst_filepath,
-                    self._start_timestamp,
-                    self._end_timestamp,
+                    measurement=self,
+                    measurement_success=job.passed,
+                    host=host,
+                    filename=dst_filepath,
+                    start_timestamp=self._start_timestamp,
+                    end_timestamp=self._end_timestamp,
                 )
             )
         return results

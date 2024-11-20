@@ -4,8 +4,8 @@ from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import (
 
 
 class CPUMeasurementResults(BaseMeasurementResults):
-    def __init__(self, measurement, host, cpu):
-        super(CPUMeasurementResults, self).__init__(measurement)
+    def __init__(self, measurement, measurement_success, host, cpu):
+        super(CPUMeasurementResults, self).__init__(measurement, measurement_success)
         self._host = host
         self._cpu = cpu
         self._utilization = None

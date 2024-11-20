@@ -12,12 +12,13 @@ class LinuxPerfMeasurementResults(BaseMeasurementResults):
     def __init__(
         self,
         measurement,
+        measurement_success: bool,
         host: Host,
         filename: str,
         start_timestamp: float,
         end_timestamp: float,
     ):
-        super().__init__(measurement)
+        super().__init__(measurement, measurement_success)
         self._host = host
         self._filename = filename
         self._start_timestamp = start_timestamp

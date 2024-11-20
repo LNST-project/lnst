@@ -5,9 +5,9 @@ from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import (
 
 
 class FlowMeasurementResults(BaseMeasurementResults):
-    def __init__(self, measurement, flow, warmup_duration=0):
+    def __init__(self, measurement, measurement_success, flow, warmup_duration=0):
         super(FlowMeasurementResults, self).__init__(
-            measurement, warmup_duration
+            measurement, measurement_success, warmup_duration
         )
         self._flow = flow
         self._generator_results = None
@@ -92,7 +92,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
 
     def time_slice(self, start, end):
         result_copy = FlowMeasurementResults(
-            self.measurement, self.flow, warmup_duration=0
+            self.measurement, self.measurement_success, self.flow, warmup_duration=0
         )
 
         result_copy.generator_cpu_stats = self.generator_cpu_stats.time_slice(

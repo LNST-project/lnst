@@ -10,10 +10,11 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     def __init__(
             self,
             measurement: "TcRunMeasurement",
+            measurement_success: bool,
             device: Device,
             warmup_rules=0,
     ):
-        super().__init__(measurement, warmup_rules)
+        super().__init__(measurement, measurement_success, warmup_rules)
         self._device = device
         self._rule_install_rate: ParallelPerfResult = None
         self._run_success: bool = None
