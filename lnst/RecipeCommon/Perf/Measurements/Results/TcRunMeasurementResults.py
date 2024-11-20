@@ -17,7 +17,6 @@ class TcRunMeasurementResults(BaseMeasurementResults):
         super().__init__(measurement, measurement_success, warmup_rules)
         self._device = device
         self._rule_install_rate: ParallelPerfResult = None
-        self._run_success: bool = None
 
     @property
     def metrics(self) -> list[str]:
@@ -38,14 +37,6 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     @rule_install_rate.setter
     def rule_install_rate(self, result: ParallelPerfResult):
         self._rule_install_rate = result
-
-    @property
-    def run_success(self) -> bool:
-        return self._run_success
-
-    @run_success.setter
-    def run_success(self, v: bool):
-        self._run_success = v
 
     @property
     def description(self):

@@ -218,7 +218,6 @@ class TcRunMeasurement(BaseMeasurement):
         run_result.rule_install_rate = ParallelPerfResult(
             [self._get_instance_interval(d) for d in instance_data]
         )
-        run_result.run_success = job.passed
 
         return [run_result]
 

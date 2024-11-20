@@ -35,10 +35,6 @@ class AggregatedTcRunMeasurementResults(TcRunMeasurementResults):
         self._rule_install_rate = result
 
     @property
-    def run_success(self) -> bool:
-        return all((i.run_success for i in self.individual_results))
-
-    @property
     def individual_results(self) -> list[TcRunMeasurementResults]:
         return self._individual_results
 
