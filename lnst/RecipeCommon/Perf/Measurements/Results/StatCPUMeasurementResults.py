@@ -4,8 +4,8 @@ from lnst.RecipeCommon.Perf.Measurements.Results import CPUMeasurementResults
 
 
 class StatCPUMeasurementResults(CPUMeasurementResults):
-    def __init__(self, *args):
-        super(StatCPUMeasurementResults, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super(StatCPUMeasurementResults, self).__init__(*args, **kwargs)
         self._data = {}
 
     def update_intervals(self, intervals):
