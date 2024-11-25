@@ -211,14 +211,15 @@ class BaseEnrtRecipe(
 
     @contextmanager
     def _test_wide_context(self):
-        config = self.test_wide_configuration()
-        self.describe_test_wide_configuration(config)
+        config = EnrtConfiguration()
         try:
+            config = self.test_wide_configuration(config)
+            self.describe_test_wide_configuration(config)
             yield config
         finally:
             self.test_wide_deconfiguration(config)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """Creates an empty :any:`EnrtConfiguration` object
 
         This is again used in potential collaborative inheritance design that
@@ -242,7 +243,7 @@ class BaseEnrtRecipe(
 
                     return config
         """
-        return EnrtConfiguration()
+        return config
 
     def test_wide_deconfiguration(self, config):
         """Base deconfiguration method.
@@ -311,9 +312,9 @@ class BaseEnrtRecipe(
 
     @contextmanager
     def _sub_context(self, config):
-        self.apply_sub_configuration(config)
-        self.describe_sub_configuration(config)
         try:
+            self.apply_sub_configuration(config)
+            self.describe_sub_configuration(config)
             yield config
         finally:
             self.remove_sub_configuration(config)

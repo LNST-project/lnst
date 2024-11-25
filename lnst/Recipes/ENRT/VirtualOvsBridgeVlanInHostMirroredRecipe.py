@@ -42,7 +42,7 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
     net_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2, guest1, guest2 = (self.matched.host1,
             self.matched.host2, self.matched.guest1, self.matched.guest2)
 
@@ -56,7 +56,7 @@ class VirtualOvsBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
         guest1.eth0.down()
         guest2.eth0.down()
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="192.168.10.3/24")
         ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::3/64")

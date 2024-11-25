@@ -145,7 +145,7 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
     cpu_perf_tool = Param(default=StatCPUMeasurement)
     net_perf_tool = Param(default=TRexFlowMeasurement)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves adding an IPv4 and
         IPv6 address to the matched eth0 and eth1 nics on both hosts.
@@ -201,7 +201,7 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
                 nics=["vhost0", "vhost1"]),
             bg=True)
 
-        configuration = super().test_wide_configuration()
+        configuration = super().test_wide_configuration(config)
         return configuration
 
     def ovs_dpdk_bridge_configuration(self, host):

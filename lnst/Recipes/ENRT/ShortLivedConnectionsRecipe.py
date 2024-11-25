@@ -32,10 +32,10 @@ class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     ip_versions = Param(default=("ipv4",))
     perf_msg_sizes = ListParam(default=[1000, 5000, 7000, 10000, 12000])
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4, default_start="192.168.101.10/24")
         for host in [host1, host2]:

@@ -6,6 +6,7 @@ from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import ListParam, StrParam, IntParam, ChoiceParam, BoolParam
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
+from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.RecipeCommon import BaseResultEvaluator
 from lnst.RecipeCommon.Perf.Evaluators.MaxTimeTakenEvaluator import MaxTimeTakenEvaluator
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
@@ -48,13 +49,14 @@ class TrafficControlRecipe(PerfRecipe):
 
     @contextmanager
     def _test_wide_context(self):
-        config = self.test_wide_configuration()
+        config = EnrtConfiguration()
         try:
+            config = self.test_wide_configuration(config)
             yield config
         finally:
             self.test_wide_deconfiguration(config)
 
-    def test_wide_configuration(self) -> TcRecipeConfiguration:
+    def test_wide_configuration(self, config) -> TcRecipeConfiguration:
         host = self.matched.host1
         cpu_measurement = StatCPUMeasurement(
             hosts=[host],
