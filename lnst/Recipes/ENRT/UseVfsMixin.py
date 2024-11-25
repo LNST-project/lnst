@@ -27,8 +27,8 @@ class UseVfsMixin:
     use_vfs = BoolParam(default=False)
     vf_trust = ChoiceParam(choices={'on', 'off'})
 
-    def test_wide_configuration(self):
-        config = super().test_wide_configuration()
+    def test_wide_configuration(self, config):
+        config = super().test_wide_configuration(config)
 
         if not self.params.use_vfs:
             return config

@@ -43,10 +43,10 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
 
     spi_values = ["0x00000001", "0x00000002", "0x00000003", "0x00000004"]
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = {host1: interface_addresses(self.params.net1_ipv4),
                      host2: interface_addresses(self.params.net2_ipv4)}

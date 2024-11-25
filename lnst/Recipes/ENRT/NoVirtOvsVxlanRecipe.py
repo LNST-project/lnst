@@ -20,9 +20,9 @@ class NoVirtOvsVxlanRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
 
     net_ipv4 = IPv4NetworkParam(default="192.168.2.0/24")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         host_addr = [next(ipv4_addr), next(ipv4_addr)]

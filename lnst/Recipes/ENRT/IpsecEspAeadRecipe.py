@@ -61,7 +61,7 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
     spi_values = ["0x00001000", "0x00001001"]
     ipsec_mode = StrParam(default="transport")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
         IPv6 address to the matched eth0 nics on both hosts and route between them.
@@ -72,7 +72,7 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
         """
         host1, host2 = self.matched.host1, self.matched.host2
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = {host1: interface_addresses(self.params.net1_ipv4),
                      host2: interface_addresses(self.params.net2_ipv4)}

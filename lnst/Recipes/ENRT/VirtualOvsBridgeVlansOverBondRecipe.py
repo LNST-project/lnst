@@ -66,7 +66,7 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
     bonding_mode = StrParam(mandatory = True)
     miimon_value = IntParam(mandatory = True)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2, guest1, guest2, guest3, guest4 = (self.matched.host1,
             self.matched.host2, self.matched.guest1, self.matched.guest2,
             self.matched.guest3, self.matched.guest4)
@@ -88,7 +88,7 @@ class VirtualOvsBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
         guest3.eth0.down()
         guest4.eth0.down()
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         vlan0_ipv4_addr = interface_addresses(self.params.vlan0_ipv4)
         vlan0_ipv6_addr = interface_addresses(self.params.vlan0_ipv6)

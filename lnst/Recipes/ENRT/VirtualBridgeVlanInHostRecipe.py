@@ -43,7 +43,7 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
     net_ipv4 = IPv4NetworkParam(default="192.168.10.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00:0:0:1::/64")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)
 
@@ -59,7 +59,7 @@ class VirtualBridgeVlanInHostRecipe(CommonHWSubConfigMixin,
             master=host1.br0)
         host2.vlan0 = VlanDevice(realdev=host2.eth0, vlan_id=self.params.vlan_id)
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6, default_start="fc00:0:0:1::2/64")

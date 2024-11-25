@@ -211,20 +211,23 @@ class BaseEnrtRecipe(
 
     @contextmanager
     def _test_wide_context(self):
-        config = self.test_wide_configuration()
-        self.describe_test_wide_configuration(config)
+        config = EnrtConfiguration()
         try:
+            config = self.test_wide_configuration(config)
+            self.describe_test_wide_configuration(config)
             yield config
         finally:
             self.test_wide_deconfiguration(config)
 
-    def test_wide_configuration(self):
-        """Creates an empty :any:`EnrtConfiguration` object
+    def test_wide_configuration(self, config):
+        """Collaboratively builds an :any:`EnrtConfiguration` object
 
         This is again used in potential collaborative inheritance design that
-        may potentially be useful for Enrt recipes. Derived classes will each
-        individually add their own values to the instance created here. This way
-        the complete test wide configuration is tracked in a single object.
+        may potentially be useful for Enrt recipes. The initial empty
+        EnrtConfiguration object is created in the BaseEnrtRecipe
+        _test_wide_context method. Derived classes will each individually add
+        their own values to the instance created here. This way the complete
+        test wide configuration is tracked in a single object.
 
         :return: returns a config object that tracks the applied configuration
             that can be used during testing to inspect the current state and
@@ -234,15 +237,15 @@ class BaseEnrtRecipe(
         Example::
 
             class Derived:
-                def test_wide_configuration():
-                    config = super().test_wide_configuration()
+                def test_wide_configuration(config):
+                    config = super().test_wide_configuration(config)
 
                     # ... configure something
                     config.something = what_was_configured
 
                     return config
         """
-        return EnrtConfiguration()
+        return config
 
     def test_wide_deconfiguration(self, config):
         """Base deconfiguration method.
@@ -311,9 +314,9 @@ class BaseEnrtRecipe(
 
     @contextmanager
     def _sub_context(self, config):
-        self.apply_sub_configuration(config)
-        self.describe_sub_configuration(config)
         try:
+            self.apply_sub_configuration(config)
+            self.describe_sub_configuration(config)
             yield config
         finally:
             self.remove_sub_configuration(config)
