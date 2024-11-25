@@ -47,12 +47,12 @@ class LongLivedConnectionsMixin(BasePerfTestTweakMixin):
     long_lived_conns_net4 = IPv4NetworkParam(default="192.168.102.0/24", mandatory=True)
     long_lived_conns_net6 = IPv6NetworkParam(default="fc01::/64", mandatory=True)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
         host1.eth0.keep_addrs_on_down()
         host2.eth0.keep_addrs_on_down()
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
         # L4 can address up to 65535 ports (size of addresable space
         # defined in long_lived_conns_per_ip) Therefore opening connections
         # may require multiple IPs.

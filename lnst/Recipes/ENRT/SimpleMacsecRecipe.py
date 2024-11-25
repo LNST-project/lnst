@@ -31,9 +31,9 @@ class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
     keys = ["7a16780284000775d4f0a3c0f0e092c0",
         "3212ef5c4cc5d0e4210b17208e88779e"]
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         config.endpoint1 = host1.eth0
         config.endpoint2 = host2.eth0
