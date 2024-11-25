@@ -27,7 +27,7 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.0.0/24")
     vxlan_group_ip = IpParam(default="239.1.1.1", multicast=True, family=AF_INET)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2, guest1 = (self.matched.host1, self.matched.host2,
             self.matched.guest1)
 
@@ -46,7 +46,7 @@ class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
         for machine in [guest1, host2]:
             machine.vxlan0 = VxlanDevice(vxlan_id=1, realdev=machine.eth0, group=self.params.vxlan_group_ip)
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         for i, (machine, dev) in enumerate([(host1, host1.br0),
             (guest1, guest1.eth0), (host2, host2.eth0)], 1):

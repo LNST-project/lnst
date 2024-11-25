@@ -66,7 +66,7 @@ class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, B
     bonding_mode = StrParam(mandatory=True)
     miimon_value = IntParam(mandatory=True)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves
         * creating a bonding device from the matched NICs
@@ -78,7 +78,7 @@ class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, B
         host2.br0 = 192.168.101.2/24 and fc00::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)

@@ -57,7 +57,7 @@ class MPTCPRecipe(
         for host in hosts:
             host.mptcp = host.init_class(MPTCPManager)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
         IPv6 address to the matched eth0 nics on both hosts.
@@ -70,7 +70,7 @@ class MPTCPRecipe(
         host2.eth1 = 192.168.102.2/24 and fc01::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
         config.mptcp_endpoints = [host1.eth1]
         hosts = [host1, host2]
 

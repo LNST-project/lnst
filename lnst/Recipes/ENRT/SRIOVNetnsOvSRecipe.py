@@ -84,7 +84,7 @@ class SRIOVNetnsOvSRecipe(
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves switching the device to switchdev
         mode, adding single VF and mapping the VF, as well as its representor.
@@ -98,7 +98,7 @@ class SRIOVNetnsOvSRecipe(
         host2.eth0 = 192.168.101.2/24 and fc00::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)

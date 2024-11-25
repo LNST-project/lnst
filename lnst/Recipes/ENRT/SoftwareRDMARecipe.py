@@ -25,8 +25,8 @@ class SoftwareRDMARecipe(SimpleNetworkRecipe):
     def device_name(self) -> str:
         return f"{self.params.software_rdma_type}0"
 
-    def test_wide_configuration(self) -> RecipeConf:
-        config = super().test_wide_configuration()
+    def test_wide_configuration(self, config) -> RecipeConf:
+        config = super().test_wide_configuration(config)
         host1, host2 = self.matched.host1, self.matched.host2
 
         # setup RDMA link, emulating InfiniBand on Ethernet

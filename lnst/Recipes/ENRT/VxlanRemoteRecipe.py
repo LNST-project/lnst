@@ -26,9 +26,9 @@ class VxlanRemoteRecipe(
 
     net_ipv4 = IPv4NetworkParam(default="192.168.0.0/24")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         for host in [host1, host2]:
             host.eth0.down()
