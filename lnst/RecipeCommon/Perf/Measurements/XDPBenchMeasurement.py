@@ -218,8 +218,8 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
 
             recipe_result = ResultType.PASS
             metrics = {"Generator": generator, "Receiver": receiver}
-            for name, result in metrics.items():
-                if cls._invalid_flow_duration(result):
+            for name, metric_result in metrics.items():
+                if cls._invalid_flow_duration(metric_result):
                     recipe_result = ResultType.FAIL
                     desc.append("{} has invalid duration!".format(name))
 
