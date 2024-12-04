@@ -23,6 +23,6 @@ RUN dnf install -y initscripts \
     python3 - --version 1.3.1
 
 COPY . /lnst
-RUN cd /lnst/container_files && chmod +x install.sh && sh install.sh
+RUN cd /lnst/container_files/agent && chmod +x install.sh && sh install.sh
 
 CMD cd /lnst/.bin && ./lnst-agent
