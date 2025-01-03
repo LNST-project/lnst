@@ -190,6 +190,17 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
         )  # just a placeholder to keep data structure same as other Measurements
         results = SequentialPerfResult()  # single instance of xdp-bench
 
+        if not job.passed:
+            if "exception" in job.result:
+                logging.error(f"Exception from receiver job: {job.result['exception']}")
+            elif job.result == "Job killed":
+                # when job was killed, .result is replaced by "Job killed",
+                # so there are no results to process bellow
+                logging.error("Receiver job killed")
+
+            results.append(PerfInterval(0, 1, "packets", time.time()))
+            return results
+
         for sample in job.result:
             results.append(
                 PerfInterval(
