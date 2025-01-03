@@ -164,6 +164,12 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
     def _parse_generator_results(self, job: Job):
         results = ParallelPerfResult()  # container for multiple instances of pktgen
 
+        if not job.passed and "exception" in job.result:
+            logging.error(f"Exception from generator job: {job.result['exception']}")
+
+            results.append(PerfInterval(0, 1, "packets", time.time()))
+            return results
+
         for _, raw_results in job.result.items():
             instance_results = SequentialPerfResult()  # instance (device) of pktgen
             for raw_result in raw_results:
