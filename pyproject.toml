@@ -14,7 +14,11 @@ packages = [
     { include = "lnst"}
 ]
 
-include = ["schema-am.rng", "install/*", "lnst-ctl.conf"]
+include = [
+    { path="schema-am.rng", format=["sdist", "wheel"]},
+    { path="install/*", format=["sdist", "wheel"]},
+    { path="lnst-ctl.conf", format=["sdist", "wheel"]},
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
