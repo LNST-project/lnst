@@ -1,3 +1,5 @@
+.. _installation:
+
 Install LNST and Hello world
 ============================
 
@@ -11,7 +13,9 @@ LNST is logically split into two separate application use cases:
 
 Codebases for both use cases are developed in this repository and as we
 currently don't have a stable release yet, the recommended method of
-installation involves the following steps:
+installation is either to install both Agents and Controller on your
+local machines or to use docker/podman. Manual installation on your 
+machine involves the following steps:
 
 .. code-block:: bash
 
@@ -19,6 +23,8 @@ installation involves the following steps:
     cd lnst
     poetry install
 
+
+For installation of containerized version, see :ref:`containerized`.
 
 This installs both the Controller and the Agent code, and you'll need to run
 this on all the test machines that you want to use as well as the machine which
@@ -111,6 +117,9 @@ And you'll end up receiving an error about being unable to find a match in your
 configured pools, since we didn't configure any yet, this is quite expected. But
 running this script did take care of creating a default configuration file and
 directory where we'll now be able to create our machine pool.
+
+
+.. _machines-pool:
 
 Creating a simple machine pool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
