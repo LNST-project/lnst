@@ -12,7 +12,7 @@ olichtne@redhat.com (Ondrej Lichtner)
 
 import socket
 from collections.abc import Iterator
-from ipaddress import IPv4Network, IPv6Network, IPv4Interface, IPv6Interface, ip_interface
+from ipaddress import IPv4Network, IPv6Network, IPv4Interface, IPv6Interface, ip_interface, IPv4Address, IPv6Address
 from itertools import dropwhile, islice
 from socket import inet_pton, inet_ntop, AF_INET, AF_INET6
 from typing import Union, Optional
@@ -171,6 +171,10 @@ def ipaddress(addr, flags=None):
             return Ip4Address(addr, flags)
         except:
             return Ip6Address(addr, flags)
+    elif isinstance(addr, IPv4Address):
+        return Ip4Address(str(addr), flags)
+    elif isinstance(addr, IPv6Address):
+        return Ip6Address(str(addr), flags)
     else:
         raise LnstError("Value must be a BaseIpAddress or string object."
                         " Not {}".format(type(addr)))
