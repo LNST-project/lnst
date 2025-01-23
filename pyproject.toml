@@ -24,7 +24,7 @@ include = [
 python = "^3.9"
 lxml = "*"
 ethtool = "*"
-pyroute2 = "*"
+pyroute2 = "<0.9.0"
 
 libvirt-python = {version = "*", optional = true }
 podman = {version = "*", optional = true }
