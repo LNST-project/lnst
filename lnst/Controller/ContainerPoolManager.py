@@ -345,6 +345,8 @@ class ContainerPoolManager(object):
 
             self._connect_to_network(container, network)
 
+        breakpoint()
+
     def process_reqs(self, mreqs: dict):
         """This method is called by :py:class:`lnst.Controller.MachineMapper.ContainerMapper`,
         it is responsible for creating containers and networks.

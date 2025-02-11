@@ -85,7 +85,7 @@ class BaseSRIOVNetnsTcRecipe(
     vf_net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     vf_net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves switching the device to switchdev
         mode, adding single VF and mapping the VF, as well as its representor.
@@ -102,7 +102,7 @@ class BaseSRIOVNetnsTcRecipe(
         The derived class can also override :method:`add_network_layers`.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         # create virtual functions
         for host in [host1, host2]:

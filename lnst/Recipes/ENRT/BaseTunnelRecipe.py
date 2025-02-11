@@ -30,7 +30,7 @@ class BaseTunnelRecipe(
     * :meth:`get_packet_assert_config`
     """
 
-    def test_wide_configuration(self) -> EnrtConfiguration:
+    def test_wide_configuration(self, config) -> EnrtConfiguration:
         """
         The base class defines common steps to create the test wide
         configuration of a tunnel recipe.
@@ -40,7 +40,7 @@ class BaseTunnelRecipe(
         then the tunnel is created between the specified endpoints in
         :meth:`create_tunnel`.
         """
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
         config.tunnel_endpoints = self.configure_underlying_network(config)
         config.tunnel_devices = self.create_tunnel(config, config.tunnel_endpoints)
         self.wait_tentative_ips(config.configured_devices)

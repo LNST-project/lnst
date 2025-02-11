@@ -82,7 +82,7 @@ class VlansOverBondRecipe(BondingMixin, PerfReversibleFlowMixin, VlanPingEvaluat
     vlan2_ipv4 = IPv4NetworkParam(default="192.168.30.0/24")
     vlan2_ipv6 = IPv6NetworkParam(default="fc00:0:0:3::/64")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves creating one bonding
         device on the first host. This device bonds two NICs matched by the
@@ -104,7 +104,7 @@ class VlansOverBondRecipe(BondingMixin, PerfReversibleFlowMixin, VlanPingEvaluat
         | host2.vlan2 = 192.168.30.2/24 and fc00:0:0:3::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         self.create_bond_devices(
             config,
