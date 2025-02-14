@@ -405,6 +405,6 @@ class ContainerMapper(object):
                 }
 
         for name, network in self._pool_manager.get_networks().items():
-            mapping["networks"][name] = network.name
+            mapping["networks"][name] = name
 
         yield mapping

@@ -66,7 +66,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
     vlan2_ipv4 = IPv4NetworkParam(default="192.168.30.0/24")
     vlan2_ipv6 = IPv6NetworkParam(default="fc00:0:0:3::/64")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves creating three
         VLAN (802.1Q) tunnels on top of the matched host's NIC with vlan
@@ -85,7 +85,7 @@ class VlansRecipe(VlanPingEvaluatorMixin,
 
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         host1.eth0.down()
         host2.eth0.down()

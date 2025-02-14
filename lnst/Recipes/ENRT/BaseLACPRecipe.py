@@ -32,14 +32,14 @@ class BaseLACPRecipe(DoubleBondRecipe):
         """
         raise NotImplementedError()
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         This method is almost the same as DoubleBondRecipe.test_wide_configuration,
         however, it configures multiple IP addresses on the bond0 interface as well as
         it calls switch configuration method.
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super(DoubleBondRecipe, self).test_wide_configuration()
+        config = super(DoubleBondRecipe, self).test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)

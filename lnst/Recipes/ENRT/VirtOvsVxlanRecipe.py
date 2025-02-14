@@ -40,7 +40,7 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
     net_ipv4 = IPv4NetworkParam(default="192.168.2.0/24")
 
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         host1, host2, guest1, guest2, guest3, guest4 = (self.matched.host1,
             self.matched.host2, self.matched.guest1, self.matched.guest2,
             self.matched.guest3, self.matched.guest4)
@@ -68,7 +68,7 @@ class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
             "output:6")
         flow_entries.append("table=0,priority=100,actions=drop")
 
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         for host, self_ip, other_ip in zip([host1, host2], host_ips, reversed(host_ips)):
             config.configure_and_track_ip(host.eth0, self_ip)

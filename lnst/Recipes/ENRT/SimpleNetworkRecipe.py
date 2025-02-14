@@ -25,7 +25,7 @@ class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
         IPv6 address to the matched eth0 nics on both hosts.
@@ -35,7 +35,7 @@ class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
         host2.eth0 = 192.168.101.2/24 and fc00::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         ipv6_addr = interface_addresses(self.params.net_ipv6)

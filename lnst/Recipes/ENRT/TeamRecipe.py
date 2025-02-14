@@ -73,7 +73,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
 
     runner_name = StrParam(mandatory=True)
 
-    def test_wide_configuration(self):
+    def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves creating a team
         device using the two matched physical devices as ports on host1.
@@ -85,7 +85,7 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
         | host2.eth0 = 192.168.10.2/24 and fc00:0:0:1::2/64
         """
         host1, host2 = self.matched.host1, self.matched.host2
-        config = super().test_wide_configuration()
+        config = super().test_wide_configuration(config)
 
         teamd_config = {'runner': {'name': self.params.runner_name}}
         host1.team0 = TeamDevice(config=teamd_config)
