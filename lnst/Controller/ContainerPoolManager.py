@@ -3,7 +3,7 @@ import logging
 import socket
 from time import sleep
 from json import loads
-from typing import Optional
+from typing import Optional, Union
 from lnst.Controller.AgentPoolManager import PoolManagerError
 from lnst.Controller.Machine import Machine
 from lnst.Common.DependencyError import DependencyError
@@ -227,6 +227,8 @@ class ContainerPoolManager(object):
             return self._create_network_netavark(network_name)
         elif plugin == "cni":
             return self._create_network_cni(network_name)
+        elif plugin == "custom_lnst":
+            return self._create_network_custom_lnst(network_name)
         else:
             raise PoolManagerError(f"Unknown podman network plugin {plugin}")
 
@@ -298,7 +300,46 @@ class ContainerPoolManager(object):
 
         return network
 
-    def _connect_to_network(self, container: "Container", network: "Network"):
+    def _create_network_custom_lnst(self, network_name: str):
+        name = self.get_network_name(network_name)
+        if name in self._networks:
+            return self._networks[name]
+
+        br_name = self._generate_bridge_name()
+
+        try:
+            res = subprocess.run(
+                f"ip -j link add name {br_name} type bridge",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            raise PoolManagerError(f"Could not create network {name}: {e}")
+
+        try:
+            res = subprocess.run(
+                f"ip link set {br_name} up",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            raise PoolManagerError(f"Could not UP network {name}: {e}")
+
+        self._networks[name] = network = {'name': name, 'br_name': br_name, 'out': res, "nics": []}
+        return network
+
+
+    def _connect_to_network(self, container: "Container", network: Union[dict, "Network"]):
+        if isinstance(network, Network):
+            return self._connect_to_podman_network(container, network)
+        elif isinstance(network, dict):
+            return self._connect_to_custom_network(container, network)
+        else:
+            raise PoolManagerError("Unknown network type")
+
+    def _connect_to_podman_network(self, container: "Container", network: "Network"):
         """There is no way to get MAC address of remote interface except
         executing "ip l" inside container.
         """
@@ -336,6 +377,102 @@ class ContainerPoolManager(object):
 
         return True
 
+    def _connect_to_custom_network(self, container: "Container", network: dict):
+        logging.debug(f"Connecting {container.name} to {network['name']}")
+        nic_root_name, nic_container_name = self._generate_nic_name_pair(network)
+        try:
+            res = subprocess.run(
+                f"ip link add {nic_root_name} type veth peer name {nic_container_name}",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+            network['nics'].append(nic_root_name)
+            network['nics'].append(nic_container_name)
+        except subprocess.CalledProcessError as e:
+            raise PoolManagerError(
+                f"Could not create veth pair for {container.name} to {network['name']}"
+            )
+
+        try:
+            res = subprocess.run(
+                f"ip link set {nic_container_name} netns {container.attrs['NetworkSettings']['SandboxKey']}",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            raise PoolManagerError(
+                f"Could not move veth {nic_container_name} into {container.name}"
+            )
+
+        try:
+            res = subprocess.run(
+                f"ip link set {nic_root_name} master {network['br_name']}",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            raise PoolManagerError(
+                f"Could not set veth {nic_root_name} as bridge port of {network['br_name']}"
+            )
+
+        try:
+            res = subprocess.run(
+                f"ip link set {nic_root_name} up",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            raise PoolManagerError(
+                f"Could not set veth {nic_root_name} up"
+            )
+
+        logging.debug(
+            f"Getting MAC address of remote interface at {container.name} for {network['name']}"
+        )
+        interfaces = loads(
+            subprocess.check_output(
+                ["podman", "exec", "-it", container.name, "ip", "-j", "a"]
+            ).decode("utf-8")
+        )
+        for i in interfaces:
+            if i['ifname'] == nic_container_name:
+                eth = i["ifname"]
+                if "link_index" in i:
+                    eth += f"@{i['link_index']}"
+                machine = self._pool[container.attrs["Config"]["Hostname"]]
+                machine["interfaces"][eth] = {
+                    "params": {"hwaddr": i["address"], "driver": "veth"},
+                    "network": network['name'],
+                }
+
+        return True
+
+    def _generate_bridge_name(self):
+        i = 0
+        while True:
+            name_candidate = f"br{i}"
+            res = subprocess.run(
+                f"ip link show {name_candidate}",
+                shell=True,
+                stdout=subprocess.PIPE,
+            )
+            if res.returncode == 1:
+                return name_candidate
+            i += 1
+
+    def _generate_nic_name_pair(self, network: dict):
+        i = 0
+        while True:
+            name_candidate_root = f"{network['br_name']}_nic{i}_r"
+            name_candidate_container = f"{network['br_name']}_nic{i}_c"
+            if name_candidate_root not in network['nics'] and name_candidate_container not in network['nics']:
+                return name_candidate_root, name_candidate_container
+            i += 1
+
     def _connect_to_networks(self, container: "Container", network_reqs: dict):
         for _, params in network_reqs["interfaces"].items():
             name = params["network"]
@@ -361,19 +498,62 @@ class ContainerPoolManager(object):
         logging.info("Cleaning containers")
 
         for m_id, container in self._containers.items():
-            logging.debug("Stopping container " + m_id)
-            container.stop()
+            try:
+                logging.debug("Stopping container " + m_id)
+                container.stop()
 
-            logging.debug("Removing container " + m_id)
-            container.remove()
+                logging.debug("Removing container " + m_id)
+                container.remove()
+            except Exception as e:
+                logging.exception(f"Error during container cleanup: {e}")
+
+        self._containers = {}
 
     def cleanup_networks(self):
         for name, network in self._networks.items():
             logging.debug("Removing network " + name)
+
+            if isinstance(network, Network):
+                self._cleanup_podman_network(network)
+            elif isinstance(network, dict):
+                self._cleanup_custom_network(network)
+            else:
+                raise PoolManagerError(f"Can't cleanup this type of network {type(network)}")
+
+        self._networks = {}
+
+    def _cleanup_podman_network(self, network: "Network"):
+        try:
+            network.remove(force=True)
+        except APIError as e:
+            logging.error(f"Could not remove network {name}: {e}")
+
+    def _cleanup_custom_network(self, network: dict):
+        for nic in network['nics']:
             try:
-                network.remove(force=True)
-            except APIError as e:
-                logging.error(f"Could not remove network {name}: {e}")
+                res = subprocess.run(
+                    f"ip link del {nic}",
+                    check=True,
+                    shell=True,
+                    stdout=subprocess.PIPE
+                )
+            except subprocess.CalledProcessError as e:
+                logging.exception(
+                    f"Could not delete nic {nic}: {e}"
+                )
+
+        try:
+            res = subprocess.run(
+                f"ip link del {network['br_name']}",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE
+            )
+        except subprocess.CalledProcessError as e:
+            logging.exception(
+                f"Could not delete network bridge {network['br_name']}: {e}"
+            )
+
 
     def cleanup(self):
         self.cleanup_containers()
