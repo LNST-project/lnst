@@ -404,7 +404,7 @@ class ContainerMapper(object):
                     "hwaddr": machine_inf["params"]["hwaddr"],
                 }
 
-        for name, network in self._pool_manager.get_networks().items():
-            mapping["networks"][name] = network.name
+        for name in self._pool_manager.get_networks().keys():
+            mapping["networks"][name] = name
 
         yield mapping
