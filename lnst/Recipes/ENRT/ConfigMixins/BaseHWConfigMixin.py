@@ -98,12 +98,7 @@ class BaseHWConfigMixin(BaseSubConfigMixin):
         """
         result_mapping = {}
         for host in settings:
-            try:
-                matched_host = getattr(self.matched, host)
-            except AttributeError:
-                raise Exception(
-                    f"Host {host} not found in matched hosts, while parsing {settings}"
-                )
+            matched_host = self._get_host_from_str(host)
 
             for device, device_setting in settings[host].items():
                 try:
@@ -121,3 +116,30 @@ class BaseHWConfigMixin(BaseSubConfigMixin):
                     )
 
         return result_mapping
+
+    def _get_host_from_str(self, host: str):
+        """
+        Parses host and namespace from string and returns
+        the corresponding host or namespace object.
+
+        E.g.:
+            "host1" -> self.matched.host1
+            "host1.ns1" ->  self.matched.host1.ns1
+        """
+        netns_path = host.split(".")
+        host = netns_path[0]
+
+        try:
+            host = getattr(self.matched, host)
+        except AttributeError:
+            raise Exception(f"Host {host} not found in matched hosts")
+
+        if len(netns_path) == 2:  # machine.namespace => 2 elements
+            try:
+                return getattr(host, netns_path[1])
+            except AttributeError:
+                raise Exception(f"Namespace {netns_path[1]} not found on {host}")
+        elif len(netns_path) > 2:
+            raise NotImplementedError("Nested namespaces are not (yet) supported")
+
+        return host
