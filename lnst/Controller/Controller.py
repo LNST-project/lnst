@@ -158,26 +158,30 @@ class Controller(object):
         self._mapper.set_requirements(req._to_dict())
 
         i = 0
-        for match in self._mapper.matches(**kwargs):
-            self._log_ctl.set_recipe(recipe.__class__.__name__,
-                                     expand="match_%d" % i)
-            i += 1
+        try:
+            for match in self._mapper.matches(**kwargs):
+                self._log_ctl.set_recipe(recipe.__class__.__name__,
+                                         expand="match_%d" % i)
+                i += 1
 
-            for line in format_match_description(match).split('\n'):
-                logging.info(line)
-            try:
-                self._map_match(match, req, recipe)
-                recipe._init_run(RecipeRun(recipe, match, log_dir=self._log_ctl.get_recipe_log_path(),
-                                           log_list=self._log_ctl.get_recipe_log_list()))
-                recipe.test()
-            except Exception as exc:
-                if recipe.current_run:
-                    recipe.current_run.exception = exc
-                logging.error("Recipe execution terminated by unexpected exception")
-                log_exc_traceback()
-                raise
-            finally:
-                self._cleanup_agents()
+                for line in format_match_description(match).split('\n'):
+                    logging.info(line)
+                try:
+                    self._map_match(match, req, recipe)
+                    recipe._init_run(RecipeRun(recipe, match, log_dir=self._log_ctl.get_recipe_log_path(),
+                                               log_list=self._log_ctl.get_recipe_log_list()))
+                    recipe.test()
+                except Exception as exc:
+                    if recipe.current_run:
+                        recipe.current_run.exception = exc
+                    logging.error("Recipe execution terminated by unexpected exception")
+                    log_exc_traceback()
+                    raise
+                finally:
+                    self._cleanup_agents()
+        finally:
+            if isinstance(self._pools, ContainerPoolManager):
+                self._pools.cleanup()
 
     def _map_match(self, match, requested, recipe):
         self._machines = {}
@@ -240,9 +244,6 @@ class Controller(object):
         for bridge in list(self._network_bridges.values()):
             bridge.cleanup()
         self._network_bridges = {}
-
-        if isinstance(self._pools, ContainerPoolManager):
-            self._pools.cleanup()
 
     def _load_ctl_config(self, config):
         if isinstance(config, CtlConfig):
