@@ -18,7 +18,10 @@ RUN dnf install -y initscripts \
     perf \
     perftest \
     tcpdump \
-    libnl3-devel &&  \
+    libnl3-devel \
+    nftables \
+    openvswitch \
+    teamd &&  \
     curl -sSL https://install.python-poetry.org |  \
     python3 - --version 1.3.1
 
