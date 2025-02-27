@@ -28,7 +28,7 @@ ctl = Controller(
     podman_uri=podman_uri,
     image=image_name,
     debug=1,
-    network_plugin="cni",
+    network_plugin="custom_lnst",
 )
 
 recipe_instance = HelloWorldRecipe()
