@@ -5,7 +5,7 @@ echo Set up system requirements
 sudo apt-get update
 sudo apt-get install podman -y
 sudo systemctl enable --now podman.socket
-curl -sSL https://install.python-poetry.org | python3 - --version 1.3.1
+curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
 
 echo Set up Podman network requirements
 
@@ -19,7 +19,7 @@ echo Install LNST
 sudo apt-get install -y iputils-* \
 ethtool \
 gcc \
-python-dev \
+python3-dev \
 libxml2-dev \
 libxslt-dev \
 qemu-kvm \

@@ -14,7 +14,7 @@ RUN dnf install -y initscripts \
     git \
     libnl3-devel &&  \
     curl -sSL https://install.python-poetry.org |  \
-    python3 - --version 1.8.3
+    python3 - --version 1.4.2
 
 RUN mkdir -p /root/.lnst
 COPY . /lnst
