@@ -21,9 +21,10 @@ RUN dnf install -y initscripts \
     libnl3-devel \
     nftables \
     openvswitch \
-    teamd &&  \
+    teamd \
+    kernel-tools &&  \
     curl -sSL https://install.python-poetry.org |  \
-    python3 - --version 1.3.1
+    python3 - --version 1.4.2
 
 COPY . /lnst
 RUN cd /lnst/container_files/agent && chmod +x install.sh && sh install.sh
