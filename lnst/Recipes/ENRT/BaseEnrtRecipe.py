@@ -413,7 +413,8 @@ class BaseEnrtRecipe(
                     if not self.params.ping_parallel:
                         break
 
-                yield ping_conf_list
+                if ping_conf_list:
+                    yield ping_conf_list
 
     def generate_ping_endpoints(self, config):
         """Generator for ping endpoints
