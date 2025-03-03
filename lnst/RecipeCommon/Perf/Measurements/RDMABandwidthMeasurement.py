@@ -91,6 +91,26 @@ class RDMABandwidthMeasurement(BaseFlowMeasurement):
         self._endpoint_tests.clear()
         return results
 
+    def collect_simulated_results(self) -> list[RDMABandwidthMeasurementResults]:
+        results: list[RDMABandwidthMeasurementResults] = []
+        for endpoint_test in self._endpoint_tests:
+            bandwidth = 0
+            duration = 1
+            result = RDMABandwidthMeasurementResults(
+                measurement=self,
+                measurement_success=True,
+                flow=endpoint_test.flow,
+            )
+            result.bandwidth = PerfInterval(
+                value=0,
+                duration=1,
+                unit="MiB",
+                timestamp=self._start_timestamp,
+            )
+            results.append(result)
+        self._endpoint_tests.clear()
+        return results
+
     def _prepare_endpoint_tests(self) -> list[NetworkFlowTest]:
         return [
             NetworkFlowTest(
