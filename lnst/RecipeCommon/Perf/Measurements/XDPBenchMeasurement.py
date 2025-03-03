@@ -161,6 +161,37 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
             results.append(flow_results)
         return results
 
+    def collect_simulated_results(self):
+        test_flows = self._finished_measurements
+        res = []
+        for test_flow in test_flows:
+            flow_results = XDPBenchMeasurementResults(
+                measurement=self,
+                measurement_success=True,
+                flow=test_flow.flow,
+                warmup_duration=test_flow.flow.warmup_duration,
+            )
+            flow_results.generator_results = ParallelPerfResult(
+                [
+                    SequentialPerfResult(
+                        [PerfInterval(0, 1, "packets", time.time())]
+                        * (test_flow.flow.warmup_duration * 2 + test_flow.flow.duration)
+                    )
+                ]
+            )
+
+            flow_results.receiver_results = ParallelPerfResult(
+                [
+                    SequentialPerfResult(
+                        [PerfInterval(0, 1, "packets", time.time())]
+                        * (test_flow.flow.warmup_duration * 2 + test_flow.flow.duration)
+                    )
+                ]
+            )
+
+            res.append(flow_results)
+        return res
+
     def _parse_generator_results(self, job: Job):
         results = ParallelPerfResult()  # container for multiple instances of pktgen
 
