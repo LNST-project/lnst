@@ -45,12 +45,33 @@ The first requirement is **Podman**, follow installation steps on
 `official Podman installation page <https://podman.io/getting-started/installation>`_.
 
 
-Configure Podman to use CNI
-+++++++++++++++++++++++++++
+Container Networking
+--------------------
 
-If you use Podman 4.0+ you need to change default network backend from `netavark` to `CNI` as LNST supports CNI
-only. If your Podman is already running, stop it.
+LNST ContainerPoolManager supports 3 different plugins to generate the networks defined in Recipe Requirements.
 
+The first two plugins are podman native plugins `netavark` and `CNI`.
+
+The final plugin is the recently added `custom_lnst`. This plugin has no
+requirements on your system or it's configuration, it utilizes `ip-route`
+commands to build a network using `veth` and `bridge` interfaces manually. So
+the only requirement here is to run the recipe with root privileges.
+
+To select which plugin is used for networking you can change the value of the
+`network_plugin` argument when creating the `Controller` class:
+
+  .. code-block:: python
+
+    ctl = Controller(
+        poolMgr=ContainerPoolManager,
+        mapper=ContainerMapper,
+        network_plugin="custom_lnst",
+    )
+
+CNI system configuration
+````````````````````````
+
+To use `CNI` you may need to adjust the systemwide container configurations.
 
 1. Remove all the LNST's leftovers from `/etc/cni/net.d/lnst_*.conflist` if you already tried to run LNST
 
@@ -70,11 +91,10 @@ only. If your Podman is already running, stop it.
 
 4. Start your Podman instance
 
-
-Podman API is also required, follow the steps below:
-
 Enabling Podman API service:
 ++++++++++++++++++++++++++++
+
+Podman API is also required, follow the steps below:
 
 .. code-block:: bash
 
@@ -235,4 +255,3 @@ Classes documentation
 `````````````````````
 .. autoclass:: container_files.controller.container_runner.ContainerRunner
     :members:
-
