@@ -41,7 +41,7 @@ class ContainerPoolManager(object):
     :type image: str
 
     :param network_plugin:
-        Podman network plugin, 'cni' or 'netavark', if unset, the network backend is auto-detected
+        Podman network plugin, 'cni', 'netavark' or 'custom_lnst', if unset, the network backend is auto-detected
     :type network_plugin: Optional[str]
     """
 
