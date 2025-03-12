@@ -6,10 +6,15 @@ from lnst.Recipes.ENRT.MeasurementGenerators.BaseMeasurementGenerator import (
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements import LinuxPerfMeasurement
 from lnst.Common.Parameters import BoolParam
+from lnst.Controller.Host import Host
 
 
 class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
     do_linuxperf_measurement = BoolParam(default=False)
+
+    @property
+    def linuxperf_hosts(self) -> list[Host]:
+        return self.matched
 
     def generate_perf_measurements_combinations(self, config):
         combinations = super().generate_perf_measurements_combinations(config)
@@ -29,7 +34,7 @@ class LinuxPerfMeasurementGenerator(BaseMeasurementGenerator):
 
         for combination in combinations:
             measurement: BaseMeasurement = LinuxPerfMeasurement(
-                hosts=self.matched,
+                hosts=self.linuxperf_hosts,
                 data_folder=linuxperf_data_folder,
                 recipe_conf=config,
             )
