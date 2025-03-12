@@ -5,7 +5,7 @@ import os
 from lnst.Tests.BaseTestModule import BaseTestModule
 from lnst.Common.Parameters import StrParam, IntParam, ListParam
 from lnst.Common.Utils import is_installed
-from lnst.Common.ExecCmd import exec_cmd, log_output
+from lnst.Common.ExecCmd import exec_cmd, log_output, ExecCmdFail
 
 class LinuxPerf(BaseTestModule):
     output_file = StrParam(mandatory=True)
@@ -40,8 +40,11 @@ class LinuxPerf(BaseTestModule):
 
         self._res_data["filename"] = os.path.abspath(self.params.output_file)
 
-        exec_cmd(f"HOME=/root perf archive {self._res_data['filename']}")
-        self._res_data["archive_filename"] = self._res_data["filename"] + ".tar.bz2"
+        try:
+            exec_cmd(f"HOME=/root perf archive {self._res_data['filename']}")
+            self._res_data["archive_filename"] = self._res_data["filename"] + ".tar.bz2"
+        except ExecCmdFail:
+            logging.error(f"Could not generate perf archive for {self._res_data['filename']}")
 
         return process.returncode == -2
 

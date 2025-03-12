@@ -111,9 +111,11 @@ class LinuxPerfMeasurement(BaseMeasurement):
             logging.debug(f"perf-record data copied from agent to {dst_filepath}")
 
             # copy debug symbols to controller
-            archive_filepath = job.result.get("archive_filename")
-            host.copy_file_from_machine(archive_filepath, f"{dst_filepath}.tar.bz2")
-            logging.debug(f"perf-record debug symbols copied from agent to {dst_filepath}.tar.bz2")
+            if archive_filepath := job.result.get("archive_filename"):
+                host.copy_file_from_machine(archive_filepath, f"{dst_filepath}.tar.bz2")
+                logging.debug(f"perf-record debug symbols copied from agent to {dst_filepath}.tar.bz2")
+            else:
+                logging.debug(f"perf-record debug symbols not available")
 
             results.append(
                 LinuxPerfMeasurementResults(
