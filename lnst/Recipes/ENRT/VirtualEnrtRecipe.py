@@ -13,6 +13,8 @@ from lnst.Recipes.ENRT.MeasurementGenerators.FlowMeasurementGenerator import (
 from lnst.Recipes.ENRT.MeasurementGenerators.HypervisorsStatCPUMeasurementGenerator import (
     HypervisorsStatCPUMeasurementGenerator,
 )
+from lnst.Recipes.ENRT.MeasurementGenerators.LinuxPerfMeasurementGenerator import LinuxPerfMeasurementGenerator
+from lnst.Controller.Host import Host
 
 
 class VirtualEnrtRecipe(
@@ -20,6 +22,7 @@ class VirtualEnrtRecipe(
     DisableTurboboostMixin,
     DisableIdleStatesMixin,
     HypervisorsStatCPUMeasurementGenerator,
+    LinuxPerfMeasurementGenerator,
     FlowMeasurementGenerator,
     BaseEnrtRecipe,
 ):
@@ -49,4 +52,8 @@ class VirtualEnrtRecipe(
         :any:`DisableTurboboostMixin` and
         :any:`DisableTurboboostMixin.disable_turboboost_host_list`.
         """
+        return self.hypervisor_hosts
+
+    @property
+    def linuxperf_hosts(self) -> list[Host]:
         return self.hypervisor_hosts
