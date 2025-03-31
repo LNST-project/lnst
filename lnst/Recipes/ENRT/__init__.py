@@ -145,3 +145,4 @@ from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.SimpleNetnsRouterRecipe import SimpleNetnsRouterRecipe
 from lnst.Recipes.ENRT.NftablesRuleScaleRecipe import NftablesRuleScaleRecipe
 from .ForwardingRecipe import ForwardingRecipe
+from .XDPForwardingRecipe import XDPForwardingRecipe
