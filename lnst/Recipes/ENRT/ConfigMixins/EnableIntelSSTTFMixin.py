@@ -11,7 +11,7 @@ from lnst.Recipes.ENRT.ConfigMixins import BaseSubConfigMixin
 class EnableIntelSSTTFMixin(BaseSubConfigMixin):
     TURBO_PATH = "/sys/devices/system/cpu/intel_pstate/no_turbo"
 
-    enable_intel_sst_tf = BoolParam(default=False)
+    enable_intel_sst_tf = BoolParam()
 
     @property
     def intel_sst_tf_host_list(self):
@@ -24,7 +24,7 @@ class EnableIntelSSTTFMixin(BaseSubConfigMixin):
     def apply_sub_configuration(self, config):
         super().apply_sub_configuration(config)
 
-        if not self.params.enable_intel_sst_tf:
+        if getattr(self.params, "enable_intel_sst_tf", None) is None:
             return
 
         for host in self.intel_sst_tf_host_list:
@@ -47,7 +47,7 @@ class EnableIntelSSTTFMixin(BaseSubConfigMixin):
                 raise RecipeError(f"Could not enable sst-tf for {self._ssted_cpus()}")
 
     def remove_sub_configuration(self, config):
-        if not self.params.enable_intel_sst_tf:
+        if getattr(self.params, "enable_intel_sst_tf", None) is None:
             return super().remove_sub_configuration(config)
 
         logging.warning(
@@ -66,7 +66,7 @@ class EnableIntelSSTTFMixin(BaseSubConfigMixin):
     def generate_sub_configuration_description(self, config):
         description = super().generate_sub_configuration_description(config)
 
-        if self.params.enable_intel_sst_tf:
+        if getattr(self.params, "enable_intel_sst_tf", None) is not None:
             for host in self.intel_sst_tf_host_list:
                 description.append(
                     f"intel sst-tf enabled on {host} cpus: {self._ssted_cpus()}"
