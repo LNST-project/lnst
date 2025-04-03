@@ -174,6 +174,8 @@ class BaseEnrtRecipe(
     """
 
     driver = StrParam()
+    nic_speed = StrParam()
+    nic_model = StrParam()
 
     #common test parameters
     ip_versions = Param(default=("ipv4", "ipv6"))

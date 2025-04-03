@@ -1,9 +1,19 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 
 
-class SimpleNetworkReq():
+class SimpleNetworkReq:
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1.eth0 = DeviceReq(
+        label="net1",
+        driver=RecipeParam("driver"),
+        speed=RecipeParam("nic_speed"),
+        model=RecipeParam("nic_model"),
+    )
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2.eth0 = DeviceReq(
+        label="net1",
+        driver=RecipeParam("driver"),
+        speed=RecipeParam("nic_speed"),
+        model=RecipeParam("nic_model"),
+    )
