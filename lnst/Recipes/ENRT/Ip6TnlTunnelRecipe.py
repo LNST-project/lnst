@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET6,
     ipaddress,
@@ -18,9 +17,10 @@ from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRecipe):
+class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, SimpleNetworkReq, BaseTunnelRecipe):
     """
     This class implements a recipe that configures a simple Ip6Tnl tunnel between
     two hosts.
@@ -54,12 +54,6 @@ class Ip6TnlTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelR
             this parameter specifies the mode of the ip6tnl tunnel, can be any
             of the **any**, **ipip6** or **ip6ip6**
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     tunnel_mode = ChoiceParam(
         type=StrParam, choices=set(["any", "ipip6", "ip6ip6"]), mandatory=True

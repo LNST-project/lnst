@@ -6,9 +6,9 @@ from lnst.Common.Parameters import (
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
+from lnst.Recipes.ENRT.RecipeReqs import DoubleTeamOrBondReq
 from dataclasses import dataclass
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Tests.TestPMD import TestPMD
@@ -46,7 +46,7 @@ class DummyRecipeConfig:
     bond_br: str = "bond_bridge"
 
 
-class OvSDPDKBondRecipe(BaseEnrtRecipe):
+class OvSDPDKBondRecipe(DoubleTeamOrBondReq, BaseEnrtRecipe):
     """
     This recipe implements Enrt testing for OvS DPDK Bonding recipe
     network scenario that looks as follows
@@ -111,14 +111,6 @@ class OvSDPDKBondRecipe(BaseEnrtRecipe):
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
     """
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
     net1_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net1_ipv6 = IPv6NetworkParam(default="fc00::/64")
     net2_ipv4 = IPv4NetworkParam(default="192.168.102.0/24")

@@ -9,7 +9,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -19,37 +18,14 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
+from lnst.Recipes.ENRT.RecipeReqs import VirtualBridgeOverBondReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices import BondDevice
 from lnst.Devices import BridgeDevice
 
 class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, VirtualEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host1.tap0 = DeviceReq(label="to_guest1")
-    host1.tap1 = DeviceReq(label="to_guest2")
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host2.tap0 = DeviceReq(label="to_guest3")
-    host2.tap1 = DeviceReq(label="to_guest4")
-
-    guest1 = HostReq()
-    guest1.eth0 = DeviceReq(label="to_guest1")
-
-    guest2 = HostReq()
-    guest2.eth0 = DeviceReq(label="to_guest2")
-
-    guest3 = HostReq()
-    guest3.eth0 = DeviceReq(label="to_guest3")
-
-    guest4 = HostReq()
-    guest4.eth0 = DeviceReq(label="to_guest4")
-
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, VirtualBridgeOverBondReq, VirtualEnrtRecipe):
     vlan0_id = IntParam(default=10)
     vlan1_id = IntParam(default=20)
 

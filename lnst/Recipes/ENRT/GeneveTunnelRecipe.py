@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     AF_INET6,
@@ -22,10 +21,11 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubCon
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
 class GeneveTunnelRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a simple Geneve tunnel
@@ -61,12 +61,6 @@ class GeneveTunnelRecipe(
             used for the underlying (carrier) network. The value is either
             **ipv4** or **ipv6**
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(
         default=(

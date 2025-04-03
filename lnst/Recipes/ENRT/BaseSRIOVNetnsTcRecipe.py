@@ -6,7 +6,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf
@@ -21,10 +20,11 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
 class BaseSRIOVNetnsTcRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaremetalEnrtRecipe
 ):
     """
     This base class provides common network configuration for tests
@@ -60,20 +60,6 @@ class BaseSRIOVNetnsTcRecipe(
     All sub configurations are included via Mixin classes.
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
-    """
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    """
-    This parameter was created due to the difference between various kernel and distro
-    versions, not having consistent naming scheme of virtual function.
-
-    Solution here is to expect deterministic VF name, which is derived from the PF name.
-    With specific kernel parameter `biosdevname=1` we can expect default suffix on
-    VF to be created to be `_n`, where n is the index of VF created.
     """
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),

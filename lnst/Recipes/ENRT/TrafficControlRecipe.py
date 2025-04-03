@@ -4,9 +4,9 @@ from contextlib import contextmanager
 
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import ListParam, StrParam, IntParam, ChoiceParam, BoolParam
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Namespace import Namespace
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
+from lnst.Recipes.ENRT.RecipeReqs import TrafficControlReq
 from lnst.RecipeCommon import BaseResultEvaluator
 from lnst.RecipeCommon.Perf.Evaluators.MaxTimeTakenEvaluator import MaxTimeTakenEvaluator
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement
@@ -18,7 +18,7 @@ class TcRecipeConfiguration(RecipeConf):
     pass
 
 
-class TrafficControlRecipe(PerfRecipe):
+class TrafficControlRecipe(TrafficControlReq, PerfRecipe):
     """
     Recipe to evaluate the performance of `tc filter` rule installs
 
@@ -26,9 +26,6 @@ class TrafficControlRecipe(PerfRecipe):
     """
 
     driver = StrParam(default="mlx5_core")
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     num_rules = IntParam(default=1000)
     parallel_instances = IntParam(default=4)

@@ -7,7 +7,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -16,26 +15,13 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.RecipeReqs import VirtualBridgeMirroredReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VlanDevice
 from lnst.Devices import BridgeDevice
 
 class VirtualBridgeVlanInHostMirroredRecipe(CommonHWSubConfigMixin,
-    OffloadSubConfigMixin, VirtualEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host1.tap0 = DeviceReq(label="to_guest1")
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host2.tap0 = DeviceReq(label="to_guest2")
-
-    guest1 = HostReq()
-    guest1.eth0 = DeviceReq(label="to_guest1")
-
-    guest2 = HostReq()
-    guest2.eth0 = DeviceReq(label="to_guest2")
-
+    OffloadSubConfigMixin, VirtualBridgeMirroredReq, VirtualEnrtRecipe):
     vlan_id = IntParam(default=10)
 
     offload_combinations = Param(default=(

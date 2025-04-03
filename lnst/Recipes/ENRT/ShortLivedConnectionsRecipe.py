@@ -1,6 +1,5 @@
 from collections.abc import Collection
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -14,15 +13,10 @@ from lnst.Common.Parameters import (
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
+class ShortLivedConnectionsRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrtRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
 
     # Neper is the only option for RR type tests.

@@ -6,7 +6,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
@@ -20,11 +19,12 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
 from lnst.Recipes.ENRT.SRIOVDevices import SRIOVDevices
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 from lnst.Devices import OvsBridgeDevice
 
 
 class SRIOVNetnsOvSRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaremetalEnrtRecipe
 ):
     """
     This recipe implements Enrt testing for a SRIOV network scenario
@@ -56,11 +56,6 @@ class SRIOVNetnsOvSRecipe(
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
     """
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),

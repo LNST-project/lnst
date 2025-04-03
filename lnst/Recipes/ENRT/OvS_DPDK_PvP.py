@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 
 from lnst.Recipes.ENRT.BasePvPRecipe import BasePvPTestConf, BasePvPRecipe
 from lnst.Recipes.ENRT.BasePvPRecipe import VirtioDevice, VirtioType
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from lnst.Recipes.ENRT.RecipeReqs import PvPReq
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.Parameters import IntParam, Param, StrParam, IPv4NetworkParam, BoolParam
 from lnst.Common.IpAddress import interface_addresses
@@ -36,15 +36,7 @@ class OVSPvPTestConf(BasePvPTestConf):
         self.guest = self.GuestConf()
 
 
-class OvSDPDKPvPRecipe(BasePvPRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq(with_guest="yes")
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
+class OvSDPDKPvPRecipe(PvPReq, BasePvPRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.1.0/24")
 
     guest_dpdk_cores = StrParam(mandatory=True)

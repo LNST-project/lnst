@@ -2,7 +2,6 @@ from collections.abc import Collection
 from itertools import combinations
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -10,35 +9,15 @@ from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
+from lnst.Recipes.ENRT.RecipeReqs import VirtOvsVxlanReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import OvsBridgeDevice
 
+
 class VirtOvsVxlanRecipe(VlanPingEvaluatorMixin,
-    CommonHWSubConfigMixin, VirtualEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host1.tap0 = DeviceReq(label="to_guest1")
-    host1.tap1 = DeviceReq(label="to_guest2")
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host2.tap0 = DeviceReq(label="to_guest3")
-    host2.tap1 = DeviceReq(label="to_guest4")
-
-    guest1 = HostReq()
-    guest1.eth0 = DeviceReq(label="to_guest1")
-
-    guest2 = HostReq()
-    guest2.eth0 = DeviceReq(label="to_guest2")
-
-    guest3 = HostReq()
-    guest3.eth0 = DeviceReq(label="to_guest3")
-
-    guest4 = HostReq()
-    guest4.eth0 = DeviceReq(label="to_guest4")
+    CommonHWSubConfigMixin, VirtOvsVxlanReq, VirtualEnrtRecipe):
 
     net_ipv4 = IPv4NetworkParam(default="192.168.2.0/24")
-
 
     def test_wide_configuration(self, config):
         host1, host2, guest1, guest2, guest3, guest4 = (self.matched.host1,
