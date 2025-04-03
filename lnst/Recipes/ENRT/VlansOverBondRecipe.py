@@ -6,7 +6,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -21,11 +20,13 @@ from lnst.Recipes.ENRT.BondingMixin import BondingMixin
 from lnst.Devices import VlanDevice
 from lnst.Devices.VlanDevice import VlanDevice as Vlan
 from lnst.Recipes.ENRT.PingMixins import VlanPingEvaluatorMixin
+from lnst.Recipes.ENRT.RecipeReqs import BondOrTeamReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
+
 
 class VlansOverBondRecipe(BondingMixin, PerfReversibleFlowMixin, VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin,
-    BaremetalEnrtRecipe):
+    BondOrTeamReq, BaremetalEnrtRecipe):
     r"""
     This recipe implements Enrt testing for a network scenario that looks
     as follows
@@ -56,13 +57,6 @@ class VlansOverBondRecipe(BondingMixin, PerfReversibleFlowMixin, VlanPingEvaluat
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
     """
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
     vlan0_id = IntParam(default=10)
     vlan1_id = IntParam(default=20)
     vlan2_id = IntParam(default=30)

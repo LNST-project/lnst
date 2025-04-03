@@ -1,7 +1,6 @@
 from collections.abc import Collection
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IPv4NetworkParam
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -14,16 +13,12 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 )
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import VxlanDevice
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
+
 
 class VxlanRemoteRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaremetalEnrtRecipe
 ):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
     net_ipv4 = IPv4NetworkParam(default="192.168.0.0/24")
 
     def test_wide_configuration(self, config):

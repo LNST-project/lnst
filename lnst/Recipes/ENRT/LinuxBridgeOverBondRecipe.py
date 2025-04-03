@@ -7,7 +7,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -17,12 +16,13 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import CommonHWSubCon
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import DoubleTeamOrBondReq
 from lnst.Devices import BondDevice, BridgeDevice
 from lnst.Devices.BridgeDevice import BridgeDevice as BridgeDeviceType
 from lnst.Devices.BondDevice import BondDevice as BondDeviceType
 
 
-class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe):
+class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, DoubleTeamOrBondReq, BaremetalEnrtRecipe):
     r"""
     This recipe implements Enrt testing for a network scenario that looks
     as follows
@@ -51,14 +51,6 @@ class LinuxBridgeOverBondRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, B
     offload_combinations = Param(
         default=(dict(gro="on", gso="on", tso="on", tx="on"),)
     )
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")

@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     Ip4Address,
@@ -19,9 +18,10 @@ from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class SitTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRecipe):
+class SitTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, SimpleNetworkReq, BaseTunnelRecipe):
     """
     This class implements a recipe that configures a simple SIT tunnel between
     two hosts.
@@ -55,12 +55,6 @@ class SitTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelReci
             this parameter specifies the mode of the SIT tunnel, can be any of
             the **any**, **ip6ip6**, **ipip** or **mplsip**
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     tunnel_mode = ChoiceParam(
         type=StrParam, choices=set(["any", "ip6ip", "ipip", "mplsip"]), mandatory=True
