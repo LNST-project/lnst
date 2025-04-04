@@ -1,9 +1,7 @@
 from collections.abc import Collection
-import time
 
 from lnst.Common.Parameters import (
     Param,
-    StrParam,
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
@@ -21,6 +19,7 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
+from lnst.Recipes.ENRT.SRIOVDevices import SRIOVDevices
 from lnst.Devices import OvsBridgeDevice
 
 
@@ -63,16 +62,6 @@ class SRIOVNetnsOvSRecipe(
     host2 = HostReq()
     host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
-    """
-    This parameter was created due to the difference between various kernel and distro
-    versions, not having consistent naming scheme of virtual function.
-
-    Solution here is to expect deterministic VF name, which is derived from the PF name.
-    With specific kernel parameter `biosdevname=1` we can expect default suffix on
-    VF to be created to be `_n`, where n is the index of VF created.
-    """
-    vf_suffix = StrParam(default="_0")
-
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
         dict(gro="off", gso="on", tso="on", tx="on", rx="on"),
@@ -82,7 +71,6 @@ class SRIOVNetnsOvSRecipe(
 
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
-
 
     def test_wide_configuration(self, config):
         """
@@ -108,25 +96,18 @@ class SRIOVNetnsOvSRecipe(
             host.run("systemctl start openvswitch")
             host.run("ovs-vsctl set Open_vSwitch . other_config:hw-offload=true")
 
-            host.run(f"devlink dev eswitch set pci/{host.eth0.bus_info} mode switchdev")
-            time.sleep(2)
-            host.run(f"echo 1 > /sys/class/net/{host.eth0.name}/device/sriov_numvfs")
-            time.sleep(3)
-
-            vf_ifname = dict(ifname=f"{host.eth0.name}{self.params.vf_suffix}")
-            host.map_device("vf_eth0", vf_ifname)
+            host.eth0.eswitch_mode = "switchdev"
+            host.sriov_devices = SRIOVDevices(host.eth0, 1)
+            vf_dev, vf_rep_dev = host.sriov_devices[0]
 
             host.newns = NetNamespace("lnst")
-            host.newns.vf_eth0 = host.vf_eth0
-
-            vf_representor_ifname = dict(ifname="eth0")
-            host.map_device("vf_representor_eth0", vf_representor_ifname)
+            host.newns.vf_eth0 = vf_dev
 
             host.br0 = OvsBridgeDevice()
             host.br0.port_add(host.eth0)
-            host.br0.port_add(host.vf_representor_eth0)
+            host.br0.port_add(vf_rep_dev)
 
-            for dev in [host.eth0, host.newns.vf_eth0, host.vf_representor_eth0, host.br0]:
+            for dev in [host.eth0, host.newns.vf_eth0, vf_rep_dev, host.br0]:
                 dev.up()
             config.configure_and_track_ip(host.newns.vf_eth0, next(ipv4_addr))
             config.configure_and_track_ip(host.newns.vf_eth0, next(ipv6_addr))
@@ -141,11 +122,11 @@ class SRIOVNetnsOvSRecipe(
         for host in [host1, host2]:
             desc += [
                 f"Configured {host.hostid}.{host.eth0.name}.driver = switchdev\n"
-                f"Created virtual function on {host.hostid}.{host.eth0.name} = {host.newns.vf_eth0.name}\n"
+                f"Created virtual function on {host.hostid}.{host.eth0.name} = {host.sriov_devices.vfs[0].name}\n"
                 f"Created network_namespace on {host.hostid} = {host.newns.name}\n"
-                f"Moved interface {host.newns.vf_eth0.name} from {host.hostid} root namespace to {host.hostid}.{host.newns.name} namespace\n"
+                f"Moved interface {host.sriov_devices.vfs[0].name} from {host.hostid} root namespace to {host.hostid}.{host.newns.name} namespace\n"
                 f"Created OvS bridge on {host.hostid} = {host.br0.name}\n"
-                f"Configured {host.hostid}.{host.br0.name}.slaves = {host.eth0.name}, {host.vf_representor_eth0.name}"
+                f"Configured {host.hostid}.{host.br0.name}.slaves = {host.eth0.name}, {host.sriov_devices.vf_reps[0].name}"
             ]
         desc += [
             f"Configured {dev.host.hostid}.{dev.name}.ips = {dev.ips}"
@@ -162,16 +143,15 @@ class SRIOVNetnsOvSRecipe(
         host1, host2 = self.matched.host1, self.matched.host2
 
         for host in [host1, host2]:
-            for dev in [host.eth0, host.vf_representor_eth0, host.br0]:
+            for dev in [host.eth0, host.sriov_devices.vf_reps[0], host.br0]:
                 dev.down()
 
             host.br0.port_del(host.eth0)
-            host.br0.port_del(host.vf_representor_eth0)
+            host.br0.port_del(host.sriov_devices.vf_reps[0])
 
-            host.run(f"echo 0 > /sys/class/net/{host.eth0.name}/device/sriov_numvfs")
-            time.sleep(2)
-            host.run(f"devlink dev eswitch set pci/{host.eth0.bus_info} mode legacy")
-            time.sleep(3)
+            host.eth0.delete_vfs()
+            host.eth0.eswitch_mode = "legacy"
+            del host.sriov_devices
 
         super().test_wide_deconfiguration(config)
 
