@@ -26,6 +26,8 @@ class TrafficControlRecipe(TrafficControlReq, PerfRecipe):
     """
 
     driver = StrParam(default="mlx5_core")
+    nic_speed = StrParam()
+    nic_model = StrParam()
 
     num_rules = IntParam(default=1000)
     parallel_instances = IntParam(default=4)
