@@ -1,7 +1,8 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from .EnrtDeviceReqParams import EnrtDeviceReqParams
 
 
-class VirtualBridgeMirroredReq:
+class VirtualBridgeMirroredReq(EnrtDeviceReqParams):
     host1 = HostReq()
     host1.eth0 = DeviceReq(
         label="to_switch",

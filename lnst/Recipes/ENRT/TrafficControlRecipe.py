@@ -24,11 +24,6 @@ class TrafficControlRecipe(TrafficControlReq, PerfRecipe):
 
     Primarily targeted towards testing mlx cards which support hardware and software steering
     """
-
-    driver = StrParam(default="mlx5_core")
-    nic_speed = StrParam()
-    nic_model = StrParam()
-
     num_rules = IntParam(default=1000)
     parallel_instances = IntParam(default=4)
     cpu_bind = ListParam(type=IntParam())

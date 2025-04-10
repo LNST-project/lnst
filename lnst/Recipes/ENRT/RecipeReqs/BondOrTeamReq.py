@@ -1,7 +1,8 @@
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
+from .EnrtDeviceReqParams import EnrtDeviceReqParams
 
 
-class BondOrTeamReq:
+class BondOrTeamReq(EnrtDeviceReqParams):
     host1 = HostReq()
     host1.eth0 = DeviceReq(
         label="tnet",
