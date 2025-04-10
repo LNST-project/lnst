@@ -7,7 +7,6 @@ from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import (
     Param,
     IntParam,
-    StrParam,
     BoolParam,
     FloatParam,
 )
@@ -106,13 +105,6 @@ class BaseEnrtRecipe(
     The "machinery" for that is defined in the :any:`BaseSubConfigMixin` class.
     It is then used in this class from the `test` method loop.
 
-    :param driver:
-        The driver parameter is used to modify the hw network requirements,
-        specifically to request Devices using the specified driver. This is
-        common enough in the Enrt recipes that it can be part of the Base class.
-
-    :type driver: :any:`StrParam` (default "ixgbe")
-
     :param ip_versions:
         Parameter that determines which IP protocol versions will be tested.
     :type ip_versions: Tuple[Str] (default ("ipv4", "ipv6"))
@@ -172,11 +164,6 @@ class BaseEnrtRecipe(
         generate 0 value measurement results as if they ran
     :type perf_test_simulation: :any:`BoolParam` (default False)
     """
-
-    driver = StrParam()
-    nic_speed = StrParam()
-    nic_model = StrParam()
-
     #common test parameters
     ip_versions = Param(default=("ipv4", "ipv6"))
 
