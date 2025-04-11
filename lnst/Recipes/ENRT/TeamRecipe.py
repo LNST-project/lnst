@@ -6,7 +6,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -17,12 +16,13 @@ from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.ConfigMixins.PerfReversibleFlowMixin import (
     PerfReversibleFlowMixin)
+from lnst.Recipes.ENRT.RecipeReqs import BondOrTeamReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import TeamDevice
 
 
 class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
-    BaremetalEnrtRecipe):
+    BondOrTeamReq, BaremetalEnrtRecipe):
     """
     This recipe implements Enrt testing for a network scenario that looks
     as follows
@@ -55,12 +55,6 @@ class TeamRecipe(PerfReversibleFlowMixin, CommonHWSubConfigMixin, OffloadSubConf
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
     """
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="tnet", driver=RecipeParam("driver"))
 
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),

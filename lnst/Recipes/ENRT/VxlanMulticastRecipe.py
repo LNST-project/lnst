@@ -3,27 +3,17 @@ from itertools import permutations
 from socket import AF_INET
 from lnst.Common.IpAddress import ipaddress, interface_addresses
 from lnst.Common.Parameters import IpParam, IPv4NetworkParam
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.VirtualEnrtRecipe import VirtualEnrtRecipe
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
+from lnst.Recipes.ENRT.RecipeReqs import VirtualBridgeReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.Devices import BridgeDevice, VxlanDevice
 
-class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-    host1.tap0 = DeviceReq(label="to_guest1")
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
-    guest1 = HostReq()
-    guest1.eth0 = DeviceReq(label="to_guest1")
-
+class VxlanMulticastRecipe(CommonHWSubConfigMixin, VirtualBridgeReq, VirtualEnrtRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.0.0/24")
     vxlan_group_ip = IpParam(default="239.1.1.1", multicast=True, family=AF_INET)
 

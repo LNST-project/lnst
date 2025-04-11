@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     Ip4Address,
@@ -23,10 +22,11 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
 class GreTunnelOverMacvlanRecipe(
-    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a GRE tunnel between
@@ -58,12 +58,6 @@ class GreTunnelOverMacvlanRecipe(
     The test wide configuration is implemented in the :any:`BaseTunnelRecipe`
     class.
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(
         default=(

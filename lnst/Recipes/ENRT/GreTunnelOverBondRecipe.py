@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     Ip4Address,
@@ -25,10 +24,11 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import DoubleTeamOrBondReq
 
 
 class GreTunnelOverBondRecipe(
-    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, DoubleTeamOrBondReq, BaseTunnelRecipe
 ):
     r"""
     This class implements a recipe that configures a GRE tunnel between
@@ -70,14 +70,6 @@ class GreTunnelOverBondRecipe(
             (mandatory test parameter) the miimon interval to be configured
             on the bond0 device.
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     bonding_mode = StrParam(mandatory=True)
     miimon_value = IntParam(mandatory=True)

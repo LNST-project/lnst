@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     AF_INET6,
@@ -19,9 +18,10 @@ from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
+class L2TPTunnelRecipe(PauseFramesHWConfigMixin, SimpleNetworkReq, BaseTunnelRecipe):
     """
     This class implements a recipe that configures a simple L2TP tunnel with
     one tunnel session between two hosts.
@@ -60,12 +60,6 @@ class L2TPTunnelRecipe(PauseFramesHWConfigMixin, BaseTunnelRecipe):
             (mandatory test parameter) the encapsulation mode for the L2TP tunnel,
             can be either **udp** or **ip**
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     carrier_ipversion = ChoiceParam(type=StrParam, choices=set(["ipv4", "ipv6"]))
     l2tp_encapsulation = ChoiceParam(

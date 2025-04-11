@@ -1,7 +1,6 @@
 from collections.abc import Collection
 from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe, EnrtConfiguration
@@ -13,15 +12,10 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class BaseSimpleNetworkRecipe(BaseEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
+class BaseSimpleNetworkRecipe(SimpleNetworkReq, BaseEnrtRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 

@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Common.IpAddress import (
     AF_INET,
     ipaddress,
@@ -18,9 +17,10 @@ from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRecipe):
+class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, SimpleNetworkReq, BaseTunnelRecipe):
     """
     This class implements a recipe that configures a simple IpIp tunnel between
     two hosts.
@@ -54,12 +54,6 @@ class IpIpTunnelRecipe(MTUHWConfigMixin, PauseFramesHWConfigMixin, BaseTunnelRec
             this parameter specifies the mode of the IPIP tunnel, can be any
             of the **any**, **ipip** or **mplsip**
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     tunnel_mode = ChoiceParam(
         type=StrParam, choices=set(["any", "ipip", "mplsip"]), mandatory=True

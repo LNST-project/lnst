@@ -5,7 +5,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
@@ -15,10 +14,11 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.Recipes.ENRT.BondingMixin import BondingMixin
+from lnst.Recipes.ENRT.RecipeReqs import DoubleTeamOrBondReq
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 
 
-class DoubleBondRecipe(BondingMixin, CommonHWSubConfigMixin, OffloadSubConfigMixin,
+class DoubleBondRecipe(BondingMixin, CommonHWSubConfigMixin, DoubleTeamOrBondReq, OffloadSubConfigMixin,
     BaremetalEnrtRecipe):
     """
     This recipe implements Enrt testing for a network scenario that looks
@@ -47,14 +47,6 @@ class DoubleBondRecipe(BondingMixin, CommonHWSubConfigMixin, OffloadSubConfigMix
 
     The actual test machinery is implemented in the :any:`BaseEnrtRecipe` class.
     """
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on"),
         dict(gro="off", gso="on", tso="on", tx="on"),

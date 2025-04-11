@@ -4,7 +4,6 @@ from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
 from lnst.Common.LnstError import LnstError
 from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Devices import MacsecDevice
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
@@ -15,14 +14,10 @@ from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin)
 from lnst.RecipeCommon.Ping.Recipe import PingConf
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
-class SimpleMacsecRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
 
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
+class SimpleMacsecRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrtRecipe):
     net_ipv4 = IPv4NetworkParam(default="192.168.100.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
 

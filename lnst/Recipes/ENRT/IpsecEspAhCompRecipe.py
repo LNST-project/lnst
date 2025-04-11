@@ -10,7 +10,6 @@ from lnst.Common.Parameters import (
     IPv6NetworkParam,
 )
 from lnst.Common.LnstError import LnstError
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.Recipes.ENRT.ConfigMixins.BaseSubConfigMixin import (
@@ -23,15 +22,11 @@ from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Ping.Recipe import PingConf
 from lnst.Recipes.ENRT.XfrmTools import (configure_ipsec_esp_ah_comp,
     generate_key)
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
-class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, BaremetalEnrtRecipe,
+
+class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrtRecipe,
     PacketAssertTestAndEvaluate):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="to_switch", driver=RecipeParam("driver"))
-
     net1_ipv4 = IPv4NetworkParam(default="192.168.99.0/24")
     net1_ipv6 = IPv6NetworkParam(default="fc00:1::/64")
     net2_ipv4 = IPv4NetworkParam(default="192.168.100.0/24")

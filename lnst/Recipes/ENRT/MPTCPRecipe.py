@@ -4,7 +4,6 @@ from typing import List
 
 from lnst.Common.Parameters import Param, IPv4NetworkParam, IPv6NetworkParam
 from lnst.Common.IpAddress import interface_addresses
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.Host import Host
 from lnst.RecipeCommon.MPTCPManager import MPTCPManager
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
@@ -20,18 +19,12 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
     CommonHWSubConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import DoubleTeamOrBondReq
+
 
 class MPTCPRecipe(
-    CommonHWSubConfigMixin, OffloadSubConfigMixin, BaremetalEnrtRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, DoubleTeamOrBondReq, BaremetalEnrtRecipe
 ):
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net", driver=RecipeParam("driver"))
-    host1.eth1 = DeviceReq(label="net", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net", driver=RecipeParam("driver"))
-    host2.eth1 = DeviceReq(label="net", driver=RecipeParam("driver"))
-
     offload_combinations = Param(default=(
         dict(gro="on", gso="on", tso="on", tx="on", rx="on"),
         dict(gro="off", gso="on", tso="on", tx="on", rx="on"),

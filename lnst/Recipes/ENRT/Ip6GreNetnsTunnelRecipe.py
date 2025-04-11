@@ -1,4 +1,3 @@
-from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.Controller.NetNamespace import NetNamespace
 from lnst.Common.IpAddress import (
     AF_INET6,
@@ -24,10 +23,11 @@ from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
 from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
     PauseFramesHWConfigMixin,
 )
+from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
 class Ip6GreNetnsTunnelRecipe(
-    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, BaseTunnelRecipe
+    MTUHWConfigMixin, PauseFramesHWConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
 ):
     r"""
     This class implements a recipe that configures a IP6GRE tunnel between
@@ -70,12 +70,6 @@ class Ip6GreNetnsTunnelRecipe(
     The test wide configuration is implemented in the :any:`BaseTunnelRecipe`
     class.
     """
-
-    host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
-
-    host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
 
     offload_combinations = Param(
         default=(

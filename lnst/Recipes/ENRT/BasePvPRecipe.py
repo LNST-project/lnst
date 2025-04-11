@@ -51,8 +51,6 @@ class BasePvPRecipe(PingTestAndEvaluate, PerfRecipe):
     Base PvP Recipe:
         TODO: Describe stages and configurations
     """
-
-    driver = StrParam(mandatory=True)
     driverctl_override = BoolParam(default=True)
 
     trex_dir = StrParam(mandatory=True)
