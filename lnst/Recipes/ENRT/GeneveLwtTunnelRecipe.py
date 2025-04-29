@@ -7,13 +7,15 @@ from lnst.Common.IpAddress import (
     Ip6Address,
     interface_addresses,
 )
-from lnst.Devices import GeneveDevice, LoopbackDevice, RemoteDevice
+from lnst.Devices import GeneveDevice, RemoteDevice
 from lnst.RecipeCommon.Ping.PingEndpoints import PingEndpoints
 from lnst.RecipeCommon.PacketAssert import PacketAssertConf
 from lnst.Common.Parameters import (
     Param,
     StrParam,
+    IntParam,
     ChoiceParam,
+    BoolParam,
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
@@ -24,14 +26,14 @@ from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
-from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
-    PauseFramesHWConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin,
 )
 from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
 class GeneveLwtTunnelRecipe(
-    PauseFramesHWConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a simple Geneve lightweight
@@ -60,12 +62,21 @@ class GeneveLwtTunnelRecipe(
     The test wide configuration is implemented in the :any:`BaseTunnelRecipe`
     class.
 
-    The recipe provides additional parameter:
+    The recipe provides additional parameters:
 
         :param carrier_ipversion:
             This parameter specifies whether IPv4 or IPv6 addresses are
             used for the underlying (carrier) network. The value is either
             **ipv4** or **ipv6**
+
+        :param geneve_opts:
+            If set to True, the geneve tunnel options will be used in
+            encapsulation
+
+        :param flow_count:
+            Specified number of flows (encapsulation rules) will be configured
+            for the geneve tunnel. Flow is a connection specified by a tunneled
+            IPv4/IPv6 address. By default only one flow is configured.
     """
 
     offload_combinations = Param(
@@ -82,6 +93,8 @@ class GeneveLwtTunnelRecipe(
     carrier_ipversion = ChoiceParam(type=StrParam, choices=set(["ipv4", "ipv6"]))
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+    geneve_opts = BoolParam(default=False)
+    flow_count = IntParam(default=1)
 
     def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
@@ -123,49 +136,58 @@ class GeneveLwtTunnelRecipe(
         endpoint1_ip = config.ips_for_device(endpoint1)[0]
         endpoint2_ip = config.ips_for_device(endpoint2)[0]
 
-        m1_dummy_ip = ipaddress("172.16.10.1/32")
-        m1_dummy_ip6 = ipaddress("fc00:a::1/128")
-        m2_dummy_ip = ipaddress("172.16.20.1/32")
-        m2_dummy_ip6 = ipaddress("fc00:b::1/128")
-
         m1.gnv_tunnel = GeneveDevice(external=True)
-        m2.gnv_tunnel = GeneveDevice(external=True)
-        m1.lo = LoopbackDevice()
-        m2.lo = LoopbackDevice()
-
-        # A
-        config.configure_and_track_ip(m1.lo, m1_dummy_ip)
-        config.configure_and_track_ip(m1.lo, m1_dummy_ip6)
         m1.gnv_tunnel.mtu = 1400
         m1.gnv_tunnel.up()
 
-        # B
-        config.configure_and_track_ip(m2.lo, m2_dummy_ip)
-        config.configure_and_track_ip(m2.lo, m2_dummy_ip6)
+        m2.gnv_tunnel = GeneveDevice(external=True)
         m2.gnv_tunnel.mtu = 1400
         m2.gnv_tunnel.up()
+        self._connection_to_tunnelid = {}
 
-        tunnel_id = 1234
-        encap = "ip" if self.params.carrier_ipversion == "ipv4" else "ip6"
-        m1.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m2_dummy_ip, encap, tunnel_id, endpoint2_ip, m1.gnv_tunnel.name
+        m1_dummy_ips = []
+        m1_dummy_ips6 = []
+        m2_dummy_ips = []
+        m2_dummy_ips6 = []
+        for flow_id in range(self.params.flow_count):
+            # A
+            m1_dummy_ip = ipaddress(f"172.16.10.{flow_id+1}/32")
+            m1_dummy_ip6 = ipaddress(f"fc00:a::{flow_id+1}/128")
+            m1_dummy_ips.append((m1_dummy_ip, None))
+            m1_dummy_ips6.append((m1_dummy_ip6, None))
+
+            # B
+            m2_dummy_ip = ipaddress(f"172.16.20.{flow_id+1}/32")
+            m2_dummy_ip6 = ipaddress(f"fc00:b::{flow_id+1}/128")
+            m2_dummy_ips.append((m2_dummy_ip, None))
+            m2_dummy_ips6.append((m2_dummy_ip6, None))
+
+            tunnel_id = flow_id
+            port = f"{flow_id:04x}{flow_id:04x}"
+            encap = "ip" if self.params.carrier_ipversion == "ipv4" else "ip6"
+            geneve_opts = " geneve_opts " + f"0x102:0x80:{port}" if self.params.geneve_opts else ""
+
+            m1.run(
+                f"ip route add {m2_dummy_ip} encap {encap} id {tunnel_id} dst {endpoint2_ip}{geneve_opts} dev {m1.gnv_tunnel.name}"
             )
-        )
-        m2.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m1_dummy_ip, encap, tunnel_id, endpoint1_ip, m2.gnv_tunnel.name
+            m2.run(
+                f"ip route add {m1_dummy_ip} encap {encap} id {tunnel_id} dst {endpoint1_ip}{geneve_opts} dev {m2.gnv_tunnel.name}"
             )
-        )
-        m1.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m2_dummy_ip6, encap, tunnel_id, endpoint2_ip, m1.gnv_tunnel.name
+            m1.run(
+                f"ip route add {m2_dummy_ip6} encap {encap} id {tunnel_id} dst {endpoint2_ip}{geneve_opts} dev {m1.gnv_tunnel.name}"
             )
-        )
-        m2.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m1_dummy_ip6, encap, tunnel_id, endpoint1_ip, m2.gnv_tunnel.name
+            m2.run(
+                f"ip route add {m1_dummy_ip6} encap {encap} id {tunnel_id} dst {endpoint1_ip}{geneve_opts} dev {m2.gnv_tunnel.name}"
             )
+
+            self._connection_to_tunnelid[(str(m1_dummy_ip), str(m2_dummy_ip))] = tunnel_id
+            self._connection_to_tunnelid[(str(m1_dummy_ip6), str(m2_dummy_ip6))] = tunnel_id
+
+        config.configure_and_track_ip_bulk(
+            [
+                (m1.gnv_tunnel, m1_dummy_ips + m1_dummy_ips6),
+                (m2.gnv_tunnel, m2_dummy_ips + m2_dummy_ips6),
+            ]
         )
 
         return (m1.gnv_tunnel, m2.gnv_tunnel)
@@ -179,14 +201,14 @@ class GeneveLwtTunnelRecipe(
 
             [PingEndpoints(self.matched.host1.lo, self.matched.host2.lo)]
         """
-        return [PingEndpoints(self.matched.host1.lo, self.matched.host2.lo)]
+        return [PingEndpoints(self.matched.host1.gnv_tunnel, self.matched.host2.gnv_tunnel)]
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
         """
         The perf endpoints for this recipe are the loopback devices that
         are configured with IP addresses of the tunnelled networks.
         """
-        return [ip_endpoint_pairs(config, (self.matched.host1.lo, self.matched.host2.lo))]
+        return [ip_endpoint_pairs(config, (self.matched.host1.gnv_tunnel, self.matched.host2.gnv_tunnel), combination_func=zip)]
 
     def get_packet_assert_config(self, ping_config):
         """
@@ -215,8 +237,15 @@ class GeneveLwtTunnelRecipe(
             pa_kwargs["p_filter"] = "ip6"
             grep_pattern = r"IP6 "
 
-        grep_pattern += r"{}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2: ".format(
-            m1_carrier_ip, m2_carrier_ip
+        # 14:56:29.576709 IP 192.168.101.1.35551 > 192.168.101.2.6081: Geneve, Flags [none], vni 0x4d2, options [8 bytes]: IP 172.16.10.1 > 172.16.20.1: ICMP echo request, id 64, seq 1, length 64
+        options = r", options \[[0-9]+ bytes\]" if self.params.geneve_opts else ""
+        tunnel_id = f"{self._connection_to_tunnelid[(str(ip1), str(ip2))]:x}"
+
+        grep_pattern += r"{}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x{}{}: ".format(
+            m1_carrier_ip,
+            m2_carrier_ip,
+            tunnel_id,
+            options,
         )
 
         if isinstance(ip2, Ip4Address):
@@ -233,10 +262,25 @@ class GeneveLwtTunnelRecipe(
 
         return pa_config
 
+    def generate_test_wide_description(self, config: EnrtConfiguration):
+        desc = super().generate_test_wide_description(config)
+        desc += [
+            f"Configured tunnel options = {self.params.geneve_opts}"
+        ]
+        return desc
+
     @property
     def offload_nics(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
     def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
