@@ -855,7 +855,8 @@ class Device(object, metaclass=DeviceMeta):
 
     def _read_pause_frames(self):
         try:
-            res, _ = exec_cmd("ethtool -a %s" % self.name)
+            res, _ = exec_cmd("ethtool -a %s" % self.name,
+                              log_outputs = False)
         except:
             raise DeviceFeatureNotSupported(
                 "No values for pause frames of %s." % self.name
@@ -925,7 +926,8 @@ class Device(object, metaclass=DeviceMeta):
     def eswitch_mode(self):
         try:
             # TODO: do this through device._devlink?
-            stdout, _ = exec_cmd(f"devlink dev eswitch show pci/{self.bus_info}")
+            stdout, _ = exec_cmd(f"devlink dev eswitch show pci/{self.bus_info}",
+                                 log_outputs = False)
         except ExecCmdFail as e:
             if e.get_stderr().find("Operation not supported") > -1 or e.get_stderr().find("No such device"):
                 raise DeviceFeatureNotSupported(f"Device {self.name} not compatible with switchdev")
