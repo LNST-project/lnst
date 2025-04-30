@@ -14,6 +14,7 @@ from lnst.Common.Parameters import (
     Param,
     StrParam,
     ChoiceParam,
+    ListParam,
     IPv4NetworkParam,
     IPv6NetworkParam,
 )
@@ -60,12 +61,16 @@ class GeneveLwtTunnelRecipe(
     The test wide configuration is implemented in the :any:`BaseTunnelRecipe`
     class.
 
-    The recipe provides additional parameter:
+    The recipe provides additional parameters:
 
         :param carrier_ipversion:
             This parameter specifies whether IPv4 or IPv6 addresses are
             used for the underlying (carrier) network. The value is either
             **ipv4** or **ipv6**
+
+        :param geneve_opts:
+            Geneve tunnel options as specified in iproute's geneve_opts, multiple
+            options are specified as individual list items
     """
 
     offload_combinations = Param(
@@ -82,6 +87,7 @@ class GeneveLwtTunnelRecipe(
     carrier_ipversion = ChoiceParam(type=StrParam, choices=set(["ipv4", "ipv6"]))
     net_ipv4 = IPv4NetworkParam(default="192.168.101.0/24")
     net_ipv6 = IPv6NetworkParam(default="fc00::/64")
+    geneve_opts = ListParam(type=StrParam(), default=[])
 
     def configure_underlying_network(self, config: EnrtConfiguration) -> tuple[RemoteDevice, RemoteDevice]:
         """
@@ -147,25 +153,19 @@ class GeneveLwtTunnelRecipe(
 
         tunnel_id = 1234
         encap = "ip" if self.params.carrier_ipversion == "ipv4" else "ip6"
+        geneve_opts = " geneve_opts " + ",".join(self.params.geneve_opts) if self.params.geneve_opts else ""
+
         m1.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m2_dummy_ip, encap, tunnel_id, endpoint2_ip, m1.gnv_tunnel.name
-            )
+            f"ip route add {m2_dummy_ip} encap {encap} id {tunnel_id} dst {endpoint2_ip}{geneve_opts} dev {m1.gnv_tunnel.name}"
         )
         m2.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m1_dummy_ip, encap, tunnel_id, endpoint1_ip, m2.gnv_tunnel.name
-            )
+            f"ip route add {m1_dummy_ip} encap {encap} id {tunnel_id} dst {endpoint1_ip}{geneve_opts} dev {m2.gnv_tunnel.name}"
         )
         m1.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m2_dummy_ip6, encap, tunnel_id, endpoint2_ip, m1.gnv_tunnel.name
-            )
+            f"ip route add {m2_dummy_ip6} encap {encap} id {tunnel_id} dst {endpoint2_ip}{geneve_opts} dev {m1.gnv_tunnel.name}"
         )
         m2.run(
-            "ip route add {} encap {} id {} dst {} dev {}".format(
-                m1_dummy_ip6, encap, tunnel_id, endpoint1_ip, m2.gnv_tunnel.name
-            )
+            f"ip route add {m1_dummy_ip6} encap {encap} id {tunnel_id} dst {endpoint1_ip}{geneve_opts} dev {m2.gnv_tunnel.name}"
         )
 
         return (m1.gnv_tunnel, m2.gnv_tunnel)
@@ -215,8 +215,13 @@ class GeneveLwtTunnelRecipe(
             pa_kwargs["p_filter"] = "ip6"
             grep_pattern = r"IP6 "
 
-        grep_pattern += r"{}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2: ".format(
-            m1_carrier_ip, m2_carrier_ip
+        # 14:56:29.576709 IP 192.168.101.1.35551 > 192.168.101.2.6081: Geneve, Flags [none], vni 0x4d2, options [8 bytes]: IP 172.16.10.1 > 172.16.20.1: ICMP echo request, id 64, seq 1, length 64
+        options = r", options \[[0-9]+ bytes\]" if self.params.geneve_opts else ""
+
+        grep_pattern += r"{}\.[0-9]+ > {}\.[0-9]+: Geneve.*vni 0x4d2{}: ".format(
+            m1_carrier_ip,
+            m2_carrier_ip,
+            options,
         )
 
         if isinstance(ip2, Ip4Address):
@@ -232,6 +237,13 @@ class GeneveLwtTunnelRecipe(
         pa_config = PacketAssertConf(m2, m2_carrier, **pa_kwargs)
 
         return pa_config
+
+    def generate_test_wide_description(self, config: EnrtConfiguration):
+        desc = super().generate_test_wide_description(config)
+        desc += [
+            f"Configured tunnel options = {self.params.geneve_opts}"
+        ]
+        return desc
 
     @property
     def offload_nics(self):
