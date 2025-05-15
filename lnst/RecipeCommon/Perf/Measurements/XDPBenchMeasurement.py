@@ -19,7 +19,7 @@ from lnst.RecipeCommon.Perf.Results import (
     ParallelPerfResult,
     SequentialPerfResult,
 )
-from lnst.Tests.PktGen import PktGen
+from lnst.Tests.PktGen import PktgenController
 from lnst.Tests.XDPBench import XDPBench
 from lnst.Controller.Job import Job
 from lnst.Controller.RecipeResults import MeasurementResult, ResultType
@@ -91,16 +91,20 @@ class XDPBenchMeasurement(BaseFlowMeasurement):
         return job
 
     def _prepare_client(self, flow: Flow):
-        params = {
-            "src_if": flow.generator_nic,
-            "dst_mac": flow.receiver_nic.hwaddr,
-            "src_ip": flow.generator_bind,
-            "dst_ip": flow.receiver_bind,
-            "cpus": flow.generator_cpupin,
-            "pkt_size": flow.msg_size,
-            "duration": flow.duration + flow.warmup_duration * 2,
-        }
-        pktgen = PktGen(**params)
+        config = []
+        for cpu in flow.generator_cpupin:
+            config.append(
+                {
+                    "src_if": flow.generator_nic,
+                    "dst_mac": flow.receiver_nic.hwaddr,
+                    "src_ip": flow.generator_bind,
+                    "dst_ip": flow.receiver_bind,
+                    "cpu": cpu,
+                    "pkt_size": flow.msg_size,
+                    "duration": flow.duration + flow.warmup_duration * 2,
+                }
+            )
+        pktgen = PktgenController(config=config)
 
         job = flow.generator.prepare_job(pktgen)
 
