@@ -27,14 +27,14 @@ from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
-from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
-    PauseFramesHWConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
+    CommonHWSubConfigMixin,
 )
 from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
 class GeneveLwtTunnelRecipe(
-    PauseFramesHWConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
+    CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe
 ):
     """
     This class implements a recipe that configures a simple Geneve lightweight
@@ -268,4 +268,12 @@ class GeneveLwtTunnelRecipe(
 
     @property
     def pause_frames_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def dev_interrupt_hw_config_dev_list(self):
         return [self.matched.host1.eth0, self.matched.host2.eth0]
