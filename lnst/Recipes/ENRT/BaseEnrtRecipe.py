@@ -1,5 +1,6 @@
 import pprint
 import copy
+import logging
 from contextlib import contextmanager
 from typing import Literal, Optional
 
@@ -63,6 +64,16 @@ class EnrtConfiguration:
         """Configure IP for device and"""
         device.ip_add(ip_address, peer=peer)
         self._device_ips.setdefault(device, []).append(ip_address)
+
+    def configure_and_track_ip_bulk(
+        self,
+        device: RemoteDevice,
+        addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]],
+    ) -> None:
+        """Configure multiple IPs for device and"""
+        device.ip_add_bulk(addresses)
+        for address, _ in addresses:
+            self._device_ips.setdefault(device, []).append(address)
 
 
 class BaseEnrtRecipe(
