@@ -148,19 +148,22 @@ class GeneveLwtTunnelRecipe(
         m2.lo = LoopbackDevice()
         self._connection_to_tunnelid = {}
 
+        m1_dummy_ips = []
+        m1_dummy_ips6 = []
+        m2_dummy_ips = []
+        m2_dummy_ips6 = []
         for flow_id in range(self.params.flow_count):
+            # A
             m1_dummy_ip = ipaddress(f"172.16.10.{flow_id}/32")
             m1_dummy_ip6 = ipaddress(f"fc00:a::{flow_id+1}/128")
-            m2_dummy_ip = ipaddress(f"172.16.20.{flow_id}/32")
-            m2_dummy_ip6 = ipaddress(f"fc00:b::{flow_id+1}/128")
-
-            # A
-            config.configure_and_track_ip(m1.lo, m1_dummy_ip)
-            config.configure_and_track_ip(m1.lo, m1_dummy_ip6)
+            m1_dummy_ips.append((m1_dummy_ip, None))
+            m1_dummy_ips6.append((m1_dummy_ip6, None))
 
             # B
-            config.configure_and_track_ip(m2.lo, m2_dummy_ip)
-            config.configure_and_track_ip(m2.lo, m2_dummy_ip6)
+            m2_dummy_ip = ipaddress(f"172.16.20.{flow_id}/32")
+            m2_dummy_ip6 = ipaddress(f"fc00:b::{flow_id+1}/128")
+            m2_dummy_ips.append((m2_dummy_ip, None))
+            m2_dummy_ips6.append((m2_dummy_ip6, None))
 
             tunnel_id = flow_id
             port = f"{flow_id:04x}{flow_id:04x}"
@@ -182,6 +185,9 @@ class GeneveLwtTunnelRecipe(
 
             self._connection_to_tunnelid[(str(m1_dummy_ip), str(m2_dummy_ip))] = tunnel_id
             self._connection_to_tunnelid[(str(m1_dummy_ip6), str(m2_dummy_ip6))] = tunnel_id
+
+        config.configure_and_track_ip_bulk(m1.lo, m1_dummy_ips + m1_dummy_ips6)
+        config.configure_and_track_ip_bulk(m2.lo, m2_dummy_ips + m2_dummy_ips6)
 
         return (m1.gnv_tunnel, m2.gnv_tunnel)
 
