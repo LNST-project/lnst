@@ -44,54 +44,57 @@ class PacketAssertConf(object):
         return self._promiscuous
 
 class PacketAssertTestAndEvaluate(BaseRecipe):
-    started_job = None
+    packet_assert_jobs = []
 
-    def packet_assert_test_start(self, packet_assert_config):
-        if self.started_job:
-            raise LnstError("Only 1 packet_assert job is allowed to run at a time.")
-
-        host = packet_assert_config.host
-        kwargs = self._generate_packet_assert_kwargs(packet_assert_config)
-        packet_assert = PacketAssert(**kwargs)
-        self.started_job = host.prepare_job(packet_assert).start(bg=True)
+    def packet_assert_test_start(self, packet_assert_configs):
+        for packet_assert_config in packet_assert_configs:
+            host = packet_assert_config.host
+            kwargs = self._generate_packet_assert_kwargs(packet_assert_config)
+            packet_assert = PacketAssert(**kwargs)
+            self.packet_assert_jobs.append(host.prepare_job(packet_assert).start(bg=True))
 
     def packet_assert_test_stop(self):
-        if not self.started_job:
+        if not self.packet_assert_jobs:
             raise LnstError("No packet_assert job is running.")
 
-        self.started_job.kill(signal=signal.SIGINT)
-        self.started_job.wait()
-        if not self.started_job.passed:
-            result = {}
-        else:
-            result = self.started_job.result
-        self.started_job = None
-        return result
+        results = []
+        for packet_assert_job in self.packet_assert_jobs:
+            packet_assert_job.kill(signal=signal.SIGINT)
+            packet_assert_job.wait()
+            if not packet_assert_job.passed:
+                results.append({})
+            else:
+                results.append(packet_assert_job.result)
 
-    def packet_assert_evaluate_and_report(self, packet_assert_config, results):
+        self.packet_assert_jobs = []
+
+        return results
+
+    def packet_assert_evaluate_and_report(self, packet_assert_configs, results):
         if not results:
             self.add_result(ResultType.FAIL, "Packet assert results unavailable")
             return
 
-        success = ResultType.FAIL
-        if results["p_recv"] >= packet_assert_config.p_min and \
-            (results["p_recv"] <= packet_assert_config.p_max or
-             not packet_assert_config.p_max):
-            success = ResultType.PASS
+        for packet_assert_config, result in zip(packet_assert_configs, results):
+            success = ResultType.FAIL
+            if result["p_recv"] >= packet_assert_config.p_min and \
+                (result["p_recv"] <= packet_assert_config.p_max or
+                 not packet_assert_config.p_max):
+                success = ResultType.PASS
 
-        cmp_msg = "packets received {}, expected min({}) max({})".format(
-            results["p_recv"],
-            packet_assert_config.p_min,
-            packet_assert_config.p_max
-        )
-        self.add_result(
-            success,
-            "Packet assert {}, {}".format(
-                "successful" if success else "unsuccessful",
-                cmp_msg
-            ),
-            results
-        )
+            cmp_msg = "packets received {}, expected min({}) max({})".format(
+                result["p_recv"],
+                packet_assert_config.p_min,
+                packet_assert_config.p_max
+            )
+            self.add_result(
+                success,
+                "Packet assert {}, {}".format(
+                    "successful" if success else "unsuccessful",
+                    cmp_msg
+                ),
+                result
+            )
 
     def _generate_packet_assert_kwargs(self, packet_assert_config):
         kwargs = dict(interface=packet_assert_config.iface)
