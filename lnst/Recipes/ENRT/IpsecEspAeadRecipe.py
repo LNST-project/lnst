@@ -227,18 +227,19 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrt
         pa_config = PacketAssertConf(m2, if2, **pa_kwargs)
 
         dump = m1.run("tcpdump -i %s -nn -vv" % if1_name, bg=True)
-        self.packet_assert_test_start(pa_config)
+        self.packet_assert_test_start([pa_config])
         self.ctl.wait(2)
         ping_result = super().ping_test(ping_configs)
         self.ctl.wait(2)
-        pa_result = self.packet_assert_test_stop()
+        pa_results = self.packet_assert_test_stop()
         dump.kill(signal=signal.SIGINT)
 
-        return (ping_result, pa_config, pa_result)
+        return ((ping_result, [pa_config], pa_results),)
 
     def ping_report_and_evaluate(self, results):
-        super().ping_report_and_evaluate(results[0])
-        self.packet_assert_evaluate_and_report(results[1], results[2])
+        for res in results:
+            super().ping_report_and_evaluate(res[0])
+            self.packet_assert_evaluate_and_report(res[1], res[2])
 
     def get_dev_by_ip(self, netns, ip):
         for dev in netns.device_database:
