@@ -1,3 +1,4 @@
+import itertools
 from collections.abc import Collection
 from lnst.Common.IpAddress import (
     AF_INET,
@@ -22,6 +23,7 @@ from lnst.Common.Parameters import (
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
+from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
@@ -209,6 +211,53 @@ class GeneveLwtTunnelRecipe(
         are configured with IP addresses of the tunnelled networks.
         """
         return [ip_endpoint_pairs(config, (self.matched.host1.gnv_tunnel, self.matched.host2.gnv_tunnel), combination_func=zip)]
+
+    def _create_perf_flows(
+        self,
+        endpoint_pairs: list[EndpointPair[IPEndpoint]],
+        perf_test: str,
+        msg_size,
+    ) -> list[PerfFlow]:
+        """
+        This overrides the BaseFlowMeasurementGenerator implementation.
+
+        The base generator expects that parallel flows are generated based on
+        the perf_parallel_processes parameter. Individual processes are
+        pinned to CPUs selected from perf_tool_cpu list by iterator over the
+        perf_parallel_processes parameter.
+
+        The GeneveLwtTunnelRecipe however generates parallel flows based on
+        flow_count parameter and creates multiple flow endpoints pairs
+        (endpoint_pairs parameter). Since the typical scenario is run with
+        perf_parallel_processes=1, we need to move the iterator to outer
+        loop, so that individual flows are pinned to separate CPUs in the
+        perf_tool_cpu list.
+        """
+        port_iter = itertools.count(12000)
+
+        flows = []
+        i = 0
+        for endpoint_pair in endpoint_pairs:
+            client, server = endpoint_pair
+            for j in range(self.params.perf_parallel_processes):
+                server_port = client_port = next(port_iter)
+                flows.append(
+                    self._create_perf_flow(
+                        perf_test,
+                        client.device,
+                        client.address,
+                        client_port if perf_test != "mptcp_stream" else None,
+                        server.device,
+                        server.address,
+                        server_port,
+                        msg_size,
+                        self.generator_cpupin(i),
+                        self.receiver_cpupin(i),
+                    )
+                )
+                i += 1
+
+        return flows
 
     def get_packet_assert_config(self, ping_config):
         """
