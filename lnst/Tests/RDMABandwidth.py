@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
 
-from lnst.Tests.BaseTestModule import BaseTestModule
+from lnst.Tests.BaseTestModule import BaseTestModule, TestModuleError
 from lnst.Common.Parameters import BoolParam, IntParam, IpParam, ListParam, StrParam
 from lnst.Common.ExecCmd import exec_cmd
 from lnst.Common.Utils import is_installed
@@ -27,7 +27,12 @@ class RDMABandwidthBase(ABC, BaseTestModule):
         command = self._compose_cmd()
         logging.debug(command)
         out, _ = exec_cmd(command)
-        bandwidth = float(out.strip())
+
+        filtered_lines = [line for line in out.split("\n") if line.strip() and line.find("WARNING:") == -1]
+        if len(filtered_lines) > 1:
+            raise TestModuleError(f"{self.__class__.__name__}: Expecting one line in the output")
+
+        bandwidth = float(filtered_lines[0].strip())
 
         self._res_data["bandwidth"] = bandwidth
         return True
