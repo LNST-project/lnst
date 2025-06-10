@@ -99,7 +99,7 @@ A minimal "hello world" example of an executable test script looks like this:
             self.matched.machine2.nic1.ip_add("192.168.1.2/24")
             self.matched.machine2.nic1.up()
 
-            self.matched.machine1.run("ping 192.168.1.2")
+            self.matched.machine1.run("ping 192.168.1.2 -c 10")
 
     ctl = Controller()
     recipe_instance = HelloWorldRecipe()
