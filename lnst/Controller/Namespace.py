@@ -136,6 +136,11 @@ class Namespace(object):
 
         return self._machine.wait_for_job(job, condition.timeout)
 
+    def rename_object(self, old_key, new_key):
+        if old_key in self._objects:
+            self._objects[new_key] = self._objects[old_key]
+            del self._objects[old_key]
+
     def __getattr__(self, name):
         """direct access to Device objects
 
