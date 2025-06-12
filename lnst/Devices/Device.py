@@ -669,7 +669,7 @@ class Device(object, metaclass=DeviceMeta):
         except IOError as e:
             raise DeviceFeatureNotSupported(f"No bus info for {self.name}")
 
-    def ip_add_bulk(self, addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]]):
+    def ip_add_bulk(self, addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]], wait=True):
         for addr, peer in addresses:
             ip = ipaddress(addr)
             if ip not in self.ips:
@@ -684,14 +684,8 @@ class Device(object, metaclass=DeviceMeta):
 
                 self._ipr_wrapper("addr", "add", **kwargs)
 
-        for i in range(5):
-            logging.debug("Waiting for ip address to be added {} of 5".format(i))
-            time.sleep(1)
-            self._if_manager.rescan_devices()
-            if all([addr in self.ips for (addr, _) in addresses]):
-                break
-        else:
-            raise DeviceError("Failed to configure ip addresses {}".format(str(ipaddress(addr)) for (addr, _) in addresses))
+        if wait:
+            self.wait_for_addresses(addresses)
 
     def ip_add(self, addr, peer=None):
         """add an ip address
@@ -714,14 +708,17 @@ class Device(object, metaclass=DeviceMeta):
 
             self._ipr_wrapper("addr", "add", **kwargs)
 
+        self.wait_for_addresses([(addr, peer)])
+
+    def wait_for_addresses(self, addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]]):
         for i in range(5):
             logging.debug("Waiting for ip address to be added {} of 5".format(i))
-            time.sleep(1)
             self._if_manager.rescan_devices()
-            if addr in self.ips:
+            if all([addr in self.ips for (addr, _) in addresses]):
                 break
+            time.sleep(1)
         else:
-            raise DeviceError("Failed to configure ip address {}".format(str(ip)))
+            raise DeviceError("Failed to configure ip addresses {}".format(str(ipaddress(addr)) for (addr, _) in addresses))
 
     def ip_del(self, addr):
         """remove an ip address
