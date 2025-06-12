@@ -66,13 +66,24 @@ class EnrtConfiguration:
 
     def configure_and_track_ip_bulk(
         self,
-        device: RemoteDevice,
-        addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]],
+        devices: list[
+            tuple[
+                RemoteDevice,
+                list[tuple[BaseIpAddress, Optional[BaseIpAddress]]]
+            ]
+        ]
     ) -> None:
-        """Configure multiple IPs for device and"""
-        device.ip_add_bulk(addresses)
-        for address, _ in addresses:
-            self._device_ips.setdefault(device, []).append(address)
+        """Configure multiple IPs for multiple devices, this is useful if
+        the user needs to configure many devices, where individual device
+        configuration would wait for the IP address to appear on the device"""
+        for device, addresses in devices:
+            device.ip_add_bulk(addresses, wait=False)
+
+        for device, addresses in devices:
+            device.wait_for_addresses(addresses)
+
+            for address, _ in addresses:
+                self._device_ips.setdefault(device, []).append(address)
 
 
 class BaseEnrtRecipe(
