@@ -23,6 +23,7 @@ _libvirt_conn = None
 def init_libvirt_con():
     try:
         import libvirt
+        from libvirt import libvirtError
     except ModuleNotFoundError as e:
         raise DependencyError(e)
 
