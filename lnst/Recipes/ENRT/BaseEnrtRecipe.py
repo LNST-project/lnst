@@ -388,6 +388,7 @@ class BaseEnrtRecipe(
                                      count = self.params.ping_count,
                                      interval = self.params.ping_interval,
                                      size = self.params.ping_psize,
+                                     reachable = endpoints.reachable,
                                      )
 
                     ping_evaluators = self.generate_ping_evaluators(
