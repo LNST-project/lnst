@@ -26,7 +26,7 @@ class MaxTimeTakenEvaluator(BaseResultEvaluator):
         for timed_run in results:
             result_text = [
                 f"MaxTimeTaken evaluation of timed run, max_time={self._max_time}s",
-                timed_run.description,
+                timed_run.describe(),
             ]
             rtype = self._check_interval(timed_run)
 
