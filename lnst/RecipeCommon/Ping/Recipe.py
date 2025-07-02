@@ -1,4 +1,4 @@
-from lnst.Controller.Recipe import BaseRecipe
+from lnst.Controller.Recipe import BaseRecipe, RecipeError
 from lnst.Controller.RecipeResults import MeasurementResult
 from lnst.Tests import Ping
 
@@ -73,7 +73,9 @@ class PingTestAndEvaluate(BaseRecipe):
 
         for _, pingjob in ping_array:
             try:
-                pingjob.wait()
+                pingjob.wait(
+                    timeout=self._estimate_ping_duration(pingconf),
+                )
             finally:
                 pingjob.kill()
 
@@ -82,6 +84,18 @@ class PingTestAndEvaluate(BaseRecipe):
             results[pingconf] = result
 
         return results
+
+    def _estimate_ping_duration(self, ping_config: PingConf) -> int:
+        if ping_config.count and ping_config.interval:
+            estimate = int((ping_config.count*ping_config.interval) + 10)
+
+            # if the endpoints are expected not to be reachable, assume
+            # 2 seconds per each ping plus overhead
+            return estimate if ping_config.reachable else 2*ping_config.count + 10
+        else:
+            raise RecipeError(
+                "Cannot estimate the ping duration without PingConf.count and PingConf.interval"
+            )
 
     def ping_init(self, ping_config):
         client = ping_config.client
