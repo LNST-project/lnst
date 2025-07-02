@@ -252,7 +252,7 @@ class TcRunMeasurement(BaseMeasurement):
         measurement_result = MeasurementResult(
             "tc",
             result=r_type,
-            description=f"{r_type} {result.description}",
+            description=f"{r_type} {result.describe()}",
             data={"rule_install_rate": result.rule_install_rate},
         )
         recipe.add_custom_result(measurement_result)

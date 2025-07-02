@@ -38,8 +38,7 @@ class TcRunMeasurementResults(BaseMeasurementResults):
     def rule_install_rate(self, result: ParallelPerfResult):
         self._rule_install_rate = result
 
-    @property
-    def description(self):
+    def describe(self):
         return f"{self.device.host.hostid}.{self.device.name}" \
                f" tc run with {self.rule_install_rate.value} rules" \
                f" num_instances={self.measurement.num_instances}" \
