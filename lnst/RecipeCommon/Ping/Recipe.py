@@ -6,7 +6,7 @@ class PingConf(object):
     def __init__(self,
                  client, client_bind,
                  destination, destination_address,
-                 count=None, interval=None, size=None):
+                 count=None, interval=None, size=None, reachable=True,):
         self._client = client
         self._client_bind = client_bind
         self._destination = destination
@@ -15,6 +15,7 @@ class PingConf(object):
         self._interval = interval
         self._size = size
         self._evaluators = list()
+        self._reachable = reachable
 
     @property
     def client(self):
@@ -47,6 +48,10 @@ class PingConf(object):
     @size.setter
     def size(self, value):
         self._size = value
+
+    @property
+    def reachable(self):
+        return self._reachable
 
     @property
     def evaluators(self):
