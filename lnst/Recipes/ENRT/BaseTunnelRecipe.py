@@ -115,14 +115,14 @@ class BaseTunnelRecipe(
         return desc
 
     def ping_test(self, ping_configs):
-        pa_config = self.get_packet_assert_config(ping_configs[0])
-        self.packet_assert_test_start(pa_config)
+        pa_configs = [self.get_packet_assert_config(ping_config) for ping_config in ping_configs]
+        self.packet_assert_test_start(pa_configs)
         self.ctl.wait(2)
         ping_result = super().ping_test(ping_configs)
         self.ctl.wait(2)
-        pa_result = self.packet_assert_test_stop()
+        pa_results = self.packet_assert_test_stop()
 
-        result = ((ping_result, pa_config, pa_result),)
+        result = ((ping_result, pa_configs, pa_results),)
 
         return result
 
