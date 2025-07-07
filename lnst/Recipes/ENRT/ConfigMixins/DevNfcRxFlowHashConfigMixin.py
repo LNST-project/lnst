@@ -1,3 +1,5 @@
+import logging
+
 from lnst.Common.Parameters import DictParam
 from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 
@@ -25,6 +27,14 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
                 nfc_config[device][protocol] = {
                     "original": original_flow_hash,
                 }
+
+                if protocol_setting not in {"sd", "fn", "sdfn"}:
+                    logging.info(
+                        f"Selected protocol setting {protocol_setting} requires disabling symmetric hashing: setting xfrm none"
+                    )
+                    device.host.run(
+                        f"ethtool -X {device.name} xfrm none"
+                    )
 
                 device.host.run(
                     f"ethtool -N {device.name} rx-flow-hash {protocol} {protocol_setting}"
