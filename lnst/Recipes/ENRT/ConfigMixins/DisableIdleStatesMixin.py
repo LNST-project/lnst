@@ -52,7 +52,7 @@ class DisableIdleStatesMixin(BaseSubConfigMixin):
 
     def remove_sub_configuration(self, config):
         for host in self.disable_idlestates_host_list:
-            if getattr(self.params, "minimal_idlestates_latency", None):
+            if getattr(self.params, "minimal_idlestates_latency", None) is not None:
                 host.run("cpupower idle-set -E")
 
         return super().remove_sub_configuration(config)
