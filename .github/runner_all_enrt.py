@@ -85,6 +85,10 @@ for recipe_name in dir(enrt_recipes):
         }
         params["perf_tool_cpu"] = [0]
 
+    if recipe_name == "NftablesRuleScaleRecipe":
+        params["rule"] = "accept"
+        params["scale"] = 1
+
     if issubclass(recipe, OffloadSubConfigMixin):
         params['offload_combinations'] = []
 
