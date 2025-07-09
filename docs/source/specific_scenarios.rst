@@ -29,3 +29,4 @@ Specific ENRT scenarios
     l2tp_tunnel_recipe
     linux_bridge_recipe
     linux_bridge_over_bond_recipe
+    nftables_rule_scale_recipe
