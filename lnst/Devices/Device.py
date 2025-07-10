@@ -49,7 +49,8 @@ def sriov_capable(func):
     """
     def wrapper(self, *args, **kwargs):
         try:
-            exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
+            exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs",
+                     log_outputs = False)
         except ExecCmdFail:
             raise DeviceFeatureNotSupported(f"Device {self.name} not SR-IOV capable")
 
@@ -855,7 +856,8 @@ class Device(object, metaclass=DeviceMeta):
 
     def _read_pause_frames(self):
         try:
-            res, _ = exec_cmd("ethtool -a %s" % self.name)
+            res, _ = exec_cmd("ethtool -a %s" % self.name,
+                              log_outputs = False)
         except:
             raise DeviceFeatureNotSupported(
                 "No values for pause frames of %s." % self.name
@@ -925,7 +927,8 @@ class Device(object, metaclass=DeviceMeta):
     def eswitch_mode(self):
         try:
             # TODO: do this through device._devlink?
-            stdout, _ = exec_cmd(f"devlink dev eswitch show pci/{self.bus_info}")
+            stdout, _ = exec_cmd(f"devlink dev eswitch show pci/{self.bus_info}",
+                                 log_outputs = False)
         except ExecCmdFail as e:
             if e.get_stderr().find("Operation not supported") > -1 or e.get_stderr().find("No such device"):
                 raise DeviceFeatureNotSupported(f"Device {self.name} not compatible with switchdev")
@@ -1085,9 +1088,12 @@ class Device(object, metaclass=DeviceMeta):
 
     def _get_vf_count(self):
         # TODO: create sysfs api for Device, then run self.[get|set]_sysfs("device/sriov_numvfs")
-        stdout, _ = exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
-
-        return int(stdout)
+        try:
+            stdout, _ = exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs",
+                                 log_outputs = False)
+            return int(stdout)
+        except ExecCmdFail:
+            return 0
 
     def _get_vf_representor(self, vf_index: int):
         pf_number = int(self.phys_port_name[1:])

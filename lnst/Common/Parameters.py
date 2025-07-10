@@ -26,8 +26,8 @@ class ParamError(LnstError):
 class Param(object):
     """Base Parameter class
 
-    Can beused to define your own specific parameter type. Param derived classes
-    serve as *type checkers* to enable earlier failure of the recipe.
+    Can be used to define your own specific parameter type. Param derived
+    classes serve as *type checkers* to enable earlier failure of the recipe.
 
     :param mandatory: if `True`, marks the parameter as mandatory
     :type mandatory: bool
