@@ -117,3 +117,5 @@ from lnst.Recipes.ENRT.CTInsertionRateNftablesRecipe import CTInsertionRateNftab
 from .CTFulltableInsertionRateRecipe import CTFulltableInsertionRateRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import BaseEnrtRecipe
 from lnst.Recipes.ENRT.BaseTunnelRecipe import BaseTunnelRecipe
+from lnst.Recipes.ENRT.SimpleNetnsRouterRecipe import SimpleNetnsRouterRecipe
+from lnst.Recipes.ENRT.NftablesRuleScaleRecipe import NftablesRuleScaleRecipe
