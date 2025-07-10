@@ -20,12 +20,13 @@ import time
 from abc import ABCMeta
 from itertools import product
 from pyroute2.netlink.rtnl import ifinfmsg
+from typing import Optional
 from lnst.Common.Logs import log_exc_traceback
 from lnst.Common.ExecCmd import exec_cmd, ExecCmdFail
 from lnst.Common.DeviceError import DeviceError, DeviceDeleted, DeviceDisabled
 from lnst.Common.DeviceError import DeviceConfigError, DeviceConfigValueError
 from lnst.Common.DeviceError import DeviceFeatureNotSupported
-from lnst.Common.IpAddress import ipaddress, AF_INET
+from lnst.Common.IpAddress import ipaddress, AF_INET, BaseIpAddress
 from lnst.Common.HWAddress import hwaddress
 from lnst.Common.Utils import wait_for_condition
 
@@ -668,6 +669,24 @@ class Device(object, metaclass=DeviceMeta):
         except IOError as e:
             raise DeviceFeatureNotSupported(f"No bus info for {self.name}")
 
+    def ip_add_bulk(self, addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]], wait=True):
+        for addr, peer in addresses:
+            ip = ipaddress(addr)
+            if ip not in self.ips:
+                kwargs = dict(
+                    index=self.ifindex,
+                    local=str(ip),
+                    address=str(ip),
+                    mask=ip.prefixlen
+                )
+                if peer:
+                    kwargs['address'] = str(ipaddress(peer))
+
+                self._ipr_wrapper("addr", "add", **kwargs)
+
+        if wait:
+            self.wait_for_addresses(addresses)
+
     def ip_add(self, addr, peer=None):
         """add an ip address
 
@@ -689,14 +708,17 @@ class Device(object, metaclass=DeviceMeta):
 
             self._ipr_wrapper("addr", "add", **kwargs)
 
+        self.wait_for_addresses([(addr, peer)])
+
+    def wait_for_addresses(self, addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]]):
         for i in range(5):
             logging.debug("Waiting for ip address to be added {} of 5".format(i))
-            time.sleep(1)
             self._if_manager.rescan_devices()
-            if addr in self.ips:
+            if all([addr in self.ips for (addr, _) in addresses]):
                 break
+            time.sleep(1)
         else:
-            raise DeviceError("Failed to configure ip address {}".format(str(ip)))
+            raise DeviceError("Failed to configure ip addresses {}".format(str(ipaddress(addr)) for (addr, _) in addresses))
 
     def ip_del(self, addr):
         """remove an ip address

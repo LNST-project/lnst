@@ -11,6 +11,7 @@ from lnst.Controller.RecipeResults import (
     JobResult,
     JobStartResult,
     MeasurementResult,
+    Result,
     BaseResult,
 )
 from .RunSummaryFormatter import RunSummaryFormatter
@@ -136,6 +137,12 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                 "type": "measurement",
                 "measurement_type": result.measurement_type,
                 "data": measurement_data,
+            }
+        elif isinstance(result, Result):
+            return ret | {
+                "type": "arbitrary_data",
+                "description": result.description,
+                "data": result.data,
             }
         else:
             if result.data is not None:
