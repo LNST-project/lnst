@@ -1085,9 +1085,11 @@ class Device(object, metaclass=DeviceMeta):
 
     def _get_vf_count(self):
         # TODO: create sysfs api for Device, then run self.[get|set]_sysfs("device/sriov_numvfs")
-        stdout, _ = exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
-
-        return int(stdout)
+        try:
+            stdout, _ = exec_cmd(f"cat /sys/class/net/{self.name}/device/sriov_numvfs")
+            return int(stdout)
+        except ExecCmdFail:
+            raise DeviceFeatureNotSupported(f"Device {self.name} not SR-IOV capable")
 
     def _get_vf_representor(self, vf_index: int):
         pf_number = int(self.phys_port_name[1:])
