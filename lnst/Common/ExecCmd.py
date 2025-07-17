@@ -77,7 +77,6 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False, json=F
             log_output(logging.debug, "Stderr", data_stderr)
     if subp.returncode and die_on_err:
         err = ExecCmdFail(cmd, subp.returncode, [data_stdout, data_stderr], report_stderr)
-        logging.error(err)
         raise err
 
     if json:
