@@ -176,11 +176,11 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEn
         pa_config = PacketAssertConf(m2, if2, **pa_kwargs)
 
         dump = m1.run("tcpdump -i %s -nn -vv" % if1_name, bg=True)
-        self.packet_assert_test_start(pa_config)
+        self.packet_assert_test_start([pa_config])
         self.ctl.wait(2)
         ping_result = super().ping_test(ping_configs)
         self.ctl.wait(2)
-        pa_result = self.packet_assert_test_stop()
+        pa_results = self.packet_assert_test_stop()
         dump.kill(signal=signal.SIGINT)
 
         m1.run("ip -s xfrm pol")
@@ -197,17 +197,17 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEn
             if ping_configs2[0].count:
                 pa_kwargs2["p_min"] = ping_configs2[0].count
             pa_config2 = PacketAssertConf(m2, if2, **pa_kwargs2)
-            self.packet_assert_test_start(pa_config2)
+            self.packet_assert_test_start([pa_config2])
         self.ctl.wait(2)
         ping_result2 = super().ping_test(ping_configs2)
         self.ctl.wait(2)
         if no_trans:
-            pa_result2 = self.packet_assert_test_stop()
+            pa_results2 = self.packet_assert_test_stop()
         dump2.kill(signal=signal.SIGINT)
 
-        result = ((ping_result, pa_config, pa_result),)
+        result = ((ping_result, [pa_config], pa_results),)
         if no_trans:
-            result += ((ping_result2, pa_config2, pa_result2),)
+            result += ((ping_result2, [pa_config2], pa_results2),)
         return result
 
     def ping_report_and_evaluate(self, results):

@@ -21,6 +21,6 @@ class FlowEndpointsStatCPUMeasurementGenerator(BaseMeasurementGenerator):
         for measurement in measurements:
             if isinstance(measurement, BaseFlowMeasurement):
                 for flow in measurement.flows:
-                    endpoints.add(flow.generator)
-                    endpoints.add(flow.receiver)
+                    endpoints.add(flow.generator.initns)
+                    endpoints.add(flow.receiver.initns)
         return endpoints
