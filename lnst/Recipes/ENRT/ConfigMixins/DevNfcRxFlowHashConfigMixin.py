@@ -1,3 +1,4 @@
+import re
 import logging
 
 from lnst.Common.Parameters import DictParam
@@ -15,6 +16,7 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
 
         hw_config = config.hw_config
         nfc_config = hw_config["dev_nfc_rx_flow_hash_configuration"] = {}
+        xfrm_original_config = hw_config["xfrm_original"] = {}
 
         device_settings = self._parse_device_settings(self.params.dev_nfc_rx_flow_hash_config)
         for device, nfc_rx_flow_hash_config in device_settings.items():
@@ -32,15 +34,26 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
                     logging.info(
                         f"Selected protocol setting {protocol_setting} requires disabling symmetric hashing: setting xfrm none"
                     )
-                    device.host.run(
-                        f"ethtool -X {device.name} xfrm none"
-                    )
+                    self._disable_xfrm_transformations(xfrm_original_config, device)
 
                 device.host.run(
                     f"ethtool -N {device.name} rx-flow-hash {protocol} {protocol_setting}"
                 )
 
                 nfc_config[device][protocol]["configured"] = "".join(sorted([*protocol_setting]))
+
+    def _disable_xfrm_transformations(self, xfrm_original_config, device):
+        xfrm_ethtool_job = device.host.run(f"ethtool -x {device.name}")
+        xfrm_original_config[device] = process_xfrm_output(xfrm_ethtool_job.stdout)
+
+        if not xfrm_original_config[device]:
+            # if no xfrm values are parsed, this is not supported so no need to
+            # do more configuration
+            return
+
+        device.host.run(
+            f"ethtool -X {device.name} xfrm none"
+        )
 
     def hw_deconfig(self, config):
         nfc_config = config.hw_config.get("dev_nfc_rx_flow_hash_configuration", {})
@@ -49,6 +62,23 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
                 dev.host.run(
                     f"ethtool -N {dev.name} rx-flow-hash {protocol} {protocol_setting['original']}"
                 )
+
+        xfrm_original_config = config.hw_config.get("xfrm_original", {})
+        for device, xfrm_dev_config in xfrm_original_config.items():
+            if not any(i == "on" for i in xfrm_dev_config.values()):
+                continue
+
+            # this sets the xfrm bitmap to 0 and sets the individual bits to 1
+            # based on original state
+            dev.host.run(f"ethtool -X {device.name} xfrm none " +
+                 " ".join(
+                     "xfrm " + i[0]
+                     for i in xfrm_dev_config.items()
+                     if i[1] == "on"
+                 )
+            )
+
+        del config.hw_config["xfrm_original"]
 
         super().hw_deconfig(config)
 
@@ -88,3 +118,28 @@ def process_nfc_output(output):
             raise Exception(f"Unknown input from nfc rx-flow-hash: {line}")
 
     return "".join(sorted(result))
+
+def process_xfrm_output(output):
+    result = {}
+    started = False
+
+    for line in output.split("\n")[1:]:
+        if not line:
+            continue
+        if line == "RSS input transformation:":
+            # parsing all values under this section
+            started = True
+            continue
+
+        if started and line[0] != ' ':
+            # all values need to start with empty spaces
+            # if there's another section starting it will start from the first character
+            break
+
+        if not started:
+            continue
+
+        if m := re.match(r"\s*(\S*): (on|off)", line):
+            result[m.group(1)] = m.group(2)
+
+    return result
