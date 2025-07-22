@@ -28,16 +28,45 @@ from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
 from lnst.RecipeCommon.endpoints import EndpointPair, IPEndpoint
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.Recipes.ENRT.helpers import ip_endpoint_pairs
+
+from lnst.Recipes.ENRT.ConfigMixins.CoalescingHWConfigMixin import (
+    CoalescingHWConfigMixin,
+)
+from lnst.Recipes.ENRT.ConfigMixins.MultiDevInterruptHWConfigMixin import (
+    MultiDevInterruptHWConfigMixin,
+)
+from lnst.Recipes.ENRT.ConfigMixins.DevRxHashFunctionConfigMixin import (
+    DevRxHashFunctionConfigMixin,
+)
+from lnst.Recipes.ENRT.ConfigMixins.DevNfcRxFlowHashConfigMixin import (
+    DevNfcRxFlowHashConfigMixin,
+)
+from lnst.Recipes.ENRT.ConfigMixins.DevQueuesConfigMixin import (
+    DevQueuesConfigMixin,
+)
 from lnst.Recipes.ENRT.ConfigMixins.OffloadSubConfigMixin import (
     OffloadSubConfigMixin,
 )
-from lnst.Recipes.ENRT.ConfigMixins.CommonHWSubConfigMixin import (
-    CommonHWSubConfigMixin,
+from lnst.Recipes.ENRT.ConfigMixins.MTUHWConfigMixin import MTUHWConfigMixin
+from lnst.Recipes.ENRT.ConfigMixins.PauseFramesHWConfigMixin import (
+    PauseFramesHWConfigMixin,
 )
+
 from lnst.Recipes.ENRT.RecipeReqs import SimpleNetworkReq
 
 
-class GeneveOvsNetnsTunnelRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, SimpleNetworkReq, BaseTunnelRecipe):
+class GeneveOvsNetnsTunnelRecipe(
+    DevRxHashFunctionConfigMixin,
+    DevNfcRxFlowHashConfigMixin,
+    DevQueuesConfigMixin,
+    PauseFramesHWConfigMixin,
+    CoalescingHWConfigMixin,
+    MultiDevInterruptHWConfigMixin,
+    MTUHWConfigMixin,
+    OffloadSubConfigMixin,
+    SimpleNetworkReq,
+    BaseTunnelRecipe
+):
     """
     This class implements a recipe that configures Geneve tunnel(s) connecting
     network namespaces between two hosts using OpenVSwitch.
@@ -453,6 +482,10 @@ class GeneveOvsNetnsTunnelRecipe(CommonHWSubConfigMixin, OffloadSubConfigMixin, 
                 i += 1
 
         return flows
+
+    @property
+    def mtu_hw_config_dev_list(self):
+        return [self.matched.host1.eth0, self.matched.host2.eth0]
 
     @property
     def offload_nics(self):
