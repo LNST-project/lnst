@@ -1,6 +1,7 @@
 import logging
 
 from lnst.Common.Parameters import DictParam
+from lnst.Controller.RecipeResults import ResultType
 from lnst.Recipes.ENRT.ConfigMixins.BaseHWConfigMixin import BaseHWConfigMixin
 
 
@@ -32,9 +33,17 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
                     logging.info(
                         f"Selected protocol setting {protocol_setting} requires disabling symmetric hashing: setting xfrm none"
                     )
-                    device.host.run(
+                    xfrm_job = device.host.run(
                         f"ethtool -X {device.name} xfrm none"
                     )
+
+                    if xfrm_job.passed:
+                        # there's only one supported value and that is the default
+                        nfc_config[device]["xfrm"] = {"original": "symmetric-xor"}
+                    else:
+                        logging.error(f"Disabling symmetric hashing failed: {xfrm_job.stderr}")
+                        logging.error("Overriding the result value to pass")
+                        xfrm_job.passed = ResultType.PASS
 
                 device.host.run(
                     f"ethtool -N {device.name} rx-flow-hash {protocol} {protocol_setting}"
@@ -46,6 +55,12 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
         nfc_config = config.hw_config.get("dev_nfc_rx_flow_hash_configuration", {})
         for dev, dev_nfc in nfc_config.items():
             for protocol, protocol_setting in dev_nfc.items():
+                if protocol == "xfrm":
+                    dev.host.run(
+                        f"ethtool -X {dev.name} xfrm {protocol_setting}"
+                    )
+                    continue
+
                 dev.host.run(
                     f"ethtool -N {dev.name} rx-flow-hash {protocol} {protocol_setting['original']}"
                 )
