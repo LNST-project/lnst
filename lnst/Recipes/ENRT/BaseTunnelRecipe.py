@@ -103,7 +103,7 @@ class BaseTunnelRecipe(
         """
         desc = super().generate_test_wide_description(config)
         desc += [
-            "Configured {}.{}.ips = {}".format(dev.host.hostid, dev.name, dev.ips)
+            "Configured {}{}.{}.ips = {}".format(dev.host.hostid, f".{dev.netns.name}" if dev.netns.name else "", dev.name, dev.ips)
             for dev in config.configured_devices
         ]
         desc += [
