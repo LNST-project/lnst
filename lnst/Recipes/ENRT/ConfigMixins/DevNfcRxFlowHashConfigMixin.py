@@ -78,7 +78,8 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
                  )
             )
 
-        del config.hw_config["xfrm_original"]
+        if xfrm_original_config:
+            del config.hw_config["xfrm_original"]
 
         super().hw_deconfig(config)
 
