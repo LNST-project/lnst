@@ -16,7 +16,7 @@ from lnst.Tests.Ping import Ping
 from lnst.Tests.PacketAssert import PacketAssert
 from lnst.Tests.Iperf import IperfClient, IperfServer
 from lnst.Tests.RDMABandwidth import RDMABandwidthClient, RDMABandwidthServer
-from lnst.Tests.PktGen import PktGen
+from lnst.Tests.PktGen import PktgenController
 from lnst.Tests.XDPBench import XDPBench
 from .LongLivedConnections import LongLivedServer, LongLivedClient
 #TODO add support for test classes from lnst-ctl.conf
