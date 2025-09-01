@@ -1,0 +1,29 @@
+From 59628886410107cecbcaf5e51341fca3f48ae322 Mon Sep 17 00:00:00 2001
+From: Samuel Dobron <sdobron@redhat.com>
+Date: Thu, 31 Jul 2025 21:59:20 +0200
+Subject: [PATCH] RemoteDevice: copy device ID during deepcopy
+
+Commit [0] added `_id` property for `RemoteDevice` but
+deepcopy method wasn't extended of copying it.
+
+[0]
+https://github.com/LNST-project/lnst/commit/34dba1bd82bc8159b6b8d095c4ab8eced1736d5c
+---
+ lnst/Devices/RemoteDevice.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lnst/Devices/RemoteDevice.py b/lnst/Devices/RemoteDevice.py
+index b37391a4..cf1ddb5d 100644
+--- a/lnst/Devices/RemoteDevice.py
++++ b/lnst/Devices/RemoteDevice.py
+@@ -51,6 +51,7 @@ class RemoteDevice(object):
+                             deepcopy(self.__dev_kwargs, memo))
+         newone.__netns = self.__netns
+         newone._machine = self._machine
++        newone._id = self._id
+         newone.ifindex = deepcopy(self.ifindex, memo)
+         newone.deleted = deepcopy(self.deleted, memo)
+         newone._inited = deepcopy(self._inited, memo)
+-- 
+2.39.5 (Apple Git-154)
+
