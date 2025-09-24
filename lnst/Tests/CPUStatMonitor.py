@@ -23,7 +23,9 @@ class CPUStatMonitor(BaseTestModule):
                 while True:
                     stat.seek(0)
                     timestamp = time.time()
-                    stat_lines = "".join(stat.readlines())
+                    stat_lines = "".join(
+                        [l for l in stat.readlines() if l.startswith('cpu')]
+                    )
                     raw_samples.append({
                         "timestamp": timestamp,
                         "stat": stat_lines
