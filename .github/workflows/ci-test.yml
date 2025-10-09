@@ -49,6 +49,27 @@ jobs:
         venv_path=$(poetry env info -p)
         sudo "$venv_path"/bin/python3 .github/runner_all_enrt.py
 
+  ENRT_PingFlood:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+
+    - name: Source branch checkout
+      uses: actions/checkout@v2
+
+    - name: LNST Setup
+      run: bash .github/lnst_setup.sh
+
+    - name: Run PingFlood
+      run: |
+        export PATH="/root/.local/bin:$PATH"
+        venv_path=$(poetry env info -p)
+        sudo "$venv_path"/bin/python3 .github/runner_ping_flood.py
+
   ImportsCheck:
     runs-on: ubuntu-latest
     steps:
