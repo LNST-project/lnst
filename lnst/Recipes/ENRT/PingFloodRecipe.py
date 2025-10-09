@@ -1,21 +1,24 @@
-from lnst.Common.Parameters import IntParam, StrParam
+from lnst.Common.Parameters import IntParam, StrParam, FloatParam
 from lnst.Common.IpAddress import ipaddress
 from lnst.Controller import HostReq, DeviceReq, RecipeParam
 from lnst.RecipeCommon.Ping.Recipe import PingConf, PingTestAndEvaluate
+from lnst.RecipeCommon.Ping.Evaluators import RatePingEvaluator
+
 
 class PingFloodRecipe(PingTestAndEvaluate):
-    driver = StrParam()
+    driver = StrParam(mandatory=False)
+
     host1 = HostReq()
-    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host1.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver", mandatory=False))
 
     host2 = HostReq()
-    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver"))
+    host2.eth0 = DeviceReq(label="net1", driver=RecipeParam("driver", mandatory=False))
 
-    src_addr = StrParam(default = "192.168.1.1/24")
-    dst_addr = StrParam(default = "192.168.1.2/24")
-    count = IntParam(default = 100)
-    interval = StrParam(default = 0.2)
-    size = IntParam(mandatory = False)
+    src_addr = StrParam(default="192.168.1.1/24")
+    dst_addr = StrParam(default="192.168.1.2/24")
+    count = IntParam(default=100)
+    interval = FloatParam(default=0.2)
+    size = IntParam(mandatory=False)
     mtu = IntParam(mandatory = False)
 
     def test(self):
@@ -40,7 +43,7 @@ class PingFloodRecipe(PingTestAndEvaluate):
         else:
             sz = None
 
-        pcfg=PingConf(host1, ip1, host2, ip2, count = cn, interval = iv,
-            size = sz)
+        pcfg = PingConf(host1, ip1, host2, ip2, count=cn, interval=iv, size=sz)
+        pcfg.register_evaluators([RatePingEvaluator(min_rate=50)])
         result = self.ping_test([pcfg])
         self.ping_report_and_evaluate(result)
