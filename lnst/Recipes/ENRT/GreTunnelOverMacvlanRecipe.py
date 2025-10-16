@@ -77,8 +77,8 @@ class GreTunnelOverMacvlanRecipe(
         """
         host1, host2 = self.matched.host1, self.matched.host2
 
-        host1.macvlan10 = MacvlanDevice(realdev=host1.eth0, hwaddr="0A:00:00:00:00:01")
-        host2.macvlan10 = MacvlanDevice(realdev=host2.eth0, hwaddr="0A:00:00:00:00:02")
+        host1.macvlan10 = MacvlanDevice(realdev=host1.eth0)
+        host2.macvlan10 = MacvlanDevice(realdev=host2.eth0)
 
         ipv4_addr = interface_addresses(self.params.net_ipv4)
         for device in [host1.macvlan10, host2.macvlan10]:
