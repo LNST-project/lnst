@@ -86,6 +86,9 @@ class SimpleNetnsRouterRecipe(SimpleNetworkRecipe):
         self.matched.host2.run("sysctl -w net.ipv4.ip_forward=0")
         self.matched.host2.run("sysctl -w net.ipv6.conf.all.forwarding=0")
 
+        self.matched.host1.run(f"ip route del {self.params.netns_ipv4[2]}")
+        self.matched.host1.run(f"ip -6 route del {self.params.netns_ipv6[2]}")
+
     def generate_ping_endpoints(self, config):
         return [PingEndpoints(self.matched.host1.eth0,
                               self.matched.host2.ns.np0)]
