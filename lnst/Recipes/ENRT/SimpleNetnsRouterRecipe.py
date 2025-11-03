@@ -51,10 +51,7 @@ class SimpleNetnsRouterRecipe(SimpleNetworkRecipe):
         host2 = self.matched.host2
         config = super().test_wide_configuration(config)
 
-        host2.ns = NetNamespace("host2ns")
-
-        host2.pn0, host2.np0 = VethPair()
-        host2.ns.np0 = host2.np0
+        self.setup_namespaces()
 
         ipv4_addr = interface_addresses(self.params.netns_ipv4)
         ipv6_addr = interface_addresses(self.params.netns_ipv6)
@@ -76,6 +73,13 @@ class SimpleNetnsRouterRecipe(SimpleNetworkRecipe):
             host1.run(f"ip route add {dst} via {gw}")
 
         return config
+
+    def setup_namespaces(self):
+        host2 = self.matched.host2
+        host2.ns = NetNamespace("host2ns")
+
+        host2.pn0, host2.np0 = VethPair()
+        host2.ns.np0 = host2.np0
 
     def test_wide_deconfiguration(self, config):
         config = super().test_wide_deconfiguration(config)
