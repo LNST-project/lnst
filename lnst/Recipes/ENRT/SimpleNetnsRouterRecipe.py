@@ -55,15 +55,15 @@ class SimpleNetnsRouterRecipe(SimpleNetworkRecipe):
 
         ipv4_addr = interface_addresses(self.params.netns_ipv4)
         ipv6_addr = interface_addresses(self.params.netns_ipv6)
-        config.configure_and_track_ip(host2.pn0, next(ipv4_addr))
-        config.configure_and_track_ip(host2.pn0, next(ipv6_addr))
-        config.configure_and_track_ip(host2.ns.np0, next(ipv4_addr))
-        config.configure_and_track_ip(host2.ns.np0, next(ipv6_addr))
-        host2.pn0.up_and_wait()
-        host2.ns.np0.up_and_wait()
+        config.configure_and_track_ip(self.forwarder_egress_nic, next(ipv4_addr))
+        config.configure_and_track_ip(self.forwarder_egress_nic, next(ipv6_addr))
+        config.configure_and_track_ip(self.receiver_nic, next(ipv4_addr))
+        config.configure_and_track_ip(self.receiver_nic, next(ipv6_addr))
+        self.forwarder_egress_nic.up_and_wait()
+        self.receiver_nic.up_and_wait()
 
         for gw in (self.params.netns_ipv4[1], self.params.netns_ipv6[1]):
-            host2.ns.run(f"ip route add default via {gw}")
+            self.receiver_nic.netns.run(f"ip route add default via {gw}")
 
         host2.run("sysctl -w net.ipv4.ip_forward=1")
         host2.run("sysctl -w net.ipv6.conf.all.forwarding=1")
@@ -90,9 +90,22 @@ class SimpleNetnsRouterRecipe(SimpleNetworkRecipe):
         self.matched.host1.run(f"ip -6 route del {self.params.netns_ipv6[2]}")
 
     def generate_ping_endpoints(self, config):
-        return [PingEndpoints(self.matched.host1.eth0,
-                              self.matched.host2.ns.np0)]
+        return [PingEndpoints(self.generator_nic,
+                              self.receiver_nic)]
 
     def generate_perf_endpoints(self, config: EnrtConfiguration) -> list[Collection[EndpointPair[IPEndpoint]]]:
-        return [ip_endpoint_pairs(config, (self.matched.host1.eth0,
-                                           self.matched.host2.ns.np0))]
+        return [ip_endpoint_pairs(config, (self.generator_nic,
+                                           self.receiver_nic))]
+
+    @property
+    def generator_nic(self):
+        return self.matched.host1.eth0
+
+    @property
+    def receiver_nic(self):
+        return self.matched.host2.ns.np0
+
+    @property
+    def forwarder_egress_nic(self):
+        return self.matched.host2.pn0
+
