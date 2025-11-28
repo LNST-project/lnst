@@ -40,6 +40,10 @@ for recipe_name in dir(enrt_recipes):
         continue
     elif recipe_name in ["L2TPTunnelRecipe"]:
         continue
+    elif recipe_name in ["ForwardingRecipe", "XDPForwardingRecipe"]:
+        # forwarding recipes requires 2 hosts with 2 NICs each
+        # XDPForwarding requires 2 physical NICs on forwarding host
+        continue
 
     recipe = getattr(enrt_recipes, recipe_name)
 
