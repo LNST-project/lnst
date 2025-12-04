@@ -129,6 +129,13 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                     "generator_results": result.data["generator_results"].average,
                     "receiver_results": result.data["receiver_results"].average,
                 }
+            elif result.measurement_type == "forwarding":
+                measurement_data = {
+                    "generator_results": result.data["generator_results"].average,
+                    "receiver_results": result.data["receiver_results"].average,
+                    "forwarder_rx_results": result.data["forwarder_rx_results"].average,
+                    "forwarder_tx_results": result.data["forwarder_tx_results"].average,
+                }
             else:
                 logging.warning(f"unhandled measurement result type: {result.measurement_type}")
                 measurement_data = None
