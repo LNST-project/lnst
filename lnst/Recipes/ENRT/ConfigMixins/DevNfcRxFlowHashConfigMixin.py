@@ -116,7 +116,8 @@ def process_nfc_output(output):
         try:
             result.append(nfc_rx_flow_hash_mapping[line])
         except KeyError:
-            raise Exception(f"Unknown input from nfc rx-flow-hash: {line}")
+            logging.warning(f"Unknown input from nfc rx-flow-hash: {line}")
+            continue
 
     return "".join(sorted(result))
 
