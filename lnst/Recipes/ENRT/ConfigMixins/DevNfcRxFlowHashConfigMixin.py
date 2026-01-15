@@ -104,6 +104,9 @@ nfc_rx_flow_hash_mapping = {
     "IP DA": "d",
     "L4 bytes 0 & 1 [TCP/UDP src port]": "f",
     "L4 bytes 2 & 3 [TCP/UDP dst port]": "n",
+    "L2DA": "m",
+    "L3 proto": "t",
+    "VLAN tag": "v",
 }
 
 def process_nfc_output(output):
