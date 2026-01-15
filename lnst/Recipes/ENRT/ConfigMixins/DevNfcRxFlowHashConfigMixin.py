@@ -59,9 +59,12 @@ class DevNfcRxFlowHashConfigMixin(BaseHWConfigMixin):
         nfc_config = config.hw_config.get("dev_nfc_rx_flow_hash_configuration", {})
         for dev, dev_nfc in nfc_config.items():
             for protocol, protocol_setting in dev_nfc.items():
-                dev.host.run(
-                    f"ethtool -N {dev.name} rx-flow-hash {protocol} {protocol_setting['original']}"
-                )
+                if protocol_setting['original']:
+                    dev.host.run(
+                        f"ethtool -N {dev.name} rx-flow-hash {protocol} {protocol_setting['original']}"
+                    )
+                else:
+                    logging.warning(f"rx-flow-hash protocol setting is empty for {dev.host.hostid} {dev.name}, skipping deconfig")
 
         xfrm_original_config = config.hw_config.get("xfrm_original", {})
         for device, xfrm_dev_config in xfrm_original_config.items():
