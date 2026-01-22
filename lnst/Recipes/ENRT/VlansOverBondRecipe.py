@@ -282,4 +282,8 @@ class VlansOverBondRecipe(BondingMixin, PerfReversibleFlowMixin, VlanPingEvaluat
 
     @property
     def vf_trust_dev_list(self):
-        return [self.matched.host1.eth0, self.matched.host1.eth1]
+        return [
+            self.matched.host1.eth0,
+            self.matched.host1.eth1,
+            self.matched.host2.eth0
+        ]
