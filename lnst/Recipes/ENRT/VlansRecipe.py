@@ -242,3 +242,10 @@ class VlansRecipe(VlanPingEvaluatorMixin,
         :any:`PauseFramesHWConfigMixin.pause_frames_dev_list`.
         """
         return [self.matched.host1.eth0, self.matched.host2.eth0]
+
+    @property
+    def vf_trust_dev_list(self):
+        return [
+            self.matched.host1.eth0,
+            self.matched.host2.eth0
+        ]
