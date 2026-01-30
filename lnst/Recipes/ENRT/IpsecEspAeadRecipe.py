@@ -3,7 +3,7 @@ import logging
 import copy
 from lnst.Common.IpAddress import interface_addresses
 from lnst.Common.IpAddress import AF_INET, AF_INET6
-from lnst.Common.Parameters import StrParam, IPv4NetworkParam, IPv6NetworkParam
+from lnst.Common.Parameters import StrParam, IPv4NetworkParam, IPv6NetworkParam, BoolParam
 from lnst.Common.LnstError import LnstError
 from lnst.Recipes.ENRT.BaremetalEnrtRecipe import BaremetalEnrtRecipe
 from lnst.Recipes.ENRT.BaseEnrtRecipe import EnrtConfiguration
@@ -55,6 +55,8 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrt
     spi_values = ["0x00001000", "0x00001001"]
     ipsec_mode = StrParam(default="transport")
 
+    ipsec_offload_modprobe = BoolParam(default=False)
+
     def test_wide_configuration(self, config):
         """
         Test wide configuration for this recipe involves just adding an IPv4 and
@@ -67,6 +69,12 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrt
         host1, host2 = self.matched.host1, self.matched.host2
 
         config = super().test_wide_configuration(config)
+
+        if self.params.ipsec_offload_modprobe:
+            host1.run("modprobe esp4_offload")
+            host1.run("modprobe esp6_offload")
+            host2.run("modprobe esp4_offload")
+            host2.run("modprobe esp6_offload")
 
         ipv4_addr = {host1: interface_addresses(self.params.net1_ipv4),
                      host2: interface_addresses(self.params.net2_ipv4)}
@@ -109,6 +117,16 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrt
 
         ]
         return desc
+
+    def test_wide_deconfiguration(self, config: EnrtConfiguration):
+        """
+        For this recipe this takes care of the modprobe deconfiguration of esp
+        offload module if applicable.
+        """
+        host1, host2 = self.matched.host1, self.matched.host2
+        if self.params.ipsec_offload_modprobe:
+            host1.run("modprobe -r esp4_offload esp6_offload")
+            host2.run("modprobe -r esp4_offload esp6_offload")
 
     def generate_sub_configurations(self, config):
         """
