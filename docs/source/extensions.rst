@@ -195,7 +195,17 @@ need to put it to LNST project directory.
 
 .. note::
    To avoid having to deal with pool files you can simply mount your `~/.lnst/pool` directory
-   to `/root/.lnst/pool/` in the container (read-only access is sufficient). 
+   to `/root/.lnst/pool/` in the container (read-only access is sufficient).
+
+.. warning::
+   If SELinux is enforcing on the host, mounted volumes may not be accessible from inside the
+   container. The container runner will detect this on startup and print an error message.
+   To fix this, you can:
+
+   * add the ``:z`` or ``:Z`` suffix to the volume mount (e.g. ``-v /host/path:/container/path:z``)
+     to let Podman relabel the directory automatically
+   * relabel the host directory manually with ``chcon -Rt svirt_sandbox_file_t /host/path``
+   * disable SELinux label confinement for the container with ``--security-opt label=disable``
 
 
 Build and run controller
@@ -274,6 +284,25 @@ To use the test database, simply run the container without ``RECIPE`` and ``RECI
 .. code-block:: bash
 
     podman run -e DEBUG=1 --rm --name lnst_controller lnst_controller
+
+Exporting results
++++++++++++++++++
+
+Results are automatically exported to ``/root/.lnst/results/`` inside the container.
+Each recipe run gets its own subdirectory (e.g. ``0_SimpleNetworkRecipe/``) containing:
+
+* ``controller.log`` -- human-readable log with debug-level output
+* ``run-data-{i}.json`` -- JSON-formatted results for each recipe run
+* ``run-data-{i}.lrc`` -- pickled/compressed run data for each recipe run
+
+At the end of execution, all result directories are zipped into ``results.zip``
+and verified for integrity.
+
+To access results on the host, mount a volume to ``/root/.lnst/results/``:
+
+.. code-block:: bash
+
+    podman run -e DEBUG=1 -v /host/path/to/results:/root/.lnst/results --rm --name lnst_controller lnst_controller
 
 Now, you can run the controller:
 
