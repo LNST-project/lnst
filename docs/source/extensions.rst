@@ -229,6 +229,52 @@ Before running the container, you need to provide environment variables:
    `RECIPE`, `RECIPE_PARAMS` and `FORMATTERS` are parsed using Python's `eval` function,
    which is a security risk. Make sure you trust the source of these variables.
 
+Using the test database
++++++++++++++++++++++++
+
+Instead of specifying ``RECIPE`` and ``RECIPE_PARAMS`` environment variables, you can
+define a list of tests in ``container_files/controller/test_db.py``. When the ``RECIPE``
+environment variable is **not** set, the container runner will automatically execute all
+tests defined in ``test_db.py`` in order.
+
+Each entry in the ``tests`` list is a dictionary with two keys:
+
+* ``recipe_name`` -- string name of the recipe class (loaded from ``lnst.Recipes.ENRT``)
+* ``params`` -- dictionary of parameters to pass to the recipe constructor
+
+Example ``test_db.py``:
+
+.. code-block:: python
+
+    tests = [
+        {
+            "recipe_name": "SimpleNetworkRecipe",
+            "params": {
+                "perf_iterations": 1,
+                "perf_duration": 10,
+                "driver": "ice",
+            },
+        },
+        {
+            "recipe_name": "BondRecipe",
+            "params": {
+                "bonding_mode": "active-backup",
+                "miimon_value": 5,
+                "driver": "ice",
+            },
+        },
+    ]
+
+Tests run sequentially and each test is independent -- a failure in one test does not
+prevent subsequent tests from running. A summary of pass/fail results is printed at the
+end of the run.
+
+To use the test database, simply run the container without ``RECIPE`` and ``RECIPE_PARAMS``:
+
+.. code-block:: bash
+
+    podman run -e DEBUG=1 --rm --name lnst_controller lnst_controller
+
 Now, you can run the controller:
 
 .. code-block:: bash

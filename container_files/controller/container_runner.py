@@ -1,7 +1,7 @@
 import os
 import sys
 import traceback
-from typing import Any, Type, Optional
+from typing import Any, Type
 
 from lnst.Recipes.ENRT import *
 from lnst.Controller.Recipe import BaseRecipe
@@ -12,6 +12,8 @@ from lnst.Controller.ContainerPoolManager import ContainerPoolManager
 
 from lnst.Controller.RunSummaryFormatters import *
 from lnst.Controller.RunSummaryFormatters.RunSummaryFormatter import RunSummaryFormatter
+
+from container_files.controller.test_db import tests as test_db_tests
 
 
 class ContainerRunner:
@@ -33,12 +35,16 @@ class ContainerRunner:
 
     def __init__(self) -> None:
         self._controller = Controller(**self._parse_controller_params())
-        self._recipe_params: dict[str, Any] = self._parse_recipe_params()
 
-        if not os.getenv("RECIPE"):
-            raise ValueError("RECIPE environment variable is not set")
-        self._recipe_cls: Type[BaseRecipe] = eval(os.getenv("RECIPE", ""))
-        self._recipe: Optional[BaseRecipe] = None
+        if os.getenv("RECIPE"):
+            self._test_db = [
+                {
+                    "recipe_name": os.getenv("RECIPE", ""),
+                    "params": self._parse_recipe_params(),
+                },
+            ]
+        else:
+            self._test_db = test_db_tests
 
         self._formatters: list[Type[RunSummaryFormatter]] = self._parse_formatters()
 
@@ -76,30 +82,46 @@ class ContainerRunner:
         ]
 
     def run(self) -> ResultType:
-        """Initialize recipe class with parameters provided in `RECIPE_PARAMS`
-        and execute. Function returns overall result.
+        """Execute all tests from test_db sequentially.
+
+        Each test is independent -- a failure in one test does not prevent
+        subsequent tests from running.  A summary is printed at the end.
         """
-        overall_result = ResultType.PASS
+        overall = ResultType.PASS
+        results: list[tuple[str, ResultType]] = []
 
-        try:
-            self._recipe = self._recipe_cls(**self._recipe_params)
-            self._controller.run(
-                self._recipe, multimatch=bool(os.getenv("MULTIMATCH", False))
-            )
-        except Exception:
-            print("LNST Controller crashed with an exception:", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            exit(ResultType.FAIL)
+        for test in self._test_db:
+            print(f"\n{'=' * 60}")
+            recipe_name = test["recipe_name"]
 
-        for formatter in self._formatters:
-            fmt = formatter(level=ResultLevel.IMPORTANT)
-            for run in self._recipe.runs:
-                print(fmt.format_run(run))
-                overall_result = ResultType.max_severity(
-                    overall_result, run.overall_result
+            test_result = ResultType.PASS
+            try:
+                recipe_cls = eval(recipe_name)
+                recipe = recipe_cls(**test.get("params", {}))
+                self._controller.run(
+                    recipe, multimatch=bool(os.getenv("MULTIMATCH", False))
                 )
+            except Exception:
+                print(
+                    f"Test {recipe_name} crashed with an exception:",
+                    file=sys.stderr,
+                )
+                traceback.print_exc(file=sys.stderr)
+                test_result = ResultType.FAIL
 
-        return overall_result
+            results.append((recipe_name, test_result))
+            overall = ResultType.max_severity(overall, test_result)
+
+        print(f"\n{'=' * 60}")
+        print("Test Summary:")
+        print(f"{'=' * 60}")
+        for i, (recipe_name, result) in enumerate(results):
+            status = "PASS" if result == ResultType.PASS else "FAIL"
+            print(f"  {i}_{recipe_name}: {status}")
+        overall_status = "PASS" if overall == ResultType.PASS else "FAIL"
+        print(f"\nOverall result: {overall_status}")
+
+        return overall
 
 
 if __name__ == "__main__":
