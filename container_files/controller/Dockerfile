@@ -16,8 +16,13 @@ RUN dnf install -y initscripts \
     libnl3-devel
 
 RUN mkdir -p /root/.lnst
-COPY . /lnst
-COPY container_files/controller/pool /root/.lnst/pool
+ARG LNST_SRC=https://github.com/LNST-project/lnst.git
+RUN repo="$LNST_SRC" && \
+    ref="" && \
+    case "$repo" in *@*) ref="${repo##*@}"; repo="${repo%@*}" ;; esac && \
+    git clone "$repo" /lnst && \
+    if [ -n "$ref" ]; then cd /lnst && git checkout "$ref"; fi
+ENV LNST_SRC=${LNST_SRC}
 
 ENV UV_PROJECT_ENVIRONMENT=/root/lnst_venv
 RUN cd /lnst && uv sync
