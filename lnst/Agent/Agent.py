@@ -987,6 +987,7 @@ class Agent:
             try:
                 if self._server_handler.get_ctl_sock() is None:
                     self._log_ctl.cancel_connection()
+                    self._methods.machine_cleanup()
                     try:
                         logging.info("Waiting for connection.")
                         self._server_handler.accept_connection()
