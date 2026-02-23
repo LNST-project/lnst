@@ -17,7 +17,7 @@ RUN dnf install -y initscripts \
     python3 - --version 1.4.2
 
 RUN mkdir -p /root/.lnst
-RUN git clone https://github.com/LNST-project/lnst.git /lnst
+RUN git clone -b nv https://github.com/enhaut/lnst.git /lnst
 
 RUN cd /lnst && \
     /root/.local/bin/poetry config virtualenvs.path /root/lnst_venv && \
