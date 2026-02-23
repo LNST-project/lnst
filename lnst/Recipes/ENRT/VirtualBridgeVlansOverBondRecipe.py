@@ -26,6 +26,35 @@ from lnst.Devices import BridgeDevice
 
 class VirtualBridgeVlansOverBondRecipe(VlanPingEvaluatorMixin,
     CommonHWSubConfigMixin, OffloadSubConfigMixin, VirtualBridgeOverBondReq, VirtualEnrtRecipe):
+    """
+            +--------------------------------------------------------------+
+            |                          NETWORK                             |
+            +----------+-------------------------------------------+-------+
+                       |                                           |
+        _______________|_______________             _______________|_______________
+       |            HOST 1             |           |            HOST 2             |
+       |  +-------+          +-------+ |           |  +-------+          +-------+ |
+       |  | eth0  |          | eth1  | |           |  | eth0  |          | eth1  | |
+       |  +---+---+          +---+---+ |           |  +---+---+          +---+---+ |
+       |      |       BOND 0     |     |           |      |       BOND 0     |     |
+       |      +---------+--------+     |           |      +---------+--------+     |
+       |                |              |           |                |              |
+       |        +-------+-------+      |           |        +-------+-------+      |
+       |        |               |      |           |        |               |      |
+       |    VLAN 0 (10)     VLAN 1 (20)|           |    VLAN 0 (10)     VLAN 1 (20)|
+       |        |               |      |           |        |               |      |
+       |     BRIDGE 0        BRIDGE 1  |           |     BRIDGE 0        BRIDGE 1  |
+       |     (IP .1)         (IP .1)   |           |     (IP .2)         (IP .2)   |
+       |        |               |      |           |        |               |      |
+       |      tap0            tap1     |           |      tap0            tap1     |
+       |________|_______________|______|           |________|_______________|______|
+                |               |                           |               |
+        ________|_______        |_______            ________|_______        |_______
+       |    GUEST 1     |      | GUEST 2|          |    GUEST 3     |      | GUEST 4|
+       |     eth0       |      |  eth0  |          |     eth0       |      |  eth0  |
+       |  (VLAN 10 IP)  |      |(VLAN 20|          |  (VLAN 10 IP)  |      |(VLAN 20|
+       |________________|      |___IP)__|          |________________|      |___IP)__|
+    """
     vlan0_id = IntParam(default=10)
     vlan1_id = IntParam(default=20)
 
