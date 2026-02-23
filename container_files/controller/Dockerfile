@@ -17,8 +17,7 @@ RUN dnf install -y initscripts \
     python3 - --version 1.4.2
 
 RUN mkdir -p /root/.lnst
-COPY . /lnst
-COPY container_files/controller/pool /root/.lnst/pool
+RUN git clone https://github.com/LNST-project/lnst.git /lnst
 
 RUN cd /lnst && \
     /root/.local/bin/poetry config virtualenvs.path /root/lnst_venv && \

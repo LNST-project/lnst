@@ -185,17 +185,15 @@ It expects that you use CNI as network backend for Podman.
 
 Using baremetal agents
 ``````````````````````
-Firstly, you need to prepare machine XMLs if you decide to run agents on baremetal
-machines (see :ref:`machines-pool`). Instead of putting them into `~/.lnst/pool`
-directory, you need to put them into `container_files/controller/pool` directory.
-Machine XMLs are copied to container during build process from
-`container_files/controller/pool`.
-Podman doesn't support copying files located outside of build context, so you
-need to put it to LNST project directory.
+If you decide to run agents on baremetal machines, you need to prepare machine XMLs
+(see :ref:`machines-pool`) and mount them into the container at runtime.
 
-.. note::
-   To avoid having to deal with pool files you can simply mount your `~/.lnst/pool` directory
-   to `/root/.lnst/pool/` in the container (read-only access is sufficient).
+Mount your pool directory to ``/root/.lnst/pool/`` in the container (read-only
+access is sufficient):
+
+.. code-block:: bash
+
+    podman run -v /path/to/pool:/root/.lnst/pool:ro ... lnst_controller
 
 .. warning::
    If SELinux is enforcing on the host, mounted volumes may not be accessible from inside the
@@ -215,17 +213,20 @@ Build the controller image:
 
 .. code-block:: bash
 
-    cd your_lnst_project_directory
-    podman build . -t lnst_controller -f container_files/controller/Dockerfile
+    podman build -t lnst_controller -f container_files/controller/Dockerfile .
 
-This will copy pool files to `/root/.lnst/pool/` in container and LNST from
-`your_lnst_project_directory` to `/lnst` in container.
+The image clones LNST from ``https://github.com/LNST-project/lnst.git`` into
+``/lnst`` inside the container and installs its dependencies.
 
 .. note::
-   If you want to avoid rebuilding the image every time you change your LNST project (e.g. during
-   development), you can mount `your_lnst_project_directory` to `/lnst` in container. The LNST's
-   virtual environment is located outside of `/lnst/` directory, so if your changes requires
-   reinstallation fo LNST and/or its dependencies, you need to rebuild the image.
+   If you want to use a local copy of LNST (e.g. during development), you can mount
+   your project directory to ``/lnst`` in the container. The LNST virtual environment is
+   located outside of ``/lnst/``, so if your changes require reinstallation of LNST
+   and/or its dependencies, you need to rebuild the image.
+
+.. note::
+   The machine pool is **not** baked into the image. You must mount it at runtime
+   (see `Using baremetal agents`_ above).
 
 
 Before running the container, you need to provide environment variables:
@@ -283,7 +284,7 @@ To use the test database, simply run the container without ``RECIPE`` and ``RECI
 
 .. code-block:: bash
 
-    podman run -e DEBUG=1 --rm --name lnst_controller lnst_controller
+    podman run -e DEBUG=1 -v /path/to/pool:/root/.lnst/pool:ro --rm --name lnst_controller lnst_controller
 
 Exporting results
 +++++++++++++++++
@@ -308,7 +309,7 @@ Now, you can run the controller:
 
 .. code-block:: bash
 
-    podman run -e RECIPE=SimpleNetworkRecipe -e RECIPE_PARAMS="perf_iterations=1;perf_duration=10" -e DEBUG=1 --rm --name lnst_controller lnst_controller
+    podman run -e RECIPE=SimpleNetworkRecipe -e RECIPE_PARAMS="perf_iterations=1;perf_duration=10" -e DEBUG=1 -v /path/to/pool:/root/.lnst/pool:ro --rm --name lnst_controller lnst_controller
 
 
 .. note::
@@ -323,7 +324,7 @@ Or you can run more complex recipes:
 
 .. code-block:: bash
 
-    podman run -e RECIPE=XDPDropRecipe -e RECIPE_PARAMS="perf_iterations=1;perf_tool_cpu=[0,1];multi_dev_interrupt_config={'host1':{'eth0':{'cpus':[0],'policy':'round-robin'}}}" --rm --name lnst_controller lnst_controller
+    podman run -e RECIPE=XDPDropRecipe -e RECIPE_PARAMS="perf_iterations=1;perf_tool_cpu=[0,1];multi_dev_interrupt_config={'host1':{'eth0':{'cpus':[0],'policy':'round-robin'}}}" -v /path/to/pool:/root/.lnst/pool:ro --rm --name lnst_controller lnst_controller
 
 
 Classes documentation
