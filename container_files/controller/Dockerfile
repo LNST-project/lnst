@@ -13,9 +13,13 @@ RUN dnf install -y initscripts \
     libnl3 \
     lksctp-tools-devel \
     git \
-    libnl3-devel
+    libnl3-devel \
+    jq \
+    sshpass \
+    openssh-clients
 
 RUN mkdir -p /root/.lnst
+# LNST_SRC: git URL used to clone LNST source, accepts "repo_url" or "repo_url@ref" (branch/tag/commit)
 ARG LNST_SRC=https://github.com/LNST-project/lnst.git
 RUN repo="$LNST_SRC" && \
     ref="" && \
@@ -25,7 +29,7 @@ RUN repo="$LNST_SRC" && \
 ENV LNST_SRC=${LNST_SRC}
 
 ENV UV_PROJECT_ENVIRONMENT=/root/lnst_venv
-RUN cd /lnst && uv sync
+RUN cd /lnst && uv sync --extra trex
 # UV_PROJECT_ENVIRONMENT places the venv outside /lnst
 # to prevent conflicts when user mounts host-machine's
 # lnst dir to /lnst

@@ -183,9 +183,85 @@ following parameters as environment variables to controller container:
 It expects that you use CNI as network backend for Podman.
 
 
+Test environment description
+````````````````````````````
+
+Instead of manually creating machine pool XMLs, you can provide a test environment
+description file (``test_environment.json``). The controller generates pool XMLs
+from it at startup.
+
+The file must be located at ``/lnst/container_files/controller/pool/test_environment.json``
+inside the container (see ``test_environment.example.json`` for reference):
+
+.. code-block:: bash
+
+    podman run -v /path/to/test_environment.json:/lnst/container_files/controller/pool/test_environment.json:ro ...
+
+Format:
+
+.. code-block:: json
+
+    [
+        {
+            "test_system_name": "host1",
+            "hostname": "machine1.example.com",
+            "ssh_port": 22,
+            "username": "root",
+            "password": "",
+            "test_nic_hw_addrs": [
+                "00:00:5e:00:53:01"
+            ]
+        },
+        {
+            "test_system_name": "host2",
+            "hostname": "machine2.example.com",
+            "ssh_port": 22,
+            "username": "root",
+            "password": "",
+            "test_nic_hw_addrs": [
+                "00:00:5e:00:53:02"
+            ]
+        }
+    ]
+
+Fields:
+
+* ``test_system_name`` — unique identifier for the machine (used in pool XML filename)
+* ``hostname`` — FQDN or IP of the remote host
+* ``ssh_port`` — SSH port
+* ``username`` — SSH username
+* ``password`` — SSH password (leave empty for key-based authentication)
+* ``test_nic_hw_addrs`` — list of MAC addresses of NICs used for testing (verified at startup)
+
+
+.. _automatic-agent-setup:
+
+Automatic agent setup
+``````````````````````
+
+When a test environment description file is present, the controller container
+automatically sets up LNST agents on remote hosts at startup. For each host
+defined in ``test_environment.json``, the container:
+
+1. Connects via SSH using credentials from the test environment description
+2. Runs ``setup_agent.sh`` remotely — installs LNST agent, its dependencies,
+   and starts the ``lnst-agent`` systemd service
+
+The agent is installed using the same LNST version as the controller (determined
+by the ``LNST_SRC`` build argument). If the agent is already running on a host,
+the setup is skipped.
+
+SSH authentication uses either the password from the test environment description
+file or SSH keys mounted into the container (e.g. ``-v machine_keys/:/root/.ssh:ro``).
+
+.. note::
+   Remote hosts must be reachable from the container via SSH. If using the default
+   network mode, you may need ``--network=host`` for the container.
+
 Using baremetal agents
 ``````````````````````
-If you decide to run agents on baremetal machines, you need to prepare machine XMLs
+If you decide to run agents on baremetal machines, you can either provide
+a test environment description (see above) or prepare machine pool XMLs manually
 (see :ref:`machines-pool`) and mount them into the container at runtime.
 
 Mount your pool directory to ``/root/.lnst/pool/`` in the container (read-only
