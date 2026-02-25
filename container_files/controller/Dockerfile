@@ -22,7 +22,7 @@ RUN git clone -b nv https://github.com/enhaut/lnst.git /lnst
 RUN cd /lnst && \
     /root/.local/bin/poetry config virtualenvs.path /root/lnst_venv && \
     /root/.local/bin/poetry config virtualenvs.in-project false && \
-    /root/.local/bin/poetry install
+    /root/.local/bin/poetry install -E trex # required for pyyaml
 # setting in-project to false to prevent poetry from
 # using in-project .venv which might be present if
 # user has mounted host-machine's lnst dir to /lnst

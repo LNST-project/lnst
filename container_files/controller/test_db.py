@@ -18,7 +18,6 @@ tests = [
     {
         "recipe_name": "SimpleNetworkRecipe",
         "params": {
-            "driver": "mlx5_core",
             "perf_tool_cpu": [6],
             "dev_intr_cpu": [0],
             "perf_parallel_processes": 1,
@@ -31,8 +30,6 @@ tests = [
             "perf_msg_sizes": [131072],
             "rx_pause_frames": False,
             "tx_pause_frames": False,
-            "nic_speed": "100000",
-            "nic_model": "Mellanox-MT2910_Family",
             "perf_iterations": 1,
             "net_ipv4": "192.168.220.0/24",
         },
@@ -40,7 +37,6 @@ tests = [
     {
         "recipe_name": "SimpleNetworkRecipe",
         "params": {
-            "driver": "mlx5_core",
             "perf_tool_cpu": [6],
             "dev_intr_cpu": [0],
             "perf_parallel_processes": 1,
@@ -53,8 +49,6 @@ tests = [
             "perf_msg_sizes": [131072],
             "rx_pause_frames": False,
             "tx_pause_frames": False,
-            "nic_speed": "100000",
-            "nic_model": "Mellanox-MT2910_Family",
             "perf_iterations": 1,
             "net_ipv6": "fd00:0:b100::/64",
         },
