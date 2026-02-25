@@ -301,6 +301,8 @@ class MachineMapper(object):
                 return False
         return True
 
+    _SKIP_IF_PARAMS = {"driver", "speed", "model"}
+
     def _check_interface_compatibility(self, req_if, pool_if):
         label_mapping = self._net_label_mapping
         for req_label, mapping in list(label_mapping.items()):
@@ -311,6 +313,8 @@ class MachineMapper(object):
                req_label != req_if["network"]:
                 return False
         for param, value in list(req_if["params"].items()):
+            if param in self._SKIP_IF_PARAMS:
+                continue
             # skip empty parameters
             if len(value) == 0:
                 continue
