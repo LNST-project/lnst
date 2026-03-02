@@ -12,7 +12,10 @@ RUN dnf install -y initscripts \
     libnl3 \
     lksctp-tools-devel \
     git \
-    libnl3-devel &&  \
+    libnl3-devel \
+    jq \
+    sshpass \
+    openssh-clients &&  \
     curl -sSL https://install.python-poetry.org |  \
     python3 - --version 1.4.2
 
