@@ -170,7 +170,7 @@ class Namespace(object):
                     if name not in self._objects:
                         self._objects[name] = value
                     elif self._objects[name] is not value:
-                        raise HostError("Different object with same name is already assined")
+                        raise HostError("Different object with same name is already assigned")
                     return True
                 old_ns = value.netns
                 old_ns._unset(value)
