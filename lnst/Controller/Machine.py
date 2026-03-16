@@ -129,6 +129,8 @@ class Machine(object):
         self._add_device_to_database(ret["ifindex"], dev, netns)
 
     def remote_device_set_netns(self, dev, dst, src):
+        dev_id = f"{dev.host.hostid}{dev.netns.name if dev.netns.name else ''}.{dev._id}"
+        logging.info(f"Moving {dev_id} to namespace {dst.name}")
         self._add_device_to_netns_moved_devices(dev, dst, src)
         self.rpc_call("set_dev_netns", dev, dst.name, netns=src)
         dev_clsname = dev._dev_cls.__name__
@@ -140,6 +142,16 @@ class Machine(object):
                 dev_kwargs['peer_name'] = dev.peer_name
         except AttributeError:
             pass
+
+        def condition():
+            return dev not in self._netns_moved_devices
+
+        # wait until the device has been moved completely and ifindex is
+        # updated to dst namespace specific one
+        if not self._msg_dispatcher.wait_for_condition(condition, timeout=10):
+            raise MachineError(
+                f"Waiting for device {dev_id} move from {src.name} to {dst.name} netns timed out"
+            )
 
         self.rpc_call("remap_device",
                 dev.ifindex,
@@ -231,8 +243,10 @@ class Machine(object):
                 new_dev.netns = ns_instance
             else:
                 if netns_moved:
-                    del self._netns_moved_devices[new_dev]
                     new_dev.disable_readonly_cache()
+                    new_dev.ifindex = ifindex
+                    new_dev.netns = ns_instance
+                    del self._netns_moved_devices[new_dev]
                 else:
                     self._tmp_device_database.remove(new_dev)
                     new_dev.ifindex = dev_data["ifindex"]

@@ -175,7 +175,6 @@ class Namespace(object):
                 old_ns = value.netns
                 old_ns._unset(value)
                 self._machine.remote_device_set_netns(value, self, old_ns)
-                value.netns = self
                 self._objects[name] = value
                 self._update_device_id(value, name)
                 value._enable()
