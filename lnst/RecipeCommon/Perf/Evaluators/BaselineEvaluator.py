@@ -19,6 +19,7 @@ class MetricComparison:
     baseline_result: Optional[PerfMeasurementResults]
     threshold: Optional[float]
     metric_name: str
+    metric_metadata: dict
     difference: Optional[float]
     comparison_result: ResultType
     text: str
@@ -192,6 +193,7 @@ class BaselineEvaluator(BaseResultEvaluator):
             baseline_result=baseline,
             threshold=threshold,
             metric_name=metric_name,
+            metric_metadata=result.metric_metadata.get(metric_name, {}),
             difference=diff,
             comparison_result=comparison_result,
             text=text,
