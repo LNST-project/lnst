@@ -23,6 +23,10 @@ class BaseMeasurementResults(object):
     def metrics(self) -> list[str]:
         return []
 
+    @property
+    def metric_metadata(self) -> dict:
+        return {}
+
     def align_data(self, start, end):
         return self
 
