@@ -30,6 +30,10 @@ class CPUMeasurementResults(BaseMeasurementResults):
     def metrics(self) -> list[str]:
         return ['utilization']
 
+    @property
+    def metric_metadata(self) -> dict:
+        return {metric: {"host": self._host.hostid, "cpu": self._cpu} for metric in self.metrics}
+
     def describe(self):
         return "host {host} cpu '{cpu}' utilization: {average:.2f} +-{deviation:.2f} {unit} per second".format(
             host=self.host.hostid,
