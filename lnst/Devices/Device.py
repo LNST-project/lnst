@@ -73,6 +73,24 @@ def switchdev_capable(func):
 
     return wrapper
 
+def exec_cmd_ebusy_retry(cmd, operation, max_retries=10):
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            return exec_cmd(cmd)
+        except ExecCmdFail as e:
+            if "Device or resource busy" not in e.get_stderr():
+                raise
+
+            logging.debug(
+                f"Got EBUSY {attempt + 1}/{max_retries} while {operation}:\n{e.get_stderr()}"
+            )
+            last_error = e
+            time.sleep(1)
+
+    raise DeviceError(f"Retries exhausted while {operation}") from last_error
+
+
 class Device(object, metaclass=DeviceMeta):
     """The base Device class
 
@@ -940,14 +958,22 @@ class Device(object, metaclass=DeviceMeta):
     def eswitch_mode(self):
         try:
             # TODO: do this through device._devlink?
-            stdout, _ = exec_cmd(f"devlink dev eswitch show pci/{self.bus_info}")
+            stdout, _ = exec_cmd_ebusy_retry(
+                f"devlink dev eswitch show pci/{self.bus_info}",
+                f"querying device {self.name} eswitch mode",
+            )
         except ExecCmdFail as e:
-            if e.get_stderr().find("Operation not supported") > -1 or e.get_stderr().find("No such device"):
-                raise DeviceFeatureNotSupported(f"Device {self.name} not compatible with switchdev")
-            else:
-                raise DeviceError(
-                    f"Error while querying device {self.name} eswitch mode:\n{e.get_stderr()}"
+            if (
+                "Operation not supported" in e.get_stderr()
+                or "No such device" in e.get_stderr()
+            ):
+                raise DeviceFeatureNotSupported(
+                    f"Device {self.name} not compatible with switchdev"
                 )
+
+            raise DeviceError(
+                f"Error while querying device {self.name} eswitch mode:\n{e.get_stderr()}"
+            )
 
         m = re.search("mode (legacy|switchdev)", stdout)
         try:
@@ -962,7 +988,10 @@ class Device(object, metaclass=DeviceMeta):
 
         try:
             # TODO: do this through device._devlink?
-            exec_cmd(f"devlink dev eswitch set pci/{self.bus_info} mode {mode}")
+            exec_cmd_ebusy_retry(
+                f"devlink dev eswitch set pci/{self.bus_info} mode {mode}",
+                f"setting device {self.name} eswitch mode",
+            )
         except ExecCmdFail as e:
             raise DeviceError(
                 f"Error while setting device {self.name} eswitch mode:\n{e.get_stderr()}"
