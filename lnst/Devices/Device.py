@@ -959,9 +959,16 @@ class Device(object, metaclass=DeviceMeta):
     @property
     def eswitch_mode(self):
         try:
+            bus_info = self.bus_info
+        except DeviceFeatureNotSupported:
+            raise DeviceFeatureNotSupported(
+                f"Device {self.name} not compatible with switchdev, no bus_info"
+            )
+
+        try:
             # TODO: do this through device._devlink?
             stdout, _ = exec_cmd_ebusy_retry(
-                f"devlink dev eswitch show pci/{self.bus_info}",
+                f"devlink dev eswitch show pci/{bus_info}",
                 f"querying device {self.name} eswitch mode",
             )
         except ExecCmdFail as e:
