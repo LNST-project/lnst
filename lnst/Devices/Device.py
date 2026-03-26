@@ -683,7 +683,9 @@ class Device(object, metaclass=DeviceMeta):
     @property
     def bus_info(self):
         try:
-            return ethtool.get_businfo(self.name)
+            bus_info = ethtool.get_businfo(self.name)
+            if bus_info == "N/A":
+                raise DeviceFeatureNotSupported(f"No bus info for {self.name}")
         except IOError as e:
             raise DeviceFeatureNotSupported(f"No bus info for {self.name}")
 
