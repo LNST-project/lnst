@@ -1,10 +1,8 @@
 #!/bin/bash
-export PATH="/root/.local/bin:$PATH"
-poetry install -E "containers"
+cd /lnst
+uv sync --extra containers
 
-venv_path=$(poetry env info -p)
-echo "$venv_path"
-ln -s $venv_path/bin /lnst/.bin
+ln -s /lnst/.venv/bin /lnst/.bin
 
 echo "================== Installing iperf  ======================"
 cd /

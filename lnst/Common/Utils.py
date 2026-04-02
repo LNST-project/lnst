@@ -23,7 +23,7 @@ import ast
 import collections
 import statistics
 import itertools
-from collections.abc import Iterable, Callable
+from collections.abc import Iterable, Callable, Mapping
 from contextlib import AbstractContextManager
 from _ast import Call, Attribute
 from lnst.Common.ExecCmd import exec_cmd
@@ -227,7 +227,7 @@ def get_module_tools(module_path):
 
 def recursive_dict_update(original, update):
     for key, value in list(update.items()):
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             r = recursive_dict_update(original.get(key, {}), value)
             original[key] = r
         else:
@@ -254,7 +254,7 @@ def list_to_dot(original_list, prefix="", key=""):
     for value in original_list:
         iter_key = prefix + key + str(index)
         index += 1
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             sub_list = dict_to_dot(value, iter_key + '.')
             return_list.extend(sub_list)
         elif isinstance(value, list):
@@ -270,7 +270,7 @@ def list_to_dot(original_list, prefix="", key=""):
 def dict_to_dot(original_dict, prefix=""):
     return_list = []
     for key, value in list(original_dict.items()):
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             sub_list = dict_to_dot(value, prefix + key + '.')
             return_list.extend(sub_list)
         elif isinstance(value, list):

@@ -1,61 +1,66 @@
-[tool.poetry]
+[project]
 name = "lnst"
 version = "16.1.0"
-homepage = "http://lnst-project.org"
-license = "GPL-2.0-or-later"
-readme = "README.md"
-repository = "https://github.com/LNST-project/lnst"
 description = "Linux Network Stack Test"
-authors = ["LNST Team <lnst-developers@lists.fedorahosted.org>"]
-maintainers = ["Ondrej Lichtner <olichtne@redhat.com>", "Jan Tluka <jtluka@redhat.com>",
-    "Jozef Urbanovsky <jurbanov@redhat.com>", "Perry Gagne <pgagne@redhat.com>", "Jiri Pirko <jiri@resnulli.us>"]
-
-packages = [
-    { include = "lnst"}
+authors = [{ name = "LNST Team", email = "lnst-developers@lists.fedorahosted.org" }]
+requires-python = ">=3.13"
+readme = "README.md"
+license = "GPL-2.0-or-later"
+maintainers = [
+    { name = "Ondrej Lichtner", email = "olichtne@redhat.com" },
+    { name = "Jan Tluka", email = "jtluka@redhat.com" },
+    { name = "Jozef Urbanovsky", email = "jurbanov@redhat.com" },
+    { name = "Perry Gagne", email = "pgagne@redhat.com" },
+    { name = "Jiri Pirko", email = "jiri@resnulli.us" },
+]
+dependencies = [
+    "lxml",
+    "ethtool",
+    "pyroute2",
+    "psutil>=5.9.4",
+    "requests>=2.30.0",
 ]
 
-include = [
-    { path="schema-am.rng", format=["sdist", "wheel"]},
-    { path="install/*", format=["sdist", "wheel"]},
-    { path="lnst-ctl.conf", format=["sdist", "wheel"]},
-]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-lxml = "*"
-ethtool = "*"
-pyroute2 = "<0.9.0"
-
-libvirt-python = {version = "*", optional = true }
-podman = {version = "*", optional = true }
-cryptography = {version = "*", optional = true }
-pyyaml = {version = "*", optional = true}
-psutil = "^5.9.4"
-requests = "^2.30.0"
-
-urllib3 = "<2"
-wheel = "^0.45.1"
-
-[tool.poetry.extras]
+[project.optional-dependencies]
 virt = ["libvirt-python"]
 containers = ["podman"]
 sec_socket = ["cryptography"]
 trex = ["pyyaml"]
 
+[project.urls]
+Homepage = "http://lnst-project.org"
+Repository = "https://github.com/LNST-project/lnst"
 
-[tool.poetry.scripts]
-lnst-agent = 'lnst.Agent.__main__:main'
+[project.scripts]
+lnst-agent = "lnst.Agent.__main__:main"
 
-[tool.poetry.group.dev]
-optional = true
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pylint>=3.2.2",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^6.2.5"
-pylint = "^3.2.2"
+[tool.hatch.build.targets.sdist]
+include = ["lnst"]
+
+[tool.hatch.build.targets.sdist.force-include]
+"schema-am.rng" = "schema-am.rng"
+"install/lnst-agent.example.conf" = "install/lnst-agent.example.conf"
+"install/lnst-agent.service" = "install/lnst-agent.service"
+"lnst-ctl.conf" = "lnst-ctl.conf"
+
+[tool.hatch.build.targets.wheel]
+include = ["lnst"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schema-am.rng" = "schema-am.rng"
+"install/lnst-agent.example.conf" = "install/lnst-agent.example.conf"
+"install/lnst-agent.service" = "install/lnst-agent.service"
+"lnst-ctl.conf" = "lnst-ctl.conf"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 filterwarnings = [

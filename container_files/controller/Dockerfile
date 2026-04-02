@@ -1,32 +1,29 @@
 # syntax=docker/dockerfile:1
 FROM fedora:41
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 RUN dnf install -y initscripts \
     iputils \
-    python3.9 \
-    python-pip \
+    python3 \
     gcc \
-    python-devel \
+    python3-devel \
     libxml2-devel \
     libxslt-devel \
     libnl3 \
     lksctp-tools-devel \
     git \
-    libnl3-devel &&  \
-    curl -sSL https://install.python-poetry.org |  \
-    python3 - --version 1.4.2
+    libnl3-devel
 
 RUN mkdir -p /root/.lnst
 COPY . /lnst
 COPY container_files/controller/pool /root/.lnst/pool
 
-RUN cd /lnst && \
-    /root/.local/bin/poetry config virtualenvs.path /root/lnst_venv && \
-    /root/.local/bin/poetry config virtualenvs.in-project false && \
-    /root/.local/bin/poetry install
-# setting in-project to false to prevent poetry from
-# using in-project .venv which might be present if
-# user has mounted host-machine's lnst dir to /lnst
+ENV UV_PROJECT_ENVIRONMENT=/root/lnst_venv
+RUN cd /lnst && uv sync --frozen
+# UV_PROJECT_ENVIRONMENT places the venv outside /lnst
+# to prevent conflicts when user mounts host-machine's
+# lnst dir to /lnst
 
 WORKDIR /lnst
 CMD ["/lnst/container_files/controller/entrypoint.sh"]
