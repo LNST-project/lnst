@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 FROM fedora:41
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 RUN dnf install -y initscripts \
     iputils \
     ethtool \
-    python3.9 \
-    python-pip \
+    python3 \
     gcc \
-    python-devel \
+    python3-devel \
     libxml2-devel \
     libxslt-devel \
     libvirt \
@@ -22,9 +23,7 @@ RUN dnf install -y initscripts \
     nftables \
     openvswitch \
     teamd \
-    kernel-tools &&  \
-    curl -sSL https://install.python-poetry.org |  \
-    python3 - --version 1.4.2
+    kernel-tools
 
 COPY . /lnst
 RUN cd /lnst/container_files/agent && chmod +x install.sh && sh install.sh
