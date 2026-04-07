@@ -689,6 +689,8 @@ class Device(object, metaclass=DeviceMeta):
         except IOError as e:
             raise DeviceFeatureNotSupported(f"No bus info for {self.name}")
 
+        return bus_info
+
     def ip_add_bulk(self, addresses: list[tuple[BaseIpAddress, Optional[BaseIpAddress]]], wait=True):
         for addr, peer in addresses:
             self._ip_add((addr, peer))
