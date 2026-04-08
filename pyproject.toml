@@ -33,7 +33,6 @@ pyyaml = {version = "*", optional = true}
 psutil = "^5.9.4"
 requests = "^2.30.0"
 
-urllib3 = "<2"
 wheel = "^0.45.1"
 
 [tool.poetry.extras]
