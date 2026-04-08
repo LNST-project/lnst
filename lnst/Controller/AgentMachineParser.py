@@ -20,9 +20,12 @@ import lnst
 class AgentMachineParser(object):
     def __init__(self, am_path, ctl_config):
         # locate the schema file
-        # try git path
-        dirname = os.path.join(os.path.dirname(lnst.__file__), '..')
-        schema_path = os.path.join(dirname, "schema-am.rng")
+        # try inside lnst package directory (wheel/uv install)
+        lnst_dir = os.path.dirname(lnst.__file__)
+        schema_path = os.path.join(lnst_dir, "schema-am.rng")
+        if not os.path.exists(schema_path):
+            # try git path (editable/source install)
+            schema_path = os.path.join(lnst_dir, '..', "schema-am.rng")
         if not os.path.exists(schema_path):
             # try configuration
             res_dir = ctl_config.get_option("environment", "resource_dir")
