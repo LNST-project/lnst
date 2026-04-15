@@ -20,7 +20,6 @@ import tempfile
 import subprocess
 import errno
 import ast
-import collections
 import statistics
 import itertools
 from collections.abc import Iterable, Callable, Mapping
