@@ -19,6 +19,7 @@ dependencies = [
     "pyroute2",
     "psutil>=5.9.4",
     "requests>=2.30.0",
+    "setuptools<81",
 ]
 
 [project.optional-dependencies]

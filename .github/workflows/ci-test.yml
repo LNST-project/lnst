@@ -12,79 +12,72 @@ jobs:
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.13"
 
     - name: Source branch checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: LNST Setup
       run: bash .github/lnst_setup.sh
 
     - name: SimpleNetworkRecipe ping test
       run: |
-        export PATH="/root/.local/bin:$PATH"
-        venv_path=$(poetry env info -p)
-        sudo "$venv_path"/bin/python3 .github/runner.py
+        sudo uv run .github/runner.py
 
   ENRT_All_Test:
     runs-on: ubuntu-latest
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.13"
 
     - name: Source branch checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: LNST Setup
       run: bash .github/lnst_setup.sh
 
     - name: Run all ENRT recipes
       run: |
-        export PATH="/root/.local/bin:$PATH"
-        venv_path=$(poetry env info -p)
-        sudo "$venv_path"/bin/python3 .github/runner_all_enrt.py
+        sudo uv run .github/runner_all_enrt.py
 
   ENRT_PingFlood:
     runs-on: ubuntu-latest
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.13"
 
     - name: Source branch checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: LNST Setup
       run: bash .github/lnst_setup.sh
 
     - name: Run PingFlood
       run: |
-        export PATH="/root/.local/bin:$PATH"
-        venv_path=$(poetry env info -p)
-        sudo "$venv_path"/bin/python3 .github/runner_ping_flood.py
+        sudo uv run .github/runner_ping_flood.py
 
   ImportsCheck:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.13"
 
       - name: Source branch checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get install pylint
+      - name: LNST Setup
+        run: bash .github/lnst_setup.sh
 
       - name: Imports check
         run: |
-          pylint --disable=all --enable=W0611 lnst
+          uv run pylint --disable=all --enable=W0611 lnst

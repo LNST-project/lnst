@@ -5,7 +5,7 @@ echo Set up system requirements
 sudo apt-get update
 sudo apt-get install podman -y
 sudo systemctl enable --now podman.socket
-curl -sSL https://install.python-poetry.org | python3 - --version 1.4.2
+sudo pip install uv==0.11.6
 
 echo Set up Podman network requirements
 
@@ -31,8 +31,7 @@ libnl-3-200 \
 libnl-route-3-dev \
 git \
 libnl-3-dev
-export PATH="/root/.local/bin:$PATH"
-poetry install -E "containers"
+uv sync --extra containers
 
 echo Build LNST agents image
 sudo -E XDG_RUNTIME_DIR= podman build . -t lnst -f container_files/agent/Dockerfile
