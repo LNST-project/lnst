@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM fedora:41
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /uvx /bin/
 
 RUN dnf install -y initscripts \
     iputils \

@@ -19,12 +19,17 @@ jobs:
     - name: Source branch checkout
       uses: actions/checkout@v4
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "0.11.6"
+
     - name: LNST Setup
       run: bash .github/lnst_setup.sh
 
     - name: SimpleNetworkRecipe ping test
       run: |
-        sudo uv run .github/runner.py
+        sudo env "PATH=$PATH" uv run .github/runner.py
 
   ENRT_All_Test:
     runs-on: ubuntu-latest
@@ -38,12 +43,17 @@ jobs:
     - name: Source branch checkout
       uses: actions/checkout@v4
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "0.11.6"
+
     - name: LNST Setup
       run: bash .github/lnst_setup.sh
 
     - name: Run all ENRT recipes
       run: |
-        sudo uv run .github/runner_all_enrt.py
+        sudo env "PATH=$PATH" uv run .github/runner_all_enrt.py
 
   ENRT_PingFlood:
     runs-on: ubuntu-latest
@@ -57,12 +67,17 @@ jobs:
     - name: Source branch checkout
       uses: actions/checkout@v4
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "0.11.6"
+
     - name: LNST Setup
       run: bash .github/lnst_setup.sh
 
     - name: Run PingFlood
       run: |
-        sudo uv run .github/runner_ping_flood.py
+        sudo env "PATH=$PATH" uv run .github/runner_ping_flood.py
 
   ImportsCheck:
     runs-on: ubuntu-latest
@@ -74,6 +89,11 @@ jobs:
 
       - name: Source branch checkout
         uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.11.6"
 
       - name: LNST Setup
         run: bash .github/lnst_setup.sh

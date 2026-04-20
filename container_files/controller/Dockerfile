@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM fedora:41
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /uvx /bin/
 
 RUN dnf install -y initscripts \
     iputils \
@@ -20,7 +20,7 @@ COPY . /lnst
 COPY container_files/controller/pool /root/.lnst/pool
 
 ENV UV_PROJECT_ENVIRONMENT=/root/lnst_venv
-RUN cd /lnst && uv sync --frozen
+RUN cd /lnst && uv sync
 # UV_PROJECT_ENVIRONMENT places the venv outside /lnst
 # to prevent conflicts when user mounts host-machine's
 # lnst dir to /lnst
