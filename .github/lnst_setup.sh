@@ -5,7 +5,6 @@ echo Set up system requirements
 sudo apt-get update
 sudo apt-get install podman -y
 sudo systemctl enable --now podman.socket
-sudo pip install uv==0.11.6
 
 echo Set up Podman network requirements
 

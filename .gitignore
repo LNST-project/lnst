@@ -15,6 +15,9 @@ build/
 *.swo
 *.swn
 
+# virtual environment
+.venv/
+
 # additional patterns:
 *.pyc
 *.pyo
