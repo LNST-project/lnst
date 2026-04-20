@@ -21,7 +21,7 @@ machine involves the following steps:
 
     git clone https://github.com/LNST-project/lnst
     cd lnst
-    poetry install
+    uv sync
 
 
 For installation of containerized version, see :ref:`containerized`.
@@ -30,12 +30,12 @@ This installs both the Controller and the Agent code, and you'll need to run
 this on all the test machines that you want to use as well as the machine which
 you want to use as the Controller. Optionally a Controller and a Agent CAN run
 on the same machine.
-Some of dependencies used across lnst are optional and could be installed using ``-E|--extras``
-parameter of poetry.
+Some of dependencies used across lnst are optional and could be installed using ``--extra``
+parameter of uv.
 
 Dependencies groups:
 
-* required - installed automatically by ``poetry install`` command
+* required - installed automatically by ``uv sync`` command
 
   * ``pyroute2`` used to configure devices
   * ``lxml`` used to parse machine xml files. ``lxml`` as one of the few, supports Relax NG schema validation.
@@ -43,8 +43,8 @@ Dependencies groups:
     * Required binary dependencies: ``libxml2`` and ``libxslt``
   * ``ethtool`` used to configure network devices
 
-    * Required binary dependencies: ``libnl3-devel``, ``gcc``, ``python39-devel``
-* optional - installed using ``poetry install -E [GROUP_NAME]``
+    * Required binary dependencies: ``libnl3-devel``, ``gcc``, ``python3-devel``
+* optional - installed using ``uv sync --extra [GROUP_NAME]``
 
   * ``virt`` - used for running lnst in virtual machines
 
@@ -57,7 +57,7 @@ Dependencies groups:
 
 You can start your Agent application immediately by running::
 
-    poetry run lnst-agent
+    uv run lnst-agent
 
 Because the lnst-agent application takes care of network configuration, it
 **requires** to be executed with root privileges. This is **A BIG SECURITY
@@ -111,7 +111,7 @@ each other.
 If you write this into a ``hello_world.py`` file you should now be able to
 execute this script by running::
 
-    poetry run python3 hello_world.py
+    uv run python3 hello_world.py
 
 And you'll end up receiving an error about being unable to find a match in your
 configured pools, since we didn't configure any yet, this is quite expected. But
@@ -242,7 +242,7 @@ Other examples include:
 If you write all of this into a ``hello_world2.py`` file you should now be able to
 execute this script by running::
 
-    poetry run python3 hello_world2.py
+    uv run python3 hello_world2.py
 
 If you have previously created your machine pool configuration (and added the driver
 parameter as indicated above), the recipe should run to completion.
