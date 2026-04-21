@@ -45,7 +45,6 @@ dev = [
 include = ["lnst"]
 
 [tool.hatch.build.targets.sdist.force-include]
-"schema-am.rng" = "lnst/schema-am.rng"
 "install/lnst-agent.example.conf" = "install/lnst-agent.example.conf"
 "install/lnst-agent.service" = "install/lnst-agent.service"
 "lnst-ctl.conf" = "lnst-ctl.conf"
@@ -54,7 +53,6 @@ include = ["lnst"]
 include = ["lnst"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"schema-am.rng" = "lnst/schema-am.rng"
 "install/lnst-agent.example.conf" = "install/lnst-agent.example.conf"
 "install/lnst-agent.service" = "install/lnst-agent.service"
 "lnst-ctl.conf" = "lnst-ctl.conf"
