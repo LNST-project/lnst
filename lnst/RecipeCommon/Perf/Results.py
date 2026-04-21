@@ -16,6 +16,13 @@ class PerfStatMixin(object):
     def std_deviation(self):
         return std_deviation([i.average for i in self])
 
+    @property
+    def deviation_percentage(self):
+        try:
+            return (self.std_deviation / self.average) * 100
+        except ZeroDivisionError:
+            return float("inf") if self.std_deviation >= 0 else float("-inf")
+
 class PerfResult(PerfStatMixin):
     @property
     def value(self):

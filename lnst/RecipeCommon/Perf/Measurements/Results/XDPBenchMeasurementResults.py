@@ -90,13 +90,19 @@ class XDPBenchMeasurementResults(BaseMeasurementResults):
         desc = []
         desc.append(str(self.flow))
         desc.append(
-            "Generator generated (generator_results): {tput:,f} {unit} per second.".format(
-                tput=generator.average, unit=generator.unit
+            "Generator generated (generator_results): {tput:,f} +-{deviation:,f}({percentage:.2f}%) {unit} per second.".format(
+                tput=generator.average,
+                deviation=generator.std_deviation,
+                percentage=generator.deviation_percentage,
+                unit=generator.unit,
             )
         )
         desc.append(
-            "Receiver processed (receiver_results): {tput:,f} {unit} per second.".format(
-                tput=receiver.average, unit=receiver.unit
+            "Receiver processed (receiver_results): {tput:,f} +-{deviation:,f}({percentage:.2f}%) {unit} per second.".format(
+                tput=receiver.average,
+                deviation=receiver.std_deviation,
+                percentage=receiver.deviation_percentage,
+                unit=receiver.unit,
             )
         )
 
