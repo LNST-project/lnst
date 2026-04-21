@@ -1,10 +1,8 @@
-import os
 import psutil
 import logging
-from typing import Literal, Union
+from typing import Union
 from ipaddress import IPv4Network, IPv6Network, IPv4Address, IPv6Address
 
-from ..IpAddress import BaseIpAddress
 from .WaitForConditionModule import WaitForConditionModule
 
 
