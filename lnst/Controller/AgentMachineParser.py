@@ -13,24 +13,19 @@ rpazdera@redhat.com (Radek Pazdera)
 
 import os
 from lxml import etree
+from lnst.Common.Schema import find_schema
 from lnst.Controller.Common import ControllerError
-import lnst
 
 
 class AgentMachineParser(object):
     def __init__(self, am_path, ctl_config):
-        # locate the schema file in the lnst namespace package paths
-        schema_path = None
-        for path in lnst.__path__:
-            candidate = os.path.join(path, "schema-am.rng")
-            if os.path.exists(candidate):
-                schema_path = candidate
-                break
-        if schema_path is None:
+        try:
+            schema_path = find_schema("schema-am.rng")
+        except FileNotFoundError:
             res_dir = ctl_config.get_option("environment", "resource_dir")
             schema_path = os.path.join(res_dir, "schema-am.rng")
 
-        if not os.path.exists(schema_path):
+        if not os.path.exists(str(schema_path)):
             raise Exception("The schema file was not found. " + \
                             "Your LNST installation is corrupt!")
 
