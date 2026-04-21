@@ -8,7 +8,7 @@ from lnst.RecipeCommon.Perf.Results import SequentialPerfResult
 class AggregatedXDPBenchMeasurementResults(XDPBenchMeasurementResults):
     def __init__(self, measurement, flow):
         super().__init__(measurement, True, flow)
-        self._individual_results: list[TcRunMeasurementResults] = []
+        self._individual_results: list[XDPBenchMeasurementResults] = []
         self._generator_results = SequentialPerfResult()
         self._receiver_results = SequentialPerfResult()
 
