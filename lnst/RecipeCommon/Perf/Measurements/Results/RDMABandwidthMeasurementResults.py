@@ -1,6 +1,6 @@
 from lnst.RecipeCommon.Perf.Measurements.BaseMeasurement import BaseMeasurement
 from lnst.RecipeCommon.Perf.Measurements.Results.BaseMeasurementResults import BaseMeasurementResults
-from lnst.RecipeCommon.Perf.Results import PerfInterval, PerfResult
+from lnst.RecipeCommon.Perf.Results import PerfInterval
 
 
 class RDMABandwidthMeasurementResults(BaseMeasurementResults):
@@ -43,12 +43,5 @@ class RDMABandwidthMeasurementResults(BaseMeasurementResults):
         return "ib_send_bw measured bandwidth: {avg:.2f} +-{stddev:.2f}({percentage:.2f}%) MiB/s.".format(
             avg=bw.average,
             stddev=bw.std_deviation,
-            percentage=self._deviation_percentage(bw),
+            percentage=bw.deviation_percentage,
         )
-
-    @classmethod
-    def _deviation_percentage(cls, result: PerfResult) -> float:
-        try:
-            return (result.std_deviation/result.average) * 100
-        except ZeroDivisionError:
-            return float('inf') if result.std_deviation >= 0 else float("-inf")

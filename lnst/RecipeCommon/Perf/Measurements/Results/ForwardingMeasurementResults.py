@@ -175,7 +175,7 @@ class ForwardingMeasurementResults(BaseMeasurementResults):
                     "Generator generated (generator_results): {tput:_.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                         tput=gen_results.average,
                         deviation=gen_results.std_deviation,
-                        percentage=self._deviation_percentage(gen_results),
+                        percentage=gen_results.deviation_percentage,
                         unit=gen_results.unit,
                     ).replace("_", " ")
                 )
@@ -185,7 +185,7 @@ class ForwardingMeasurementResults(BaseMeasurementResults):
             "Generator generated (generator_results): {tput:_.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=generator.average,
                 deviation=generator.std_deviation,
-                percentage=self._deviation_percentage(generator),
+                percentage=generator.deviation_percentage,
                 unit=generator.unit,
             ).replace("_", " ")
         )
@@ -193,7 +193,7 @@ class ForwardingMeasurementResults(BaseMeasurementResults):
             "Receiver processed (receiver_results): {tput:_.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=receiver.average,
                 deviation=receiver.std_deviation,
-                percentage=self._deviation_percentage(receiver),
+                percentage=receiver.deviation_percentage,
                 unit=receiver.unit,
             ).replace("_", " ")
         )
@@ -201,7 +201,7 @@ class ForwardingMeasurementResults(BaseMeasurementResults):
             "Forwarder RX (forwarder_rx_results): {tput:_.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=self.forwarder_rx_results.average,
                 deviation=self.forwarder_rx_results.std_deviation,
-                percentage=self._deviation_percentage(self.forwarder_rx_results),
+                percentage=self.forwarder_rx_results.deviation_percentage,
                 unit=self.forwarder_rx_results.unit,
             ).replace("_", " ")
         )
@@ -209,19 +209,12 @@ class ForwardingMeasurementResults(BaseMeasurementResults):
             "Forwarder TX (forwarder_tx_results): {tput:_.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=self.forwarder_tx_results.average,
                 deviation=self.forwarder_tx_results.std_deviation,
-                percentage=self._deviation_percentage(self.forwarder_tx_results),
+                percentage=self.forwarder_tx_results.deviation_percentage,
                 unit=self.forwarder_tx_results.unit,
             ).replace("_", " ")
         )
 
         return "\n".join(desc)
-
-    @staticmethod
-    def _deviation_percentage(result):
-        try:
-            return (result.std_deviation / result.average) * 100
-        except ZeroDivisionError:
-            return float("inf") if result.std_deviation >= 0 else float("-inf")
 
     @property
     def flow(self):
