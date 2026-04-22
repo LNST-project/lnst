@@ -5,8 +5,9 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/lnst-agent
+ExecStart=/opt/lnst/bin/lnst-agent
 StandardOutput=null
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
