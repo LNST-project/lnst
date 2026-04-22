@@ -122,7 +122,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
             "Generator measured throughput (generator_results): {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=generator.average,
                 deviation=generator.std_deviation,
-                percentage=self._deviation_percentage(generator),
+                percentage=generator.deviation_percentage,
                 unit=generator.unit,
             )
         )
@@ -137,7 +137,7 @@ class FlowMeasurementResults(BaseMeasurementResults):
             "Receiver measured throughput (receiver_results): {tput:.2f} +-{deviation:.2f}({percentage:.2f}%) {unit} per second.".format(
                 tput=receiver.average,
                 deviation=receiver.std_deviation,
-                percentage=self._deviation_percentage(receiver),
+                percentage=receiver.deviation_percentage,
                 unit=receiver.unit,
             )
         )
@@ -149,10 +149,3 @@ class FlowMeasurementResults(BaseMeasurementResults):
             )
         )
         return "\n".join(desc)
-
-    @staticmethod
-    def _deviation_percentage(result):
-        try:
-            return (result.std_deviation / result.average) * 100
-        except ZeroDivisionError:
-            return float("inf") if result.std_deviation >= 0 else float("-inf")
