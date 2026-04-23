@@ -1,0 +1,22 @@
+[
+    {
+        "test_system_name": "host1",
+        "hostname": "host.example.com",
+        "ssh_port": 22,
+        "username": "root",
+        "password": "root",
+        "test_nic_hw_addrs": [
+            "00:00:00:00:00:00"
+        ]
+    },
+    {
+        "test_system_name": "host2",
+        "hostname": "host2.example.com",
+        "ssh_port": 22,
+        "username": "root",
+        "password": "root",
+        "test_nic_hw_addrs": [
+            "00:00:00:00:00:01"
+        ]
+    }
+]

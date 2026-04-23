@@ -993,6 +993,7 @@ class Agent:
                     except (socket.error, SecSocketException):
                         continue
                     self._log_ctl.set_connection(self._server_handler.get_ctl_sock())
+                    self._methods.machine_cleanup()
 
                 msgs = self._server_handler.get_messages()
 
