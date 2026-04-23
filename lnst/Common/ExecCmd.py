@@ -62,7 +62,12 @@ def exec_cmd(cmd, die_on_err=True, log_outputs=True, report_stderr=False, json=F
     subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, stdin=subprocess.PIPE,
                             close_fds=True)
-    (data_stdout, data_stderr) = subp.communicate(input = stdin)
+    try:
+        (data_stdout, data_stderr) = subp.communicate(input = stdin)
+    except KeyboardInterrupt:
+        data_stdout = subp.stdout.read()
+        data_stderr = subp.stderr.read()
+
     data_stdout = data_stdout.decode()
     data_stderr = data_stderr.decode()
 
