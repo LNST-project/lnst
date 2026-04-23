@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-LNST_SRC="${1:-git+https://github.com/LNST-project/lnst.git}"
+LNST_SRC="${1:-git+https://github.com/LNST-project/lnst.git@25cd5e9bdb80ca562c0d9ba5d40f124ba28ca77d}"
 
 # --- Validation ---
 
