@@ -43,6 +43,11 @@ jobs:
     - name: Source branch checkout
       uses: actions/checkout@v4
 
+    - name: Fetch base branch
+      if: github.event_name == 'pull_request'
+      run: |
+        git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+
     - name: Install uv
       uses: astral-sh/setup-uv@v4
       with:
