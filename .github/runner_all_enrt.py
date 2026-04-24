@@ -61,7 +61,6 @@ def get_changed_files():
         else:
             # Fallback: try to detect if we're in a PR or push
             # Check if HEAD^ exists (at least 2 commits)
-            logging.info(f"fallback ... {base_ref} {event_name}")
             check_result = subprocess.run(
                 ['git', '-C', f'{github_workspace}', 'rev-parse', '--verify', 'HEAD^'],
                 capture_output=True,

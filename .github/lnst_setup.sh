@@ -32,5 +32,5 @@ git \
 libnl-3-dev
 uv sync --extra containers
 
-#echo Build LNST agents image
-#sudo -E XDG_RUNTIME_DIR= podman build . -t lnst -f container_files/agent/Dockerfile
+echo Build LNST agents image
+sudo -E XDG_RUNTIME_DIR= podman build . -t lnst -f container_files/agent/Dockerfile
