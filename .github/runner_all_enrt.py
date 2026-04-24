@@ -31,22 +31,29 @@ def get_changed_files():
         # GitHub Actions environment variables
         base_ref = os.environ.get('GITHUB_BASE_REF')  # Set for pull_request events
         event_name = os.environ.get('GITHUB_EVENT_NAME', '')
+        github_workspace = os.environ.get('GITHUB_WORKSPACE')
 
         if base_ref and event_name == 'pull_request':
             # Pull request - compare against base branch
             # Use three-dot diff to compare merge-base with HEAD
             logging.info(f"Detected pull request, comparing with base branch: {base_ref}")
-            result = subprocess.run(
-                ['git', 'diff', '--name-only', f'origin/{base_ref}...HEAD'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            try:
+                result = subprocess.run(
+                    ['git', '-C', f'{github_workspace}', 'diff', '--name-only', f'origin/{base_ref}...HEAD'],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+            except subprocess.CalledProcessError as e:
+                logging.info(e.stdout)
+                logging.info(e.stderr)
+                raise
+
         elif event_name == 'push':
             # Push to master - compare with previous commit
             logging.info("Detected push event, comparing with previous commit")
             result = subprocess.run(
-                ['git', 'diff', '--name-only', 'HEAD^', 'HEAD'],
+                ['git', '-C', f'{github_workspace}', 'diff', '--name-only', 'HEAD^', 'HEAD'],
                 capture_output=True,
                 text=True,
                 check=True
@@ -56,14 +63,14 @@ def get_changed_files():
             # Check if HEAD^ exists (at least 2 commits)
             logging.info(f"fallback ... {base_ref} {event_name}")
             check_result = subprocess.run(
-                ['git', 'rev-parse', '--verify', 'HEAD^'],
+                ['git', '-C', f'{github_workspace}', 'rev-parse', '--verify', 'HEAD^'],
                 capture_output=True,
                 check=False
             )
             if check_result.returncode == 0:
                 logging.info("Fallback: comparing with previous commit")
                 result = subprocess.run(
-                    ['git', 'diff', '--name-only', 'HEAD^', 'HEAD'],
+                    ['git', '-C', f'{github_workspace}', 'diff', '--name-only', 'HEAD^', 'HEAD'],
                     capture_output=True,
                     text=True,
                     check=True
