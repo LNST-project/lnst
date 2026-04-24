@@ -81,10 +81,9 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrt
         ipv6_addr = {host1: interface_addresses(self.params.net1_ipv6),
                      host2: interface_addresses(self.params.net2_ipv6)}
         for host in [host1, host2]:
-            host.eth0.down()
+            host.eth0.up()
             config.configure_and_track_ip(host.eth0, next(ipv4_addr[host]))
             config.configure_and_track_ip(host.eth0, next(ipv6_addr[host]))
-            host.eth0.up()
 
         self.wait_tentative_ips(config.configured_devices)
 
