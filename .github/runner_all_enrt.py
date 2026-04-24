@@ -39,7 +39,7 @@ def get_changed_files():
             logging.info(f"Detected pull request, comparing with base branch: {base_ref}")
             try:
                 result = subprocess.run(
-                    ['git', '-C', f'{github_workspace}', 'diff', '--name-only', f'origin/{base_ref}...HEAD'],
+                    ['git', '-C', f'{github_workspace}', 'diff', '--name-only', f'origin/{base_ref}..HEAD'],
                     capture_output=True,
                     text=True,
                     check=True
