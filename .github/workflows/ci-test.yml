@@ -29,7 +29,7 @@ jobs:
 
     - name: SimpleNetworkRecipe ping test
       run: |
-        sudo env "PATH=$PATH" uv run .github/runner.py
+        sudo -E env "PATH=$PATH" uv run .github/runner.py
 
   ENRT_All_Test:
     runs-on: ubuntu-latest
@@ -43,6 +43,11 @@ jobs:
     - name: Source branch checkout
       uses: actions/checkout@v4
 
+    - name: Fetch base branch
+      if: github.event_name == 'pull_request'
+      run: |
+        git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+
     - name: Install uv
       uses: astral-sh/setup-uv@v4
       with:
@@ -53,7 +58,7 @@ jobs:
 
     - name: Run all ENRT recipes
       run: |
-        sudo env "PATH=$PATH" uv run .github/runner_all_enrt.py
+        sudo -E env "PATH=$PATH" uv run .github/runner_all_enrt.py
 
   ENRT_PingFlood:
     runs-on: ubuntu-latest
@@ -77,7 +82,7 @@ jobs:
 
     - name: Run PingFlood
       run: |
-        sudo env "PATH=$PATH" uv run .github/runner_ping_flood.py
+        sudo -E env "PATH=$PATH" uv run .github/runner_ping_flood.py
 
   ImportsCheck:
     runs-on: ubuntu-latest
