@@ -101,7 +101,7 @@ class LoggingCtl:
     agents = {}
     transmit_handler = None
     _id_seq = 0
-    log_list = {}
+    log_list = None
 
     def __init__(self, debug=False, log_dir=None, log_subdir="", colours=True):
         #clear any previously set handlers
@@ -130,11 +130,6 @@ class LoggingCtl:
         self.display_handler = logging.StreamHandler(sys.stdout)
         self.display_handler.setFormatter(MultilineFormatter(colours))
 
-        # the export_handler will add log messages to lists, so it could be exported to .lrc file
-        self.log_list["controller"] = []
-        self.export_handler = self._create_export_handler(self.log_list["controller"], colours)
-        self.export_handler.setLevel(logging.DEBUG)
-
         if not debug:
             self.display_handler.setLevel(logging.INFO)
         else:
@@ -146,7 +141,6 @@ class LoggingCtl:
         logger = logging.getLogger()
         logger.setLevel(logging.NOTSET)
         logger.addHandler(self.display_handler)
-        logger.addHandler(self.export_handler)
 
     def unset_formatter(self):
         self.display_handler.setFormatter(None)
@@ -182,11 +176,21 @@ class LoggingCtl:
         logger.addHandler(recipe_info)
         logger.addHandler(recipe_debug)
 
+        # set the export_handler
+        self.log_list = {}
+        self.log_list["controller"] = []
+        self.export_handler = self._create_export_handler(self.log_list["controller"])
+        self.export_handler.setLevel(logging.DEBUG)
+        logger.addHandler(self.export_handler)
+
     def unset_recipe(self):
         logger = logging.getLogger()
         logger.removeHandler(self.recipe_handlers[0])
         logger.removeHandler(self.recipe_handlers[1])
         self.recipe_handlers = (None, None)
+        logger.removeHandler(self.export_handler)
+        self.export_handler = None
+        self.log_list = None
 
     def add_agent(self, agent_id):
         agent_log_path = os.path.join(self.recipe_log_path, agent_id)

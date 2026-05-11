@@ -179,6 +179,7 @@ class Controller(object):
                     raise
                 finally:
                     self._cleanup_agents()
+                    self._log_ctl.unset_recipe()
         finally:
             if isinstance(self._pools, ContainerPoolManager):
                 self._pools.cleanup()
