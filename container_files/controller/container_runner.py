@@ -162,6 +162,8 @@ class ContainerRunner:
 
             test_result = ResultType.PASS
             recipe = None
+            exc_info = None
+            result_dir = f"{RESULTS_DIR}/{test_id}"
             try:
                 recipe_cls = eval(recipe_name)
                 recipe = recipe_cls(**test.get("params", {}))
@@ -181,10 +183,12 @@ class ContainerRunner:
                 )
                 traceback.print_exc(file=sys.stderr)
                 test_result = ResultType.FAIL
+                exc_info = traceback.format_exc()
+
+            os.makedirs(result_dir, exist_ok=True)
 
             if recipe is not None:
                 try:
-                    result_dir = f"{RESULTS_DIR}/{test_id}"
                     self._export_results(recipe, result_dir)
                 except Exception:
                     print(
@@ -192,6 +196,10 @@ class ContainerRunner:
                         file=sys.stderr,
                     )
                     traceback.print_exc(file=sys.stderr)
+
+            if exc_info is not None:
+                with open(os.path.join(result_dir, "controller.log"), "a") as f:
+                    f.write(exc_info)
 
             results.append((test_id, test_result))
             overall = ResultType.max_severity(overall, test_result)
