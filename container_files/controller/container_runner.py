@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import ssl
 import sys
 import traceback
@@ -92,14 +93,28 @@ class ContainerRunner:
         return params
 
     def _export_results(self, recipe, result_dir):
-        os.makedirs(result_dir, exist_ok=True)
+        log_dir = f"{result_dir}/logs"
 
-        # Export human-readable log (with debug output)
+        # Export human-readable result summary (with debug output)
         hr_fmt = HumanReadableRunSummaryFormatter(level=ResultLevel.DEBUG)
-        with open(os.path.join(result_dir, "controller.log"), "w") as f:
-            for run in recipe.runs:
-                f.write(hr_fmt.format_run(run))
-                f.write("\n")
+        try:
+            with open(os.path.join(log_dir, "result_summary.log"), "w") as f:
+                for run in recipe.runs:
+                    f.write(hr_fmt.format_run(run))
+                    f.write("\n")
+        except Exception:
+            print("Failed to export result_summary.log:", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+
+        # Export per-host log files from log_dir
+        for run in recipe.runs:
+            if not run.log_dir or not os.path.isdir(run.log_dir):
+                continue
+            try:
+                shutil.copytree(run.log_dir, log_dir, dirs_exist_ok=True)
+            except Exception:
+                print("Failed to copy log_dir:", file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
 
         # Export JSON results and LRC files per run
         json_fmt = JsonRunSummaryFormatter(pretty=True)
@@ -151,6 +166,10 @@ class ContainerRunner:
             test_id = test.get("uuid", f"{i}_{recipe_name}")
 
             recipe = None
+            exc_info = None
+            result_dir = f"{RESULTS_DIR}/{test_id}"
+            log_dir = f"{result_dir}/logs"
+            os.makedirs(log_dir, exist_ok=True)
             try:
                 recipe_cls = eval(recipe_name)
                 recipe = recipe_cls(**test.get("params", {}))
@@ -170,10 +189,10 @@ class ContainerRunner:
                 )
                 traceback.print_exc(file=sys.stderr)
                 test_result = ResultType.FAIL
+                exc_info = traceback.format_exc()
 
             if recipe is not None:
                 try:
-                    result_dir = f"{RESULTS_DIR}/{test_id}"
                     self._export_results(recipe, result_dir)
                 except Exception:
                     print(
@@ -181,6 +200,10 @@ class ContainerRunner:
                         file=sys.stderr,
                     )
                     traceback.print_exc(file=sys.stderr)
+
+            if exc_info is not None:
+                with open(os.path.join(log_dir, "crash.log"), "w") as f:
+                    f.write(exc_info)
 
             results.append((test_id, test_result))
             overall_result = ResultType.max_severity(overall_result, test_result)
@@ -220,6 +243,11 @@ if __name__ == "__main__":
     if not _check_dir_access(POOL_DIR) or not _check_dir_access(RESULTS_DIR):
         sys.exit(1)
     runner = ContainerRunner()
-    exit_code = 0 if runner.run() == ResultType.PASS else 1
-    runner._zip_results()
+    try:
+        exit_code = 0 if runner.run() == ResultType.PASS else 1
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+        exit_code = 1
+    finally:
+        runner._zip_results()
     exit(exit_code)
