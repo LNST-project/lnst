@@ -168,17 +168,26 @@ class NeperFlowMeasurement(BaseFlowMeasurement):
             flow_results.generator_results = generator_stats[0]
             flow_results.generator_cpu_stats = generator_stats[1]
             self._host_versions[test_flow.flow.generator] = \
-                test_flow.client_job.result["data"]["VERSION"]
+                self._get_neper_version(test_flow.client_job, "generator")
 
             receiver_stats = self._parse_job_samples(test_flow.server_job)
             flow_results.receiver_results = receiver_stats[0]
             flow_results.receiver_cpu_stats = receiver_stats[1]
             self._host_versions[test_flow.flow.receiver] = \
-                test_flow.server_job.result["data"]["VERSION"]
+                self._get_neper_version(test_flow.server_job, "receiver")
 
             results.append(flow_results)
 
         return results
+
+    def _get_neper_version(self, job: Job, role: str):
+        result = job.result
+        if isinstance(result, dict) and "data" in result:
+            return result["data"].get("VERSION")
+        logging.error(
+            "Neper %s job failed or timed out, result: %s", role, result
+        )
+        return None
 
     def _parse_job_samples(self, job: Job) ->\
             Tuple[ParallelPerfResult, ParallelPerfResult]:
