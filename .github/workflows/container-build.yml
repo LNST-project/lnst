@@ -1,0 +1,36 @@
+name: Build and Push Controller Container
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    paths:
+      - 'container_files/controller/**'
+
+concurrency:
+  group: container-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Source branch checkout
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Login to Quay.io
+      run: podman login -u ${{ secrets.QUAY_USER }} -p ${{ secrets.QUAY_PASS }} quay.io
+
+    - name: Build and push multi-arch manifest
+      run: |
+        podman manifest create quay.io/lnst/lnst-controller:latest
+        podman build \
+          --platform linux/amd64,linux/arm64 \
+          --build-arg LNST_SRC=${{ github.server_url }}/${{ github.repository }}.git@${{ github.sha }} \
+          --manifest quay.io/lnst/lnst-controller:latest \
+          container_files/controller
+        podman manifest push quay.io/lnst/lnst-controller:latest
