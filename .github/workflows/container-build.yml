@@ -1,0 +1,52 @@
+name: Build and Push Controller Container
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    paths:
+      - 'container_files/controller/**'
+
+concurrency:
+  group: container-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Source branch checkout
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set LNST_SRC
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          LNST_SRC="${{ github.event.pull_request.head.repo.clone_url }}@${{ github.event.pull_request.head.sha }}"
+        else
+          LNST_SRC="${{ github.server_url }}/${{ github.repository }}.git@${{ github.sha }}"
+        fi
+        echo "LNST_SRC=$LNST_SRC"
+        echo "LNST_SRC=$LNST_SRC" >> $GITHUB_ENV
+
+    - name: Login to Quay.io
+      if: github.event_name == 'push'
+      run: podman login -u ${{ secrets.QUAY_USER }} -p ${{ secrets.QUAY_PASS }} quay.io
+
+    - name: Build multi-arch container
+      run: |
+        podman manifest create quay.io/lnst/lnst-controller:latest
+        podman build \
+          --platform linux/amd64,linux/arm64 \
+          --build-arg LNST_SRC=${{ env.LNST_SRC }} \
+          --manifest quay.io/lnst/lnst-controller:latest \
+          container_files/controller
+
+    - name: Push multi-arch manifest
+      if: github.event_name == 'push'
+      run: |
+        podman manifest push quay.io/lnst/lnst-controller:latest
+        podman manifest push quay.io/lnst/lnst-controller:latest quay.io/lnst/lnst-controller:${{ github.sha }}
