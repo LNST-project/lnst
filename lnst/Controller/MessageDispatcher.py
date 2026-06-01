@@ -205,6 +205,8 @@ class MessageDispatcher(ConnectionHandler):
                 netns = message[1]["netns"]
             except KeyError:
                 netns = None
+            logging.error("Processing dev_created from agent %s: ifindex=%s netns=%s",
+                          machine.get_id(), message[1]["dev_data"].get("ifindex"), netns)
             machine.device_created(message[1]["dev_data"], netns)
         elif message[1]["type"] == "dev_deleted":
             machine = self._machines[message[0]]
@@ -212,6 +214,8 @@ class MessageDispatcher(ConnectionHandler):
                 netns = message[1]["netns"]
             except KeyError:
                 netns = None
+            logging.error("Processing dev_deleted from agent %s: ifindex=%s netns=%s",
+                          machine.get_id(), message[1].get("ifindex"), netns)
             machine.device_delete(message[1], netns)
         elif message[1]["type"] == "dev_netns_changed":
             machine = self._machines[message[0]]
@@ -219,6 +223,8 @@ class MessageDispatcher(ConnectionHandler):
                 netns = message[1]["netns"]
             except KeyError:
                 netns = None
+            logging.error("Processing dev_netns_changed from agent %s: ifindex=%s netns=%s",
+                          machine.get_id(), message[1].get("ifindex"), netns)
             machine.device_netns_change(message[1], netns)
         elif message[1]["type"] == "exception":
             raise message[1]["Exception"]
