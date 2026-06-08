@@ -15,3 +15,7 @@ class XDPTxRecipe(
     # NOTE: Receiver's IRQs needs to be pinned to single CPU (due to test stability)
     # Generator needs to reach line rate, therefore its' IRQ CPUs should not be limited.
     # Simply use `multi_dev_interrupt_config` with single host.
+
+    @property
+    def cpu_perf_evaluation_hosts(self):
+        return [self.matched.host2]
