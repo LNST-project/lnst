@@ -502,6 +502,16 @@ class BaseEnrtRecipe(
         return evaluators
 
     @property
+    def cpu_perf_evaluation_hosts(self):
+        """Hosts to include in CPU performance evaluation.
+
+        Override to limit CPU evaluation to specific hosts, e.g. only the
+        receiver in an XDP drop test where the generator's aggregate CPU
+        is irrelevant.
+        """
+        return list(self.matched)
+
+    @property
     def cpu_perf_evaluators(self):
         """CPU measurement evaluators
 
