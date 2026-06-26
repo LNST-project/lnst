@@ -48,5 +48,8 @@ class NftablesConntrackMixin(NftablesMixin):
 
         host2.run("systemctl stop nftables")
         time.sleep(2)
-        host2.run("modprobe -rv nft_ct nf_conntrack_netlink nf_conntrack nft_counter")
+        # nft_counter merged into nf_tables in kernel 5.17, doesn't
+        # exist as separate module on RHEL 10+
+        host2.run("modprobe -rv nft_ct nf_conntrack_netlink nf_conntrack")
+        host2.run("if grep -q '^nft_counter ' /proc/modules; then modprobe -rv nft_counter; fi")
 
