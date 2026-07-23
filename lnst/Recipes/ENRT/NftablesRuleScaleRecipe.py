@@ -6,8 +6,8 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
     """
     This recipe combines SimpleNetnsRouterRecipe and NftablesMixin for testing
     routing throughput impact of specific nftables rules. To generate
-    meaningful results, the rule is simply repeated multiple times, thereby
-    amplifying the impact.
+    meaningful results, the list of rules is simply repeated multiple times,
+    thereby amplifying the impact.
     Rules are added to host2's forwarding hook by default (defined by
     :any:`chainspec` parameter) which routes test traffic between host1 and a
     local netns.
@@ -35,8 +35,9 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
     :type extras: :any:`ListParam` (default empty)
 
     :param rule:
-        The actual rule to insert repeatedly into the router's chain.
-    :type rule: :any:`StrParam` representing the nftables rule.
+        The actual list of rules to insert repeatedly into the
+        router's chain.
+    :type rule: :any:`ListParam` representing the nftables rules.
 
     :param scale:
         The number of times to insert :any:`rule` into the ruleset.
@@ -55,7 +56,7 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
     chainspec = StrParam(mandatory=False,
                          default="type filter hook forward priority filter")
     extras = ListParam(mandatory=False, default=[])
-    rule = StrParam(mandatory=True)
+    rule = ListParam(mandatory=True)
     scale = IntParam(mandatory=True)
     flowtable = BoolParam(mandatory=False, default=False)
 
@@ -76,7 +77,7 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
         ] + [
             e.format(family=family, tablename=tablename, chainname=chainname)
             for e in extras
-        ] + [f"add rule {f_t_c} {rule}"] * scale
+        ] + [f"add rule {f_t_c} {r}" for r in rule] * scale
         if self.params.get('flowtable'):
             devs = f"{self.matched.host2.eth0.name}, {self.matched.host2.pn0.name}"
             ftspec = f"hook ingress priority filter; devices = {{ {devs} }};"

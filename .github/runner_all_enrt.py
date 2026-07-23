@@ -97,7 +97,7 @@ for recipe_name in dir(enrt_recipes):
                 "add chain {family} {tablename} otherchain",
                 "add rule {family} {tablename} {chainname} counter"
         ]
-        params["rule"] = "accept"
+        params["rule"] = ["jump otherchain", "accept"]
         params["scale"] = 1
 
     if issubclass(recipe, OffloadSubConfigMixin):
