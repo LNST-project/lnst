@@ -93,6 +93,10 @@ for recipe_name in dir(enrt_recipes):
         params["family"] = "ip"
         params["tablename"] = "mytable"
         params["chainname"] = "mychain"
+        params["extras"] = [
+                "add chain {family} {tablename} otherchain",
+                "add rule {family} {tablename} {chainname} counter"
+        ]
         params["rule"] = "accept"
         params["scale"] = 1
 
