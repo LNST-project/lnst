@@ -1,6 +1,6 @@
 from lnst.Recipes.ENRT.SimpleNetnsRouterRecipe import SimpleNetnsRouterRecipe
 from lnst.Recipes.ENRT.ConfigMixins.FirewallMixin import NftablesMixin
-from lnst.Common.Parameters import StrParam, IntParam, BoolParam
+from lnst.Common.Parameters import StrParam, ListParam, IntParam, BoolParam
 
 class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
     """
@@ -28,6 +28,12 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
         The hook spec of the chain to add rules to.
     :type chainspec: :any:`StrParam` (default "type filter hook forward priority filter")
 
+    :param extras:
+        Extra nftables commands to run after table and chain creation and
+        before generating the list of rules to test. Use `{family}`, `{tablename}`
+        and `{chainname}` to refer to ruleset elements.
+    :type extras: :any:`ListParam` (default empty)
+
     :param rule:
         The actual rule to insert repeatedly into the router's chain.
     :type rule: :any:`StrParam` representing the nftables rule.
@@ -48,6 +54,7 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
     chainname = StrParam(mandatory=False, default="c")
     chainspec = StrParam(mandatory=False,
                          default="type filter hook forward priority filter")
+    extras = ListParam(mandatory=False, default=[])
     rule = StrParam(mandatory=True)
     scale = IntParam(mandatory=True)
     flowtable = BoolParam(mandatory=False, default=False)
@@ -58,6 +65,7 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
         tablename = self.params.get('tablename')
         chainname = self.params.get('chainname')
         chainspec = self.params.get('chainspec')
+        extras = self.params.get('extras')
         rule = self.params.get('rule')
         scale = self.params.get('scale')
         f_t_c = f"{family} {tablename} {chainname}"
@@ -65,6 +73,9 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
             "flush ruleset",
             f"add table {family} {tablename}",
             f"add chain {f_t_c} {{ {chainspec}; }}"
+        ] + [
+            e.format(family=family, tablename=tablename, chainname=chainname)
+            for e in extras
         ] + [f"add rule {f_t_c} {rule}"] * scale
         if self.params.get('flowtable'):
             devs = f"{self.matched.host2.eth0.name}, {self.matched.host2.pn0.name}"
@@ -78,10 +89,14 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
         tablename = self.params.get('tablename')
         chainname = self.params.get('chainname')
         chainspec = self.params.get('chainspec')
+        extras = self.params.get('extras')
         rule = self.params.get('rule')
         scale = self.params.get('scale')
         desc = super().generate_sub_configuration_description(config)
-        msg = f"NftablesScale: Ruleset with {scale} times '{rule}'"
+        msg = "NftablesScale: Ruleset with"
+        if extras:
+            msg += f" extra commands '{extras}' and"
+        msg += f" {scale} times '{rule}'"
         msg += f" in a table named '{tablename}' and chain named '{chainname}'"
         msg += f" with '{chainspec}' in family '{family}'"
         if self.params.get('flowtable'):
