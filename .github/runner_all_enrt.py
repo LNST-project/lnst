@@ -90,6 +90,9 @@ for recipe_name in dir(enrt_recipes):
         params["perf_tool_cpu"] = [0]
 
     if recipe_name == "NftablesRuleScaleRecipe":
+        params["family"] = "ip"
+        params["tablename"] = "mytable"
+        params["chainname"] = "mychain"
         params["rule"] = "accept"
         params["scale"] = 1
 
