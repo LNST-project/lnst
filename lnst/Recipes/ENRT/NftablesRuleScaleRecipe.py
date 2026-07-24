@@ -8,16 +8,16 @@ class NftablesRuleScaleRecipe(SimpleNetnsRouterRecipe, NftablesMixin):
     routing throughput impact of specific nftables rules. To generate
     meaningful results, the rule is simply repeated multiple times, thereby
     amplifying the impact.
-    Rules are added to host2's forwarding hook which routes test traffic
-    between host1 and a local netns.
+    Rules are added to host2's forwarding hook by default (defined by
+    :any:`chainspec` parameter) which routes test traffic between host1 and a
+    local netns.
 
     :param chainspec:
         The hook spec of the chain to add rules to.
     :type chainspec: :any:`StrParam` (default "type filter hook forward priority filter")
 
     :param rule:
-        The actual rule to insert repeatedly into the router's forwarding
-        chain.
+        The actual rule to insert repeatedly into the router's chain.
     :type rule: :any:`StrParam` representing the nftables rule.
 
     :param scale:
