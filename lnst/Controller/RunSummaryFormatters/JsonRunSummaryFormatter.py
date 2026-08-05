@@ -129,6 +129,12 @@ class JsonRunSummaryFormatter(RunSummaryFormatter):
                     "generator_results": result.data["generator_results"].average,
                     "receiver_results": result.data["receiver_results"].average,
                 }
+            elif result.measurement_type == "xdp-redirect-cpu":
+                measurement_data = {
+                    "generator_results": result.data["generator_results"].average,
+                    "receiver_results": result.data["receiver_results"].average,
+                    "forwarded_results": result.data["forwarded_results"].average,
+                }
             elif result.measurement_type == "forwarding":
                 measurement_data = {
                     "generator_results": result.data["generator_results"].average,

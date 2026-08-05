@@ -82,7 +82,7 @@ for recipe_name in dir(enrt_recipes):
     if recipe_name == "SoftwareRDMARecipe":
         params["software_rdma_type"] = "rxe"
 
-    if recipe_name in ["XDPDropRecipe", "XDPTxRecipe"]:
+    if recipe_name in ["XDPDropRecipe", "XDPTxRecipe", "XDPRedirectCPURecipe"]:
         params["multi_dev_interrupt_config"] = {
             "host1": {"eth0": {"cpus": [0], "cpu_policy": "round-robin"}},
             "host2": {"eth0": {"cpus": [0], "cpu_policy": "round-robin"}},
