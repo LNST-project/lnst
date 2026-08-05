@@ -80,7 +80,6 @@ XDP_BENCH_COMMANDS = (
     "drop",
     "tx",
     "redirect",
-    "redirect-cpu",
     "redirect-map",
     "redirect-multi",
 )
@@ -168,3 +167,4 @@ class XDPBench(BaseTestModule):
 
     def runtime_estimate(self):
         return self.params.duration + 2
+
