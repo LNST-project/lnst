@@ -167,4 +167,3 @@ class XDPBench(BaseTestModule):
 
     def runtime_estimate(self):
         return self.params.duration + 2
-
