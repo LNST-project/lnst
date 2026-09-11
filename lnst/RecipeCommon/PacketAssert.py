@@ -44,7 +44,9 @@ class PacketAssertConf(object):
         return self._promiscuous
 
 class PacketAssertTestAndEvaluate(BaseRecipe):
-    packet_assert_jobs = []
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.packet_assert_jobs = []
 
     def packet_assert_test_start(self, packet_assert_configs):
         for packet_assert_config in packet_assert_configs:
@@ -73,6 +75,16 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
     def packet_assert_evaluate_and_report(self, packet_assert_configs, results):
         if not results:
             self.add_result(ResultType.FAIL, "Packet assert results unavailable")
+            return
+
+        if len(results) != len(packet_assert_configs):
+            self.add_result(
+                ResultType.FAIL,
+                "Packet assert result count ({}) does not match the number of "
+                "configurations ({})".format(
+                    len(results), len(packet_assert_configs)
+                )
+            )
             return
 
         for packet_assert_config, result in zip(packet_assert_configs, results):
