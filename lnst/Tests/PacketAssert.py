@@ -21,8 +21,11 @@ class PacketAssert(BaseTestModule):
     p_filter = StrParam(default="")
     grep_for = ListParam(default=[])
     promiscuous = BoolParam(default=False)
-    _grep_exprs = []
-    _p_recv = 0
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._grep_exprs = []
+        self._p_recv = 0
 
     def _prepare_grep_exprs(self):
         for expr in self.params.grep_for:
