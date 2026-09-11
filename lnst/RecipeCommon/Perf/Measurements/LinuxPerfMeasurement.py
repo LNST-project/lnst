@@ -28,8 +28,6 @@ class LinuxPerfMeasurement(BaseMeasurement):
 
     _version: Optional[dict[str, Any]] = None
     _collection_index: int = 0
-    _running_jobs: list[Job] = []
-    _finished_jobs: list[Job] = []
 
     def __init__(
         self,
@@ -38,6 +36,9 @@ class LinuxPerfMeasurement(BaseMeasurement):
         recipe_conf: Any = None,
     ):
         super().__init__(recipe_conf)
+
+        self._running_jobs: list[Job] = []
+        self._finished_jobs: list[Job] = []
 
         self.hosts = hosts
         self._data_folder = data_folder

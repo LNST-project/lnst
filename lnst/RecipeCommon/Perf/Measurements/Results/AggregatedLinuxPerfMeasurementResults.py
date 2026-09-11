@@ -4,10 +4,8 @@ from lnst.RecipeCommon.Perf.Measurements.Results.LinuxPerfMeasurementResults imp
 
 
 class AggregatedLinuxPerfMeasurementResults(BaseMeasurementResults):
-
-    _individual_results: list[LinuxPerfMeasurementResults] = []
-
     def __init__(self, result: Optional[LinuxPerfMeasurementResults] = None):
+        self._individual_results: list[LinuxPerfMeasurementResults] = []
         if result:
             self._individual_results = [result]
 

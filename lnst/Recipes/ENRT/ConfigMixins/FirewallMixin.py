@@ -9,7 +9,9 @@ class FirewallMixin(BaseSubConfigMixin):
     Do not inherit directly, use one of the derived classes below instead.
     """
 
-    _fwctl = {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._fwctl = {}
 
     def fwctl(self, host):
         try:

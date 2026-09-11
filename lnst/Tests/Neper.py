@@ -16,8 +16,8 @@ NEPER_PATH = pathlib.Path('/root/neper')
 
 
 class NeperBase(BaseTestModule):
-    _supported_workloads = set(['tcp_rr', 'tcp_crr', 'udp_rr'])
-    workload = ChoiceParam(type=StrParam, choices=_supported_workloads,
+    workload = ChoiceParam(type=StrParam,
+                           choices=('tcp_rr', 'tcp_crr', 'udp_rr'),
                            mandatory=True)
     port = IntParam()
     control_port = IntParam()
