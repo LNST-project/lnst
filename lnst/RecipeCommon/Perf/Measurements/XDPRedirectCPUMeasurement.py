@@ -1,4 +1,5 @@
 import logging
+import time
 
 from lnst.Tests.XDPBenchRedirectCpu import XDPBenchRedirectCpu
 from lnst.Tests.PktGen import PktgenController
@@ -144,6 +145,51 @@ class XDPRedirectCPUMeasurement(BaseFlowMeasurement):
             )
         pktgen = PktgenController(config=config)
         return self.flows[0].generator.prepare_job(pktgen)
+
+    def simulate_start(self):
+        self._receiver_job = self.flows[0].receiver.run("echo simulated start", bg=True)
+        self._generator_job = self.flows[0].generator.run("echo simulated start", bg=True)
+        for flow in self.flows:
+            self._net_flows.append(
+                NetworkFlowTest(flow, self._receiver_job, self._generator_job)
+            )
+
+    def simulate_finish(self):
+        logging.info("Simulating minimal 1s measurement duration")
+        time.sleep(1)
+        self._receiver_job.wait()
+        self._generator_job.wait()
+        self._finished_receiver_job = self._receiver_job
+        self._finished_generator_job = self._generator_job
+        self._receiver_job = None
+        self._generator_job = None
+
+    def collect_simulated_results(self):
+        t = time.time()
+        flows = [net_flow.flow for net_flow in self._net_flows]
+        warmup_duration = flows[0].warmup_duration if flows else 0
+        duration = max(flows[0].duration, 1) if flows else 1
+
+        result = XDPRedirectCPUMeasurementResults(
+            measurement=self,
+            measurement_success=True,
+            flows=flows,
+            warmup_duration=warmup_duration,
+        )
+        result.generator_results = ParallelPerfResult(
+            [SequentialPerfResult([PerfInterval(0, 1, "packets", t)] * duration)
+             for _ in flows]
+        )
+        result.receiver_results = ParallelPerfResult(
+            [SequentialPerfResult([PerfInterval(0, 1, "packets", t)] * duration)
+             for _ in self._cpus]
+        )
+        result.forwarded_results = ParallelPerfResult(
+            [SequentialPerfResult([PerfInterval(0, 1, "packets", t)] * duration)]
+        )
+
+        self._net_flows = []
+        return [result]
 
     def finish(self):
         try:
