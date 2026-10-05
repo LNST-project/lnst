@@ -1,6 +1,6 @@
 import re
 from lnst.Controller.Recipe import RecipeError
-from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Controller.RecipeResults import Result, ResultLevel, ResultType
 
 
 def pin_dev_interrupts(dev, cpus, policy=None):
@@ -12,15 +12,56 @@ def pin_dev_interrupts(dev, cpus, policy=None):
     for i, intr in enumerate(intrs):
         try:
             if policy in [ "round-robin", None ]:
-                cpu = cpus[i % len(cpus)]
+                requested_cpus = [cpus[i % len(cpus)]]
             elif policy == "all":
-                cpu = ",".join([str(cpu) for cpu in cpus])
+                requested_cpus = cpus
 
             netns.run(
-                "echo -n {} > /proc/irq/{}/smp_affinity_list".format(cpu, intr)
+                "echo -n {} > /proc/irq/{}/smp_affinity_list".format(
+                    ",".join(str(cpu) for cpu in requested_cpus), intr
+                )
             )
+
+            check_effective_affinity(netns, intr, requested_cpus)
         except ValueError:
             pass
+
+
+def check_effective_affinity(netns, intr, requested_cpus):
+    res = netns.run(
+        "cat /proc/irq/{}/effective_affinity_list".format(intr),
+        job_level=ResultLevel.DEBUG,
+    )
+
+    effective_cpus = parse_cpu_list(res.stdout)
+
+    if not effective_cpus.issubset(set(requested_cpus)):
+        netns._machine._add_recipe_result(
+            Result(
+                ResultType.FAIL,
+                description="IRQ {} effective affinity check".format(intr),
+                data="IRQ {} effective affinity {} does not match requested "
+                "affinity {}; the kernel reassigned it to a different CPU "
+                "within the applicable cpumask.".format(
+                    intr, sorted(effective_cpus), sorted(requested_cpus)
+                ),
+                level=ResultLevel.IMPORTANT,
+            )
+        )
+
+def parse_cpu_list(cpu_list):
+    cpus = set()
+    for part in cpu_list.strip().split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            start, end = part.split("-")
+            cpus.update(range(int(start), int(end) + 1))
+        else:
+            cpus.add(int(part))
+    return cpus
+
 
 def check_cpu_validity(host, cpus):
     cpu_info = host.run("lscpu", job_level=ResultLevel.DEBUG).stdout
