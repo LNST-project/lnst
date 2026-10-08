@@ -93,9 +93,11 @@ class PacketAssert(BaseTestModule):
         stderr = stderr.decode()
 
         self._res_data["stderr"] = stderr
+        self._res_data["stdout"] = stdout
         # tcpdump always reports information to stderr, there may be actual
         # errors but also just generic debug information
         logging.debug(self._res_data["stderr"])
+        logging.debug(self._res_data["stdout"])
 
         for line in stdout.split("\n"):
             self._check_line(line)
