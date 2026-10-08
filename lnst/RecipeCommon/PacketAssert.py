@@ -4,6 +4,8 @@ from lnst.Controller.RecipeResults import ResultType
 from lnst.Controller.Recipe import BaseRecipe
 from lnst.Tests import PacketAssert
 from lnst.Common.LnstError import LnstError
+from lnst.Common.Parameters import BoolParam
+
 
 class PacketAssertConf(object):
     def __init__(self, host, iface, **kwargs):
@@ -43,7 +45,10 @@ class PacketAssertConf(object):
     def promiscuous(self):
         return self._promiscuous
 
+
 class PacketAssertTestAndEvaluate(BaseRecipe):
+    save_packet_assert_stdout = BoolParam(default=False)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.packet_assert_jobs = []
@@ -52,6 +57,7 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
         for packet_assert_config in packet_assert_configs:
             host = packet_assert_config.host
             kwargs = self._generate_packet_assert_kwargs(packet_assert_config)
+            kwargs["save_stdout"] = bool(self.save_packet_assert_stdout)
             packet_assert = PacketAssert(**kwargs)
             self.packet_assert_jobs.append(host.prepare_job(packet_assert).start(bg=True))
 
