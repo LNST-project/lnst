@@ -21,6 +21,7 @@ class PacketAssert(BaseTestModule):
     p_filter = StrParam(default="")
     grep_for = ListParam(default=[])
     promiscuous = BoolParam(default=False)
+    save_stdout = BoolParam(default=False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -96,6 +97,10 @@ class PacketAssert(BaseTestModule):
         # tcpdump always reports information to stderr, there may be actual
         # errors but also just generic debug information
         logging.debug(self._res_data["stderr"])
+
+        if self.save_stdout:
+            self._res_data["stdout"] = stdout
+            logging.debug(self._res_data["stdout"])
 
         for line in stdout.split("\n"):
             self._check_line(line)
