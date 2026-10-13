@@ -1,0 +1,2350 @@
+[
+    {
+        "uuid": "98c0cfdc-7d16-4d13-ba2f-e875888c880f",
+        "recipe_name": "SimpleNetworkRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "net_ipv4": "192.168.200.0/24",
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "b29585da-767f-4c8f-adfc-ae4b63e1b47a",
+        "recipe_name": "SimpleNetworkRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "net_ipv4": "192.168.200.0/24",
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "73662520-543e-4768-a38f-e5576492def2",
+        "recipe_name": "SimpleNetworkRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "net_ipv6": "fd00:0:a000::/64",
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "c553ba09-42a0-4820-8ebe-2ba041052f79",
+        "recipe_name": "SimpleNetworkRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "net_ipv6": "fd00:0:a000::/64",
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "9565360e-0b8d-4785-b734-114e21e51463",
+        "recipe_name": "VlansRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "vlan0_ipv4": "192.168.200.0/24",
+            "vlan1_ipv4": "192.168.201.0/24",
+            "vlan2_ipv4": "192.168.202.0/24",
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "d4edd797-4c73-4db6-ab6c-bc92952b0000",
+        "recipe_name": "VlansRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "vlan0_ipv4": "192.168.200.0/24",
+            "vlan1_ipv4": "192.168.201.0/24",
+            "vlan2_ipv4": "192.168.202.0/24",
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "e2670efd-2cd8-49cd-8b00-fc020d5ffc41",
+        "recipe_name": "VlansRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "vlan0_ipv6": "fd00:0:a000::/64",
+            "vlan1_ipv6": "fd00:0:a010::/64",
+            "vlan2_ipv6": "fd00:0:a020::/64",
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "5c0563ee-e9e4-4bdf-8c5a-0b4e7f13727c",
+        "recipe_name": "VlansRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "vlan0_ipv6": "fd00:0:a000::/64",
+            "vlan1_ipv6": "fd00:0:a010::/64",
+            "vlan2_ipv6": "fd00:0:a020::/64",
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "fcec6203-d7e3-4efe-9a50-d5f57ee1c223",
+        "recipe_name": "SimpleNetworkRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_parallel_processes": 96,
+            "perf_tool_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "perf_tool_cpu_policy": "round-robin",
+            "dev_intr_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "net_ipv4": "192.168.200.0/24"
+        }
+    },
+    {
+        "uuid": "7c340ea7-222c-4c60-99fb-a902706be9a6",
+        "recipe_name": "SimpleNetworkRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_parallel_processes": 96,
+            "perf_tool_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "perf_tool_cpu_policy": "round-robin",
+            "dev_intr_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "net_ipv6": "fd00:0:a000::/64"
+        }
+    },
+    {
+        "uuid": "2ba04d67-1770-4db2-a8c6-6020f11c388b",
+        "recipe_name": "SimpleNetworkTunableRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_parallel_processes": 24,
+            "perf_tool_generator_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "perf_tool_generator_cpu_policy": "round-robin",
+            "perf_tool_receiver_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "perf_tool_receiver_cpu_policy": "round-robin",
+            "multi_dev_interrupt_config": {
+                "host1": {
+                    "eth0": {
+                        "cpus": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18,
+                            19,
+                            20,
+                            21,
+                            22,
+                            23
+                        ],
+                        "cpu_policy": "round-robin"
+                    }
+                },
+                "host2": {
+                    "eth0": {
+                        "cpus": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18,
+                            19,
+                            20,
+                            21,
+                            22,
+                            23
+                        ],
+                        "cpu_policy": "round-robin"
+                    }
+                }
+            },
+            "tx_pause_frames": false,
+            "rx_pause_frames": false,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "net_ipv4": "192.168.200.0/24"
+        }
+    },
+    {
+        "uuid": "fd455900-4cf6-4831-a1cc-df1728fbd965",
+        "recipe_name": "SimpleNetworkTunableRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "mtu": 1500,
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_parallel_processes": 24,
+            "perf_tool_generator_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "perf_tool_generator_cpu_policy": "round-robin",
+            "perf_tool_receiver_cpu": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+            ],
+            "perf_tool_receiver_cpu_policy": "round-robin",
+            "multi_dev_interrupt_config": {
+                "host1": {
+                    "eth0": {
+                        "cpus": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18,
+                            19,
+                            20,
+                            21,
+                            22,
+                            23
+                        ],
+                        "cpu_policy": "round-robin"
+                    }
+                },
+                "host2": {
+                    "eth0": {
+                        "cpus": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18,
+                            19,
+                            20,
+                            21,
+                            22,
+                            23
+                        ],
+                        "cpu_policy": "round-robin"
+                    }
+                }
+            },
+            "tx_pause_frames": false,
+            "rx_pause_frames": false,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "net_ipv6": "fd00:0:a000::/64"
+        }
+    },
+    {
+        "uuid": "99b56334-4323-48b8-bb29-45adcc1aad50",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "f34de25c-8fa2-4d40-8679-d8c28b6ad61b",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "cba8a909-061f-4437-946b-bd31f7d4430c",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "8f8f5917-7d16-4121-9f4c-554b6c038fc3",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "267de416-bd7b-40fc-9828-03c58c28f8b9",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "665e75d7-b00e-4c47-bc2b-ec6fe7fa1fe1",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "61057d09-1089-41eb-a8c0-f7027742cf3b",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "a211ec73-d3f7-4f73-92f5-b39c7776b7d6",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "b20835cd-1a58-4f74-83d9-53e3942c7eb2",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "ac0902f3-3ff4-47ef-9855-70e9e25a43cc",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "4b6c6b6f-297e-4d95-b9d4-db33c361008e",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "9a662446-ffe6-4ea8-a826-97c9969a6fc1",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv4",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "0592b4f9-a4ac-424a-bb10-6f4ead1e9431",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "aa0c4f50-144b-40a4-a177-8b518e9b4633",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "4a026e88-80c6-4176-8bb4-a118560326d3",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "9ae80e07-9333-4563-81f1-6b477698d826",
+        "recipe_name": "GeneveTunnelRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "carrier_ipversion": "ipv6",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "571da588-0c99-471c-b343-f94a7e0b9c07",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "0106892e-5400-4c40-ae4c-efd151634cb3",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "fd63d678-1de1-4e81-bec1-2efbfd4bb5e5",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "af6152de-58c7-4135-9016-ad29160afb00",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "381b8659-5439-4900-ae1e-a7567ad3402d",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "50e1a4fa-30fa-4306-b0eb-086ff5f4a551",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "194c6dd2-2085-4d73-b281-fadfc7e29171",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "f8900534-1930-451e-81bc-f172ab66c886",
+        "recipe_name": "VxlanRemoteRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "offload_combinations": [
+                {
+                    "gso": "on",
+                    "tx-gso-partial": "on",
+                    "rx-udp_tunnel-port-offload": "on",
+                    "tx-udp_tnl-segmentation": "on",
+                    "tx-udp_tnl-csum-segmentation": "on",
+                    "tx-checksum-ip-generic": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "9c70247f-02fb-4bc3-94e1-17efad06c97c",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "b25c1531-ef47-4107-ac4a-6736e1d19029",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "e5c5cb75-c55a-4c84-ba68-ac3fe07bb020",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "1a49aa3d-5f6f-44ee-a104-9462095b65f2",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": false,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "0d96bc4f-824f-49da-b322-aba9e30217ed",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "vf_trust": "on",
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "b1e7dcde-e7e9-4d61-a256-9dae299a856d",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "vf_trust": "on",
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "fb7fc9bc-463a-411d-8c0b-70c2acd39fae",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "vf_trust": "on",
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "fd33fe57-1a8a-4479-bed8-b017561505ec",
+        "recipe_name": "LinuxBridgeRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net_ipv4": "192.168.200.0/24",
+            "net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "use_vfs": true,
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "vf_trust": "on",
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "aa0dcb37-28f3-4eee-9caa-b68b199222b9",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "tunnel",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "a7d40de5-8ac3-4288-adb8-b6a0c482a0bf",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "tunnel",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "51469f5e-0db6-40ec-8266-844ed6968ece",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "tunnel",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "23ea8243-502c-45b1-952b-d63647b2c9fe",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "tunnel",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "f6193625-6d60-4a08-af91-f3f5249d44d6",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "transport",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "2eaccb4b-4012-481d-936d-e6de82ddd9a9",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "transport",
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "8d7013ed-0591-4869-9290-dc49fffc2288",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "transport",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "dc15589c-0658-4258-ae81-f98cabd3b894",
+        "recipe_name": "IpsecEspAeadRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "net1_ipv4": "192.168.200.0/24",
+            "net1_ipv6": "fd00:0:2000::/64",
+            "net2_ipv4": "192.168.201.0/24",
+            "net2_ipv6": "fd00:0:2010::/64",
+            "ipsec_mode": "transport",
+            "ip_versions": [
+                "ipv6"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    },
+    {
+        "uuid": "cefd01e8-e9cc-4eaf-8abc-27ed5056bb41",
+        "recipe_name": "SRIOVNetnsTcRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "vf_net_ipv4": "192.168.200.0/24",
+            "vf_net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "tcp_stream"
+            ],
+            "perf_msg_sizes": [
+                16000
+            ],
+            "perf_tool_cpu": [
+                0
+            ],
+            "dev_intr_cpu": [
+                0
+            ]
+        }
+    },
+    {
+        "uuid": "c602a578-6aee-47ac-993e-d9d48895fe74",
+        "recipe_name": "SRIOVNetnsTcRecipe",
+        "params": {
+            "ping_count": 10,
+            "perf_iterations": 5,
+            "perf_duration": 60,
+            "perf_warmup_duration": 3,
+            "vf_net_ipv4": "192.168.200.0/24",
+            "vf_net_ipv6": "fd00:0:2000::/64",
+            "offload_combinations": [
+                {
+                    "gro": "on",
+                    "gso": "on",
+                    "tso": "on",
+                    "tx": "on",
+                    "rx": "on"
+                }
+            ],
+            "ip_versions": [
+                "ipv4"
+            ],
+            "perf_tests": [
+                "udp_stream"
+            ],
+            "perf_msg_sizes": [
+                1400
+            ],
+            "perf_tool_cpu": [
+                1
+            ],
+            "dev_intr_cpu": [
+                0
+            ],
+            "tx_pause_frames": false,
+            "rx_pause_frames": false
+        }
+    }
+]
