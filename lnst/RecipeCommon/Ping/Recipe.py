@@ -71,13 +71,13 @@ class PingTestAndEvaluate(BaseRecipe):
             ping.start(bg = True)
             ping_array.append((pingconf, ping))
 
-        for _, pingjob in ping_array:
+        for pingconf, pingjob in ping_array:
             try:
                 pingjob.wait(
                     timeout=self._estimate_ping_duration(pingconf),
                 )
             finally:
-                pingjob.kill()
+                pingjob.stop()
 
         for pingconf, pingjob in ping_array:
             result = (pingjob.passed, pingjob.result)
