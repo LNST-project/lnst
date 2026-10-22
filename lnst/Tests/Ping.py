@@ -47,10 +47,11 @@ class Ping(BaseTestModule):
 
         try:
             stdout, stderr = ping_process.communicate()
-            stdout = stdout.decode()
-            stderr = stderr.decode()
         except KeyboardInterrupt:
-            pass
+            # ping received the same SIGINT, collect the statistics it prints
+            stdout, stderr = ping_process.communicate()
+        stdout = stdout.decode()
+        stderr = stderr.decode()
 
         self._res_data["stdout"] = stdout
         self._res_data["stderr"] = stderr
