@@ -18,6 +18,7 @@ from lnst.Common.JobError import JobError
 from lnst.Controller.RecipeResults import ResultLevel, ResultType
 
 DEFAULT_TIMEOUT = 60
+DEFAULT_STOP_GRACE_PERIOD = 5
 
 class Job(object):
     """Tester facing Job API
@@ -165,7 +166,7 @@ class Job(object):
         if not bg:
             if not self.wait(timeout):
                 logging.debug("Killing timed-out job")
-                self.kill()
+                self.stop()
         return self
 
     def wait(self, timeout=DEFAULT_TIMEOUT):
@@ -207,6 +208,33 @@ class Job(object):
         logging.debug("Sending signal {} to job {} on host {}".format(signal,
                      self._id, self._netns.hostid))
         return self._netns._machine.kill(self, signal)
+
+    def stop(self, grace_period=DEFAULT_STOP_GRACE_PERIOD):
+        """stop the remotely running Job, gracefully if possible
+
+        Sends SIGINT so the Job can finish and report its results. If the
+        Job is still running after grace_period seconds, sends SIGKILL.
+
+        Args:
+            grace_period -- positive integer, seconds to wait after SIGINT
+                before sending SIGKILL. Default is DEFAULT_STOP_GRACE_PERIOD.
+        Returns:
+            True if the Job finished or the signals were sent successfully.
+            False if an exception was raised while sending SIGKILL.
+        """
+        if self.finished:
+            return True
+
+        if not self.kill(signal.SIGINT):
+            logging.warning("Failed to send SIGINT to job {} on host {}"
+                    .format(self._id, self._netns.hostid))
+
+        if self.wait(grace_period):
+            return True
+
+        logging.warning("Job {} on host {} did not exit after SIGINT, "
+                "sending SIGKILL".format(self._id, self._netns.hostid))
+        return self.kill()
 
     def _to_dict(self):
         d = {"job_id": self._id,
