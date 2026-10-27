@@ -20,7 +20,10 @@ class BaseTunnelRecipe(
     that the ping packets are properly tunnelled. This is implemented with
     :any:`PacketAssert` test module. Each child class needs to implement
     :meth:`get_packet_assert_config` so that the correct filters are passed
-    to the module.
+    to the module. After the ping test finishes, the minimum expected packet
+    count of the assert is adjusted to the number of pings reported as
+    received by the ping test, so that the evaluation checks that all of the
+    completed pings travelled through the tunnel.
 
     The class inheriting from this base class need to implement following
     methods:
@@ -121,6 +124,16 @@ class BaseTunnelRecipe(
         ping_result = super().ping_test(ping_configs)
         self.ctl.wait(2)
         pa_results = self.packet_assert_test_stop()
+
+        # adjust the pa p_min to the number of pings that actually
+        # completed, so that the assert checks that all of the successful
+        # pings were properly tunnelled
+        for ping_config, pa_config in zip(ping_configs, pa_configs):
+            ping_res = ping_result.get(ping_config)
+            if ping_res and ping_res[1] and "recv_pkts" in ping_res[1]:
+                self.packet_assert_adjust_p_min(
+                    pa_config, int(ping_res[1]["recv_pkts"])
+                )
 
         result = ((ping_result, pa_configs, pa_results),)
 

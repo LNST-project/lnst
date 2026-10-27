@@ -252,6 +252,15 @@ class IpsecEspAeadRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEnrt
         pa_results = self.packet_assert_test_stop()
         dump.kill(signal=signal.SIGINT)
 
+        # adjust the pa p_min to the number of pings that actually
+        # completed, so that the assert checks that all of the successful
+        # pings were properly encrypted
+        ping_res = ping_result.get(ping_configs[0])
+        if ping_res and ping_res[1] and "recv_pkts" in ping_res[1]:
+            self.packet_assert_adjust_p_min(
+                pa_config, int(ping_res[1]["recv_pkts"])
+            )
+
         return ((ping_result, [pa_config], pa_results),)
 
     def ping_report_and_evaluate(self, results):
