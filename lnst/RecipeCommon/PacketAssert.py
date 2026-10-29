@@ -67,10 +67,7 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
         for packet_assert_job in self.packet_assert_jobs:
             packet_assert_job.kill(signal=signal.SIGINT)
             packet_assert_job.wait()
-            if not packet_assert_job.passed:
-                results.append({})
-            else:
-                results.append(packet_assert_job.result)
+            results.append(packet_assert_job.result or {})
 
         self.packet_assert_jobs = []
 
@@ -112,6 +109,15 @@ class PacketAssertTestAndEvaluate(BaseRecipe):
 
         for packet_assert_config, result in zip(packet_assert_configs, results):
             success = ResultType.FAIL
+            if "p_recv" not in result:
+                self.add_result(
+                    ResultType.FAIL,
+                    "Packet assert unsuccessful, packets received unknown, "
+                    "the packet assert job did not finish successfully",
+                    result
+                )
+                continue
+
             if result["p_recv"] >= packet_assert_config.p_min and \
                 (result["p_recv"] <= packet_assert_config.p_max or
                  not packet_assert_config.p_max):
