@@ -183,6 +183,15 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEn
         pa_results = self.packet_assert_test_stop()
         dump.kill(signal=signal.SIGINT)
 
+        # adjust the pa p_min to the number of pings that actually
+        # completed - each completed ping produces both an AH and an
+        # ESP packet that matches the grep patterns
+        ping_res = ping_result.get(ping_configs[0])
+        if ping_res and ping_res[1] and "recv_pkts" in ping_res[1]:
+            self.packet_assert_adjust_p_min(
+                pa_config, 2 * int(ping_res[1]["recv_pkts"])
+            )
+
         m1.run("ip -s xfrm pol")
         m1.run("ip -s xfrm state")
 
@@ -203,6 +212,13 @@ class IpsecEspAhCompRecipe(CommonHWSubConfigMixin, SimpleNetworkReq, BaremetalEn
         self.ctl.wait(2)
         if no_trans:
             pa_results2 = self.packet_assert_test_stop()
+            # adjust the second pa p_min to the number of pings that
+            # actually completed
+            ping_res2 = ping_result2.get(ping_configs2[0])
+            if ping_res2 and ping_res2[1] and "recv_pkts" in ping_res2[1]:
+                self.packet_assert_adjust_p_min(
+                    pa_config2, int(ping_res2[1]["recv_pkts"])
+                )
         dump2.kill(signal=signal.SIGINT)
 
         result = ((ping_result, [pa_config], pa_results),)
