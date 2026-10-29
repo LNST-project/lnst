@@ -19,6 +19,8 @@ import os
 import pickle
 import hashlib
 import hmac
+import logging
+import socket
 from lnst.Common.Utils import not_imported
 from lnst.Common.LnstError import LnstError
 
@@ -155,10 +157,17 @@ class SecureSocket(object):
         return self.send(pickled_msg)
 
     def recv_msg(self):
-        pickled_msg = self.recv()
-        if pickled_msg == b"":
-            raise SecSocketException("Disconnected")
-        msg = pickle.loads(pickled_msg)
+        try:
+            pickled_msg = self.recv()
+            if pickled_msg == b"":
+                raise SecSocketException("Disconnected")
+            msg = pickle.loads(pickled_msg)
+        except (SecSocketException, socket.error):
+            raise
+        except Exception:
+            logging.error("Failed to process a received message - "
+                          "the connection is probably desynchronized")
+            raise SecSocketException("Invalid message data received")
         return msg
 
     def _add_mac_sign(self, data):
@@ -291,7 +300,14 @@ class SecureSocket(object):
             c = self._socket.recv(1)
 
             if c == b' ':
-                length = int(length.decode('ascii'))
+                try:
+                    length = int(length.decode('ascii'))
+                except ValueError:
+                    error_msg = "Invalid message length ({!r}) - the " \
+                                "connection is probably desynchronized" \
+                                .format(length)
+                    logging.error(error_msg)
+                    raise SecSocketException(error_msg)
                 break
             elif c == b"":
                 return b""
