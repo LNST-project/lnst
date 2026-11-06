@@ -1,8 +1,9 @@
 import re
+import os
 import logging
 import subprocess
 import signal
-from select import select
+import tempfile
 from lnst.Common.Parameters import (
     StrParam,
     ListParam,
@@ -10,11 +11,8 @@ from lnst.Common.Parameters import (
     BoolParam,
 )
 from lnst.Common.Utils import is_installed
-from lnst.Tests.BaseTestModule import BaseTestModule, InterruptException
+from lnst.Tests.BaseTestModule import BaseTestModule
 
-
-def interrupt_handler(signum, frame):
-    raise InterruptException()
 
 class PacketAssert(BaseTestModule):
     interface = DeviceParam(mandatory=True)
@@ -60,37 +58,34 @@ class PacketAssert(BaseTestModule):
         cmd = self._compose_cmd()
         logging.debug("compiled command: {}".format(cmd))
 
-        packet_assert_process = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            close_fds=True,
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            stdout_path = os.path.join(tmpdir, "stdout")
+            stderr_path = os.path.join(tmpdir, "stderr")
+            with (
+                open(stdout_path, "wb") as stdout_file,
+                open(stderr_path, "wb") as stderr_file,
+            ):
+                # tcpdump itself handles SIGINT by flushing its output and
+                # exiting. The capture output is stored in files and read only
+                # after tcpdump exits, so nothing that was already printed can
+                # be lost when the capture is stopped.
+                old_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+                try:
+                    packet_assert_process = subprocess.Popen(
+                        cmd,
+                        shell=True,
+                        stdout=stdout_file,
+                        stderr=stderr_file,
+                        close_fds=True,
+                    )
+                    packet_assert_process.wait()
+                finally:
+                    signal.signal(signal.SIGINT, old_handler)
 
-        stdout = bytearray()
-        stderr = bytearray()
-        try:
-            old_handler = signal.signal(signal.SIGINT, interrupt_handler)
-            # for longer, or larger streams tcpdump can fill the entire io
-            # buffer for the stdout/stderr files, because of that we need to
-            # read the files continuosly
-            while True:
-                rl, wl, xl = select([packet_assert_process.stdout, packet_assert_process.stderr], [], [])
-                if packet_assert_process.stdout in rl:
-                    stdout += packet_assert_process.stdout.readline()
-                if packet_assert_process.stderr in rl:
-                    stderr += packet_assert_process.stderr.readline()
-        except InterruptException:
-            pass
-        finally:
-            signal.signal(signal.SIGINT, old_handler)
-
-        packet_assert_process.wait()
-        stdout += packet_assert_process.stdout.read()
-        stderr += packet_assert_process.stderr.read()
-        stdout = stdout.decode()
-        stderr = stderr.decode()
+            with open(stdout_path, "rb") as stdout_file:
+                stdout = stdout_file.read().decode()
+            with open(stderr_path, "rb") as stderr_file:
+                stderr = stderr_file.read().decode()
 
         self._res_data["stderr"] = stderr
         self._res_data["stdout"] = stdout
