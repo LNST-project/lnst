@@ -14,7 +14,7 @@ from lnst.Common.Parameters import (
     Param,
     StrParam,
 )
-from lnst.Controller.RecipeResults import ResultLevel
+from lnst.Controller.RecipeResults import ResultLevel, ResultType
 from lnst.RecipeCommon.Perf.Measurements import Flow as PerfFlow
 from lnst.RecipeCommon.Perf.Measurements import StatCPUMeasurement, TRexFlowMeasurement
 from lnst.RecipeCommon.Perf.Recipe import RecipeConf as PerfRecipeConf
@@ -80,6 +80,7 @@ class OvSDOCAPvPRecipe(PvPReq, BasePvPRecipe):
     perf_streams = IntParam(default=1)
 
     perf_test_simulation = BoolParam(default=False)
+    min_offload_ratio = IntParam(default=50)
 
     def test(self):
         self.check_dependencies()
@@ -113,6 +114,7 @@ class OvSDOCAPvPRecipe(PvPReq, BasePvPRecipe):
             result = self.perf_test(perf_config)
             try:
                 host2 = config.dut.host
+                self._evaluate_dpctl_offload(host2)
                 flows_dump = host2.run("ovs-ofctl dump-flows br0", job_level=ResultLevel.DEBUG)
                 if flows_dump and flows_dump.stdout:
                     logging.debug(f"OVS OpenFlow dump-flows:\n{flows_dump.stdout}")
@@ -135,6 +137,66 @@ class OvSDOCAPvPRecipe(PvPReq, BasePvPRecipe):
             return result
         finally:
             self.test_wide_deconfiguration(config)
+
+    def _evaluate_dpctl_offload(self, host):
+        if self.params.perf_test_simulation:
+            logging.debug("Skipping offload evaluation in simulation mode")
+            return
+
+        res = host.run("ovs-appctl dpctl/dump-flows -m", job_level=ResultLevel.DEBUG)
+        if not res or not res.stdout:
+            self.add_result(
+                ResultType.FAIL,
+                "OVS DOCA offload evaluation failed: unable to query datapath flows",
+            )
+            return
+
+        offloaded_pkts = 0
+        non_offloaded_pkts = 0
+        total_flows = 0
+        offloaded_flows = 0
+
+        for line in res.stdout.strip().splitlines():
+            line = line.strip()
+            if "packets:" not in line:
+                continue
+
+            m_pkts = re.search(r"packets:(\d+)", line)
+            if not m_pkts:
+                continue
+
+            total_flows += 1
+            pkts = int(m_pkts.group(1))
+
+            if "offloaded:yes" in line:
+                offloaded_pkts += pkts
+                offloaded_flows += 1
+            else:
+                non_offloaded_pkts += pkts
+
+        total_pkts = offloaded_pkts + non_offloaded_pkts
+        if total_flows == 0 or total_pkts == 0:
+            self.add_result(
+                ResultType.FAIL,
+                f"OVS DOCA offload evaluation failed: no packets or flows found in datapath "
+                f"(flows={total_flows}, packets={total_pkts})",
+            )
+            return
+
+        offload_ratio = (offloaded_pkts / total_pkts) * 100.0
+        summary = (
+            f"OVS DOCA datapath offload: {offloaded_pkts}/{total_pkts} packets "
+            f"({offload_ratio:.2f}%) offloaded across {offloaded_flows}/{total_flows} flows "
+            f"(threshold: >={self.params.min_offload_ratio}%)."
+        )
+
+        if offload_ratio >= self.params.min_offload_ratio:
+            self.add_result(ResultType.PASS, f"PASS: {summary}")
+        else:
+            self.add_result(
+                ResultType.FAIL,
+                f"FAIL: Majority of packets were not offloaded to hardware. {summary}",
+            )
 
     def test_wide_configuration(self, config):
         config.generator.host = self.matched.host1
