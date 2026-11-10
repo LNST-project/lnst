@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 echo Set up system requirements
 
 sudo apt-get update
@@ -21,7 +23,6 @@ gcc \
 python3-dev \
 libxml2-dev \
 libxslt-dev \
-qemu-kvm \
 libvirt-daemon-system \
 libvirt-clients \
 bridge-utils \
